@@ -68,10 +68,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             
             # Retrieve values from GUI
             self.lo_freq = float(self.lineEdit_loFreq.text())
-            self.rfAmp = float(self.textEdit_rfAmp.toPlainText())
+            self.rf_amp = float(self.textEdit_rfAmp.toPlainText())
             self.trs = int(self.textEdit_trs.toPlainText())
-            self.rfTstart = int(self.textEdit_rfTstart.toPlainText())
-            self.rxPeriod = int(self.textEdit_rxPeriod.toPlainText())
+            self.rf_tstart = int(self.textEdit_rfTstart.toPlainText())
+            self.rx_period = int(self.textEdit_rxPeriod.toPlainText())
             self.tx_gate_pre = int(self.textEdit_txGpre.toPlainText())
             self.tx_gate_post = int(self.textEdit_txGpost.toPlainText())            
             self.slice_amp = float(self.textEdit_sliceAmp.toPlainText())       
@@ -79,8 +79,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.readout_amp = float(self.textEdit_rdAmp.toPlainText()) 
             self.rf_duration = int(self.textEdit_rfDur.toPlainText()) 
             self.trap_ramp_duration = int(self.textEdit_trapRampDur.toPlainText()) 
-            self.trap_phase_delay = int(self.textEdit_phDelay.toPlainText()) 
-            self.trap_phase_dur = int(self.textEdit_phDur.toPlainText()) 
+            self.phase_delay = int(self.textEdit_phDelay.toPlainText()) 
+            self.phase_duration = int(self.textEdit_phDur.toPlainText()) 
 
             self.dbg_sc = 1
             self.plot_rx = True
@@ -130,23 +130,32 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             
             self.lineEdit_loFreq.setText("0.1")  # MHz 
             self.textEdit_rfAmp.setPlainText("0.1")  # 1 = full-scale
-#            self.textEdit_Gamp.setDisabled(True)            
+            self.textEdit_Gamp.setDisabled(True)            
             self.textEdit_trs.setPlainText("2")
-#            self.textEdit_gradTstart.setDisabled(True)
-#            self.textEdit_TR.setDisabled(True)
-#            self.textEdit_rfTend.setDisabled(True)
+            self.textEdit_gradTstart.setDisabled(True)
+            self.textEdit_TR.setDisabled(True)
+            self.textEdit_rfTend.setDisabled(True)
             self.textEdit_rfTstart.setPlainText("100")  # us
             self.textEdit_rxPeriod.setPlainText("3")  # us
-#            self.textEdit_rxTstart.setDisabled(True)
-#            self.textEdit_rxTend.setDisabled(True)       
+            self.textEdit_rxTstart.setDisabled(True)
+            self.textEdit_rxTend.setDisabled(True)       
+            self.textEdit_txGpre.setDisabled(False)
             self.textEdit_txGpre.setPlainText("2")  # us, time to start the TX gate before the RF pulse begins
+            self.textEdit_txGpost.setDisabled(False)
             self.textEdit_txGpost.setPlainText("1")  # us, time to keep the TX gate on after the RF pulse ends
+            self.textEdit_sliceAmp.setDisabled(False)
             self.textEdit_sliceAmp.setPlainText("0.4") # 1 = gradient full-scale
+            self.textEdit_phAmp.setDisabled(False)
             self.textEdit_phAmp.setPlainText("0.3") # 1 = gradient full-scale
+            self.textEdit_rdAmp.setDisabled(False)
             self.textEdit_rdAmp.setPlainText("0.8") # 1 = gradient full-scale
-            self.textEdit_rfDur.setPlainText("50") 
+            self.textEdit_rfDur.setDisabled(False)
+            self.textEdit_rfDur.setPlainText("50")
+            self.textEdit_trapRampDur.setDisabled(False) 
             self.textEdit_trapRampDur.setPlainText("50")  # us, ramp-up/down time
+            self.textEdit_phDelay.setDisabled(False)
             self.textEdit_phDelay.setPlainText("100") # how long after RF end before starting phase ramp-up
+            self.textEdit_phDur.setDisabled(False)
             self.textEdit_phDur.setPlainText("200") # length of phase plateau
  
         
@@ -155,24 +164,30 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
              ## All times are relative to a single TR, starting at time 0
             self.lineEdit_loFreq.setText("0.2")  # MHz 
             self.textEdit_rfAmp.setPlainText("0.2")  # 1 = full-scale
+            self.textEdit_Gamp.setDisabled(False)
             self.textEdit_Gamp.setPlainText("0.5")  # Gx = G cos (t), Gy = G sin (t)
             self.textEdit_trs.setPlainText("36")
+            self.textEdit_gradTstart.setDisabled(False)
             self.textEdit_gradTstart.setPlainText("0")  # us
+            self.textEdit_TR.setDisabled(False)
             self.textEdit_TR.setPlainText("220")  # start-finish TR time
             self.textEdit_rfTstart.setPlainText("5")  # us
+            self.textEdit_rfTend.setDisabled(False)
             self.textEdit_rfTend.setPlainText("50")  # us
+            self.textEdit_rxTstart.setDisabled(False)
             self.textEdit_rxTstart.setPlainText("70")  # us
+            self.textEdit_rxTend.setDisabled(False) 
             self.textEdit_rxTend.setPlainText("180")  # us
             self.textEdit_rxPeriod.setPlainText("3")  # us
             self.textEdit_txGpre.setPlainText("2")  # us, time to start the TX gate before the RF pulse begins
             self.textEdit_txGpost.setPlainText("1")  # us, time to keep the TX gate on after the RF pulse ends
-#            self.textEdit_sliceAmp.setDisabled(True)
-#            self.textEdit_phAmp.setDisabled(True)
-#            self.textEdit_rdAmp.setDisabled(True)        
-#            self.textEdit_rfDur.setDisabled(True)          
-#            self.textEdit_trapRampDur.setDisabled(True)  
-#            self.textEdit_phDelay.setDisabled(True)  
-#            self.textEdit_phDur.setDisabled(True)            
+            self.textEdit_sliceAmp.setDisabled(True)
+            self.textEdit_phAmp.setDisabled(True)
+            self.textEdit_rdAmp.setDisabled(True)        
+            self.textEdit_rfDur.setDisabled(True)          
+            self.textEdit_trapRampDur.setDisabled(True)  
+            self.textEdit_phDelay.setDisabled(True)  
+            self.textEdit_phDur.setDisabled(True)            
     
     def plot_data(self):
         
