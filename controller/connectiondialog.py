@@ -15,7 +15,7 @@ Connection Dialog
 from PyQt5.QtCore import QRegExp, pyqtSlot
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.uic import loadUiType
-from server.communicationmanager import Com
+#from server.communicationmanager import Com
 import paramiko
 
 ConnectionDialog_Form, ConnectionDialog_Base = loadUiType('ui/connDialog.ui')
