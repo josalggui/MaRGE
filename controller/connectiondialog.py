@@ -29,7 +29,7 @@ class ConnectionDialog(ConnectionDialog_Base, ConnectionDialog_Form):
         self.setupUi(self)
         self.parent = parent
 
-        Com.onStatusChanged.connect(self.setConnectionStatusSlot)
+#        Com.onStatusChanged.connect(self.setConnectionStatusSlot)
 
         # connect interface signals
 #        self.button_connectToServer.clicked.connect(self.connectClientToServer)
@@ -46,43 +46,43 @@ class ConnectionDialog(ConnectionDialog_Base, ConnectionDialog_Form):
         # for item in params.hosts: self.ip_box.addItem(item)
         print("connection dialog ready")
 
-    def connectClientToServer(self):
-        ip = self.ip_box.currentText()
-        Com.connectClient(ip)
-
-    def addNewServerAddress(self):
-        # TODO: Global list with ip's
-        ip = self.ip_box.currentText()
-        """
-        if not ip in params.hosts:
-            self.ip_box.addItem(ip)
-        else: return
-        params.hosts = [self.ip_box.itemText(i) for i in range(self.ip_box.count())]
-        """
-        print(ip)
-
-    def removeServerAddress(self):
-        # TODO: Global list with ip's
-        idx = self.ip_box.currentIndex()
-        print(idx)
-
-    @pyqtSlot(str)
-    def setConnectionStatusSlot(self, status: str = None) -> None:
-        """
-        Set the connection status
-        @param status:  Server connection status
-        @return:        None
-        """
-        self.status_label.setText(status)
-        self.parent.status_connection.setText(status)
-        print(status)
-
-        if status == "Connected":
-            self.button_disconnectFromServer.setEnabled(True)
-            self.button_connectToServer.setEnabled(False)
-        elif status == "Unconnected":
-            self.button_disconnectFromServer.setEnabled(False)
-            self.button_connectToServer.setEnabled(True)
-        else:
-            self.button_disconnectFromServer.setEnabled(True)
-            self.button_connectToServer.setEnabled(True)
+#    def connectClientToServer(self):
+#        ip = self.ip_box.currentText()
+#        Com.connectClient(ip)
+#
+#    def addNewServerAddress(self):
+#        # TODO: Global list with ip's
+#        ip = self.ip_box.currentText()
+#        """
+#        if not ip in params.hosts:
+#            self.ip_box.addItem(ip)
+#        else: return
+#        params.hosts = [self.ip_box.itemText(i) for i in range(self.ip_box.count())]
+#        """
+#        print(ip)
+#
+#    def removeServerAddress(self):
+#        # TODO: Global list with ip's
+#        idx = self.ip_box.currentIndex()
+#        print(idx)
+#
+#    @pyqtSlot(str)
+#    def setConnectionStatusSlot(self, status: str = None) -> None:
+#        """
+#        Set the connection status
+#        @param status:  Server connection status
+#        @return:        None
+#        """
+#        self.status_label.setText(status)
+#        self.parent.status_connection.setText(status)
+#        print(status)
+#
+#        if status == "Connected":
+#            self.button_disconnectFromServer.setEnabled(True)
+#            self.button_connectToServer.setEnabled(False)
+#        elif status == "Unconnected":
+#            self.button_disconnectFromServer.setEnabled(False)
+#            self.button_connectToServer.setEnabled(True)
+#        else:
+#            self.button_disconnectFromServer.setEnabled(True)
+#            self.button_connectToServer.setEnabled(True)

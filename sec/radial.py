@@ -10,24 +10,27 @@ st = pdb.set_trace
 
 def radial(self):
   
+    tx_gate_pre = 2 # us, time to start the TX gate before each RF pulse begins
+    tx_gate_post = 1 # us, time to keep the TX gate on after an RF pulse ends
     angles = np.linspace(0, 2*np.pi, self.trs) # angle
 
     def radial_tr(tstart, th):
-        dbg_sc=0.5
+
         gx = self.G * np.cos(th)
         gy = self.G * np.sin(th)
+
         value_dict = {
             # second tx0 pulse and tx1 pulse purely for loopback debugging
             'tx0': ( np.array([self.rf_tstart, self.rf_tend,    self.rx_tstart + 15, self.rx_tend - 15]),
-                     np.array([self.rf_amp, 0,    dbg_sc * (gx+gy*1j), 0]) ),
-            'tx1': ( np.array([self.rx_tstart + 15, self.rx_tend - 15]), np.array([dbg_sc * (gx+gy*1j), 0]) ),
+                     np.array([self.rf_amp, 0,    self.dbg_sc * (gx+gy*1j), 0]) ),
+            'tx1': ( np.array([self.rx_tstart + 15, self.rx_tend - 15]), np.array([self.dbg_sc * (gx+gy*1j), 0]) ),
             'grad_vz': ( np.array([self.grad_tstart]),
                          np.array([gx]) ),
             'grad_vy': ( np.array([self.grad_tstart]),
                          np.array([gy]) ),
             'rx0_en' : ( np.array([self.rx_tstart, self.rx_tend]),
                             np.array([1, 0]) ),
-            'tx_gate' : ( np.array([self.rf_tstart - self.tx_gate_pre, self.rf_tend + self.tx_gate_post]),
+            'tx_gate' : ( np.array([self.rf_tstart - tx_gate_pre, self.rf_tend + tx_gate_post]),
                           np.array([1, 0]) )
             }
 

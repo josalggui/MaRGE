@@ -8,17 +8,19 @@ Main View Controller
 
 """
 
-#from PyQt5.QtCore import QFile, QTextStream
+from PyQt5.QtCore import QFile, QTextStream
 #from PyQt5.QtWidgets import QPushButton,  QComboBox,  QGraphicsView
 from PyQt5.uic import loadUiType, loadUi
-#from PyQt5.QtCore import pyqtSignal, pyqtSlot
+from PyQt5.QtCore import pyqtSlot
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas)
 import matplotlib.pyplot as plt
 
+from globalvars import StyleSheets as style
 from controller.connectiondialog import ConnectionDialog
 from sec.radial import radial
 from sec.gradEcho import grad_echo
+from sec.turboSpinEcho import turbo_spin_echo
 
 #from server.communicationmanager import Com
 
@@ -41,20 +43,51 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Set figures        
         self.fig1 = plt.figure()
         self.ax1f1 = self.fig1.add_subplot(111)
-        self.ax1f1.set_title('K space')
+        self.ax1f1.set_title('Real')
         self.canvas1 = FigureCanvas(self.fig1)
         self.verticalLayout1.addWidget(self.canvas1)
         
         self.fig2 = plt.figure()
         self.ax1f2 = self.fig2.add_subplot(111)
-        self.ax1f2.set_title('Image space')
+        self.ax1f2.set_title('Imag')
         self.canvas2 = FigureCanvas(self.fig2)
         self.verticalLayout2.addWidget(self.canvas2)
         
         # Widgets actions
-        self.PushButton_connect.clicked.connect(self.marcos_server)
         self.comboBox_seq.activated[str].connect(self.onActivated)
-        self.PushButton_run.clicked.connect(self.run)
+       
+        # Toolbar Actions
+        self.action_connect.triggered.connect(self.marcos_server)
+        self.action_changeappearance.triggered.connect(self.changeAppearanceSlot)
+        self.action_acquire.triggered.connect(self.run)
+        self.action_close.triggered.connect(self.close)
+        
+    def close(self):
+        quit()
+        
+    @pyqtSlot(bool)
+    def changeAppearanceSlot(self) -> None:
+        """
+        Slot function to switch application appearance
+        @return:
+        """
+        if self.styleSheet is style.breezeDark:
+            self.setupStylesheet(style.breezeLight)
+        else:
+            self.setupStylesheet(style.breezeDark)
+       
+    def setupStylesheet(self, style) -> None:
+        """
+        Setup application stylesheet
+        @param style:   Stylesheet to be set
+        @return:        None
+        """
+        self.styleSheet = style
+        file = QFile(style)
+        file.open(QFile.ReadOnly | QFile.Text)
+        stream = QTextStream(file)
+        stylesheet = stream.readAll()
+        self.setStyleSheet(stylesheet)  
        
     def marcos_server(self):
         self.con = ConnectionDialog(self)
@@ -62,8 +95,35 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
     def run(self):
         content = self.comboBox_seq.currentText()
-        #if content == 'Turbo Spin Echo':
+        if content == 'Turbo Spin Echo':
             
+            # Retrieve values from GUI
+            self.lo_freq = float(self.lineEdit_loFreq.text())
+            self.rf_amp = float(self.textEdit_rfAmp.toPlainText())
+            self.trs = int(self.textEdit_trs.toPlainText())
+            self.rx_period = float(self.textEdit_rxPeriod.toPlainText())   
+            self.trap_ramp_duration = int(self.textEdit_trapRampDur.toPlainText())       
+            self.echos_per_tr=int(self.textEdit_echosTR.toPlainText())
+            self.echo_duration=int(self.textEdit_echosDur.toPlainText())           
+            self.readout_amp = float(self.textEdit_rdAmp.toPlainText()) 
+            self.rf_pi2_duration=int(self.textEdit_rfDur.toPlainText())
+            self.phase_grad_duration = int(self.textEdit_phDur.toPlainText())             
+            self.phase_start_amp=float(self.textEdit_phAmp.toPlainText())   
+            self.readout_duration=int(self.textEdit_readOutDur.toPlainText())
+            self.slice_start_amp= float(self.textEdit_sliceAmp.toPlainText())                
+            self.phase_grad_interval=int(self.textEdit_phGint.toPlainText())
+            self.tr_pause_duration=int(self.textEdit_TrPauseDur.toPlainText())
+            self.readout_grad_duration=int(self.textEdit_readoutGradDur.toPlainText())
+
+            self.dbg_sc=0, # set to 0 to avoid RF debugging pulses in each RX window, otherwise amp between 0 or 1
+            self.plot_rx = True
+            self.init_gpa = True
+            self.rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
+            self.rxd1, self.rxd2 = turbo_spin_echo(self)
+
+            if self.plot_rx == True:
+                self.plot_data()
+    
         if content == 'Gradient Echo':
             
             # Retrieve values from GUI
@@ -71,9 +131,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.rf_amp = float(self.textEdit_rfAmp.toPlainText())
             self.trs = int(self.textEdit_trs.toPlainText())
             self.rf_tstart = int(self.textEdit_rfTstart.toPlainText())
-            self.rx_period = int(self.textEdit_rxPeriod.toPlainText())
-            self.tx_gate_pre = int(self.textEdit_txGpre.toPlainText())
-            self.tx_gate_post = int(self.textEdit_txGpost.toPlainText())            
+            self.rx_period = float(self.textEdit_rxPeriod.toPlainText())
             self.slice_amp = float(self.textEdit_sliceAmp.toPlainText())       
             self.phase_amp = float(self.textEdit_phAmp.toPlainText())     
             self.readout_amp = float(self.textEdit_rdAmp.toPlainText()) 
@@ -82,9 +140,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.phase_delay = int(self.textEdit_phDelay.toPlainText()) 
             self.phase_duration = int(self.textEdit_phDur.toPlainText()) 
 
-            self.dbg_sc = 1
+            self.dbg_sc = 0.5
             self.plot_rx = True
-            self.init_gpa = False
+            self.init_gpa = True
             self.rxd1, self.rxd2 = grad_echo(self)   
          
             if self.plot_rx == True:
@@ -103,12 +161,11 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.rf_tend = int(self.textEdit_rfTend.toPlainText())
             self.rx_tstart = int(self.textEdit_rxTstart.toPlainText())
             self.rx_tend = int(self.textEdit_rxTend.toPlainText())
-            self.rx_period = int(self.textEdit_rxPeriod.toPlainText())
-            self.tx_gate_pre = int(self.textEdit_txGpre.toPlainText())
-            self.tx_gate_post = int(self.textEdit_txGpost.toPlainText())
+            self.rx_period = float(self.textEdit_rxPeriod.toPlainText())
             
+            self.dbg_sc=0.5
             self.plot_rx = True
-            self.init_gpa = False
+            self.init_gpa = True
             self.rxd1, self.rxd2 = radial(self)
         
             if self.plot_rx == True:
@@ -124,25 +181,61 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def onActivated(self, text):
         
         if text == 'Turbo Spin Echo':
-            self.listWidget_seq.insertItem(0, text)
+            
+                   
+            #self.listWidget_seq.insertItem(0, text)
+            self.lineEdit_loFreq.setText("0.2")  # MHz 
+            self.textEdit_rfAmp.setPlainText("1")  # 1 = full-scale
+            self.textEdit_trs.setPlainText("5")      
+            self.textEdit_rxPeriod.setPlainText("3.333")  # us      
+            self.textEdit_Gamp.setDisabled(True)            
+            self.textEdit_trapRampDur.setDisabled(False) 
+            self.textEdit_trapRampDur.setPlainText("50")  # us, ramp-up/down time
+            self.textEdit_echosTR.setDisabled(False)
+            self.textEdit_echosTR.setPlainText("5")    # number of spin echoes (180 pulses followed by readouts) to do
+            self.textEdit_echosDur.setDisabled(False)
+            self.textEdit_echosDur.setPlainText("2000")    # us, time from the centre of one echo to centre of the next          
+            self.textEdit_rdAmp.setDisabled(False)
+            self.textEdit_rdAmp.setPlainText("0.8") # 1 = gradient full-scale
+            self.textEdit_rfDur.setDisabled(False)
+            self.textEdit_rfDur.setPlainText("50")               
+            self.textEdit_phDelay.setDisabled(True)
+            self.textEdit_phDur.setDisabled(False)
+            self.textEdit_phDur.setPlainText("150") # us, phase trapezoid lengths (mid-ramp-up to mid-ramp-down)   
+            self.textEdit_phAmp.setDisabled(False)
+            self.textEdit_phAmp.setPlainText("0.6") # 1 = gradient full-scale            
+            self.textEdit_readOutDur.setDisabled(False)
+            self.textEdit_readOutDur.setPlainText("500")
+            self.textEdit_phGint.setDisabled(False)
+            self.textEdit_phGint.setPlainText("1200")   # us, interval between first phase trapezoid and its negative-sign counterpart within a single echo
+            self.textEdit_TrPauseDur.setDisabled(False)
+            self.textEdit_TrPauseDur.setPlainText("3000")
+            self.textEdit_readoutGradDur.setDisabled(False)
+            self.textEdit_readoutGradDur.setPlainText("700")
+            self.textEdit_sliceAmp.setDisabled(False)
+            self.textEdit_sliceAmp.setPlainText("0.3")  # 1 = gradient full-scale, starting amplitude (by default ramps from +ve to -ve in each TR)           
+            self.textEdit_gradTstart.setDisabled(True)
+            self.textEdit_TR.setDisabled(True)
+            self.textEdit_rfTend.setDisabled(True)
+            self.textEdit_rfTstart.setDisabled(True)
+            self.textEdit_rxTstart.setDisabled(True)
+            self.textEdit_rxTend.setDisabled(True)       
+            
             
         if text == 'Gradient Echo':
             
             self.lineEdit_loFreq.setText("0.1")  # MHz 
             self.textEdit_rfAmp.setPlainText("0.1")  # 1 = full-scale
-            self.textEdit_Gamp.setDisabled(True)            
-            self.textEdit_trs.setPlainText("2")
+            self.textEdit_trs.setPlainText("2")            
+            self.textEdit_rxPeriod.setPlainText("3.333")  # us
+            self.textEdit_Gamp.setDisabled(True)             
             self.textEdit_gradTstart.setDisabled(True)
             self.textEdit_TR.setDisabled(True)
             self.textEdit_rfTend.setDisabled(True)
+            self.textEdit_rfTstart.setDisabled(False)
             self.textEdit_rfTstart.setPlainText("100")  # us
-            self.textEdit_rxPeriod.setPlainText("3")  # us
             self.textEdit_rxTstart.setDisabled(True)
             self.textEdit_rxTend.setDisabled(True)       
-            self.textEdit_txGpre.setDisabled(False)
-            self.textEdit_txGpre.setPlainText("2")  # us, time to start the TX gate before the RF pulse begins
-            self.textEdit_txGpost.setDisabled(False)
-            self.textEdit_txGpost.setPlainText("1")  # us, time to keep the TX gate on after the RF pulse ends
             self.textEdit_sliceAmp.setDisabled(False)
             self.textEdit_sliceAmp.setPlainText("0.4") # 1 = gradient full-scale
             self.textEdit_phAmp.setDisabled(False)
@@ -157,8 +250,13 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.textEdit_phDelay.setPlainText("100") # how long after RF end before starting phase ramp-up
             self.textEdit_phDur.setDisabled(False)
             self.textEdit_phDur.setPlainText("200") # length of phase plateau
+            self.textEdit_echosTR.setDisabled(True)
+            self.textEdit_echosDur.setDisabled(True)
+            self.textEdit_readOutDur.setDisabled(True)
+            self.textEdit_phGint.setDisabled(True)
+            self.textEdit_TrPauseDur.setDisabled(True)
+            self.textEdit_readoutGradDur.setDisabled(True)
  
-        
         if text == 'Radial':
             # Default values
              ## All times are relative to a single TR, starting at time 0
@@ -178,9 +276,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.textEdit_rxTstart.setPlainText("70")  # us
             self.textEdit_rxTend.setDisabled(False) 
             self.textEdit_rxTend.setPlainText("180")  # us
-            self.textEdit_rxPeriod.setPlainText("3")  # us
-            self.textEdit_txGpre.setPlainText("2")  # us, time to start the TX gate before the RF pulse begins
-            self.textEdit_txGpost.setPlainText("1")  # us, time to keep the TX gate on after the RF pulse ends
+            self.textEdit_rxPeriod.setPlainText("3.333")  # us
             self.textEdit_sliceAmp.setDisabled(True)
             self.textEdit_phAmp.setDisabled(True)
             self.textEdit_rdAmp.setDisabled(True)        
@@ -188,7 +284,13 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.textEdit_trapRampDur.setDisabled(True)  
             self.textEdit_phDelay.setDisabled(True)  
             self.textEdit_phDur.setDisabled(True)            
-    
+            self.textEdit_echosTR.setDisabled(True)
+            self.textEdit_echosDur.setDisabled(True)
+            self.textEdit_readOutDur.setDisabled(True)
+            self.textEdit_phGint.setDisabled(True)
+            self.textEdit_TrPauseDur.setDisabled(True)
+            self.textEdit_readoutGradDur.setDisabled(True)
+            
     def plot_data(self):
         
         self.ax1f1.cla()

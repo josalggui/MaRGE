@@ -24,6 +24,23 @@ def trapezoid(plateau_a, total_t, ramp_t, ramp_pts, total_t_end_to_end=True, bas
     
 def grad_echo(self):
 
+#              trs=21, plot_rx=False, init_gpa=False,
+#              dbg_sc=0.5, # set to 0 to avoid 2nd RF debugging pulse, otherwise amp between 0 or 1
+#              lo_freq=0.1, # MHz
+#              rf_amp=1, # 1 = full-scale
+#
+#              slice_amp=0.4, # 1 = gradient full-scale
+#              phase_amp=0.3, # 1 = gradient full-scale
+#              readout_amp=0.8, # 1 = gradient full-scale
+#              rf_duration=50,
+#              trap_ramp_duration=50, # us, ramp-up/down time
+#              trap_ramp_pts=5, # how many points to subdivide ramp into
+#              phase_delay=100, # how long after RF end before starting phase ramp-up
+#              phase_duration=200, # length of phase plateau
+#              tr_wait=100, # delay after end of RX before start of next TR
+#
+#              rx_period=10/3 # us, 3.333us, 300 kHz rate
+
     ## All times are in the context of a single TR, starting at time 0
     tr_wait = 100
     trap_ramp_pts=5
@@ -41,8 +58,8 @@ def grad_echo(self):
     rx_tstart = readout_tstart + self.trap_ramp_duration # us
     rx_tend = readout_tstart + readout_duration - self.trap_ramp_duration # us
 
-#    tx_gate_pre = 2 # us, time to start the TX gate before the RF pulse begins
-#    tx_gate_post = 1 # us, time to keep the TX gate on after the RF pulse ends
+    tx_gate_pre = 2 # us, time to start the TX gate before the RF pulse begins
+    tx_gate_post = 1 # us, time to keep the TX gate on after the RF pulse ends
 
     tr_total_time = readout_tstart + readout_duration + tr_wait + 7000 # start-finish TR time
 
@@ -67,7 +84,7 @@ def grad_echo(self):
             'grad_vz': ( gvzt + tstart + readout_tstart, gvza),
             'rx0_en': ( np.array([rx_tstart, rx_tend]) + tstart, np.array([1, 0]) ),
             'rx1_en': ( np.array([rx_tstart, rx_tend]) + tstart, np.array([1, 0]) ), # acquire on RX1 for example too
-            'tx_gate': ( np.array([self.rf_tstart - self.tx_gate_pre, self.rf_tend + self.tx_gate_post]) + tstart, np.array([1, 0]) )
+            'tx_gate': ( np.array([self.rf_tstart - tx_gate_pre, self.rf_tend + tx_gate_post]) + tstart, np.array([1, 0]) )
         }
 
         return value_dict
