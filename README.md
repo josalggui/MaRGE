@@ -1,6 +1,6 @@
 # PhisioMRI_GUI
 
-- FirstMRI.py --> Execute the application.
+- FirstMRI.py --> Executes the application.
 
 - Folders and files:
 
