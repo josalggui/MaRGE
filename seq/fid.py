@@ -51,6 +51,8 @@ def fid(self):
 
     slice_tstart = self.rf_tstart - self.trap_ramp_duration
     slice_duration = (self.rf_tend - self.rf_tstart) + 2*self.trap_ramp_duration # includes rise, plateau and fall
+    
+    
     phase_tstart = self.rf_tend + self.phase_delay
     readout_tstart = phase_tstart
     readout_duration = self.phase_duration*2
@@ -63,7 +65,7 @@ def fid(self):
 
     tr_total_time = readout_tstart + readout_duration + tr_wait + 7000 # start-finish TR time
 
-    def grad_echo_tr(tstart, pamp):
+    def fid_tr(tstart, pamp):
         gvxt, gvxa = trapezoid(self.slice_amp, slice_duration, self.trap_ramp_duration, trap_ramp_pts)
         gvyt, gvya = trapezoid(pamp, self.phase_duration, self.trap_ramp_duration, trap_ramp_pts)
 
@@ -93,7 +95,7 @@ def fid(self):
 
     tr_t = 20 # start the first TR at 20us
     for pamp in phase_amps:
-        expt.add_flodict( grad_echo_tr( tr_t, pamp) )
+        expt.add_flodict( fid_tr( tr_t, pamp) )
         tr_t += tr_total_time
 
     rxd, msgs = expt.run()

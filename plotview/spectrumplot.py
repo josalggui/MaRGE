@@ -37,7 +37,9 @@ class SpectrumPlot (GraphicsLayoutWidget):
         plotitem = self.addPlot(row=0, col=0)
         plotitem.plot(xData, yData)
         plotitem.setTitle("%s" % dt_string)
-
+#        vb = plotitem.getViewBox()
+#        vb.setBackgroundColor('w')
+        
         print("x: {}, y: {}".format(xLabel, yLabel))
 
 

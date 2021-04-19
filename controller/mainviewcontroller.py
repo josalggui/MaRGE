@@ -7,13 +7,15 @@ Main View Controller
 @todo:
 
 """
-from PyQt5.QtWidgets import QListWidgetItem
+from PyQt5.QtWidgets import QListWidgetItem,  QMessageBox
 from PyQt5.QtCore import QFile, QTextStream
 from PyQt5.uic import loadUiType, loadUi
 from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5 import QtGui
 from controller.acquisitioncontroller import AcquisitionController
 from scipy.io import savemat
+import pyqtgraph.exporters
+import os
 from controller.sequencecontroller import SequenceList
 from controller.connectiondialog import ConnectionDialog
 from controller.outputparametercontroller import Output
@@ -55,6 +57,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_acquire.triggered.connect(acqCtrl.startAcquisition)
         self.action_close.triggered.connect(self.close)    
         self.action_savedata.triggered.connect(self.save_data)
+        self.action_exportfigure.triggered.connect(self.export_figure)
         
     def marcos_server(self):
         self.con = ConnectionDialog(self)
@@ -99,6 +102,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.sequence = item.text()
         self.onSequenceChanged.emit(self.sequence)
         self.action_acquire.setEnabled(True)
+        self.clearPlotviewLayout()
     
     def clearPlotviewLayout(self) -> None:
         """
@@ -121,16 +125,40 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         dict = vars(defaultsequences[self.sequence])
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H:%M")
-#        t =datetime.now()
-#        print(dt)
-#        dict["date"] = dt.strftime
-#        dict["time"] = t.strftime
+        dt2 = date.today()
+        dt2_string = dt2.strftime("%d-%m-%Y")
         dict["rawdata"] = self.rxd
         dict["fft"] = dataobject.f_fftData
+        if not os.path.exists('experiments/%s' % (dt2_string)):
+            os.makedirs('experiments/%s' % (dt2_string))
+            
+        if not os.path.exists('experiments/%s/%s' % (dt2_string, dt_string)):
+            os.makedirs('experiments/%s/%s' % (dt2_string, dt_string)) 
+            
+        savemat("experiments/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("Data saved")
+        msg.exec();
+
+    def export_figure(self):
         
-        savemat("experiments/%s.mat" % dt_string, dict)
-        
+        dt = datetime.now()
+        dt_string = dt.strftime("%d-%m-%Y_%H:%M")
+        dt2 = date.today()
+        dt2_string = dt2.strftime("%d-%m-%Y")
 
+        if not os.path.exists('experiments/%s' % (dt2_string)):
+            os.makedirs('experiments/%s' % (dt2_string))    
+        if not os.path.exists('experiments/%s/%s' % (dt2_string, dt_string)):
+            os.makedirs('experiments/%s/%s' % (dt2_string, dt_string)) 
+                    
+        exporter1 = pyqtgraph.exporters.ImageExporter(self.f_plotview.scene())
+        exporter1.export("experiments/%s/%s/Freq%s.png" % (dt2_string, dt_string, self.sequence))
+        exporter2 = pyqtgraph.exporters.ImageExporter(self.t_plotview.scene())
+        exporter2.export("experiments/%s/%s/Temp%s.png" % (dt2_string, dt_string, self.sequence))
 
-    
-
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("Figure saved")
+        msg.exec();
