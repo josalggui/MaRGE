@@ -199,7 +199,7 @@ def turbo_spin_echo(self):
 
     if self.plot_rx:
         
-        return rxd['rx0'].real, rxd['rx0'].imag
+        return rxd['rx0']
 #        plt.plot( rxd['rx0'].real )
 #        plt.plot( rxd['rx0'].imag )
 #        plt.plot( rxd['rx1'].real )

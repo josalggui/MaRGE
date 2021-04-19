@@ -2,8 +2,6 @@
 
 import numpy as np
 import experiment as ex
-import sys
-sys.path.append('../marcos_client')
 
 import pdb
 st = pdb.set_trace
@@ -51,6 +49,6 @@ def radial(self):
     # expt.close_server(True)
 
     if self.plot_rx:
-        return rxd['rx0'].real, rxd['rx0'].imag
+        return rxd['rx0']
 
         

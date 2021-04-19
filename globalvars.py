@@ -23,11 +23,10 @@ class Sequences:
     """
     Class with predefined sequences as sequence objects
     """
-    FID = SqncObject('Free Induction Decay', 'sequence/FID.txt')
-    SE = SqncObject('Spin Echo', 'sequence/SE_te.txt')
-    IR = SqncObject('Inversion Recovery', 'sequence/IR_ti.txt')
-    SIR = SqncObject('Saturation Inversion Recovery', 'sequence/SIR_ti.txt')
-    imgSE = SqncObject('Spin Echo for Imaging', 'sequence/img/2DSE.txt')
+    #FID = SqncObject('Free Induction Decay', 'sequence/FID.txt')
+    GE = SqncObject('Gradient Echo', 'seq/gradEcho.py')
+    R = SqncObject('Radial', 'seq/radial.py')
+    TSE = SqncObject('Turbo Spin Echo', 'seq/turboSpinEcho.py')
 
 
 class Gradients:
@@ -49,8 +48,8 @@ class ProjectionAxes:
 
 
 class StyleSheets:
-    breezeDark = "stylesheets/breeze-dark.qss"
-    breezeLight = "stylesheets/breeze-light.qss"
+    breezeDark = "view/stylesheets/breeze-dark.qss"
+    breezeLight = "view/stylesheets/breeze-light.qss"
 
 
 # Instances
