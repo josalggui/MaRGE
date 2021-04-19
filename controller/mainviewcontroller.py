@@ -7,13 +7,12 @@ Main View Controller
 @todo:
 
 """
-from PyQt5.QtWidgets import QListWidgetItem,  QMessageBox
-from PyQt5.QtCore import QFile, QTextStream
+from PyQt5.QtWidgets import QListWidgetItem,  QMessageBox,  QFileDialog
+from PyQt5.QtCore import QFile, QTextStream,  pyqtSignal, pyqtSlot
 from PyQt5.uic import loadUiType, loadUi
-from PyQt5.QtCore import pyqtSignal, pyqtSlot
 from PyQt5 import QtGui
 from controller.acquisitioncontroller import AcquisitionController
-from scipy.io import savemat
+from scipy.io import savemat, loadmat
 import pyqtgraph.exporters
 import os
 from controller.sequencecontroller import SequenceList
@@ -55,6 +54,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_connect.triggered.connect(self.marcos_server)
         self.action_changeappearance.triggered.connect(self.changeAppearanceSlot)
         self.action_acquire.triggered.connect(acqCtrl.startAcquisition)
+        self.action_loadparams.triggered.connect(self.load_parameters)
+        self.action_saveparams.triggered.connect(self.save_parameters)
         self.action_close.triggered.connect(self.close)    
         self.action_savedata.triggered.connect(self.save_data)
         self.action_exportfigure.triggered.connect(self.export_figure)
@@ -129,17 +130,15 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         dt2_string = dt2.strftime("%d-%m-%Y")
         dict["rawdata"] = self.rxd
         dict["fft"] = dataobject.f_fftData
-        if not os.path.exists('experiments/%s' % (dt2_string)):
-            os.makedirs('experiments/%s' % (dt2_string))
+        if not os.path.exists('experiments/acquisitions/%s' % (dt2_string)):
+            os.makedirs('experiments/acquisitions/%s' % (dt2_string))
             
-        if not os.path.exists('experiments/%s/%s' % (dt2_string, dt_string)):
-            os.makedirs('experiments/%s/%s' % (dt2_string, dt_string)) 
+        if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
+            os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
             
-        savemat("experiments/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setText("Data saved")
-        msg.exec();
+        savemat("experiments/acquisitions/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
+        
+        self.messages("Data saved")
 
     def export_figure(self):
         
@@ -148,17 +147,40 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         dt2 = date.today()
         dt2_string = dt2.strftime("%d-%m-%Y")
 
-        if not os.path.exists('experiments/%s' % (dt2_string)):
-            os.makedirs('experiments/%s' % (dt2_string))    
-        if not os.path.exists('experiments/%s/%s' % (dt2_string, dt_string)):
-            os.makedirs('experiments/%s/%s' % (dt2_string, dt_string)) 
+        if not os.path.exists('experiments/acquisitions/%s' % (dt2_string)):
+            os.makedirs('experiments/acquisitions/%s' % (dt2_string))    
+        if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
+            os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
                     
         exporter1 = pyqtgraph.exporters.ImageExporter(self.f_plotview.scene())
-        exporter1.export("experiments/%s/%s/Freq%s.png" % (dt2_string, dt_string, self.sequence))
+        exporter1.export("experiments/acquisitions/%s/%s/Freq%s.png" % (dt2_string, dt_string, self.sequence))
         exporter2 = pyqtgraph.exporters.ImageExporter(self.t_plotview.scene())
-        exporter2.export("experiments/%s/%s/Temp%s.png" % (dt2_string, dt_string, self.sequence))
+        exporter2.export("experiments/acquisitions/%s/%s/Temp%s.png" % (dt2_string, dt_string, self.sequence))
+        
+        self.messages("Figures saved")
 
+    def load_parameters(self):
+    
+        self.clearPlotviewLayout()
+        file_name, _ = QFileDialog.getOpenFileName(self, 'Open Parameters File', "experiments/parameterisations/")
+        
+        if file_name:
+            dict = loadmat(file_name)
+            for key in dict:
+                setattr(defaultsequences[self.sequence], key, dict[key])
+            self.messages("Parameters of %s sequence loaded" %(self.sequence))
+
+
+    def save_parameters(self):
+        
+        self.clearPlotviewLayout()
+        dict = vars(defaultsequences[self.sequence])  
+        savemat("experiments/parameterisations/%s_params.mat" % (self.sequence), dict)
+        self.messages("Parameters of %s sequence saved" %(self.sequence))
+        
+    def messages(self, text):
+        
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Information)
-        msg.setText("Figure saved")
+        msg.setText(text)
         msg.exec();

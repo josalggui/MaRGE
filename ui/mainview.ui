@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
+    <width>1126</width>
     <height>800</height>
    </rect>
   </property>
@@ -331,7 +331,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1200</width>
+     <width>1126</width>
      <height>27</height>
     </rect>
    </property>
@@ -359,9 +359,9 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_gpacontroller"/>
+   <addaction name="action_loadparams"/>
    <addaction name="separator"/>
-   <addaction name="action_focusfrequency"/>
+   <addaction name="action_saveparams"/>
    <addaction name="action_changeappearance"/>
    <addaction name="action_close"/>
   </widget>
@@ -438,28 +438,28 @@
     <string>Change Window Appearance</string>
    </property>
   </action>
-  <action name="action_gpacontroller">
+  <action name="action_loadparams">
    <property name="icon">
     <iconset>
      <normaloff>../resources/icons/waves.svg</normaloff>../resources/icons/waves.svg</iconset>
    </property>
    <property name="text">
-    <string>GPA Controller</string>
+    <string>Load sequence parameterisation</string>
    </property>
    <property name="toolTip">
-    <string>Open GPA Waveform observer</string>
+    <string>Load parameters of a sequence from files </string>
    </property>
   </action>
-  <action name="action_focusfrequency">
+  <action name="action_saveparams">
    <property name="icon">
     <iconset>
      <normaloff>../resources/icons/arrow-minimise.svg</normaloff>../resources/icons/arrow-minimise.svg</iconset>
    </property>
    <property name="text">
-    <string>Focus Frequency</string>
+    <string>Save Parameters</string>
    </property>
    <property name="toolTip">
-    <string>Focus Actual Larmor Frequency</string>
+    <string>Save the parameters of a sequence in a file</string>
    </property>
   </action>
   <action name="action_savedata">
