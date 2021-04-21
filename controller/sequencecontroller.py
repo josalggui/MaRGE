@@ -89,6 +89,8 @@ class SequenceList(QListWidget):
     def generateWidgetsFromDict(obj: dict = None, sequence: str = None) -> list:
         widgetlist: list = []
         for key in obj:
+            print(key)
+            print(obj[key])
             widget = SequenceParameter(key, obj[key], sequence)
             widgetlist.append(widget)
         return widgetlist
@@ -127,7 +129,7 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
         self.parameter = parameter
         self.label_name.setText(name)
         self.input_value.setText(str(parameter[0]))
-
+        print("{}: {}".format(self.label_name.text(), self.input_value.text()))
         # TODO: Setup validator to numbers only (float)
         
         # Connect text changed signal to getValue function
@@ -141,18 +143,14 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
             lab = 'nmspc.%s' %(item)
             res=eval(lab)
             if (res == self.label_name.text()):
-                it = item
-
-        t = type(getattr(defaultsequences[self.sequence], it))
+                t = type(getattr(defaultsequences[self.sequence], item))        
+                if (t is float): 
+                    value: float = float(self.input_value.text())
+                elif (t is int): 
+                    value: int = int(self.input_value.text())
         
-        if (t is float): 
-            value: float = float(self.input_value.text())
-        elif (t is int): 
-            value: int = int(self.input_value.text())
+                setattr(defaultsequences[self.sequence], item, value)
         
-        setattr(defaultsequences[self.sequence], it, value)
-      
-        
-        
-    def set_value(self, value: int) -> None:
-        self.input_value.setText(str(value))
+    def set_value(self, value: str) -> None:
+        print("{}: {}".format(self.label_name.text(), self.input_value.text()))
+        self.input_value.setText(value)

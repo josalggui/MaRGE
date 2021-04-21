@@ -347,6 +347,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="action_connect"/>
+   <addaction name="action_calibration"/>
    <addaction name="action_acquire"/>
   </widget>
   <widget class="QToolBar" name="AcquisitionControlToolbar">
@@ -360,8 +361,9 @@
     <bool>false</bool>
    </attribute>
    <addaction name="action_loadparams"/>
-   <addaction name="separator"/>
    <addaction name="action_saveparams"/>
+   <addaction name="action_viewsequence"/>
+   <addaction name="separator"/>
    <addaction name="action_changeappearance"/>
    <addaction name="action_close"/>
   </widget>
@@ -484,6 +486,27 @@
    </property>
    <property name="toolTip">
     <string>Export the Figure of the Acquired Signal</string>
+   </property>
+  </action>
+  <action name="action_viewsequence">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/chart-bar-outline.svg</normaloff>../resources/icons/chart-bar-outline.svg</iconset>
+   </property>
+   <property name="text">
+    <string>action_viewsequence</string>
+   </property>
+   <property name="toolTip">
+    <string>View the defined sequence</string>
+   </property>
+  </action>
+  <action name="action_calibration">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/compass.svg</normaloff>../resources/icons/compass.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Calibration of the system</string>
    </property>
   </action>
  </widget>

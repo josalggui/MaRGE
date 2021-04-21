@@ -15,8 +15,10 @@ from controller.acquisitioncontroller import AcquisitionController
 from scipy.io import savemat, loadmat
 import pyqtgraph.exporters
 import os
-from controller.sequencecontroller import SequenceList
+import ast
+from controller.sequencecontroller import SequenceList,  SequenceParameter
 from controller.connectiondialog import ConnectionDialog
+from plotview.sequenceViewer import SequenceViewer
 from controller.outputparametercontroller import Output
 from sequencemodes import defaultsequences
 from manager.datamanager import DataManager
@@ -40,15 +42,15 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.setupStylesheet(self.styleSheet)
 
         # Initialisation of sequence list
-        sequencelist = SequenceList(self)
-        sequencelist.itemClicked.connect(self.sequenceChangedSlot)
-        self.layout_operations.addWidget(sequencelist)
+        self.sequencelist = SequenceList(self)
+        self.sequencelist.itemClicked.connect(self.sequenceChangedSlot)
+        self.layout_operations.addWidget(self.sequencelist)
 
         # Initialisation of output section
         outputsection = Output(self)
         
         # Initialisation of acquisition controller
-        acqCtrl = AcquisitionController(self, outputsection, sequencelist)
+        acqCtrl = AcquisitionController(self, outputsection, self.sequencelist)
         
         # Toolbar Actions
         self.action_connect.triggered.connect(self.marcos_server)
@@ -59,6 +61,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_close.triggered.connect(self.close)    
         self.action_savedata.triggered.connect(self.save_data)
         self.action_exportfigure.triggered.connect(self.export_figure)
+        self.action_viewsequence.triggered.connect(self.represent_sequence)
         
     def marcos_server(self):
         self.con = ConnectionDialog(self)
@@ -165,18 +168,46 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         file_name, _ = QFileDialog.getOpenFileName(self, 'Open Parameters File', "experiments/parameterisations/")
         
         if file_name:
-            dict = loadmat(file_name)
-            for key in dict:
-                setattr(defaultsequences[self.sequence], key, dict[key])
+            f = open(file_name,"r")
+            contents=f.read()
+            new_dict=ast. literal_eval(contents)
+            f.close()
+
+            #dict = loadmat(file_name)
+#            dict = 
+#            del dict['__globals__']
+#            del dict['__version__']
+#            del dict['__header__']      
+#            del dict['plot_rx']
+#            del dict['init_gpa']
+
+#            setattr(defaultsequences[self.sequence], 'seq', dict['seq'])
+     
+            del new_dict['seq']
+            for key in new_dict:
+                SequenceParameter(key,[new_dict[key]] , self.sequence)
+                setattr(defaultsequences[self.sequence], key, str([new_dict[key]])) 
+
             self.messages("Parameters of %s sequence loaded" %(self.sequence))
 
 
     def save_parameters(self):
         
-        self.clearPlotviewLayout()
-        dict = vars(defaultsequences[self.sequence])  
-        savemat("experiments/parameterisations/%s_params.mat" % (self.sequence), dict)
+        dt = datetime.now()
+        dt_string = dt.strftime("%d-%m-%Y_%H:%M")
+        dict = vars(defaultsequences[self.sequence]) 
+    
+        f = open("experiments/parameterisations/%s_params_%s.txt" % (self.sequence, dt_string),"w")
+        f.write( str(dict) )
+        f.close()
+  
+        #savemat("experiments/parameterisations/%s_params_%s.mat" % (self.sequence, dt_string), dict)
         self.messages("Parameters of %s sequence saved" %(self.sequence))
+        
+    def represent_sequence(self):
+        self.seqViewer = SequenceViewer(self,  self.sequencelist).representSequence()
+        self.seqViewer.show()
+        
         
     def messages(self, text):
         

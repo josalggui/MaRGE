@@ -53,7 +53,7 @@ class ConnectionDialog(ConnectionDialog_Base, ConnectionDialog_Form):
         
         router_ip = self.ip_box.currentText()
         
-#        subprocess.Popen('../marcos_extras/marcos_setup.sh %s %s' % (str(router_ip),'rp-122',), shell=True)
+        subprocess.Popen('../marcos_extras/marcos_setup.sh %s %s' % (str(router_ip),'rp-122',), shell=True)
 #        time.sleep(60)
 #        command1 = "killall marcos_server"
 #        subprocess.Popen(["ssh", "root@%s" % str(router_ip), command1],
@@ -61,20 +61,20 @@ class ConnectionDialog(ConnectionDialog_Base, ConnectionDialog_Form):
 #                        stdout=subprocess.PIPE,
 #                        stderr=subprocess.PIPE)
 #        
-#        # Connect to the server        
-#        command2 = "nohup ~/marcos_server &"
-#        ssh = subprocess.Popen(["ssh", "root@%s" % str(router_ip), command2],
-#                        shell=False,
-#                        stdout=subprocess.PIPE,
-#                        stderr=subprocess.PIPE)
-#        result = ssh.stdout.readlines()
-#        if result == []:
-#            error = ssh.stderr.readlines()
-#            print(error)
-#        else:
-#            self.setConnectionStatusSlot("Marcos server is running")
-#            print(result)
-#            self.close()
+        # Connect to the server        
+        command2 = "nohup ~/marcos_server &"
+        ssh = subprocess.Popen(["ssh", "root@%s" % str(router_ip), command2],
+                        shell=False,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+        result = ssh.stdout.readlines()
+        if result == []:
+            error = ssh.stderr.readlines()
+            print(error)
+        else:
+            self.setConnectionStatusSlot("Marcos server is running")
+            print(result)
+            self.close()
 
     def addNewServerAddress(self):
         # TODO: Global list with ip's
