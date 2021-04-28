@@ -2,6 +2,7 @@
 
 import numpy as np
 import experiment as ex
+from local_config import ip_address, fpga_clk_freq_MHz, grad_board
 
 import pdb
 st = pdb.set_trace
@@ -22,7 +23,7 @@ def trapezoid(plateau_a, total_t, ramp_t, ramp_pts, total_t_end_to_end=True, bas
     a = np.hstack([rise_ramp, np.flip(rise_ramp)[1:]])
     return t, a
     
-def grad_echo(self):
+def grad_echo(self, plot_rx=False, init_gpa=False):
 
 #              trs=21, plot_rx=False, init_gpa=False,
 #              dbg_sc=0.5, # set to 0 to avoid 2nd RF debugging pulse, otherwise amp between 0 or 1
@@ -89,7 +90,11 @@ def grad_echo(self):
 
         return value_dict
 
-    expt = ex.Experiment(lo_freq=self.lo_freq, rx_t=self.rx_period, init_gpa=self.init_gpa)
+    expt = ex.Experiment(lo_freq=self.lo_freq, rx_t=self.rx_period, init_gpa=self.init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+    # gpa_fhdo_offset_time in microseconds; offset between channels to
+    # avoid parallel updates (default update rate is 0.2 Msps, so
+    # 1/0.2 = 5us, 5 / 3.1 gives the offset between channels; extra
+    # 0.1 for a safety margin)
 
     tr_t = 20 # start the first TR at 20us
     for pamp in phase_amps:
@@ -97,7 +102,7 @@ def grad_echo(self):
         tr_t += tr_total_time
 
     rxd, msgs = expt.run()
-    expt.close_server(True)
+#    expt.close_server(True)
 
     if self.plot_rx:
         

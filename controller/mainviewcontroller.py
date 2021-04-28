@@ -7,23 +7,32 @@ Main View Controller
 @todo:
 
 """
-from PyQt5.QtWidgets import QListWidgetItem,  QMessageBox,  QFileDialog
+from PyQt5.QtWidgets import QListWidgetItem,  QMessageBox,  QFileDialog,  QTextEdit
 from PyQt5.QtCore import QFile, QTextStream,  pyqtSignal, pyqtSlot
 from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
 from controller.acquisitioncontroller import AcquisitionController
-from scipy.io import savemat, loadmat
 import pyqtgraph.exporters
 import os
 import ast
+import sys
+from sequencesnamespace import Namespace as nmspc
+from scipy.io import savemat
 from controller.sequencecontroller import SequenceList,  SequenceParameter
-from controller.connectiondialog import ConnectionDialog
 from plotview.sequenceViewer import SequenceViewer
-from controller.outputparametercontroller import Output
 from sequencemodes import defaultsequences
 from manager.datamanager import DataManager
 from datetime import date,  datetime 
 from globalvars import StyleSheets as style
+from stream import EmittingStream
+sys.path.append('../marcos_client')
+from local_config import ip_address
+
+from controller.connectiondialog import ServerConnection
+import cgitb 
+cgitb.enable(format = 'text')
+import pdb
+st = pdb.set_trace
 
 MainWindow_Form, MainWindow_Base = loadUiType('ui/mainview.ui')
 
@@ -33,27 +42,34 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     MainViewController Class
     """
     onSequenceChanged = pyqtSignal(str)
-
+    
     def __init__(self):
         super(MainViewController, self).__init__()
         self.ui = loadUi('ui/mainview.ui')
         self.setupUi(self)
         self.styleSheet = style.breezeLight
         self.setupStylesheet(self.styleSheet)
-
+  
         # Initialisation of sequence list
         self.sequencelist = SequenceList(self)
         self.sequencelist.itemClicked.connect(self.sequenceChangedSlot)
         self.layout_operations.addWidget(self.sequencelist)
-
-        # Initialisation of output section
-        outputsection = Output(self)
+        
+        # Console
+        self.cons = self.generateConsole('')
+        self.layout_output.addWidget(self.cons)
+#        sys.stdout = EmittingStream(textWritten=self.onUpdateText)
+#        sys.stderr = EmittingStream(textWritten=self.onUpdateText)        
         
         # Initialisation of acquisition controller
-        acqCtrl = AcquisitionController(self, outputsection, self.sequencelist)
+        acqCtrl = AcquisitionController(self, self.sequencelist)
+        
+        # Connection to the server
+        self.ip = ip_address
+        
+#        ServerConnection.connectClientToServer(self)
         
         # Toolbar Actions
-        self.action_connect.triggered.connect(self.marcos_server)
         self.action_changeappearance.triggered.connect(self.changeAppearanceSlot)
         self.action_acquire.triggered.connect(acqCtrl.startAcquisition)
         self.action_loadparams.triggered.connect(self.load_parameters)
@@ -61,11 +77,33 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_close.triggered.connect(self.close)    
         self.action_savedata.triggered.connect(self.save_data)
         self.action_exportfigure.triggered.connect(self.export_figure)
-        self.action_viewsequence.triggered.connect(self.represent_sequence)
+        self.action_viewsequence.triggered.connect(self.plot_sequence)
         
-    def marcos_server(self):
-        self.con = ConnectionDialog(self)
-        self.con.show()
+    def lines_that_start_with(self, str, f):
+        return [line for line in f if line.startswith(str)]
+    
+    @staticmethod
+    def generateConsole(text):
+        con = QTextEdit()
+        con.setText(text)
+        return con
+    
+    def onUpdateText(self, text):
+        cursor = self.cons.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+        cursor.insertText(text)
+        self.cons.setTextCursor(cursor)
+        self.cons.ensureCursorVisible()
+    
+    def __del__(self):
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+        
+    def closeEvent(self, event):
+        """Shuts down application on close."""
+        # Return stdout to defaults.
+        sys.stdout = sys.__stdout__
+        super().closeEvent(event)
     
     @pyqtSlot(bool)
     def changeAppearanceSlot(self) -> None:
@@ -94,8 +132,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         stylesheet = stream.readAll()
         self.setStyleSheet(stylesheet)  
         
-
-        
     @pyqtSlot(QListWidgetItem)
     def sequenceChangedSlot(self, item: QListWidgetItem = None) -> None:
         """
@@ -118,12 +154,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
           
     
     def save_data(self):
-        
-#        name = QtGui.QFileDialog.getSaveFileName(self, 'Save File', 'default.mat')
-#        file = open(name[0],'w')
-#        text = self.textEdit.toPlainText()
-#        file.write(text)
-#        file.close()
         
         dataobject: DataManager = DataManager(self.rxd, self.lo_freq, len(self.rxd))
         dict = vars(defaultsequences[self.sequence])
@@ -173,22 +203,18 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             new_dict=ast. literal_eval(contents)
             f.close()
 
-            #dict = loadmat(file_name)
-#            dict = 
-#            del dict['__globals__']
-#            del dict['__version__']
-#            del dict['__header__']      
-#            del dict['plot_rx']
-#            del dict['init_gpa']
+        lab = 'nmspc.%s' %(new_dict['seq'])
+        item=eval(lab)
 
-#            setattr(defaultsequences[self.sequence], 'seq', dict['seq'])
-     
-            del new_dict['seq']
-            for key in new_dict:
-                SequenceParameter(key,[new_dict[key]] , self.sequence)
-                setattr(defaultsequences[self.sequence], key, str([new_dict[key]])) 
+        del new_dict['seq']     
+        for key in new_dict:       
+            setattr(defaultsequences[self.sequence], key, new_dict[key])
+        
+        self.sequence = item
+        self.onSequenceChanged.emit(self.sequence)
 
-            self.messages("Parameters of %s sequence loaded" %(self.sequence))
+        self.messages("Parameters of %s sequence loaded" %(self.sequence))
+    
 
 
     def save_parameters(self):
@@ -204,10 +230,11 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         #savemat("experiments/parameterisations/%s_params_%s.mat" % (self.sequence, dt_string), dict)
         self.messages("Parameters of %s sequence saved" %(self.sequence))
         
-    def represent_sequence(self):
-        self.seqViewer = SequenceViewer(self,  self.sequencelist).representSequence()
-        self.seqViewer.show()
-        
+    def plot_sequence(self):
+        seqViewer = SequenceViewer(self, self.sequencelist)
+        seqViewer.plotSequence()
+        seqViewer.show()
+#        
         
     def messages(self, text):
         
@@ -215,3 +242,4 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         msg.setIcon(QMessageBox.Information)
         msg.setText(text)
         msg.exec();
+        

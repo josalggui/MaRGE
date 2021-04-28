@@ -2,7 +2,7 @@ import numpy as np
 import experiment as ex
 import sys
 sys.path.append('../marcos_client')
-
+from local_config import ip_address, fpga_clk_freq_MHz, grad_board
 import pdb
 st = pdb.set_trace
 
@@ -193,17 +193,28 @@ def turbo_spin_echo(self):
 
         global_t += self.tr_pause_duration
 
-    rxd, msgs = expt.run()
-#    expt.close_server(True)
-#    expt._s.close() # close socket
+        # RF
+    idict = expt._seq
+    tx0_i_t, tx0_i_a = idict['tx0_i']
+    tx0_q_t, tx0_q_a = idict['tx0_q']
+    tx0_t = tx0_i_t / fpga_clk_freq_MHz
+    tx0_y = (tx0_i_a + 1j * tx0_q_a)/32767
 
-    if self.plot_rx:
-        
-        return rxd['rx0']
-#        plt.plot( rxd['rx0'].real )
-#        plt.plot( rxd['rx0'].imag )
-#        plt.plot( rxd['rx1'].real )
-#        plt.plot( rxd['rx1'].imag )
-#        plt.show()
+    # Grad x
+    grad_x_t,  grad_x_a = idict['ocra1_vx']
+    grad_x_t_float = grad_x_t / fpga_clk_freq_MHz
+    grad_x_a_float = (grad_x_a - 32768) / 32768
+    
+    # Grad y
+    grad_y_t,  grad_y_a = idict['ocra1_vy']
+    grad_y_t_float = grad_y_t / fpga_clk_freq_MHz
+    grad_y_a_float = (grad_y_a - 32768) / 32768
+    
+    # Grad z
+    grad_z_t,  grad_z_a = idict['ocra1_vz']
+    grad_z_t_float = grad_z_t / fpga_clk_freq_MHz
+    grad_z_a_float = (grad_z_a - 32768) / 32768
+    
+    return tx0_t, tx0_y,  grad_x_t_float, grad_x_a_float, grad_y_t_float, grad_y_a_float, grad_z_t_float, grad_z_a_float
 
 

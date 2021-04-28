@@ -53,7 +53,9 @@ class Namespace:
     init_gpa = "GPA initialisation"
     slice_amp = "Slice amplitude"
     rf_pi2_duration = "RF pi2 duration"
-    
+    R = "Radial"
+    GE = "Gradient Echo"
+    TSE = "Turbo Spin Echo"
    
 
 class Reconstruction:

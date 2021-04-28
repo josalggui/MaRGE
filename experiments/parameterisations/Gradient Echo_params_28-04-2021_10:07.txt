@@ -1,0 +1,1 @@
+{'seq': 'GE', 'dbg_sc': 0.5, 'lo_freq': 0.1, 'rf_amp': 0.1, 'trs': 8, 'rx_period': 3.333, 'rf_tstart': 100, 'slice_amp': 0.4, 'phase_amp': 0.3, 'readout_amp': 0.8, 'rf_duration': 50, 'trap_ramp_duration': 50, 'phase_delay': 100, 'phase_duration': 200}

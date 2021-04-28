@@ -12,8 +12,8 @@ Operations Controller
 @todo:      Extend construction of parameter section (headers, more categories, etc. )
 
 """
-
-from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel
+from PyQt5 import QtGui
+from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel,  QTextEdit
 from PyQt5.QtCore import Qt
 from sequencemodes import defaultsequences
 from sequencesnamespace import Namespace as nmspc
@@ -84,7 +84,8 @@ class SequenceList(QListWidget):
 
         for item in inputwidgets:
             self.parent.layout_parameters.addWidget(item)
-
+        
+       
     @staticmethod
     def generateWidgetsFromDict(obj: dict = None, sequence: str = None) -> list:
         widgetlist: list = []
@@ -128,15 +129,16 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
         self.sequence = sequence
         self.parameter = parameter
         self.label_name.setText(name)
+        self.label_name.setToolTip('Test')  
+        self.input_value.setToolTip('Value_ranges')
         self.input_value.setText(str(parameter[0]))
-        print("{}: {}".format(self.label_name.text(), self.input_value.text()))
+        
         # TODO: Setup validator to numbers only (float)
         
         # Connect text changed signal to getValue function
         self.input_value.textChanged.connect(self.get_value)
         
     def get_value(self) -> None:
-        print("{}: {}".format(self.label_name.text(), self.input_value.text()))
 
         temp = vars(defaultsequences[self.sequence])
         for item in temp:
@@ -151,6 +153,5 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
         
                 setattr(defaultsequences[self.sequence], item, value)
         
-    def set_value(self, value: str) -> None:
+    def set_value(self, key, value: str) -> None:
         print("{}: {}".format(self.label_name.text(), self.input_value.text()))
-        self.input_value.setText(value)

@@ -31,11 +31,10 @@ version_full = (version_major << 16) | (version_minor << 8) | version_debug
 
 
 class AcquisitionController(QObject):
-    def __init__(self, parent=None, outputsection=None, sequencelist=None):
+    def __init__(self, parent=None, sequencelist=None):
         super(AcquisitionController, self).__init__(parent)
 
         self.parent = parent
-        self.outputsection = outputsection
         self.sequencelist = sequencelist
         self.acquisitionData = None
 
@@ -62,9 +61,9 @@ class AcquisitionController(QObject):
             self.rxd = turbo_spin_echo(self.sequence)    
         
         dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd))
-        self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude, "frequency", "signal intensity")
-        self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, "time", "signal intensity")
-        #outputvalues = AcquisitionManager().getOutputParameterObject(dataobject, self.sequence.systemproperties)
+        self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude, "frequency", "signal intensity", "Spectrum")
+        self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, "time", "signal intensity", "Raw data")
+       # outputvalues = AcquisitionManager().getOutputParameterObject(dataobject, self.sequence.systemproperties)
 
         #self.outputsection.set_parameters(outputvalues)
         self.parent.plotview_layout.addWidget(self.parent.t_plotview)

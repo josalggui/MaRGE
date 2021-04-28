@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import numpy as np
+import experiment as ex
+from local_config import ip_address, fpga_clk_freq_MHz, grad_board
 
 import pdb
 st = pdb.set_trace
@@ -21,7 +23,7 @@ def trapezoid(plateau_a, total_t, ramp_t, ramp_pts, total_t_end_to_end=True, bas
     a = np.hstack([rise_ramp, np.flip(rise_ramp)[1:]])
     return t, a
     
-def grad_echo(self):
+def grad_echo(self, plot_rx=False, init_gpa=False):
 
 #              trs=21, plot_rx=False, init_gpa=False,
 #              dbg_sc=0.5, # set to 0 to avoid 2nd RF debugging pulse, otherwise amp between 0 or 1
@@ -85,10 +87,44 @@ def grad_echo(self):
             'rx1_en': ( np.array([rx_tstart, rx_tend]) + tstart, np.array([1, 0]) ), # acquire on RX1 for example too
             'tx_gate': ( np.array([self.rf_tstart - tx_gate_pre, self.rf_tend + tx_gate_post]) + tstart, np.array([1, 0]) )
         }
+
         return value_dict
-        
+
+    expt = ex.Experiment(lo_freq=self.lo_freq, rx_t=self.rx_period, init_gpa=self.init_gpa)
+    # gpa_fhdo_offset_time in microseconds; offset between channels to
+    # avoid parallel updates (default update rate is 0.2 Msps, so
+    # 1/0.2 = 5us, 5 / 3.1 gives the offset between channels; extra
+    # 0.1 for a safety margin)
+
     tr_t = 20 # start the first TR at 20us
     for pamp in phase_amps:
-        v_dict = grad_echo_tr( tr_t, pamp)
+        expt.add_flodict( grad_echo_tr( tr_t, pamp) )
         tr_t += tr_total_time
-        return v_dict
+
+#    expt.close_server(True)
+
+    # RF
+    idict = expt._seq
+    tx0_i_t, tx0_i_a = idict['tx0_i']
+    tx0_q_t, tx0_q_a = idict['tx0_q']
+    tx0_t = tx0_i_t / fpga_clk_freq_MHz
+    tx0_y = (tx0_i_a + 1j * tx0_q_a)/32767
+
+    # Grad x
+    grad_x_t,  grad_x_a = idict['ocra1_vx']
+    grad_x_t_float = grad_x_t / fpga_clk_freq_MHz
+    grad_x_a_float = (grad_x_a - 32768) / 32768
+    
+    # Grad y
+    grad_y_t,  grad_y_a = idict['ocra1_vy']
+    grad_y_t_float = grad_y_t / fpga_clk_freq_MHz
+    grad_y_a_float = (grad_y_a - 32768) / 32768
+    
+    # Grad z
+    grad_z_t,  grad_z_a = idict['ocra1_vz']
+    grad_z_t_float = grad_z_t / fpga_clk_freq_MHz
+    grad_z_a_float = (grad_z_a - 32768) / 32768
+    
+    return tx0_t, tx0_y,  grad_x_t_float, grad_x_a_float, grad_y_t_float, grad_y_a_float, grad_z_t_float, grad_z_a_float
+
+

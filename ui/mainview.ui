@@ -217,7 +217,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="gridWidget" native="true">
+           <widget class="QWidget" name="console" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
               <horstretch>0</horstretch>
@@ -236,7 +236,10 @@
               <height>200</height>
              </size>
             </property>
-            <layout class="QGridLayout" name="layout_outputgrid" rowstretch="0" rowminimumheight="0">
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+            <layout class="QGridLayout" name="layout_output" rowstretch="0">
              <property name="leftMargin">
               <number>10</number>
              </property>
@@ -253,7 +256,7 @@
               <number>40</number>
              </property>
              <property name="verticalSpacing">
-              <number>10</number>
+              <number>16</number>
              </property>
             </layout>
            </widget>
@@ -346,7 +349,6 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_connect"/>
    <addaction name="action_calibration"/>
    <addaction name="action_acquire"/>
   </widget>
