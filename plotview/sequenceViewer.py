@@ -52,7 +52,7 @@ class SequenceViewer(SequenceViewer_Base, SequenceViewer_Form):
 
         self.tx = SpectrumPlot(self.tx0_t, self.tx0_y, "time", "RF", "RF")
         self.plotview_layout.addWidget(self.tx)  
-        if hasattr(self, 'self.grad_x_t_float'):
+        if self.sequence.seq != 'R':
             self.gradx = SpectrumPlot(self.grad_x_t_float, self.grad_x_a_float, "time", "X gradient", "Gradient X")
             self.plotview_layout.addWidget(self.gradx)
         self.grady = SpectrumPlot(self.grad_y_t_float, self.grad_y_a_float, "time", "Y gradient", "Gradient Y")
