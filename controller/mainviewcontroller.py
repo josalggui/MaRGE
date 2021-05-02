@@ -58,7 +58,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Console
         self.cons = self.generateConsole('')
         self.layout_output.addWidget(self.cons)
-#        sys.stdout = EmittingStream(textWritten=self.onUpdateText)
+        sys.stdout = EmittingStream(textWritten=self.onUpdateText)
 #        sys.stderr = EmittingStream(textWritten=self.onUpdateText)        
         
         # Initialisation of acquisition controller
@@ -117,7 +117,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.setupStylesheet(style.breezeDark)
        
     def close(self):
-        quit()    
+        sys.exit()   
 
     def setupStylesheet(self, style) -> None:
         """
@@ -214,8 +214,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.onSequenceChanged.emit(self.sequence)
 
         self.messages("Parameters of %s sequence loaded" %(self.sequence))
-    
-
 
     def save_parameters(self):
         
@@ -227,7 +225,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         f.write( str(dict) )
         f.close()
   
-        #savemat("experiments/parameterisations/%s_params_%s.mat" % (self.sequence, dt_string), dict)
         self.messages("Parameters of %s sequence saved" %(self.sequence))
         
     def plot_sequence(self):

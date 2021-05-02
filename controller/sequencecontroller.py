@@ -14,10 +14,13 @@ Operations Controller
 """
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel,  QTextEdit
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QRegExp
 from sequencemodes import defaultsequences
 from sequencesnamespace import Namespace as nmspc
+from sequencesnamespace import Tooltip_label as tlt_l
+from sequencesnamespace import Tooltip_inValue as tlt_inV
 from PyQt5.uic import loadUiType
+from PyQt5.QtGui import QRegExpValidator
 
 Parameter_Form, Parameter_Base = loadUiType('ui/inputparameter.ui')
 
@@ -129,11 +132,24 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
         self.sequence = sequence
         self.parameter = parameter
         self.label_name.setText(name)
-        self.label_name.setToolTip('Test')  
-        self.input_value.setToolTip('Value_ranges')
+        
+        # Tooltips
+        temp = vars(defaultsequences[self.sequence])
+        for item in temp:
+            label = 'nmspc.%s' %item
+            res=eval(label)
+            if (res == name):
+                lab = 'tlt_l.%s' %(item)
+                if (hasattr(tlt_l, item)):
+                    res2=eval(lab)
+                    self.label_name.setToolTip(res2)
+                inV = 'tlt_inV.%s' %(item)
+                if (hasattr(tlt_inV, item)):
+                    res3 = eval(inV)
+                    self.input_value.setToolTip(res3)    
+                    
         self.input_value.setText(str(parameter[0]))
         
-        # TODO: Setup validator to numbers only (float)
         
         # Connect text changed signal to getValue function
         self.input_value.textChanged.connect(self.get_value)
@@ -145,13 +161,40 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
             lab = 'nmspc.%s' %(item)
             res=eval(lab)
             if (res == self.label_name.text()):
-                t = type(getattr(defaultsequences[self.sequence], item))        
-                if (t is float): 
-                    value: float = float(self.input_value.text())
-                elif (t is int): 
-                    value: int = int(self.input_value.text())
-        
-                setattr(defaultsequences[self.sequence], item, value)
+                t = type(getattr(defaultsequences[self.sequence], item))     
+                inV = 'tlt_inV.%s' %(item)
+                if (hasattr(tlt_inV, item)):
+                    res3 = eval(inV)
+                    if res3 == 'Value between 0 and 1':  
+                        val=self.validate_input()
+                        if val == 1:           
+                            if (t is float): 
+                                value: float = float(self.input_value.text())
+                                setattr(defaultsequences[self.sequence], item, value)
+                            elif (t is int): 
+                                value: int = int(self.input_value.text())
+                                setattr(defaultsequences[self.sequence], item, value)           
+                else:
+                    if (t is float): 
+                        value: float = float(self.input_value.text())
+                        setattr(defaultsequences[self.sequence], item, value)
+                    elif (t is int): 
+                        value: int = int(self.input_value.text())
+                        setattr(defaultsequences[self.sequence], item, value)
+
+                
+    def validate_input(self):
+        reg_ex = QRegExp('^(?:0*(?:\.\d+)?|1(\.0*)?)$')
+        input_validator = QRegExpValidator(reg_ex, self.input_value)
+#        print(input_validator)
+        self.input_value.setValidator(input_validator)
+#        state = input_validator.validate(self.input_value.text(), 0)
+#        print(state)
+#        if state[0] == QRegExpValidator.Acceptable:
+#            return 1
+#        else:
+#            return 0
         
     def set_value(self, key, value: str) -> None:
         print("{}: {}".format(self.label_name.text(), self.input_value.text()))
+        

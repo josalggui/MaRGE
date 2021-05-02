@@ -15,7 +15,7 @@ class Namespace:
     dbg_sc = "Debug"
     systemproperties = "System Properties"
     lo_freq = "Frequency (MHz)"
-    rf_amp = "Amplifier"
+    rf_amp = "RF Amplitude"
     G = "Gradients amplification"
     trs = "Number of TRs"
     grad_tstart = "Gradients start time"
@@ -53,10 +53,25 @@ class Namespace:
     init_gpa = "GPA initialisation"
     slice_amp = "Slice amplitude"
     rf_pi2_duration = "RF pi2 duration"
+    rf_pi_duration = "RF pi duration"
     R = "Radial"
     GE = "Gradient Echo"
     TSE = "Turbo Spin Echo"
    
+class Tooltip_label:
+    rx_period = "Sampling time"
+    rf_amp = "Full scale = 1"
+    
+class Tooltip_inValue:
+    lo_freq = "Value between 0 and 1"
+    rf_amp = "Value between 0 and 1"
+    dbg_sc = "Value between 0 and 1"
+    slice_amp = "Value between 0 and 1"
+    phase_amp = "Value between 0 and 1"
+    readout_amp = "Value between 0 and 1"
+    G = "Value between 0 and 1"
+    phase_start_amp = "Value between 0 and 1"
+    slice_start_amp = "Value between 0 and 1"
 
 class Reconstruction:
     spectrum = "1D FFT"
