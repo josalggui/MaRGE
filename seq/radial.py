@@ -7,7 +7,7 @@ import pdb
 st = pdb.set_trace
 
 def radial(self):
-  
+
     tx_gate_pre = 2 # us, time to start the TX gate before each RF pulse begins
     tx_gate_post = 1 # us, time to keep the TX gate on after an RF pulse ends
     angles = np.linspace(0, 2*np.pi, self.trs) # angle
@@ -27,10 +27,10 @@ def radial(self):
             'grad_vy': ( np.array([self.grad_tstart]),
                          np.array([gy]) ),
             'rx0_en' : ( np.array([self.rx_tstart, self.rx_tend]),
-                            np.array([1, 0]) ),
+                         np.array([1, 0]) ),
             'tx_gate' : ( np.array([self.rf_tstart - tx_gate_pre, self.rf_tend + tx_gate_post]),
                           np.array([1, 0]) )
-            }
+        }
 
         for k, v in value_dict.items():
             # v for read, value_dict[k] for write
@@ -46,9 +46,8 @@ def radial(self):
         tr_t += self.tr_total_time
 
     rxd, msgs = expt.run()
-#    expt.close_server(True)
+    #    expt.close_server(True)
 
-    if self.plot_rx:
-        return rxd['rx0']
+    expt.__del__()
 
-        
+    return rxd['rx0'], msgs
