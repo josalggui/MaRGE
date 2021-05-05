@@ -45,21 +45,21 @@ class AcquisitionController(QObject):
 
         self.parent.clearPlotviewLayout()
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
-                
+
         if self.sequence.seq == 'R':
             self.sequence.plot_rx = True
             self.sequence.init_gpa = True
-            self.rxd = radial(self.sequence)     
+            self.rxd, self.msgs = radial(self.sequence)
         elif self.sequence.seq == 'GE':
             self.sequence.plot_rx = True
             self.sequence.init_gpa = True
-            self.rxd = grad_echo(self.sequence)   
+            self.rxd = grad_echo(self.sequence)
         elif self.sequence.seq == 'TSE':
             self.sequence.plot_rx = True
             self.sequence.init_gpa = True
             self.sequence.rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
-            self.rxd = turbo_spin_echo(self.sequence)    
-        
+            self.rxd = turbo_spin_echo(self.sequence)
+
         dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd))
         self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude, "frequency", "signal intensity", "Spectrum")
         self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, "time", "signal intensity", "Raw data")
