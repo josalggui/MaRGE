@@ -197,6 +197,8 @@ def turbo_spin_echo(self):
 #    expt.close_server(True)
 #    expt._s.close() # close socket
 
+    expt.__del__()
+
     if self.plot_rx:
         
         return rxd['rx0']

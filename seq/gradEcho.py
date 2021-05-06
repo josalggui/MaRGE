@@ -2,7 +2,6 @@
 
 import numpy as np
 import experiment as ex
-from local_config import ip_address, fpga_clk_freq_MHz, grad_board
 
 import pdb
 st = pdb.set_trace
@@ -23,7 +22,7 @@ def trapezoid(plateau_a, total_t, ramp_t, ramp_pts, total_t_end_to_end=True, bas
     a = np.hstack([rise_ramp, np.flip(rise_ramp)[1:]])
     return t, a
     
-def grad_echo(self, plot_rx=False, init_gpa=False):
+def grad_echo(self):
 
 #              trs=21, plot_rx=False, init_gpa=False,
 #              dbg_sc=0.5, # set to 0 to avoid 2nd RF debugging pulse, otherwise amp between 0 or 1
@@ -103,6 +102,8 @@ def grad_echo(self, plot_rx=False, init_gpa=False):
 
     rxd, msgs = expt.run()
 #    expt.close_server(True)
+
+    expt.__del__()
 
     if self.plot_rx:
         

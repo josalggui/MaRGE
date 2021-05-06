@@ -46,6 +46,7 @@ def radial(self):
         tr_t += self.tr_total_time
 
     rxd, msgs = expt.run()
+    
     #    expt.close_server(True)
 
     expt.__del__()

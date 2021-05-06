@@ -215,6 +215,8 @@ def turbo_spin_echo(self):
     grad_z_t_float = grad_z_t / fpga_clk_freq_MHz
     grad_z_a_float = (grad_z_a - 32768) / 32768
     
+    expt.__del__()
+    
     return tx0_t, tx0_y,  grad_x_t_float, grad_x_a_float, grad_y_t_float, grad_y_a_float, grad_z_t_float, grad_z_a_float
 
 

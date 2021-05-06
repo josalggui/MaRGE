@@ -2,7 +2,7 @@
 
 import numpy as np
 import experiment as ex
-from local_config import ip_address, fpga_clk_freq_MHz, grad_board
+from local_config import fpga_clk_freq_MHz
 
 import pdb
 st = pdb.set_trace
@@ -124,6 +124,8 @@ def grad_echo(self, plot_rx=False, init_gpa=False):
     grad_z_t,  grad_z_a = idict['ocra1_vz']
     grad_z_t_float = grad_z_t / fpga_clk_freq_MHz
     grad_z_a_float = (grad_z_a - 32768) / 32768
+    
+    expt.__del__()
     
     return tx0_t, tx0_y,  grad_x_t_float, grad_x_a_float, grad_y_t_float, grad_y_a_float, grad_z_t_float, grad_z_a_float
 
