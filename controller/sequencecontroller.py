@@ -43,8 +43,10 @@ class SequenceList(QListWidget):
 
         # Make parent reachable from outside __init__
         self.parent = parent
-        self._currentSequence = None
-
+#        self._currentSequence = None
+        self._currentSequence = "Radial"
+        self.setParametersUI("Radial")
+    
     def triggeredSequenceChanged(self, sequence: str = None) -> None:
         # TODO: set sequence only once right here or on changed signal
         # packet = Com.constructSequencePacket(operation)
@@ -80,8 +82,8 @@ class SequenceList(QListWidget):
 
         if hasattr(defaultsequences[sequence], 'gradientshims'):
             shims = defaultsequences[sequence].gradientshims
-            inputwidgets += [(self.generateLabelItem(nmspc.shim))]
-            inputwidgets += (self.generateWidgetsFromDict(shims))
+            inputwidgets += [(self.generateLabelItem(nmspc.gradientshims))]
+            inputwidgets += (self.generateWidgetsFromDict(shims, sequence))
             
 #        print(self.get_items(sys_prop, sequence))
 
@@ -167,13 +169,14 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
                     res3 = eval(inV)
                     if res3 == 'Value between 0 and 1':  
                         val=self.validate_input()
+                        print(val)
                         if val == 1:           
                             if (t is float): 
                                 value: float = float(self.input_value.text())
                                 setattr(defaultsequences[self.sequence], item, value)
                             elif (t is int): 
                                 value: int = int(self.input_value.text())
-                                setattr(defaultsequences[self.sequence], item, value)           
+                                setattr(defaultsequences[self.sequence], item, value)  
                 else:
                     if (t is float): 
                         value: float = float(self.input_value.text())
@@ -188,12 +191,12 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
         input_validator = QRegExpValidator(reg_ex, self.input_value)
 #        print(input_validator)
         self.input_value.setValidator(input_validator)
-#        state = input_validator.validate(self.input_value.text(), 0)
+        state = input_validator.validate(self.input_value.text(), 0)
 #        print(state)
-#        if state[0] == QRegExpValidator.Acceptable:
-#            return 1
-#        else:
-#            return 0
+        if state[0] == QRegExpValidator.Acceptable:
+            return 1
+        else:
+            return 0
         
     def set_value(self, key, value: str) -> None:
         print("{}: {}".format(self.label_name.text(), self.input_value.text()))

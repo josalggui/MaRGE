@@ -107,7 +107,7 @@ def grad_echo(self):
 
     if self.plot_rx:
         
-        return rxd['rx0']
+        return rxd['rx0'].real
 #        plt.plot( rxd['rx0'].real )
 #        plt.plot( rxd['rx0'].imag )
 #        plt.plot( rxd['rx1'].real )

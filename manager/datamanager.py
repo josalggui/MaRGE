@@ -59,6 +59,7 @@ class DataManager(QObject):
         self.samples = samples
         self.p_ts = self.samples * timePerSample
 
+        print(self.samples)
         d_cropped = self.data[0:self.samples]  # * 2000.0
         self._t_axis = np.linspace(0, self.p_ts, self.samples)
         self._t_magnitude = np.abs(d_cropped)
@@ -69,6 +70,7 @@ class DataManager(QObject):
 
         self._frequency = p_frequency
         self._f_axis = np.linspace(-self.f_range / 2, self.f_range / 2, self.samples)
+#        self._f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(d_cropped), n=self.samples))
         self._f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(d_cropped), n=self.samples))
         self._f_fftMagnitude = abs(self.f_fftData)
 
