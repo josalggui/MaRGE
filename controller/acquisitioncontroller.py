@@ -8,17 +8,12 @@ Acquisition Manager
 @summary:   Class for controlling the acquisition
 
 @status:    Under development
-@todo:      Subdivide "startAcquisition" routine into subroutines (modularity)
 
 """
 
-import numpy as np
-from PyQt5.QtCore import pyqtSlot
 from plotview.spectrumplot import SpectrumPlot
 from sequencemodes import defaultsequences
-from sequencesnamespace import Namespace as nmpsc
-from manager.acquisitionmanager import AcquisitionManager
-from PyQt5.QtCore import QObject
+from PyQt5.QtCore import QObject,  QThread, pyqtSignal, pyqtSlot
 from manager.datamanager import DataManager
 from seq.radial import radial
 from seq.gradEcho import grad_echo
@@ -49,12 +44,12 @@ class AcquisitionController(QObject):
         elif self.sequence.seq == 'GE':
             self.sequence.plot_rx = True
             self.sequence.init_gpa = True
-            self.rxd = grad_echo(self.sequence)
+            self.rxd, self.msgs = grad_echo(self.sequence)
         elif self.sequence.seq == 'TSE':
             self.sequence.plot_rx = True
             self.sequence.init_gpa = True
             self.sequence.rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
-            self.rxd = turbo_spin_echo(self.sequence)
+            self.rxd, self.msgs = turbo_spin_echo(self.sequence)
 
         dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd))
         self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude, "frequency", "signal intensity", "Spectrum")
@@ -67,10 +62,14 @@ class AcquisitionController(QObject):
 
         self.parent.rxd = self.rxd
         self.parent.lo_freq = self.sequence.lo_freq
+        print(self.msgs)
 
     #    self.acquisitionData = dataobject
 
 #        print("Operation: \n {}".format(operation))
 
 
-# TODO: Startup routine (set frequency, set attenuation, set shim, upload sequence, etc. )
+        
+    
+
+

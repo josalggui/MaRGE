@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import sys
+sys.path.append('../../marcos_client')
 import numpy as np
 import experiment as ex
 
@@ -11,6 +13,11 @@ def radial(self):
     tx_gate_pre = 2 # us, time to start the TX gate before each RF pulse begins
     tx_gate_post = 1 # us, time to keep the TX gate on after an RF pulse ends
     angles = np.linspace(0, 2*np.pi, self.trs) # angle
+    
+    #Shimming
+    shim_x: int = self.shim[0]
+    shim_y: int = self.shim[1]
+    shim_z: int = self.shim[2]
 
     def radial_tr(tstart, th):
 
@@ -23,9 +30,9 @@ def radial(self):
                      np.array([self.rf_amp, 0,    self.dbg_sc * (gx+gy*1j), 0]) ),
             'tx1': ( np.array([self.rx_tstart + 15, self.rx_tend - 15]), np.array([self.dbg_sc * (gx+gy*1j), 0]) ),
             'grad_vz': ( np.array([self.grad_tstart]),
-                         np.array([gx]) ),
+                         np.array([gx]) +shim_z),
             'grad_vy': ( np.array([self.grad_tstart]),
-                         np.array([gy]) ),
+                         np.array([gy]) +shim_y),
             'rx0_en' : ( np.array([self.rx_tstart, self.rx_tend]),
                          np.array([1, 0]) ),
             'tx_gate' : ( np.array([self.rf_tstart - tx_gate_pre, self.rf_tend + tx_gate_post]),

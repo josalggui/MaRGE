@@ -46,6 +46,11 @@ def grad_echo(self):
     trap_ramp_pts=5
     phase_amps = np.linspace(self.phase_amp, -self.phase_amp, self.trs)
 
+    # Shimming
+    shim_x: int = self.shim[0]
+    shim_y: int = self.shim[1]
+    shim_z: int = self.shim[2]
+
     #rf_tstart = 100 # us
     self.rf_tend = self.rf_tstart + self.rf_duration # us
 
@@ -79,9 +84,9 @@ def grad_echo(self):
                      np.array([self.rf_amp,0,  self.dbg_sc*(1 + 0.5j),0]) ),
 
             'tx1': ( np.array([rx_tstart + 15, rx_tend - 15]) + tstart, np.array([self.dbg_sc * pamp * (1 + 0.5j), 0]) ),
-            'grad_vx': ( gvxt + tstart + slice_tstart, gvxa ),
-            'grad_vy': ( gvyt + tstart + phase_tstart, gvya),
-            'grad_vz': ( gvzt + tstart + readout_tstart, gvza),
+            'grad_vx': ( gvxt + tstart + slice_tstart, gvxa+shim_x ),
+            'grad_vy': ( gvyt + tstart + phase_tstart, gvya+shim_y),
+            'grad_vz': ( gvzt + tstart + readout_tstart, gvza+shim_z),
             'rx0_en': ( np.array([rx_tstart, rx_tend]) + tstart, np.array([1, 0]) ),
             'rx1_en': ( np.array([rx_tstart, rx_tend]) + tstart, np.array([1, 0]) ), # acquire on RX1 for example too
             'tx_gate': ( np.array([self.rf_tstart - tx_gate_pre, self.rf_tend + tx_gate_post]) + tstart, np.array([1, 0]) )
@@ -107,7 +112,7 @@ def grad_echo(self):
 
     if self.plot_rx:
         
-        return rxd['rx0'].real
+        return rxd['rx0'].real, msgs
 #        plt.plot( rxd['rx0'].real )
 #        plt.plot( rxd['rx0'].imag )
 #        plt.plot( rxd['rx1'].real )

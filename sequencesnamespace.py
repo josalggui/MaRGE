@@ -57,7 +57,7 @@ class Namespace:
     GE = "Gradient Echo"
     TSE = "Turbo Spin Echo"
     gradientshims = "Gradients shim values"
-    shim = "Shims (x,y,z,z²)"
+    shim = "Shims (x,y,z)"
    
 class Tooltip_label:
     rx_period = "Sampling time"

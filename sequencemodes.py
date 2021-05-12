@@ -273,11 +273,11 @@ defaultsequences={
     #FID(dbg_sc,lo_freq,rf_amp,trs,rx_period,trapRampDur,rfDur)
     #'FID': FID('FID', 0.2, 1, 5, 3.333, 50, )
     #RadialSeq(dbg_sc,lo_freq,rf_amp,trs,G,grad_tstart,TR,rf_tstart,rf_tend,rx_tstart,rx_tend,rx_period,sl_shim,ph_shim_rd_shim)
-    'Radial': RadialSeq('R', 0.5, 0.2, 0.2, 3, 0.5, 0, 220, 5, 50, 70, 180, 3.333, [0.01, 0.01, 0.01, 0.01]),
+    'Radial': RadialSeq('R', 0.5, 0.2, 0.2, 3, 0.5, 0, 220, 5, 50, 70, 180, 3.333, (0.01, 0.01, 0.01)),
     #GradEchoSeq(dbg_sc,lo_freq,rf_amp,trs,rx_period,rf_tstart,sliceAmp,phAmp,rdAmp,rfDur,trapRampDur,phDelay,phDur,ph_shim_rd_shim)
-    'Gradient Echo': GradEchoSeq('GE',0.5,  0.1, 0.1, 2, 3.333, 100, 0.4, 0.3, 0.8, 50, 50, 100, 200, [0.01, 0.01, 0.01, 0.01]), 
+    'Gradient Echo': GradEchoSeq('GE',0.5,  0.1, 0.1, 2, 3.333, 100, 0.4, 0.3, 0.8, 50, 50, 100, 200, (0.01, 0.01, 0.01)), 
     #TurboSpinEcho(dbg_sc,lo_freq,rf_amp,trs,rx_period,trapRampDur,echosTR,echosDur,sliceAmp,phAmp,rdAmp,rfDur,phDur,rdDur,rdGradDur,phGint,TRPauseDur,ph_shim_rd_shim)
-    'Turbo Spin Echo': TSE_Seq('TSE',  0.5, 0.2, 1, 5, 3.333, 50, 5, 2000, 0.3, 0.6,0.8, 50, 150, 500, 700, 1200, 3000, [0.01, 0.01, 0.01, 0.01])
+    'Turbo Spin Echo': TSE_Seq('TSE',  0.5, 0.2, 1, 5, 3.333, 50, 5, 2000, 0.3, 0.6,0.8, 50, 150, 500, 700, 1200, 3000, (0.01, 0.01, 0.01))
 
 }
 

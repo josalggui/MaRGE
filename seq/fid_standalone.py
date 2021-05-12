@@ -11,13 +11,12 @@ import pdb
 st = pdb.set_trace
 
    
-def fid(trs=3, plot_rx=False, init_gpa=False,
+def fid(plot_rx=False, init_gpa=False,
              dbg_sc=0.5, # set to 0 to avoid 2nd RF debugging pulse, otherwise amp between 0 or 1
              lo_freq=0.1, # MHz
              rf_amp=1, # 1 = full-scale
              rf_duration=50,
              rf_tstart = 100,  # us
-             trap_ramp_duration=50, # us, ramp-up/down time
              tr_wait=100, # delay after end of RX before start of next TR
              rx_period=10/3,  # us, 3.333us, 300 kHz rate
              readout_duration=500
@@ -28,23 +27,12 @@ def fid(trs=3, plot_rx=False, init_gpa=False,
 #    phase_amps = np.linspace(phase_amp, -phase_amp, trs)
     rf_tend = rf_tstart + rf_duration # us
 
-#    phase_tstart = self.rf_tend + self.phase_delay
-    readout_tstart = rf_tend+100
-    
-    print(readout_tstart)
-
-    rx_tstart = readout_tstart + trap_ramp_duration # us
-    rx_tend = readout_tstart + readout_duration - trap_ramp_duration # us
-
-    print(rx_tstart)
-    print(rx_tend)
+    rx_tstart = rf_tend+tr_wait # us
+    rx_tend = rx_tstart + readout_duration  # us
 
     tx_gate_pre = 2 # us, time to start the TX gate before the RF pulse begins
     tx_gate_post = 1 # us, time to keep the TX gate on after the RF pulse ends
 
-    tr_total_time = readout_tstart + readout_duration + tr_wait  + 7000 # start-finish TR time
-    
-    print(tr_total_time)
 
     def fid_tr(tstart):
         rx_tcentre = (rx_tstart + rx_tend) / 2
@@ -64,21 +52,13 @@ def fid(trs=3, plot_rx=False, init_gpa=False,
     # 1/0.2 = 5us, 5 / 3.1 gives the offset between channels; extra
     # 0.1 for a safety margin)
 
-    tr_t = 20 # start the first TR at 20us
-    for tr in range(trs):
-        expt.add_flodict( fid_tr( tr_t) )
-        tr_t += tr_total_time
+    tr_t = 0 # start the first TR at 20us
+    expt.add_flodict( fid_tr( tr_t) )
 
 #    expt.close_server(True)
 
-    # RF
-    idict = expt._seq
-    tx0_i_t, tx0_i_a = idict['tx0_i']
-    tx0_q_t, tx0_q_a = idict['tx0_q']
-    tx0_t = tx0_i_t / fpga_clk_freq_MHz
-    tx0_y = (tx0_i_a + 1j * tx0_q_a)/32767
-    
-    
+    rxd, msgs = expt.run()    
+   
     # Plot pulses
     idict = expt._seq
     tx0_i_t, tx0_i_a = idict['tx0_i']
@@ -89,7 +69,6 @@ def fid(trs=3, plot_rx=False, init_gpa=False,
     plt_seq.show()
 
 
-    rxd, msgs = expt.run()
     
     print(msgs)
     
@@ -106,4 +85,6 @@ def fid(trs=3, plot_rx=False, init_gpa=False,
         
 if __name__ == "__main__":
     
-    fid(lo_freq=0.5, trs=3, plot_rx=True, init_gpa=True, dbg_sc=0)
+#        for k in range(20):
+#            print(k)
+    fid(lo_freq=0.5, plot_rx=True, init_gpa=True, dbg_sc=0.5)

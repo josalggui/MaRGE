@@ -76,6 +76,10 @@ def turbo_spin_echo(self):
     phase gradient: y
     slice/partition gradient: z
     """
+    
+    shim_x: int = self.shim[0]
+    shim_y: int = self.shim[1]
+    shim_z: int = self.shim[2]
 
     if rf_pi_duration is None:
         rf_pi_duration = 2 * self.rf_pi2_duration
@@ -182,9 +186,9 @@ def turbo_spin_echo(self):
             expt.add_flodict({
                 'tx0': (tx_t, tx_a),
                 'tx1': (tx_t, tx_a),
-                'grad_vx': (readout_grad_t, readout_grad_a),
-                'grad_vy': (phase_grad_t, phase_grad_a),
-                'grad_vz': (slice_grad_t, slice_grad_a),
+                'grad_vx': (readout_grad_t, readout_grad_a+shim_x),
+                'grad_vy': (phase_grad_t, phase_grad_a+shim_y),
+                'grad_vz': (slice_grad_t, slice_grad_a+shim_z),
                 'rx0_en': (readout_t, readout_a),
                 'rx1_en': (readout_t, readout_a),
                 'tx_gate': (tx_gate_t, tx_gate_a),
@@ -201,7 +205,7 @@ def turbo_spin_echo(self):
 
     if self.plot_rx:
         
-        return rxd['rx0']
+        return rxd['rx0'], msgs
 #        plt.plot( rxd['rx0'].real )
 #        plt.plot( rxd['rx0'].imag )
 #        plt.plot( rxd['rx1'].real )
