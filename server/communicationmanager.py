@@ -15,7 +15,7 @@ Communication Manager
 
 from PyQt5.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QObject
-#from operationsnamespace import Namespace as nmspc
+from sequencesnamespace import Namespace as nmspc
 from warnings import warn
 import numpy as np
 import struct
