@@ -16,10 +16,13 @@ import pyqtgraph.exporters
 import os
 import ast
 import sys
-from sequencesnamespace import Namespace as nmspc
 from scipy.io import savemat
-from controller.sequencecontroller import SequenceList,  SequenceParameter
-from plotview.sequenceViewer import SequenceViewer
+from controller.sequencecontroller import SequenceList
+from seq.gradEcho import grad_echo 
+from seq.radial import radial
+from seq.turboSpinEcho import turbo_spin_echo
+from seq.fid import fid
+from seq.spinEcho import spin_echo
 from sequencemodes import defaultsequences
 from manager.datamanager import DataManager
 from datetime import date,  datetime 
@@ -28,7 +31,7 @@ from stream import EmittingStream
 sys.path.append('../marcos_client')
 from local_config import ip_address
 
-from controller.connectiondialog import ServerConnection
+
 import cgitb 
 cgitb.enable(format = 'text')
 import pdb
@@ -59,7 +62,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.cons = self.generateConsole('')
         self.layout_output.addWidget(self.cons)
         sys.stdout = EmittingStream(textWritten=self.onUpdateText)
-#        sys.stderr = EmittingStream(textWritten=self.onUpdateText)        
+        sys.stderr = EmittingStream(textWritten=self.onUpdateText)        
         
         # Initialisation of acquisition controller
         acqCtrl = AcquisitionController(self, self.sequencelist)
@@ -228,10 +231,24 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.messages("Parameters of %s sequence saved" %(self.sequence))
         
     def plot_sequence(self):
-        seqViewer = SequenceViewer(self, self.sequencelist)
-        seqViewer.plotSequence()
-        seqViewer.show()
-#        
+        
+        plotSeq=1
+        self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
+        
+        if self.sequence.seq == 'FID':
+            fid(self.sequence, plotSeq)
+        if self.sequence.seq=='SE':
+            spin_echo(self.sequence, plotSeq) 
+        if self.sequence.seq == 'R':
+            radial(self.sequence, plotSeq)    
+        elif self.sequence.seq == 'GE':
+            grad_echo(self.sequence, plotSeq)   
+        elif self.sequence.seq == 'TSE':
+            turbo_spin_echo(self.sequence, plotSeq)    
+#        seqViewer = SequenceViewer(self, self.sequencelist)
+#        seqViewer.plotSequence()
+#        seqViewer.show()
+  
         
     def messages(self, text):
         

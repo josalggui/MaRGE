@@ -12,8 +12,7 @@ Operations Controller
 @todo:      Extend construction of parameter section (headers, more categories, etc. )
 
 """
-from PyQt5 import QtGui
-from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel,  QTextEdit
+from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel
 from PyQt5.QtCore import Qt, QRegExp
 from sequencemodes import defaultsequences
 from sequencesnamespace import Namespace as nmspc
@@ -85,8 +84,6 @@ class SequenceList(QListWidget):
             inputwidgets += [(self.generateLabelItem(nmspc.gradientshims))]
             inputwidgets += (self.generateWidgetsFromDict(shims, sequence))
             
-#        print(self.get_items(sys_prop, sequence))
-
         for item in inputwidgets:
             self.parent.layout_parameters.addWidget(item)
         
@@ -95,8 +92,6 @@ class SequenceList(QListWidget):
     def generateWidgetsFromDict(obj: dict = None, sequence: str = None) -> list:
         widgetlist: list = []
         for key in obj:
-            print(key)
-            print(obj[key])
             widget = SequenceParameter(key, obj[key], sequence)
             widgetlist.append(widget)
         return widgetlist
@@ -169,7 +164,6 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
                     res3 = eval(inV)
                     if res3 == 'Value between 0 and 1':  
                         val=self.validate_input()
-                        print(val)
                         if val == 1:           
                             if (t is float): 
                                 value: float = float(self.input_value.text())
@@ -189,10 +183,8 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
     def validate_input(self):
         reg_ex = QRegExp('^(?:0*(?:\.\d+)?|1(\.0*)?)$')
         input_validator = QRegExpValidator(reg_ex, self.input_value)
-#        print(input_validator)
         self.input_value.setValidator(input_validator)
         state = input_validator.validate(self.input_value.text(), 0)
-#        print(state)
         if state[0] == QRegExpValidator.Acceptable:
             return 1
         else:

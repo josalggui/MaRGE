@@ -23,7 +23,8 @@ class Sequences:
     """
     Class with predefined sequences as sequence objects
     """
-    #FID = SqncObject('Free Induction Decay', 'sequence/FID.txt')
+    SE = SqncObject('Spin Echo', 'seq/spinEcho.py')
+    FID = SqncObject('Free Induction Decay', 'seq/fid.py')
     GE = SqncObject('Gradient Echo', 'seq/gradEcho.py')
     R = SqncObject('Radial', 'seq/radial.py')
     TSE = SqncObject('Turbo Spin Echo', 'seq/turboSpinEcho.py')

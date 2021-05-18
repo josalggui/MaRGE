@@ -2,7 +2,7 @@ import numpy as np
 import experiment as ex
 import sys
 sys.path.append('../marcos_client')
-
+import matplotlib.pyplot as plt
 import pdb
 st = pdb.set_trace
 
@@ -34,7 +34,7 @@ def trap_cent(centre_t, plateau_a, trap_t, ramp_t, ramp_pts, base_a=0):
     t, a = trapezoid(plateau_a, trap_t, ramp_t, ramp_pts, False, base_a)
     return t + centre_t - (trap_t + ramp_t)/2, a
 
-def turbo_spin_echo(self):
+def turbo_spin_echo(self, plotSeq):
     trap_ramp_pts=5
     rf_pi_duration=None
     grad_board = "ocra1"
@@ -197,19 +197,13 @@ def turbo_spin_echo(self):
 
         global_t += self.tr_pause_duration
 
-    rxd, msgs = expt.run()
-#    expt.close_server(True)
-#    expt._s.close() # close socket
-
-    expt.__del__()
-
-    if self.plot_rx:
-        
-        return rxd['rx0'], msgs
-#        plt.plot( rxd['rx0'].real )
-#        plt.plot( rxd['rx0'].imag )
-#        plt.plot( rxd['rx1'].real )
-#        plt.plot( rxd['rx1'].imag )
-#        plt.show()
+    if plotSeq==1:
+        expt.plot_sequence()
+        plt.show()
+        expt.__del__()
+    elif plotSeq==0:
+        rxd, msgs = expt.run()
+        expt.__del__()
+        return rxd['rx0'].real, msgs
 
 

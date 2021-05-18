@@ -58,13 +58,13 @@ class Namespace:
     TSE = "Turbo Spin Echo"
     gradientshims = "Gradients shim values"
     shim = "Shims (x,y,z)"
+    rf_wait = "Tx - rx time"
    
 class Tooltip_label:
     rx_period = "Sampling time"
     rf_amp = "Full scale = 1"
     
 class Tooltip_inValue:
-    lo_freq = "Value between 0 and 1"
     rf_amp = "Value between 0 and 1"
     dbg_sc = "Value between 0 and 1"
     slice_amp = "Value between 0 and 1"

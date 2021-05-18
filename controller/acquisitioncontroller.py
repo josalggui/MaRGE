@@ -13,11 +13,13 @@ Acquisition Manager
 
 from plotview.spectrumplot import SpectrumPlot
 from sequencemodes import defaultsequences
-from PyQt5.QtCore import QObject,  QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QObject,  pyqtSlot
 from manager.datamanager import DataManager
 from seq.radial import radial
 from seq.gradEcho import grad_echo
 from seq.turboSpinEcho import turbo_spin_echo
+from seq.fid import fid
+from seq.spinEcho import spin_echo
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, sequencelist=None):
@@ -35,21 +37,21 @@ class AcquisitionController(QObject):
         self.parent.clearPlotviewLayout()
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
         
-        print(self.sequence.lo_freq)
-
+        self.sequence.plot_rx = True
+        self.sequence.init_gpa = True 
+        
+        plotSeq=0
+        if self.sequence.seq == 'SE':
+            self.rxd, self.msgs=spin_echo(self.sequence, plotSeq)
+        if self.sequence.seq == 'FID':
+            self.rxd, self.msgs=fid(self.sequence, plotSeq)
         if self.sequence.seq == 'R':
-            self.sequence.plot_rx = True
-            self.sequence.init_gpa = True
-            self.rxd, self.msgs = radial(self.sequence)
+            self.rxd, self.msgs = radial(self.sequence, plotSeq)
         elif self.sequence.seq == 'GE':
-            self.sequence.plot_rx = True
-            self.sequence.init_gpa = True
-            self.rxd, self.msgs = grad_echo(self.sequence)
+            self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
-            self.sequence.plot_rx = True
-            self.sequence.init_gpa = True
             self.sequence.rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
-            self.rxd, self.msgs = turbo_spin_echo(self.sequence)
+            self.rxd, self.msgs = turbo_spin_echo(self.sequence, plotSeq)
 
         dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd))
         self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude, "frequency", "signal intensity", "Spectrum")

@@ -4,18 +4,18 @@ import sys
 sys.path.append('../../marcos_client')
 import numpy as np
 import experiment as ex
-
+import matplotlib.pyplot as plt
 import pdb
 st = pdb.set_trace
 
-def radial(self):
+def radial(self, plotSeq):
 
     tx_gate_pre = 2 # us, time to start the TX gate before each RF pulse begins
     tx_gate_post = 1 # us, time to keep the TX gate on after an RF pulse ends
     angles = np.linspace(0, 2*np.pi, self.trs) # angle
     
     #Shimming
-    shim_x: int = self.shim[0]
+#    shim_x: int = self.shim[0]
     shim_y: int = self.shim[1]
     shim_z: int = self.shim[2]
 
@@ -28,7 +28,6 @@ def radial(self):
             # second tx0 pulse and tx1 pulse purely for loopback debugging
             'tx0': ( np.array([self.rf_tstart, self.rf_tend,    self.rx_tstart + 15, self.rx_tend - 15]),
                      np.array([self.rf_amp, 0,    self.dbg_sc * (gx+gy*1j), 0]) ),
-            'tx1': ( np.array([self.rx_tstart + 15, self.rx_tend - 15]), np.array([self.dbg_sc * (gx+gy*1j), 0]) ),
             'grad_vz': ( np.array([self.grad_tstart]),
                          np.array([gx]) +shim_z),
             'grad_vy': ( np.array([self.grad_tstart]),
@@ -52,10 +51,11 @@ def radial(self):
         expt.add_flodict( radial_tr( tr_t, th ) )
         tr_t += self.tr_total_time
 
-    rxd, msgs = expt.run()
-    
-    #    expt.close_server(True)
-
-    expt.__del__()
-
-    return rxd['rx0'], msgs
+    if plotSeq==1:
+        expt.plot_sequence()
+        plt.show()
+        expt.__del__()
+    elif plotSeq==0:
+        rxd, msgs = expt.run()
+        expt.__del__()
+        return rxd['rx0'].real, msgs

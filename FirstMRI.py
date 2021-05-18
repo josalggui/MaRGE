@@ -1,7 +1,7 @@
 """
 Startup Code
 
-@author:    Yolanda Vives
+#@author:    Yolanda Vives
 
 """
 

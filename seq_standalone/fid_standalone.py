@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
 import sys
 sys.path.append('../marcos_client')
+sys.path.append('manager')
+
 import numpy as np
 import experiment as ex
 import matplotlib.pyplot as plt
-import matplotlib.pyplot as plt_seq
 from local_config import fpga_clk_freq_MHz
-
+#from datamanager import DataManager
 import pdb
 st = pdb.set_trace
 
    
-def fid(plot_rx=False, init_gpa=False,
-             dbg_sc=0.5, # set to 0 to avoid 2nd RF debugging pulse, otherwise amp between 0 or 1
+def fid(dbg_sc=0.5, # set to 0 to avoid 2nd RF debugging pulse, otherwise amp between 0 or 1
              lo_freq=0.1, # MHz
              rf_amp=1, # 1 = full-scale
              rf_duration=50,
              rf_tstart = 100,  # us
              tr_wait=100, # delay after end of RX before start of next TR
              rx_period=10/3,  # us, 3.333us, 300 kHz rate
-             readout_duration=500
+             readout_duration=500, 
+             shimming=(0.01, 0.01, 0.01)
              ):
 
     ## All times are in the context of a single TR, starting at time 0
+    init_gpa = True
 
 #    phase_amps = np.linspace(phase_amp, -phase_amp, trs)
     rf_tend = rf_tstart + rf_duration # us
@@ -65,26 +67,29 @@ def fid(plot_rx=False, init_gpa=False,
     tx0_q_t, tx0_q_a = idict['tx0_q']
     tx0_t = tx0_i_t / fpga_clk_freq_MHz
     tx0_y = (tx0_i_a + 1j * tx0_q_a)/32767
-    plt_seq.plot(tx0_t, tx0_y)
-    plt_seq.show()
+    plt.plot(tx0_t, tx0_y)
+    plt.show()
 
-
-    
     print(msgs)
     
     expt.__del__()
-
-    if plot_rx:
         
-        plt.plot( rxd['rx0'].real )
-        plt.plot( rxd['rx0'].imag )
-#        plt.plot( rxd['rx1'].real )
-#        plt.plot( rxd['rx1'].imag )
-        plt.show()
- 
+    plt.plot( np.abs(rxd['rx0']) )
+#        plt.plot( rxd['rx0'].real )
+#        plt.plot( rxd['rx0'].imag )
+    plt.show()
+    
+#    dataobject: DataManager = DataManager(rxd, lo_freq, len(rxd))
+#    plt.plot(dataobject.f_axis, dataobject.f_fftMagnitude)
+
+    
+#    d_cropped = rxd[0:len(rxd)]  # * 2000.0
+#    f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(rxd), len(rxd)))
+#    f_fftMagnitude = abs(f_fftData) 
+#    plt.plot(f_fftMagnitude)
         
 if __name__ == "__main__":
     
 #        for k in range(20):
 #            print(k)
-    fid(lo_freq=0.5, plot_rx=True, init_gpa=True, dbg_sc=0.5)
+    fid(lo_freq=0.9, rf_amp=1, dbg_sc=1)

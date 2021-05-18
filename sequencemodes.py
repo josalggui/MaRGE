@@ -14,6 +14,94 @@ Operation Modes
 
 from sequencesnamespace import Namespace as nmspc
 
+class SpinEchoSeq:
+    
+    def __init__(self, 
+                 seq:str, 
+                 dbg_sc: float=None, 
+                 lo_freq: float=None, 
+                 rf_amp: float=None, 
+                 trs: int=None, 
+                 rf_pi2_duration: int=None, 
+                 echo_duration:int=None, 
+                 readout_duration:int=None, 
+                 rx_period:float=None, 
+                 ):
+    
+        self.seq:str=seq
+        self.dbg_sc:float=dbg_sc
+        self.lo_freq:float=lo_freq
+        self.rf_amp: float=rf_amp
+        self.trs:int=trs
+        self.rf_pi2_duration:int=rf_pi2_duration
+        self.echo_duration:int=echo_duration
+        self.readout_duration:int=readout_duration
+        self.rx_period:float=rx_period
+    
+    @property
+    def systemproperties(self) -> dict:
+        # TODO: add server cmd's as third entry in list
+        return {
+            nmspc.lo_freq: [float(self.lo_freq)],
+            nmspc.rf_amp: [float(self.rf_amp)],
+            nmspc.dbg_sc:[float(self.dbg_sc)], 
+            nmspc.trs:[int(self. trs)]
+        }
+
+    @property
+    def sqncproperties(self) -> dict:
+        return{
+            nmspc.rf_pi2_duration:[int(self.rf_pi2_duration)],            
+            nmspc.echo_duration:[int(self.echo_duration)], 
+            nmspc.readout_duration:[int(self.readout_duration)], 
+            nmspc.rx_period:[float(self.rx_period)]
+        }    
+
+class FIDSeq:
+    
+    def __init__(self, 
+                 seq:str, 
+                 dbg_sc: float=None, 
+                 lo_freq: float=None, 
+                 rf_amp: float=None, 
+                 rf_duration: int=None, 
+                 rf_tstart:int=None, 
+                 rf_wait:int=None, 
+                 rx_period:float=None, 
+                 readout_duration:int=None
+                 ):
+        
+        self.seq: str=seq
+        self.dbg_sc: float= dbg_sc
+        self.lo_freq: float=lo_freq
+        self.rf_amp: float=rf_amp
+        self.rf_duration: int=rf_duration
+        self.rf_tstart:int=rf_tstart
+        self.rf_wait:int=rf_wait
+        self.rx_period:float=rx_period
+        self.readout_duration:int=readout_duration
+
+    @property
+    def systemproperties(self) -> dict:
+        # TODO: add server cmd's as third entry in list
+        return {
+            nmspc.lo_freq: [float(self.lo_freq)],
+            nmspc.rf_amp: [float(self.rf_amp)],
+            nmspc.dbg_sc:[float(self.dbg_sc)]
+        }
+
+    @property
+    def sqncproperties(self) -> dict:
+        return{
+            nmspc.rf_duration:[int(self.rf_duration)],            
+            nmspc.rf_tstart:[int(self.rf_tstart)], 
+            nmspc.rf_wait:[int(self.rf_wait)], 
+            nmspc.rx_period:[float(self.rx_period)], 
+            nmspc.readout_duration:[int(self.readout_duration)]
+        }    
+
+    
+        
 class RadialSeq:
     """
     Spectrum Operation Class
@@ -269,14 +357,16 @@ class TSE_Seq:
 Definition of default sequences
 """
 defaultsequences={
-    #
-    #FID(dbg_sc,lo_freq,rf_amp,trs,rx_period,trapRampDur,rfDur)
-    #'FID': FID('FID', 0.2, 1, 5, 3.333, 50, )
-    #RadialSeq(dbg_sc,lo_freq,rf_amp,trs,G,grad_tstart,TR,rf_tstart,rf_tend,rx_tstart,rx_tend,rx_period,sl_shim,ph_shim_rd_shim)
-    'Radial': RadialSeq('R', 0.5, 0.2, 0.2, 3, 0.5, 0, 220, 5, 50, 70, 180, 3.333, (0.01, 0.01, 0.01)),
-    #GradEchoSeq(dbg_sc,lo_freq,rf_amp,trs,rx_period,rf_tstart,sliceAmp,phAmp,rdAmp,rfDur,trapRampDur,phDelay,phDur,ph_shim_rd_shim)
+
+    #SpinEchoSeq(dbg_sc,lo_freq,rf_amp,trs,rf_pi2_duration,echo_duration,readout_duration,rx_period)
+    'Spin Echo': SpinEchoSeq('SE', 0.5, 0.2, 0.2, 1, 50, 2000, 500, 3.33), 
+    #FID(dbg_sc,lo_freq,rf_amp,rf_duration,rf_tstart,rf_wait,rx_period,readout_duration)
+    'Free Induction Decay': FIDSeq('FID', 0.2, 0.1, 0.6, 50, 100, 100, 3.333, 500), 
+    #RadialSeq(dbg_sc,lo_freq,rf_amp,trs,G,grad_tstart,TR,rf_tstart,rf_tend,rx_tstart,rx_tend,rx_period,shimming(sl,h,rd))
+    'Radial': RadialSeq('R', 0.5, 0.2, 0.2, 3, 0.5, 0, 220, 5, 50, 70, 180, 3.333, (0.01,  0.01,  0.01)),
+    #GradEchoSeq(dbg_sc,lo_freq,rf_amp,trs,rx_period,rf_tstart,sliceAmp,phAmp,rdAmp,rfDur,trapRampDur,phDelay,phDur,shimming(sl,h,rd))
     'Gradient Echo': GradEchoSeq('GE',0.5,  0.1, 0.1, 2, 3.333, 100, 0.4, 0.3, 0.8, 50, 50, 100, 200, (0.01, 0.01, 0.01)), 
-    #TurboSpinEcho(dbg_sc,lo_freq,rf_amp,trs,rx_period,trapRampDur,echosTR,echosDur,sliceAmp,phAmp,rdAmp,rfDur,phDur,rdDur,rdGradDur,phGint,TRPauseDur,ph_shim_rd_shim)
+    #TurboSpinEcho(dbg_sc,lo_freq,rf_amp,trs,rx_period,trapRampDur,echosTR,echosDur,sliceAmp,phAmp,rdAmp,rfDur,phDur,rdDur,rdGradDur,phGint,TRPauseDur,shimming(sl,h,rd))
     'Turbo Spin Echo': TSE_Seq('TSE',  0.5, 0.2, 1, 5, 3.333, 50, 5, 2000, 0.3, 0.6,0.8, 50, 150, 500, 700, 1200, 3000, (0.01, 0.01, 0.01))
 
 }

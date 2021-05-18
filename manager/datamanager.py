@@ -15,7 +15,6 @@ Data Manager
 """
 
 from PyQt5.QtCore import QObject, pyqtSignal
-from datetime import datetime
 from dataclasses import dataclass
 import numpy as np
 
@@ -59,7 +58,6 @@ class DataManager(QObject):
         self.samples = samples
         self.p_ts = self.samples * timePerSample
 
-        print(self.samples)
         d_cropped = self.data[0:self.samples]  # * 2000.0
         self._t_axis = np.linspace(0, self.p_ts, self.samples)
         self._t_magnitude = np.abs(d_cropped)
