@@ -57,7 +57,7 @@ def spin_echo(self, plotSeq):
         if echo_idx == 0:
             # do pi/2 pulse, then start first pi pulse
             return np.array([tstart + (echo_duration - rf_pi2_duration)/2, tstart + (echo_duration + rf_pi2_duration)/2,
-                             tstart + echo_duration - rf_pi_duration/2, rx_tcentre - 10, rx_tcentre + 10]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp, dbg_sc*(1 + 0.5j), 0])                        
+                             tstart + echo_duration - rf_pi_duration/2, rx_tcentre - 20, rx_tcentre + 20]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp, dbg_sc*(1 + 0.5j), 0])                        
         elif echo_idx == echos_per_tr:
             # finish final RF pulse
             return np.array([tstart + rf_pi_duration/2]), np.array([0])
