@@ -38,12 +38,15 @@ def spin_echo(plot_rx=True, init_gpa=False,
     # create appropriate waveforms for each echo, based on start time, echo index and TR index
     # note: echo index is 0 for the first interval (90 pulse until first 180 pulse) thereafter 1, 2 etc between each 180 pulse
     def rf_wf(tstart, echo_idx):
+        rx_tstart=tstart + (echo_duration - readout_duration)/2+ tr_pause_duration
+        rx_tend=tstart + (echo_duration + readout_duration)/2+ tr_pause_duration
+        rx_tcentre = (rx_tstart + rx_tend) / 2
         pi2_phase = 1 # x
         pi_phase = 1j # y
         if echo_idx == 0:
             # do pi/2 pulse, then start first pi pulse
             return np.array([tstart + (echo_duration - rf_pi2_duration)/2, tstart + (echo_duration + rf_pi2_duration)/2,
-                             tstart + echo_duration - rf_pi_duration/2]), np.array([pi2_phase, 0, pi_phase]) * rf_amp
+                             tstart + echo_duration - rf_pi_duration/2, rx_tcentre - 10, rx_tcentre + 10]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp, dbg_sc*(1 + 0.5j), 0])                        
         elif echo_idx == echos_per_tr:
             # finish final RF pulse
             return np.array([tstart + rf_pi_duration/2]), np.array([0])
