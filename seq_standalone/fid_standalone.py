@@ -61,15 +61,6 @@ def fid(dbg_sc=0.5, # set to 0 to avoid 2nd RF debugging pulse, otherwise amp be
 
     rxd, msgs = expt.run()    
    
-    # Plot pulses
-    idict = expt._seq
-    tx0_i_t, tx0_i_a = idict['tx0_i']
-    tx0_q_t, tx0_q_a = idict['tx0_q']
-    tx0_t = tx0_i_t / fpga_clk_freq_MHz
-    tx0_y = (tx0_i_a + 1j * tx0_q_a)/32767
-    plt.plot(tx0_t, tx0_y)
-    plt.show()
-
     print(msgs)
     
     expt.__del__()

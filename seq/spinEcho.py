@@ -96,7 +96,6 @@ def spin_echo(self, plotSeq):
     # 0.1 for a safety margin))
 
     global_t = 20 # start the first TR at 20us
-
     for tr in range(trs):
         for echo in range(echos_per_tr + 1):
             tx_t, tx_a = rf_wf(global_t, echo)

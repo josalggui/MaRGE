@@ -38,7 +38,8 @@ def turbo_spin_echo(self, plotSeq):
     trap_ramp_pts=5
     rf_pi_duration=None
     grad_board = "ocra1"
-
+    dbg_sc=self.dbg_sc
+    
 #                   plot_rx=False, init_gpa=False,
 #                    dbg_sc=0.5, # set to 0 to avoid RF debugging pulses in each RX window, otherwise amp between 0 or 1
 #                    lo_freq=0.2, # MHz
@@ -90,12 +91,15 @@ def turbo_spin_echo(self, plotSeq):
     # create appropriate waveforms for each echo, based on start time, echo index and TR index
     # note: echo index is 0 for the first interval (90 pulse until first 180 pulse) thereafter 1, 2 etc between each 180 pulse
     def rf_wf(tstart, echo_idx):
+        rx_tstart=tstart + (self.echo_duration - self.readout_duration)/2+ self.tr_pause_duration
+        rx_tend=tstart + (self.echo_duration + self.readout_duration)/2+ self.tr_pause_duration
+        rx_tcentre = (rx_tstart + rx_tend) / 2
         pi2_phase = 1 # x
         pi_phase = 1j # y
         if echo_idx == 0:
             # do pi/2 pulse, then start first pi pulse
             return np.array([tstart + (self.echo_duration - self.rf_pi2_duration)/2, tstart + (self.echo_duration + self.rf_pi2_duration)/2,
-                             tstart + self.echo_duration - rf_pi_duration/2]), np.array([pi2_phase, 0, pi_phase]) * self.rf_amp
+                             tstart + self.echo_duration - rf_pi_duration/2, rx_tcentre - 20, rx_tcentre + 20]), np.array([pi2_phase* self.rf_amp, 0, pi_phase* self.rf_amp, dbg_sc*(1 + 0.5j), 0]) 
         elif echo_idx == self.echos_per_tr:
             # finish final RF pulse
             return np.array([tstart + rf_pi_duration/2]), np.array([0])
@@ -161,7 +165,7 @@ def turbo_spin_echo(self, plotSeq):
 
     #tr_total_time = self.echo_duration * (self.echos_per_tr + 1) + self.tr_pause_duration
 
-    expt = ex.Experiment(lo_freq=self.lo_freq, rx_t=self.rx_period, init_gpa=self.init_gpa)
+    expt = ex.Experiment(lo_freq=self.lo_freq, rx_t=self.rx_period)
 
     global_t = 20 # start the first TR at 20us
 
@@ -185,12 +189,10 @@ def turbo_spin_echo(self, plotSeq):
 
             expt.add_flodict({
                 'tx0': (tx_t, tx_a),
-                'tx1': (tx_t, tx_a),
                 'grad_vx': (readout_grad_t, readout_grad_a+shim_x),
                 'grad_vy': (phase_grad_t, phase_grad_a+shim_y),
                 'grad_vz': (slice_grad_t, slice_grad_a+shim_z),
                 'rx0_en': (readout_t, readout_a),
-                'rx1_en': (readout_t, readout_a),
                 'tx_gate': (tx_gate_t, tx_gate_a),
                 'rx_gate': (rx_gate_t, rx_gate_a),
             })

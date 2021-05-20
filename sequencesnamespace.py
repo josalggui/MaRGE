@@ -40,7 +40,7 @@ class Namespace:
     trap_ramp_duration = "Gradients ramp duration"
     phase_delay = "Phase Delay"
     echos_per_tr = "Echos per TR"
-    echo_duration = "Echos Duration"
+    echo_duration = "TE"
     rf_duration = "RF Duration"
     phase_duration = "Phase Duration"
     readout_duration = "Readout Duration"

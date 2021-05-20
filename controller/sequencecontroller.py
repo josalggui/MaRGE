@@ -43,8 +43,8 @@ class SequenceList(QListWidget):
         # Make parent reachable from outside __init__
         self.parent = parent
 #        self._currentSequence = None
-        self._currentSequence = "Radial"
-        self.setParametersUI("Radial")
+        self._currentSequence = "Spin Echo"
+        self.setParametersUI("Spin Echo")
     
     def triggeredSequenceChanged(self, sequence: str = None) -> None:
         # TODO: set sequence only once right here or on changed signal
