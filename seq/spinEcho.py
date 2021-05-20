@@ -121,6 +121,6 @@ def spin_echo(self, plotSeq):
     elif plotSeq==0:
         rxd, msgs = expt.run()
         expt.__del__()
-        return rxd['rx0'].real, msgs
+        return rxd['rx0'], msgs
 
 

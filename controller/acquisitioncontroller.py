@@ -52,8 +52,8 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs = turbo_spin_echo(self.sequence, plotSeq)
 
         dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd))
-        self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude, "frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq))
-        self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, "time", "signal intensity", "%s Raw data" %(self.sequence.seq))
+        self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq))
+        self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq))
        # outputvalues = AcquisitionManager().getOutputParameterObject(dataobject, self.sequence.systemproperties)
 
         #self.outputsection.set_parameters(outputvalues)

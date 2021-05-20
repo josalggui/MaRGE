@@ -13,7 +13,7 @@ Plotview Spectrum (1D Plot)
 
 """
 
-from pyqtgraph import GraphicsLayoutWidget, PlotItem
+from pyqtgraph import GraphicsLayoutWidget
 from warnings import warn
 from datetime import datetime 
 import numpy as np
@@ -22,6 +22,8 @@ class SpectrumPlot (GraphicsLayoutWidget):
     def __init__(self,
                  xData: list,
                  yData: list,
+                 yData2:list, 
+                 yData3:list, 
                  xLabel: str,
                  yLabel: str, 
                  title:str
@@ -36,15 +38,19 @@ class SpectrumPlot (GraphicsLayoutWidget):
         dt_string = dt.strftime("%d-%m-%Y_%H:%M")
 
         plotitem = self.addPlot(row=0, col=0)
-        plotitem.plot(xData, np.abs(yData))
+        plotitem.addLegend()
+        plotitem.plot(xData, yData, pen=[255, 0, 0], name="magnitude")
+        if yData2 !=[]:
+            plotitem.plot(xData, yData2, pen=[0, 255, 0], name="real part")
+            plotitem.plot(xData, yData3, pen=[0, 0, 255], name="imaginary part")
         plotitem.setTitle("%s %s" % (title, dt_string))
-#        styles = {'color':'r', 'font-size':'20px'}
-#        plotitem.setLabel('left', 'Amplitude', **styles)
-#        plotitem.setLabel('bottom', 'Time', **styles)
+        plotitem.setLabel('left', 'Amplitude')
+        plotitem.setLabel('bottom', 'Time')
+
 #        vb = plotitem.getViewBox()
 #        vb.setBackgroundColor('w')
         
-        print("x: {}, y: {}".format(xLabel, yLabel))
+#        print("x: {}, y: {}".format(xLabel, yLabel))
 
 
 

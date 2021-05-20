@@ -68,7 +68,6 @@ class DataManager(QObject):
 
         self._frequency = p_frequency
         self._f_axis = np.linspace(-self.f_range / 2, self.f_range / 2, self.samples)
-#        self._f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(d_cropped), n=self.samples))
         self._f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(d_cropped), n=self.samples))
         self._f_fftMagnitude = abs(self.f_fftData)
 
