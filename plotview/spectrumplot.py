@@ -16,7 +16,6 @@ Plotview Spectrum (1D Plot)
 from pyqtgraph import GraphicsLayoutWidget
 from warnings import warn
 from datetime import datetime 
-import numpy as np
 
 class SpectrumPlot (GraphicsLayoutWidget):
     def __init__(self,

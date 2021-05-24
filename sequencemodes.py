@@ -1,15 +1,15 @@
 """
-Operation Modes
+Calibration functions Modes
 
-@author:    David Schote
-@contact:   david.schote@ovgu.de
+@author:    Yolanda Vives
+@contact:   
 @version:   2.0 (Beta)
-@change:    13/06/2020
+@change:    
 
 @summary:   TBD
 
-@status:    Under development, simple 1D spectrum operation implemented
-@todo:      Add gradient waveform, add more properties, add more operation types (create directory for operations)
+@status:    
+
 """
 
 from sequencesnamespace import Namespace as nmspc
@@ -26,6 +26,7 @@ class SpinEchoSeq:
                  echo_duration:int=None, 
                  readout_duration:int=None, 
                  rx_period:float=None, 
+                 shim: list=None
                  ):
     
         self.seq:str=seq
@@ -37,6 +38,7 @@ class SpinEchoSeq:
         self.echo_duration:int=echo_duration
         self.readout_duration:int=readout_duration
         self.rx_period:float=rx_period
+        self.shim:list=shim
     
     @property
     def systemproperties(self) -> dict:
@@ -56,6 +58,12 @@ class SpinEchoSeq:
             nmspc.readout_duration:[int(self.readout_duration)], 
             nmspc.rx_period:[float(self.rx_period)]
         }    
+        
+    @property
+    def gradientshims(self) -> dict:
+        return{
+            nmspc.shim:[list(self.shim)]
+        }
 
 class FIDSeq:
     
@@ -358,8 +366,8 @@ Definition of default sequences
 """
 defaultsequences={
 
-    #SpinEchoSeq(dbg_sc,lo_freq,rf_amp,trs,rf_pi2_duration,echo_duration,readout_duration,rx_period)
-    'Spin Echo': SpinEchoSeq('SE', 0.5, 0.2, 0.2, 1, 50, 2000, 500, 3.33), 
+    #SpinEchoSeq(dbg_sc,lo_freq,rf_amp,trs,rf_pi2_duration,echo_duration,readout_duration,rx_period,shimming(sl,h,rd))
+    'Spin Echo': SpinEchoSeq('SE', 0.5, 0.2, 0.2, 1, 50, 2000, 500, 3.33, (0,  0,  0)), 
     #FID(dbg_sc,lo_freq,rf_amp,rf_duration,rf_tstart,rf_wait,rx_period,readout_duration)
     'Free Induction Decay': FIDSeq('FID', 0.2, 0.1, 0.6, 50, 100, 100, 3.333, 500), 
     #RadialSeq(dbg_sc,lo_freq,rf_amp,trs,G,grad_tstart,TR,rf_tstart,rf_tend,rx_tstart,rx_tend,rx_period,shimming(sl,h,rd))

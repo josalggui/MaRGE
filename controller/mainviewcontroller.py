@@ -12,7 +12,7 @@ from PyQt5.QtCore import QFile, QTextStream,  pyqtSignal, pyqtSlot
 from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
 from controller.acquisitioncontroller import AcquisitionController
-#from controller.calibrationcontroller import CalibrationController
+from controller.calibrationcontroller import CalibrationController
 import pyqtgraph.exporters
 import os
 import ast
@@ -74,7 +74,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 #        ServerConnection.connectClientToServer(self)
         
         # Toolbar Actions
-#        self.action_calibration.triggered.connect(self.calibrate)
+        self.action_calibration.triggered.connect(self.calibrate)
         self.action_changeappearance.triggered.connect(self.changeAppearanceSlot)
         self.action_acquire.triggered.connect(acqCtrl.startAcquisition)
         self.action_loadparams.triggered.connect(self.load_parameters)
@@ -259,6 +259,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         msg.setText(text)
         msg.exec();
         
-#    def calibrate(self):
-#        seqCalib = CalibrationController(self, self.sequencelist)
-#        seqCalib.show()
+    def calibrate(self):
+        seqCalib = CalibrationController(self, self.sequencelist)
+        seqCalib.show()

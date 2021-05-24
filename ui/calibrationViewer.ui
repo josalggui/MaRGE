@@ -16,7 +16,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>GUI for Open-Source MRI</string>
+   <string>Calibration Window</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -391,7 +391,7 @@
     <string>Close</string>
    </property>
    <property name="toolTip">
-    <string>Close PhisioMRI_GUI</string>
+    <string>Close Calibration Window</string>
    </property>
    <property name="font">
     <font/>
@@ -403,7 +403,7 @@
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>../resources/icons/power.svg</normaloff>../resources/icons/power.svg</iconset>
+     <normaloff>../../../../.designer/resources/icons/power.svg</normaloff>../../../../.designer/resources/icons/power.svg</iconset>
    </property>
    <property name="text">
     <string>Connect</string>
