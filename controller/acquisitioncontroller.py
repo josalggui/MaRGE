@@ -20,6 +20,7 @@ from seq.gradEcho import grad_echo
 from seq.turboSpinEcho import turbo_spin_echo
 from seq.fid import fid
 from seq.spinEcho import spin_echo
+from seq.spinEcho1D import spin_echo1D
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, sequencelist=None):
@@ -41,6 +42,8 @@ class AcquisitionController(QObject):
         plotSeq=0
         if self.sequence.seq == 'SE':
             self.rxd, self.msgs=spin_echo(self.sequence, plotSeq)
+        if self.sequence.seq == 'SE1D':
+            self.rxd, self.msgs=spin_echo1D(self.sequence, plotSeq)
         if self.sequence.seq == 'FID':
             self.rxd, self.msgs=fid(self.sequence, plotSeq)
         if self.sequence.seq == 'R':

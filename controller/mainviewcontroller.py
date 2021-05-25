@@ -24,6 +24,8 @@ from seq.radial import radial
 from seq.turboSpinEcho import turbo_spin_echo
 from seq.fid import fid
 from seq.spinEcho import spin_echo
+from seq.spinEcho1D import spin_echo1D
+#from plotview.sequenceViewer import SequenceViewer
 from sequencemodes import defaultsequences
 from manager.datamanager import DataManager
 from datetime import date,  datetime 
@@ -241,6 +243,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             fid(self.sequence, plotSeq)
         if self.sequence.seq=='SE':
             spin_echo(self.sequence, plotSeq) 
+        if self.sequence.seq=='SE1D':
+            spin_echo1D(self.sequence, plotSeq)
         if self.sequence.seq == 'R':
             radial(self.sequence, plotSeq)    
         elif self.sequence.seq == 'GE':

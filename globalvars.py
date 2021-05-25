@@ -24,6 +24,7 @@ class Sequences:
     Class with predefined sequences as sequence objects
     """
     SE = SqncObject('Spin Echo', 'seq/spinEcho.py')
+    SE1D=SqncObject('Spin Echo 1D', 'seq/spinEcho1D.py')
     FID = SqncObject('Free Induction Decay', 'seq/fid.py')
     GE = SqncObject('Gradient Echo', 'seq/gradEcho.py')
     R = SqncObject('Radial', 'seq/radial.py')

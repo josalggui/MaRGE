@@ -64,6 +64,66 @@ class SpinEchoSeq:
         return{
             nmspc.shim:[list(self.shim)]
         }
+        
+class SpinEcho1DSeq:
+    
+    def __init__(self, 
+                 seq:str, 
+                 dbg_sc: float=None, 
+                 lo_freq: float=None, 
+                 rf_amp: float=None, 
+                 trs: int=None, 
+                 rf_pi2_duration: int=None, 
+                 echo_duration:int=None, 
+                 readout_duration:int=None, 
+                 rx_period:float=None, 
+                 shim: list=None, 
+                 readout_amp:float=None, 
+                 readout_grad_duration:int=None, 
+                 trap_ramp_duration:int=None
+                 ):
+    
+        self.seq:str=seq
+        self.dbg_sc:float=dbg_sc
+        self.lo_freq:float=lo_freq
+        self.rf_amp: float=rf_amp
+        self.trs:int=trs
+        self.rf_pi2_duration:int=rf_pi2_duration
+        self.echo_duration:int=echo_duration
+        self.readout_duration:int=readout_duration
+        self.rx_period:float=rx_period
+        self.shim:list=shim
+        self.readout_amp:float=readout_amp
+        self.readout_grad_duration:int=readout_grad_duration
+        self.trap_ramp_duration:int=trap_ramp_duration
+    
+    @property
+    def systemproperties(self) -> dict:
+        # TODO: add server cmd's as third entry in list
+        return {
+            nmspc.lo_freq: [float(self.lo_freq)],
+            nmspc.rf_amp: [float(self.rf_amp)],
+            nmspc.dbg_sc:[float(self.dbg_sc)], 
+            nmspc.trs:[int(self. trs)]
+        }
+
+    @property
+    def sqncproperties(self) -> dict:
+        return{
+            nmspc.rf_pi2_duration:[int(self.rf_pi2_duration)],            
+            nmspc.echo_duration:[int(self.echo_duration)], 
+            nmspc.readout_duration:[int(self.readout_duration)], 
+            nmspc.rx_period:[float(self.rx_period)], 
+            nmspc.readout_amp:[float(self.readout_amp)], 
+            nmspc.readout_grad_duration:[int(self.readout_grad_duration)], 
+            nmspc.trap_ramp_duration:[int(self.trap_ramp_duration)]
+        }    
+        
+    @property
+    def gradientshims(self) -> dict:
+        return{
+            nmspc.shim:[list(self.shim)]
+        }
 
 class FIDSeq:
     
@@ -368,6 +428,8 @@ defaultsequences={
 
     #SpinEchoSeq(dbg_sc,lo_freq,rf_amp,trs,rf_pi2_duration,echo_duration,readout_duration,rx_period,shimming(sl,h,rd))
     'Spin Echo': SpinEchoSeq('SE', 0.5, 0.2, 0.2, 1, 50, 2000, 500, 3.33, (0,  0,  0)), 
+    #SpinEcho1DSeq(dbg_sc,lo_freq,rf_amp,trs,rf_pi2_duration,echo_duration,readout_duration,rx_period,shimming(sl,h,rd))
+    'Spin Echo 1D': SpinEcho1DSeq('SE1D', 0.5, 3, 0.2, 1, 50, 2000, 500, 3.33, (0,  0,  0), 0.8, 700, 100), 
     #FID(dbg_sc,lo_freq,rf_amp,rf_duration,rf_tstart,rf_wait,rx_period,readout_duration)
     'Free Induction Decay': FIDSeq('FID', 0.2, 0.1, 0.6, 50, 100, 100, 3.333, 500), 
     #RadialSeq(dbg_sc,lo_freq,rf_amp,trs,G,grad_tstart,TR,rf_tstart,rf_tend,rx_tstart,rx_tend,rx_period,shimming(sl,h,rd))

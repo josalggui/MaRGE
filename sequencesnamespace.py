@@ -56,6 +56,7 @@ class Namespace:
     R = "Radial"
     GE = "Gradient Echo"
     TSE = "Turbo Spin Echo"
+    SE1D = "Spin Echo 1D"
     gradientshims = "Gradients shim values"
     shim = "Shims (x,y,z)"
     rf_wait = "Tx - rx time"
