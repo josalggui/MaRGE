@@ -59,11 +59,23 @@ def spin_echo(self, plotSeq):
     echo_duration=self.echo_duration
     readout_duration=self.readout_duration
     rx_period=self.rx_period
-    shim_x: int = self.shim[0]
-    shim_y: int = self.shim[1]
-    shim_z: int = self.shim[2]
+    shim_x: float = self.shim[0]
+    shim_y: float = self.shim[1]
+    shim_z: float = self.shim[2]
     trap_ramp_pts=5
-                     
+    readout_amp=0.8
+    readout_grad_duration=700
+    phase_start_amp=0.6
+    slice_start_amp=0.3
+    trap_ramp_duration=50
+    phase_grad_duration=150
+    phase_grad_interval=1200
+    
+    print(shim_x)
+    print(shim_y)
+    print(shim_z)
+    
+   
     """
     readout gradient: x
     phase gradient: y
@@ -76,8 +88,8 @@ def spin_echo(self, plotSeq):
     if rf_pi_duration is None:
         rf_pi_duration = 2 * rf_pi2_duration
     
-    phase_amps = np.linspace(self.phase_start_amp, -self.phase_start_amp, self.echos_per_tr)
-    slice_amps = np.linspace(self.slice_start_amp, -self.slice_start_amp, self.trs)
+    phase_amps = np.linspace(phase_start_amp, -phase_start_amp, echos_per_tr)
+    slice_amps = np.linspace(slice_start_amp, -slice_start_amp, self.trs)
 
     # create appropriate waveforms for each echo, based on start time, echo index and TR index
     # note: echo index is 0 for the first interval (90 pulse until first 180 pulse) thereafter 1, 2 etc between each 180 pulse
@@ -126,32 +138,32 @@ def spin_echo(self, plotSeq):
             
     def readout_grad_wf(tstart, echo_idx):
         if echo_idx == 0:
-            return trap_cent(tstart + self.echo_duration*3/4, self.readout_amp, self.readout_grad_duration/2,
-                             self.trap_ramp_duration, trap_ramp_pts)
+            return trap_cent(tstart + self.echo_duration*3/4, readout_amp, readout_grad_duration/2,
+                             trap_ramp_duration, trap_ramp_pts)
         else:
-            return trap_cent(tstart + self.echo_duration/2, self.readout_amp, self.readout_grad_duration,
-                             self.trap_ramp_duration, trap_ramp_pts)
+            return trap_cent(tstart + self.echo_duration/2, readout_amp, readout_grad_duration,
+                             trap_ramp_duration, trap_ramp_pts)
 
     def phase_grad_wf(tstart, echo_idx):
-        t1, a1 = trap_cent(tstart + (self.echo_duration - self.phase_grad_interval)/2, phase_amps[echo_idx-1], self.phase_grad_duration,
-                           self.trap_ramp_duration, trap_ramp_pts)
-        t2, a2 = trap_cent(tstart + (self.echo_duration + self.phase_grad_interval)/2, -phase_amps[echo_idx-1], self.phase_grad_duration,
-                           self.trap_ramp_duration, trap_ramp_pts)
+        t1, a1 = trap_cent(tstart + (self.echo_duration - phase_grad_interval)/2, phase_amps[echo_idx-1], phase_grad_duration,
+                           trap_ramp_duration, trap_ramp_pts)
+        t2, a2 = trap_cent(tstart + (self.echo_duration + phase_grad_interval)/2, -phase_amps[echo_idx-1], phase_grad_duration,
+                           trap_ramp_duration, trap_ramp_pts)
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
-        elif echo_idx == self.echos_per_tr: # last echo, don't need 2nd trapezoids
+        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
             return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
 
     def slice_grad_wf(tstart, echo_idx, tr_idx):
-        t1, a1 = trap_cent(tstart + (self.echo_duration - self.phase_grad_interval)/2, slice_amps[tr_idx], self.phase_grad_duration,
-                           self.trap_ramp_duration, trap_ramp_pts)
-        t2, a2 = trap_cent(tstart + (self.echo_duration + self.phase_grad_interval)/2, -slice_amps[tr_idx], self.phase_grad_duration,
-                           self.trap_ramp_duration, trap_ramp_pts)
+        t1, a1 = trap_cent(tstart + (self.echo_duration - phase_grad_interval)/2, slice_amps[tr_idx], phase_grad_duration,
+                           trap_ramp_duration, trap_ramp_pts)
+        t2, a2 = trap_cent(tstart + (self.echo_duration + phase_grad_interval)/2, -slice_amps[tr_idx], phase_grad_duration,
+                           trap_ramp_duration, trap_ramp_pts)
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
-        elif echo_idx == self.echos_per_tr: # last echo, don't need 2nd trapezoids
+        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
             return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
@@ -174,18 +186,21 @@ def spin_echo(self, plotSeq):
             phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo)
             slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo, tr)
 
-            global_t += echo_duration
-
             expt.add_flodict({
                 'tx0': (tx_t, tx_a),
-                'grad_vx': (readout_grad_t, shim_x),
-                'grad_vy': (phase_grad_t, shim_y),
-                'grad_vz': (slice_grad_t, shim_z),
+#                'grad_vx': (readout_grad_t, shim_x),
+#                'grad_vy': (phase_grad_t, shim_y),
+#                'grad_vz': (slice_grad_t, shim_z),
+                'grad_vx': (np.array([global_t]), np.array([shim_x])), 
+                'grad_vy': (np.array([global_t]), np.array([shim_y])), 
+                'grad_vz': (np.array([global_t]), np.array([shim_z])), 
                 'rx0_en': (readout_t, readout_a),
                 'tx_gate': (tx_gate_t, tx_gate_a),
                 'rx_gate': (rx_gate_t, rx_gate_a),
             })
-
+            
+            global_t += echo_duration
+            
         global_t += tr_pause_duration
         
     if plotSeq==1:

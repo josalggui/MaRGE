@@ -178,6 +178,13 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
                     elif (t is int): 
                         value: int = int(self.input_value.text())
                         setattr(defaultsequences[self.sequence], item, value)
+                    else:
+                        v = self.input_value.text()
+                        v=v.replace("[", "")
+                        v=v.replace("]", "")
+                        v2 = list(v.split(","))
+                        value: list = list([float(v2[0]), float(v2[1]), float(v2[2])])
+                        setattr(defaultsequences[self.sequence], item, value)
 
                 
     def validate_input(self):
