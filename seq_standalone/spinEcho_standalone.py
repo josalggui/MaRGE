@@ -20,6 +20,9 @@ def spin_echo(plot_rx=True, init_gpa=False,
                     echo_duration=2000, # us, time from the centre of one echo to centre of the next
                     readout_duration=500, # us, time in the centre of an echo when the readout occurs
                     rx_period=10/3, # us, 3.333us, 300 kHz rate
+                    shim_x=0, 
+                    shim_y=0, 
+                    shim_z=0
                     # (must at least be longer than readout_duration + trap_ramp_duration)
                     ):
                         
@@ -97,6 +100,9 @@ def spin_echo(plot_rx=True, init_gpa=False,
 
             expt.add_flodict({
                 'tx0': (tx_t, tx_a),
+                'grad_vx': (np.array([global_t]), np.array([shim_x])), 
+                'grad_vy': (np.array([global_t]), np.array([shim_y])), 
+                'grad_vz': (np.array([global_t]), np.array([shim_z])), 
                 'rx0_en': (readout_t, readout_a),
                 'tx_gate': (tx_gate_t, tx_gate_a),
                 'rx_gate': (rx_gate_t, rx_gate_a),
@@ -118,4 +124,4 @@ def spin_echo(plot_rx=True, init_gpa=False,
 
 if __name__ == "__main__":
     
-    spin_echo(lo_freq=1, trs=1, dbg_sc=0.5)
+    spin_echo(lo_freq=1, trs=1, dbg_sc=0.5, shim_x=0.1, shim_y=0.1, shim_z=0.1)
