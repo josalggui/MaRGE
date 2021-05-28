@@ -25,7 +25,8 @@ class SpectrumPlot (GraphicsLayoutWidget):
                  yData3:list, 
                  xLabel: str,
                  yLabel: str, 
-                 title:str
+                 title:str, 
+                 xlabel:str
                  ):
         super(SpectrumPlot, self).__init__()
 
@@ -44,8 +45,8 @@ class SpectrumPlot (GraphicsLayoutWidget):
             plotitem.plot(xData, yData3, pen=[0, 0, 255], name="imaginary part")
         plotitem.setTitle("%s %s" % (title, dt_string))
         plotitem.setLabel('left', 'Amplitude')
-        plotitem.setLabel('bottom', 'Time')
-
+        plotitem.setLabel('bottom', xlabel)
+ 
 #        vb = plotitem.getViewBox()
 #        vb.setBackgroundColor('w')
         

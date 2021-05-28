@@ -25,6 +25,8 @@ class Sequences:
     """
     SE = SqncObject('Spin Echo', 'seq/spinEcho.py')
     SE1D=SqncObject('Spin Echo 1D', 'seq/spinEcho1D.py')
+    SE2D=SqncObject('Spin Echo 2D', 'seq/spinEcho2D.py')
+    SE3D=SqncObject('Spin Echo 3D', 'seq/spinEcho3D.py')
     FID = SqncObject('Free Induction Decay', 'seq/fid.py')
     GE = SqncObject('Gradient Echo', 'seq/gradEcho.py')
     R = SqncObject('Radial', 'seq/radial.py')

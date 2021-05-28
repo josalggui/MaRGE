@@ -60,6 +60,8 @@ class Namespace:
     gradientshims = "Gradients shim values"
     shim = "Shims (x,y,z)"
     rf_wait = "Tx - rx time"
+    BW= "BandWidth"
+    n="Number of points (rd,ph,sl)"
    
 class Tooltip_label:
     rx_period = "Sampling time"
@@ -70,7 +72,7 @@ class Tooltip_inValue:
     dbg_sc = "Value between 0 and 1"
     slice_amp = "Value between 0 and 1"
     phase_amp = "Value between 0 and 1"
-    readout_amp = "Value between 0 and 1"
+#    readout_amp = "Value between 0 and 1"
     G = "Value between 0 and 1"
     phase_start_amp = "Value between 0 and 1"
     slice_start_amp = "Value between 0 and 1"

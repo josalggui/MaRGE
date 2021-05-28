@@ -1,0 +1,1 @@
+{'seq': 'SE2D', 'dbg_sc': 0.5, 'lo_freq': 3, 'rf_amp': 0.2, 'trs': 1, 'rf_pi2_duration': 50, 'echo_duration': 2000, 'readout_duration': 500, 'BW': 0.3, 'shim': (0, 0, 0), 'readout_amp': 0.8, 'readout_grad_duration': 700, 'trap_ramp_duration': 100, 'phase_start_amp': 0.6, 'phase_grad_duration': 150, 'plot_rx': True, 'init_gpa': True}

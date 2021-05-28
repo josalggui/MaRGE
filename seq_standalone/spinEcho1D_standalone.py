@@ -36,20 +36,19 @@ def trap_cent(centre_t, plateau_a, trap_t, ramp_t, ramp_pts, base_a=0):
 
 def spin_echo1D(plot_rx=True, init_gpa=False,
                     dbg_sc=0.5, # set to 0 to avoid RF debugging pulses in each RX window, otherwise amp between 0 or 1
-                    lo_freq=0.2, # MHz
-                    rf_amp=1, # 1 = full-scale
+                    lo_freq=3.0718, # MHz
+                    rf_amp=0.6, # 1 = full-scale
                     trs=1, 
-                    rf_pi2_duration=50, # us, rf pi/2 pulse length
+                    rf_pi2_duration=70, # us, rf pi/2 pulse length
                     rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
 
                     # spin-echo properties
                     echo_duration=2000, # us, time from the centre of one echo to centre of the next
                     readout_duration=500, # us, time in the centre of an echo when the readout occurs
-                    rx_period=10/3, # us, 3.333us, 300 kHz rate
+                    BW=0.3, # MHz (rx_period=3.333us, 300 kHz rate)
                     shim_x=0, 
                     shim_y=0, 
                     shim_z=0, 
-                    # (must at least be longer than readout_duration + trap_ramp_duration)
                     readout_amp=0.6, 
                     readout_grad_duration=700, 
                     trap_ramp_duration=100
@@ -62,9 +61,12 @@ def spin_echo1D(plot_rx=True, init_gpa=False,
     slice_start_amp=0.3
 
     phase_grad_duration=150
-    phase_grad_interval=1200
+    rx_period=1/BW
     
-   
+    grad_readout_delay=8.83    # readout amplifier delay
+    grad_phase_delay=8.83
+    grad_slice_delay=8.83
+    
     """
     readout gradient: x
     phase gradient: y
@@ -72,7 +74,7 @@ def spin_echo1D(plot_rx=True, init_gpa=False,
     """
     
     tr_pause_duration=2000
-    echos_per_tr=1 # number of spin echoes (180 pulses followed by readouts) to do
+    echos_per_tr=2 # number of spin echoes (180 pulses followed by readouts) to do
                     
     if rf_pi_duration is None:
         rf_pi_duration = 2 * rf_pi2_duration
@@ -92,7 +94,7 @@ def spin_echo1D(plot_rx=True, init_gpa=False,
         if echo_idx == 0:
             # do pi/2 pulse, then start first pi pulse
             return np.array([tstart + (echo_duration - rf_pi2_duration)/2, tstart + (echo_duration + rf_pi2_duration)/2,
-                             tstart + echo_duration - rf_pi_duration/2, rx_tcentre - 20, rx_tcentre + 20]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp, dbg_sc*(1 + 0.5j), 0])                        
+                             tstart + echo_duration - rf_pi_duration/2,rx_tcentre - 20, rx_tcentre + 20]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp,  dbg_sc*(1 + 0.5j), 0])                        
         elif echo_idx == echos_per_tr:
             # finish final RF pulse
             return np.array([tstart + rf_pi_duration/2]), np.array([0])
@@ -127,17 +129,23 @@ def spin_echo1D(plot_rx=True, init_gpa=False,
             
     def readout_grad_wf(tstart, echo_idx):
         if echo_idx == 0:
-            return trap_cent(tstart + echo_duration*3/4, readout_amp, readout_grad_duration/2,
+#            return trap_cent(tstart + echo_duration*3/4, readout_amp, readout_grad_duration/2,
+#                             trap_ramp_duration, trap_ramp_pts)
+            return trap_cent(tstart + (echo_duration + rf_pi2_duration+readout_grad_duration-trap_ramp_duration)/2-grad_readout_delay, readout_amp, readout_grad_duration/2,
                              trap_ramp_duration, trap_ramp_pts)
         else:
-            return trap_cent(tstart + echo_duration/2, readout_amp, readout_grad_duration,
+            return trap_cent(tstart + echo_duration/2-grad_readout_delay, readout_amp, readout_grad_duration,
                              trap_ramp_duration, trap_ramp_pts)
 
     def phase_grad_wf(tstart, echo_idx):
-        t1, a1 = trap_cent(tstart + (echo_duration - phase_grad_interval)/2, phase_amps[echo_idx-1], phase_grad_duration,
+#        t1, a1 = trap_cent(tstart + (self.echo_duration - phase_grad_interval)/2, phase_amps[echo_idx-1], phase_grad_duration,
+#                           trap_ramp_duration, trap_ramp_pts)
+#        t2, a2 = trap_cent(tstart + (self.echo_duration + phase_grad_interval)/2, -phase_amps[echo_idx-1], phase_grad_duration,
+#                           trap_ramp_duration, trap_ramp_pts)
+        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, phase_amps[echo_idx-1], phase_grad_duration,
                            trap_ramp_duration, trap_ramp_pts)
-        t2, a2 = trap_cent(tstart + (echo_duration + phase_grad_interval)/2, -phase_amps[echo_idx-1], phase_grad_duration,
-                           trap_ramp_duration, trap_ramp_pts)
+        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, -phase_amps[echo_idx-1], phase_grad_duration,
+                           trap_ramp_duration, trap_ramp_pts)   
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
         elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
@@ -146,17 +154,20 @@ def spin_echo1D(plot_rx=True, init_gpa=False,
             return np.hstack([t1, t2]), np.hstack([a1, a2])
 
     def slice_grad_wf(tstart, echo_idx, tr_idx):
-        t1, a1 = trap_cent(tstart + (echo_duration - phase_grad_interval)/2, slice_amps[tr_idx], phase_grad_duration,
+#        t1, a1 = trap_cent(tstart + (self.echo_duration - phase_grad_interval)/2, slice_amps[tr_idx], phase_grad_duration,
+#                           trap_ramp_duration, trap_ramp_pts)
+#        t2, a2 = trap_cent(tstart + (self.echo_duration + phase_grad_interval)/2, -slice_amps[tr_idx], phase_grad_duration,
+#                           trap_ramp_duration, trap_ramp_pts)
+        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, slice_amps[tr_idx], phase_grad_duration,
                            trap_ramp_duration, trap_ramp_pts)
-        t2, a2 = trap_cent(tstart + (echo_duration + phase_grad_interval)/2, -slice_amps[tr_idx], phase_grad_duration,
-                           trap_ramp_duration, trap_ramp_pts)
+        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_slice_delay, -slice_amps[tr_idx], phase_grad_duration,
+                           trap_ramp_duration, trap_ramp_pts)  
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
         elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
             return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
-
 
     expt = ex.Experiment(lo_freq=lo_freq, rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
     # gpa_fhdo_offset_time in microseconds; offset between channels to
@@ -192,7 +203,7 @@ def spin_echo1D(plot_rx=True, init_gpa=False,
     expt.__del__()
 
     if plot_rx:
-        plt.plot( rxd['rx0'].real)
+        plt.plot( rxd['rx0'])
 #        plt.plot( rxd['rx0'].imag )
 #        plt.plot( rxd['rx1'].real )
 #        plt.plot( rxd['rx1'].imag )
@@ -201,5 +212,5 @@ def spin_echo1D(plot_rx=True, init_gpa=False,
 
 if __name__ == "__main__":
     
-    spin_echo1D(lo_freq=3, trs=1, dbg_sc=0.5)
+    spin_echo1D(lo_freq=3, trs=1, dbg_sc=0)
 

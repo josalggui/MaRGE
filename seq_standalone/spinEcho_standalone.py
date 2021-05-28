@@ -8,22 +8,21 @@ import matplotlib.pyplot as plt
 import pdb
 st = pdb.set_trace
 
-def spin_echo(plot_rx=True, init_gpa=False,
-                    dbg_sc=0.5, # set to 0 to avoid RF debugging pulses in each RX window, otherwise amp between 0 or 1
-                    lo_freq=0.2, # MHz
-                    rf_amp=1, # 1 = full-scale
+def spin_echo(lo_freq=0.2, # MHz
+                    rf_amp=0.62, # 1 = full-scale
                     trs=1, 
                     rf_pi2_duration=50, # us, rf pi/2 pulse length
                     rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
 
                     # spin-echo properties
                     echo_duration=2000, # us, time from the centre of one echo to centre of the next
-                    readout_duration=500, # us, time in the centre of an echo when the readout occurs
-                    rx_period=10/3, # us, 3.333us, 300 kHz rate
+                    readout_duration=1000, # us, time in the centre of an echo when the readout occurs
+                    BW=0.05, # MHz (rx_period=3.333us, 300 kHz rate)                    
                     shim_x=0, 
                     shim_y=0, 
-                    shim_z=0
+                    shim_z=0, 
                     # (must at least be longer than readout_duration + trap_ramp_duration)
+                    dbg_sc=0, # set to 0 to avoid RF debugging pulses in each RX window, otherwise amp between 0 or 1
                     ):
                         
     """
@@ -31,7 +30,8 @@ def spin_echo(plot_rx=True, init_gpa=False,
     phase gradient: y
     slice/partition gradient: z
     """
-
+    init_gpa=False
+    rx_period=1/BW
     tr_pause_duration=2000
     echos_per_tr=1 # number of spin echoes (180 pulses followed by readouts) to do
                     
@@ -112,16 +112,18 @@ def spin_echo(plot_rx=True, init_gpa=False,
         
     rxd, msgs = expt.run()
     
+    return rxd['rx0'], msgs
+    
     expt.__del__()
 
-    if plot_rx:
-        plt.plot( rxd['rx0'].real)
-#        plt.plot( rxd['rx0'].imag )
-#        plt.plot( rxd['rx1'].real )
-#        plt.plot( rxd['rx1'].imag )
-        plt.show()
+#    if plot_rx:
+#        plt.plot( rxd['rx0'].real)
+##        plt.plot( rxd['rx0'].imag )
+##        plt.plot( rxd['rx1'].real )
+##        plt.plot( rxd['rx1'].imag )
+#        plt.show()
 
-
-if __name__ == "__main__":
-    
-    spin_echo(lo_freq=1, trs=1, dbg_sc=0.5, shim_x=0.1, shim_y=0.1, shim_z=0.1)
+#
+#if __name__ == "__main__":
+#    
+#    spin_echo(lo_freq=1, trs=1, dbg_sc=0.5, shim_x=0.1, shim_y=0.1, shim_z=0.1)

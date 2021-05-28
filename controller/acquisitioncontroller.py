@@ -21,6 +21,8 @@ from seq.turboSpinEcho import turbo_spin_echo
 from seq.fid import fid
 from seq.spinEcho import spin_echo
 from seq.spinEcho1D import spin_echo1D
+from seq.spinEcho2D import spin_echo2D
+from seq.spinEcho3D import spin_echo3D
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, sequencelist=None):
@@ -44,6 +46,10 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs=spin_echo(self.sequence, plotSeq)
         if self.sequence.seq == 'SE1D':
             self.rxd, self.msgs=spin_echo1D(self.sequence, plotSeq)
+        if self.sequence.seq == 'SE2D':
+            self.rxd, self.msgs=spin_echo2D(self.sequence, plotSeq)
+        if self.sequence.seq == 'SE3D':
+            self.rxd, self.msgs=spin_echo3D(self.sequence, plotSeq)
         if self.sequence.seq == 'FID':
             self.rxd, self.msgs=fid(self.sequence, plotSeq)
         if self.sequence.seq == 'R':
@@ -55,8 +61,8 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs = turbo_spin_echo(self.sequence, plotSeq)
 
         dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd))
-        self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq))
-        self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq))
+        self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency')
+        self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time')
        # outputvalues = AcquisitionManager().getOutputParameterObject(dataobject, self.sequence.systemproperties)
 
         #self.outputsection.set_parameters(outputvalues)
@@ -67,9 +73,9 @@ class AcquisitionController(QObject):
         self.parent.lo_freq = self.sequence.lo_freq
         print(self.msgs)
 
-    #    self.acquisitionData = dataobject
+#        self.parent.save_data(self)
+        
 
-#        print("Operation: \n {}".format(operation))
 
 
         

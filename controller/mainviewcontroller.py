@@ -25,6 +25,8 @@ from seq.turboSpinEcho import turbo_spin_echo
 from seq.fid import fid
 from seq.spinEcho import spin_echo
 from seq.spinEcho1D import spin_echo1D
+from seq.spinEcho2D import spin_echo2D
+from seq.spinEcho3D import spin_echo3D
 #from plotview.sequenceViewer import SequenceViewer
 from sequencemodes import defaultsequences
 from manager.datamanager import DataManager
@@ -245,6 +247,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             spin_echo(self.sequence, plotSeq) 
         if self.sequence.seq=='SE1D':
             spin_echo1D(self.sequence, plotSeq)
+        if self.sequence.seq=='SE2D':
+            spin_echo2D(self.sequence, plotSeq)
+        if self.sequence.seq=='SE3D':
+            spin_echo3D(self.sequence, plotSeq)
         if self.sequence.seq == 'R':
             radial(self.sequence, plotSeq)    
         elif self.sequence.seq == 'GE':
