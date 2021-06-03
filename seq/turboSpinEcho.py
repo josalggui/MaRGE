@@ -90,7 +90,7 @@ def turbo_spin_echo(self, plotSeq):
     if rf_pi_duration is None:
         rf_pi_duration = 2 * self.rf_pi2_duration
 
-    phase_amps = np.linspace(self.phase_start_amp, -self.phase_start_amp, self.echos_per_tr)
+    phase_amps = np.linspace(self.phase_start_amp, self.phase_start_amp/3, self.echos_per_tr)
     slice_amps = np.linspace(self.slice_start_amp, -self.slice_start_amp, self.trs)
 
     # create appropriate waveforms for each echo, based on start time, echo index and TR index
@@ -151,9 +151,9 @@ def turbo_spin_echo(self, plotSeq):
 #                           trap_ramp_duration, trap_ramp_pts)
 #        t2, a2 = trap_cent(tstart + (self.echo_duration + phase_grad_interval)/2, -phase_amps[echo_idx-1], phase_grad_duration,
 #                           trap_ramp_duration, trap_ramp_pts)
-        t1, a1 = trap_cent(tstart + (rf_pi_duration+self.phase_grad_duration-self.trap_ramp_duration)/2+self.trap_ramp_duration-grad_phase_delay, phase_amps[echo_idx], self.phase_grad_duration,
+        t1, a1 = trap_cent(tstart + (rf_pi_duration+self.phase_grad_duration-self.trap_ramp_duration)/2+self.trap_ramp_duration-grad_phase_delay, phase_amps[echo_idx-1], self.phase_grad_duration,
                            self.trap_ramp_duration, trap_ramp_pts)
-        t2, a2 = trap_cent(tstart + (self.echo_duration + self.readout_duration+self.trap_ramp_duration)/2+self.trap_ramp_duration-grad_phase_delay, -phase_amps[echo_idx], self.phase_grad_duration,
+        t2, a2 = trap_cent(tstart + (self.echo_duration + self.readout_duration+self.trap_ramp_duration)/2+self.trap_ramp_duration-grad_phase_delay, -phase_amps[echo_idx-1], self.phase_grad_duration,
                            self.trap_ramp_duration, trap_ramp_pts)    
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
