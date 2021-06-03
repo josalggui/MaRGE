@@ -14,6 +14,8 @@ Operations Namespace
 class Namespace:
     dbg_sc = "Debug"
     systemproperties = "System Properties"
+    RFproperties = "RF and System Properties"
+    Gproperties = "Gradients Properties"
     lo_freq = "Frequency (MHz)"
     rf_amp = "RF Amplitude"
     G = "Gradients amplification"
@@ -46,7 +48,7 @@ class Namespace:
     readout_duration = "Readout Duration"
     readout_grad_duration = "Readout Gradient Duration"
     phase_grad_interval = "Phase interval"
-    phase_grad_duration = "Phase Gradient Duration"
+    phase_grad_duration = "Phase and Slice Duration"
     tr_pause_duration = "TR pause Duration"
     plot_rx = "plot rx"
     init_gpa = "GPA initialisation"
@@ -61,7 +63,10 @@ class Namespace:
     shim = "Shims (x,y,z)"
     rf_wait = "Tx - rx time"
     BW= "BandWidth"
-    n="Number of points (rd,ph,sl)"
+    n="Number of points (Nx,Ny,Nz)"
+    fov="FOV (rd,ph,sl)"
+    tr="TR"
+    nScans="nScans"
    
 class Tooltip_label:
     rx_period = "Sampling time"

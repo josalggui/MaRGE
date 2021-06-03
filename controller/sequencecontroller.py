@@ -12,7 +12,7 @@ Operations Controller
 @todo:      Extend construction of parameter section (headers, more categories, etc. )
 
 """
-from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel
+from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel,  QCheckBox
 from PyQt5.QtCore import Qt, QRegExp
 from sequencemodes import defaultsequences
 from sequencesnamespace import Namespace as nmspc
@@ -22,6 +22,7 @@ from PyQt5.uic import loadUiType
 from PyQt5.QtGui import QRegExpValidator
 
 Parameter_Form, Parameter_Base = loadUiType('ui/inputparameter.ui')
+#Parameter_FormG, Parameter_BaseG = loadUIType('ui/gradients.ui')
 
 
 class SequenceList(QListWidget):
@@ -78,15 +79,25 @@ class SequenceList(QListWidget):
             seqs_prop = defaultsequences[sequence].sqncproperties
             inputwidgets += [self.generateLabelItem(nmspc.sqncproperties)]
             inputwidgets += self.generateWidgetsFromDict(seqs_prop, sequence)
-
+                        
+        if hasattr(defaultsequences[sequence], 'RFproperties'):
+            sys_prop = defaultsequences[sequence].RFproperties
+            inputwidgets += [self.generateLabelItem(nmspc.RFproperties)]
+            inputwidgets += self.generateWidgetsFromDict(sys_prop, sequence)
+            
+        if hasattr(defaultsequences[sequence], 'Gproperties'):
+            sys_prop = defaultsequences[sequence].Gproperties
+            inputwidgets += [self.generateLabelItem(nmspc.Gproperties)]
+#            inputwidgets += [self.generateTickItem()]
+            inputwidgets += self.generateWidgetsFromDict(sys_prop, sequence)     
+     
         if hasattr(defaultsequences[sequence], 'gradientshims'):
             shims = defaultsequences[sequence].gradientshims
             inputwidgets += [(self.generateLabelItem(nmspc.gradientshims))]
-            inputwidgets += (self.generateWidgetsFromDict(shims, sequence))
+            inputwidgets += (self.generateWidgetsFromDict(shims, sequence))     
             
         for item in inputwidgets:
             self.parent.layout_parameters.addWidget(item)
-        
        
     @staticmethod
     def generateWidgetsFromDict(obj: dict = None, sequence: str = None) -> list:
@@ -102,6 +113,15 @@ class SequenceList(QListWidget):
         label.setText(text)
         label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
         return label
+        
+#    def generateTickItem(text):
+#        Qx = QCheckBox("Qx")
+#        Qx.setChecked(True)
+        
+#        Qy = QRadioButton('Qy')
+#        Qy.setChecked(True)
+#        Qz = QRadioButton('Qz')
+        return Qx
 
     def get_items(self, struct: dict = None, sequence:str = None) -> list:
         itemlist: list = []

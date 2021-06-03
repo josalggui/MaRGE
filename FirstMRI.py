@@ -17,7 +17,7 @@ VERSION = "0.1.0"
 AUTHOR = "Yolanda Vives"
 
 if __name__ == '__main__':
-    print("Graphical User Interface for Magnetic Resonance Imaging {} by {}".format(VERSION, AUTHOR))
+    print("Graphical User Interface for Magnetic Resonance Imaging")
     
    
     app = QApplication(sys.argv)

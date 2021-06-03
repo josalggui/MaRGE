@@ -75,7 +75,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Connection to the server
         self.ip = ip_address
         
-#        ServerConnection.connectClientToServer(self)
+        # Init gpa
+        
         
         # Toolbar Actions
         self.action_calibration.triggered.connect(self.calibrate)
