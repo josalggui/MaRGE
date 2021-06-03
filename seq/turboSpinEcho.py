@@ -5,6 +5,7 @@ sys.path.append('../marcos_client')
 import matplotlib.pyplot as plt
 import pdb
 st = pdb.set_trace
+from scipy.io import savemat
 
 
 def trapezoid(plateau_a, total_t, ramp_t, ramp_pts, total_t_end_to_end=True, base_a=0):
@@ -212,6 +213,9 @@ def turbo_spin_echo(self, plotSeq):
             })
 
         global_t += self.tr_pause_duration
+        
+        waves=expt.get_flodict()
+        savemat("experiments/%s.mat" % (self.sequence), waves)
 
     if plotSeq==1:
         expt.plot_sequence()
