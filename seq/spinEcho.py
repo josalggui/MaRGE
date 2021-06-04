@@ -89,6 +89,7 @@ def spin_echo(self, plotSeq):
     shim_x: float = self.shim[0]
     shim_y: float = self.shim[1]
     shim_z: float = self.shim[2]
+    nScans=self.nScans
     n_rd:int=self.n[0]
     n_ph:int=self.n[1]
     n_sl:int=self.n[2]
@@ -98,11 +99,12 @@ def spin_echo(self, plotSeq):
     readout_amp=self.readout_amp
 #    readout_grad_duration=self.readout_grad_duration
     trap_ramp_duration=self.trap_ramp_duration   
-    phase_start_amp=self.phase_start_amp
+#    phase_start_amp=self.phase_start_amp
     phase_grad_duration=self.phase_grad_duration
 #    phase_grad_interval=self.phase_grad_interval 
-    slice_start_amp=self.slice_start_amp
-    
+#   slice_start_amp=self.slice_start_amp
+    t_ph = self.t_ph
+   
     trap_ramp_pts=trap_ramp_duration*0.2    # 0.2 puntos/ms
     grad_readout_delay=8.83    # readout amplifier delay
     grad_phase_delay=8.83
@@ -120,7 +122,7 @@ def spin_echo(self, plotSeq):
     if rf_pi_duration is None:
         rf_pi_duration = 2 * rf_pi2_duration
         
-    SweepMode=1
+#    SweepMode=1
     
     phase_amps = np.linspace(phase_start_amp, -phase_start_amp, n_ph)
 #    phase_amps=phase_amps[getIndex(phase_amps, echos_per_tr, SweepMode)]
@@ -128,19 +130,23 @@ def spin_echo(self, plotSeq):
 #    slice_amps=slice_amps[getIndex(slice_amps, echos_per_tr, SweepMode)]
 #    slice_amps = np.linspace(slice_start_amp, -slice_start_amp, trs)
 
+    gammaB = 42.56    # MHz/T
+    # readout amplitude
+    Grd = BW/(gammaB*fov_rd)
+    # slice amplitude
+    Gph = n_ph/(2*gammaB*fov_ph*(t_ph+trap_ramp_duration))
+    
+
     # create appropriate waveforms for each echo, based on start time, echo index and TR index
     # note: echo index is 0 for the first interval (90 pulse until first 180 pulse) thereafter 1, 2 etc between each 180 pulse
    
     def rf_wf(tstart, echo_idx):
-        rx_tstart=tstart + (echo_duration - readout_duration)/2+ tr_pause_duration
-        rx_tend=tstart + (echo_duration + readout_duration)/2+ tr_pause_duration
-        rx_tcentre = (rx_tstart + rx_tend) / 2
         pi2_phase = 1 # x
         pi_phase = 1j # y
         if echo_idx == 0:
             # do pi/2 pulse, then start first pi pulse
             return np.array([tstart + (echo_duration - rf_pi2_duration)/2, tstart + (echo_duration + rf_pi2_duration)/2,
-                             tstart + echo_duration - rf_pi_duration/2, rx_tcentre - 20, rx_tcentre + 20]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp, dbg_sc*(1 + 0.5j), 0])                        
+                             tstart + echo_duration - rf_pi_duration/2]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp])                        
         elif echo_idx == echos_per_tr:
             # finish final RF pulse
             return np.array([tstart + rf_pi_duration/2]), np.array([0])
@@ -166,11 +172,11 @@ def spin_echo(self, plotSeq):
             return np.array([tstart + rf_pi_duration/2 + tx_gate_post, tstart + echo_duration - rf_pi_duration/2 - tx_gate_pre]), \
                 np.array([0, 1])
 
-    def readout_wf(tstart, echo_idx):
-        if echo_idx != 0:
-            return np.array([tstart + (echo_duration - readout_duration)/2, tstart + (echo_duration + readout_duration)/2 ]), np.array([1, 0])
-        else:
-            return np.array([tstart]), np.array([0]) # keep on zero otherwise
+#    def readout_wf(tstart, echo_idx):
+#        if echo_idx != 0:
+#            return np.array([tstart + (echo_duration - readout_duration)/2, tstart + (echo_duration + readout_duration)/2 ]), np.array([1, 0])
+#        else:
+#            return np.array([tstart]), np.array([0]) # keep on zero otherwise
             
             
     def readout_grad_wf(tstart, echo_idx):

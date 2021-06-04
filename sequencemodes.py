@@ -203,11 +203,9 @@ class SpinEchoSeq:
                  BW:float=None, 
                  nScans:int=None, 
                  shim: list=None,             
-                 readout_amp:float=None, 
                  trap_ramp_duration:int=None, 
-                 phase_start_amp:float=None, 
                  phase_grad_duration:int=None, 
-                 slice_start_amp:float=None, 
+                 phase_t:int=None, 
                  n:list=None, 
                  fov:list=None
                  ):
@@ -221,11 +219,9 @@ class SpinEchoSeq:
         self.BW:float=BW
         self.nScans:int=nScans
         self.shim:list=shim
-        self.readout_amp:float=readout_amp
         self.trap_ramp_duration:int=trap_ramp_duration
-        self.phase_start_amp:float=phase_start_amp
         self.phase_grad_duration:int=phase_grad_duration
-        self.slice_start_amp:float=slice_start_amp
+        self.phase_t:int=phase_t
         self.n:list=n
         self.fov:list=fov
     
@@ -248,10 +244,8 @@ class SpinEchoSeq:
     def Gproperties(self) -> dict:
         return{
             nmspc.trap_ramp_duration:[int(self.trap_ramp_duration)], 
-            nmspc.readout_amp:[float(self.readout_amp)], 
-            nmspc.phase_start_amp:[float(self.phase_start_amp)], 
             nmspc.phase_grad_duration:[int(self.phase_grad_duration)], 
-            nmspc.slice_start_amp:[float(self.slice_start_amp)], 
+            nmspc.phase_t:[int(self.phase_t)], 
 
         }    
         

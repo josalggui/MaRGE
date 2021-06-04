@@ -214,8 +214,8 @@ def turbo_spin_echo(self, plotSeq):
 
         global_t += self.tr_pause_duration
         
-        waves=expt.get_flodict()
-        savemat("experiments/%s.mat" % (self.sequence), waves)
+#        waves=expt.get_flodict()
+#        savemat("experiments/TSE_seq.mat" % (self.sequence), waves)
 
     if plotSeq==1:
         expt.plot_sequence()

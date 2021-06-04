@@ -200,14 +200,17 @@ def spin_echo1D(plot_rx=True, init_gpa=False,
         
     rxd, msgs = expt.run()
     
+#    if plot_rx:
+#        plt.plot( rxd['rx0'])
+##        plt.plot( rxd['rx0'].imag )
+##        plt.plot( rxd['rx1'].real )
+##        plt.plot( rxd['rx1'].imag )
+#        plt.show()
+#        
+    expt.plot_sequence()
+    plt.show()
+    
     expt.__del__()
-
-    if plot_rx:
-        plt.plot( rxd['rx0'])
-#        plt.plot( rxd['rx0'].imag )
-#        plt.plot( rxd['rx1'].real )
-#        plt.plot( rxd['rx1'].imag )
-        plt.show()
 
 
 if __name__ == "__main__":
