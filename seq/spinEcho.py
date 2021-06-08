@@ -108,9 +108,9 @@ def spin_echo(self, plotSeq):
 #    phase_t = self.phase_t
    
     trap_ramp_pts=trap_ramp_duration*200    # 0.2 puntos/ms
-    grad_readout_delay=8.83    # readout amplifier delay
-    grad_phase_delay=8.83
-    grad_slice_delay=8.83
+    grad_readout_delay=9e-3   #8.83    # readout amplifier delay
+    grad_phase_delay=9e-3      #8.83
+    grad_slice_delay=9e-3         #8.83
     rx_period=1/BW
     """
     readout gradient: x
