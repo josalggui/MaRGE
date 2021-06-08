@@ -205,7 +205,6 @@ class SpinEchoSeq:
                  shim: list=None,             
                  trap_ramp_duration:int=None, 
                  phase_grad_duration:int=None, 
-                 phase_t:int=None, 
                  n:list=None, 
                  fov:list=None
                  ):
@@ -221,7 +220,6 @@ class SpinEchoSeq:
         self.shim:list=shim
         self.trap_ramp_duration:int=trap_ramp_duration
         self.phase_grad_duration:int=phase_grad_duration
-        self.phase_t:int=phase_t
         self.n:list=n
         self.fov:list=fov
     
@@ -245,8 +243,6 @@ class SpinEchoSeq:
         return{
             nmspc.trap_ramp_duration:[int(self.trap_ramp_duration)], 
             nmspc.phase_grad_duration:[int(self.phase_grad_duration)], 
-            nmspc.phase_t:[int(self.phase_t)], 
-
         }    
         
     @property
@@ -562,8 +558,8 @@ defaultsequences={
     'Spin Echo 1D': SpinEcho1DSeq('SE1D', 0, 3.069, 0.62, 1, 70, 2000, 1000, 0.05, (0,  0,  0), 0.2, 700, 250), 
     #SpinEcho2DSeq(dbg_sc,lo_freq,rf_amp,trs,rf_pi2_duration,echo_duration,readout_duration,BW,shimming(rd,ph,sl),phase_start_amp,phase_grad_duration,n(sr,sph,sl))
 #    'Spin Echo 2D': SpinEcho2DSeq('SE2D', 0, 3.069, 0.8, 1, 50, 2000, 500, 0.3, (0,  0,  0), 0.8, 700, 100, 0.6, 150), 
-    #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl),readout_amp, trap_ramp_duration,phase_start_amp,phase_grad_duration,slice_start_amp,n(x,y,z),fov(rd,ph,sl))
-    'Spin Echo': SpinEchoSeq('SE', 3.069, 0.2, 50, 2000, 5000, 0.3, 10, (0,  0,  0), 100, 150, 200, (10, 10, 10), (100, 100, 100)), 
+    #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl), trap_ramp_duration,phase_grad_duration,n(x,y,z),fov(rd,ph,sl))
+    'Spin Echo': SpinEchoSeq('SE', 3.069, 0.2, 50, 2000, 5000, 0.3, 10, (0,  0,  0), 100, 200, (10, 10, 10), (100, 100, 100)), 
     #FID(dbg_sc,lo_freq,rf_amp,rf_duration,rf_tstart,rf_wait,rx_period,readout_duration)
     'Free Induction Decay': FIDSeq('FID', 0, 3, 0.6, 50, 100, 100, 3.333, 500), 
     #RadialSeq(dbg_sc,lo_freq,rf_amp,trs,G,grad_tstart,TR,rf_tstart,rf_tend,rx_tstart,rx_tend,rx_period,shimming(rd,ph,sl))

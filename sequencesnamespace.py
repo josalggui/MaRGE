@@ -67,7 +67,6 @@ class Namespace:
     fov="FOV (rd,ph,sl)"
     tr_duration="TR"
     nScans="nScans"
-    phase_t = "Phase time"
    
 class Tooltip_label:
     rx_period = "Sampling time"
