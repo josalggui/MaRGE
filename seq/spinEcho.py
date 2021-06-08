@@ -6,6 +6,8 @@ import experiment as ex
 import matplotlib.pyplot as plt
 import pdb
 st = pdb.set_trace
+from scipy.io import savemat
+from datetime import date,  datetime 
 
 def trapezoid(plateau_a, total_t, ramp_t, ramp_pts, total_t_end_to_end=True, base_a=0):
     """Helper function that just generates a Numpy array starting at time
@@ -103,7 +105,7 @@ def spin_echo(self, plotSeq):
     phase_grad_duration=self.phase_grad_duration
 #    phase_grad_interval=self.phase_grad_interval 
 #   slice_start_amp=self.slice_start_amp
-    phase_t = self.phase_t
+#    phase_t = self.phase_t
    
     trap_ramp_pts=trap_ramp_duration*0.2    # 0.2 puntos/ms
     grad_readout_delay=8.83    # readout amplifier delay
@@ -115,6 +117,11 @@ def spin_echo(self, plotSeq):
     phase gradient: y
     slice/partition gradient: z
     """
+
+    fov_rd = fov_rd*1e-2
+    fov_ph = fov_ph*1e-2
+    fov_sl = fov_sl*1e-2
+
     readout_duration = n_rd/BW
 
     
@@ -125,13 +132,13 @@ def spin_echo(self, plotSeq):
         
 #    SweepMode=1
         
-    gammaB = 42.56    # MHz/T
+    gammaB = 42.56e6    # Hz/T
     # readout amplitude
     Grd = BW/(gammaB*fov_rd)
     # slice amplitude
-    Gph = n_ph/(2*gammaB*fov_ph*(phase_t+trap_ramp_duration))
+    Gph = n_ph/(2*gammaB*fov_ph*phase_grad_duration)
     # phase amplitude
-    Gsl = n_sl/(2*gammaB*fov_sl*(phase_t+trap_ramp_duration))
+    Gsl = n_sl/(2*gammaB*fov_sl*phase_grad_duration)
     
     phase_amps = np.linspace(Gph, -Gph, n_ph)
 #    phase_amps=phase_amps[getIndex(phase_amps, echos_per_tr, SweepMode)]
@@ -141,31 +148,31 @@ def spin_echo(self, plotSeq):
     # create appropriate waveforms for each echo, based on start time, echo index and TR index
     # note: echo index is 0 for the first interval (90 pulse until first 180 pulse) thereafter 1, 2 etc between each 180 pulse
    
-    def rf_wf(tstart, tr_idx):
+    def rf_wf(tstart, echo_idx):
         pi2_phase = 1 # x
         pi_phase = 1j # y
-        if tr_idx == 0:
+        if echo_idx == 0:
             # do pi/2 pulse, then start first pi pulse
             return np.array([tstart + (echo_duration - rf_pi2_duration)/2, tstart + (echo_duration + rf_pi2_duration)/2,
                              tstart + echo_duration - rf_pi_duration/2]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp])                        
-        elif tr_idx == echos_per_tr:
-            # finish final RF pulse
-            return np.array([tstart + rf_pi_duration/2]), np.array([0])
+#        elif tr_idx == echos_per_tr:
+#            # finish final RF pulse
+#            return np.array([tstart + rf_pi_duration/2]), np.array([0])
         else:
             # finish last pi pulse, start next pi pulse
             return np.array([tstart + rf_pi_duration/2, tstart + echo_duration - rf_pi_duration/2]), np.array([0, pi_phase]) * rf_amp
 
-    def tx_gate_wf(tstart, tr_idx):
+    def tx_gate_wf(tstart, echo_idx):
         tx_gate_pre = 2 # us, time to start the TX gate before each RF pulse begins
         tx_gate_post = 1 # us, time to keep the TX gate on after an RF pulse ends
 
-        if tr_idx == 0:
+        if echo_idx == 0:
             # do pi/2 pulse, then start first pi pulse
             return np.array([tstart + (echo_duration - rf_pi2_duration)/2 - tx_gate_pre,
                              tstart + (echo_duration + rf_pi2_duration)/2 + tx_gate_post,
                              tstart + echo_duration - rf_pi_duration/2 - tx_gate_pre]), \
                              np.array([1, 0, 1])
-        elif tr_idx == echos_per_tr:
+        elif echo_idx == echos_per_tr:
             # finish final RF pulse
             return np.array([tstart + rf_pi_duration/2 + tx_gate_post]), np.array([0])
         else:
@@ -173,41 +180,45 @@ def spin_echo(self, plotSeq):
             return np.array([tstart + rf_pi_duration/2 + tx_gate_post, tstart + echo_duration - rf_pi_duration/2 - tx_gate_pre]), \
                 np.array([0, 1])
 
-    def readout_wf(tstart, tr_idx):
-        if tr_idx != 0:
+    def readout_wf(tstart, echo_idx):
+        if echo_idx != 0:
             return np.array([tstart + (echo_duration - readout_duration)/2, tstart + (echo_duration + readout_duration)/2 ]), np.array([1, 0])
         else:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
             
             
-    def readout_grad_wf(tstart, tr_idx):
-        if tr_idx == 0:
-            return trap_cent(tstart + (echo_duration + rf_pi2_duration+readout_duration-trap_ramp_duration)/2-trap_ramp_duration-grad_readout_delay, Grd, readout_duration/2,
+    def readout_grad_wf(tstart, echo_idx):
+
+        if echo_idx == 0:
+                    #            return trap_cent(tstart + self.echo_duration*3/4, readout_amp, readout_grad_duration/2,
+                    #                             trap_ramp_duration, trap_ramp_pts)
+            return trap_cent(tstart + echo_duration/2 + rf_pi2_duration/2+trap_ramp_duration/2+readout_duration/4, Grd, readout_duration/2,
                              trap_ramp_duration, trap_ramp_pts)
         else:
             return trap_cent(tstart + self.echo_duration/2-grad_readout_delay, Grd, readout_duration,
                              trap_ramp_duration, trap_ramp_pts)
+        
 
-    def phase_grad_wf(tstart, tr_idx):
-        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, phase_amps[tr_idx-1], phase_grad_duration,
+    def phase_grad_wf(tstart, echo_idx, n_ph):
+        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, phase_amps[n_ph-1], phase_grad_duration,
                            trap_ramp_duration, trap_ramp_pts)
-        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, -phase_amps[tr_idx-1], phase_grad_duration,
+        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, -phase_amps[n_ph-1], phase_grad_duration,
                            trap_ramp_duration, trap_ramp_pts)    
-        if tr_idx == 0:
+        if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
-        elif tr_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
+        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
             return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
 
-    def slice_grad_wf(tstart, tr_idx):
-        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, slice_amps[tr_idx], phase_grad_duration,
+    def slice_grad_wf(tstart, echo_idx,  n_sl):
+        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, slice_amps[n_sl], phase_grad_duration,
                            trap_ramp_duration, trap_ramp_pts)
-        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_slice_delay, -slice_amps[tr_idx], phase_grad_duration,
+        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_slice_delay, -slice_amps[n_sl], phase_grad_duration,
                            trap_ramp_duration, trap_ramp_pts)  
-        if tr_idx == 0:
+        if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
-        elif tr_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
+        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
             return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
@@ -222,28 +233,26 @@ def spin_echo(self, plotSeq):
     for nS in range(nScans):
         for sl in range(n_sl):
             for ph in range(n_ph):
-                tx_t, tx_a = rf_wf(global_t, n_ph)
-                tx_gate_t, tx_gate_a = tx_gate_wf(global_t, n_ph)
-                readout_t, readout_a = readout_wf(global_t, n_ph)
-                rx_gate_t, rx_gate_a = readout_wf(global_t, n_ph)
-                readout_grad_t, readout_grad_a = readout_grad_wf(global_t, n_ph)
-                phase_grad_t, phase_grad_a = phase_grad_wf(global_t, n_ph)
-                slice_grad_t, slice_grad_a = slice_grad_wf(global_t, n_sl, n_ph)
+                for echo_idx in range(2):
+                    tx_t, tx_a = rf_wf(global_t, echo_idx)
+                    tx_gate_t, tx_gate_a = tx_gate_wf(global_t, echo_idx)
+                    readout_t, readout_a = readout_wf(global_t, echo_idx)
+                    rx_gate_t, rx_gate_a = readout_wf(global_t, echo_idx)
+                    readout_grad_t, readout_grad_a = readout_grad_wf(global_t, echo_idx)
+                    phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  n_ph)
+                    slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  n_sl)
     
-                expt.add_flodict({
-                    'tx0': (tx_t, tx_a),
-                    'grad_vx': (readout_grad_t, readout_grad_a+shim_x),
-                    'grad_vy': (phase_grad_t, phase_grad_a+shim_y),
-                    'grad_vz': (slice_grad_t, slice_grad_a+shim_z), 
-                    'rx0_en': (readout_t, readout_a),
-                    'tx_gate': (tx_gate_t, tx_gate_a),
-                    'rx_gate': (rx_gate_t, rx_gate_a),
-                })
+                    expt.add_flodict({
+                        'tx0': (tx_t, tx_a),
+                        'grad_vx': (readout_grad_t, readout_grad_a+shim_x),
+                        'grad_vy': (phase_grad_t, phase_grad_a+shim_y),
+                        'grad_vz': (slice_grad_t, slice_grad_a+shim_z), 
+                        'rx0_en': (readout_t, readout_a),
+                        'tx_gate': (tx_gate_t, tx_gate_a),
+                        'rx_gate': (rx_gate_t, rx_gate_a),
+                    })
                 
                 global_t += tr_duration
-                
-
-            
                 
     if plotSeq==1:
         expt.plot_sequence()
@@ -252,6 +261,11 @@ def spin_echo(self, plotSeq):
     elif plotSeq==0:
         rxd, msgs = expt.run()
         expt.__del__()
+        dt = datetime.now()
+        dt_string = dt.strftime("%d-%m-%Y_%H_%M")
+        dt2 = date.today()
+        dt2_string = dt2.strftime("%d-%m-%Y")
+        savemat("/home/physiomri/share_vm/results_experiments/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict) 
         return rxd['rx0'], msgs
 
 
