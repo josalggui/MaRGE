@@ -107,7 +107,7 @@ def spin_echo(self, plotSeq):
 #   slice_start_amp=self.slice_start_amp
 #    phase_t = self.phase_t
    
-    trap_ramp_pts=trap_ramp_duration*200    # 0.2 puntos/ms
+    trap_ramp_pts=np.int(trap_ramp_duration*200)    # 0.2 puntos/ms
     grad_readout_delay=9e-3   #8.83    # readout amplifier delay
     grad_phase_delay=9e-3      #8.83
     grad_slice_delay=9e-3         #8.83
