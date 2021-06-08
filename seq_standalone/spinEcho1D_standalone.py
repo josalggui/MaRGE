@@ -129,12 +129,12 @@ def spin_echo1D(plot_rx=True, init_gpa=False,
             
     def readout_grad_wf(tstart, echo_idx):
         if echo_idx == 0:
-#            return trap_cent(tstart + echo_duration*3/4, readout_amp, readout_grad_duration/2,
-#                             trap_ramp_duration, trap_ramp_pts)
-            return trap_cent(tstart + (echo_duration + rf_pi2_duration+readout_grad_duration-trap_ramp_duration)/2-grad_readout_delay, readout_amp, readout_grad_duration/2,
+                    #            return trap_cent(tstart + self.echo_duration*3/4, readout_amp, readout_grad_duration/2,
+                    #                             trap_ramp_duration, trap_ramp_pts)
+            return trap_cent(tstart + echo_duration/2 + rf_pi2_duration/2+trap_ramp_duration/2+readout_duration/4, readout_amp, readout_duration/2,
                              trap_ramp_duration, trap_ramp_pts)
         else:
-            return trap_cent(tstart + echo_duration/2-grad_readout_delay, readout_amp, readout_grad_duration,
+            return trap_cent(tstart + echo_duration/2-grad_readout_delay, readout_amp, readout_duration,
                              trap_ramp_duration, trap_ramp_pts)
 
     def phase_grad_wf(tstart, echo_idx):
