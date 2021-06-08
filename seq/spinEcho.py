@@ -98,7 +98,6 @@ def spin_echo(self, plotSeq):
     fov_rd:int=self.fov[0]*1e-2
     fov_ph:int=self.fov[1]*1e-2
     fov_sl:int=self.fov[2]*1e-2
-    sequence=self.sequence
 #    readout_amp=self.readout_amp
 #    readout_grad_duration=self.readout_grad_duration
     trap_ramp_duration=self.trap_ramp_duration*1e-3
