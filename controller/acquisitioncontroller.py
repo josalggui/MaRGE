@@ -63,7 +63,7 @@ class AcquisitionController(QObject):
             self.sequence.rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
             self.rxd, self.msgs = turbo_spin_echo(self.sequence, plotSeq)
 
-        self.save_data()
+
 
         dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd))
         self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency')
@@ -73,6 +73,8 @@ class AcquisitionController(QObject):
         #self.outputsection.set_parameters(outputvalues)
         self.parent.plotview_layout.addWidget(self.parent.t_plotview)
         self.parent.plotview_layout.addWidget(self.parent.f_plotview)
+        
+        self.save_data(self.rxd, self.sequence.lo_freq)
 
         self.parent.rxd = self.rxd
         self.parent.lo_freq = self.sequence.lo_freq
@@ -80,15 +82,15 @@ class AcquisitionController(QObject):
 
 #        self.parent.save_data(self)
         
-    def save_data(self):
+    def save_data(self, rxd, lo_freq):
         
-        dataobject: DataManager = DataManager(self.rxd, self.lo_freq, len(self.rxd))
+        dataobject: DataManager = DataManager(rxd, lo_freq, len(rxd))
         dict = vars(defaultsequences[self.sequence])
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H:%M")
         dt2 = date.today()
         dt2_string = dt2.strftime("%d-%m-%Y")
-        dict["rawdata"] = self.rxd
+        dict["rawdata"] = rxd
         dict["fft"] = dataobject.f_fftData
         if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string)):
             os.makedirs('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string))
