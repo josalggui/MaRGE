@@ -52,5 +52,16 @@ class SpectrumPlot (GraphicsLayoutWidget):
         
 #        print("x: {}, y: {}".format(xLabel, yLabel))
 
-
+class Spectrum2DPlot(GraphicsLayoutWidget):
+    def __init__(self,
+                 xData: list,
+                 yData: list,
+                 yData2:list, 
+                 yData3:list, 
+                 xLabel: str,
+                 yLabel: str, 
+                 title:str, 
+                 xlabel:str
+                 ):
+        super(Spectrum2DPlot, self).__init__()
 

@@ -258,11 +258,7 @@ def spin_echo(self, plotSeq):
     elif plotSeq==0:
         rxd, msgs = expt.run()
         expt.__del__()
-        dt = datetime.now()
-        dt_string = dt.strftime("%d-%m-%Y_%H_%M")
-        dt2 = date.today()
-        dt2_string = dt2.strftime("%d-%m-%Y")
-        savemat("/home/physiomri/share_vm/results_experiments/%s/%s/spinEcho.mat" % (dt2_string, dt_string), dict) 
+        
         return rxd['rx0'], msgs
 
 
