@@ -84,9 +84,9 @@ def spin_echo(self, plotSeq):
     rf_amp=self.rf_amp
 #    trs=self.trs
     rf_pi_duration=None
-    rf_pi2_duration=self.rf_pi2_duration
-    echo_duration=self.echo_duration
-    tr_duration=self.tr_duration
+    rf_pi2_duration=self.rf_pi2_duration*1e-3
+    echo_duration=self.echo_duration*1e-3
+    tr_duration=self.tr_duration*1e-3
     BW=self.BW
     shim_x: float = self.shim[0]
     shim_y: float = self.shim[1]
@@ -95,19 +95,19 @@ def spin_echo(self, plotSeq):
     n_rd:int=self.n[0]
     n_ph:int=self.n[1]
     n_sl:int=self.n[2]
-    fov_rd:int=self.fov[0]
-    fov_ph:int=self.fov[1]
-    fov_sl:int=self.fov[2]
+    fov_rd:int=self.fov[0]*1e-2
+    fov_ph:int=self.fov[1]*1e-2
+    fov_sl:int=self.fov[2]*1e-2
 #    readout_amp=self.readout_amp
 #    readout_grad_duration=self.readout_grad_duration
-    trap_ramp_duration=self.trap_ramp_duration   
+    trap_ramp_duration=self.trap_ramp_duration*1e-3
 #    phase_start_amp=self.phase_start_amp
-    phase_grad_duration=self.phase_grad_duration
+    phase_grad_duration=self.phase_grad_duration*1e-3
 #    phase_grad_interval=self.phase_grad_interval 
 #   slice_start_amp=self.slice_start_amp
 #    phase_t = self.phase_t
    
-    trap_ramp_pts=trap_ramp_duration*0.2    # 0.2 puntos/ms
+    trap_ramp_pts=trap_ramp_duration*200    # 0.2 puntos/ms
     grad_readout_delay=8.83    # readout amplifier delay
     grad_phase_delay=8.83
     grad_slice_delay=8.83
@@ -118,10 +118,7 @@ def spin_echo(self, plotSeq):
     slice/partition gradient: z
     """
 
-    fov_rd = fov_rd*1e-2
-    fov_ph = fov_ph*1e-2
-    fov_sl = fov_sl*1e-2
-
+    BW = BW*1e-6
     readout_duration = n_rd/BW
 
     
