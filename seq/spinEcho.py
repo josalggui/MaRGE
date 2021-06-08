@@ -118,7 +118,7 @@ def spin_echo(self, plotSeq):
     slice/partition gradient: z
     """
 
-    BW = BW*1e-6
+    BW = BW*1e6
     readout_duration = n_rd/BW
 
     
