@@ -98,6 +98,7 @@ def spin_echo(self, plotSeq):
     fov_rd:int=self.fov[0]*1e-2
     fov_ph:int=self.fov[1]*1e-2
     fov_sl:int=self.fov[2]*1e-2
+    sequence=self.sequence
 #    readout_amp=self.readout_amp
 #    readout_grad_duration=self.readout_grad_duration
     trap_ramp_duration=self.trap_ramp_duration*1e-3
@@ -262,7 +263,7 @@ def spin_echo(self, plotSeq):
         dt_string = dt.strftime("%d-%m-%Y_%H_%M")
         dt2 = date.today()
         dt2_string = dt2.strftime("%d-%m-%Y")
-        savemat("/home/physiomri/share_vm/results_experiments/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict) 
+        savemat("/home/physiomri/share_vm/results_experiments/%s/%s/spinEcho.mat" % (dt2_string, dt_string), dict) 
         return rxd['rx0'], msgs
 
 
