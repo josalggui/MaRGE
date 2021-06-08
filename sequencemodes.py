@@ -199,7 +199,7 @@ class SpinEchoSeq:
                  rf_amp: float=None, 
                  rf_pi2_duration: int=None, 
                  echo_duration:int=None, 
-                 tr:int=None, 
+                 tr_duration:int=None, 
                  BW:float=None, 
                  nScans:int=None, 
                  shim: list=None,             
@@ -215,7 +215,7 @@ class SpinEchoSeq:
         self.rf_amp: float=rf_amp
         self.rf_pi2_duration:int=rf_pi2_duration
         self.echo_duration:int=echo_duration
-        self.tr:int=tr
+        self.tr_duration:int=tr_duration
         self.BW:float=BW
         self.nScans:int=nScans
         self.shim:list=shim
@@ -234,7 +234,7 @@ class SpinEchoSeq:
             nmspc.nScans:[int(self.nScans)], 
             nmspc.n:[list(self.n)], 
             nmspc.fov:[list(self.fov)], 
-            nmspc.tr:[int(self.tr)], 
+            nmspc.tr_duration:[int(self.tr_duration)], 
             nmspc.echo_duration:[int(self.echo_duration)],
             nmspc.rf_amp: [float(self.rf_amp)],
             nmspc.rf_pi2_duration:[int(self.rf_pi2_duration)], 
@@ -563,7 +563,7 @@ defaultsequences={
     #SpinEcho2DSeq(dbg_sc,lo_freq,rf_amp,trs,rf_pi2_duration,echo_duration,readout_duration,BW,shimming(rd,ph,sl),phase_start_amp,phase_grad_duration,n(sr,sph,sl))
 #    'Spin Echo 2D': SpinEcho2DSeq('SE2D', 0, 3.069, 0.8, 1, 50, 2000, 500, 0.3, (0,  0,  0), 0.8, 700, 100, 0.6, 150), 
     #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl),readout_amp, trap_ramp_duration,phase_start_amp,phase_grad_duration,slice_start_amp,n(x,y,z),fov(rd,ph,sl))
-    'Spin Echo': SpinEchoSeq('SE', 3.069, 0.2, 50, 2000, 5000, 0.3, 10, (0,  0,  0), 0.8, 100, 0.6, 150, 0.6, (10, 10, 10), (100, 100, 100)), 
+    'Spin Echo': SpinEchoSeq('SE', 3.069, 0.2, 50, 2000, 5000, 0.3, 10, (0,  0,  0), 100, 150, 200, (10, 10, 10), (100, 100, 100)), 
     #FID(dbg_sc,lo_freq,rf_amp,rf_duration,rf_tstart,rf_wait,rx_period,readout_duration)
     'Free Induction Decay': FIDSeq('FID', 0, 3, 0.6, 50, 100, 100, 3.333, 500), 
     #RadialSeq(dbg_sc,lo_freq,rf_amp,trs,G,grad_tstart,TR,rf_tstart,rf_tend,rx_tstart,rx_tend,rx_period,shimming(rd,ph,sl))
@@ -574,4 +574,3 @@ defaultsequences={
     'Turbo Spin Echo': TSE_Seq('TSE',  0, 3, 1, 5, 3.333, 100, 5, 2000, 0.3, 0.6,0.8, 50, 150, 500, 700, 1200, 3000, (0.01, 0.01, 0.01))
 }
 
- 

@@ -65,9 +65,9 @@ class Namespace:
     BW= "BandWidth"
     n="Number of points (Nx,Ny,Nz)"
     fov="FOV (rd,ph,sl)"
-    tr="TR"
+    tr_duration="TR"
     nScans="nScans"
-    t_ph = "Phase time"
+    phase_t = "Phase time"
    
 class Tooltip_label:
     rx_period = "Sampling time"

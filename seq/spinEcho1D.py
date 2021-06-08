@@ -49,7 +49,7 @@ def spin_echo1D(self, plotSeq):
 #                    rx_period=10/3, # us, 3.333us, 300 kHz rate
 #                    # (must at least be longer than readout_duration + trap_ramp_duration)
 #                    ):
-    init_gpa=False                   
+    init_gpa=True                   
     dbg_sc=self.dbg_sc
     lo_freq=self.lo_freq
     rf_amp=self.rf_amp
@@ -139,7 +139,7 @@ def spin_echo1D(self, plotSeq):
         if echo_idx == 0:
 #            return trap_cent(tstart + self.echo_duration*3/4, readout_amp, readout_grad_duration/2,
 #                             trap_ramp_duration, trap_ramp_pts)
-            return trap_cent(tstart + (echo_duration + rf_pi2_duration+readout_grad_duration-trap_ramp_duration)/2-grad_readout_delay, readout_amp, readout_grad_duration/2,
+            return trap_cent(tstart + echo_duration/2 + rf_pi2_duration/2+trap_ramp_duration/2+readout_grad_duration/4, readout_amp, readout_grad_duration/2,
                              trap_ramp_duration, trap_ramp_pts)
         else:
             return trap_cent(tstart + self.echo_duration/2-grad_readout_delay, readout_amp, readout_grad_duration,
