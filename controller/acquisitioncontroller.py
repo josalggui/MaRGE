@@ -87,7 +87,7 @@ class AcquisitionController(QObject):
         dataobject: DataManager = DataManager(rxd, lo_freq, len(rxd))
         dict = vars(defaultsequences[self.sequence])
         dt = datetime.now()
-        dt_string = dt.strftime("%d-%m-%Y_%H:%M")
+        dt_string = dt.strftime("%d-%m-%Y_%H_%M")
         dt2 = date.today()
         dt2_string = dt2.strftime("%d-%m-%Y")
         dict["rawdata"] = rxd

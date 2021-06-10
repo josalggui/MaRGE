@@ -153,8 +153,7 @@ def spin_echo(self, plotSeq):
         "lo_freq":lo_freq, 
         "rf_amp":rf_amp, 
         "rf_pi2_duration":rf_pi2_duration, 
-        "echo_duration":echo_duration, 
-        ""
+        "echo_duration":echo_duration 
     }
    
    
@@ -170,7 +169,7 @@ def spin_echo(self, plotSeq):
 #            return np.array([tstart + rf_pi_duration/2]), np.array([0])
         else:
             # finish last pi pulse, start next pi pulse
-            return np.array([tstart + rf_pi_duration/2, tstart + echo_duration - rf_pi_duration/2]), np.array([0, pi_phase]) * rf_amp
+            return np.array([tstart + rf_pi_duration/2]), np.array([0])
 
     def tx_gate_wf(tstart, echo_idx):
         tx_gate_pre = 2 # us, time to start the TX gate before each RF pulse begins
