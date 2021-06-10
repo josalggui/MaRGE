@@ -146,17 +146,6 @@ def spin_echo(self, plotSeq):
     # create appropriate waveforms for each echo, based on start time, echo index and TR index
     # note: echo index is 0 for the first interval (90 pulse until first 180 pulse) thereafter 1, 2 etc between each 180 pulse
 
-    params_dict={
-        "Gx factor" : Gx_factor, 
-        "Gy factor" : Gy_factor, 
-        "Gz factor": Gz_factor, 
-        "lo_freq":lo_freq, 
-        "rf_amp":rf_amp, 
-        "rf_pi2_duration":rf_pi2_duration, 
-        "echo_duration":echo_duration 
-    }
-   
-   
     def rf_wf(tstart, echo_idx):
         pi2_phase = 1 # x
         pi_phase = 1j # y
