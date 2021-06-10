@@ -251,6 +251,12 @@ def spin_echo(self, plotSeq):
                 
                 global_t += tr_duration
                 
+                
+    flodict = expt.get_flodict()
+    flodict["Gx_factor"] = Gx_factor
+    flodict["Gy_factor"] = Gy_factor
+    flodict["Gz_factor"] = Gz_factor
+                
     if plotSeq==1:
         expt.plot_sequence()
         plt.show()
@@ -258,7 +264,6 @@ def spin_echo(self, plotSeq):
     elif plotSeq==0:
         rxd, msgs = expt.run()
         expt.__del__()
-        
-        return rxd['rx0'], msgs
+        return rxd['rx0'], flodict, msgs
 
 

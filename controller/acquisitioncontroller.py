@@ -46,9 +46,9 @@ class AcquisitionController(QObject):
         
         plotSeq=0
         if self.sequence.seq == 'SE':
-            self.rxd, self.msgs=spin_echo(self.sequence, plotSeq)
+            self.rxd, self.flodict, self.msgs=spin_echo(self.sequence, plotSeq)
         if self.sequence.seq == 'SE1D':
-            self.rxd, self.msgs=spin_echo1D(self.sequence, plotSeq)
+            self.rxd, self.flodict, self.msgs=spin_echo1D(self.sequence, plotSeq)
         if self.sequence.seq == 'SE2D':
             self.rxd, self.msgs=spin_echo2D(self.sequence, plotSeq)
         if self.sequence.seq == 'SE3D':
@@ -80,15 +80,16 @@ class AcquisitionController(QObject):
 
 #        self.parent.save_data(self)
         
-    def save_data(self, rxd, lo_freq):
+    def save_data(self):
         
-        dataobject: DataManager = DataManager(rxd, lo_freq, len(rxd))
+        dataobject: DataManager = DataManager(self.rxd, self.lo_freq, len(self.rxd))
         dict = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H_%M")
         dt2 = date.today()
         dt2_string = dt2.strftime("%d-%m-%Y")
-        dict["rawdata"] = rxd
+        dict["flodict"] = self.flodict
+        dict["rawdata"] = self.rxd
         dict["fft"] = dataobject.f_fftData
         if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string)):
             os.makedirs('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string))
