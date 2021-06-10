@@ -112,7 +112,7 @@ def spin_echo(self, plotSeq):
     grad_readout_delay=9e-6   #8.83    # readout amplifier delay
     grad_phase_delay=9e-6      #8.83
     grad_slice_delay=9e-6         #8.83
-    rx_period=1/BW
+    rx_period=1/BW/1e-3
     """
     readout gradient: x
     phase gradient: y
