@@ -96,7 +96,7 @@ class AcquisitionController(QObject):
         if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)):
             os.makedirs('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)) 
             
-        savemat("/home/physiomri/share_vm/results_experiments/%s/%s/spinEcho.mat" % (dt2_string, dt_string), dict) 
+        savemat("/home/physiomri/share_vm/results_experiments/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict) 
 
 
 
