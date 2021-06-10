@@ -86,7 +86,7 @@ def spin_echo(self, plotSeq):
 #    trs=self.trs
     rf_pi_duration=None
     rf_pi2_duration=self.rf_pi2_duration*1e-6
-    echo_duration=self.echo_duration*1e-6
+    echo_duration=self.echo_duration*1e-3
     tr_duration=self.tr_duration*1e-3
     BW=self.BW
     shim_x: float = self.shim[0]
@@ -108,7 +108,7 @@ def spin_echo(self, plotSeq):
 #   slice_start_amp=self.slice_start_amp
 #    phase_t = self.phase_t
    
-    trap_ramp_pts=np.int(trap_ramp_duration*200)    # 0.2 puntos/ms
+    trap_ramp_pts=np.int(trap_ramp_duration*2e5)    # 0.2 puntos/ms
     grad_readout_delay=9e-6   #8.83    # readout amplifier delay
     grad_phase_delay=9e-6      #8.83
     grad_slice_delay=9e-6         #8.83
@@ -161,8 +161,8 @@ def spin_echo(self, plotSeq):
             return np.array([tstart + rf_pi_duration/2]), np.array([0])
 
     def tx_gate_wf(tstart, echo_idx):
-        tx_gate_pre = 2 # us, time to start the TX gate before each RF pulse begins
-        tx_gate_post = 1 # us, time to keep the TX gate on after an RF pulse ends
+        tx_gate_pre = 2e-6 # us, time to start the TX gate before each RF pulse begins
+        tx_gate_post = 1e-6 # us, time to keep the TX gate on after an RF pulse ends
 
         if echo_idx == 0:
             # do pi/2 pulse, then start first pi pulse
