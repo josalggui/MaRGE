@@ -63,8 +63,6 @@ class AcquisitionController(QObject):
             self.sequence.rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
             self.rxd, self.msgs = turbo_spin_echo(self.sequence, plotSeq)
 
-
-
         dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd))
         self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency')
         self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time')
@@ -85,7 +83,7 @@ class AcquisitionController(QObject):
     def save_data(self, rxd, lo_freq):
         
         dataobject: DataManager = DataManager(rxd, lo_freq, len(rxd))
-        dict = vars(defaultsequences[self.sequence])
+        dict = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H_%M")
         dt2 = date.today()
