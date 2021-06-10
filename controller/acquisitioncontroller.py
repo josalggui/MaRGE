@@ -82,7 +82,7 @@ class AcquisitionController(QObject):
         
     def save_data(self):
         
-        dataobject: DataManager = DataManager(self.rxd, self.lo_freq, len(self.rxd))
+        dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd))
         dict = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H_%M")
