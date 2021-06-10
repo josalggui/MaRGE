@@ -2,12 +2,13 @@ import sys
 sys.path.append('../marcos_client')
 import numpy as np
 import experiment as ex
-#from local_config import fpga_clk_freq_MHz
+from configs.hw_config import Gx_factor
+from configs.hw_config import Gy_factor
+from configs.hw_config import Gz_factor
 import matplotlib.pyplot as plt
 import pdb
 st = pdb.set_trace
-from scipy.io import savemat
-from datetime import date,  datetime 
+
 
 def trapezoid(plateau_a, total_t, ramp_t, ramp_pts, total_t_end_to_end=True, base_a=0):
     """Helper function that just generates a Numpy array starting at time
@@ -84,8 +85,8 @@ def spin_echo(self, plotSeq):
     rf_amp=self.rf_amp
 #    trs=self.trs
     rf_pi_duration=None
-    rf_pi2_duration=self.rf_pi2_duration*1e-3
-    echo_duration=self.echo_duration*1e-3
+    rf_pi2_duration=self.rf_pi2_duration*1e-6
+    echo_duration=self.echo_duration*1e-6
     tr_duration=self.tr_duration*1e-3
     BW=self.BW
     shim_x: float = self.shim[0]
@@ -100,17 +101,17 @@ def spin_echo(self, plotSeq):
     fov_sl:int=self.fov[2]*1e-2
 #    readout_amp=self.readout_amp
 #    readout_grad_duration=self.readout_grad_duration
-    trap_ramp_duration=self.trap_ramp_duration*1e-3
+    trap_ramp_duration=self.trap_ramp_duration*1e-6
 #    phase_start_amp=self.phase_start_amp
-    phase_grad_duration=self.phase_grad_duration*1e-3
+    phase_grad_duration=self.phase_grad_duration*1e-6
 #    phase_grad_interval=self.phase_grad_interval 
 #   slice_start_amp=self.slice_start_amp
 #    phase_t = self.phase_t
    
     trap_ramp_pts=np.int(trap_ramp_duration*200)    # 0.2 puntos/ms
-    grad_readout_delay=9e-3   #8.83    # readout amplifier delay
-    grad_phase_delay=9e-3      #8.83
-    grad_slice_delay=9e-3         #8.83
+    grad_readout_delay=9e-6   #8.83    # readout amplifier delay
+    grad_phase_delay=9e-6      #8.83
+    grad_slice_delay=9e-6         #8.83
     rx_period=1/BW
     """
     readout gradient: x
@@ -118,7 +119,7 @@ def spin_echo(self, plotSeq):
     slice/partition gradient: z
     """
 
-    BW = BW*1e6
+    BW = BW*1e3
     readout_duration = n_rd/BW
 
     
@@ -144,6 +145,18 @@ def spin_echo(self, plotSeq):
 
     # create appropriate waveforms for each echo, based on start time, echo index and TR index
     # note: echo index is 0 for the first interval (90 pulse until first 180 pulse) thereafter 1, 2 etc between each 180 pulse
+
+    params_dict={
+        "Gx factor" : Gx_factor, 
+        "Gy factor" : Gy_factor, 
+        "Gz factor": Gz_factor, 
+        "lo_freq":lo_freq, 
+        "rf_amp":rf_amp, 
+        "rf_pi2_duration":rf_pi2_duration, 
+        "echo_duration":echo_duration, 
+        ""
+    }
+   
    
     def rf_wf(tstart, echo_idx):
         pi2_phase = 1 # x
@@ -219,14 +232,14 @@ def spin_echo(self, plotSeq):
             return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
-
+            
     expt = ex.Experiment(lo_freq=lo_freq, rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
     # gpa_fhdo_offset_time in microseconds; offset between channels to
     # avoid parallel updates (default update rate is 0.2 Msps, so
     # 1/0.2 = 5us, 5 / 3.1 gives the offset between channels; extra
     # 0.1 for a safety margin))
 
-    global_t = 20 # start the first TR at 20us
+    global_t = 20e-6 # start the first TR at 20us
     for nS in range(nScans):
         for sl in range(n_sl):
             for ph in range(n_ph):
@@ -241,9 +254,9 @@ def spin_echo(self, plotSeq):
     
                     expt.add_flodict({
                         'tx0': (tx_t*1e3, tx_a),
-                        'grad_vx': (readout_grad_t*1e3, readout_grad_a+shim_x),
-                        'grad_vy': (phase_grad_t*1e3, phase_grad_a+shim_y),
-                        'grad_vz': (slice_grad_t*1e3, slice_grad_a+shim_z), 
+                        'grad_vx': (readout_grad_t*1e3, readout_grad_a*Gx_factor/10+shim_x),
+                        'grad_vy': (phase_grad_t*1e3, phase_grad_a*Gy_factor/10+shim_y),
+                        'grad_vz': (slice_grad_t*1e3, slice_grad_a*Gz_factor/10+shim_z), 
                         'rx0_en': (readout_t*1e3, readout_a),
                         'tx_gate': (tx_gate_t*1e3, tx_gate_a),
                         'rx_gate': (rx_gate_t*1e3, rx_gate_a),

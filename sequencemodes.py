@@ -200,7 +200,7 @@ class SpinEchoSeq:
                  rf_pi2_duration: int=None, 
                  echo_duration:int=None, 
                  tr_duration:int=None, 
-                 BW:float=None, 
+                 BW:int=None, 
                  nScans:int=None, 
                  shim: list=None,             
                  trap_ramp_duration:int=None, 
@@ -215,7 +215,7 @@ class SpinEchoSeq:
         self.rf_pi2_duration:int=rf_pi2_duration
         self.echo_duration:int=echo_duration
         self.tr_duration:int=tr_duration
-        self.BW:float=BW
+        self.BW:int=BW
         self.nScans:int=nScans
         self.shim:list=shim
         self.trap_ramp_duration:int=trap_ramp_duration
@@ -228,7 +228,7 @@ class SpinEchoSeq:
         # TODO: add server cmd's as third entry in list
         return {
             nmspc.lo_freq: [float(self.lo_freq)], 
-            nmspc.BW:[float(self.BW)], 
+            nmspc.BW:[int(self.BW)], 
             nmspc.nScans:[int(self.nScans)], 
             nmspc.n:[list(self.n)], 
             nmspc.fov:[list(self.fov)], 
@@ -559,7 +559,7 @@ defaultsequences={
     #SpinEcho2DSeq(dbg_sc,lo_freq,rf_amp,trs,rf_pi2_duration,echo_duration,readout_duration,BW,shimming(rd,ph,sl),phase_start_amp,phase_grad_duration,n(sr,sph,sl))
 #    'Spin Echo 2D': SpinEcho2DSeq('SE2D', 0, 3.069, 0.8, 1, 50, 2000, 500, 0.3, (0,  0,  0), 0.8, 700, 100, 0.6, 150), 
     #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl), trap_ramp_duration,phase_grad_duration,n(x,y,z),fov(rd,ph,sl))
-    'Spin Echo': SpinEchoSeq('SE', 3.069, 0.2, 50, 2000, 5000, 0.3, 10, (0,  0,  0), 100, 200, (20, 20, 20), (15, 15, 15)), 
+    'Spin Echo': SpinEchoSeq('SE', 3.069, 0.2, 50, 2000, 5000, 50, 10, (0,  0,  0), 100, 200, (20, 20, 20), (15, 15, 15)), 
     #FID(dbg_sc,lo_freq,rf_amp,rf_duration,rf_tstart,rf_wait,rx_period,readout_duration)
     'Free Induction Decay': FIDSeq('FID', 0, 3, 0.6, 50, 100, 100, 3.333, 500), 
     #RadialSeq(dbg_sc,lo_freq,rf_amp,trs,G,grad_tstart,TR,rf_tstart,rf_tend,rx_tstart,rx_tend,rx_period,shimming(rd,ph,sl))
