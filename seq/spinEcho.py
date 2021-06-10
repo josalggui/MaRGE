@@ -123,7 +123,7 @@ def spin_echo(self, plotSeq):
     readout_duration = n_rd/BW
 
     
-    echos_per_tr=1 # number of spin echoes (180 pulses followed by readouts) to do
+#    echos_per_tr=1 # number of spin echoes (180 pulses followed by readouts) to do
                     
     if rf_pi_duration is None:
         rf_pi_duration = 2 * rf_pi2_duration
@@ -181,13 +181,12 @@ def spin_echo(self, plotSeq):
                              tstart + (echo_duration + rf_pi2_duration)/2 + tx_gate_post,
                              tstart + echo_duration - rf_pi_duration/2 - tx_gate_pre]), \
                              np.array([1, 0, 1])
-        elif echo_idx == echos_per_tr:
-            # finish final RF pulse
-            return np.array([tstart + rf_pi_duration/2 + tx_gate_post]), np.array([0])
+#        elif echo_idx == echos_per_tr:
+#            # finish final RF pulse
+#            return np.array([tstart + rf_pi_duration/2 + tx_gate_post]), np.array([0])
         else:
             # finish last pi pulse, start next pi pulse
-            return np.array([tstart + rf_pi_duration/2 + tx_gate_post, tstart + echo_duration - rf_pi_duration/2 - tx_gate_pre]), \
-                np.array([0, 1])
+            return np.array([tstart + rf_pi_duration/2 + tx_gate_post]), np.array([0])
 
     def readout_wf(tstart, echo_idx):
         if echo_idx != 0:
@@ -215,8 +214,8 @@ def spin_echo(self, plotSeq):
                            trap_ramp_duration, trap_ramp_pts)    
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
-        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
-            return t1, a1
+#        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
+#            return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
 
@@ -227,8 +226,8 @@ def spin_echo(self, plotSeq):
                            trap_ramp_duration, trap_ramp_pts)  
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
-        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
-            return t1, a1
+#        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
+#            return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
             
