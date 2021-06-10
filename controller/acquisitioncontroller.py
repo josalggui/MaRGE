@@ -72,7 +72,7 @@ class AcquisitionController(QObject):
         self.parent.plotview_layout.addWidget(self.parent.t_plotview)
         self.parent.plotview_layout.addWidget(self.parent.f_plotview)
         
-        self.save_data(self.rxd, self.sequence.lo_freq)
+        self.save_data(self)
 
         self.parent.rxd = self.rxd
         self.parent.lo_freq = self.sequence.lo_freq
