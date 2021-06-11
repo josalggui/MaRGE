@@ -85,9 +85,9 @@ def spin_echo(self, plotSeq):
     rf_amp=self.rf_amp
 #    trs=self.trs
     rf_pi_duration=None
-    rf_pi2_duration=self.rf_pi2_duration*1e-6
-    echo_duration=self.echo_duration*1e-3
-    tr_duration=self.tr_duration*1e-3
+    rf_pi2_duration=self.rf_pi2_duration
+    echo_duration=self.echo_duration
+    tr_duration=self.tr_duration
     BW=self.BW
     shim_x: float = self.shim[0]
     shim_y: float = self.shim[1]
@@ -101,17 +101,17 @@ def spin_echo(self, plotSeq):
     fov_sl:int=self.fov[2]*1e-2
 #    readout_amp=self.readout_amp
 #    readout_grad_duration=self.readout_grad_duration
-    trap_ramp_duration=self.trap_ramp_duration*1e-6
+    trap_ramp_duration=self.trap_ramp_duration
 #    phase_start_amp=self.phase_start_amp
-    phase_grad_duration=self.phase_grad_duration*1e-6
+    phase_grad_duration=self.phase_grad_duration
 #    phase_grad_interval=self.phase_grad_interval 
 #   slice_start_amp=self.slice_start_amp
 #    phase_t = self.phase_t
    
     trap_ramp_pts=np.int(trap_ramp_duration*2e5)    # 0.2 puntos/ms
-    grad_readout_delay=9e-6   #8.83    # readout amplifier delay
-    grad_phase_delay=9e-6      #8.83
-    grad_slice_delay=9e-6         #8.83
+    grad_readout_delay=9   #8.83    # readout amplifier delay
+    grad_phase_delay=9      #8.83
+    grad_slice_delay=9        #8.83
     rx_period=1/BW/1e-3
     """
     readout gradient: x
@@ -134,9 +134,9 @@ def spin_echo(self, plotSeq):
     # readout amplitude
     Grd = BW/(gammaB*fov_rd)
     # slice amplitude
-    Gph = n_ph/(2*gammaB*fov_ph*phase_grad_duration)
+    Gph = n_ph/(2*gammaB*fov_ph*phase_grad_duration*1e-6)
     # phase amplitude
-    Gsl = n_sl/(2*gammaB*fov_sl*phase_grad_duration)
+    Gsl = n_sl/(2*gammaB*fov_sl*phase_grad_duration*1e-6)
     
     phase_amps = np.linspace(Gph, -Gph, n_ph)
 #    phase_amps=phase_amps[getIndex(phase_amps, echos_per_tr, SweepMode)]
@@ -161,8 +161,8 @@ def spin_echo(self, plotSeq):
             return np.array([tstart + rf_pi_duration/2]), np.array([0])
 
     def tx_gate_wf(tstart, echo_idx):
-        tx_gate_pre = 2e-6 # us, time to start the TX gate before each RF pulse begins
-        tx_gate_post = 1e-6 # us, time to keep the TX gate on after an RF pulse ends
+        tx_gate_pre = 2 # us, time to start the TX gate before each RF pulse begins
+        tx_gate_post = 1 # us, time to keep the TX gate on after an RF pulse ends
 
         if echo_idx == 0:
             # do pi/2 pulse, then start first pi pulse
@@ -226,7 +226,7 @@ def spin_echo(self, plotSeq):
     # 1/0.2 = 5us, 5 / 3.1 gives the offset between channels; extra
     # 0.1 for a safety margin))
 
-    global_t = 20e-6 # start the first TR at 20us
+    global_t = 20 # start the first TR at 20us
     for nS in range(nScans):
         for sl in range(n_sl):
             for ph in range(n_ph):
