@@ -3,7 +3,6 @@ sys.path.append('../marcos_client')
 import numpy as np
 import experiment as ex
 #from local_config import fpga_clk_freq_MHz
-import matplotlib.pyplot as plt
 
 import pdb
 st = pdb.set_trace
@@ -22,7 +21,6 @@ def spin_echo(lo_freq=0.2, # MHz
                     shim_y=0, 
                     shim_z=0, 
                     # (must at least be longer than readout_duration + trap_ramp_duration)
-                    dbg_sc=0, # set to 0 to avoid RF debugging pulses in each RX window, otherwise amp between 0 or 1
                     ):
                         
     """
@@ -41,15 +39,12 @@ def spin_echo(lo_freq=0.2, # MHz
     # create appropriate waveforms for each echo, based on start time, echo index and TR index
     # note: echo index is 0 for the first interval (90 pulse until first 180 pulse) thereafter 1, 2 etc between each 180 pulse
     def rf_wf(tstart, echo_idx):
-        rx_tstart=tstart + (echo_duration - readout_duration)/2+ tr_pause_duration
-        rx_tend=tstart + (echo_duration + readout_duration)/2+ tr_pause_duration
-        rx_tcentre = (rx_tstart + rx_tend) / 2
         pi2_phase = 1 # x
         pi_phase = 1j # y
         if echo_idx == 0:
             # do pi/2 pulse, then start first pi pulse
             return np.array([tstart + (echo_duration - rf_pi2_duration)/2, tstart + (echo_duration + rf_pi2_duration)/2,
-                             tstart + echo_duration - rf_pi_duration/2, rx_tcentre - 10, rx_tcentre + 10]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp, dbg_sc*(1 + 0.5j), 0])                        
+                             tstart + echo_duration - rf_pi_duration/2]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp])                        
         elif echo_idx == echos_per_tr:
             # finish final RF pulse
             return np.array([tstart + rf_pi_duration/2]), np.array([0])
@@ -100,9 +95,9 @@ def spin_echo(lo_freq=0.2, # MHz
 
             expt.add_flodict({
                 'tx0': (tx_t, tx_a),
-                'grad_vx': (np.array([global_t]), np.array([shim_x])), 
-                'grad_vy': (np.array([global_t]), np.array([shim_y])), 
-                'grad_vz': (np.array([global_t]), np.array([shim_z])), 
+#                'grad_vx': (np.array([global_t]), np.array([shim_x])), 
+#                'grad_vy': (np.array([global_t]), np.array([shim_y])), 
+#                'grad_vz': (np.array([global_t]), np.array([shim_z])), 
                 'rx0_en': (readout_t, readout_a),
                 'tx_gate': (tx_gate_t, tx_gate_a),
                 'rx_gate': (rx_gate_t, rx_gate_a),
