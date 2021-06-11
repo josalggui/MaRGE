@@ -240,13 +240,13 @@ def spin_echo(self, plotSeq):
                     slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  n_sl)
     
                     expt.add_flodict({
-                        'tx0': (tx_t*1e3, tx_a),
-                        'grad_vx': (readout_grad_t*1e3, readout_grad_a*Gx_factor/10+shim_x),
-                        'grad_vy': (phase_grad_t*1e3, phase_grad_a*Gy_factor/10+shim_y),
-                        'grad_vz': (slice_grad_t*1e3, slice_grad_a*Gz_factor/10+shim_z), 
-                        'rx0_en': (readout_t*1e3, readout_a),
-                        'tx_gate': (tx_gate_t*1e3, tx_gate_a),
-                        'rx_gate': (rx_gate_t*1e3, rx_gate_a),
+                        'tx0': (tx_t, tx_a),
+                        'grad_vx': (readout_grad_t, readout_grad_a*Gx_factor/10+shim_x),
+                        'grad_vy': (phase_grad_t, phase_grad_a*Gy_factor/10+shim_y),
+                        'grad_vz': (slice_grad_t, slice_grad_a*Gz_factor/10+shim_z), 
+                        'rx0_en': (readout_t, readout_a),
+                        'tx_gate': (tx_gate_t, tx_gate_a),
+                        'rx_gate': (rx_gate_t, rx_gate_a),
                     })
                 
                 global_t += tr_duration
