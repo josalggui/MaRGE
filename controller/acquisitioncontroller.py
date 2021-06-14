@@ -50,6 +50,9 @@ class AcquisitionController(QObject):
             self.rxd, self.flodict, self.msgs=spin_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'SE1D':
             self.rxd, self.flodict, self.msgs=spin_echo1D(self.sequence, plotSeq)
+            dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd))
+            self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency')
+            self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time')
         elif self.sequence.seq == 'SE2D':
             self.rxd, self.msgs=spin_echo2D(self.sequence, plotSeq)
         elif self.sequence.seq == 'SE3D':
