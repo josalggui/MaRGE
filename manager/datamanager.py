@@ -70,6 +70,9 @@ class DataManager(QObject):
         self._f_axis = np.linspace(-self.f_range / 2, self.f_range / 2, self.samples)
         self._f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(d_cropped), n=self.samples))
         self._f_fftMagnitude = abs(self.f_fftData)
+        
+        self._f_fft2Data = np.fft.fftshift(np.fft.fft2(np.fft.fftshift(d_cropped), n=self.samples))
+        self._f_fft2Magnitude = abs(self.f_fft2Data)
 
         # self._dataTimestamp = datetime.now().strftime('%m/%d/%Y, %H:%M:%S')
 
@@ -108,6 +111,14 @@ class DataManager(QObject):
     @property
     def f_fftMagnitude(self):
         return self._f_fftMagnitude
+        
+    @property
+    def f_fft2Data(self):
+        return self._f_fft2Data
+    
+    @property
+    def f_fft2Magnitude(self):
+        return self._f_fft2Magnitude
 
     # TODO: Implementation of params-setter (?)
     def get_fwhm(self, f_fwhmWindow: int = 1000) -> [int, float, float]:

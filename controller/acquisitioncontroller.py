@@ -47,31 +47,36 @@ class AcquisitionController(QObject):
         plotSeq=0
         if self.sequence.seq == 'SE':
             self.rxd, self.flodict, self.msgs=spin_echo(self.sequence, plotSeq)
-        if self.sequence.seq == 'SE1D':
+        elif self.sequence.seq == 'SE1D':
             self.rxd, self.flodict, self.msgs=spin_echo1D(self.sequence, plotSeq)
-        if self.sequence.seq == 'SE2D':
+        elif self.sequence.seq == 'SE2D':
             self.rxd, self.msgs=spin_echo2D(self.sequence, plotSeq)
-        if self.sequence.seq == 'SE3D':
+        elif self.sequence.seq == 'SE3D':
             self.rxd, self.msgs=spin_echo3D(self.sequence, plotSeq)
-        if self.sequence.seq == 'FID':
+        elif self.sequence.seq == 'FID':
             self.rxd, self.msgs=fid(self.sequence, plotSeq)
-        if self.sequence.seq == 'R':
+        elif self.sequence.seq == 'R':
             self.rxd, self.msgs = radial(self.sequence, plotSeq)
         elif self.sequence.seq == 'GE':
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
             self.sequence.rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
             self.rxd, self.msgs = turbo_spin_echo(self.sequence, plotSeq)
-
+            
         dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd))
-        self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency')
-        self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time')
-       # outputvalues = AcquisitionManager().getOutputParameterObject(dataobject, self.sequence.systemproperties)
+        if (self.n_ph ==0 & self.n_sl == 0):
+            self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency')
+            self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time')
+           # outputvalues = AcquisitionManager().getOutputParameterObject(dataobject, self.sequence.systemproperties)
+            #self.outputsection.set_parameters(outputvalues)
 
-        #self.outputsection.set_parameters(outputvalues)
+        elif (self.n_sl == 0 & self.n_ph != 0):
+            self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
+        else:
+        
+        
         self.parent.plotview_layout.addWidget(self.parent.t_plotview)
         self.parent.plotview_layout.addWidget(self.parent.f_plotview)
-        
         self.save_data()
 
         self.parent.rxd = self.rxd

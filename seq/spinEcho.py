@@ -264,6 +264,8 @@ def spin_echo(self, plotSeq):
     elif plotSeq==0:
         rxd, msgs = expt.run()
         expt.__del__()
-        return rxd['rx0'], flodict, msgs
+        samples = int(len(rxd)/nScans)
+        data_avg = np.average(np.reshape(rxd, nScans, samples), axis=2) 
+        return rxd['rx0'], flodict, msgs, data_avg
 
 

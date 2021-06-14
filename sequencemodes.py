@@ -388,7 +388,7 @@ class GradEchoSeq:
                  seq: str,
                  dbg_sc: float=None, 
                  lo_freq: float=None,
-                rf_amp: float=None,
+                 rf_amp: float=None,
                  trs: int=None,
                  rx_period: int=None, 
                  rf_tstart: int=None, 

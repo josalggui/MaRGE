@@ -54,14 +54,12 @@ class SpectrumPlot (GraphicsLayoutWidget):
 
 class Spectrum2DPlot(GraphicsLayoutWidget):
     def __init__(self,
-                 xData: list,
-                 yData: list,
-                 yData2:list, 
-                 yData3:list, 
-                 xLabel: str,
-                 yLabel: str, 
-                 title:str, 
-                 xlabel:str
+                 Data: list,
+                 title:str
                  ):
         super(Spectrum2DPlot, self).__init__()
 
+        plotitem = self.addPlot(row=0, col=0)
+        plotitem.addLegend()
+        plotitem.plot(Data, pen=[255, 0, 0], name="magnitude")
+        
