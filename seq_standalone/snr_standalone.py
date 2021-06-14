@@ -88,7 +88,8 @@ if __name__ == "__main__":
         s=s+samples
         i=i+1
     
-    snr = np.log10(np.mean(peakVals)/np.std(peakVals))
+    snr = np.log20(np.mean(peakVals)/np.std(peakVals))
+    print(snr)
 
     plt.plot(peakVals)
     plt.show()
