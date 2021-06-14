@@ -12,6 +12,7 @@ Acquisition Manager
 """
 
 from plotview.spectrumplot import SpectrumPlot
+from plotview.spectrumplot import Spectrum2DPlot
 from sequencemodes import defaultsequences
 from PyQt5.QtCore import QObject,  pyqtSlot
 from manager.datamanager import DataManager
@@ -73,7 +74,7 @@ class AcquisitionController(QObject):
         elif (self.n_sl == 0 & self.n_ph != 0):
             self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
         else:
-        
+            self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
         
         self.parent.plotview_layout.addWidget(self.parent.t_plotview)
         self.parent.plotview_layout.addWidget(self.parent.f_plotview)

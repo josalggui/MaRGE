@@ -138,9 +138,15 @@ def spin_echo(self, plotSeq):
     # phase amplitude
     Gsl = n_sl/(2*gammaB*fov_sl*phase_grad_duration*1e-6)
     
-    phase_amps = np.linspace(Gph, -Gph, n_ph)
+    if (n_ph !=0):
+        phase_amps = np.linspace(Gph, -Gph, n_ph)
+    else:
+        phase_amps = 0
 #    phase_amps=phase_amps[getIndex(phase_amps, echos_per_tr, SweepMode)]
-    slice_amps = np.linspace(Gsl, -Gsl,  n_sl)
+    if (n_sl != 0):
+        slice_amps = np.linspace(Gsl, -Gsl,  n_sl)
+    else:
+        slice_amps = 0
 #    slice_amps=slice_amps[getIndex(slice_amps, echos_per_tr, SweepMode)]
 
     # create appropriate waveforms for each echo, based on start time, echo index and TR index
