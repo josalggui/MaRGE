@@ -69,7 +69,7 @@ def rabi_flops(lo_freq=3.069, # MHz
 if __name__ == "__main__":
     
     N=20
-    values=rabi_flops(lo_freq=3.069, rf_amp=0.62,  rf_duration=50, N=N, step=5)
+    values=rabi_flops(lo_freq=3.069, rf_amp=0.62,  rf_duration=50, N=N, step=5, tr_wait=1000)
     samples = int(len(values)/N)
     
     i=0
