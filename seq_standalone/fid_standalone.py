@@ -6,7 +6,6 @@ sys.path.append('manager')
 import numpy as np
 import experiment as ex
 import matplotlib.pyplot as plt
-from local_config import fpga_clk_freq_MHz
 #from datamanager import DataManager
 import pdb
 st = pdb.set_trace
