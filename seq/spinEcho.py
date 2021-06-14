@@ -242,8 +242,15 @@ def spin_echo(self, plotSeq):
                     readout_t, readout_a = readout_wf(global_t, echo_idx)
                     rx_gate_t, rx_gate_a = readout_wf(global_t, echo_idx)
                     readout_grad_t, readout_grad_a = readout_grad_wf(global_t, echo_idx)
-                    phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  n_ph)
-                    slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  n_sl)
+                    if n_ph !=0:
+                        phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  n_ph)
+                    else:
+                        phase_grad_t, phase_grad_a = np.array([0, 0])
+                    
+                    if n_sl !=0:
+                        slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  n_sl)
+                    else:
+                        slice_grad_t, slice_grad_a = np.array([0, 0])
     
                     expt.add_flodict({
                         'tx0': (tx_t, tx_a),
@@ -270,6 +277,7 @@ def spin_echo(self, plotSeq):
     elif plotSeq==0:
         rxd, msgs = expt.run()
         expt.__del__()
+        print(len(rxd))
         samples = int(len(rxd)/nScans)
         data_avg = np.average(np.reshape(rxd, nScans, samples), axis=2) 
         return rxd['rx0'], flodict, msgs, data_avg
