@@ -21,6 +21,7 @@ def fids(lo_freq=3.069, # MHz
              rf_duration=50,
              N=100, 
              rf_tstart = 100,  # us
+             rx_wait=0, 
              tr_wait=1000, # delay after end of RX before start of next TR
              rx_period=10/3,  # us, 3.333us, 300 kHz rate
              readout_duration=500,
@@ -40,7 +41,7 @@ def fids(lo_freq=3.069, # MHz
     i=0
     while i < N:     
         rf_tend = rf_tstart + rf_duration # us
-        rx_tstart = rf_tend+tr_wait # us
+        rx_tstart = rf_tend+rx_wait # us
         rx_tend = rx_tstart + readout_duration  # us
         expt.add_flodict({
             # second tx0 pulse purely for loopback debugging
@@ -49,7 +50,7 @@ def fids(lo_freq=3.069, # MHz
             'tx_gate': ( np.array([rf_tstart - tx_gate_pre, rf_tend + tx_gate_post])+tstart, np.array([1, 0]) ), 
             'rx_gate': ( np.array([rx_tstart, rx_tend])+tstart, np.array([1, 0]) )
         })
-        tstart = tstart + rx_tend
+        tstart = tstart + rx_tend+tr_wait
         i = i+1
     
     expt.plot_sequence()
