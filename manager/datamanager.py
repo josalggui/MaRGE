@@ -71,7 +71,7 @@ class DataManager(QObject):
         self._f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(d_cropped), n=self.samples))
         self._f_fftMagnitude = abs(self.f_fftData)
         
-        self._f_fft2Data = np.fft.fftshift(np.fft.fft2(np.fft.fftshift(d_cropped), n=self.samples))
+        self._f_fft2Data = np.fft.fftshift(np.fft.fft2(d_cropped))
         self._f_fft2Magnitude = abs(self.f_fft2Data)
 
         # self._dataTimestamp = datetime.now().strftime('%m/%d/%Y, %H:%M:%S')
