@@ -11,8 +11,7 @@ import pdb
 st = pdb.set_trace
 
    
-def fid(dbg_sc=0.5, # set to 0 to avoid 2nd RF debugging pulse, otherwise amp between 0 or 1
-             lo_freq=0.1, # MHz
+def fid(lo_freq=3.069, # MHz
              rf_amp=1, # 1 = full-scale
              rf_duration=50,
              rf_tstart = 100,  # us
@@ -36,11 +35,10 @@ def fid(dbg_sc=0.5, # set to 0 to avoid 2nd RF debugging pulse, otherwise amp be
 
 
     def fid_tr(tstart):
-        rx_tcentre = (rx_tstart + rx_tend) / 2
         value_dict = {
             # second tx0 pulse purely for loopback debugging
-            'tx0': ( np.array([rf_tstart, rf_tend,   rx_tcentre - 10, rx_tcentre + 10]) + tstart,
-                     np.array([rf_amp,0,  dbg_sc*(1 + 0.5j),0]) ),
+            'tx0': ( np.array([rf_tstart, rf_tend]) + tstart,
+                     np.array([rf_amp,0]) ),
             'rx0_en': ( np.array([rx_tstart, rx_tend]) + tstart, np.array([1, 0]) ),
              'tx_gate': ( np.array([rf_tstart - tx_gate_pre, rf_tend + tx_gate_post]) + tstart, np.array([1, 0]) )
         }
@@ -80,6 +78,4 @@ def fid(dbg_sc=0.5, # set to 0 to avoid 2nd RF debugging pulse, otherwise amp be
         
 if __name__ == "__main__":
     
-#        for k in range(20):
-#            print(k)
-    fid(lo_freq=0.9, rf_amp=1, dbg_sc=1)
+    fid(lo_freq=3.069, rf_amp=1)
