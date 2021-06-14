@@ -203,7 +203,7 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
                         v=v.replace("[", "")
                         v=v.replace("]", "")
                         v2 = list(v.split(","))
-                        value: list = list([v2[0], v2[1], v2[2]])
+                        value: list = list([int(v2[0]), int(v2[1]), int(v2[2])])
                         setattr(defaultsequences[self.sequence], item, value)
 
                 
