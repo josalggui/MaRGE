@@ -55,12 +55,12 @@ def rabi_flops(lo_freq=3.069, # MHz
         i = i+1
         k=k+step
     
-#    expt.plot_sequence()
-#    plt.show()
+    expt.plot_sequence()
+    plt.show()
     
     rxd, msgs = expt.run()    
-#    plt.plot( rxd['rx0'])
-#    plt.show()
+    plt.plot( rxd['rx0'])
+    plt.show()
     
     expt.__del__()
     return rxd['rx0']
