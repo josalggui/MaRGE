@@ -15,7 +15,7 @@ from spinEcho_standalone import spin_echo
 import time
 
 def rabi_flops(lo_freq, pulse_duration):  # Initial pulse duration
-
+        
     rxd, msgs=spin_echo(lo_freq, pulse_duration)            
 
     dataobject:DataManager=DataManager(rxd, lo_freq, len(rxd))
@@ -25,9 +25,9 @@ def rabi_flops(lo_freq, pulse_duration):  # Initial pulse duration
 
 
 if __name__ == "__main__":
-    
+
     peakVals = [] #define the array 
-    for k in range(20):
+    for k in range(2):
         print(k)
         peak_value=rabi_flops(lo_freq=3.069, pulse_duration=50+k)
         print(peak_value)
