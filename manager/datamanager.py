@@ -45,7 +45,7 @@ class DataManager(QObject):
                  '_f_fftData',
                  '_f_fftMagnitude']
 
-    def __init__(self, data: np.complex, p_frequency: float, samples: int, f_range: int = 250000):
+    def __init__(self, data: np.complex, p_frequency: float, samples: int, f_range: int = 250000, numberOfPoints=1):
         """
         Initialisation of data manager class
         @param data:        Raw data
@@ -57,7 +57,7 @@ class DataManager(QObject):
         self.f_range = f_range
         self.samples = samples
         self.p_ts = self.samples * timePerSample
-
+ 
         d_cropped = self.data[0:self.samples]  # * 2000.0
         self._t_axis = np.linspace(0, self.p_ts, self.samples)
         self._t_magnitude = np.abs(d_cropped)
@@ -68,11 +68,13 @@ class DataManager(QObject):
 
         self._frequency = p_frequency
         self._f_axis = np.linspace(-self.f_range / 2, self.f_range / 2, self.samples)
-        self._f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(d_cropped), n=self.samples))
+        self._f_fftData = np.fft.fftshift(np.fft.fft((d_cropped), n=self.samples))
         self._f_fftMagnitude = abs(self.f_fftData)
         
-        self._f_fft2Data = np.fft.fftshift(np.fft.fft2(np.fft.fftshift(d_cropped)))
-        self._f_fft2Magnitude = abs(self.f_fft2Data)
+        if(n[1]>1):
+            self.data2D = np.reshape(self.data, (n[0], n[1]))
+            self._f_fft2Data = np.fft.fftshift(np.fft.fft2((self.data2D)))
+            self._f_fft2Magnitude = abs(self.f_fft2Data)
 
         # self._dataTimestamp = datetime.now().strftime('%m/%d/%Y, %H:%M:%S')
 

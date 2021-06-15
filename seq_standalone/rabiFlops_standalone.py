@@ -16,7 +16,7 @@ import numpy as np
 import experiment as ex
 
 
-def rabi_flops(lo_freq=3.069, # MHz
+def rabi_flops(lo_freq=3.023, # MHz
              rf_amp=0.62, # 1 = full-scale
              rf_duration=50,
              N=10, 
@@ -24,9 +24,9 @@ def rabi_flops(lo_freq=3.069, # MHz
              rf_tstart = 100,  # us
              rx_wait = 0, 
              tr_wait=0, # delay after end of RX before start of next TR
-             rx_period=10/3,  # us, 3.333us, 300 kHz rate
-             readout_duration=500,
-             shimming=(0, 0, 0)
+             rx_period=50/3,  # us, 3.333us, 300 kHz rate
+             readout_duration=5000,
+             shimming=(0.1, 0, 0)
              ):
         
     ## All times are in the context of a single TR, starting at time 0
@@ -68,8 +68,8 @@ def rabi_flops(lo_freq=3.069, # MHz
 
 if __name__ == "__main__":
     
-    N=20
-    values=rabi_flops(lo_freq=3.069, rf_amp=0.62,  rf_duration=50, N=N, step=5, tr_wait=1000)
+    N=1
+    values=rabi_flops(lo_freq=3.041, rf_amp=0.30,  rf_duration=160, N=N, step=20, tr_wait=1e6, rx_wait=200)
     samples = int(len(values)/N)
     
     i=0
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     while i < N:
         d_cropped = values[s:s+samples-1] 
         
-        f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(d_cropped), n=samples))
+        f_fftData = np.fft.fftshift(np.fft.fft((d_cropped), n=samples))
         f_fftMagnitude = abs(f_fftData)
         f_signalValue: float = round(np.max(f_fftMagnitude), 4)
         peakVals.append(f_signalValue)
@@ -91,5 +91,6 @@ if __name__ == "__main__":
         s=s+samples
         i=i+1
 
-    plt.plot(peakVals)
+
+    plt.plot(f_fftMagnitude)
     plt.show()

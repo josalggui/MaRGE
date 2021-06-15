@@ -80,14 +80,14 @@ def spin_echo(self, plotSeq):
 #                    rx_period=10/3, # us, 3.333us, 300 kHz rate
 #                    # (must at least be longer than readout_duration + trap_ramp_duration)
 #                    ):
-    init_gpa=True                   
+    init_gpa=False                
     lo_freq=self.lo_freq
     rf_amp=self.rf_amp
 #    trs=self.trs
     rf_pi_duration=None
     rf_pi2_duration=self.rf_pi2_duration
-    echo_duration=self.echo_duration
-    tr_duration=self.tr_duration
+    echo_duration=self.echo_duration*1e3
+    tr_duration=self.tr_duration*1e3
     BW=self.BW
     shim_x: float = self.shim[0]
     shim_y: float = self.shim[1]
@@ -108,18 +108,19 @@ def spin_echo(self, plotSeq):
 #   slice_start_amp=self.slice_start_amp
 #    phase_t = self.phase_t
    
-    trap_ramp_pts=np.int(trap_ramp_duration*2e5)    # 0.2 puntos/ms
+    BW=BW*1e-3
+    trap_ramp_pts=np.int32(trap_ramp_duration*0.2)    # 0.2 puntos/ms
     grad_readout_delay=9   #8.83    # readout amplifier delay
     grad_phase_delay=9      #8.83
     grad_slice_delay=9        #8.83
-    rx_period=1/BW/1e-3
+    rx_period=1/BW
     """
     readout gradient: x
     phase gradient: y
     slice/partition gradient: z
     """
 
-    BW = BW*1e3
+#    BW = BW*1e3
     readout_duration = n_rd/BW
 
     
@@ -129,24 +130,28 @@ def spin_echo(self, plotSeq):
         rf_pi_duration = 2 * rf_pi2_duration
         
 #    SweepMode=1
-        
+    
+    # Calibration constans to change from T/m to DAC amplitude
+    
     gammaB = 42.56e6    # Hz/T
     # readout amplitude
-    Grd = BW/(gammaB*fov_rd)
+    Grd = BW*1e6/(gammaB*fov_rd);
     # slice amplitude
-    Gph = n_ph/(2*gammaB*fov_ph*phase_grad_duration*1e-6)
+    if (n_ph==1):
+        Gph=0
+    else:
+        Gph = n_ph/(2*gammaB*fov_ph*phase_grad_duration*1e-6);
     # phase amplitude
-    Gsl = n_sl/(2*gammaB*fov_sl*phase_grad_duration*1e-6)
     
-    if (n_ph !=0):
-        phase_amps = np.linspace(Gph, -Gph, n_ph)
+    if (n_sl==1):
+        Gsl=0
     else:
-        phase_amps = 0
+        Gsl = n_sl/(2*gammaB*fov_sl*phase_grad_duration*1e-6);
+    
+    phase_amps = np.linspace(Gph, -Gph, n_ph)
 #    phase_amps=phase_amps[getIndex(phase_amps, echos_per_tr, SweepMode)]
-    if (n_sl != 0):
-        slice_amps = np.linspace(Gsl, -Gsl,  n_sl)
-    else:
-        slice_amps = 0
+    slice_amps = np.linspace(Gsl, -Gsl,  n_sl)
+
 #    slice_amps=slice_amps[getIndex(slice_amps, echos_per_tr, SweepMode)]
 
     # create appropriate waveforms for each echo, based on start time, echo index and TR index
@@ -195,10 +200,10 @@ def spin_echo(self, plotSeq):
         if echo_idx == 0:
                     #            return trap_cent(tstart + self.echo_duration*3/4, readout_amp, readout_grad_duration/2,
                     #                             trap_ramp_duration, trap_ramp_pts)
-            return trap_cent(tstart + echo_duration/2 + rf_pi2_duration/2+trap_ramp_duration/2+readout_duration/4, Grd, readout_duration/2,
+            return trap_cent(tstart + echo_duration/2 + rf_pi2_duration/2+trap_ramp_duration/2+readout_duration/4-grad_readout_delay, Grd, readout_duration/2,
                              trap_ramp_duration, trap_ramp_pts)
         else:
-            return trap_cent(tstart + self.echo_duration/2-grad_readout_delay, Grd, readout_duration,
+            return trap_cent(tstart + echo_duration/2-grad_readout_delay, Grd, readout_duration,
                              trap_ramp_duration, trap_ramp_pts)
         
 
@@ -242,33 +247,29 @@ def spin_echo(self, plotSeq):
                     readout_t, readout_a = readout_wf(global_t, echo_idx)
                     rx_gate_t, rx_gate_a = readout_wf(global_t, echo_idx)
                     readout_grad_t, readout_grad_a = readout_grad_wf(global_t, echo_idx)
-                    if n_ph !=0:
-                        phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  n_ph)
-                    else:
-                        phase_grad_t, phase_grad_a = np.array([0, 0])
-                    
-                    if n_sl !=0:
-                        slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  n_sl)
-                    else:
-                        slice_grad_t, slice_grad_a = np.array([0, 0])
+                    phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  n_ph)
+                    slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  n_sl)
+#                    plt.plot(readout_grad_t, readout_grad_a)
+#                    plt.show()
     
                     expt.add_flodict({
                         'tx0': (tx_t, tx_a),
-                        'grad_vx': (readout_grad_t, readout_grad_a*Gx_factor/10+shim_x),
-                        'grad_vy': (phase_grad_t, phase_grad_a*Gy_factor/10+shim_y),
-                        'grad_vz': (slice_grad_t, slice_grad_a*Gz_factor/10+shim_z), 
+                        'grad_vx': (readout_grad_t, readout_grad_a/(Gx_factor/1000)/10+shim_x),
+                        'grad_vy': (phase_grad_t, phase_grad_a/(Gy_factor/1000)/10+shim_y),
+                        'grad_vz': (slice_grad_t, slice_grad_a/(Gz_factor/1000)/10+shim_z), 
                         'rx0_en': (readout_t, readout_a),
                         'tx_gate': (tx_gate_t, tx_gate_a),
                         'rx_gate': (rx_gate_t, rx_gate_a),
                     })
+                    global_t += echo_duration
                 
-                global_t += tr_duration
+                global_t += tr_duration-echo_duration
                 
                 
-    flodict = expt.get_flodict()
-    flodict["Gx_factor"] = Gx_factor
-    flodict["Gy_factor"] = Gy_factor
-    flodict["Gz_factor"] = Gz_factor
+#    flodict = expt.get_flodict()
+#    flodict["Gx_factor"] = Gx_factor
+#    flodict["Gy_factor"] = Gy_factor
+#    flodict["Gz_factor"] = Gz_factor
                 
     if plotSeq==1:
         expt.plot_sequence()
@@ -278,8 +279,12 @@ def spin_echo(self, plotSeq):
         rxd, msgs = expt.run()
         expt.__del__()
         print(len(rxd))
-        samples = int(len(rxd)/nScans)
-        data_avg = np.average(np.reshape(rxd, nScans, samples), axis=2) 
-        return rxd['rx0'], flodict, msgs, data_avg
+        if nScans > 1:
+            samples = int(len(rxd)/nScans)
+            data_avg = np.average(np.reshape(rxd['rx0'], (nScans, n_rd)), axis=0)
+        else:
+            data_avg = rxd['rx0']
+
+        return rxd['rx0'], msgs, data_avg
 
 

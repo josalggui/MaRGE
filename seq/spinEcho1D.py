@@ -207,7 +207,7 @@ def spin_echo1D(self, plotSeq):
             
         global_t += tr_pause_duration
         
-    flodict = expt.get_flodict()
+#    flodict = expt.get_flodict()
         
     if plotSeq==1:
         expt.plot_sequence()
@@ -216,6 +216,6 @@ def spin_echo1D(self, plotSeq):
     elif plotSeq==0:
         rxd, msgs = expt.run()
         expt.__del__()
-        return rxd['rx0'], flodict, msgs
+        return rxd['rx0'], msgs
 
 
