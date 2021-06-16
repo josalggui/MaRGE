@@ -235,10 +235,10 @@ def spin_echo(lo_freq=3.043, # MHz
     
     expt.__del__()
 
-        if nScans > 1:
-            data_avg = np.average(np.reshape(rxd['rx0'], (nScans, n_rd*n_ph*n_sl)), axis=0)
-        else:
-            data_avg = rxd['rx0']
+    if nScans > 1:
+        data_avg = np.average(np.reshape(rxd['rx0'], (nScans, n_rd*n_ph*n_sl)), axis=0)
+    else:
+        data_avg = rxd['rx0']
 
 #
 if __name__ == "__main__":

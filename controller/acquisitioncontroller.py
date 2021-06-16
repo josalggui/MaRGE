@@ -105,14 +105,14 @@ class AcquisitionController(QObject):
         dt2_string = dt2.strftime("%d-%m-%Y")
 #        dict["flodict"] = self.flodict
         dict["rawdata"] = self.rxd
-#        dict["fft"] = dataobject.f_fftData
+        dict["fft2D"] = dataobject.f_fft2Data
         if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string)):
             os.makedirs('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string))
             
         if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)):
             os.makedirs('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)) 
             
-        savemat("/home/physiomri/share_vm/results_experiments/%s/%s/%s.mat" % (dt2_string, dt_string, dict["seq"]), dict) 
+        savemat("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict) 
 
 
 
