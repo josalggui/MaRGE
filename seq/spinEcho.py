@@ -207,10 +207,10 @@ def spin_echo(self, plotSeq):
                              trap_ramp_duration, trap_ramp_pts)
         
 
-    def phase_grad_wf(tstart, echo_idx, n_ph):
-        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, phase_amps[n_ph-1], phase_grad_duration,
+    def phase_grad_wf(tstart, echo_idx, ph):
+        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, phase_amps[ph-1], phase_grad_duration,
                            trap_ramp_duration, trap_ramp_pts)
-        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, -phase_amps[n_ph-1], phase_grad_duration,
+        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, -phase_amps[ph-1], phase_grad_duration,
                            trap_ramp_duration, trap_ramp_pts)    
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
@@ -220,9 +220,9 @@ def spin_echo(self, plotSeq):
             return np.hstack([t1, t2]), np.hstack([a1, a2])
 
     def slice_grad_wf(tstart, echo_idx,  n_sl):
-        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, slice_amps[n_sl-1], phase_grad_duration,
+        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, slice_amps[sl-1], phase_grad_duration,
                            trap_ramp_duration, trap_ramp_pts)
-        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_slice_delay, -slice_amps[n_sl-1], phase_grad_duration,
+        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_slice_delay, -slice_amps[sl-1], phase_grad_duration,
                            trap_ramp_duration, trap_ramp_pts)  
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
@@ -247,8 +247,8 @@ def spin_echo(self, plotSeq):
                     readout_t, readout_a = readout_wf(global_t, echo_idx)
                     rx_gate_t, rx_gate_a = readout_wf(global_t, echo_idx)
                     readout_grad_t, readout_grad_a = readout_grad_wf(global_t, echo_idx)
-                    phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  n_ph)
-                    slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  n_sl)
+                    phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  ph)
+                    slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  sl)
 #                    plt.plot(readout_grad_t, readout_grad_a)
 #                    plt.show()
     
@@ -280,8 +280,7 @@ def spin_echo(self, plotSeq):
         expt.__del__()
         print(len(rxd))
         if nScans > 1:
-            samples = int(len(rxd)/nScans)
-            data_avg = np.average(np.reshape(rxd['rx0'], (nScans, n_rd)), axis=0)
+            data_avg = np.average(np.reshape(rxd['rx0'], (nScans, n_rd*n_ph*n_sl)), axis=0)
         else:
             data_avg = rxd['rx0']
 

@@ -34,7 +34,7 @@ def trap_cent(centre_t, plateau_a, trap_t, ramp_t, ramp_pts, base_a=0):
     t, a = trapezoid(plateau_a, trap_t, ramp_t, ramp_pts, False, base_a)
     return t + centre_t - (trap_t + ramp_t)/2, a
 
-def spin_echo1D(plot_rx=True, init_gpa=False,
+def spin_echo1D(plot_rx=True, init_gpa=True,
                     dbg_sc=0.5, # set to 0 to avoid RF debugging pulses in each RX window, otherwise amp between 0 or 1
                     lo_freq=3.0718, # MHz
                     rf_amp=0.6, # 1 = full-scale

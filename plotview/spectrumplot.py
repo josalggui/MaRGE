@@ -16,6 +16,7 @@ Plotview Spectrum (1D Plot)
 from pyqtgraph import GraphicsLayoutWidget
 from warnings import warn
 from datetime import datetime 
+import pyqtgraph as pg
 
 class SpectrumPlot (GraphicsLayoutWidget):
     def __init__(self,
@@ -59,7 +60,11 @@ class Spectrum2DPlot(GraphicsLayoutWidget):
                  ):
         super(Spectrum2DPlot, self).__init__()
 
-        plotitem = self.addPlot(row=0, col=0)
-        plotitem.addLegend()
-        plotitem.plot(Data, pen=[255, 0, 0], name="magnitude")
-        
+        imv = pg.ImageView()
+        imv.show()
+        imv.setImage(Data)
+        imv.autoRange()
+#        imv.image(Data)
+#        imv.autoLevels()
+
+ 

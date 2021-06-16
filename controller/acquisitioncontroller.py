@@ -76,16 +76,16 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs = turbo_spin_echo(self.sequence, plotSeq)
             
 #        self.n_rd = self.sequence.n[0]
-        dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd), 250000,  self.sequence.n)
+        dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd),  self.sequence.n, 250000)
         if (self.sequence.n[1] ==1 & self.sequence.n[2] == 1):
             self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency')
             self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time')
+            self.parent.plotview_layout.addWidget(self.parent.t_plotview)
         elif(self.sequence.n[2] == 1 & self.sequence.n[1] != 1):
             self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
         else:
             self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
         
-        self.parent.plotview_layout.addWidget(self.parent.t_plotview)
         self.parent.plotview_layout.addWidget(self.parent.f_plotview)
         self.save_data()
 
@@ -97,7 +97,7 @@ class AcquisitionController(QObject):
         
     def save_data(self):
         
-        dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd))
+        dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd), self.sequence.n)
         dict = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H_%M")
@@ -105,7 +105,7 @@ class AcquisitionController(QObject):
         dt2_string = dt2.strftime("%d-%m-%Y")
 #        dict["flodict"] = self.flodict
         dict["rawdata"] = self.rxd
-        dict["fft"] = dataobject.f_fftData
+#        dict["fft"] = dataobject.f_fftData
         if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string)):
             os.makedirs('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string))
             
