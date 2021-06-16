@@ -37,7 +37,7 @@ def trap_cent(centre_t, plateau_a, trap_t, ramp_t, ramp_pts, base_a=0):
     t, a = trapezoid(plateau_a, trap_t, ramp_t, ramp_pts, False, base_a)
     return t + centre_t - (trap_t + ramp_t)/2, a
 
-def spin_echo(lo_freq=3.069, # MHz
+def spin_echo(lo_freq=3.043, # MHz
                     rf_amp=0.62, # 1 = full-scale
                     rf_pi2_duration=50, # us, rf pi/2 pulse length
                     rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
@@ -102,7 +102,7 @@ def spin_echo(lo_freq=3.069, # MHz
         
     gammaB = 42.56e6    # Hz/T
     # readout amplitude
-    Grd = BW/(gammaB*fov_rd)
+    Grd = BW*1e6/(gammaB*fov_rd)
     # slice amplitude
     Gph = n_ph/(2*gammaB*fov_ph*phase_grad_duration*1e-6)
     # phase amplitude
@@ -212,15 +212,16 @@ def spin_echo(lo_freq=3.069, # MHz
     
                     expt.add_flodict({
                         'tx0': (tx_t, tx_a),
-                        'grad_vx': (readout_grad_t, readout_grad_a*Gx_factor/10+shim_x),
-                        'grad_vy': (phase_grad_t, phase_grad_a*Gy_factor/10+shim_y),
-                        'grad_vz': (slice_grad_t, slice_grad_a*Gz_factor/10+shim_z), 
+                        'grad_vx': (readout_grad_t, readout_grad_a/Gx_factor/10+shim_x),
+                        'grad_vy': (phase_grad_t, phase_grad_a/Gy_factor/10+shim_y),
+                        'grad_vz': (slice_grad_t, slice_grad_a/Gz_factor/10+shim_z), 
                         'rx0_en': (readout_t, readout_a),
                         'tx_gate': (tx_gate_t, tx_gate_a),
                         'rx_gate': (rx_gate_t, rx_gate_a),
                     })
+                    global_t += echo_duration
                 
-                global_t += tr_duration
+                global_t += tr_duration-echo_duration
     
     expt.plot_sequence()
     plt.show()     
@@ -234,12 +235,10 @@ def spin_echo(lo_freq=3.069, # MHz
     
     expt.__del__()
 
-#    if plot_rx:
-#        plt.plot( rxd['rx0'].real)
-##        plt.plot( rxd['rx0'].imag )
-##        plt.plot( rxd['rx1'].real )
-##        plt.plot( rxd['rx1'].imag )
-#        plt.show()
+        if nScans > 1:
+            data_avg = np.average(np.reshape(rxd['rx0'], (nScans, n_rd*n_ph*n_sl)), axis=0)
+        else:
+            data_avg = rxd['rx0']
 
 #
 if __name__ == "__main__":
