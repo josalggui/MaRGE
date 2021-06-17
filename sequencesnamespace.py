@@ -69,6 +69,7 @@ class Namespace:
     nScans="nScans"
     rawdata ="rawdata"
     fft = "fft"
+    preemph_factor = "Pre emphasis factor"
    
 class Tooltip_label:
     rx_period = "Sampling time"

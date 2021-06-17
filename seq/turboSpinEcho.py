@@ -104,9 +104,7 @@ def turbo_spin_echo(self, plotSeq):
     trap_ramp_duration=self.trap_ramp_duration
 #    phase_start_amp=self.phase_start_amp
     phase_grad_duration=self.phase_grad_duration
-#    phase_grad_interval=self.phase_grad_interval 
-#   slice_start_amp=self.slice_start_amp
-#    phase_t = self.phase_t
+    echos_per_tr=self.echos_per_tr
    
     BW=BW*1e-3
 #    trap_ramp_pts=np.int32(trap_ramp_duration*0.2)    # 0.2 puntos/ms
@@ -165,9 +163,9 @@ def turbo_spin_echo(self, plotSeq):
             # do pi/2 pulse, then start first pi pulse
             return np.array([tstart + (echo_duration - rf_pi2_duration)/2, tstart + (echo_duration + rf_pi2_duration)/2,
                              tstart + echo_duration - rf_pi_duration/2]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp])                        
-#        elif tr_idx == echos_per_tr:
-#            # finish final RF pulse
-#            return np.array([tstart + rf_pi_duration/2]), np.array([0])
+        elif echo_idx == self.echos_per_tr:
+            # finish final RF pulse
+            return np.array([tstart + rf_pi_duration/2]), np.array([0])
         else:
             # finish last pi pulse, start next pi pulse
             return np.array([tstart + rf_pi_duration/2, tstart + echo_duration - rf_pi_duration/2]), np.array([0, pi_phase]) * self.rf_amp
@@ -182,12 +180,13 @@ def turbo_spin_echo(self, plotSeq):
                              tstart + (echo_duration + rf_pi2_duration)/2 + tx_gate_post,
                              tstart + echo_duration - rf_pi_duration/2 - tx_gate_pre]), \
                              np.array([1, 0, 1])
-#        elif echo_idx == echos_per_tr:
-#            # finish final RF pulse
-#            return np.array([tstart + rf_pi_duration/2 + tx_gate_post]), np.array([0])
+        elif echo_idx == echos_per_tr:
+            # finish final RF pulse
+            return np.array([tstart + rf_pi_duration/2 + tx_gate_post]), np.array([0])
         else:
             # finish last pi pulse, start next pi pulse
-            return np.array([tstart + rf_pi_duration/2 + tx_gate_post]), np.array([0])
+            return np.array([tstart + rf_pi_duration/2 + tx_gate_post, tstart + self.echo_duration - rf_pi_duration/2 - tx_gate_pre]), \
+                np.array([0, 1])
 
     def readout_wf(tstart, echo_idx):
         if echo_idx != 0:
@@ -195,9 +194,7 @@ def turbo_spin_echo(self, plotSeq):
         else:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
             
-            
     def readout_grad_wf(tstart, echo_idx):
-
         if echo_idx == 0:
                     #            return trap_cent(tstart + self.echo_duration*3/4, readout_amp, readout_grad_duration/2,
                     #                             trap_ramp_duration, trap_ramp_pts)
@@ -206,7 +203,6 @@ def turbo_spin_echo(self, plotSeq):
         else:
             return trap_cent(tstart + echo_duration/2-grad_readout_delay, Grd, readout_duration+trap_ramp_duration,
                              trap_ramp_duration, trap_ramp_pts)
-        
 
     def phase_grad_wf(tstart, echo_idx, ph):
         t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, phase_amps[ph-1], phase_grad_duration,
@@ -215,8 +211,8 @@ def turbo_spin_echo(self, plotSeq):
                            trap_ramp_duration, trap_ramp_pts)    
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
-#        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
-#            return t1, a1
+        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
+            return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
 
@@ -227,8 +223,8 @@ def turbo_spin_echo(self, plotSeq):
                            trap_ramp_duration, trap_ramp_pts)  
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
-#        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
-#            return t1, a1
+        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
+            return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
             
@@ -242,7 +238,7 @@ def turbo_spin_echo(self, plotSeq):
     for nS in range(nScans):
         for sl in range(n_sl):
             for ph in range(n_ph):
-                for echo_idx in range(2):
+                for echo_idx in range(echos_per_tr):
                     tx_t, tx_a = rf_wf(global_t, echo_idx)
                     tx_gate_t, tx_gate_a = tx_gate_wf(global_t, echo_idx)
                     readout_t, readout_a = readout_wf(global_t, echo_idx)
@@ -250,8 +246,6 @@ def turbo_spin_echo(self, plotSeq):
                     readout_grad_t, readout_grad_a = readout_grad_wf(global_t, echo_idx)
                     phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  ph)
                     slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  sl)
-#                    plt.plot(readout_grad_t, readout_grad_a)
-#                    plt.show()
     
                     expt.add_flodict({
                         'tx0': (tx_t, tx_a),

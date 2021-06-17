@@ -61,10 +61,10 @@ class Spectrum2DPlot(GraphicsLayoutWidget):
                  ):
         super(Spectrum2DPlot, self).__init__()
 
-        data2=np.matrix('10 10;20 40')
+#        data2=np.matrix('10 10;20 40')
         imv = pg.ImageView()
 #        imv.show()
-        imv.setImage(data2, autoRange=True, autoLevels=True)
+        imv.setImage(Data, autoRange=True, autoLevels=True)
 #        imv.autoLevels()
 
  

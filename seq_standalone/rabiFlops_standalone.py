@@ -42,17 +42,25 @@ def rabi_flops(lo_freq=3.023, # MHz
     k = 0
     i=0
     while i < N:     
-        rf_tend = rf_tstart + rf_duration+k # us
-        rx_tstart = rf_tend+rx_wait # us
-        rx_tend = rx_tstart + readout_duration  # us
-        expt.add_flodict({
-            # second tx0 pulse purely for loopback debugging
-            'tx0': ( np.array([rf_tstart, rf_tend])+tstart, np.array([rf_amp,0]) ),
-            'rx0_en': ( np.array([rx_tstart, rx_tend])+tstart, np.array([1, 0]) ),
-            'tx_gate': ( np.array([rf_tstart - tx_gate_pre, rf_tend + tx_gate_post])+tstart, np.array([1, 0]) ), 
-            'rx_gate': ( np.array([rx_tstart, rx_tend])+tstart, np.array([1, 0]) )
-        })
-        tstart = tstart + rx_tend+tr_wait
+        
+        if fid==1:
+            rf_tend = rf_tstart + rf_duration+k # us
+            rx_tstart = rf_tend+rx_wait # us
+            rx_tend = rx_tstart + readout_duration  # us
+            expt.add_flodict({
+                # second tx0 pulse purely for loopback debugging
+                'tx0': ( np.array([rf_tstart, rf_tend])+tstart, np.array([rf_amp,0]) ),
+                'rx0_en': ( np.array([rx_tstart, rx_tend])+tstart, np.array([1, 0]) ),
+                'tx_gate': ( np.array([rf_tstart - tx_gate_pre, rf_tend + tx_gate_post])+tstart, np.array([1, 0]) ), 
+                'rx_gate': ( np.array([rx_tstart, rx_tend])+tstart, np.array([1, 0]) )
+            })
+            tstart = tstart + rx_tend+tr_wait
+        else:
+            
+            
+            
+            
+            
         i = i+1
         k=k+step
     
@@ -69,28 +77,32 @@ def rabi_flops(lo_freq=3.023, # MHz
 if __name__ == "__main__":
     
     N=1
-    values=rabi_flops(lo_freq=3.041, rf_amp=0.30,  rf_duration=160, N=N, step=20, tr_wait=1e6, rx_wait=200)
+    values=rabi_flops(lo_freq=3.041, rf_amp=0.30,  rf_duration=160, N=N, step=20, tr_wait=1e6, rx_wait=200, fid=0)
     samples = int(len(values)/N)
     
     i=0
     s=0
-    peakVals =[]
+    peakValsf =[]
+    peakValst = []
     while i < N:
         d_cropped = values[s:s+samples-1] 
         
         f_fftData = np.fft.fftshift(np.fft.fft((d_cropped), n=samples))
         f_fftMagnitude = abs(f_fftData)
         f_signalValue: float = round(np.max(f_fftMagnitude), 4)
-        peakVals.append(f_signalValue)
+        peakValsf.append(f_signalValue)
         
-#        t_magnitude = np.abs(d_cropped)
-#        t_magnitudeCon = np.convolve(t_magnitude, np.ones((50,)) / 50, mode='same')
-#        t_signalValue: float = round(np.max(t_magnitudeCon), 4)
-#        peakVals.append(t_signalValue)
+        t_magnitude = np.abs(d_cropped)
+        t_magnitudeCon = np.convolve(t_magnitude, np.ones((50,)) / 50, mode='same')
+        t_signalValue: float = t_magnitudeCon(1)
+        peakValst.append(t_signalValue)
         
         s=s+samples
         i=i+1
 
 
     plt.plot(f_fftMagnitude)
+    plt.show()
+    
+    plt.plot(t_magnitudeCon)
     plt.show()
