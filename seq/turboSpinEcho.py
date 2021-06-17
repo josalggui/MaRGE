@@ -105,6 +105,7 @@ def turbo_spin_echo(self, plotSeq):
 #    phase_start_amp=self.phase_start_amp
     phase_grad_duration=self.phase_grad_duration
     echos_per_tr=self.echos_per_tr
+    preemph_factor=self.preemph_factor
    
     BW=BW*1e-3
 #    trap_ramp_pts=np.int32(trap_ramp_duration*0.2)    # 0.2 puntos/ms
