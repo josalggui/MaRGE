@@ -250,8 +250,6 @@ def spin_echo(self, plotSeq):
                     readout_grad_t, readout_grad_a = readout_grad_wf(global_t, echo_idx)
                     phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  ph)
                     slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  sl)
-#                    plt.plot(readout_grad_t, readout_grad_a)
-#                    plt.show()
     
                     expt.add_flodict({
                         'tx0': (tx_t, tx_a),

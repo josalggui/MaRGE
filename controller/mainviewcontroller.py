@@ -17,6 +17,8 @@ import pyqtgraph.exporters
 import os
 import ast
 import sys
+sys.path.append('../marcos_client')
+import experiment as ex
 from scipy.io import savemat
 from controller.sequencecontroller import SequenceList
 from seq.gradEcho import grad_echo 
@@ -79,6 +81,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
         
         # Toolbar Actions
+        self.action_gpaInit.triggered.connect(self.initgpa)
         self.action_calibration.triggered.connect(self.calibrate)
         self.action_changeappearance.triggered.connect(self.changeAppearanceSlot)
         self.action_acquire.triggered.connect(acqCtrl.startAcquisition)
@@ -273,3 +276,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def calibrate(self):
         seqCalib = CalibrationController(self, self.sequencelist)
         seqCalib.show()
+        
+    def gpaInit(self):
+        expt = ex.Experiment(init_gpa=True)
+        expt.run()
