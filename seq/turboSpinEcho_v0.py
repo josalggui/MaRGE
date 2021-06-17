@@ -138,8 +138,6 @@ def turbo_spin_echo(self, plotSeq):
 
     def readout_grad_wf(tstart, echo_idx):
         if echo_idx == 0:
-#            return trap_cent(tstart + self.echo_duration*3/4, readout_amp, readout_grad_duration/2,
-#                             trap_ramp_duration, trap_ramp_pts)
             return trap_cent(tstart + (self.echo_duration + self.rf_pi2_duration+self.readout_grad_duration-self.trap_ramp_duration)/2-self.trap_ramp_duration-grad_readout_delay, self.readout_amp, self.readout_grad_duration/2,
                              self.trap_ramp_duration, trap_ramp_pts)
         else:
@@ -147,10 +145,6 @@ def turbo_spin_echo(self, plotSeq):
                              self.trap_ramp_duration, trap_ramp_pts)
 
     def phase_grad_wf(tstart, echo_idx, tr_idx):
-#        t1, a1 = trap_cent(tstart + (self.echo_duration - phase_grad_interval)/2, phase_amps[echo_idx-1], phase_grad_duration,
-#                           trap_ramp_duration, trap_ramp_pts)
-#        t2, a2 = trap_cent(tstart + (self.echo_duration + phase_grad_interval)/2, -phase_amps[echo_idx-1], phase_grad_duration,
-#                           trap_ramp_duration, trap_ramp_pts)
         t1, a1 = trap_cent(tstart + (rf_pi_duration+self.phase_grad_duration-self.trap_ramp_duration)/2+self.trap_ramp_duration-grad_phase_delay, phase_amps[echo_idx-1], self.phase_grad_duration,
                            self.trap_ramp_duration, trap_ramp_pts)
         t2, a2 = trap_cent(tstart + (self.echo_duration + self.readout_duration+self.trap_ramp_duration)/2+self.trap_ramp_duration-grad_phase_delay, -phase_amps[echo_idx-1], self.phase_grad_duration,
@@ -163,10 +157,6 @@ def turbo_spin_echo(self, plotSeq):
             return np.hstack([t1, t2]), np.hstack([a1, a2])
 
     def slice_grad_wf(tstart, echo_idx, tr_idx):
-#        t1, a1 = trap_cent(tstart + (self.echo_duration - phase_grad_interval)/2, slice_amps[tr_idx], phase_grad_duration,
-#                           trap_ramp_duration, trap_ramp_pts)
-#        t2, a2 = trap_cent(tstart + (self.echo_duration + phase_grad_interval)/2, -slice_amps[tr_idx], phase_grad_duration,
-#                           trap_ramp_duration, trap_ramp_pts)
         t1, a1 = trap_cent(tstart + (rf_pi_duration+self.phase_grad_duration-self.trap_ramp_duration)/2+self.trap_ramp_duration-grad_phase_delay, slice_amps[tr_idx], self.phase_grad_duration,
                            self.trap_ramp_duration, trap_ramp_pts)
         t2, a2 = trap_cent(tstart + (self.echo_duration + self.readout_duration+self.trap_ramp_duration)/2+self.trap_ramp_duration-grad_slice_delay, -slice_amps[tr_idx], self.phase_grad_duration,
@@ -177,8 +167,6 @@ def turbo_spin_echo(self, plotSeq):
             return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
-
-    #tr_total_time = self.echo_duration * (self.echos_per_tr + 1) + self.tr_pause_duration
 
     expt = ex.Experiment(lo_freq=self.lo_freq, rx_t=self.rx_period)
 
@@ -213,9 +201,6 @@ def turbo_spin_echo(self, plotSeq):
             })
 
         global_t += self.tr_pause_duration
-        
-#        waves=expt.get_flodict()
-#        savemat("experiments/TSE_seq.mat" % (self.sequence), waves)
 
     if plotSeq==1:
         expt.plot_sequence()
