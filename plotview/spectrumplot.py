@@ -17,6 +17,7 @@ from pyqtgraph import GraphicsLayoutWidget
 from warnings import warn
 from datetime import datetime 
 import pyqtgraph as pg
+import numpy as np
 
 class SpectrumPlot (GraphicsLayoutWidget):
     def __init__(self,
@@ -40,12 +41,12 @@ class SpectrumPlot (GraphicsLayoutWidget):
 
         plotitem = self.addPlot(row=0, col=0)
         plotitem.addLegend()
-        plotitem.plot(xData, yData, pen=[255, 0, 0], name="magnitude")
+        plotitem.plot(xData, yData, pen=[255, 0, 0], name="Magnitude")
         if yData2 !=[]:
-            plotitem.plot(xData, yData2, pen=[0, 255, 0], name="real part")
-            plotitem.plot(xData, yData3, pen=[0, 0, 255], name="imaginary part")
+            plotitem.plot(xData, yData2, pen=[0, 255, 0], name="Real part")
+            plotitem.plot(xData, yData3, pen=[0, 0, 255], name="Imaginary part")
         plotitem.setTitle("%s %s" % (title, dt_string))
-        plotitem.setLabel('left', 'Amplitude')
+        plotitem.setLabel('left', 'Amplitude (a.u.)')
         plotitem.setLabel('bottom', xlabel)
  
 #        vb = plotitem.getViewBox()
@@ -55,16 +56,15 @@ class SpectrumPlot (GraphicsLayoutWidget):
 
 class Spectrum2DPlot(GraphicsLayoutWidget):
     def __init__(self,
-                 Data: list,
+                 Data:tuple,
                  title:str
                  ):
         super(Spectrum2DPlot, self).__init__()
 
+        data2=np.matrix('10 10;20 40')
         imv = pg.ImageView()
-        imv.show()
-        imv.setImage(Data)
-        imv.autoRange()
-#        imv.image(Data)
+#        imv.show()
+        imv.setImage(data2, autoRange=True, autoLevels=True)
 #        imv.autoLevels()
 
  

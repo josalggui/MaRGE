@@ -18,12 +18,17 @@ def trapezoid(plateau_a, total_t, ramp_t, ramp_pts, total_t_end_to_end=True, bas
 
     # ramp_pts = int( np.ceil(ramp_t/ramp_ts) ) + 1
     rise_ramp_times = np.linspace(0, ramp_t, ramp_pts)
-    rise_ramp = np.linspace(base_a, plateau_a, ramp_pts)
+    rise_ramp = np.linspace(base_a+plateau_a/ramp_pts, plateau_a, ramp_pts)
+    drop_ramp_times = np.linspace(total_t, total_t+ramp_t, ramp_pts)
+    drop_ramp = np.linspace(plateau_a-plateau_a/ramp_pts, base_a, ramp_pts)
 
     # [1: ] because the first element of descent will be repeated
-    descent_t = total_t - ramp_t if total_t_end_to_end else total_t
-    t = np.hstack([rise_ramp_times, rise_ramp_times[:-1] + descent_t])
-    a = np.hstack([rise_ramp, np.flip(rise_ramp)[1:]])
+#    if total_t_end_to_end:
+#        descent_t = total_t - ramp_t  
+#    else:
+#        descent_t = total_t
+    t = np.hstack([rise_ramp_times, drop_ramp_times])
+    a = np.hstack([rise_ramp, drop_ramp])
     return t, a
 
 
@@ -109,8 +114,8 @@ def spin_echo(self, plotSeq):
 #    phase_t = self.phase_t
    
     BW=BW*1e-3
-#    trap_ramp_pts=np.int32(trap_ramp_duration*0.2)    # 0.2 puntos/ms
-    trap_ramp_pts = 10 
+    trap_ramp_pts=np.int32(trap_ramp_duration*0.2)    # 0.2 puntos/ms
+#    trap_ramp_pts = 10 
     grad_readout_delay=9   #8.83    # readout amplifier delay
     grad_phase_delay=9      #8.83
     grad_slice_delay=9        #8.83
@@ -173,7 +178,7 @@ def spin_echo(self, plotSeq):
             return np.array([tstart + rf_pi_duration/2]), np.array([0])
 
     def tx_gate_wf(tstart, echo_idx):
-        tx_gate_pre = 2 # us, time to start the TX gate before each RF pulse begins
+        tx_gate_pre = 15 # us, time to start the TX gate before each RF pulse begins
         tx_gate_post = 1 # us, time to keep the TX gate on after an RF pulse ends
 
         if echo_idx == 0:
@@ -201,7 +206,7 @@ def spin_echo(self, plotSeq):
         if echo_idx == 0:
                     #            return trap_cent(tstart + self.echo_duration*3/4, readout_amp, readout_grad_duration/2,
                     #                             trap_ramp_duration, trap_ramp_pts)
-            return trap_cent(tstart + echo_duration/2 + rf_pi2_duration/2+trap_ramp_duration/2+readout_duration/4-grad_readout_delay, Grd, readout_duration/2,
+            return trap_cent(tstart + echo_duration/2 + rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay, Grd/2, readout_duration+trap_ramp_duration,
                              trap_ramp_duration, trap_ramp_pts)
         else:
             return trap_cent(tstart + echo_duration/2-grad_readout_delay, Grd, readout_duration+trap_ramp_duration,

@@ -45,21 +45,21 @@ class DataManager(QObject):
                  '_f_fftData',
                  '_f_fftMagnitude']
 
-    def __init__(self, data: np.complex, p_frequency: float, samples: int, n:list, f_range: int = 250000):
+    def __init__(self, data: np.complex, p_frequency: float, samples: int, n:list, bandWidth: float, ):
         """
         Initialisation of data manager class
         @param data:        Raw data
         @param p_ts:        Sample time (property)
-        @param f_range:     Range of frequency spectrum
+        @param bandWidth:     Spectral frequency / acquisition bandwidth
         """
         super(DataManager, self).__init__()
         self.data = data
-        self.f_range = f_range
+        self.bandWidth = bandWidth
         self.samples = samples
-        self.p_ts = self.samples * timePerSample
+        self.p_ts = self.samples/self.bandWidth
  
         d_cropped = self.data[0:self.samples]  # * 2000.0
-        self._t_axis = np.linspace(0, self.p_ts, self.samples)
+        self._t_axis = np.linspace(-self.p_ts/2, self.p_ts/2, self.samples)
         self._t_magnitude = np.abs(d_cropped)
         self._t_magnitudeCon = np.convolve(self.t_magnitude, np.ones((50,)) / 50, mode='same')
         self._t_real = np.real(d_cropped)
@@ -67,7 +67,7 @@ class DataManager(QObject):
         self._t_imag = np.imag(d_cropped)
 
         self._frequency = p_frequency
-        self._f_axis = np.linspace(-self.f_range / 2, self.f_range / 2, self.samples)
+        self._f_axis = np.linspace(-self.bandWidth / 2, self.bandWidth / 2, self.samples)
         self._f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(d_cropped), n=self.samples))
         self._f_fftMagnitude = abs(self.f_fftData)
         
@@ -179,7 +179,7 @@ class DataManager(QObject):
         f_signalValue: float = round(np.max(self._f_fftMagnitude), 4)
         f_signalIdx: int = np.argmax(self._f_fftMagnitude)  # [0]
         f_signalFrequency: float = round(self._frequency + ((f_signalIdx - self.samples / 2)
-                                                            * self.f_range / self.samples) / 1.0e6, 6)
+                                                            * self.bandWidth / self.samples) / 1.0e6, 6)
 
         return [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]
 
