@@ -277,6 +277,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         seqCalib = CalibrationController(self, self.sequencelist)
         seqCalib.show()
         
-    def gpaInit(self):
+    def initgpa(self):
         expt = ex.Experiment(init_gpa=True)
         expt.run()

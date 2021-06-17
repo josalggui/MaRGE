@@ -73,7 +73,7 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
             self.sequence.rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
-            self.rxd, self.msgs = turbo_spin_echo(self.sequence, plotSeq)
+            self.rxd, self.msgs, self.data_avg = turbo_spin_echo(self.sequence, plotSeq)
             
 #        self.n_rd = self.sequence.n[0]
         dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd),  self.sequence.n, self.sequence.BW)
@@ -85,6 +85,7 @@ class AcquisitionController(QObject):
             self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
         else:
             self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
+            self.rxd=self.data_avg
         
         self.parent.plotview_layout.addWidget(self.parent.f_plotview)
         self.save_data()
