@@ -349,6 +349,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="action_gpaInit"/>
    <addaction name="action_calibration"/>
    <addaction name="action_acquire"/>
   </widget>
@@ -406,7 +407,7 @@
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>../resources/icons/power.svg</normaloff>../resources/icons/power.svg</iconset>
+     <normaloff>../../../../.designer/resources/icons/power.svg</normaloff>../../../../.designer/resources/icons/power.svg</iconset>
    </property>
    <property name="text">
     <string>Connect</string>
@@ -509,6 +510,18 @@
    </property>
    <property name="text">
     <string>Calibration of the system</string>
+   </property>
+  </action>
+  <action name="action_gpaInit">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/key.svg</normaloff>../resources/icons/key.svg</iconset>
+   </property>
+   <property name="text">
+    <string>GPA Initialization</string>
+   </property>
+   <property name="toolTip">
+    <string>Initialization of the GPA</string>
    </property>
   </action>
  </widget>

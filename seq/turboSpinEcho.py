@@ -119,11 +119,7 @@ def turbo_spin_echo(self, plotSeq):
     slice/partition gradient: z
     """
 
-#    BW = BW*1e3
     readout_duration = n_rd/BW
-
-    
-#    echos_per_tr=1 # number of spin echoes (180 pulses followed by readouts) to do
                     
     if rf_pi_duration is None:
         rf_pi_duration = 2 * rf_pi2_duration
@@ -152,9 +148,6 @@ def turbo_spin_echo(self, plotSeq):
     slice_amps = np.linspace(Gsl, -Gsl,  n_sl)
 
 #    slice_amps=slice_amps[getIndex(slice_amps, echos_per_tr, SweepMode)]
-
-    # create appropriate waveforms for each echo, based on start time, echo index and TR index
-    # note: echo index is 0 for the first interval (90 pulse until first 180 pulse) thereafter 1, 2 etc between each 180 pulse
 
     def rf_wf(tstart, echo_idx):
         pi2_phase = 1 # x
