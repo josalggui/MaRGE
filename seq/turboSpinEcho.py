@@ -37,33 +37,57 @@ def trap_cent(centre_t, plateau_a, trap_t, ramp_t, ramp_pts, base_a=0):
     t, a = trapezoid(plateau_a, trap_t, ramp_t, ramp_pts, False, base_a)
     return t + centre_t - (trap_t + ramp_t)/2, a
     
-#def getIndex(amps, ETL, SweepMode):
-#    n=len(amps)
-#    print(n/2/ETL)
-#    ind=[]
-#    n2ETL=np.int(n/2/ETL)
-#    if n==1:
-#        ind=1
-#    
-#    if SweepMode==0:
-#        for ii in range(n/ETL):
-#            ind=np.concatenate(ind, np.linspace(1, n, n/ETL)+ii-1)
-#    elif SweepMode==1:
-#        if ETL==n:
-#            ind = np.concatenate(np.linspace(n/2, 1, -1),np.linspace(n/2+np, 1))
-#        else:
-#            for ii in range(n2ETL):
-#                ind = np.concatenate(ind,np.linspace(n/2, 1, -n2ETL)-(ii-1))
-#                ind = np.concatenate(ind,np.linspace(n/2+1, n, n2ETL)+(ii-1))
-#    elif SweepMode==2:
-#        if ETL==n:
-#            ind=np.linspace(1, n)
-#        else:
-#            for ii in range(n2ETL):
-#                ind = np.concatenate(ind,np.linspace(1, n/2, n2ETL)+(ii-1))
-#                ind = np.concatenate(ind,np.linspace(n, n/2+1, -np2/ETL)-(ii-1));
-#
-#    return ind
+
+#*********************************************************************************
+#*********************************************************************************
+#*********************************************************************************
+
+
+def getIndex(self, g_amps, echos_per_tr, sweep_mode):
+    print(self.n[1]/2/self.echos_per_tr)
+    n2ETL=np.int32(self.n[1]/2/self.echos_per_tr)
+    ind:np.int32 = []
+    n_ph = self.n[1]
+    if n_ph==1:
+        ind=1
+    
+    if sweep_mode==0:   # Sequential for T2 contrast
+        for ii in range(np.int32(n_ph/self.echos_per_tr)):
+            if ii==0:
+                ind = np.linspace(0, n_ph-1, echos_per_tr)+ii
+            else:
+                ind=np.concatenate((ind, np.linspace(0, n_ph-1, echos_per_tr)+ii), axis=0)
+    elif sweep_mode==1: # Center-out for T1 contrast
+        if self.echos_per_tr==n_ph:
+            ind = np.linspace(np.int32(n_ph/2)-1, -n2ETL, echos_per_tr)
+            ind2 = np.linspace(np.int32(n_ph/2), n_ph-1, np.int32(echos_per_tr/2))
+            ind[1::2] = ind2
+#            ind = np.concatenate((np.linspace(np.int32(n_ph/2)-1, 0, np.int32(echos_per_tr/2)),np.linspace(np.int32(n_ph/2), n_ph-1, np.int32(echos_per_tr/2))), axis=0)
+        else:
+            for ii in range(n2ETL):
+                if ii==0:
+                    ind = np.linspace(np.int32(n_ph/2)-1, 1, echos_per_tr)
+                else:
+                    ind = np.concatenate((ind, np.linspace(np.int32(n_ph/2)-1-ii, n2ETL-1-ii, echos_per_tr)), axis=0)
+                ind = np.concatenate((ind,np.linspace(np.int32(n_ph/2)+ii, n_ph-n2ETL+ii, echos_per_tr)), axis=0)
+    elif sweep_mode==2:
+        if self.echos_per_tr==n_ph:
+            ind=np.linspace(0, n_ph-1, echos_per_tr)
+        else:
+            for ii in range(n2ETL):
+                if ii==0:
+                    ind = np.linspace(0, np.int32(n_ph/2)-1, echos_per_tr)
+                else:
+                    ind = np.concatenate(ind,np.linspace(ii, ii+np.int32(n_ph/2)-1, echos_per_tr))
+                ind = np.concatenate(ind,np.linspace(n_ph-1-ii, np.int32(n_ph/2)-ii, echos_per_tr));
+
+    return np.int32(ind)
+
+
+#*********************************************************************************
+#*********************************************************************************
+#*********************************************************************************
+
 
 def turbo_spin_echo(self, plotSeq):
 #                    plot_rx=True, init_gpa=False,
@@ -106,10 +130,12 @@ def turbo_spin_echo(self, plotSeq):
     phase_grad_duration=self.phase_grad_duration
     echos_per_tr=self.echos_per_tr
     rd_preemph_factor=self.preemph_factor
+    sweep_mode = self.sweep_mode
+    dummies=self.dummies
    
     BW=BW*1e-3
 #    trap_ramp_pts=np.int32(trap_ramp_duration*0.2)    # 0.2 puntos/ms
-    trap_ramp_pts = 10 
+    trap_ramp_pts = 10
     grad_readout_delay=9   #8.83    # readout amplifier delay
     grad_phase_delay=9      #8.83
     grad_slice_delay=9        #8.83
@@ -145,10 +171,17 @@ def turbo_spin_echo(self, plotSeq):
         Gsl = n_sl/(2*gammaB*fov_sl*phase_grad_duration*1e-6);
     
     phase_amps = np.linspace(Gph, -Gph, n_ph)
-#    phase_amps=phase_amps[getIndex(phase_amps, echos_per_tr, SweepMode)]
+    ind = getIndex(self, phase_amps, echos_per_tr, sweep_mode)
+    phase_amps=phase_amps[ind]
     slice_amps = np.linspace(Gsl, -Gsl,  n_sl)
 
 #    slice_amps=slice_amps[getIndex(slice_amps, echos_per_tr, SweepMode)]
+
+
+#*********************************************************************************
+#*********************************************************************************
+#*********************************************************************************
+
 
     def rf_wf(tstart, echo_idx):
         pi2_phase = 1 # x
@@ -157,15 +190,24 @@ def turbo_spin_echo(self, plotSeq):
             # do pi/2 pulse, then start first pi pulse
             return np.array([tstart + (echo_duration - rf_pi2_duration)/2, tstart + (echo_duration + rf_pi2_duration)/2,
                              tstart + echo_duration - rf_pi_duration/2]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp])                        
+#        elif echo_idx == self.echos_per_tr and ph==n_ph and sl==n_sl-1:
+#            # last echo of the full sequence
+#            return np.array([tstart + rf_pi_duration/2, tr_duration-echo_duration*echos_per_tr]), np.array([0, 0])
         elif echo_idx == self.echos_per_tr:
-            # finish final RF pulse
+            # last echo on any other echo train
             return np.array([tstart + rf_pi_duration/2]), np.array([0])
         else:
             # finish last pi pulse, start next pi pulse
-            return np.array([tstart + rf_pi_duration/2, tstart + echo_duration - rf_pi_duration/2]), np.array([0, pi_phase]) * self.rf_amp
+            return np.array([tstart + rf_pi_duration/2, tstart + echo_duration - rf_pi_duration/2]), np.array([0, pi_phase*self.rf_amp])
 
-    def tx_gate_wf(tstart, echo_idx):
-        tx_gate_pre = 2 # us, time to start the TX gate before each RF pulse begins
+
+#*********************************************************************************
+#*********************************************************************************
+#*********************************************************************************
+
+
+    def tx_gate_wf(tstart, echo_idx, ph, sl):
+        tx_gate_pre = 15 # us, time to start the TX gate before each RF pulse begins
         tx_gate_post = 1 # us, time to keep the TX gate on after an RF pulse ends
 
         if echo_idx == 0:
@@ -174,6 +216,8 @@ def turbo_spin_echo(self, plotSeq):
                              tstart + (echo_duration + rf_pi2_duration)/2 + tx_gate_post,
                              tstart + echo_duration - rf_pi_duration/2 - tx_gate_pre]), \
                              np.array([1, 0, 1])
+        elif echo_idx == self.echos_per_tr and ph==n_ph and sl==n_sl-1:
+            return np.array([tstart + rf_pi_duration/2 + tx_gate_post, tstart+tr_duration-echo_duration*echos_per_tr]), np.array([0, 0])
         elif echo_idx == echos_per_tr:
             # finish final RF pulse
             return np.array([tstart + rf_pi_duration/2 + tx_gate_post]), np.array([0])
@@ -182,12 +226,26 @@ def turbo_spin_echo(self, plotSeq):
             return np.array([tstart + rf_pi_duration/2 + tx_gate_post, tstart + self.echo_duration - rf_pi_duration/2 - tx_gate_pre]), \
                 np.array([0, 1])
 
+
+#*********************************************************************************
+#*********************************************************************************
+#*********************************************************************************
+
+
     def readout_wf(tstart, echo_idx):
-        if echo_idx != 0:
-            return np.array([tstart + (echo_duration - readout_duration)/2, tstart + (echo_duration + readout_duration)/2 ]), np.array([1, 0])
-        else:
+        if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
-            
+#        elif echo_idx==echos_per_tr:
+#            return np.array([tstart + (echo_duration - readout_duration)/2, tstart + (echo_duration + readout_duration)/2, tstart+echo_duration+tr_duration-echos_per_tr*echo_duration ]), np.array([1, 0, 0])
+        else:
+            return np.array([tstart + (echo_duration - readout_duration)/2, tstart + (echo_duration + readout_duration)/2 ]), np.array([1, 0])
+
+
+#*********************************************************************************
+#*********************************************************************************
+#*********************************************************************************
+
+
     def readout_grad_wf(tstart, echo_idx):
         if echo_idx == 0:
             return trap_cent(tstart + echo_duration/2 + rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay, Grd/2*rd_preemph_factor, readout_duration+trap_ramp_duration,
@@ -195,6 +253,12 @@ def turbo_spin_echo(self, plotSeq):
         else:
             return trap_cent(tstart + echo_duration/2-grad_readout_delay, Grd, readout_duration+trap_ramp_duration,
                              trap_ramp_duration, trap_ramp_pts)
+
+
+#*********************************************************************************
+#*********************************************************************************
+#*********************************************************************************
+
 
     def phase_grad_wf(tstart, echo_idx, ph):
         t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay,
@@ -208,10 +272,16 @@ def turbo_spin_echo(self, plotSeq):
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
 
-    def slice_grad_wf(tstart, echo_idx,  n_sl):
-        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, slice_amps[sl-1], phase_grad_duration,
+
+#*********************************************************************************
+#*********************************************************************************
+#*********************************************************************************
+
+
+    def slice_grad_wf(tstart, echo_idx,  sl):
+        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, slice_amps[sl], phase_grad_duration,
                            trap_ramp_duration, trap_ramp_pts)
-        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_slice_delay, -slice_amps[sl-1], phase_grad_duration,
+        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_slice_delay, -slice_amps[sl], phase_grad_duration,
                            trap_ramp_duration, trap_ramp_pts)  
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
@@ -220,6 +290,12 @@ def turbo_spin_echo(self, plotSeq):
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
             
+
+#*********************************************************************************
+#*********************************************************************************
+#*********************************************************************************
+
+
     expt = ex.Experiment(lo_freq=lo_freq, rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
     # gpa_fhdo_offset_time in microseconds; offset between channels to
     # avoid parallel updates (default update rate is 0.2 Msps, so
@@ -227,50 +303,81 @@ def turbo_spin_echo(self, plotSeq):
     # 0.1 for a safety margin))
 
     global_t = 20 # start the first TR at 20us
-    for nS in range(nScans):
-        for sl in range(n_sl):
-            for ph_block in range(np.int32(n_ph/echos_per_tr)):
-                for echo_idx in range(echos_per_tr):
-                    tx_t, tx_a = rf_wf(global_t, echo_idx)
-                    tx_gate_t, tx_gate_a = tx_gate_wf(global_t, echo_idx)
-                    readout_t, readout_a = readout_wf(global_t, echo_idx)
-                    rx_gate_t, rx_gate_a = readout_wf(global_t, echo_idx)
-                    readout_grad_t, readout_grad_a = readout_grad_wf(global_t, echo_idx)
-                    phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  (ph_block-1)*echos_per_tr+echo_idx)
-                    slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  sl)
-    
-                    expt.add_flodict({
-                        'tx0': (tx_t, tx_a),
-                        'grad_vx': (readout_grad_t, readout_grad_a/(Gx_factor/1000)/10+shim_x),
-                        'grad_vy': (phase_grad_t, phase_grad_a/(Gy_factor/1000)/10+shim_y),
-                        'grad_vz': (slice_grad_t, slice_grad_a/(Gz_factor/1000)/10+shim_z), 
-                        'rx0_en': (readout_t, readout_a),
-                        'tx_gate': (tx_gate_t, tx_gate_a),
-                        'rx_gate': (rx_gate_t, rx_gate_a),
-                    })
-                    global_t += echo_duration
-                
-                global_t += tr_duration-echo_duration
+#    for nS in range(nScans):
+    for sl in range(n_sl):
+        for ph_block in range(np.int32(n_ph/echos_per_tr)):
+            for echo_idx in range(1+echos_per_tr):
+                tx_t, tx_a = rf_wf(global_t, echo_idx)
+                tx_gate_t, tx_gate_a = tx_gate_wf(global_t, echo_idx, ph_block*echos_per_tr+echo_idx, sl)
+                readout_t, readout_a = readout_wf(global_t, echo_idx)
+                rx_gate_t, rx_gate_a = readout_wf(global_t, echo_idx)
+                readout_grad_t, readout_grad_a = readout_grad_wf(global_t, echo_idx)
+                phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  ph_block*echos_per_tr+echo_idx)
+                slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  sl)
+
+                expt.add_flodict({
+                    'tx0': (tx_t, tx_a),
+                    'grad_vx': (readout_grad_t, readout_grad_a/(Gx_factor/1000)/10+shim_x),
+                    'grad_vy': (phase_grad_t, phase_grad_a/(Gy_factor/1000)/10+shim_y),
+                    'grad_vz': (slice_grad_t, slice_grad_a/(Gz_factor/1000)/10+shim_z), 
+                    'rx0_en': (readout_t, readout_a),
+                    'tx_gate': (tx_gate_t, tx_gate_a),
+                    'rx_gate': (rx_gate_t, rx_gate_a),
+                })
+                global_t += echo_duration
+            
+            global_t += tr_duration-echo_duration*echos_per_tr
                 
                 
 #    flodict = expt.get_flodict()
 #    flodict["Gx_factor"] = Gx_factor
 #    flodict["Gy_factor"] = Gy_factor
 #    flodict["Gz_factor"] = Gz_factor
-                
-    if plotSeq==1:
+    
+    if plotSeq==1:                  # What is the meaning of plotSeq??
         expt.plot_sequence()
         plt.show()
         expt.__del__()
     elif plotSeq==0:
-        rxd, msgs = expt.run()
+        for nS in range(nScans):
+            rxd, msgs = expt.run()
+            if nS ==0:
+                data_avg = rxd['rx0']
+                n_rxd = rxd['rx0']
+            else:
+                data_avg= np.average((data_avg, rxd['rx0']), axis=0)
+                n_rxd = np.concatenate((n_rxd, rxd['rx0']), axis=0)
+            
         expt.__del__()
-        print(len(rxd))
-        if nScans > 1:
-            data_avg = np.average(np.reshape(rxd['rx0'], (nScans, n_rd*n_ph*n_sl)), axis=0)
-        else:
-            data_avg = rxd['rx0']
 
-        return rxd['rx0'], msgs, data_avg
 
+        # Reorganize data according to sweep mode. This works for 2D but not for 3D
+#        rxd_temp1 = np.reshape(data_avg, (n_ph, n_rd))
+#        rxd_temp2 = rxd_temp1*0
+#        for ii in range(n_ph):
+#            ind_temp = ind[ii]
+#            rxd_temp2[ind_temp, :, :] = rxd_temp1[ii, :, :]
+#        data_avg = np.reshape(rxd_temp2, -1)    # -1 means reshape to 1D array
+        
+        rxd_temp1 = np.reshape(data_avg, (n_sl, n_ph, n_rd))
+        rxd_temp2 = rxd_temp1*0
+        for ii in range(n_ph):
+            ind_temp = ind[ii]
+            rxd_temp2[:, ind_temp, :] = rxd_temp1[:, ii, :]
+        data_avg = np.reshape(rxd_temp2, -1)    # -1 means reshape to 1D array
+
+#        av1 = np.arange(8)
+#        am = np.reshape(av1, (2, 2, 2))
+#        a1 = am[0, 0, 0]
+#        a2 = am[0, 1, 0]
+#        a3 = am[1, 0, 0]
+#        a4 = am[1, 1, 0]
+#        a5 = am[0, 0, 1]
+#        a6 = am[0, 1, 1]
+#        a7 = am[1, 0, 1]
+#        a8 = am[1, 1, 1]
+#        av2 = np.reshape(am, -1)
+
+#        return rxd['rx0'], msgs, data_avg
+        return n_rxd, msgs, data_avg
 

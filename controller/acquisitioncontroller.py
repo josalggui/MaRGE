@@ -48,7 +48,6 @@ class AcquisitionController(QObject):
         plotSeq=0
         if self.sequence.seq == 'SE':
             self.rxd, self.msgs, self.data_avg=spin_echo(self.sequence, plotSeq)
-            self.rxd=self.data_avg
 #            dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg))
 #            if (self.n_ph ==0 & self.n_sl == 0):
 #                self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency')
@@ -72,20 +71,20 @@ class AcquisitionController(QObject):
         elif self.sequence.seq == 'GE':
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
-            self.sequence.rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
             self.rxd, self.msgs, self.data_avg = turbo_spin_echo(self.sequence, plotSeq)
+#            self.rxd=self.data_avg
             
 #        self.n_rd = self.sequence.n[0]
-        dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd),  self.sequence.n, self.sequence.BW)
-        if (self.sequence.n[1] ==1 & self.sequence.n[2] == 1):
-            self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency (kHz)')
-            self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time (ms)')
-            self.parent.plotview_layout.addWidget(self.parent.t_plotview)
-        elif(self.sequence.n[2] == 1 & self.sequence.n[1] != 1):
-            self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
-        else:
-            self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
-            self.rxd=self.data_avg
+        dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg),  self.sequence.n, self.sequence.BW)
+#        if (self.sequence.n[1] ==1 & self.sequence.n[2] == 1):
+        self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency (kHz)')
+        self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time (ms)')
+        self.parent.plotview_layout.addWidget(self.parent.t_plotview)
+#        elif(self.sequence.n[2] == 1 & self.sequence.n[1] != 1):
+#            self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
+#        else:
+#            self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
+#            self.rxd=self.data_avg
         
         self.parent.plotview_layout.addWidget(self.parent.f_plotview)
         self.save_data()
@@ -106,6 +105,7 @@ class AcquisitionController(QObject):
         dt2_string = dt2.strftime("%d-%m-%Y")
 #        dict["flodict"] = self.flodict
         dict["rawdata"] = self.rxd
+        dict["average"] = self.data_avg
 #        dict["fft2D"] = dataobject.f_fft2Data
         if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string)):
             os.makedirs('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string))
@@ -114,6 +114,7 @@ class AcquisitionController(QObject):
             os.makedirs('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)) 
             
         savemat("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict) 
+#        savemat('/home/physiomri/share_vm/results_experiments/TSE.mat', dict)
 
 
 

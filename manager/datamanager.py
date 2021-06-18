@@ -72,7 +72,7 @@ class DataManager(QObject):
         self._f_fftMagnitude = abs(self.f_fftData)
         
         if(int(n[1])>1):
-            self.data2D = np.reshape(self.data, (n[0], n[1]))
+            self.data2D = np.reshape(self.data, (n[1], n[0], n[2]))
             self._f_fft2Data = np.fft.fftshift(np.fft.fft2(np.fft.fftshift(self.data2D)))
             self._f_fft2Magnitude = abs(self.f_fft2Data)
 

@@ -106,7 +106,7 @@ def spin_echo(self, plotSeq):
     fov_sl:int=self.fov[2]*1e-2
     trap_ramp_duration=self.trap_ramp_duration
     phase_grad_duration=self.phase_grad_duration
-    preemph_factor=self.preemph_factor
+    rd_preemph_factor=self.preemph_factor
    
     BW=BW*1e-3
     trap_ramp_pts=np.int32(trap_ramp_duration*0.2)    # 0.2 puntos/ms
@@ -199,9 +199,7 @@ def spin_echo(self, plotSeq):
     def readout_grad_wf(tstart, echo_idx):
 
         if echo_idx == 0:
-                    #            return trap_cent(tstart + self.echo_duration*3/4, readout_amp, readout_grad_duration/2,
-                    #                             trap_ramp_duration, trap_ramp_pts)
-            return trap_cent(tstart + echo_duration/2 + rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay, Grd/2, readout_duration+trap_ramp_duration,
+            return trap_cent(tstart + echo_duration/2 + rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay, Grd/2*rd_preemph_factor, readout_duration+trap_ramp_duration,
                              trap_ramp_duration, trap_ramp_pts)
         else:
             return trap_cent(tstart + echo_duration/2-grad_readout_delay, Grd, readout_duration+trap_ramp_duration,
@@ -215,8 +213,6 @@ def spin_echo(self, plotSeq):
                            trap_ramp_duration, trap_ramp_pts)    
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
-#        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
-#            return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
 
@@ -227,8 +223,6 @@ def spin_echo(self, plotSeq):
                            trap_ramp_duration, trap_ramp_pts)  
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
-#        elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
-#            return t1, a1
         else: # otherwise do both trapezoids
             return np.hstack([t1, t2]), np.hstack([a1, a2])
             
