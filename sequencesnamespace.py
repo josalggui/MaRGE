@@ -72,7 +72,7 @@ class Namespace:
     fft = "fft"
     preemph_factor = "Pre emphasis factor"
     sweep_mode = "Sweep Mode"
-    dummies = "Number of dummy pulses"
+    par_acq_factor = "Partial acquisition factor"
    
 class Tooltip_label:
     rx_period = "Sampling time"

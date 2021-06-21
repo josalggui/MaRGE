@@ -46,7 +46,7 @@ class SpectrumPlot (GraphicsLayoutWidget):
             plotitem.plot(xData, yData2, pen=[0, 255, 0], name="Real part")
             plotitem.plot(xData, yData3, pen=[0, 0, 255], name="Imaginary part")
         plotitem.setTitle("%s %s" % (title, dt_string))
-        plotitem.setLabel('left', 'Amplitude (a.u.)')
+        plotitem.setLabel('left', 'Amplitude (mV)')
         plotitem.setLabel('bottom', xlabel)
  
 #        vb = plotitem.getViewBox()

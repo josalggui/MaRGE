@@ -36,7 +36,20 @@ def trap_cent(centre_t, plateau_a, trap_t, ramp_t, ramp_pts, base_a=0):
     parameters are as for trapezoid()."""
     t, a = trapezoid(plateau_a, trap_t, ramp_t, ramp_pts, False, base_a)
     return t + centre_t - (trap_t + ramp_t)/2, a
+
+
+#*********************************************************************************
+#*********************************************************************************
+#*********************************************************************************
+
+
+def rect_cent(centre_t, plateau_a, rect_t, base_a=0):
+    """It idefines a rectangle around a centre time, with a given amplitude."""
     
+    t = np.array([centre_t-rect_t/2, centre_t+rect_t/2])
+    a = np.array([plateau_a, base_a])
+    return t, a
+
 
 #*********************************************************************************
 #*********************************************************************************
@@ -123,15 +136,12 @@ def turbo_spin_echo(self, plotSeq):
     fov_rd:int=self.fov[0]*1e-2
     fov_ph:int=self.fov[1]*1e-2
     fov_sl:int=self.fov[2]*1e-2
-#    readout_amp=self.readout_amp
-#    readout_grad_duration=self.readout_grad_duration
     trap_ramp_duration=self.trap_ramp_duration
-#    phase_start_amp=self.phase_start_amp
     phase_grad_duration=self.phase_grad_duration
     echos_per_tr=self.echos_per_tr
-    rd_preemph_factor=self.preemph_factor
+    rd_preemph_factor:float=self.preemph_factor
     sweep_mode = self.sweep_mode
-    dummies=self.dummies
+    par_acq_factor=self.par_acq_factor
    
     BW=BW*1e-3
 #    trap_ramp_pts=np.int32(trap_ramp_duration*0.2)    # 0.2 puntos/ms
@@ -155,27 +165,36 @@ def turbo_spin_echo(self, plotSeq):
     
     # Calibration constans to change from T/m to DAC amplitude
     
-    gammaB = 42.56e6    # Hz/T
-    # readout amplitude
-    Grd = BW*1e6/(gammaB*fov_rd);
-    # slice amplitude
-    if (n_ph==1):
+    gammaB = 42.56e6    # Gyromagnetic ratio in Hz/T
+    # Get readout, phase and slice amplitudes
+    # Readout gradient amplitude
+    Grd = BW*1e6/(gammaB*fov_rd)
+    # Phase gradient amplitude
+    if (n_ph==1):   
         Gph=0
     else:
         Gph = n_ph/(2*gammaB*fov_ph*phase_grad_duration*1e-6);
-    # phase amplitude
-    
+    # Slice gradient amplitude
     if (n_sl==1):
         Gsl=0
     else:
         Gsl = n_sl/(2*gammaB*fov_sl*phase_grad_duration*1e-6);
     
-    phase_amps = np.linspace(Gph, -Gph, n_ph)
+    # Get the phase gradient vector
+    if(n_ph>1):
+        phase_amps = np.linspace(-Gph, Gph, n_ph+1)
+        phase_amps = phase_amps[1:n_ph+1]
+    else:
+        phase_amps = np.linspace(-Gph, Gph, n_ph)    
     ind = getIndex(self, phase_amps, echos_per_tr, sweep_mode)
     phase_amps=phase_amps[ind]
-    slice_amps = np.linspace(Gsl, -Gsl,  n_sl)
-
-#    slice_amps=slice_amps[getIndex(slice_amps, echos_per_tr, SweepMode)]
+    
+    # Get the slice gradient vector
+    if (n_sl>1):
+        slice_amps = np.linspace(-Gsl, Gsl,  n_sl+1)
+        slice_amps = slice_amps[1:n_sl+1]
+    else:
+        slice_amps = np.linspace(-Gsl, Gsl, n_sl)
 
 
 #*********************************************************************************
@@ -248,11 +267,13 @@ def turbo_spin_echo(self, plotSeq):
 
     def readout_grad_wf(tstart, echo_idx):
         if echo_idx == 0:
-            return trap_cent(tstart + echo_duration/2 + rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay, Grd/2*rd_preemph_factor, readout_duration+trap_ramp_duration,
-                             trap_ramp_duration, trap_ramp_pts)
+#            return trap_cent(tstart+echo_duration/2+rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay, Grd/2*rd_preemph_factor, readout_duration+trap_ramp_duration,
+#                             trap_ramp_duration, trap_ramp_pts)
+            return rect_cent(tstart+echo_duration/2+rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay, Grd/2.0*rd_preemph_factor,  readout_duration+2*trap_ramp_duration)
         else:
-            return trap_cent(tstart + echo_duration/2-grad_readout_delay, Grd, readout_duration+trap_ramp_duration,
-                             trap_ramp_duration, trap_ramp_pts)
+#            return trap_cent(tstart + echo_duration/2-grad_readout_delay, Grd, readout_duration+trap_ramp_duration,
+#                             trap_ramp_duration, trap_ramp_pts)
+            return rect_cent(tstart+echo_duration/2-grad_readout_delay, Grd, readout_duration+2*trap_ramp_duration)
 
 
 #*********************************************************************************
@@ -261,10 +282,14 @@ def turbo_spin_echo(self, plotSeq):
 
 
     def phase_grad_wf(tstart, echo_idx, ph):
-        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay,
-                            phase_amps[ph-1], phase_grad_duration, trap_ramp_duration, trap_ramp_pts)
-        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay,
-                            -phase_amps[ph-1], phase_grad_duration, trap_ramp_duration, trap_ramp_pts)    
+#        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay,
+#                            phase_amps[ph-1], phase_grad_duration, trap_ramp_duration, trap_ramp_pts)
+#        t2, a2 = trap_cent(tstart + echo_duration/2 + readout_duration/2+phase_grad_duration/2+trap_ramp_duration/2-grad_phase_delay,
+#                            -phase_amps[ph-1], phase_grad_duration, trap_ramp_duration, trap_ramp_pts)
+        t1, a1 = rect_cent(tstart+rf_pi_duration/2+phase_grad_duration/2+trap_ramp_duration-grad_phase_delay, phase_amps[ph-1], 
+                            phase_grad_duration+2*trap_ramp_duration)
+        t2, a2 = rect_cent(tstart+echo_duration/2+readout_duration/2+trap_ramp_duration+phase_grad_duration/2-grad_phase_delay, -phase_amps[ph-1], 
+                            phase_grad_duration+2*trap_ramp_duration)
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
         elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
@@ -279,10 +304,14 @@ def turbo_spin_echo(self, plotSeq):
 
 
     def slice_grad_wf(tstart, echo_idx,  sl):
-        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, slice_amps[sl], phase_grad_duration,
-                           trap_ramp_duration, trap_ramp_pts)
-        t2, a2 = trap_cent(tstart + (echo_duration + readout_duration+trap_ramp_duration)/2+trap_ramp_duration-grad_slice_delay, -slice_amps[sl], phase_grad_duration,
-                           trap_ramp_duration, trap_ramp_pts)  
+#        t1, a1 = trap_cent(tstart + (rf_pi_duration+phase_grad_duration-trap_ramp_duration)/2+trap_ramp_duration-grad_phase_delay, slice_amps[sl], phase_grad_duration,
+#                           trap_ramp_duration, trap_ramp_pts)
+#        t2, a2 = trap_cent(tstart +echo_duration/2 + readout_duration/2+phase_grad_duration/2+trap_ramp_duration/2-grad_slice_delay, -slice_amps[sl], phase_grad_duration,
+#                           trap_ramp_duration, trap_ramp_pts)
+        t1, a1 = rect_cent(tstart+rf_pi_duration/2+trap_ramp_duration+phase_grad_duration/2-grad_slice_delay,
+                            slice_amps[sl], phase_grad_duration+2*trap_ramp_duration)
+        t2, a2 = rect_cent(tstart+echo_duration/2+readout_duration/2+trap_ramp_duration+phase_grad_duration/2-grad_slice_delay,
+                            -slice_amps[sl], phase_grad_duration+2*trap_ramp_duration)
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
         elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
@@ -304,7 +333,11 @@ def turbo_spin_echo(self, plotSeq):
 
     global_t = 20 # start the first TR at 20us
 #    for nS in range(nScans):
-    for sl in range(n_sl):
+    if par_acq_factor==0:
+        n_sl_par = n_sl
+    else:
+        n_sl_par = np.int32(n_sl/2)+par_acq_factor
+    for sl in range(n_sl_par):
         for ph_block in range(np.int32(n_ph/echos_per_tr)):
             for echo_idx in range(1+echos_per_tr):
                 tx_t, tx_a = rf_wf(global_t, echo_idx)
@@ -341,6 +374,7 @@ def turbo_spin_echo(self, plotSeq):
     elif plotSeq==0:
         for nS in range(nScans):
             rxd, msgs = expt.run()
+            rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             if nS ==0:
                 data_avg = rxd['rx0']
                 n_rxd = rxd['rx0']
@@ -349,34 +383,14 @@ def turbo_spin_echo(self, plotSeq):
                 n_rxd = np.concatenate((n_rxd, rxd['rx0']), axis=0)
             
         expt.__del__()
-
-
-        # Reorganize data according to sweep mode. This works for 2D but not for 3D
-#        rxd_temp1 = np.reshape(data_avg, (n_ph, n_rd))
-#        rxd_temp2 = rxd_temp1*0
-#        for ii in range(n_ph):
-#            ind_temp = ind[ii]
-#            rxd_temp2[ind_temp, :, :] = rxd_temp1[ii, :, :]
-#        data_avg = np.reshape(rxd_temp2, -1)    # -1 means reshape to 1D array
         
-        rxd_temp1 = np.reshape(data_avg, (n_sl, n_ph, n_rd))
+        rxd_temp1 = np.reshape(data_avg, (n_sl_par, n_ph, n_rd))
         rxd_temp2 = rxd_temp1*0
         for ii in range(n_ph):
             ind_temp = ind[ii]
             rxd_temp2[:, ind_temp, :] = rxd_temp1[:, ii, :]
         data_avg = np.reshape(rxd_temp2, -1)    # -1 means reshape to 1D array
 
-#        av1 = np.arange(8)
-#        am = np.reshape(av1, (2, 2, 2))
-#        a1 = am[0, 0, 0]
-#        a2 = am[0, 1, 0]
-#        a3 = am[1, 0, 0]
-#        a4 = am[1, 1, 0]
-#        a5 = am[0, 0, 1]
-#        a6 = am[0, 1, 1]
-#        a7 = am[1, 0, 1]
-#        a8 = am[1, 1, 1]
-#        av2 = np.reshape(am, -1)
 
 #        return rxd['rx0'], msgs, data_avg
         return n_rxd, msgs, data_avg
