@@ -376,20 +376,33 @@ def turbo_spin_echo(self, plotSeq):
             rxd, msgs = expt.run()
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             if nS ==0:
-                data_avg = rxd['rx0']
+#                data_avg = rxd['rx0']
                 n_rxd = rxd['rx0']
             else:
-                data_avg= np.average((data_avg, rxd['rx0']), axis=0)
                 n_rxd = np.concatenate((n_rxd, rxd['rx0']), axis=0)
-            
+        if par_acq_factor==0 and nScans>1:
+            n_rxd = np.reshape(n_rxd, (nScans, n_sl*n_ph*n_rd))
+            data_avg = np.average(n_rxd, axis=0) 
+        elif par_acq_factor>0 and nScans>1:
+            n_rxd = np.reshape(n_rxd, (nScans, n_sl_par*n_ph*n_rd))
+            data_avg = np.average(n_rxd, axis=0) 
+        else:
+            data_avg = n_rxd
+        
         expt.__del__()
         
+        # Reorganize the data matrix according to the sweep mode
         rxd_temp1 = np.reshape(data_avg, (n_sl_par, n_ph, n_rd))
         rxd_temp2 = rxd_temp1*0
         for ii in range(n_ph):
             ind_temp = ind[ii]
             rxd_temp2[:, ind_temp, :] = rxd_temp1[:, ii, :]
-        data_avg = np.reshape(rxd_temp2, -1)    # -1 means reshape to 1D array
+        
+        rxd_temp3:complex = np.zeros((n_sl, n_ph, n_rd))+1j*np.zeros((n_sl, n_ph, n_rd))
+        rxd_temp3[0:n_sl_par, :,  :] = rxd_temp2
+        data_avg = np.reshape(rxd_temp3, -1)    # -1 means reshape to 1D array
+
+
 
 
 #        return rxd['rx0'], msgs, data_avg

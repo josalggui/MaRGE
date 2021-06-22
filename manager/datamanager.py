@@ -43,7 +43,9 @@ class DataManager(QObject):
                  '_t_realCon',
                  '_f_axis',
                  '_f_fftData',
-                 '_f_fftMagnitude']
+                 '_f_fftMagnitude', 
+                 '_f_fft2Data', 
+                 '_f_fft2DMagnitude']
 
     def __init__(self, data: np.complex, p_frequency: float, samples: int, n:list, bandWidth: float, ):
         """
@@ -71,10 +73,10 @@ class DataManager(QObject):
         self._f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(d_cropped), n=self.samples))
         self._f_fftMagnitude = abs(self.f_fftData)
         
-#        if(int(n[1])>1):
-#            self.data2D = np.reshape(self.data, (n[1], n[0], n[2]))
-#            self._f_fft2Data = np.fft.fftshift(np.fft.fft2(np.fft.fftshift(self.data2D)))
-#            self._f_fft2Magnitude = abs(self.f_fft2Data)
+        if(int(n[1])>1 or int(n[2])>1):
+            self.data_nD = np.reshape(self.data, (n[2], n[1], n[0]))
+            self._f_fft2Data = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(self.data_nD)))
+            self._f_fft2Magnitude = abs(self._f_fft2Data)
 
         # self._dataTimestamp = datetime.now().strftime('%m/%d/%Y, %H:%M:%S')
 

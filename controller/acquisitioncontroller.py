@@ -11,8 +11,10 @@ Acquisition Manager
 
 """
 
+from PyQt5.QtWidgets import QLabel
 from plotview.spectrumplot import SpectrumPlot
 from plotview.spectrumplot import Spectrum2DPlot
+from plotview.spectrumplot import Spectrum3DPlot
 from sequencemodes import defaultsequences
 from PyQt5.QtCore import QObject,  pyqtSlot
 from manager.datamanager import DataManager
@@ -27,6 +29,7 @@ from seq.spinEcho3D import spin_echo3D
 from datetime import date,  datetime 
 from scipy.io import savemat
 import os
+import pyqtgraph as pg
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, sequencelist=None):
@@ -42,22 +45,12 @@ class AcquisitionController(QObject):
         self.parent.clearPlotviewLayout()
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
         
-        self.sequence.plot_rx = True
-        self.sequence.init_gpa = True 
+#        self.sequence.plot_rx = True
+#        self.sequence.init_gpa = True 
         
         plotSeq=0
         if self.sequence.seq == 'SE':
             self.rxd, self.msgs, self.data_avg=spin_echo(self.sequence, plotSeq)
-#            dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg))
-#            if (self.n_ph ==0 & self.n_sl == 0):
-#                self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency')
-#                self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time')
-#                # outputvalues = AcquisitionManager().getOutputParameterObject(dataobject, self.sequence.systemproperties)
-#                #self.outputsection.set_parameters(outputvalues)
-#            elif (self.n_sl == 0 & self.n_ph != 0):
-#                self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
-#            else:
-#                self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
         elif self.sequence.seq == 'SE1D':
             self.rxd, self.msgs=spin_echo1D(self.sequence, plotSeq)
         elif self.sequence.seq == 'SE2D':
@@ -72,21 +65,23 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
             self.rxd, self.msgs, self.data_avg = turbo_spin_echo(self.sequence, plotSeq)
-#            self.rxd=self.data_avg
             
-#        self.n_rd = self.sequence.n[0]
         dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg),  self.sequence.n, self.sequence.BW)
-#        if (self.sequence.n[1] ==1 & self.sequence.n[2] == 1):
-        self.parent.f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency (kHz)')
-        self.parent.t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time (ms)')
-        self.parent.plotview_layout.addWidget(self.parent.t_plotview)
-#        elif(self.sequence.n[2] == 1 & self.sequence.n[1] != 1):
-#            self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
-#        else:
-#            self.parent.f_plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude,"%s Spectrum" %(self.sequence.seq))
-#            self.rxd=self.data_avg
+        if (self.sequence.n[1] ==1 & self.sequence.n[2] == 1):
+            f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency (kHz)')
+            t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time (ms)')
+            self.parent.plotview_layout.addWidget(t_plotview)
+            self.parent.plotview_layout.addWidget(f_plotview)
+#        elif(self.sequence.n[2] == 1):
+##            
+#            plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude, '%s image' %(self.sequence.seq))
+#            self.parent.plotview_layout.addWidget(plotview)
+        else:
+            dt = datetime.now()
+            dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
+            self.parent.plotview_layout.addWidget(QLabel("%s %s" % (self.sequence.seq, dt_string)))
+            self.parent.plotview_layout.addWidget(pg.image(dataobject.f_fft2Magnitude))
         
-        self.parent.plotview_layout.addWidget(self.parent.f_plotview)
         self.save_data()
 
         self.parent.rxd = self.rxd
@@ -100,7 +95,7 @@ class AcquisitionController(QObject):
 #        dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd), self.sequence.n, self.sequence.BW)
         dict = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
         dt = datetime.now()
-        dt_string = dt.strftime("%d-%m-%Y_%H_%M")
+        dt_string = dt.strftime("%d-%m-%Y_%H_%M_%S")
         dt2 = date.today()
         dt2_string = dt2.strftime("%d-%m-%Y")
 #        dict["flodict"] = self.flodict

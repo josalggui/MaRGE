@@ -17,7 +17,7 @@ from pyqtgraph import GraphicsLayoutWidget
 from warnings import warn
 from datetime import datetime 
 import pyqtgraph as pg
-import numpy as np
+
 
 class SpectrumPlot (GraphicsLayoutWidget):
     def __init__(self,
@@ -37,7 +37,7 @@ class SpectrumPlot (GraphicsLayoutWidget):
             return
             
         dt = datetime.now()
-        dt_string = dt.strftime("%d-%m-%Y_%H:%M")
+        dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
 
         plotitem = self.addPlot(row=0, col=0)
         plotitem.addLegend()
@@ -56,15 +56,31 @@ class SpectrumPlot (GraphicsLayoutWidget):
 
 class Spectrum2DPlot(GraphicsLayoutWidget):
     def __init__(self,
-                 Data:tuple,
+                 Data:tuple, 
                  title:str
                  ):
         super(Spectrum2DPlot, self).__init__()
 
-#        data2=np.matrix('10 10;20 40')
-        imv = pg.ImageView()
-#        imv.show()
-        imv.setImage(Data, autoRange=True, autoLevels=True)
-#        imv.autoLevels()
+        dt = datetime.now()
+        dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
+        image = pg.ImageItem(Data) 
+        plotitem = self.addPlot(row=0, col=0)
+        plotitem.addItem(image)
+        plotitem.setTitle("%s %s" % (title, dt_string))
 
- 
+class Spectrum3DPlot(GraphicsLayoutWidget):
+    def __init__(self,
+                 Data:tuple, 
+                 title:str
+                 ):
+        super(Spectrum3DPlot, self).__init__()
+
+        dt = datetime.now()
+        dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
+        image = pg.ImageItem(Data) 
+        plotitem = self.addPlot(row=0, col=0)
+        plotitem.addItem(image)
+            
+#        self.addItem(image)
+#        vbox = image.getView()
+#        vbox.addItem(pg.TextItem("%s %s" % (title, dt_string)))
