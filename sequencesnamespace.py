@@ -73,7 +73,7 @@ class Namespace:
     preemph_factor = "Pre emphasis factor"
     sweep_mode = "Sweep Mode"
     par_acq_factor = "Partial acquisition factor"
-    axes = "Axes (rd,ph,sl)"
+    axes = "Axes (rd=1,ph=2,sl=3)"
    
 class Tooltip_label:
     rx_period = "Sampling time"

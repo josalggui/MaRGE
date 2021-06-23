@@ -16,6 +16,7 @@ from plotview.spectrumplot import SpectrumPlot
 from plotview.spectrumplot import Spectrum2DPlot
 from plotview.spectrumplot import Spectrum3DPlot
 from sequencemodes import defaultsequences
+from PyQt5 import QtCore
 from PyQt5.QtCore import QObject,  pyqtSlot
 from manager.datamanager import DataManager
 from seq.radial import radial
@@ -75,7 +76,10 @@ class AcquisitionController(QObject):
         else:
             dt = datetime.now()
             dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
-            self.parent.plotview_layout.addWidget(QLabel("%s %s" % (self.sequence.seq, dt_string)))
+            label = QLabel("%s %s" % (self.sequence.seq, dt_string))
+            label.setAlignment(QtCore.Qt.AlignCenter)
+            label.setStyleSheet("background-color: black;color: white")
+            self.parent.plotview_layout.addWidget(label)
             self.parent.plotview_layout.addWidget(pg.image(dataobject.f_fft2Magnitude))
         
         self.save_data()
