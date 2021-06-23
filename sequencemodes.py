@@ -268,6 +268,7 @@ class TurboSpinEchoSeq:
                  shim: list=None,             
                  trap_ramp_duration:int=None, 
                  phase_grad_duration:int=None, 
+                 axes:list=None, 
                  n:list=None, 
                  fov:list=None, 
                  preemph_factor:float=None, 
@@ -293,6 +294,7 @@ class TurboSpinEchoSeq:
         self.echos_per_tr:int=echos_per_tr
         self.sweep_mode:int=sweep_mode
         self.par_acq_factor:int=par_acq_factor
+        self.axes:list=axes
     
     @property
     def RFproperties(self) -> dict:
@@ -301,6 +303,7 @@ class TurboSpinEchoSeq:
             nmspc.lo_freq: [float(self.lo_freq)], 
             nmspc.BW:[int(self.BW)], 
             nmspc.nScans:[int(self.nScans)], 
+            nmspc.axes:[list(self.axes)], 
             nmspc.n:[list(self.n)], 
             nmspc.fov:[list(self.fov)], 
             nmspc.tr_duration:[int(self.tr_duration)], 
@@ -636,7 +639,7 @@ defaultsequences={
     #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl), trap_ramp_duration,phase_grad_duration,n(x,y,z),fov(rd,ph,sl),preemph_factor)
     'Spin Echo': SpinEchoSeq('SE', 3.040, 0.6, 65, 10, 500, 31, 1, (0,  0,  0), 500, 1000, (40, 1, 1), (20, 20, 15), 1.05), 
     #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl), trap_ramp_duration,phase_grad_duration,n(x,y,z),fov(rd,ph,sl),preemph_factor,echos_per_tr,sweep_mode,par_acq_factor)
-    'Turbo Spin Echo': TurboSpinEchoSeq('TSE', 3.0395, 0.4, 45, 10, 500, 31, 1, (0,  0,  0), 100, 500, (40, 40, 1), (20, 20, 20), 1.0, 40, 1, 0),  
+    'Turbo Spin Echo': TurboSpinEchoSeq('TSE', 3.0395, 0.4, 45, 10, 500, 31, 1, (0,  0,  0), 100, 500, (1, 2, 3), (40, 40, 1), (20, 20, 20), 1.0, 40, 1, 0),  
     #FID(dbg_sc,lo_freq,rf_amp,rf_duration,rf_tstart,rf_wait,rx_period,readout_duration)
     'Free Induction Decay': FIDSeq('FID', 0, 3, 0.6, 50, 100, 100, 3.333, 500), 
     #RadialSeq(dbg_sc,lo_freq,rf_amp,trs,G,grad_tstart,TR,rf_tstart,rf_tend,rx_tstart,rx_tend,rx_period,shimming(rd,ph,sl))

@@ -72,10 +72,6 @@ class AcquisitionController(QObject):
             t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time (ms)')
             self.parent.plotview_layout.addWidget(t_plotview)
             self.parent.plotview_layout.addWidget(f_plotview)
-#        elif(self.sequence.n[2] == 1):
-##            
-#            plotview = Spectrum2DPlot(dataobject.f_fft2Magnitude, '%s image' %(self.sequence.seq))
-#            self.parent.plotview_layout.addWidget(plotview)
         else:
             dt = datetime.now()
             dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
