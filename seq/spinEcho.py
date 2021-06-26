@@ -166,9 +166,6 @@ def spin_echo(self, plotSeq):
             # do pi/2 pulse, then start first pi pulse
             return np.array([tstart + (echo_duration - rf_pi2_duration)/2, tstart + (echo_duration + rf_pi2_duration)/2,
                              tstart + echo_duration - rf_pi_duration/2]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp])                        
-#        elif tr_idx == echos_per_tr:
-#            # finish final RF pulse
-#            return np.array([tstart + rf_pi_duration/2]), np.array([0])
         else:
             # finish last pi pulse, start next pi pulse
             return np.array([tstart + rf_pi_duration/2]), np.array([0])
@@ -183,9 +180,6 @@ def spin_echo(self, plotSeq):
                              tstart + (echo_duration + rf_pi2_duration)/2 + tx_gate_post,
                              tstart + echo_duration - rf_pi_duration/2 - tx_gate_pre]), \
                              np.array([1, 0, 1])
-#        elif echo_idx == echos_per_tr:
-#            # finish final RF pulse
-#            return np.array([tstart + rf_pi_duration/2 + tx_gate_post]), np.array([0])
         else:
             # finish last pi pulse, start next pi pulse
             return np.array([tstart + rf_pi_duration/2 + tx_gate_post]), np.array([0])
@@ -258,12 +252,6 @@ def spin_echo(self, plotSeq):
                     global_t += echo_duration
                 
                 global_t += tr_duration-echo_duration
-                
-                
-#    flodict = expt.get_flodict()
-#    flodict["Gx_factor"] = Gx_factor
-#    flodict["Gy_factor"] = Gy_factor
-#    flodict["Gz_factor"] = Gz_factor
                 
     if plotSeq==1:
         expt.plot_sequence()

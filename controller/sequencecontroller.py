@@ -121,7 +121,7 @@ class SequenceList(QListWidget):
 #        Qy = QRadioButton('Qy')
 #        Qy.setChecked(True)
 #        Qz = QRadioButton('Qz')
-        return Qx
+#        return Qx
 
     def get_items(self, struct: dict = None, sequence:str = None) -> list:
         itemlist: list = []

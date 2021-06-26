@@ -15,10 +15,10 @@ Operations Controller
 from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel
 from PyQt5.QtCore import Qt, QRegExp
 #from sequencemodes import defaultsequences
-from calibfunctionmodes import defaultcalibfunctions
+from calibfunctionsmodes import defaultcalibfunctions
 from calibfunctionsnamespace import Namespace as cfnmspc
-from sequencesnamespace import Tooltip_label as tlt_l
-from sequencesnamespace import Tooltip_inValue as tlt_inV
+from calibfunctionsnamespace import Tooltip_label as tlt_l
+from calibfunctionsnamespace import Tooltip_inValue as tlt_inV
 from PyQt5.uic import loadUiType
 from PyQt5.QtGui import QRegExpValidator
 
@@ -38,14 +38,14 @@ class CalibFunctionsList(QListWidget):
 
         # Add calibfunctions to calibfunctionslist
         self.addItems(list(defaultcalibfunctions.keys()))
-        parent.onSequenceChanged.connect(self.triggeredCalibfunctionChanged)
+        parent.onCalibFunctionChanged.connect(self.triggeredCalibfunctionChanged)
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
 
         # Make parent reachable from outside __init__
         self.parent = parent
 #        self._currentSequence = None
-        self._currentCalibfunction = "Larmor Frequency"
-        self.setParametersUI("Larmor Frequency")
+        self._currentCalibfunction = "Rabi Flops"
+        self.setParametersUI("Rabi Flops")
     
     def triggeredCalibfunctionChanged(self, calibfunction: str = None) -> None:
         # TODO: set calibfunction only once right here or on changed signal
@@ -57,7 +57,7 @@ class CalibFunctionsList(QListWidget):
     def getCurrentCalibfunction(self) -> str:
         return self._currentCalibfunction
 
-    def setParametersUI(self, sequence: str = None) -> None:
+    def setParametersUI(self, calibfunction: str = None) -> None:
         """
         Set input parameters from sequence object
         @param sequence:  Sequence object
@@ -69,31 +69,32 @@ class CalibFunctionsList(QListWidget):
 
         # Add input parameters to row layout
         inputwidgets: list = []
+        self.calibfunction = calibfunction
 
-        if hasattr(defaultcalibfunctions[self.calibfunction], 'systemproperties'):
-            sys_prop = defaultcalibfunctions[self.calibfunction].systemproperties
-            inputwidgets += [self.generateLabelItem(nmspc.systemproperties)]
-            inputwidgets += self.generateWidgetsFromDict(sys_prop, sequence)
-            
         if hasattr(defaultcalibfunctions[self.calibfunction], 'sqncproperties'):
             seqs_prop = defaultcalibfunctions[self.calibfunction].sqncproperties
-            inputwidgets += [self.generateLabelItem(nmspc.sqncproperties)]
-            inputwidgets += self.generateWidgetsFromDict(seqs_prop, sequence)
+            inputwidgets += [self.generateLabelItem(cfnmspc.sqncproperties)]
+            inputwidgets += self.generateWidgetsFromDict(seqs_prop, calibfunction)
+        
+        if hasattr(defaultcalibfunctions[self.calibfunction], 'RFproperties'):
+            sys_prop = defaultcalibfunctions[self.calibfunction].RFproperties
+            inputwidgets += [self.generateLabelItem(cfnmspc.RFproperties)]
+            inputwidgets += self.generateWidgetsFromDict(sys_prop, calibfunction)
 
         if hasattr(defaultcalibfunctions[self.calibfunction], 'gradientshims'):
             shims = defaultcalibfunctions[self.calibfunction].gradientshims
-            inputwidgets += [(self.generateLabelItem(nmspc.gradientshims))]
-            inputwidgets += (self.generateWidgetsFromDict(shims, sequence))
+            inputwidgets += [(self.generateLabelItem(cfnmspc.gradientshims))]
+            inputwidgets += (self.generateWidgetsFromDict(shims, calibfunction))
             
         for item in inputwidgets:
             self.parent.layout_parameters.addWidget(item)
         
        
     @staticmethod
-    def generateWidgetsFromDict(obj: dict = None, sequence: str = None) -> list:
+    def generateWidgetsFromDict(obj: dict = None, calibfunction: str = None) -> list:
         widgetlist: list = []
         for key in obj:
-            widget = CalibfunctionParameter(key, obj[key], sequence)
+            widget = CalibfunctionParameter(key, obj[key], calibfunction)
             widgetlist.append(widget)
         return widgetlist
 
@@ -104,14 +105,14 @@ class CalibFunctionsList(QListWidget):
         label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
         return label
 
-    def get_items(self, struct: dict = None, sequence:str = None) -> list:
+    def get_items(self, struct: dict = None, calibfunction:str = None) -> list:
         itemlist: list = []
         for key in list(struct.keys()):
             if type(struct[key]) == dict:
                 itemlist.append(self.generateLabelItem(key))
                 itemlist += self.get_items(struct[key])
             else:
-                item = CalibfunctionParameter(key, struct[key], sequence)
+                item = CalibfunctionParameter(key, struct[key], calibfunction)
                 itemlist.append(item)
 
         return itemlist
@@ -122,7 +123,7 @@ class CalibfunctionParameter(Parameter_Base, Parameter_Form):
     Operation Parameter Widget-Class
     """
     # Get reference to position in operation object
-    def __init__(self, name, parameter, sequence):
+    def __init__(self, name, parameter, calibfunction):
         super(CalibfunctionParameter, self).__init__()
         self.setupUi(self)
 
@@ -134,7 +135,7 @@ class CalibfunctionParameter(Parameter_Base, Parameter_Form):
         # Tooltips
         temp = vars(defaultcalibfunctions[self.calibfunction])
         for item in temp:
-            label = 'nmspc.%s' %item
+            label = 'cfnmspc.%s' %item
             res=eval(label)
             if (res == name):
                 lab = 'tlt_l.%s' %(item)
@@ -156,7 +157,7 @@ class CalibfunctionParameter(Parameter_Base, Parameter_Form):
 
         temp = vars(defaultcalibfunctions[self.calibfunction])
         for item in temp:
-            lab = 'nmspc.%s' %(item)
+            lab = 'cfnmspc.%s' %(item)
             res=eval(lab)
             if (res == self.label_name.text()):
                 t = type(getattr(defaultcalibfunctions[self.calibfunction], item))     

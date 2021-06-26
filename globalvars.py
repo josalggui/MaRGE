@@ -32,6 +32,8 @@ class Sequences:
     R = SqncObject('Radial', 'seq/radial.py')
     TSE = SqncObject('Turbo Spin Echo', 'seq/turboSpinEcho.py')
 
+class Calibfunctions:
+    RabiFlops = SqncObject('Rabi Flops', 'seq/rabiFlops.py')
 
 class Gradients:
     X = 0
@@ -61,3 +63,4 @@ sqncs = Sequences()
 grads = Gradients()
 rlxs = Relaxations()
 pax = ProjectionAxes()
+calibs = Calibfunctions()

@@ -384,6 +384,8 @@ def turbo_spin_echo(
 
     plt.plot(data_avg)
     plt.show()
+    
+    
 
 if __name__ == "__main__":
     
