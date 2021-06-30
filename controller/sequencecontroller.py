@@ -20,6 +20,7 @@ from sequencesnamespace import Tooltip_label as tlt_l
 from sequencesnamespace import Tooltip_inValue as tlt_inV
 from PyQt5.uic import loadUiType
 from PyQt5.QtGui import QRegExpValidator
+import numpy as np
 
 Parameter_Form, Parameter_Base = loadUiType('ui/inputparameter.ui')
 #Parameter_FormG, Parameter_BaseG = loadUIType('ui/gradients.ui')
@@ -207,7 +208,7 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
                         v=v.replace("]", "")
                         v2 = list(v.split(","))
                         if item=='shim':
-                             value: list = list([float(v2[0]), float(v2[1]), float(v2[2])])
+                            value: list = list([float(v2[0]), float(v2[1]), float(v2[2])])
                         else:
                             value: list = list([int(v2[0]), int(v2[1]), int(v2[2])])
                         setattr(defaultsequences[self.sequence], item, value)

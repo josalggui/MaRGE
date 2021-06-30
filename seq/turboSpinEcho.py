@@ -56,11 +56,11 @@ def rect_cent(centre_t, plateau_a, rect_t, ramp_t, base_a=0):
 #*********************************************************************************
 
 
-def getIndex(self, g_amps, echos_per_tr, sweep_mode):
+def getIndex(self, g_amps, echos_per_tr, n_ph, sweep_mode):
 #    print(self.n[1]/2/self.echos_per_tr)
     n2ETL=np.int32(self.n[1]/2/self.echos_per_tr)
     ind:np.int32 = []
-    n_ph = self.n[1]
+#    n_ph = self.n[1]
     if n_ph==1:
         ind=1
     
@@ -174,9 +174,9 @@ def turbo_spin_echo(self, plotSeq):
         x='slice'
         y='readout'
         z='phase' 
-        n_rd=self.n[2]
-        n_ph=self.n[0]
-        n_sl=self.n[1]       
+        n_rd=self.n[1]
+        n_ph=self.n[2]
+        n_sl=self.n[0]       
     elif axes_x==3 and axes_y==2 and axes_z==1:
         x='slice'
         y='phase'
@@ -233,7 +233,7 @@ def turbo_spin_echo(self, plotSeq):
         phase_amps = phase_amps[1:n_ph+1]
     else:
         phase_amps = np.linspace(-Gph, Gph, n_ph)    
-    ind = getIndex(self, phase_amps, echos_per_tr, sweep_mode)
+    ind = getIndex(self, phase_amps, echos_per_tr, n_ph, sweep_mode)
     phase_amps=phase_amps[ind]
     
     # Get the slice gradient vector
