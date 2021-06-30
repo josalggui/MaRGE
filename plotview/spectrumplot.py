@@ -12,7 +12,7 @@ Plotview Spectrum (1D Plot)
 @todo:      Implement more feature from pyqtgraph
 
 """
-
+from PyQt5.QtWidgets import QLabel
 from pyqtgraph import GraphicsLayoutWidget
 from warnings import warn
 from datetime import datetime 
@@ -31,7 +31,8 @@ class SpectrumPlot (GraphicsLayoutWidget):
                  xlabel:str
                  ):
         super(SpectrumPlot, self).__init__()
-
+        self.yData = yData
+        
         if len(xData) != len(yData):
             warn("Length of x and y data does not match.")
             return
@@ -39,20 +40,31 @@ class SpectrumPlot (GraphicsLayoutWidget):
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
 
-        plotitem = self.addPlot(row=0, col=0)
-        plotitem.addLegend()
-        plotitem.plot(xData, yData, pen=[255, 0, 0], name="Magnitude")
+        self.plotitem = self.addPlot(row=0, col=0)
+        self.plotitem.addLegend()
+        self.label = pg.TextItem()
+        self.plotitem.addItem(self.label)
+        self.plotitem.plot(xData, yData, pen=[255, 0, 0], name="Magnitude")
         if yData2 !=[]:
-            plotitem.plot(xData, yData2, pen=[0, 255, 0], name="Real part")
-            plotitem.plot(xData, yData3, pen=[0, 0, 255], name="Imaginary part")
-        plotitem.setTitle("%s %s" % (title, dt_string))
-        plotitem.setLabel('left', 'Amplitude (mV)')
-        plotitem.setLabel('bottom', xlabel)
+            self.plotitem.plot(xData, yData2, pen=[0, 255, 0], name="Real part")
+            self.plotitem.plot(xData, yData3, pen=[0, 0, 255], name="Imaginary part")
+        self.plotitem.setTitle("%s %s" % (title, dt_string))
+        self.plotitem.setLabel('left', 'Amplitude (mV)')
+        self.plotitem.setLabel('bottom', xlabel)
+        self.crosshair_v = pg.InfiniteLine(angle=90, movable=False)
+        self.crosshair_h = pg.InfiniteLine(angle=0, movable=False)
+        self.plotitem.addItem(self.crosshair_v, ignoreBounds=True)
+        self.plotitem.addItem(self.crosshair_h, ignoreBounds=True)
+        self.proxy = pg.SignalProxy(self.plotitem.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
  
-#        vb = plotitem.getViewBox()
-#        vb.setBackgroundColor('w')
-        
-#        print("x: {}, y: {}".format(xLabel, yLabel))
+    def mouseMoved(self, e):
+        pos = e[0] ## using signal proxy turns original arguments into a tuple
+        if self.plotitem.sceneBoundingRect().contains(pos):
+            mousePoint = self.plotitem.vb.mapSceneToView(pos)
+            self.label.setText("x=%0.3f, y(Magnitude)=%0.3f" % (mousePoint.x(), mousePoint.y()))
+            self.crosshair_v.setPos(mousePoint.x())
+            self.crosshair_h.setPos(mousePoint.y()) 
+
 
 class Spectrum2DPlot(GraphicsLayoutWidget):
     def __init__(self,

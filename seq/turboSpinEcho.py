@@ -62,7 +62,7 @@ def getIndex(self, g_amps, echos_per_tr, n_ph, sweep_mode):
     ind:np.int32 = []
 #    n_ph = self.n[1]
     if n_ph==1:
-        ind=1
+        ind=0
     
     if sweep_mode==0:   # Sequential for T2 contrast
         for ii in range(np.int32(n_ph/self.echos_per_tr)):
