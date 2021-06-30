@@ -73,6 +73,11 @@ class AcquisitionController(QObject):
             t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time (ms)')
             self.parent.plotview_layout.addWidget(t_plotview)
             self.parent.plotview_layout.addWidget(f_plotview)
+            [fwhm, fwhm_hz, fwhm_ppm] = dataobject.get_fwhm(self)
+            print('FWHM:%s'%(fwhm))
+            [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]=dataobject.get_peakparameters()
+            print('Max Signal Value = %s' %(f_signalValue))
+
         else:
             dt = datetime.now()
             dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
@@ -82,7 +87,7 @@ class AcquisitionController(QObject):
             self.parent.plotview_layout.addWidget(label)
             self.parent.plotview_layout.addWidget(pg.image(dataobject.f_fft2Magnitude))
         
-        self.save_data()
+        self.save_data()    
 
         self.parent.rxd = self.rxd
         self.parent.lo_freq = self.sequence.lo_freq

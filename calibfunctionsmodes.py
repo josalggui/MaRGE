@@ -117,7 +117,7 @@ class RabiFlops:
                  echo_duration:int=None, 
                  BW: int=None, 
                  readout_duration:int=None, 
-                 shim: list=None
+                 rx_wait:int=None
                  ):
                    
         self.cfn: str=cfn
@@ -130,7 +130,7 @@ class RabiFlops:
         self.echo_duration:int=echo_duration
         self.BW: int=BW
         self.readout_duration:int=readout_duration
-        self.shim:list=shim
+        self.rx_wait:int=rx_wait
 
     @property
     def sqncproperties(self) -> dict:
@@ -143,6 +143,7 @@ class RabiFlops:
             cfnmspc.tr_duration:[int(self.tr_duration)],             
             cfnmspc.echo_duration:[int(self.echo_duration)], 
             cfnmspc.readout_duration:[int(self.readout_duration)], 
+            cfnmspc.rx_wait:[int(self.rx_wait)]
         }
 
     @property
@@ -152,11 +153,11 @@ class RabiFlops:
             cfnmspc.rf_pi2_duration:[int(self.rf_pi2_duration)], 
         }    
 
-    @property
-    def gradientshims(self) -> dict:
-        return{
-            cfnmspc.shim:[list(self.shim)]
-        }  
+#    @property
+#    def gradientshims(self) -> dict:
+#        return{
+#            cfnmspc.shim:[list(self.shim)]
+#        }  
            
 
 #class GradShim:
@@ -242,8 +243,8 @@ Definition of default calibfunctions
 """
 defaultcalibfunctions={
 
-    #RabiFlops(lo_freq,rf_amp,N,step,rf_pi2_duration,tr_duration,echo_duration,BW,readout_duration,shimming)
-    'Rabi Flops': RabiFlops('Rabi Flops', 3.041, 0.3, 20, 5, 100, 1000, 5, 31, 5000,(0, 0, 0))
+    #RabiFlops(lo_freq,rf_amp,N,step,rf_pi2_duration,tr_duration,echo_duration,BW,readout_duration,rx_wait)
+    'Rabi Flops': RabiFlops('Rabi Flops', 3.041, 0.3, 20, 5, 50, 20, 15, 31, 5, 100)
 
 }
            

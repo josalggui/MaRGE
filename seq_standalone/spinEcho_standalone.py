@@ -38,23 +38,23 @@ def trap_cent(centre_t, plateau_a, trap_t, ramp_t, ramp_pts, base_a=0):
     return t + centre_t - (trap_t + ramp_t)/2, a
 
 def spin_echo(lo_freq=3.043, # MHz
-                    rf_amp=0.62, # 1 = full-scale
-                    rf_pi2_duration=50, # us, rf pi/2 pulse length
+                    rf_amp=0.1, # 1 = full-scale
+                    rf_pi2_duration=1000, # us, rf pi/2 pulse length
                     rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
                     # spin-echo properties
-                    echo_duration=500, # us, time from the centre of one echo to centre of the next
-                    tr_duration=200000, 
-                    BW=50, #                
+                    echo_duration=10000, # us, time from the centre of one echo to centre of the next
+                    tr_duration=500000, 
+                    BW=31, #                
                     shim_x=0, 
                     shim_y=0, 
                     shim_z=0, 
-                    nScans = 10, 
-                    n_rd=30, 
+                    nScans = 1, 
+                    n_rd=800, 
                     n_ph=1, 
                     n_sl=1, 
-                    fov_rd=10, 
-                    fov_ph=10, 
-                    fov_sl=10, 
+                    fov_rd=1000000, 
+                    fov_ph=10000000, 
+                    fov_sl=10000000, 
                     trap_ramp_duration=100, 
                     phase_grad_duration=500
                     # (must at least be longer than readout_duration + trap_ramp_duration)

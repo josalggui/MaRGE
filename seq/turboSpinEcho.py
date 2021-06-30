@@ -43,10 +43,10 @@ def trap_cent(centre_t, plateau_a, trap_t, ramp_t, ramp_pts, base_a=0):
 #*********************************************************************************
 
 
-def rect_cent(centre_t, plateau_a, rect_t, base_a=0):
+def rect_cent(centre_t, plateau_a, rect_t, ramp_t, base_a=0):
     """It idefines a rectangle around a centre time, with a given amplitude."""
     
-    t = np.array([centre_t-rect_t/2, centre_t+rect_t/2])
+    t = np.array([centre_t-rect_t/2-ramp_t, centre_t+rect_t/2])
     a = np.array([plateau_a, base_a])
     return t, a
 
@@ -57,7 +57,7 @@ def rect_cent(centre_t, plateau_a, rect_t, base_a=0):
 
 
 def getIndex(self, g_amps, echos_per_tr, sweep_mode):
-    print(self.n[1]/2/self.echos_per_tr)
+#    print(self.n[1]/2/self.echos_per_tr)
     n2ETL=np.int32(self.n[1]/2/self.echos_per_tr)
     ind:np.int32 = []
     n_ph = self.n[1]
@@ -120,6 +120,7 @@ def turbo_spin_echo(self, plotSeq):
 #    n_rd:int=self.n[0]
 #    n_ph:int=self.n[1]
 #    n_sl:int=self.n[2]
+#    print(self.n)
     fov_rd:int=self.fov[0]*1e-2
     fov_ph:int=self.fov[1]*1e-2
     fov_sl:int=self.fov[2]*1e-2
@@ -197,11 +198,17 @@ def turbo_spin_echo(self, plotSeq):
     true_rx_period = expt.get_rx_ts()[0]
     true_BW = 1/true_rx_period
     readout_duration = n_rd/true_BW
+    
+    # We calculate here the realtive sequence efficiency
+    alphaRO = fov_rd/n_rd*np.sqrt(np.float(n_rd)/true_BW)
+    alphaPH = fov_ph/n_ph*np.sqrt(np.float(echos_per_tr))
+    alphaSL = fov_sl/n_sl*np.sqrt(np.float(n_sl)/(np.float(n_sl)/2+np.float(par_acq_factor)))
+    alpha = alphaRO*alphaPH*alphaSL*10000
+    print('alpha:%f'%(alpha))
                     
     if rf_pi_duration is None:
         rf_pi_duration = 2 * rf_pi2_duration
         
-#    SweepMode=1
     
     # Calibration constans to change from T/m to DAC amplitude
     
@@ -309,11 +316,11 @@ def turbo_spin_echo(self, plotSeq):
         if echo_idx == 0:
 #            return trap_cent(tstart+echo_duration/2+rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay, Grd/2*rd_preemph_factor, readout_duration+trap_ramp_duration,
 #                             trap_ramp_duration, trap_ramp_pts)
-            return rect_cent(tstart+echo_duration/2+rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay, Grd/2.0*rd_preemph_factor,  readout_duration+2*trap_ramp_duration)
+            return rect_cent(tstart+echo_duration/2+rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay, Grd/2.0*rd_preemph_factor,  readout_duration, trap_ramp_duration)
         else:
 #            return trap_cent(tstart + echo_duration/2-grad_readout_delay, Grd, readout_duration+trap_ramp_duration,
 #                             trap_ramp_duration, trap_ramp_pts)
-            return rect_cent(tstart+echo_duration/2-grad_readout_delay, Grd, readout_duration+2*trap_ramp_duration)
+            return rect_cent(tstart+echo_duration/2-grad_readout_delay, Grd, readout_duration, trap_ramp_duration)
 
 
 #*********************************************************************************
@@ -327,9 +334,9 @@ def turbo_spin_echo(self, plotSeq):
 #        t2, a2 = trap_cent(tstart + echo_duration/2 + readout_duration/2+phase_grad_duration/2+trap_ramp_duration/2-grad_phase_delay,
 #                            -phase_amps[ph-1], phase_grad_duration, trap_ramp_duration, trap_ramp_pts)
         t1, a1 = rect_cent(tstart+rf_pi_duration/2+phase_grad_duration/2+trap_ramp_duration-grad_phase_delay, phase_amps[ph-1], 
-                            phase_grad_duration+2*trap_ramp_duration)
+                            phase_grad_duration, trap_ramp_duration)
         t2, a2 = rect_cent(tstart+echo_duration/2+readout_duration/2+trap_ramp_duration+phase_grad_duration/2-grad_phase_delay, -phase_amps[ph-1], 
-                            phase_grad_duration+2*trap_ramp_duration)
+                            phase_grad_duration, trap_ramp_duration)
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
         elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
@@ -349,9 +356,9 @@ def turbo_spin_echo(self, plotSeq):
 #        t2, a2 = trap_cent(tstart +echo_duration/2 + readout_duration/2+phase_grad_duration/2+trap_ramp_duration/2-grad_slice_delay, -slice_amps[sl], phase_grad_duration,
 #                           trap_ramp_duration, trap_ramp_pts)
         t1, a1 = rect_cent(tstart+rf_pi_duration/2+trap_ramp_duration+phase_grad_duration/2-grad_slice_delay,
-                            slice_amps[sl], phase_grad_duration+2*trap_ramp_duration)
+                            slice_amps[sl], phase_grad_duration, trap_ramp_duration)
         t2, a2 = rect_cent(tstart+echo_duration/2+readout_duration/2+trap_ramp_duration+phase_grad_duration/2-grad_slice_delay,
-                            -slice_amps[sl], phase_grad_duration+2*trap_ramp_duration)
+                            -slice_amps[sl], phase_grad_duration, trap_ramp_duration)
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
         elif echo_idx == echos_per_tr: # last echo, don't need 2nd trapezoids
@@ -392,22 +399,16 @@ def turbo_spin_echo(self, plotSeq):
                     'rx_gate': (rx_gate_t, rx_gate_a),
                 })
 
-
-
-#                expt.add_flodict({
-#                    'tx0': (tx_t, tx_a),
-#                    'grad_vx': (readout_grad_t, readout_grad_a/(Gx_factor/1000)/10+shim_x),
-#                    'grad_vy': (phase_grad_t, phase_grad_a/(Gy_factor/1000)/10+shim_y),
-#                    'grad_vz': (slice_grad_t, slice_grad_a/(Gz_factor/1000)/10+shim_z), 
-#                    'rx0_en': (readout_t, readout_a),
-#                    'tx_gate': (tx_gate_t, tx_gate_a),
-#                    'rx_gate': (rx_gate_t, rx_gate_a),
-#                })
-                
-                    
                 global_t += echo_duration
             
             global_t += tr_duration-echo_duration*echos_per_tr
+
+    expt.add_flodict({
+        'grad_vx': (np.array([global_t+echo_duration]),np.array([0]) ), 
+        'grad_vy': (np.array([global_t+echo_duration]),np.array([0]) ), 
+        'grad_vz': (np.array([global_t+echo_duration]),np.array([0] )),
+    })
+
                 
     if plotSeq==1:                  # What is the meaning of plotSeq??
         expt.plot_sequence()
@@ -418,7 +419,6 @@ def turbo_spin_echo(self, plotSeq):
             rxd, msgs = expt.run()
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             if nS ==0:
-#                data_avg = rxd['rx0']
                 n_rxd = rxd['rx0']
             else:
                 n_rxd = np.concatenate((n_rxd, rxd['rx0']), axis=0)
@@ -444,9 +444,5 @@ def turbo_spin_echo(self, plotSeq):
         rxd_temp3[0:n_sl_par, :,  :] = rxd_temp2
         data_avg = np.reshape(rxd_temp3, -1)    # -1 means reshape to 1D array
 
-
-
-
-#        return rxd['rx0'], msgs, data_avg
         return n_rxd, msgs, data_avg
 

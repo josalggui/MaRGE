@@ -73,11 +73,11 @@ class DataManager(QObject):
         self._f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(d_cropped), n=self.samples))
         self._f_fftMagnitude = abs(self.f_fftData)
         
-        if(int(n[1])>1 or int(n[2])>1):
+        if(n != [] and (int(n[1])>1 or int(n[2])>1)):
             self.data_nD = np.reshape(self.data, (n[2], n[1], n[0]))
             self._f_fft2Data = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(self.data_nD)))
             self._f_fft2Magnitude = abs(self._f_fft2Data)
-
+        
         # self._dataTimestamp = datetime.now().strftime('%m/%d/%Y, %H:%M:%S')
 
     @property

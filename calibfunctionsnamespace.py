@@ -20,11 +20,9 @@ class Namespace:
     lo_freq = "Frequency (MHz)"
     rf_amp = "RF Amplitude"
     rf_tstart = "RF start time"
-    rf_duration = "RF duration"
+    rf_duration = "RF duration (us)"
     rx_tstart = "RX start time"
-    rx_wait = "RX wait time"
-    tr_duration = "TR"
-    echo_duration = "TE"
+    echo_duration = "TE (ms)"
     fcn = "calibfunction"
     shim = "Shims (x,y,z)"
     rf_wait = "Tx - rx time"
@@ -34,7 +32,8 @@ class Namespace:
     N = "Num. points RF pulse enlargement"
     step = "Step"
     rf_pi2_duration="RF excitation duration (us)"
-    readout_duration = "Readout duration"
+    readout_duration = "Readout duration (ms)"
+    rx_wait="Readout wait time (after 2nd RF pulse)"
 
 class Tooltip_label:
     rx_period = "Sampling time"

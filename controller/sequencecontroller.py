@@ -12,7 +12,7 @@ Operations Controller
 @todo:      Extend construction of parameter section (headers, more categories, etc. )
 
 """
-from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel,  QCheckBox
+from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel,  QCheckBox, QComboBox
 from PyQt5.QtCore import Qt, QRegExp
 from sequencemodes import defaultsequences
 from sequencesnamespace import Namespace as nmspc
@@ -25,7 +25,8 @@ Parameter_Form, Parameter_Base = loadUiType('ui/inputparameter.ui')
 #Parameter_FormG, Parameter_BaseG = loadUIType('ui/gradients.ui')
 
 
-class SequenceList(QListWidget):
+#class SequenceList(QListWidget):
+class SequenceList(QComboBox):
     """
     Sequence List Class
     """
@@ -39,11 +40,13 @@ class SequenceList(QListWidget):
         # Add sequences to sequences list
         self.addItems(list(defaultsequences.keys()))
         parent.onSequenceChanged.connect(self.triggeredSequenceChanged)
+        
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
 
         # Make parent reachable from outside __init__
         self.parent = parent
 #        self._currentSequence = None
+
         self._currentSequence = "Turbo Spin Echo"
         self.setParametersUI("Turbo Spin Echo")
     

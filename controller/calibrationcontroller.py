@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.uic import loadUiType,  loadUi
 from PyQt5.QtCore import pyqtSignal,  pyqtSlot
 from controller.calibfunctionscontroller import CalibFunctionsList
+from controller.calibrationAcqcontroller import CalibrationAcqController
 from PyQt5 import QtGui
 
 CalibrationController_Form, CalibrationController_Base = loadUiType('ui/calibrationViewer.ui')
@@ -34,6 +35,8 @@ class CalibrationController(CalibrationController_Base, CalibrationController_Fo
         self.layout_operations.addWidget(self.calibfunctionslist)
         
         
+        calibAcqCtrl = CalibrationAcqController(self, self.calibfunctionslist)
+        self.action_acquire.triggered.connect(calibAcqCtrl.startCalibAcq)
         self.action_close.triggered.connect(self.close) 
        
     
