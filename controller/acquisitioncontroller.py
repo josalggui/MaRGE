@@ -16,6 +16,7 @@ from plotview.spectrumplot import SpectrumPlot
 from plotview.spectrumplot import Spectrum2DPlot
 from plotview.spectrumplot import Spectrum3DPlot
 from sequencemodes import defaultsequences
+from seq.utilities import change_axes
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject,  pyqtSlot
 from manager.datamanager import DataManager
@@ -47,9 +48,8 @@ class AcquisitionController(QObject):
         self.parent.clearPlotviewLayout()
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
         
-#        self.sequence.plot_rx = True
-#        self.sequence.init_gpa = True 
-        
+        x, y, z, self.n_rd, self.n_ph, self.n_sl = change_axes(self.sequence)
+
         plotSeq=0
         if self.sequence.seq == 'SE':
             self.rxd, self.msgs, self.data_avg=spin_echo(self.sequence, plotSeq)
@@ -67,13 +67,14 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
             self.rxd, self.msgs, self.data_avg = turbo_spin_echo(self.sequence, plotSeq)
+    
+        dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg),  self.sequence.n, self.sequence.BW)
+        self.plot_result(dataobject)
         
-        data_avgR = self.data_avg
-        self.plot_result(data_avgR)
-            
-    def plot_result(self, data_avgR):
-        dataobject: DataManager = DataManager(data_avgR, self.sequence.lo_freq, len(data_avgR),  self.sequence.n, self.sequence.BW)
-        if (self.sequence.n[1] ==1 & self.sequence.n[2] == 1):
+    def plot_result(self, dataobject):
+    
+        
+        if (self.n_ph ==1 & self.n_sl == 1):
             f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency (kHz)')
             t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time (ms)')
             self.parent.plotview_layout.addWidget(t_plotview)
@@ -86,15 +87,16 @@ class AcquisitionController(QObject):
         else:
             dt = datetime.now()
             dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
-            button = QPushButton("Change View")
-            button.setEnabled(False)
             label = QLabel("%s %s" % (self.sequence.seq, dt_string))
             label.setAlignment(QtCore.Qt.AlignCenter)
             label.setStyleSheet("background-color: black;color: white")
-            self.parent.plotview_layout.addWidget(button)
+            button = QPushButton("Change View")
+            button.clicked.connect(self.button_clicked(dataobject))
+            if (self.n_ph !=1 & self.n_sl != 1):  #Add button to change the view only if 3D image
+                self.parent.plotview_layout.addWidget(button)
             self.parent.plotview_layout.addWidget(label)
             self.parent.plotview_layout.addWidget(pg.image(dataobject.f_fft2Magnitude))
-            button.clicked.connect(self.button_clicked(data_avgR))
+
         self.save_data()    
 
         self.parent.rxd = self.rxd
@@ -102,10 +104,13 @@ class AcquisitionController(QObject):
         print(self.msgs)
 
 
-    def button_clicked(self, data_avgR):
+    def button_clicked(self, dataobject):
+        
         self.parent.clearPlotviewLayout()
-        new_data_avg=np.moveaxis(data_avgR, 0, -1)
-        self.plot_result(new_data_avg)
+        im = dataobject.f_fft2Magnitude
+        im2=np.moveaxis(im, 0, -1)
+        dataobject.f_fft2Magnitude=im2
+        self.plot_result(dataobject)
         
         
         
