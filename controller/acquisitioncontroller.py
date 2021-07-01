@@ -11,7 +11,7 @@ Acquisition Manager
 
 """
 
-from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QLabel, QPushButton
 from plotview.spectrumplot import SpectrumPlot
 from plotview.spectrumplot import Spectrum2DPlot
 from plotview.spectrumplot import Spectrum3DPlot
@@ -31,6 +31,7 @@ from datetime import date,  datetime
 from scipy.io import savemat
 import os
 import pyqtgraph as pg
+import numpy as np
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, sequencelist=None):
@@ -66,8 +67,12 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
             self.rxd, self.msgs, self.data_avg = turbo_spin_echo(self.sequence, plotSeq)
+        
+        data_avgR = self.data_avg
+        self.plot_result(data_avgR)
             
-        dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg),  self.sequence.n, self.sequence.BW)
+    def plot_result(self, data_avgR):
+        dataobject: DataManager = DataManager(data_avgR, self.sequence.lo_freq, len(data_avgR),  self.sequence.n, self.sequence.BW)
         if (self.sequence.n[1] ==1 & self.sequence.n[2] == 1):
             f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency (kHz)')
             t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time (ms)')
@@ -81,12 +86,15 @@ class AcquisitionController(QObject):
         else:
             dt = datetime.now()
             dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
+            button = QPushButton("Change View")
+            button.setEnabled(False)
             label = QLabel("%s %s" % (self.sequence.seq, dt_string))
             label.setAlignment(QtCore.Qt.AlignCenter)
             label.setStyleSheet("background-color: black;color: white")
+            self.parent.plotview_layout.addWidget(button)
             self.parent.plotview_layout.addWidget(label)
             self.parent.plotview_layout.addWidget(pg.image(dataobject.f_fft2Magnitude))
-        
+            button.clicked.connect(self.button_clicked(data_avgR))
         self.save_data()    
 
         self.parent.rxd = self.rxd
@@ -94,6 +102,12 @@ class AcquisitionController(QObject):
         print(self.msgs)
 
 
+    def button_clicked(self, data_avgR):
+        self.parent.clearPlotviewLayout()
+        new_data_avg=np.moveaxis(data_avgR, 0, -1)
+        self.plot_result(new_data_avg)
+        
+        
         
     def save_data(self):
         

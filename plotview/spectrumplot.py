@@ -32,6 +32,8 @@ class SpectrumPlot (GraphicsLayoutWidget):
                  ):
         super(SpectrumPlot, self).__init__()
         self.yData = yData
+        self.yData2 = yData2
+        self.yData3 = yData3
         
         if len(xData) != len(yData):
             warn("Length of x and y data does not match.")
@@ -42,7 +44,7 @@ class SpectrumPlot (GraphicsLayoutWidget):
 
         self.plotitem = self.addPlot(row=0, col=0)
         self.plotitem.addLegend()
-        self.label = pg.TextItem()
+        self.label = pg.TextItem(color=(200, 200, 200), anchor=(1, -1))
         self.plotitem.addItem(self.label)
         self.plotitem.plot(xData, yData, pen=[255, 0, 0], name="Magnitude")
         if yData2 !=[]:
@@ -61,7 +63,7 @@ class SpectrumPlot (GraphicsLayoutWidget):
         pos = e[0] ## using signal proxy turns original arguments into a tuple
         if self.plotitem.sceneBoundingRect().contains(pos):
             mousePoint = self.plotitem.vb.mapSceneToView(pos)
-            self.label.setText("x=%0.3f, y(Magnitude)=%0.3f" % (mousePoint.x(), mousePoint.y()))
+            self.label.setText("x=%0.4f, y(Magnitude)=%0.4f" % (mousePoint.x(), mousePoint.y()))
             self.crosshair_v.setPos(mousePoint.x())
             self.crosshair_h.setPos(mousePoint.y()) 
 
