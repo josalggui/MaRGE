@@ -176,7 +176,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     
     def save_data(self):
         
-        dataobject: DataManager = DataManager(self.rxd, self.lo_freq, len(self.rxd))
+        dataobject: DataManager = DataManager(self.rxd, self.lo_freq, len(self.rxd),  self.sequence.n, self.sequence.BW)
         dict = vars(defaultsequences[self.sequence])
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H:%M")
