@@ -176,7 +176,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     
     def save_data(self):
         
-        dataobject: DataManager = DataManager(self.rxd, self.lo_freq, len(self.rxd),  self.sequence.n, self.sequence.BW)
+        dataobject: DataManager = DataManager(self.rxd, self.lo_freq, len(self.rxd), [], self.BW)
         dict = vars(defaultsequences[self.sequence])
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H:%M")
@@ -239,10 +239,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def save_parameters(self):
         
         dt = datetime.now()
-        dt_string = dt.strftime("%d-%m-%Y_%H:%M")
+        dt_string = dt.strftime("%d-%m-%Y_%H_%M")
         dict = vars(defaultsequences[self.sequence]) 
-    
-        f = open("experiments/parameterisations/%s_params_%s.txt" % (self.sequence, dt_string),"w")
+        
+        sequ = '%s' %(self.sequence)
+        sequ = sequ.replace(" ", "")
+        f = open("experiments/parameterisations/%s_params_%s.txt" % (sequ, dt_string),"w")
         f.write( str(dict) )
         f.close()
   

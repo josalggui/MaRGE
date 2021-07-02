@@ -115,7 +115,7 @@ class RabiFlops:
                  rf_pi2_duration:int=None, 
                  tr_duration: int=None, 
                  echo_duration:int=None, 
-                 BW: int=None, 
+                 BW: float=None, 
                  readout_duration:int=None, 
                  rx_wait:int=None
                  ):
@@ -128,7 +128,7 @@ class RabiFlops:
         self.rf_pi2_duration: int=rf_pi2_duration
         self.tr_duration: int=tr_duration
         self.echo_duration:int=echo_duration
-        self.BW: int=BW
+        self.BW: float=BW
         self.readout_duration:int=readout_duration
         self.rx_wait:int=rx_wait
 
@@ -143,7 +143,7 @@ class RabiFlops:
             cfnmspc.tr_duration:[int(self.tr_duration)],             
             cfnmspc.echo_duration:[int(self.echo_duration)], 
             cfnmspc.readout_duration:[int(self.readout_duration)], 
-            cfnmspc.rx_wait:[int(self.rx_wait)]
+            cfnmspc.rx_wait:[int(self.rx_wait)], 
         }
 
     @property
@@ -160,83 +160,73 @@ class RabiFlops:
 #        }  
            
 
-#class GradShim:
-#    """
-#    Spectrum Operation Class
-#    """
-#    def __init__(self,
-#                 seq: str,
-#                 dbg_sc: float=None, 
-#                 lo_freq: float=None,
-#                rf_amp: float=None,
-#                 trs: int=None,
-#                 rx_period: int=None, 
-#                 rf_tstart: int=None, 
-#                 slice_amp: float=None, 
-#                 phase_amp: float=None, 
-#                 readout_amp: float=None, 
-#                 rf_duration: int=None, 
-#                 trap_ramp_duration: int=None, 
-#                 phase_delay: int=None, 
-#                 phase_duration: int=None, 
-#                 shim: list=None
-#                 ):
-#
-#                     
-#        """
-#        Initialization of gradient echo sequence class
-#        @param frequency:       Frequency value for operation
-#        @param amplification:     Attenuation value for operation
-#        @param shim:            Shim values for operation
-#        @return:                None
-#        """
-#        self.seq: str=seq
-#        self.dbg_sc: float=dbg_sc
-#        self.lo_freq: float=lo_freq
-#        self.rf_amp: float=rf_amp
-#        self.trs:int=trs
-#        self.rx_period: float=rx_period
-#        self.rf_tstart: int=rf_tstart
-#        self.slice_amp: float=slice_amp
-#        self.phase_amp: float=phase_amp
-#        self.readout_amp: float=readout_amp
-#        self.rf_duration: int=rf_duration
-#        self.trap_ramp_duration: int=trap_ramp_duration
-#        self.phase_delay: int=phase_delay
-#        self.phase_duration: int=phase_duration
-#        self.shim:list=shim
-#        
-#
-#    @property
-#    def systemproperties(self) -> dict:
-#        # TODO: add server cmd's as third entry in list
-#        return {
-#            cfnmspc.lo_freq: [float(self.lo_freq)],
-#            cfnmspc.rf_amp: [self.rf_amp],
-#            cfnmspc.trs:[int(self. trs)], 
-#            cfnmspc.dbg_sc:[float(self.dbg_sc)]
-#        }
-#
-#    @property
-#    def sqncproperties(self) -> dict:
-#        return{
-#            cfnmspc.rx_period:[float(self.rx_period)], 
-#            cfnmspc.rf_tstart:[int(self.rf_tstart)],         
-#            cfnmspc.slice_amp:[float(self.slice_amp)], 
-#            cfnmspc.phase_amp:[float(self.phase_amp)], 
-#            cfnmspc.readout_amp:[float(self.readout_amp)], 
-#            cfnmspc.rf_duration:[int(self.rf_duration)], 
-#            cfnmspc.trap_ramp_duration:[int(self.trap_ramp_duration)], 
-#            cfnmspc.phase_delay:[int(self.phase_delay)], 
-#           cfnmspc.phase_duration:[int(self.phase_duration)]
-#        }
-#           
-#
-#    @property
-#    def gradientshims(self) -> dict:
-#        return{
-#            cfnmspc.shim:[list(self.shim)]
-#        } 
+class GradShim:
+    """
+    Spectrum Operation Class
+    """
+    def __init__(self,
+         cfn: str,
+         lo_freq: float=None,
+         BW: float=None,
+         tr_duration: int=None,          
+         rf_amp: float=None,
+         rf_duration:int=None, 
+         rf_tstart:int=None, 
+         N_shim: int=None, 
+         shim_initial:float=None, 
+         shim_final:float=None, 
+         readout_duration:int=None, 
+         rx_wait:int=None
+         ):
+
+                     
+        """
+        Initialization of gradient echo sequence class
+        @param frequency:       Frequency value for operation
+        @param amplification:     Attenuation value for operation
+        @param shim:            Shim values for operation
+        @return:                None
+        """
+        self.cfn: str=cfn
+        self.lo_freq: float=lo_freq
+        self.BW: float=BW
+        self.tr_duration: int=tr_duration     
+        self.rf_amp: float=rf_amp
+        self.rf_duration:int=rf_duration
+        self.rf_tstart:int=rf_tstart
+        self.N_shim: int=N_shim
+        self.shim_initial:float=shim_initial
+        self.shim_final:float=shim_final
+        self.readout_duration:int=readout_duration
+        self.rx_wait:int=rx_wait
+        
+
+    @property
+    def systemproperties(self) -> dict:
+        return{
+            cfnmspc.lo_freq: [float(self.lo_freq)],
+            cfnmspc.BW: [int(self.BW)],
+            cfnmspc.tr_duration:[int(self.tr_duration)], 
+            cfnmspc.N_shim:[int(self.N_shim)], 
+            cfnmspc.shim_initial:[float(self.shim_initial)], 
+            cfnmspc.shim_final:[float(self.shim_final)], 
+        }
+    
+    @property    
+    def RFproperties(self) -> dict:
+        return{
+            cfnmspc.rf_amp: [float(self.rf_amp)],
+            cfnmspc.rf_duration:[int(self.rf_duration)], 
+            cfnmspc.rf_tstart:[int(self.rf_tstart)], 
+        }    
+
+    @property
+    def sqncproperties(self) -> dict:
+        return{
+            cfnmspc.readout_duration:[int(self.readout_duration)], 
+            cfnmspc.rx_wait:[int(self.rx_wait)], 
+        }
+           
 
 """
 Definition of default calibfunctions
@@ -244,7 +234,8 @@ Definition of default calibfunctions
 defaultcalibfunctions={
 
     #RabiFlops(lo_freq,rf_amp,N,step,rf_pi2_duration,tr_duration,echo_duration,BW,readout_duration,rx_wait)
-    'Rabi Flops': RabiFlops('Rabi Flops', 3.041, 0.3, 20, 5, 50, 20, 15, 31, 5, 100)
-
+    'Rabi Flops': RabiFlops('Rabi Flops', 3.041, 0.3, 20, 5, 50, 20, 15, 31, 5, 100), 
+    #Shimming(lo_freq,BW,tr_duration,rf_amp,rf_duration,rf_tstart,N_shim,shim_initial,shim_final,readout_duration,rx_wait)
+    'Shimming': GradShim('Shimming', 3.041, 31, 500, 0.2, 50, 100, 10, -0.01, 0.01, 50, 100)
 }
            

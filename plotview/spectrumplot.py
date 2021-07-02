@@ -25,10 +25,9 @@ class SpectrumPlot (GraphicsLayoutWidget):
                  yData: list,
                  yData2:list, 
                  yData3:list, 
-                 xLabel: str,
-                 yLabel: str, 
+                 xlabel: str,
+                 ylabel: str, 
                  title:str, 
-                 xlabel:str
                  ):
         super(SpectrumPlot, self).__init__()
         self.yData = yData
@@ -51,8 +50,8 @@ class SpectrumPlot (GraphicsLayoutWidget):
             self.plotitem.plot(xData, yData2, pen=[0, 255, 0], name="Real part")
             self.plotitem.plot(xData, yData3, pen=[0, 0, 255], name="Imaginary part")
         self.plotitem.setTitle("%s %s" % (title, dt_string))
-        self.plotitem.setLabel('left', 'Amplitude (mV)')
         self.plotitem.setLabel('bottom', xlabel)
+        self.plotitem.setLabel('left', ylabel)        
         self.crosshair_v = pg.InfiniteLine(angle=90, movable=False)
         self.crosshair_h = pg.InfiniteLine(angle=0, movable=False)
         self.plotitem.addItem(self.crosshair_v, ignoreBounds=True)

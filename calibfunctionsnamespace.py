@@ -33,7 +33,12 @@ class Namespace:
     step = "Step"
     rf_pi2_duration="RF excitation duration (us)"
     readout_duration = "Readout duration (ms)"
-    rx_wait="Readout wait time (after 2nd RF pulse)"
+    rx_wait="Waiting time before readout"
+    N_shim = "Number of points for shimming"
+    shim_initial = "Initial value for shimming"
+    shim_final = "Final value for shimming"
+    
+    
 
 class Tooltip_label:
     rx_period = "Sampling time"

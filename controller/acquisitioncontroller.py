@@ -68,21 +68,22 @@ class AcquisitionController(QObject):
         elif self.sequence.seq == 'TSE':
             self.rxd, self.msgs, self.data_avg = turbo_spin_echo(self.sequence, plotSeq)
     
-        dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg),  self.sequence.n, self.sequence.BW)
-        self.plot_result(dataobject)
+        self.plot_result()
         
-    def plot_result(self, dataobject):
-    
+    def plot_result(self):
         
-        if (self.n_ph ==1 & self.n_sl == 1):
-            f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum" %(self.sequence.seq), 'Frequency (kHz)')
-            t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,"time", "signal intensity", "%s Raw data" %(self.sequence.seq), 'Time (ms)')
+        dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.n_rd, self.n_ph, self.n_sl], self.sequence.BW)
+        if (self.n_ph ==1 and self.n_sl == 1):
+            f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude (mV)", "%s Spectrum" %(self.sequence.seq), )
+            t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.seq), )
             self.parent.plotview_layout.addWidget(t_plotview)
             self.parent.plotview_layout.addWidget(f_plotview)
-#            [fwhm, fwhm_hz, fwhm_ppm] = dataobject.get_fwhm(self)
-#            print('FWHM:%s'%(fwhm))
+#            [fwhm, fwhm_hz, fwhm_ppm] = dataobject.get_fwhm()
+#            print('FWHM:%0.3f'%(fwhm))
 #            [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]=dataobject.get_peakparameters()
-#            print('Max Signal Value = %s' %(f_signalValue))
+#            print('Max Signal Value = %0.3f' %(f_signalValue))
+#            [snr]=dataobject.get_snr()
+#            print('SNR:%0.3f' %(snr))
 
         else:
             dt = datetime.now()
@@ -90,13 +91,13 @@ class AcquisitionController(QObject):
             label = QLabel("%s %s" % (self.sequence.seq, dt_string))
             label.setAlignment(QtCore.Qt.AlignCenter)
             label.setStyleSheet("background-color: black;color: white")
-            button = QPushButton("Change View")
-            button.clicked.connect(self.button_clicked(dataobject))
-            if (self.n_ph !=1 & self.n_sl != 1):  #Add button to change the view only if 3D image
-                self.parent.plotview_layout.addWidget(button)
+#            button = QPushButton("Change View")
+#            if (self.n_ph !=1 & self.n_sl != 1):  #Add button to change the view only if 3D image
+#                self.parent.plotview_layout.addWidget(button(dataobject))
             self.parent.plotview_layout.addWidget(label)
             self.parent.plotview_layout.addWidget(pg.image(dataobject.f_fft2Magnitude))
-
+#            button.clicked.connect(self.button_clicked)
+        
         self.save_data()    
 
         self.parent.rxd = self.rxd
@@ -107,10 +108,11 @@ class AcquisitionController(QObject):
     def button_clicked(self, dataobject):
         
         self.parent.clearPlotviewLayout()
-        im = dataobject.f_fft2Magnitude
+        im = dataobject.k_space
         im2=np.moveaxis(im, 0, -1)
-        dataobject.f_fft2Magnitude=im2
-        self.plot_result(dataobject)
+        im3 = np.reshape(im2, (n[2]*n[1]*n[0]))      
+        
+        self.plot_result()
         
         
         

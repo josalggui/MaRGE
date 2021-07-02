@@ -70,17 +70,22 @@ class CalibFunctionsList(QListWidget):
         # Add input parameters to row layout
         inputwidgets: list = []
         self.calibfunction = calibfunction
+ 
+        if hasattr(defaultcalibfunctions[self.calibfunction], 'systemproperties'):
+            sys_prop = defaultcalibfunctions[self.calibfunction].systemproperties
+            inputwidgets += [self.generateLabelItem(cfnmspc.systemproperties)]
+            inputwidgets += self.generateWidgetsFromDict(sys_prop, calibfunction)  
+       
+        if hasattr(defaultcalibfunctions[self.calibfunction], 'RFproperties'):
+            rf_prop = defaultcalibfunctions[self.calibfunction].RFproperties
+            inputwidgets += [self.generateLabelItem(cfnmspc.RFproperties)]
+            inputwidgets += self.generateWidgetsFromDict(rf_prop, calibfunction)       
 
         if hasattr(defaultcalibfunctions[self.calibfunction], 'sqncproperties'):
             seqs_prop = defaultcalibfunctions[self.calibfunction].sqncproperties
             inputwidgets += [self.generateLabelItem(cfnmspc.sqncproperties)]
             inputwidgets += self.generateWidgetsFromDict(seqs_prop, calibfunction)
         
-        if hasattr(defaultcalibfunctions[self.calibfunction], 'RFproperties'):
-            sys_prop = defaultcalibfunctions[self.calibfunction].RFproperties
-            inputwidgets += [self.generateLabelItem(cfnmspc.RFproperties)]
-            inputwidgets += self.generateWidgetsFromDict(sys_prop, calibfunction)
-
         if hasattr(defaultcalibfunctions[self.calibfunction], 'gradientshims'):
             shims = defaultcalibfunctions[self.calibfunction].gradientshims
             inputwidgets += [(self.generateLabelItem(cfnmspc.gradientshims))]

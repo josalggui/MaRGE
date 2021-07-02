@@ -39,6 +39,7 @@ class DataManager(QObject):
                  '_t_real',
                  '_t_imag',
                  '_t_axis',
+                 '_k_space'
                  '_t_magnitudeCon',
                  '_t_realCon',
                  '_f_axis',
@@ -73,9 +74,9 @@ class DataManager(QObject):
         self._f_fftData = np.fft.fftshift(np.fft.fft(np.fft.fftshift(d_cropped), n=self.samples))
         self._f_fftMagnitude = abs(self.f_fftData)
         
-        if(n != [] and (int(n[1])>1 or int(n[2])>1)):
-            self.data_nD = np.reshape(self.data, (n[2], n[1], n[0]))
-            self._f_fft2Data = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(self.data_nD)))
+        if(n != [] and (n[1]>1 or n[2]>1)):
+            self._data_kS = np.reshape(self.data, (n[2], n[1], n[0]))
+            self._f_fft2Data = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(self._data_kS)))
             self._f_fft2Magnitude = abs(self._f_fft2Data)
         
         # self._dataTimestamp = datetime.now().strftime('%m/%d/%Y, %H:%M:%S')
@@ -87,6 +88,10 @@ class DataManager(QObject):
     @property
     def t_magnitude(self):
         return self._t_magnitude
+        
+    @property
+    def k_space(self):
+        return self._data_kS
 
     @property
     def t_magnitudeCon(self):
@@ -131,8 +136,8 @@ class DataManager(QObject):
         @param f_fwhmWindow:    Frequency window
         @return:                FWHM in datapoint indices, hertz and ppm
         """
-        if not self.is_evaluateable():
-            return [0, float("nan"), float("nan")]
+#        if not self.is_evaluateable():
+#            return [0, float("nan"), float("nan")]
 
         [_peakValue, _, _peakIdx, _peakFreq] = self.get_peakparameters()
         fft = self.f_fftMagnitude[int(_peakIdx - f_fwhmWindow / 2):int(_peakIdx + f_fwhmWindow / 2)]
@@ -152,8 +157,8 @@ class DataManager(QObject):
         @param n:               N datapoints for moving average
         @return:                SNR
         """
-        if not self.is_evaluateable():
-            return float("nan")
+#        if not self.is_evaluateable():
+#            return float("nan")
 
         [_fwhm, _, _] = self.get_fwhm()
         [_signalValue, _, _signalIdx, _] = self.get_peakparameters()
@@ -174,8 +179,8 @@ class DataManager(QObject):
         Get peak parameters
         @return:            Frequency peak, time domain peak, index of frequency peak and frequency of peak
         """
-        if not self.is_evaluateable():
-            return [float("nan"), float("nan"), 0, float("nan")]
+#        if not self.is_evaluateable():
+#            return [float("nan"), float("nan"), 0, float("nan")]
 
         t_signalValue: float = round(np.max(self._t_magnitudeCon), 4)
         f_signalValue: float = round(np.max(self._f_fftMagnitude), 4)
