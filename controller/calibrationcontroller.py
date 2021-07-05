@@ -66,7 +66,7 @@ class CalibrationController(CalibrationController_Base, CalibrationController_Fo
         """
         for i in reversed(range(self.plotview_layout.count())):
             self.plotview_layout.itemAt(i).widget().setParent(None)
-            
+
 
     
        

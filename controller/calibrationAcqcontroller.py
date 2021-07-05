@@ -29,6 +29,37 @@ class CalibrationAcqController(QObject):
         self.parent = parent
         self.calibfunctionslist = calibfunctionslist
         self.acquisitionData = None
+        
+        self.layout = QHBoxLayout()
+        self.b1 = QCheckBox("Plot Shim x")
+        self.b1.setGeometry(200, 150, 100, 30)   #            setting geometry of check box
+        self.b1.setStyleSheet("QCheckBox::indicator"
+                               "{"
+                               "background-color : white;"
+                               "selection-color: black;"
+                               "}")     #    adding background color to indicator
+        self.b1.toggled.connect(lambda:self.btnstate(self.b1))
+        self.layout.addWidget(self.b1)
+    
+        self.b2 = QCheckBox("Plot Shim y")
+        self.b2.setGeometry(200, 150, 100, 30)   #            setting geometry of check box
+        self.b2.setStyleSheet("QCheckBox::indicator"
+                               "{"
+                               "background-color : white;"
+                               "selection-color: black;"
+                               "}")     #    adding background color to indicator
+        self.b2.toggled.connect(lambda:self.btnstate(self.b2))
+        self.layout.addWidget(self.b2)
+        
+        self.b3 = QCheckBox("Plot Shim z")
+        self.b3.setGeometry(200, 150, 100, 30)   #            setting geometry of check box
+        self.b3.setStyleSheet("QCheckBox::indicator"
+                               "{"
+                               "background-color : white;"
+                               "selection-color: black;"
+                               "}")     #    adding background color to indicator        
+        self.b3.toggled.connect(lambda:self.btnstate(self.b3))
+        self.layout.addWidget(self.b3)
 
     @pyqtSlot(bool)
     def startCalibAcq(self):
@@ -112,46 +143,16 @@ class CalibrationAcqController(QObject):
                 
                 s=s+samples
                 i=i+1
-                
+
             self.plot_shim(axis='x')
     
     def plot_shim(self, axis):
         
-        layout = QHBoxLayout()
-        self.b1 = QCheckBox("Plot Shim x")
-        self.b1.setGeometry(200, 150, 100, 30)   #            setting geometry of check box
-        self.b1.setStyleSheet("QCheckBox::indicator"
-                               "{"
-                               "background-color : white;"
-                               "selection-color: black;"
-                               "}")     #    adding background color to indicator
-        self.b1.toggled.connect(lambda:self.btnstate(self.b1))
-        layout.addWidget(self.b1)
-    
-        self.b2 = QCheckBox("Plot Shim y")
-        self.b2.setGeometry(200, 150, 100, 30)   #            setting geometry of check box
-        self.b2.setStyleSheet("QCheckBox::indicator"
-                               "{"
-                               "background-color : white;"
-                               "selection-color: black;"
-                               "}")     #    adding background color to indicator
-        self.b2.toggled.connect(lambda:self.btnstate(self.b2))
-        layout.addWidget(self.b2)
-        
-        self.b3 = QCheckBox("Plot Shim z")
-        self.b3.setGeometry(200, 150, 100, 30)   #            setting geometry of check box
-        self.b3.setStyleSheet("QCheckBox::indicator"
-                               "{"
-                               "background-color : white;"
-                               "selection-color: black;"
-                               "}")     #    adding background color to indicator        
-        self.b3.toggled.connect(lambda:self.btnstate(self.b3))
-        layout.addWidget(self.b3)
         
         if axis == 'x':
             plotview1 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N_shim), self.peakValsf_x, [],[],"Shim value x", "Peak value", "%s x Peak value" %(self.calibfunction.cfn))
             plotview2 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N_shim), self.fwhmf_x, [],[],"Shim value x ", "FHWM", "%s x FHWM" %(self.calibfunction.cfn))
-       
+
         elif axis == 'y':
             plotview1 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N_shim), self.peakValsf_y, [],[],"Shim value", "Peak value", "%s y Peak value" %(self.calibfunction.cfn))
             plotview2 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N_shim), self.fwhmf_y, [],[],"Shim value", "FHWM", "%s y FWHM" %(self.calibfunction.cfn))
@@ -160,8 +161,9 @@ class CalibrationAcqController(QObject):
             plotview1 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N_shim), self.peakValsf_z, [],[],"Shim value", "Peak value", "%s z Peak value" %(self.calibfunction.cfn))
             plotview2 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N_shim), self.fwhmf_z, [],[],"Shim value", "FHWM", "%s z FWHM" %(self.calibfunction.cfn))
 
-#        self.parent.clearPlotviewLayout()
-#        self.parent.plotview_layout.addLayout(layout)
+        self.layout.setParent(None)
+        self.parent.clearPlotviewLayout()  
+        self.parent.plotview_layout.addLayout(self.layout)
         self.parent.plotview_layout.addWidget(plotview1)
         self.parent.plotview_layout.addWidget(plotview2)
             

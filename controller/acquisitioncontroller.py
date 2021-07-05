@@ -18,7 +18,7 @@ from plotview.spectrumplot import Spectrum3DPlot
 from sequencemodes import defaultsequences
 from seq.utilities import change_axes
 from PyQt5 import QtCore
-from PyQt5.QtCore import QObject,  pyqtSlot
+from PyQt5.QtCore import QObject,  pyqtSlot,  pyqtSignal
 from manager.datamanager import DataManager
 from seq.radial import radial
 from seq.gradEcho import grad_echo
@@ -41,8 +41,11 @@ class AcquisitionController(QObject):
         self.parent = parent
         self.sequencelist = sequencelist
         self.acquisitionData = None
-
-    @pyqtSlot(bool)
+        
+        self.button = QPushButton("Change View")
+        self.button.setChecked(False)
+        self.button.clicked.connect(self.button_clicked)
+    
     def startAcquisition(self):
 
         self.parent.clearPlotviewLayout()
@@ -68,14 +71,13 @@ class AcquisitionController(QObject):
         elif self.sequence.seq == 'TSE':
             self.rxd, self.msgs, self.data_avg = turbo_spin_echo(self.sequence, plotSeq)
     
-        self.plot_result()
-        
-    def plot_result(self):
-        
-        dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.n_rd, self.n_ph, self.n_sl], self.sequence.BW)
+        self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.n_rd, self.n_ph, self.n_sl], self.sequence.BW)
+        self.ns = [self.n_rd, self.n_ph, self.n_sl]
+
+
         if (self.n_ph ==1 and self.n_sl == 1):
-            f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude (mV)", "%s Spectrum" %(self.sequence.seq), )
-            t_plotview = SpectrumPlot(dataobject.t_axis, dataobject.t_magnitude, dataobject.t_real,dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.seq), )
+            f_plotview = SpectrumPlot(self.dataobject.f_axis, self.dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude (mV)", "%s Spectrum" %(self.sequence.seq), )
+            t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.seq), )
             self.parent.plotview_layout.addWidget(t_plotview)
             self.parent.plotview_layout.addWidget(f_plotview)
 #            [fwhm, fwhm_hz, fwhm_ppm] = dataobject.get_fwhm()
@@ -86,33 +88,45 @@ class AcquisitionController(QObject):
 #            print('SNR:%0.3f' %(snr))
 
         else:
-            dt = datetime.now()
-            dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
-            label = QLabel("%s %s" % (self.sequence.seq, dt_string))
-            label.setAlignment(QtCore.Qt.AlignCenter)
-            label.setStyleSheet("background-color: black;color: white")
-#            button = QPushButton("Change View")
-#            if (self.n_ph !=1 & self.n_sl != 1):  #Add button to change the view only if 3D image
-#                self.parent.plotview_layout.addWidget(button(dataobject))
-            self.parent.plotview_layout.addWidget(label)
-            self.parent.plotview_layout.addWidget(pg.image(dataobject.f_fft2Magnitude))
-#            button.clicked.connect(self.button_clicked)
-        
-        self.save_data()    
+                       
+            self.plot_3Dresult()
 
+        self.save_data()    
         self.parent.rxd = self.rxd
         self.parent.lo_freq = self.sequence.lo_freq
         print(self.msgs)
-
-
-    def button_clicked(self, dataobject):
         
+    def plot_3Dresult(self):
+        
+        self.kspace=self.dataobject.k_space
+        dt = datetime.now()
+        dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
+        self.label = QLabel("%s %s" % (self.sequence.seq, dt_string))
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        if (self.n_ph !=1 & self.n_sl != 1):  #Add button to change the view only if 3D image
+            self.parent.plotview_layout.addWidget(self.button)
+
+        self.parent.plotview_layout.addWidget(self.label)
+        self.parent.plotview_layout.addWidget(pg.image( self.dataobject.f_fft2Magnitude))
+            
+
+
+    @pyqtSlot()
+    def button_clicked(self):
+        
+#        if self.button.isChecked():
         self.parent.clearPlotviewLayout()
-        im = dataobject.k_space
+        im = self.kspace
         im2=np.moveaxis(im, 0, -1)
-        im3 = np.reshape(im2, (n[2]*n[1]*n[0]))      
+        im3 = np.reshape(im2, (self.n_sl*self.n_ph*self.n_rd))    
+        self.ns = self.ns[1:]+self.ns[:1]
+
+        self.dataobject: DataManager = DataManager(im3, self.sequence.lo_freq, len(im3),self.ns, self.sequence.BW)
         
-        self.plot_result()
+        self.button.setChecked(False)
+        
+        self.plot_3Dresult()
         
         
         
@@ -137,6 +151,21 @@ class AcquisitionController(QObject):
         savemat("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict) 
 #        savemat('/home/physiomri/share_vm/results_experiments/TSE.mat', dict)
 
+        #rawdata
+        f = open("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
+        f.write( self.rxd )
+        f.close()
+        
+        #avg
+        f = open("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_avg.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
+        f.write( self.data_avg)
+        f.close()        
+        
+        dict2 = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
+        #params
+        f = open("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_params.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
+        f.write( dict2)
+        f.close()     
 
 
         
