@@ -76,16 +76,16 @@ class AcquisitionController(QObject):
 
 
         if (self.n_ph ==1 and self.n_sl == 1):
-            f_plotview = SpectrumPlot(self.dataobject.f_axis, self.dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude (mV)", "%s Spectrum" %(self.sequence.seq), )
-            t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude", "%s Raw data" %(self.sequence.seq), )
+            f_plotview = SpectrumPlot(self.dataobject.f_axis, self.dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude", "%s Spectrum" %(self.sequence.seq), )
+            t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.seq), )
             self.parent.plotview_layout.addWidget(t_plotview)
             self.parent.plotview_layout.addWidget(f_plotview)
-#            [fwhm, fwhm_hz, fwhm_ppm] = dataobject.get_fwhm()
-#            print('FWHM:%0.3f'%(fwhm))
-#            [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]=dataobject.get_peakparameters()
-#            print('Max Signal Value = %0.3f' %(f_signalValue))
-#            [snr]=dataobject.get_snr()
-#            print('SNR:%0.3f' %(snr))
+            [fwhm, fwhm_hz, fwhm_ppm] = self.dataobject.get_fwhm()
+            print('FWHM:%0.3f'%(fwhm))
+            [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]=self.dataobject.get_peakparameters()
+            print('Peak Value = %0.3f' %(f_signalValue))
+            snr=self.dataobject.get_snr()
+            print('SNR:%0.3f' %(snr))
 
         else:
                        
