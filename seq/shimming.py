@@ -23,7 +23,7 @@ def shimming(self, grad):
     rf_amp=self.rf_amp # 1 = full-scale
     rf_duration = self.rf_duration    
     rf_tstart=self.rf_tstart
-    N_shim=self.N_shim    #points
+    N=self.N    #points
     shim_initial = self.shim_initial
     shim_final = self.shim_final    
     tr_duration=self.tr_duration*1e3  # delay after end of RX before start of next TR
@@ -37,11 +37,11 @@ def shimming(self, grad):
     rx_period = 1/(BW*1e-3)
     expt = ex.Experiment(lo_freq=lo_freq, rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
     
-    shim_vector = np.linspace(shim_initial, shim_final, N_shim)
+    shim_vector = np.linspace(shim_initial, shim_final, N)
     
     tstart = 20 # start the first TR at 20us
     i=0
-    while i < N_shim:     
+    while i < N:     
         
         shim_val = shim_vector[i]
         

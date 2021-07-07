@@ -20,7 +20,7 @@ def inversionRecovery(self):
 
     lo_freq = self.lo_freq
     rf_amp = self.rf_amp
-    N_ir = self.N_ir
+    N = self.N
     step=self.step  
     rf_duration = self.rf_duration
     tr_duration=self.tr_duration*1e3  # delay after end of RX before start of next TR
@@ -43,7 +43,7 @@ def inversionRecovery(self):
     i=0
     pi2_phase = 1 # x
     pi_phase = 1j # y
-    while i < N_ir:     
+    while i < N:     
         rf_tend = tstart+echo_duration+k+rf_duration/2 # us
         rx_tstart = rf_tend+rx_wait # us
         rx_tend = rx_tstart + readout_duration  # us
@@ -59,8 +59,8 @@ def inversionRecovery(self):
         i = i+1
         k=k+step
     
-    expt.plot_sequence()
-    plt.show()
+#    expt.plot_sequence()
+#    plt.show()
     
     rxd, msgs = expt.run()    
     

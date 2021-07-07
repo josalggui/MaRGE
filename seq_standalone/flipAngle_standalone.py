@@ -12,70 +12,88 @@ import sys
 sys.path.append('../marcos_client')
 sys.path.append('../manager')
 import numpy as np
-#import matplotlib.pyplot as plt
-#from configs.hw_config import fo
-#from seq_standalone.fid_standalone import fid
-#from seq_standalone.spinEcho_standalone import spin_echo
-from manager.datamanager import DataManager
 import experiment as ex
+import matplotlib.pyplot as plt
+from manager.datamanager import DataManager
 
-def larmorFreq(self):
-
-    lo_freq=self.lo_freq # KHz
-    rf_amp=self.rf_amp # 1 = full-scale
-    N=self.N 
-    step=self.step  
-    rf_pi2_duration = self.rf_pi2_duration
-    echo_duration = self.echo_duration*1e3
-    BW=self.BW  # us, 3.333us, 300 kHz rate
-    rx_wait=self.rx_wait
-    readout_duration=self.readout_duration*1e3
-              
+def flipAngle(lo_freq=3.041,  # KHz
+            rf_amp=0.3,  # 1 = full-scale
+            N_amp=10,  
+            step=0.05,   
+            rf_pi2_duration = 50, 
+            echo_duration = 15e3, 
+            BW=31,   # us, 3.333us, 300 kHz rate
+            rx_wait=100, 
+            readout_duration=10e3, 
+            tr_duration=20e3
+            ):
 
     rx_period = 1/(BW*1e-3)
 
     rf_pi_duration = 2*rf_pi2_duration
-    BW = 1e-3   
        
     ## All times are in the context of a single TR, starting at time 0
     init_gpa = False
    
     tx_gate_pre = 2 # us, time to start the TX gate before the RF pulse begins
     tx_gate_post = 1 # us, time to keep the TX gate on after the RF pulse ends
-    tstart = 0   
+    tstart = 20   
     pi2_phase = 1 # x
     pi_phase = 1j # y
     
+    expt = ex.Experiment(lo_freq=lo_freq, rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
     i=0
-    peakValsf = []
-    freqs = np.linspace(lo_freq-N/2*step, lo_freq+N/2*step, N)
-    
-    while i<N:
-    
-        expt = ex.Experiment(lo_freq=freqs[i], rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-    
+
+    amps = np.linspace(rf_amp-N_amp/2*step, rf_amp+N_amp/2*step, N_amp)
+    while i<N_amp:
         rf_tend = tstart+echo_duration+rf_pi_duration/2 # us
         rx_tstart = rf_tend+rx_wait # us
         rx_tend = rx_tstart + readout_duration  # us
         expt.add_flodict({
             # second tx0 pulse purely for loopback debugging
             'tx0': (np.array([tstart + (echo_duration - rf_pi2_duration)/2, tstart + (echo_duration + rf_pi2_duration)/2,
-                         tstart + echo_duration - rf_pi_duration/2, rf_tend]), np.array([pi2_phase*rf_amp, 0, pi_phase*rf_amp, 0])),
+                         tstart + echo_duration - rf_pi_duration/2, rf_tend]), np.array([pi2_phase*amps[i], 0, pi_phase*amps[i], 0])),
             'rx0_en': ( np.array([rx_tstart, rx_tend]),  np.array([1, 0]) ),
             'tx_gate': (np.array([tstart + (echo_duration - rf_pi2_duration)/2- tx_gate_pre, tstart + (echo_duration + rf_pi2_duration)/2 + tx_gate_post,
                          tstart + echo_duration - rf_pi_duration/2- tx_gate_pre, rf_tend+ tx_gate_post]), np.array([1, 0, 1, 0])),
             'rx_gate': ( np.array([rx_tstart, rx_tend]), np.array([1, 0]) )
         })
     
-        rxd, msg = expt.run()    
-        dataobject:DataManager=DataManager(rxd['rx0'], freqs[i], len(rxd['rx0']), [], BW)
+        i = i+1
+        tstart = tstart + tr_duration
+    
+    expt.plot_sequence()
+    plt.show()
+    rxd, msg = expt.run()   
+   
+    expt.__del__()
+    return rxd['rx0'] 
+
+if __name__ == "__main__":
+    
+    lo_freq = 3.041
+    N_amp = 10
+    BW=31
+    
+    rxd=flipAngle(N_amp=N_amp, lo_freq=lo_freq, BW=BW)
+    values = rxd
+    samples = np.int32(len(values)/N_amp)
+    i=0
+    s=0
+    peakValsf =[]
+    while i < N_amp:
+        d_cropped = values[s:s+samples] 
+        
+        dataobject: DataManager = DataManager(d_cropped, lo_freq, len(d_cropped),  [], BW)
         f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency = dataobject.get_peakparameters()
         peakValsf.append(f_signalValue)
-        
-        expt.__del__()
 
-        print(i)
-        i = i+1
-        
+        s=s+samples
+        i=i+1
     
-    return(peakValsf)
+#    plt.plot(dataobject.f_fftMagnitude)
+#    plt.show()
+    
+    plt.plot(peakValsf)
+    plt.show()
+
