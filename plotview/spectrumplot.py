@@ -43,7 +43,7 @@ class SpectrumPlot (GraphicsLayoutWidget):
 
         self.plotitem = self.addPlot(row=0, col=0)
         self.plotitem.addLegend()
-        self.label = pg.TextItem(color=(200, 200, 200), anchor=(1, -1))
+        self.label = pg.TextItem(color=(200, 200, 200), anchor=(0, 0))
         self.plotitem.addItem(self.label)
         self.plotitem.plot(xData, yData, pen=[255, 0, 0], name="Magnitude")
         if yData2 !=[]:

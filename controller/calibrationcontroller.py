@@ -10,7 +10,6 @@ Acquisition Manager
 @status:    Under development
 
 """
-import sys
 from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.uic import loadUiType,  loadUi
 from PyQt5.QtCore import pyqtSignal,  pyqtSlot
@@ -50,6 +49,7 @@ class CalibrationController(CalibrationController_Base, CalibrationController_Fo
         self.calibfunction = item.text()
         self.onCalibFunctionChanged.emit(self.calibfunction)
         self.action_acquire.setEnabled(True)
+
         self.clearPlotviewLayout()
         
     def onUpdateText(self, text):
@@ -64,8 +64,12 @@ class CalibrationController(CalibrationController_Base, CalibrationController_Fo
         Clear the plot layout
         @return:    None
         """
+        
         for i in reversed(range(self.plotview_layout.count())):
-            self.plotview_layout.itemAt(i).widget().setParent(None)
+            if self.plotview_layout.itemAt(i).layout():
+                self.plotview_layout.itemAt(i).layout().setParent(None)
+            else:
+                self.plotview_layout.itemAt(i).widget().setParent(None)
 
 
     

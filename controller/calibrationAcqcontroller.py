@@ -6,20 +6,18 @@
 
 """
 
-from PyQt5.QtWidgets import QLabel, QTextEdit, QCheckBox, QHBoxLayout, QRadioButton
+from PyQt5.QtWidgets import QTextEdit, QCheckBox, QHBoxLayout
 from plotview.spectrumplot import SpectrumPlot
-from plotview.spectrumplot import Spectrum2DPlot
-from plotview.spectrumplot import Spectrum3DPlot
+#from plotview.spectrumplot import Spectrum2DPlot
+#from plotview.spectrumplot import Spectrum3DPlot
 from calibfunctionsmodes import defaultcalibfunctions
-from PyQt5 import QtCore
 from PyQt5.QtCore import QObject,  pyqtSlot
 from manager.datamanager import DataManager
 from seq.shimming import shimming
 from seq.rabiFlops import rabi_flops
-from datetime import date,  datetime 
-from scipy.io import savemat
-import os
-import pyqtgraph as pg
+from seq.larmor import larmorFreq
+from seq.inversionRecovery import inversionRecovery
+#from scipy.io import savemat
 import numpy as np
 
 class CalibrationAcqController(QObject):
@@ -63,7 +61,8 @@ class CalibrationAcqController(QObject):
 
     @pyqtSlot(bool)
     def startCalibAcq(self):
-
+    
+        self.layout.setParent(None)
         self.parent.clearPlotviewLayout()
         self.calibfunction = defaultcalibfunctions[self.calibfunctionslist.getCurrentCalibfunction()]
        
@@ -85,8 +84,31 @@ class CalibrationAcqController(QObject):
                 s=s+samples
                 i=i+1
             
-            f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],"frequency", "signal intensity", "%s Spectrum last pulse" %(self.calibfunction.cfn), 'Frequency (kHz)')
-            t_plotview = SpectrumPlot(np.linspace(self.calibfunction.rf_pi2_duration, self.calibfunction.rf_pi2_duration+self.calibfunction.N*self.calibfunction.step-self.calibfunction.step, self.calibfunction.N), peakValst, [],[],"time", "pi2 pulse duration", "%s First Value of the time signal" %(self.calibfunction.cfn), 'Excitation duration (ms)')
+            f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],'Frequency (kHz)', "Amplitude", "%s Spectrum (last pulse)" %(self.calibfunction.cfn) )
+            t_plotview = SpectrumPlot(np.linspace(self.calibfunction.rf_pi2_duration, self.calibfunction.rf_pi2_duration+self.calibfunction.N*self.calibfunction.step-self.calibfunction.step, self.calibfunction.N), peakValst, [],[],'Excitation duration (ms)', "pi2 pulse duration", "%s" %(self.calibfunction.cfn))
+            self.parent.plotview_layout.addWidget(t_plotview)
+            self.parent.plotview_layout.addWidget(f_plotview)
+            
+        elif self.calibfunction.cfn == 'Inversion Recovery':
+            self.rxd, self.msgs=inversionRecovery(self.calibfunction)
+            values = self.rxd
+            samples = np.int32(len(values)/self.calibfunction.N_ir)
+            i=0
+            s=0
+            peakValsf =[]
+            peakValst = []
+            while i < self.calibfunction.N_ir:
+                d_cropped = values[s:s+samples] 
+                
+                dataobject: DataManager = DataManager(d_cropped, self.calibfunction.lo_freq, len(d_cropped),  [], self.calibfunction.BW)
+                peakValsf.append(round(np.max(dataobject.f_fftMagnitude), 4))
+                peakValst.append(dataobject.t_magnitude[0])
+
+                s=s+samples
+                i=i+1
+            
+            f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],'Frequency (kHz)', "Amplitude", "%s Spectrum (last pulse)" %(self.calibfunction.cfn) )
+            t_plotview = SpectrumPlot(np.linspace(self.calibfunction.echo_duration/2-self.calibfunction.rf_duration*1e-3, self.calibfunction.echo_duration/2-self.calibfunction.rf_duration*1e-3+self.calibfunction.N_ir*self.calibfunction.step-self.calibfunction.step, self.calibfunction.N_ir), peakValst, [],[],'Time between pulses (ms)', "Amplitude", "%s" %(self.calibfunction.cfn))
             self.parent.plotview_layout.addWidget(t_plotview)
             self.parent.plotview_layout.addWidget(f_plotview)
             
@@ -145,7 +167,13 @@ class CalibrationAcqController(QObject):
                 i=i+1
 
             self.plot_shim(axis='x')
-    
+            
+        elif self.calibfunction.cfn == 'Larmor Frequency':
+            self.peakVals=larmorFreq(self.calibfunction)
+            t_plotview = SpectrumPlot(np.linspace(-self.calibfunction.N_larmor/2*self.calibfunction.step, self.calibfunction.N_larmor/2*self.calibfunction.step, self.calibfunction.N_larmor), self.peakVals, [],[],'Larmor Frequency variation (KHz)', "Amplitude", "%s" %(self.calibfunction.cfn))
+            self.parent.plotview_layout.addWidget(t_plotview)
+            
+            
     def plot_shim(self, axis):
         
         
@@ -161,7 +189,7 @@ class CalibrationAcqController(QObject):
             plotview1 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N_shim), self.peakValsf_z, [],[],"Shim value", "Peak value", "%s z Peak value" %(self.calibfunction.cfn))
             plotview2 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N_shim), self.fwhmf_z, [],[],"Shim value", "FHWM", "%s z FWHM" %(self.calibfunction.cfn))
 
-        self.layout.setParent(None)
+#        self.layout.setParent(None)
         self.parent.clearPlotviewLayout()  
         self.parent.plotview_layout.addLayout(self.layout)
         self.parent.plotview_layout.addWidget(plotview1)

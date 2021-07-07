@@ -9,15 +9,14 @@ Frequency fit
 
 """
 import numpy as np
-from configs.hw_config import fo
+#from configs.hw_config import fo
 from seq.fid import fid
 from manager.datamanager import DataManager
 
-def amplitude(self, lo_freq=0.5, 
+def amplitude(lo_freq=0.5, 
                 rf_amp=1, 
                 step=0.01,  #
-                bw2=0.2,  # limits
-                dbg_sc=0.5):
+                bw2=0.2):
 
     freqPeak=lo_freq
     peak_f = 0
@@ -51,4 +50,5 @@ if __name__ == "__main__":
     
 #        for k in range(20):
 #            print(k)
-    amplitude(lo_freq=fo, step=0.1, bw2=0.2, dbg_sc=0.5)
+    lo_freq=3.041
+    amplitude(lo_freq=lo_freq, step=0.1, bw2=0.2)

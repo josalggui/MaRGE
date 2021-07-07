@@ -77,7 +77,7 @@ class AcquisitionController(QObject):
 
         if (self.n_ph ==1 and self.n_sl == 1):
             f_plotview = SpectrumPlot(self.dataobject.f_axis, self.dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude (mV)", "%s Spectrum" %(self.sequence.seq), )
-            t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.seq), )
+            t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude", "%s Raw data" %(self.sequence.seq), )
             self.parent.plotview_layout.addWidget(t_plotview)
             self.parent.plotview_layout.addWidget(f_plotview)
 #            [fwhm, fwhm_hz, fwhm_ppm] = dataobject.get_fwhm()
@@ -138,33 +138,26 @@ class AcquisitionController(QObject):
         dt_string = dt.strftime("%d-%m-%Y_%H_%M_%S")
         dt2 = date.today()
         dt2_string = dt2.strftime("%d-%m-%Y")
-#        dict["flodict"] = self.flodict
-        dict["rawdata"] = self.rxd
-        dict["average"] = self.data_avg
-#        dict["fft2D"] = dataobject.f_fft2Data
-        if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string)):
-            os.makedirs('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string))
+        if not os.path.exists('/share_vm/results_experiments/%s' % (dt2_string)):
+            os.makedirs('/share_vm/results_experiments/%s' % (dt2_string))
             
-        if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)):
-            os.makedirs('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)) 
+        if not os.path.exists('/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)):
+            os.makedirs('/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)) 
             
-        savemat("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict) 
+        savemat("/share_vm/results_experiments/%s/%s/%s_%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict) 
 #        savemat('/home/physiomri/share_vm/results_experiments/TSE.mat', dict)
 
         #rawdata
-        f = open("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
-        f.write( self.rxd )
-        f.close()
+        np.savetxt("/share_vm/results_experiments/%s/%s/%s_%s_rawdata.csv" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd, delimiter=',')
+     
         
         #avg
-        f = open("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_avg.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
-        f.write( self.data_avg)
-        f.close()        
+        np.savetxt("/share_vm/results_experiments/%s/%s/%s_%s_avg.csv" % (dt2_string, dt_string, dict["seq"],dt_string), self.data_avg, delimiter=',')
         
-        dict2 = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
+#        dict2 = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
         #params
-        f = open("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_params.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
-        f.write( dict2)
+        f = open("/share_vm/results_experiments/%s/%s/%s_%s_params.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
+        f.write( str(dict))
         f.close()     
 
 

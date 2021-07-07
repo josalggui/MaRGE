@@ -12,7 +12,7 @@ Operations Controller
 @todo:      Extend construction of parameter section (headers, more categories, etc. )
 
 """
-from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel,  QCheckBox, QComboBox
+from PyQt5.QtWidgets import QSizePolicy, QLabel,  QComboBox
 from PyQt5.QtCore import Qt, QRegExp
 from sequencemodes import defaultsequences
 from sequencesnamespace import Namespace as nmspc
@@ -20,7 +20,7 @@ from sequencesnamespace import Tooltip_label as tlt_l
 from sequencesnamespace import Tooltip_inValue as tlt_inV
 from PyQt5.uic import loadUiType
 from PyQt5.QtGui import QRegExpValidator
-import numpy as np
+
 
 Parameter_Form, Parameter_Base = loadUiType('ui/inputparameter.ui')
 #Parameter_FormG, Parameter_BaseG = loadUIType('ui/gradients.ui')

@@ -35,6 +35,7 @@ class Sequences:
 class Calibfunctions:
     RabiFlops = SqncObject('Rabi Flops', 'seq/rabiFlops.py')
 
+
 class Gradients:
     X = 0
     Y = 1

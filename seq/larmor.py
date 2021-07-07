@@ -12,28 +12,27 @@ import sys
 sys.path.append('../marcos_client')
 sys.path.append('../manager')
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 #from configs.hw_config import fo
 #from seq_standalone.fid_standalone import fid
 #from seq_standalone.spinEcho_standalone import spin_echo
 from manager.datamanager import DataManager
 import experiment as ex
 
-def larmor(lo_freq=3.023, # MHz
-             rf_amp=0.62, # 1 = full-scale
-             rf_pi2_duration=50,
-             N_larmor=5,  # Number of points
-             step=1e-3,  # Step in Khz
-             rx_wait = 100,   #us
-             BW=31,  # us, 3.333us, 300 kHz rate
-             readout_duration=5000,
-             echo_duration=4,   #ms
-             ):
+def larmorFreq(self):
 
-           
+    lo_freq=self.lo_freq # KHz
+    rf_amp=self.rf_amp # 1 = full-scale
+    N_larmor=self.N_larmor 
+    step=self.step  
+    rf_pi2_duration = self.rf_pi2_duration
+    echo_duration = self.echo_duration*1e3
+    BW=self.BW  # us, 3.333us, 300 kHz rate
+    rx_wait=self.rx_wait
+    readout_duration=self.readout_duration*1e3
+              
 
     rx_period = 1/(BW*1e-3)
-    echo_duration = echo_duration*1e3
 
     rf_pi_duration = 2*rf_pi2_duration
     BW = 1e-3   
@@ -79,11 +78,4 @@ def larmor(lo_freq=3.023, # MHz
         i = i+1
         
     
-    
     return(peakValsf)
-
-if __name__ == "__main__":
-    
-    peak_larmor=larmor()
-    plt.plot(peak_larmor)
-    plt.show()

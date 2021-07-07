@@ -33,11 +33,12 @@ class Namespace:
     step = "Step"
     rf_pi2_duration="RF excitation duration (us)"
     readout_duration = "Readout duration (ms)"
-    rx_wait="Waiting time before readout"
+    rx_wait="Waiting time before readout (us)"
     N_shim = "Number of points for shimming"
     shim_initial = "Initial value for shimming"
     shim_final = "Final value for shimming"
-    
+    N_ir = "Number of TRs"
+    N_larmor = "Number of TRs"
     
 
 class Tooltip_label:
