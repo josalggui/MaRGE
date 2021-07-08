@@ -138,27 +138,30 @@ class AcquisitionController(QObject):
         dt_string = dt.strftime("%d-%m-%Y_%H_%M_%S")
         dt2 = date.today()
         dt2_string = dt2.strftime("%d-%m-%Y")
-        if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string)):
-            os.makedirs('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string))
+#        if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string)):
+#            os.makedirs('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string))
+#            
+#        if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)):
+#            os.makedirs('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)) 
+
+        if not os.path.exists('/share_vm/results_experiments/%s' % (dt2_string)):
+            os.makedirs('/share_vm/results_experiments/%s' % (dt2_string))
             
-        if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)):
-            os.makedirs('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)) 
+        if not os.path.exists('/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)):
+            os.makedirs('/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)) 
             
         dict2 = dict
         dict2['rawdata'] = self.rxd
         dict2['average'] = self.data_avg
             
         savemat("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict2) 
-#        savemat('/home/physiomri/share_vm/results_experiments/TSE.mat', dict)
 
         #rawdata
-        np.savetxt("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_rawdata.csv" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd, delimiter=',')
-     
+        np.savetxt("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd, fmt='%.6e')
         
         #avg
-        np.savetxt("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_avg.csv" % (dt2_string, dt_string, dict["seq"],dt_string), self.data_avg, delimiter=',')
-        
-#        dict2 = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
+        np.savetxt("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_avg.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.data_avg,  fmt='%.6e')
+
         #params
         f = open("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_params.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
         f.write( str(dict))
