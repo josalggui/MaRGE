@@ -109,8 +109,6 @@ class AcquisitionController(QObject):
 
         self.parent.plotview_layout.addWidget(self.label)
         self.parent.plotview_layout.addWidget(pg.image( self.dataobject.f_fft2Magnitude))
-            
-
 
     @pyqtSlot()
     def button_clicked(self):
@@ -128,47 +126,39 @@ class AcquisitionController(QObject):
         
         self.plot_3Dresult()
         
-        
-        
     def save_data(self):
         
 #        dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd), self.sequence.n, self.sequence.BW)
         dict = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
         dt = datetime.now()
-        dt_string = dt.strftime("%d-%m-%Y_%H_%M_%S")
+        dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S")
         dt2 = date.today()
-        dt2_string = dt2.strftime("%d-%m-%Y")
-#        if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string)):
-#            os.makedirs('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string))
-#            
-#        if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)):
-#            os.makedirs('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)) 
+        dt2_string = dt2.strftime("%Y.%m.%d")
 
-        if not os.path.exists('/share_vm/results_experiments/%s' % (dt2_string)):
-            os.makedirs('/share_vm/results_experiments/%s' % (dt2_string))
+        if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string)):
+            os.makedirs('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string))
             
-        if not os.path.exists('/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)):
-            os.makedirs('/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)) 
+        if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)):
+            os.makedirs('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)) 
             
         dict2 = dict
         dict2['rawdata'] = self.rxd
         dict2['average'] = self.data_avg
             
-        savemat("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict2) 
-
+        savemat("/home/physiomri/share_vm/results_experiments/%s/%s/%s.%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict2) 
         #rawdata
-        np.savetxt("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd, fmt='%.6e')
-        
-        #avg
-        np.savetxt("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_avg.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.data_avg,  fmt='%.6e')
+#        np.savetxt("/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.view(float).reshape(-1, 2))
+#        np.savetxt("/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.view(float))
 
+        if (dict["nScans"]==1):
+            np.savetxt("/home/physiomri/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.reshape(1, self.rxd.shape[0]), newline = "\r\n", fmt = '%.6f%+.6fj '*self.rxd.shape[0])
+        else:
+            np.savetxt("/home/physiomri/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.reshape(self.rxd.shape[0], self.rxd.shape[1]), newline = "\r\n", fmt = '%.6f%+.6fj '*self.rxd.shape[1])
+
+#        test = np.loadtxt("/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string)).view(complex).reshape(-1)
+        #avg
+        np.savetxt("/home/physiomri/share_vm/results_experiments/%s/%s/%s.%s.avg.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.data_avg,  fmt='%.6e')
         #params
-        f = open("/home/physiomri/share_vm/results_experiments/%s/%s/%s_%s_params.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
+        f = open("/home/physiomri/share_vm/results_experiments/%s/%s/%s.%s.params.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
         f.write( str(dict))
         f.close()     
-
-
-        
-    
-
-
