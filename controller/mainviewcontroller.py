@@ -63,7 +63,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Initialisation of sequence list
         self.sequencelist = SequenceList(self)
         self.sequencelist.setCurrentIndex(1)
-#        self.sequencelist.itemClicked.connect(self.sequenceChangedSlot)
         self.sequencelist.currentIndexChanged.connect(self.selectionChanged)
         self.layout_operations.addWidget(self.sequencelist)
         self.sequence = self.sequencelist.currentText()
@@ -147,19 +146,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         stream = QTextStream(file)
         stylesheet = stream.readAll()
         self.setStyleSheet(stylesheet)  
-        
-#    @pyqtSlot(QListWidgetItem)
-#    def sequenceChangedSlot(self, item: QListWidgetItem = None) -> None:
-#        """
-#        Operation changed slot function
-#        @param item:    Selected Operation Item
-#        @return:        None
-#        """
-#        self.sequence = item.text()
-#        self.onSequenceChanged.emit(self.sequence)
-#        self.action_acquire.setEnabled(True)
-#        self.clearPlotviewLayout()
-        
+
     def selectionChanged(self,item):
         self.sequence = self.sequencelist.currentText()
         self.onSequenceChanged.emit(self.sequence)

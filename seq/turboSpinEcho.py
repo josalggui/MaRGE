@@ -134,7 +134,6 @@ def turbo_spin_echo(self, plotSeq):
     x = self.x
     y = self.y
     z = self.z
-    oversampling_factor = self.oversampling_factor
    
     BW=BW*1e-3
 #    trap_ramp_pts=np.int32(trap_ramp_duration*0.2)    # 0.2 puntos/ms

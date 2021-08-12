@@ -55,7 +55,13 @@ class AcquisitionController(QObject):
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
         
         self.sequence.oversampling_factor = 6
-        self.sequence.x, self.sequence.y, self.sequence.z, self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl = change_axes(self.sequence)
+        
+        if hasattr(self.sequence, 'axes'):
+            self.sequence.x, self.sequence.y, self.sequence.z, self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl = change_axes(self.sequence)
+        else:
+            self.sequence.n_rd=1
+            self.sequence.n_ph=1
+            self.sequence.n_sl=1
 
         plotSeq=0
         if self.sequence.seq == 'SE':
@@ -67,14 +73,14 @@ class AcquisitionController(QObject):
         elif self.sequence.seq == 'SE3D':
             self.rxd, self.msgs=spin_echo3D(self.sequence, plotSeq)
         elif self.sequence.seq == 'FID':
-            self.rxd, self.msgs=fid(self.sequence, plotSeq)
-            self.data_avg=self.rxd
+            self.rxd, self.msgs, self.data_avg=fid(self.sequence, plotSeq)
         elif self.sequence.seq == 'R':
             self.rxd, self.msgs = radial(self.sequence, plotSeq)
         elif self.sequence.seq == 'GE':
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
             self.rxd, self.msgs, self.data_avg = turbo_spin_echo(self.sequence, plotSeq)
+            
         self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl], self.sequence.BW)
         self.sequence.ns = [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]
 
@@ -101,11 +107,11 @@ class AcquisitionController(QObject):
         self.parent.lo_freq = self.sequence.lo_freq
         print(self.msgs)
         
-    def butter_lowpass_filter(self, data, cutoff, fs, order, nyq):
-        normal_cutoff = cutoff/nyq
-        b, a = butter(order, normal_cutoff,btype='low', analog=False)
-        y=filtfilt(b, a, data)
-        return y 
+#    def butter_lowpass_filter(self, data, cutoff, fs, order, nyq):
+#        normal_cutoff = cutoff/nyq
+#        b, a = butter(order, normal_cutoff,btype='low', analog=False)
+#        y=filtfilt(b, a, data)
+#        return y 
 
         
     def plot_3Dresult(self):
@@ -140,7 +146,6 @@ class AcquisitionController(QObject):
         
     def save_data(self):
         
-#        dataobject: DataManager = DataManager(self.rxd, self.sequence.lo_freq, len(self.rxd), self.sequence.n, self.sequence.BW)
         dict = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
         dt = datetime.now()
         dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S")

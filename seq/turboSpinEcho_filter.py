@@ -109,7 +109,6 @@ def turbo_spin_echo(self, plotSeq):
     init_gpa=True                
     lo_freq=self.lo_freq
     rf_amp=self.rf_amp
-#    trs=self.trs
     rf_pi_duration=None
     rf_pi2_duration=self.rf_pi2_duration
     echo_duration=self.echo_duration*1e3
