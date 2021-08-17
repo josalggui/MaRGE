@@ -142,23 +142,19 @@ def turbo_spin_echo(self, plotSeq):
     grad_readout_delay=9   #8.83    # readout amplifier delay
     grad_phase_delay=9      #8.83
     grad_slice_delay=9        #8.83
-    rx_period=1/(BW)
+    rx_period=1/(BW*oversampling_factor)
     """
     readout gradient: x
     phase gradient: y
     slice/partition gradient: z
     """
-    #####################################
-    
-#    x, y, z, n_rd, n_ph, n_sl = change_axes(self)
-    
-     ######################################
 
     expt = ex.Experiment(lo_freq=lo_freq, rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
     true_rx_period = expt.get_rx_ts()[0]
     true_BW = 1/true_rx_period
+    true_BW = true_BW/oversampling_factor
     readout_duration = n_rd/true_BW
-        
+    
     # We calculate here the realtive sequence efficiency
     alphaRO = fov_rd/n_rd*np.sqrt(np.float(n_rd)/true_BW)
     alphaPH = fov_ph/n_ph*np.sqrt(np.float(echos_per_tr))
@@ -166,18 +162,18 @@ def turbo_spin_echo(self, plotSeq):
     alpha = alphaRO*alphaPH*alphaSL*10000
     print('alpha:%f'%(alpha))
 
-                        
+                    
     if rf_pi_duration is None:
         rf_pi_duration = 2 * rf_pi2_duration
         
-    
+ 
     # Calibration constans to change from T/m to DAC amplitude
     
     gammaB = 42.56e6    # Gyromagnetic ratio in Hz/T
     # Get readout, phase and slice amplitudes
     # Readout gradient amplitude
     Grd = true_BW*1e6/(gammaB*fov_rd)
-      # Phase gradient amplitude
+    # Phase gradient amplitude
     if (n_ph==1):   
         Gph=0
     else:
@@ -379,6 +375,8 @@ def turbo_spin_echo(self, plotSeq):
         for nS in range(nScans):
             print('nScan=%s'%(nS))
             rxd, msgs = expt.run()
+            #Decimate
+            rxd['rx0'] = sig.decimate(rxd['rx0'], oversampling_factor, ftype='fir')
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             if nS ==0:
                 n_rxd = rxd['rx0']

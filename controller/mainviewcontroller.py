@@ -66,6 +66,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 #        self.sequencelist.itemClicked.connect(self.sequenceChangedSlot)
         self.sequencelist.currentIndexChanged.connect(self.selectionChanged)
         self.layout_operations.addWidget(self.sequencelist)
+        self.sequence = self.sequencelist.currentText()
         
         # Console
         self.cons = self.generateConsole('')

@@ -172,12 +172,13 @@ class CalibrationAcqController(QObject):
             self.plot_shim(axis='x')
             
         elif self.calibfunction.cfn == 'Larmor Frequency':
-            self.peakVals=larmorFreq(self.calibfunction)
-            t_plotview = SpectrumPlot(np.linspace(-self.calibfunction.N/2*self.calibfunction.step, self.calibfunction.N/2*self.calibfunction.step, self.calibfunction.N), self.peakVals, [],[],'Larmor Frequency variation (KHz)', "Amplitude (mV)", "%s" %(self.calibfunction.cfn))
+            self.peakVals, self.freqs=larmorFreq(self.calibfunction)
+            #t_plotview = SpectrumPlot(np.linspace(-self.calibfunction.N/2*self.calibfunction.step, self.calibfunction.N/2*self.calibfunction.step, self.calibfunction.N), self.peakVals, [],[],'Larmor Frequency variation (KHz)', "Amplitude (mV)", "%s" %(self.calibfunction.cfn))
+            t_plotview = SpectrumPlot(self.freqs, self.peakVals, [],[],'Larmor Frequency variation (MHz)', "Amplitude (mV)", "%s" %(self.calibfunction.cfn))
             self.parent.plotview_layout.addWidget(t_plotview)
             
         elif self.calibfunction.cfn == 'Flip Angle':
-            self.rxd, self.msgs=flipAngle(self.calibfunction)
+            self.rxd, self.msgs, self.amps=flipAngle(self.calibfunction)
             values = self.rxd
             samples = np.int32(len(values)/self.calibfunction.N)
             i=0
@@ -193,23 +194,25 @@ class CalibrationAcqController(QObject):
                 s=s+samples
                 i=i+1
             
-            t_plotview = SpectrumPlot(np.linspace(-self.calibfunction.N/2*self.calibfunction.step, self.calibfunction.N/2*self.calibfunction.step, self.calibfunction.N), peakValsf, [],[],'Flip Angle value', "Amplitude (mV)", "%s" %(self.calibfunction.cfn))
+#            t_plotview = SpectrumPlot(np.linspace(-self.calibfunction.N/2*self.calibfunction.step, self.calibfunction.N/2*self.calibfunction.step, self.calibfunction.N), peakValsf, [],[],'Flip Angle value', "Amplitude (mV)", "%s" %(self.calibfunction.cfn))
+            t_plotview = SpectrumPlot(self.amps, peakValsf, [],[],'Flip Angle value', "Amplitude (mV)", "%s" %(self.calibfunction.cfn))
             self.parent.plotview_layout.addWidget(t_plotview)
            
     def plot_shim(self, axis):
         
+        shim_values = np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N)
         
         if axis == 'x':
-            plotview1 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N), self.peakValsf_x, [],[],"Shim value x", "Peak value", "%s x Peak value" %(self.calibfunction.cfn))
-            plotview2 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N), self.fwhmf_x, [],[],"Shim value x ", "FHWM", "%s x FHWM" %(self.calibfunction.cfn))
+            plotview1 = SpectrumPlot(shim_values, self.peakValsf_x, [],[],"Shim value x", "Peak value", "%s x Peak value" %(self.calibfunction.cfn))
+            plotview2 = SpectrumPlot(shim_values, self.fwhmf_x, [],[],"Shim value x ", "FHWM", "%s x FHWM" %(self.calibfunction.cfn))
 
         elif axis == 'y':
-            plotview1 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N), self.peakValsf_y, [],[],"Shim value", "Peak value", "%s y Peak value" %(self.calibfunction.cfn))
-            plotview2 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N), self.fwhmf_y, [],[],"Shim value", "FHWM", "%s y FWHM" %(self.calibfunction.cfn))
+            plotview1 = SpectrumPlot(shim_values,  self.peakValsf_y, [],[],"Shim value", "Peak value", "%s y Peak value" %(self.calibfunction.cfn))
+            plotview2 = SpectrumPlot(shim_values, self.fwhmf_y, [],[],"Shim value", "FHWM", "%s y FWHM" %(self.calibfunction.cfn))
 
         elif axis == 'z':
-            plotview1 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N), self.peakValsf_z, [],[],"Shim value", "Peak value", "%s z Peak value" %(self.calibfunction.cfn))
-            plotview2 = SpectrumPlot(np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N), self.fwhmf_z, [],[],"Shim value", "FHWM", "%s z FWHM" %(self.calibfunction.cfn))
+            plotview1 = SpectrumPlot(shim_values, self.peakValsf_z, [],[],"Shim value", "Peak value", "%s z Peak value" %(self.calibfunction.cfn))
+            plotview2 = SpectrumPlot(shim_values, self.fwhmf_z, [],[],"Shim value", "FHWM", "%s z FWHM" %(self.calibfunction.cfn))
 
         self.layout.setParent(None)
         self.parent.clearPlotviewLayout()  
@@ -217,13 +220,18 @@ class CalibrationAcqController(QObject):
         self.parent.plotview_layout.addWidget(plotview1)
         self.parent.plotview_layout.addWidget(plotview2)
             
-        shim_x=round(np.max(self.peakValsf_x), 4)
-        shim_y=round(np.max(self.peakValsf_y), 4)
-        shim_z=round(np.max(self.peakValsf_z), 4)
+        max_x=self.peakValsf_x.index(round(np.max(self.peakValsf_x), 4))
+        max_y=self.peakValsf_y.index(round(np.max(self.peakValsf_y), 4))
+        max_z=self.peakValsf_z.index(round(np.max(self.peakValsf_z), 4))
+        
+        shim_x=shim_values[max_x]
+        shim_y=shim_values[max_y]
+        shim_z=shim_values[max_z]
         
         self.textEdit = QTextEdit()
-        self.textEdit.setPlainText('Shim_x=%0.3f,       Shim_y=%0.3f,       Shim_z=%0.3f'%(shim_x, shim_y, shim_z))
+        self.textEdit.setPlainText('Shim_x=%0.5f,       Shim_y=%0.5f,       Shim_z=%0.5f'%(shim_x, shim_y, shim_z))
         self.parent.plotview_layout.addWidget(self.textEdit)
+        
 
     def btnstate(self,b):
 

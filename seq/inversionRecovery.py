@@ -26,7 +26,7 @@ def inversionRecovery(self):
     tr_duration=self.tr_duration*1e3  # delay after end of RX before start of next TR
     echo_duration = self.echo_duration*1e3
     BW=self.BW  # us, 3.333us, 300 kHz rate
-    rx_wait=self.rx_wait
+    rx_wait=self.rx_wait*1e3
     readout_duration=self.readout_duration*1e3
        
        
@@ -59,8 +59,8 @@ def inversionRecovery(self):
         i = i+1
         k=k+step
     
-#    expt.plot_sequence()
-#    plt.show()
+    expt.plot_sequence()
+    plt.show()
     
     rxd, msgs = expt.run()    
     

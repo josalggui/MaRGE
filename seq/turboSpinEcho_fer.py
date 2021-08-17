@@ -9,7 +9,6 @@ from configs.hw_config import Gz_factor
 import matplotlib.pyplot as plt
 import pdb
 st = pdb.set_trace
-import scipy.signal as sig
 
 
 def trapezoid(plateau_a, total_t, ramp_t, ramp_pts, total_t_end_to_end=True, base_a=0):
@@ -134,7 +133,6 @@ def turbo_spin_echo(self, plotSeq):
     x = self.x
     y = self.y
     z = self.z
-    oversampling_factor = self.oversampling_factor
    
     BW=BW*1e-3
 #    trap_ramp_pts=np.int32(trap_ramp_duration*0.2)    # 0.2 puntos/ms
@@ -142,7 +140,7 @@ def turbo_spin_echo(self, plotSeq):
     grad_readout_delay=9   #8.83    # readout amplifier delay
     grad_phase_delay=9      #8.83
     grad_slice_delay=9        #8.83
-    rx_period=1/(BW)
+    rx_period=1/BW
     """
     readout gradient: x
     phase gradient: y
@@ -158,15 +156,14 @@ def turbo_spin_echo(self, plotSeq):
     true_rx_period = expt.get_rx_ts()[0]
     true_BW = 1/true_rx_period
     readout_duration = n_rd/true_BW
-        
+    
     # We calculate here the realtive sequence efficiency
     alphaRO = fov_rd/n_rd*np.sqrt(np.float(n_rd)/true_BW)
     alphaPH = fov_ph/n_ph*np.sqrt(np.float(echos_per_tr))
     alphaSL = fov_sl/n_sl*np.sqrt(np.float(n_sl)/(np.float(n_sl)/2+np.float(par_acq_factor)))
     alpha = alphaRO*alphaPH*alphaSL*10000
     print('alpha:%f'%(alpha))
-
-                        
+                    
     if rf_pi_duration is None:
         rf_pi_duration = 2 * rf_pi2_duration
         
@@ -177,7 +174,7 @@ def turbo_spin_echo(self, plotSeq):
     # Get readout, phase and slice amplitudes
     # Readout gradient amplitude
     Grd = true_BW*1e6/(gammaB*fov_rd)
-      # Phase gradient amplitude
+    # Phase gradient amplitude
     if (n_ph==1):   
         Gph=0
     else:
@@ -277,11 +274,11 @@ def turbo_spin_echo(self, plotSeq):
         if echo_idx == 0:
 #            return trap_cent(tstart+echo_duration/2+rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay, Grd/2*rd_preemph_factor, readout_duration+trap_ramp_duration,
 #                             trap_ramp_duration, trap_ramp_pts)
-            return rect_cent(tstart+echo_duration/2+rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay, Grd/2.0*rd_preemph_factor,  readout_duration, trap_ramp_duration)
+            return rect_cent(tstart+echo_duration/2+rf_pi2_duration/2+trap_ramp_duration+readout_duration/2-grad_readout_delay+150, Grd/2.0*rd_preemph_factor,  readout_duration, trap_ramp_duration)
         else:
 #            return trap_cent(tstart + echo_duration/2-grad_readout_delay, Grd, readout_duration+trap_ramp_duration,
 #                             trap_ramp_duration, trap_ramp_pts)
-            return rect_cent(tstart+echo_duration/2-grad_readout_delay, Grd, readout_duration, trap_ramp_duration)
+            return rect_cent(tstart+echo_duration/2-grad_readout_delay+150, Grd, readout_duration, trap_ramp_duration)
 
 
 #*********************************************************************************
@@ -294,9 +291,9 @@ def turbo_spin_echo(self, plotSeq):
 #                            phase_amps[ph-1], phase_grad_duration, trap_ramp_duration, trap_ramp_pts)
 #        t2, a2 = trap_cent(tstart + echo_duration/2 + readout_duration/2+phase_grad_duration/2+trap_ramp_duration/2-grad_phase_delay,
 #                            -phase_amps[ph-1], phase_grad_duration, trap_ramp_duration, trap_ramp_pts)
-        t1, a1 = rect_cent(tstart+rf_pi_duration/2+phase_grad_duration/2+trap_ramp_duration-grad_phase_delay, phase_amps[ph-1], 
+        t1, a1 = rect_cent(tstart+rf_pi_duration/2+phase_grad_duration/2+trap_ramp_duration-grad_phase_delay+150, phase_amps[ph-1], 
                             phase_grad_duration, trap_ramp_duration)
-        t2, a2 = rect_cent(tstart+echo_duration/2+readout_duration/2+trap_ramp_duration+phase_grad_duration/2-grad_phase_delay, -phase_amps[ph-1], 
+        t2, a2 = rect_cent(tstart+echo_duration/2+readout_duration/2+trap_ramp_duration+phase_grad_duration/2-grad_phase_delay+150, -phase_amps[ph-1], 
                             phase_grad_duration, trap_ramp_duration)
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
@@ -316,9 +313,9 @@ def turbo_spin_echo(self, plotSeq):
 #                           trap_ramp_duration, trap_ramp_pts)
 #        t2, a2 = trap_cent(tstart +echo_duration/2 + readout_duration/2+phase_grad_duration/2+trap_ramp_duration/2-grad_slice_delay, -slice_amps[sl], phase_grad_duration,
 #                           trap_ramp_duration, trap_ramp_pts)
-        t1, a1 = rect_cent(tstart+rf_pi_duration/2+trap_ramp_duration+phase_grad_duration/2-grad_slice_delay,
+        t1, a1 = rect_cent(tstart+rf_pi_duration/2+trap_ramp_duration+phase_grad_duration/2-grad_slice_delay+150,
                             slice_amps[sl], phase_grad_duration, trap_ramp_duration)
-        t2, a2 = rect_cent(tstart+echo_duration/2+readout_duration/2+trap_ramp_duration+phase_grad_duration/2-grad_slice_delay,
+        t2, a2 = rect_cent(tstart+echo_duration/2+readout_duration/2+trap_ramp_duration+phase_grad_duration/2-grad_slice_delay+150,
                             -slice_amps[sl], phase_grad_duration, trap_ramp_duration)
         if echo_idx == 0:
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
@@ -377,7 +374,6 @@ def turbo_spin_echo(self, plotSeq):
         expt.__del__()
     elif plotSeq==0:
         for nS in range(nScans):
-            print('nScan=%s'%(nS))
             rxd, msgs = expt.run()
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             if nS ==0:

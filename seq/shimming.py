@@ -28,7 +28,7 @@ def shimming(self, grad):
     shim_final = self.shim_final    
     tr_duration=self.tr_duration*1e3  # delay after end of RX before start of next TR
     BW=self.BW  # us, 3.333us, 300 kHz rate
-    rx_wait=self.rx_wait
+    rx_wait=self.rx_wait*1e3
     readout_duration=self.readout_duration*1e3
   
     ## All times are in the context of a single TR, starting at time 0
@@ -89,8 +89,8 @@ def shimming(self, grad):
         'grad_vz': (np.array([tstart]),np.array([0]) ), 
     })
     
-#    expt.plot_sequence()
-#    plt.show()
+    expt.plot_sequence()
+    plt.show()
  
     rxd, msgs = expt.run()    
         

@@ -20,6 +20,7 @@ class LarmorFreq:
                  cfn:str, 
                  lo_freq: float=None, 
                  rf_amp: float=None, 
+                 nScans:int=None, 
                  N: float=None, 
                  step:int=None, 
                  rx_wait:int=None, 
@@ -33,6 +34,7 @@ class LarmorFreq:
         self.cfn: str=cfn
         self.lo_freq: float=lo_freq
         self.rf_amp: float=rf_amp
+        self.nScans:int=nScans
         self.N: int=N
         self.step: int=step
         self.rf_pi2_duration: int=rf_pi2_duration
@@ -45,6 +47,7 @@ class LarmorFreq:
     def sqncproperties(self) -> dict:
         # TODO: add server cmd's as third entry in list
         return {
+            cfnmspc.nScans:[int(self.nScans)], 
             cfnmspc.N:[int(self.N)], 
             cfnmspc.step:[int(self.step)], 
             cfnmspc.lo_freq: [float(self.lo_freq)],
@@ -69,6 +72,7 @@ class FlipAngle:
                  lo_freq: float=None,
                  rf_amp: float=None,
                  N: int=None, 
+                 nScans: int=None, 
                  step:float=None, 
                  rf_pi2_duration:int=None, 
                  tr_duration: int=None, 
@@ -82,6 +86,7 @@ class FlipAngle:
         self.lo_freq: float=lo_freq
         self.rf_amp: float=rf_amp
         self.N: int=N
+        self.nScans: int=nScans
         self.step: float=step
         self.rf_pi2_duration: int=rf_pi2_duration
         self.tr_duration: int=tr_duration
@@ -107,6 +112,7 @@ class FlipAngle:
         return{
             cfnmspc.rf_amp: [float(self.rf_amp)],
             cfnmspc.N:[int(self.N)], 
+            cfnmspc.nScans:[int(self.nScans)], 
             cfnmspc.step:[float(self.step)], 
             cfnmspc.rf_pi2_duration:[int(self.rf_pi2_duration)], 
         }    
@@ -120,7 +126,8 @@ class RabiFlops:
                  lo_freq: float=None,
                  rf_amp: float=None,
                  N: int=None, 
-                 step:int=None, 
+                 nScans:int=None, 
+                 step:float=None, 
                  rf_pi2_duration:int=None, 
                  tr_duration: int=None, 
                  echo_duration:int=None, 
@@ -133,7 +140,8 @@ class RabiFlops:
         self.lo_freq: float=lo_freq
         self.rf_amp: float=rf_amp
         self.N: int=N
-        self.step: int=step
+        self.nScans:int=nScans
+        self.step: float=step
         self.rf_pi2_duration: int=rf_pi2_duration
         self.tr_duration: int=tr_duration
         self.echo_duration:int=echo_duration
@@ -146,6 +154,7 @@ class RabiFlops:
         # TODO: add server cmd's as third entry in list
         return {
             cfnmspc.N:[int(self.N)], 
+            cfnmspc.nScans:[int(self.nScans)], 
             cfnmspc.step:[int(self.step)], 
             cfnmspc.lo_freq: [float(self.lo_freq)],
             cfnmspc.BW:[int(self.BW)], 
@@ -299,15 +308,15 @@ Definition of default calibfunctions
 """
 defaultcalibfunctions={
 
-    #RabiFlops(lo_freq,rf_amp,N,step,rf_pi2_duration,tr_duration,echo_duration,BW,readout_duration,rx_wait)
-    'Rabi Flops': RabiFlops('Rabi Flops', 3.041, 0.3, 20, 5, 50, 20, 15, 31, 5, 100), 
+    #RabiFlops(lo_freq,rf_amp,N,nScans,step,rf_pi2_duration,tr_duration,echo_duration,BW,readout_duration,rx_wait)
+    'Rabi Flops': RabiFlops('Rabi Flops', 3.03, 0.6, 80, 3, 10.0, 30, 500, 100, 80, 3, 50), 
     #InvRecov(lo_freq,rf_amp,N,step,rf_pi2_duration,tr_duration,echo_duration,BW,readout_duration,rx_wait)
     'Inversion Recovery': InvRecov('Inversion Recovery', 3.041, 0.3, 20, 5, 50, 20, 15, 31, 5, 100), 
-    #larmor(lo_freq,rf_amp,N,step,rf_pi2_duration,echo_duration,BW,readout_duration,rx_wait)
-    'Larmor Frequency': LarmorFreq('Larmor Frequency', 3.041, 0.3, 20, 5,  20, 15, 31, 5, 100), 
+    #larmor(lo_freq,rf_amp,nScans,N,step,rf_pi2_duration,echo_duration,BW,readout_duration,rx_wait)
+    'Larmor Frequency': LarmorFreq('Larmor Frequency', 3.03, 0.6, 3, 20, 2,  100, 190, 80, 100, 3), 
     #Shimming(lo_freq,BW,tr_duration,rf_amp,rf_duration,rf_tstart,N_shim,shim_initial,shim_final,readout_duration,rx_wait)
     'Shimming': GradShim('Shimming', 3.041, 31, 500, 0.2, 50, 100, 10, -0.01, 0.01, 50, 100), 
-    #FlipAngle(lo_freq,rf_amp,N,step,rf_pi2_duration,tr_duration,echo_duration,BW,readout_duration,rx_wait)
-    'FlipAngle': FlipAngle('Flip Angle', 3.041, 0.3, 10, 0.05, 50, 20, 15, 31, 5, 100), 
+    #FlipAngle(lo_freq,rf_amp,N,nScans,step,rf_pi2_duration,tr_duration,echo_duration,BW,readout_duration,rx_wait)
+    'FlipAngle': FlipAngle('Flip Angle', 3.03, 0.3, 10,3,  0.05, 190, 500, 100, 80, 3, 100), 
 }
            

@@ -21,21 +21,23 @@ import experiment as ex
 
 def larmorFreq(self):
 
-    lo_freq=self.lo_freq # KHz
+    lo_freq=self.lo_freq # MHz
     rf_amp=self.rf_amp # 1 = full-scale
     N=self.N 
     step=self.step  
     rf_pi2_duration = self.rf_pi2_duration
     echo_duration = self.echo_duration*1e3
     BW=self.BW  # us, 3.333us, 300 kHz rate
-    rx_wait=self.rx_wait
+    rx_wait=self.rx_wait*1e3
     readout_duration=self.readout_duration*1e3
+    nScans=self.nScans
               
 
     rx_period = 1/(BW*1e-3)
+    step = step*1e-3
 
     rf_pi_duration = 2*rf_pi2_duration
-    BW = 1e-3   
+#    BW = BW*1e3   
        
     ## All times are in the context of a single TR, starting at time 0
     init_gpa = False
@@ -67,8 +69,20 @@ def larmorFreq(self):
             'rx_gate': ( np.array([rx_tstart, rx_tend]), np.array([1, 0]) )
         })
     
-        rxd, msg = expt.run()    
-        dataobject:DataManager=DataManager(rxd['rx0'], freqs[i], len(rxd['rx0']), [], BW)
+        rxd, msg = expt.run() 
+      
+        for nS in range(nScans):
+            print('nScan=%s'%(nS))
+            rxd, msgs = expt.run()
+            if nS ==0:
+                n_rxd = rxd['rx0']
+            else:
+                n_rxd = np.concatenate((n_rxd, rxd['rx0']), axis=0)
+    
+        n_rxd = np.reshape(n_rxd, (nScans, len(rxd['rx0'])))
+        n_rxd = np.average(n_rxd, axis=0) 
+    
+        dataobject:DataManager=DataManager(n_rxd, freqs[i], len(n_rxd), [], BW)
         f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency = dataobject.get_peakparameters()
         peakValsf.append(f_signalValue)
         
@@ -78,4 +92,4 @@ def larmorFreq(self):
         i = i+1
         
     
-    return(peakValsf)
+    return(peakValsf, freqs)

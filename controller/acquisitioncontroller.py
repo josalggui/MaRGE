@@ -22,7 +22,7 @@ from PyQt5.QtCore import QObject,  pyqtSlot,  pyqtSignal
 from manager.datamanager import DataManager
 from seq.radial import radial
 from seq.gradEcho import grad_echo
-from seq.turboSpinEcho import turbo_spin_echo
+from seq.turboSpinEcho_filter import turbo_spin_echo
 from seq.fid import fid
 from seq.spinEcho import spin_echo
 from seq.spinEcho1D import spin_echo1D
@@ -33,6 +33,9 @@ from scipy.io import savemat
 import os
 import pyqtgraph as pg
 import numpy as np
+import scipy.signal as sig
+from scipy.signal import butter, filtfilt 
+import nibabel as nib
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, sequencelist=None):
@@ -51,7 +54,8 @@ class AcquisitionController(QObject):
         self.parent.clearPlotviewLayout()
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
         
-        x, y, z, self.n_rd, self.n_ph, self.n_sl = change_axes(self.sequence)
+        self.sequence.oversampling_factor = 6
+        self.sequence.x, self.sequence.y, self.sequence.z, self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl = change_axes(self.sequence)
 
         plotSeq=0
         if self.sequence.seq == 'SE':
@@ -64,28 +68,29 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs=spin_echo3D(self.sequence, plotSeq)
         elif self.sequence.seq == 'FID':
             self.rxd, self.msgs=fid(self.sequence, plotSeq)
+            self.data_avg=self.rxd
         elif self.sequence.seq == 'R':
             self.rxd, self.msgs = radial(self.sequence, plotSeq)
         elif self.sequence.seq == 'GE':
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
             self.rxd, self.msgs, self.data_avg = turbo_spin_echo(self.sequence, plotSeq)
-    
-        self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.n_rd, self.n_ph, self.n_sl], self.sequence.BW)
-        self.ns = [self.n_rd, self.n_ph, self.n_sl]
+        self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl], self.sequence.BW)
+        self.sequence.ns = [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]
 
-
-        if (self.n_ph ==1 and self.n_sl == 1):
+        if (self.sequence.n_ph ==1 and self.sequence.n_sl == 1):
             f_plotview = SpectrumPlot(self.dataobject.f_axis, self.dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude", "%s Spectrum" %(self.sequence.seq), )
             t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.seq), )
             self.parent.plotview_layout.addWidget(t_plotview)
             self.parent.plotview_layout.addWidget(f_plotview)
-            [fwhm, fwhm_hz, fwhm_ppm] = self.dataobject.get_fwhm()
-            print('FWHM:%0.3f'%(fwhm))
+            self.parent.f_plotview = f_plotview
+            self.parent.t_plotview = t_plotview
+#            [fwhm, fwhm_hz, fwhm_ppm] = self.dataobject.get_fwhm()
+#            print('FWHM:%0.3f'%(fwhm))
             [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]=self.dataobject.get_peakparameters()
             print('Peak Value = %0.3f' %(f_signalValue))
-            snr=self.dataobject.get_snr()
-            print('SNR:%0.3f' %(snr))
+#            snr=self.dataobject.get_snr()
+#            print('SNR:%0.3f' %(snr))
 
         else:
                        
@@ -96,6 +101,13 @@ class AcquisitionController(QObject):
         self.parent.lo_freq = self.sequence.lo_freq
         print(self.msgs)
         
+    def butter_lowpass_filter(self, data, cutoff, fs, order, nyq):
+        normal_cutoff = cutoff/nyq
+        b, a = butter(order, normal_cutoff,btype='low', analog=False)
+        y=filtfilt(b, a, data)
+        return y 
+
+        
     def plot_3Dresult(self):
         
         self.kspace=self.dataobject.k_space
@@ -104,7 +116,7 @@ class AcquisitionController(QObject):
         self.label = QLabel("%s %s" % (self.sequence.seq, dt_string))
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setStyleSheet("background-color: black;color: white")
-        if (self.n_ph !=1 & self.n_sl != 1):  #Add button to change the view only if 3D image
+        if (self.sequence.n_ph !=1 & self.sequence.n_sl != 1):  #Add button to change the view only if 3D image
             self.parent.plotview_layout.addWidget(self.button)
 
         self.parent.plotview_layout.addWidget(self.label)
@@ -117,10 +129,10 @@ class AcquisitionController(QObject):
         self.parent.clearPlotviewLayout()
         im = self.kspace
         im2=np.moveaxis(im, 0, -1)
-        im3 = np.reshape(im2, (self.n_sl*self.n_ph*self.n_rd))    
-        self.ns = self.ns[1:]+self.ns[:1]
+        im3 = np.reshape(im2, (self.sequence.n_sl*self.sequence.n_ph*self.sequence.n_rd))    
+        self.sequence.ns = self.sequence.ns[1:]+self.sequence.ns[:1]
 
-        self.dataobject: DataManager = DataManager(im3, self.sequence.lo_freq, len(im3),self.ns, self.sequence.BW)
+        self.dataobject: DataManager = DataManager(im3, self.sequence.lo_freq, len(im3),self.sequence.ns, self.sequence.BW)
         
         self.button.setChecked(False)
         
@@ -135,30 +147,34 @@ class AcquisitionController(QObject):
         dt2 = date.today()
         dt2_string = dt2.strftime("%Y.%m.%d")
 
-        if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string)):
-            os.makedirs('/home/physiomri/share_vm/results_experiments/%s' % (dt2_string))
+        if not os.path.exists('experiments/acquisitions/%s' % (dt2_string)):
+            os.makedirs('experiments/acquisitions/%s' % (dt2_string))
             
-        if not os.path.exists('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)):
-            os.makedirs('/home/physiomri/share_vm/results_experiments/%s/%s' % (dt2_string, dt_string)) 
+        if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
+            os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
             
         dict2 = dict
         dict2['rawdata'] = self.rxd
         dict2['average'] = self.data_avg
             
-        savemat("/home/physiomri/share_vm/results_experiments/%s/%s/%s.%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict2) 
+        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict2) 
         #rawdata
 #        np.savetxt("/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.view(float).reshape(-1, 2))
 #        np.savetxt("/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.view(float))
 
         if (dict["nScans"]==1):
-            np.savetxt("/home/physiomri/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.reshape(1, self.rxd.shape[0]), newline = "\r\n", fmt = '%.6f%+.6fj '*self.rxd.shape[0])
+            np.savetxt("experiments/acquisitions/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.reshape(1, self.rxd.shape[0]), newline = "\r\n", fmt = '%.6f%+.6fj '*self.rxd.shape[0])
         else:
-            np.savetxt("/home/physiomri/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.reshape(self.rxd.shape[0], self.rxd.shape[1]), newline = "\r\n", fmt = '%.6f%+.6fj '*self.rxd.shape[1])
+            np.savetxt("experiments/acquisitions/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.reshape(self.rxd.shape[0], self.rxd.shape[1]), newline = "\r\n", fmt = '%.6f%+.6fj '*self.rxd.shape[1])
 
 #        test = np.loadtxt("/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string)).view(complex).reshape(-1)
         #avg
-        np.savetxt("/home/physiomri/share_vm/results_experiments/%s/%s/%s.%s.avg.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.data_avg,  fmt='%.6e')
+        np.savetxt("experiments/acquisitions/%s/%s/%s.%s.avg.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.data_avg,  fmt='%.6e')
         #params
-        f = open("/home/physiomri/share_vm/results_experiments/%s/%s/%s.%s.params.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
+        f = open("experiments/acquisitions/%s/%s/%s.%s.params.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
         f.write( str(dict))
         f.close()     
+
+        if hasattr(self.dataobject, 'f_fft2Magnitude'):
+            nifti_file=nib.Nifti1Image(self.dataobject.f_fft2Magnitude, affine=np.eye(4))
+            nib.save(nifti_file, 'experiments/acquisitions/%s/%s/%s.%s.nii'% (dt2_string, dt_string, dict["seq"],dt_string))

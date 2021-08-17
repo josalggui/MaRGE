@@ -29,13 +29,14 @@ class Namespace:
     BW= "BandWidth (KHz)"
     tr_duration="TR (ms)"
     axes = "Axes (rd=1,ph=2,sl=3)"
-    N = "Number of TRs"
+    N = "Number of points"
     step = "Step"
     rf_pi2_duration="RF excitation duration (us)"
     readout_duration = "Readout duration (ms)"
-    rx_wait="Waiting time before readout (us)"
+    rx_wait="Waiting time before readout (ms)"
     shim_initial = "Initial value for shimming"
     shim_final = "Final value for shimming"
+    nScans = "Number of acquisitions to average"
 
 class Tooltip_label:
     rx_period = "Sampling time"

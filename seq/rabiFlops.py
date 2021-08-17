@@ -14,6 +14,7 @@ sys.path.append('../marcos_client')
 #from spinEcho_standalone import spin_echo
 import numpy as np
 import experiment as ex
+import matplotlib.pyplot as plt
 
 
 def rabi_flops(self):
@@ -21,12 +22,13 @@ def rabi_flops(self):
     lo_freq=self.lo_freq # KHz
     rf_amp=self.rf_amp # 1 = full-scale
     N=self.N 
+    nScans = self.nScans
     step=self.step  
     rf_pi2_duration0 = self.rf_pi2_duration
     tr_duration=self.tr_duration*1e3  # delay after end of RX before start of next TR
     echo_duration = self.echo_duration*1e3
     BW=self.BW  # us, 3.333us, 300 kHz rate
-    rx_wait=self.rx_wait
+    rx_wait=self.rx_wait*1e3
     readout_duration=self.readout_duration*1e3
   
     ## All times are in the context of a single TR, starting at time 0
@@ -84,21 +86,7 @@ def rabi_flops(self):
     k = 0
     i=0
     while i < N:     
-        
-#        if fid==1:
-#            rf_tend = rf_tstart + rf_duration+k # us
-#            rx_tstart = rf_tend+rx_wait # us
-#            rx_tend = rx_tstart + readout_duration  # us
-#            expt.add_flodict({
-#                # second tx0 pulse purely for loopback debugging
-#                'tx0': ( np.array([rf_tstart, rf_tend])+tstart, np.array([rf_amp,0]) ),
-#                'rx0_en': ( np.array([rx_tstart, rx_tend])+tstart, np.array([1, 0]) ),
-#                'tx_gate': ( np.array([rf_tstart - tx_gate_pre, rf_tend + tx_gate_post])+tstart, np.array([1, 0]) ), 
-#                'rx_gate': ( np.array([rx_tstart, rx_tend])+tstart, np.array([1, 0]) )
-#            })
-#            tstart = tstart + rx_tend+tr_wait
-#        else:
-            
+           
         for echo_idx in range(2):
             tx_t, tx_a = rf_wf(global_t, echo_idx, k)
             tx_gate_t, tx_gate_a = tx_gate_wf(global_t, echo_idx)
@@ -117,9 +105,20 @@ def rabi_flops(self):
         i = i+1
         k=k+step
     
- 
-    rxd, msgs = expt.run()    
+#    expt.plot_sequence()
+#    plt.show()   
+
+    for nS in range(nScans):
+        print('nScan=%s'%(nS))
+        rxd, msgs = expt.run()
+        if nS ==0:
+            n_rxd = rxd['rx0']
+        else:
+            n_rxd = np.concatenate((n_rxd, rxd['rx0']), axis=0)
+    
+    n_rxd = np.reshape(n_rxd, (nScans, len(rxd['rx0'])))
+    n_rxd = np.average(n_rxd, axis=0) 
         
     expt.__del__()
-    return rxd['rx0'], msgs
+    return n_rxd, msgs
 

@@ -6,17 +6,17 @@ sys.path.append('manager')
 import numpy as np
 import experiment as ex
 import matplotlib.pyplot as plt
-#from datamanager import DataManager
+from datamanager import DataManager
 import pdb
 st = pdb.set_trace
 
    
-def fid(lo_freq=3.069, # MHz
-             rf_amp=1, # 1 = full-scale
-             rf_duration=50,
+def fid(lo_freq=3.032, # MHz
+             rf_amp=0.3, # 1 = full-scale
+             rf_duration=100,
              rf_tstart = 100,  # us
              tr_wait=100, # delay after end of RX before start of next TR
-             rx_period=10/3,  # us, 3.333us, 300 kHz rate
+             rx_period=0.0323,  # us, 3.333us, 300 kHz rate
              readout_duration=500, 
              shimming=(0.01, 0.01, 0.01)
              ):
@@ -58,17 +58,23 @@ def fid(lo_freq=3.069, # MHz
 
     rxd, msgs = expt.run()    
    
+    expt.plot_sequence()
+    plt.show()     
+   
     print(msgs)
     
     expt.__del__()
-        
+       
     plt.plot( np.abs(rxd['rx0']) )
 #        plt.plot( rxd['rx0'].real )
 #        plt.plot( rxd['rx0'].imag )
     plt.show()
     
-#    dataobject: DataManager = DataManager(rxd, lo_freq, len(rxd))
-#    plt.plot(dataobject.f_axis, dataobject.f_fftMagnitude)
+    recept = rxd['rx0']
+    
+    dataobject: DataManager = DataManager(recept, lo_freq, len(recept), [], 1/rx_period)
+    plt.plot(dataobject.f_axis, dataobject.f_fftMagnitude)
+    plt.show()
 
     
 #    d_cropped = rxd[0:len(rxd)]  # * 2000.0
@@ -78,4 +84,4 @@ def fid(lo_freq=3.069, # MHz
         
 if __name__ == "__main__":
     
-    fid(lo_freq=3.069, rf_amp=1)
+    fid()

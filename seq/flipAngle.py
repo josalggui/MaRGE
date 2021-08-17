@@ -23,13 +23,13 @@ def flipAngle(self):
     rf_pi2_duration = self.rf_pi2_duration
     echo_duration = self.echo_duration*1e3
     BW=self.BW  # us, 3.333us, 300 kHz rate
-    rx_wait=self.rx_wait
+    rx_wait=self.rx_wait*1e3
     readout_duration=self.readout_duration*1e3
     tr_duration=self.tr_duration*1e3
+    nScans = self.nScans
               
 
     rx_period = 1/(BW*1e-3)
-
     rf_pi_duration = 2*rf_pi2_duration
        
     ## All times are in the context of a single TR, starting at time 0
@@ -62,11 +62,20 @@ def flipAngle(self):
         i = i+1
         tstart = tstart + tr_duration
     
+   
+    for nS in range(nScans):
+        print('nScan=%s'%(nS))
+        rxd, msgs = expt.run()
+        if nS ==0:
+            n_rxd = rxd['rx0']
+        else:
+            n_rxd = np.concatenate((n_rxd, rxd['rx0']), axis=0)
     
-    rxd, msg = expt.run()    
+    n_rxd = np.reshape(n_rxd, (nScans, len(rxd['rx0'])))
+    n_rxd = np.average(n_rxd, axis=0) 
     
     expt.__del__()
-    return rxd['rx0'], msg
+    return n_rxd, msgs, amps
 
 
 

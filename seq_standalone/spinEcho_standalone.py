@@ -37,8 +37,8 @@ def trap_cent(centre_t, plateau_a, trap_t, ramp_t, ramp_pts, base_a=0):
     t, a = trapezoid(plateau_a, trap_t, ramp_t, ramp_pts, False, base_a)
     return t + centre_t - (trap_t + ramp_t)/2, a
 
-def spin_echo(lo_freq=3.043, # MHz
-                    rf_amp=0.1, # 1 = full-scale
+def spin_echo(lo_freq=3.0399, # MHz
+                    rf_amp=0.6, # 1 = full-scale
                     rf_pi2_duration=1000, # us, rf pi/2 pulse length
                     rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
                     # spin-echo properties
