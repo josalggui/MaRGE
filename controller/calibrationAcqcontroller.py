@@ -172,12 +172,18 @@ class CalibrationAcqController(QObject):
             self.plot_shim(axis='x')
             
         elif self.calibfunction.cfn == 'Larmor Frequency':
-            self.peakVals, self.freqs=larmorFreq(self.calibfunction)
-            #t_plotview = SpectrumPlot(np.linspace(-self.calibfunction.N/2*self.calibfunction.step, self.calibfunction.N/2*self.calibfunction.step, self.calibfunction.N), self.peakVals, [],[],'Larmor Frequency variation (KHz)', "Amplitude (mV)", "%s" %(self.calibfunction.cfn))
-            t_plotview = SpectrumPlot(self.freqs, self.peakVals, [],[],'Larmor Frequency variation (MHz)', "Amplitude (mV)", "%s" %(self.calibfunction.cfn))
-            self.parent.plotview_layout.addWidget(t_plotview)
-            
-        elif self.calibfunction.cfn == 'Flip Angle':
+            repetitions = np.int32(self.calibfunction.step/self.calibfunction.resolution)
+            while i < repetitions:            
+                self.peakVals, self.freqs=larmorFreq(self.calibfunction)
+                t_plotview = SpectrumPlot(self.freqs, self.peakVals, [],[],'Larmor Frequency variation (MHz)', "Amplitude (mV)", "%s" %(self.calibfunction.cfn))
+                self.parent.plotview_layout.addWidget(t_plotview)
+                self.calibfunction.step = self.calibfunction.step/2
+                f_signalValue: float = round(np.max(self.peakVals), 4)
+                f_signalIdx: int = np.argmax(self.f_signalValue)  
+                self.calibfunction.lo_freq=self.freqs[f_signalIdx]
+                i = i+1
+                            
+        elif self.calibfunction.cfn == 'Amplitude':
             self.rxd, self.msgs, self.amps=flipAngle(self.calibfunction)
             values = self.rxd
             samples = np.int32(len(values)/self.calibfunction.N)

@@ -22,12 +22,13 @@ class LarmorFreq:
                  rf_amp: float=None, 
                  nScans:int=None, 
                  N: float=None, 
-                 step:int=None, 
+                 step_larmor:int=None, 
                  rx_wait:int=None, 
                  rf_pi2_duration: int=None, 
                  BW:float=None, 
                  echo_duration:int=None, 
-                 readout_duration:int=None
+                 readout_duration:int=None, 
+                 resolution_larmor:float=None
                  ):
                      
              
@@ -36,12 +37,13 @@ class LarmorFreq:
         self.rf_amp: float=rf_amp
         self.nScans:int=nScans
         self.N: int=N
-        self.step: int=step
+        self.step_larmor: int=step_larmor
         self.rf_pi2_duration: int=rf_pi2_duration
         self.echo_duration:int=echo_duration
         self.BW: float=BW
         self.readout_duration:int=readout_duration
         self.rx_wait:int=rx_wait
+        self.resolution_larmor:float=resolution_larmor
     
     @property
     def sqncproperties(self) -> dict:
@@ -49,12 +51,13 @@ class LarmorFreq:
         return {
             cfnmspc.nScans:[int(self.nScans)], 
             cfnmspc.N:[int(self.N)], 
-            cfnmspc.step:[int(self.step)], 
+            cfnmspc.step_larmor:[int(self.step_larmor)], 
             cfnmspc.lo_freq: [float(self.lo_freq)],
             cfnmspc.BW:[int(self.BW)], 
             cfnmspc.echo_duration:[int(self.echo_duration)], 
             cfnmspc.readout_duration:[int(self.readout_duration)], 
             cfnmspc.rx_wait:[int(self.rx_wait)], 
+            cfnmspc.resolution_larmor:[float(self.resolution_larmor)]
         }
 
     @property
@@ -313,10 +316,9 @@ defaultcalibfunctions={
     #InvRecov(lo_freq,rf_amp,N,step,rf_pi2_duration,tr_duration,echo_duration,BW,readout_duration,rx_wait)
     'Inversion Recovery': InvRecov('Inversion Recovery', 3.041, 0.3, 20, 5, 50, 20, 15, 31, 5, 100), 
     #larmor(lo_freq,rf_amp,nScans,N,step,rf_pi2_duration,echo_duration,BW,readout_duration,rx_wait)
-    'Larmor Frequency': LarmorFreq('Larmor Frequency', 3.03, 0.6, 3, 20, 2,  100, 190, 80, 100, 3), 
+    'Larmor Frequency': LarmorFreq('Larmor Frequency', 3.03, 0.6, 3, 20, 2,  100, 190, 80, 100, 3, 1), 
     #Shimming(lo_freq,BW,tr_duration,rf_amp,rf_duration,rf_tstart,N_shim,shim_initial,shim_final,readout_duration,rx_wait)
     'Shimming': GradShim('Shimming', 3.041, 31, 500, 0.2, 50, 100, 10, -0.01, 0.01, 50, 100), 
     #FlipAngle(lo_freq,rf_amp,N,nScans,step,rf_pi2_duration,tr_duration,echo_duration,BW,readout_duration,rx_wait)
     'FlipAngle': FlipAngle('Flip Angle', 3.03, 0.3, 10,3,  0.05, 190, 500, 100, 80, 3, 100), 
 }
-           

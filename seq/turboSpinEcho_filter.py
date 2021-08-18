@@ -118,9 +118,9 @@ def turbo_spin_echo(self, plotSeq):
     shim_y: float = self.shim[1]
     shim_z: float = self.shim[2]
     nScans=self.nScans
-    fov_rd:int=self.fov[0]*1e-2
-    fov_ph:int=self.fov[1]*1e-2
-    fov_sl:int=self.fov[2]*1e-2
+    fov_rd:int=self.fov_rd*1e-2
+    fov_ph:int=self.fov_ph*1e-2
+    fov_sl:int=self.fov_sl*1e-2
     trap_ramp_duration=self.trap_ramp_duration
     phase_grad_duration=self.phase_grad_duration
     echos_per_tr=self.echos_per_tr
@@ -374,19 +374,26 @@ def turbo_spin_echo(self, plotSeq):
         for nS in range(nScans):
             print('nScan=%s'%(nS))
             rxd, msgs = expt.run()
+            data_nodecimate = rxd['rx0']
             #Decimate
             rxd['rx0'] = sig.decimate(rxd['rx0'], oversampling_factor, ftype='fir')
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             if nS ==0:
                 n_rxd = rxd['rx0']
+                n_nodecimate = data_nodecimate
             else:
                 n_rxd = np.concatenate((n_rxd, rxd['rx0']), axis=0)
+                n_nodecimate=np.concatenate((n_nodecimate, data_nodecimate), axis=0)
         if par_acq_factor==0 and nScans>1:
             n_rxd = np.reshape(n_rxd, (nScans, n_sl*n_ph*n_rd))
             data_avg = np.average(n_rxd, axis=0) 
+            n_nodecimate=np.reshape(n_nodecimate, (nScans, n_sl*n_ph*n_rd))
+            data_nodecimate = np.average(n_nodecimate, axis=0)
         elif par_acq_factor>0 and nScans>1:
             n_rxd = np.reshape(n_rxd, (nScans, n_sl_par*n_ph*n_rd))
             data_avg = np.average(n_rxd, axis=0) 
+            n_nodecimate=np.reshape(n_nodecimate, (nScans, n_sl_par*n_ph*n_rd))
+            data_nodecimate = np.average(n_nodecimate, axis=0)            
         else:
             data_avg = n_rxd
         
@@ -403,5 +410,5 @@ def turbo_spin_echo(self, plotSeq):
         rxd_temp3[0:n_sl_par, :,  :] = rxd_temp2
         data_avg = np.reshape(rxd_temp3, -1)    # -1 means reshape to 1D array
 
-        return n_rxd, msgs, data_avg
+        return n_rxd, msgs, data_avg, data_nodecimate
 

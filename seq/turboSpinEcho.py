@@ -109,7 +109,6 @@ def turbo_spin_echo(self, plotSeq):
     init_gpa=True                
     lo_freq=self.lo_freq
     rf_amp=self.rf_amp
-#    trs=self.trs
     rf_pi_duration=None
     rf_pi2_duration=self.rf_pi2_duration
     echo_duration=self.echo_duration*1e3
@@ -373,7 +372,7 @@ def turbo_spin_echo(self, plotSeq):
     if plotSeq==1:                  # What is the meaning of plotSeq??
         expt.plot_sequence()
         plt.show()
-        expt.__del__()
+#        expt.__del__()
     elif plotSeq==0:
         for nS in range(nScans):
             print('nScan=%s'%(nS))

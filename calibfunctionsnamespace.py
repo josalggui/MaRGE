@@ -37,6 +37,8 @@ class Namespace:
     shim_initial = "Initial value for shimming"
     shim_final = "Final value for shimming"
     nScans = "Number of acquisitions to average"
+    resolution_larmor="Resolution (KHz)"
+    step_larmor="Step (KHz)"
 
 class Tooltip_label:
     rx_period = "Sampling time"

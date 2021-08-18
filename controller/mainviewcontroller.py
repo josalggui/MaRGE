@@ -7,7 +7,7 @@ Main View Controller
 @todo:
 
 """
-from PyQt5.QtWidgets import QListWidgetItem,  QMessageBox,  QFileDialog,  QTextEdit
+from PyQt5.QtWidgets import  QMessageBox,  QFileDialog,  QTextEdit
 from PyQt5.QtCore import QFile, QTextStream,  pyqtSignal, pyqtSlot
 from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
@@ -26,9 +26,6 @@ from seq.radial import radial
 from seq.turboSpinEcho import turbo_spin_echo
 from seq.fid import fid
 from seq.spinEcho import spin_echo
-from seq.spinEcho1D import spin_echo1D
-from seq.spinEcho2D import spin_echo2D
-from seq.spinEcho3D import spin_echo3D
 #from plotview.sequenceViewer import SequenceViewer
 from sequencemodes import defaultsequences
 from manager.datamanager import DataManager
@@ -37,7 +34,7 @@ from globalvars import StyleSheets as style
 from stream import EmittingStream
 sys.path.append('../marcos_client')
 from local_config import ip_address
-
+from seq.utilities import change_axes
 
 import cgitb 
 cgitb.enable(format = 'text')
@@ -242,17 +239,18 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
         plotSeq=1
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
-        
+
+        if hasattr(self.sequence, 'axes'):
+            self.sequence.x, self.sequence.y, self.sequence.z, self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl = change_axes(self.sequence)
+        else:
+            self.sequence.n_rd=1
+            self.sequence.n_ph=1
+            self.sequence.n_sl=1
+            
         if self.sequence.seq == 'FID':
             fid(self.sequence, plotSeq)
         if self.sequence.seq=='SE':
             spin_echo(self.sequence, plotSeq) 
-        if self.sequence.seq=='SE1D':
-            spin_echo1D(self.sequence, plotSeq)
-        if self.sequence.seq=='SE2D':
-            spin_echo2D(self.sequence, plotSeq)
-        if self.sequence.seq=='SE3D':
-            spin_echo3D(self.sequence, plotSeq)
         if self.sequence.seq == 'R':
             radial(self.sequence, plotSeq)    
         elif self.sequence.seq == 'GE':

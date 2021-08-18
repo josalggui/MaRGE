@@ -71,24 +71,9 @@ def trap_cent(centre_t, plateau_a, trap_t, ramp_t, ramp_pts, base_a=0):
 #    return ind
 
 def spin_echo(self, plotSeq):
-#                    plot_rx=True, init_gpa=False,
-#                    dbg_sc=0.5, # set to 0 to avoid RF debugging pulses in each RX window, otherwise amp between 0 or 1
-#                    lo_freq=0.2, # MHz
-#                    rf_amp=1, # 1 = full-scale
-#                    trs=1, 
-#                    rf_pi2_duration=50, # us, rf pi/2 pulse length
-#                    rf_pi_duration=None, # us, rf pi pulse length  - if None then automatically gets set to 2 * rf_pi2_duration
-#
-#                    # spin-echo properties
-#                    echo_duration=2000, # us, time from the centre of one echo to centre of the next
-#                    readout_duration=500, # us, time in the centre of an echo when the readout occurs
-#                    rx_period=10/3, # us, 3.333us, 300 kHz rate
-#                    # (must at least be longer than readout_duration + trap_ramp_duration)
-#                    ):
     init_gpa=False                
     lo_freq=self.lo_freq
     rf_amp=self.rf_amp
-#    trs=self.trs
     rf_pi_duration=None
     rf_pi2_duration=self.rf_pi2_duration
     echo_duration=self.echo_duration*1e3
@@ -122,11 +107,8 @@ def spin_echo(self, plotSeq):
     slice/partition gradient: z
     """
 
-#    BW = BW*1e3
     readout_duration = n_rd/BW
-
     
-#    echos_per_tr=1 # number of spin echoes (180 pulses followed by readouts) to do
                     
     if rf_pi_duration is None:
         rf_pi_duration = 2 * rf_pi2_duration
@@ -228,44 +210,49 @@ def spin_echo(self, plotSeq):
     # 0.1 for a safety margin))
 
     global_t = 20 # start the first TR at 20us
-    for nS in range(nScans):
-        for sl in range(n_sl):
-            for ph in range(n_ph):
-                for echo_idx in range(2):
-                    tx_t, tx_a = rf_wf(global_t, echo_idx)
-                    tx_gate_t, tx_gate_a = tx_gate_wf(global_t, echo_idx)
-                    readout_t, readout_a = readout_wf(global_t, echo_idx)
-                    rx_gate_t, rx_gate_a = readout_wf(global_t, echo_idx)
-                    readout_grad_t, readout_grad_a = readout_grad_wf(global_t, echo_idx)
-                    phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  ph)
-                    slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  sl)
-    
-                    expt.add_flodict({
-                        'tx0': (tx_t, tx_a),
-                        'grad_vx': (readout_grad_t, readout_grad_a/(Gx_factor/1000)/10+shim_x),
-                        'grad_vy': (phase_grad_t, phase_grad_a/(Gy_factor/1000)/10+shim_y),
-                        'grad_vz': (slice_grad_t, slice_grad_a/(Gz_factor/1000)/10+shim_z), 
-                        'rx0_en': (readout_t, readout_a),
-                        'tx_gate': (tx_gate_t, tx_gate_a),
-                        'rx_gate': (rx_gate_t, rx_gate_a),
-                    })
-                    global_t += echo_duration
-                
-                global_t += tr_duration-echo_duration
+    for sl in range(n_sl):
+        for ph in range(n_ph):
+            for echo_idx in range(2):
+                tx_t, tx_a = rf_wf(global_t, echo_idx)
+                tx_gate_t, tx_gate_a = tx_gate_wf(global_t, echo_idx)
+                readout_t, readout_a = readout_wf(global_t, echo_idx)
+                rx_gate_t, rx_gate_a = readout_wf(global_t, echo_idx)
+                readout_grad_t, readout_grad_a = readout_grad_wf(global_t, echo_idx)
+                phase_grad_t, phase_grad_a = phase_grad_wf(global_t, echo_idx,  ph)
+                slice_grad_t, slice_grad_a = slice_grad_wf(global_t, echo_idx,  sl)
+
+                expt.add_flodict({
+                    'tx0': (tx_t, tx_a),
+                    'grad_vx': (readout_grad_t, readout_grad_a/(Gx_factor/1000)/10+shim_x),
+                    'grad_vy': (phase_grad_t, phase_grad_a/(Gy_factor/1000)/10+shim_y),
+                    'grad_vz': (slice_grad_t, slice_grad_a/(Gz_factor/1000)/10+shim_z), 
+                    'rx0_en': (readout_t, readout_a),
+                    'tx_gate': (tx_gate_t, tx_gate_a),
+                    'rx_gate': (rx_gate_t, rx_gate_a),
+                })
+                global_t += echo_duration
+            
+            global_t += tr_duration-echo_duration
                 
     if plotSeq==1:
         expt.plot_sequence()
         plt.show()
         expt.__del__()
-    elif plotSeq==0:
-        rxd, msgs = expt.run()
-        expt.__del__()
-        print(len(rxd))
-        if nScans > 1:
-            data_avg = np.average(np.reshape(rxd['rx0'], (nScans, n_rd*n_ph*n_sl)), axis=0)
-        else:
-            data_avg = rxd['rx0']
-
-        return rxd['rx0'], msgs, data_avg
+#    elif plotSeq==0:
+#        for nS in range(nScans):
+#            print('nScan=%s'%(nS))
+#            rxd, msgs = expt.run()
+#            rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
+#            
+#            if nS ==0:
+#                n_rxd = rxd['rx0']
+#            else:
+#                n_rxd = np.concatenate((n_rxd, rxd['rx0']), axis=0)
+#    
+#        n_rxd = np.reshape(n_rxd, (nScans, len(rxd['rx0'])))
+#        data_avg = np.average(n_rxd, axis=0) 
+#       
+#        expt.__del__()
+#        return n_rxd, msgs, data_avg
 
 

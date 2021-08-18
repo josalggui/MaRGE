@@ -19,8 +19,9 @@ def fid(self, plotSeq):
     BW=self.BW*1e-3
     readout_duration=self.readout_duration*1e3
     nScans = self.nScans
+    oversampling_factor = self.oversampling_factor
         
-    rx_period=1/BW
+    rx_period=1/(BW*oversampling_factor)
     
     ## All times are in the context of a single TR, starting at time 0
     init_gpa = True
@@ -48,17 +49,23 @@ def fid(self, plotSeq):
         return value_dict
 
     expt = ex.Experiment(lo_freq=lo_freq, rx_t=rx_period, init_gpa=init_gpa)
-     
+    true_rx_period = expt.get_rx_ts()[0]
+    true_BW = 1/true_rx_period
+    true_BW = true_BW/oversampling_factor
+    
     tr_t = 20 # start the first TR at 20us
     expt.add_flodict( fid_tr( tr_t) )
 
     if plotSeq==1:
         expt.plot_sequence()
         plt.show()
+        expt.__del__()
     elif plotSeq==0:
         for nS in range(nScans):
             print('nScan=%s'%(nS))
             rxd, msgs = expt.run()
+            #Decimate
+            rxd['rx0'] = sig.decimate(rxd['rx0'], oversampling_factor, ftype='fir')
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             
             if nS ==0:

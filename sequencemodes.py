@@ -14,183 +14,6 @@ Calibration functions Modes
 
 from sequencesnamespace import Namespace as nmspc
 
-#class SpinEchoSeq:
-#    
-#    def __init__(self, 
-#                 seq:str, 
-#                 dbg_sc: float=None, 
-#                 lo_freq: float=None, 
-#                 rf_amp: float=None, 
-#                 trs: int=None, 
-#                 rf_pi2_duration: int=None, 
-#                 echo_duration:int=None, 
-#                 readout_duration:int=None, 
-#                 BW:float=None, 
-#                 shim: list=None
-#                 ):
-#    
-#        self.seq:str=seq
-#        self.dbg_sc:float=dbg_sc
-#        self.lo_freq:float=lo_freq
-#        self.rf_amp: float=rf_amp
-#        self.trs:int=trs
-#        self.rf_pi2_duration:int=rf_pi2_duration
-#        self.echo_duration:int=echo_duration
-#        self.readout_duration:int=readout_duration
-#        self.BW:float=BW
-#        self.shim:list=shim
-#    
-#    @property
-#    def systemproperties(self) -> dict:
-#        # TODO: add server cmd's as third entry in list
-#        return {
-#            nmspc.lo_freq: [float(self.lo_freq)],
-#            nmspc.rf_amp: [float(self.rf_amp)],
-#            nmspc.dbg_sc:[float(self.dbg_sc)], 
-#            nmspc.trs:[int(self. trs)]
-#        }
-#
-#    @property
-#    def sqncproperties(self) -> dict:
-#        return{
-#            nmspc.rf_pi2_duration:[int(self.rf_pi2_duration)],            
-#            nmspc.echo_duration:[int(self.echo_duration)], 
-#            nmspc.readout_duration:[int(self.readout_duration)], 
-#            nmspc.BW:[float(self.BW)]
-#        }    
-#        
-#    @property
-#    def gradientshims(self) -> dict:
-#        return{
-#            nmspc.shim:[list(self.shim)]
-#        }
-#        
-class SpinEcho1DSeq:
-    
-    def __init__(self, 
-                 seq:str, 
-                 dbg_sc: float=None, 
-                 lo_freq: float=None, 
-                 rf_amp: float=None, 
-                 trs: int=None, 
-                 rf_pi2_duration: int=None, 
-                 echo_duration:int=None, 
-                 readout_duration:int=None, 
-                 BW:float=None, 
-                 shim: list=None, 
-                 readout_amp:float=None, 
-                 readout_grad_duration:int=None, 
-                 trap_ramp_duration:int=None
-                 ):
-    
-        self.seq:str=seq
-        self.dbg_sc:float=dbg_sc
-        self.lo_freq:float=lo_freq
-        self.rf_amp: float=rf_amp
-        self.trs:int=trs
-        self.rf_pi2_duration:int=rf_pi2_duration
-        self.echo_duration:int=echo_duration
-        self.readout_duration:int=readout_duration
-        self.BW:float=BW
-        self.shim:list=shim
-        self.readout_amp:float=readout_amp
-        self.readout_grad_duration:int=readout_grad_duration
-        self.trap_ramp_duration:int=trap_ramp_duration
-    
-    @property
-    def systemproperties(self) -> dict:
-        # TODO: add server cmd's as third entry in list
-        return {
-            nmspc.lo_freq: [float(self.lo_freq)],
-            nmspc.rf_amp: [float(self.rf_amp)],
-            nmspc.dbg_sc:[float(self.dbg_sc)], 
-            nmspc.trs:[int(self. trs)]
-        }
-
-    @property
-    def sqncproperties(self) -> dict:
-        return{
-            nmspc.rf_pi2_duration:[int(self.rf_pi2_duration)],            
-            nmspc.echo_duration:[int(self.echo_duration)], 
-            nmspc.readout_duration:[int(self.readout_duration)], 
-            nmspc.BW:[float(self.BW)], 
-            nmspc.readout_amp:[float(self.readout_amp)], 
-            nmspc.readout_grad_duration:[int(self.readout_grad_duration)], 
-            nmspc.trap_ramp_duration:[int(self.trap_ramp_duration)]
-        }    
-        
-    @property
-    def gradientshims(self) -> dict:
-        return{
-            nmspc.shim:[list(self.shim)]
-        }
-#        
-#class SpinEcho2DSeq:
-#    
-#    def __init__(self, 
-#                 seq:str, 
-#                 dbg_sc: float=None, 
-#                 lo_freq: float=None, 
-#                 rf_amp: float=None, 
-#                 trs: int=None, 
-#                 rf_pi2_duration: int=None, 
-#                 echo_duration:int=None, 
-#                 readout_duration:int=None, 
-#                 BW:float=None, 
-#                 shim: list=None, 
-#                 readout_amp:float=None, 
-#                 readout_grad_duration:int=None, 
-#                 trap_ramp_duration:int=None, 
-#                 phase_start_amp:float=None, 
-#                 phase_grad_duration:int=None, 
-#                 ):
-#    
-#        self.seq:str=seq
-#        self.dbg_sc:float=dbg_sc
-#        self.lo_freq:float=lo_freq
-#        self.rf_amp: float=rf_amp
-#        self.trs:int=trs
-#        self.rf_pi2_duration:int=rf_pi2_duration
-#        self.echo_duration:int=echo_duration
-#        self.readout_duration:int=readout_duration
-#        self.BW:float=BW
-#        self.shim:list=shim
-#        self.readout_amp:float=readout_amp
-#        self.readout_grad_duration:int=readout_grad_duration
-#        self.trap_ramp_duration:int=trap_ramp_duration
-#        self.phase_start_amp:float=phase_start_amp
-#        self.phase_grad_duration:int=phase_grad_duration
-#    
-#    @property
-#    def systemproperties(self) -> dict:
-#        # TODO: add server cmd's as third entry in list
-#        return {
-#            nmspc.lo_freq: [float(self.lo_freq)],
-#            nmspc.rf_amp: [float(self.rf_amp)],
-#            nmspc.dbg_sc:[float(self.dbg_sc)], 
-#            nmspc.trs:[int(self. trs)]
-#        }
-#
-#    @property
-#    def sqncproperties(self) -> dict:
-#        return{
-#            nmspc.rf_pi2_duration:[int(self.rf_pi2_duration)],            
-#            nmspc.echo_duration:[int(self.echo_duration)], 
-#            nmspc.readout_duration:[int(self.readout_duration)], 
-#            nmspc.BW:[float(self.BW)], 
-#            nmspc.readout_amp:[float(self.readout_amp)], 
-#            nmspc.readout_grad_duration:[int(self.readout_grad_duration)], 
-#            nmspc.trap_ramp_duration:[int(self.trap_ramp_duration)], 
-#            nmspc.phase_start_amp:[float(self.phase_start_amp)], 
-#            nmspc.phase_grad_duration:[int(self.phase_grad_duration)]
-#        }    
-#        
-#    @property
-#    def gradientshims(self) -> dict:
-#        return{
-#            nmspc.shim:[list(self.shim)]
-#        }
-#        
 class SpinEchoSeq:
     
     def __init__(self, 
@@ -202,6 +25,7 @@ class SpinEchoSeq:
                  tr_duration:int=None, 
                  BW:int=None, 
                  nScans:int=None, 
+                 axes:list=None, 
                  shim: list=None,             
                  trap_ramp_duration:int=None, 
                  phase_grad_duration:int=None, 
@@ -224,6 +48,7 @@ class SpinEchoSeq:
         self.n:list=n
         self.fov:list=fov
         self.preemph_factor:float=preemph_factor
+        self.axes:list=axes    
     
     @property
     def RFproperties(self) -> dict:
@@ -232,6 +57,7 @@ class SpinEchoSeq:
             nmspc.lo_freq: [float(self.lo_freq)], 
             nmspc.BW:[int(self.BW)], 
             nmspc.nScans:[int(self.nScans)], 
+            nmspc.axes:[list(self.axes)], 
             nmspc.n:[list(self.n)], 
             nmspc.fov:[list(self.fov)], 
             nmspc.tr_duration:[int(self.tr_duration)], 
@@ -531,14 +357,8 @@ Definition of default sequences
 """
 defaultsequences={
 
-    #SpinEchoSeq(dbg_sc,lo_freq,rf_amp,trs,rf_pi2_duration,echo_duration,readout_duration,BW,shimming(rd,ph,sl))
-#    'Spin Echo': SpinEchoSeq('SE', 0, 3.069, 0.62, 1, 70, 2000, 1000, 0.05, (0,  0,  0)), 
-    #SpinEcho1DSeq(dbg_sc,lo_freq,rf_amp,trs,rf_pi2_duration,echo_duration,readout_duration,BW,shimming(rd,ph,sl))
-#    'Spin Echo 1D': SpinEcho1DSeq('SE1D', 0, 3.069, 0.62, 1, 70, 2000, 1000, 0.05, (0,  0,  0), 0.2, 700, 250), 
-    #SpinEcho2DSeq(dbg_sc,lo_freq,rf_amp,trs,rf_pi2_duration,echo_duration,readout_duration,BW,shimming(rd,ph,sl),phase_start_amp,phase_grad_duration,n(sr,sph,sl))
-    #'Spin Echo 2D': SpinEcho2DSeq('SE2D', 0, 3.069, 0.8, 1, 50, 2000, 500, 0.3, (0,  0,  0), 0.8, 700, 100, 0.6, 150), 
-    #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl), trap_ramp_duration,phase_grad_duration,n(x,y,z),fov(rd,ph,sl),preemph_factor)
-    'Spin Echo': SpinEchoSeq('SE', 3.040, 0.6, 65, 10, 500, 31, 1, (0,  0,  0), 1000, 100, (40, 1, 1), (20, 20, 15), 1.05), 
+    #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,axes,shimming(rd,ph,sl), trap_ramp_duration,phase_grad_duration,n(x,y,z),fov(rd,ph,sl),preemph_factor)
+    'Spin Echo': SpinEchoSeq('SE', 3.040, 0.6, 65, 10,500, 31, 3,  (1, 2, 3) , (0,  0,  0), 100, 100, (40, 1, 1), (20, 20, 15), 1.05), 
     #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl), trap_ramp_duration,phase_grad_duration,n(x,y,z),fov(rd,ph,sl),preemph_factor,echos_per_tr,sweep_mode,par_acq_factor)
     'Turbo Spin Echo': TurboSpinEchoSeq('TSE', 3.03, 0.6, 190, 100, 500, 80, 1, (0,  0,  0), 100, 500, (1, 2, 3), (100, 1, 1), (2000000, 20, 20), 1.0, 1, 1, 0),
     #FID(dbg_sc,lo_freq,BW,nScans, rf_amp,rf_duration,rf_tstart,rx_wait,,readout_duration)
@@ -547,7 +367,6 @@ defaultsequences={
     'Radial': RadialSeq('R', 0, 3, 0.2, 3, 0.5, 0, 220, 5, 50, 70, 180, 3.333, (0.01,  0.01,  0.01)),
     #GradEchoSeq(dbg_sc,lo_freq,rf_amp,trs,rx_period,rf_tstart,sliceAmp,phAmp,rdAmp,rfDur,trapRampDur,phDelay,phDur,shimming(rd,ph,sl))
     'Gradient Echo': GradEchoSeq('GE',0,  3, 0.1, 2, 3.333, 100, 0.4, 0.3, 0.8, 50, 100, 100, 200, (0.01, 0.01, 0.01)), 
-    #TurboSpinEcho(dbg_sc,lo_freq,rf_amp,trs,rx_period,trapRampDur,echosTR,echosDur,sliceAmp,phAmp,rdAmp,rfDur,phDur,rdDur,rdGradDur,phGint,TRPauseDur,shimming(rd,ph,sl))
-#    'Turbo Spin Echo': TSE_Seq('TSE',  0, 3, 1, 5, 3.333, 100, 5, 2000, 0.3, 0.6,0.8, 50, 150, 500, 700, 1200, 3000, (0.01, 0.01, 0.01))
+
 }
 

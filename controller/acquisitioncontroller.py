@@ -25,9 +25,6 @@ from seq.gradEcho import grad_echo
 from seq.turboSpinEcho_filter import turbo_spin_echo
 from seq.fid import fid
 from seq.spinEcho import spin_echo
-from seq.spinEcho1D import spin_echo1D
-from seq.spinEcho2D import spin_echo2D
-from seq.spinEcho3D import spin_echo3D
 from datetime import date,  datetime 
 from scipy.io import savemat
 import os
@@ -57,7 +54,7 @@ class AcquisitionController(QObject):
         self.sequence.oversampling_factor = 6
         
         if hasattr(self.sequence, 'axes'):
-            self.sequence.x, self.sequence.y, self.sequence.z, self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl = change_axes(self.sequence)
+            self.sequence.x, self.sequence.y, self.sequence.z, self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl, self.sequence.fov_rd, self.sequence.fov_ph, self.sequence.fov_sl = change_axes(self.sequence)
         else:
             self.sequence.n_rd=1
             self.sequence.n_ph=1
@@ -66,12 +63,6 @@ class AcquisitionController(QObject):
         plotSeq=0
         if self.sequence.seq == 'SE':
             self.rxd, self.msgs, self.data_avg=spin_echo(self.sequence, plotSeq)
-        elif self.sequence.seq == 'SE1D':
-            self.rxd, self.msgs=spin_echo1D(self.sequence, plotSeq)
-        elif self.sequence.seq == 'SE2D':
-            self.rxd, self.msgs=spin_echo2D(self.sequence, plotSeq)
-        elif self.sequence.seq == 'SE3D':
-            self.rxd, self.msgs=spin_echo3D(self.sequence, plotSeq)
         elif self.sequence.seq == 'FID':
             self.rxd, self.msgs, self.data_avg=fid(self.sequence, plotSeq)
         elif self.sequence.seq == 'R':
@@ -79,7 +70,7 @@ class AcquisitionController(QObject):
         elif self.sequence.seq == 'GE':
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
-            self.rxd, self.msgs, self.data_avg = turbo_spin_echo(self.sequence, plotSeq)
+            self.rxd, self.msgs, self.data_avg, self.data_nodecimate  = turbo_spin_echo(self.sequence, plotSeq)
             
         self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl], self.sequence.BW)
         self.sequence.ns = [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]
