@@ -63,7 +63,7 @@ class Namespace:
     shim = "Shims (x,y,z)"
     BW= "BandWidth (KHz)"
     n="Number of points (Nx,Ny,Nz)"
-    fov="FOV (rd,ph,sl)"
+    fov="FOV (x,y,z)"
     tr_duration="TR (ms)"
     nScans="nScans"
     rawdata ="rawdata"

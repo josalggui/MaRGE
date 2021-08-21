@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import pdb
 st = pdb.set_trace
 import scipy.signal as sig
+import array
 
 
 def trapezoid(plateau_a, total_t, ramp_t, ramp_pts, total_t_end_to_end=True, base_a=0):

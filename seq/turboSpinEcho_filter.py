@@ -60,41 +60,62 @@ def rect_cent(centre_t, plateau_a, rect_t, ramp_t, base_a=0):
 
 def getIndex(self, g_amps, echos_per_tr, n_ph, sweep_mode):
 #    print(self.n[1]/2/self.echos_per_tr)
-    n2ETL=np.int32(self.n[1]/2/self.echos_per_tr)
+    n2ETL=np.int32(self.n_ph/2/self.echos_per_tr)
     ind:np.int32 = []
 #    n_ph = self.n[1]
     if n_ph==1:
-        ind=0
+         ind = np.linspace(np.int32(n_ph)-1, 0, n_ph)
     
-    if sweep_mode==0:   # Sequential for T2 contrast
-        for ii in range(np.int32(n_ph/self.echos_per_tr)):
-            if ii==0:
-                ind = np.linspace(0, n_ph-1, echos_per_tr)+ii
+    else: 
+        if sweep_mode==0:   # Sequential for T2 contrast
+            for ii in range(np.int32(n_ph/self.echos_per_tr)):
+                if ii==0:
+                    ind = np.linspace(0, n_ph-1, echos_per_tr)+ii
+                else:
+                    ind=np.concatenate((ind, np.linspace(0, n_ph-1, echos_per_tr)+ii), axis=0)
+        elif sweep_mode==1: # Center-out for T1 contrast
+            #TGN-Ini. Kspace without spetial order.
+    #        ind = np.linspace(np.int32(n_ph)-1, 0, n_ph)
+            #TGN-End
+    #        YV-IniComment. Final Change 210903
+            if self.echos_per_tr==n_ph:
+                if (n_ph % 2) == 0:
+                    n2 = np.int32(n_ph/2)
+                else:
+                    n2 = np.int32((n_ph+1)/2)
+                    
+                ind = []
+                for ii in range(n2):
+                    ind_temp=[n2-ii-1, n2+ii]
+                    ind = ind + ind_temp            
+         
+    #            ind = np.linspace(np.int32(n_ph/2)-1, -n2ETL, echos_per_tr)
+    #            ind2 = np.linspace(np.int32(n_ph/2), n_ph-1, np.int32(echos_per_tr/2))
+    #            ind[1::2] = ind2
+    #            ind = np.concatenate((np.linspace(np.int32(n_ph/2)-1, 0, np.int32(echos_per_tr/2)),np.linspace(np.int32(n_ph/2), n_ph-1, np.int32(echos_per_tr/2))), axis=0)
             else:
-                ind=np.concatenate((ind, np.linspace(0, n_ph-1, echos_per_tr)+ii), axis=0)
-    elif sweep_mode==1: # Center-out for T1 contrast
-        if self.echos_per_tr==n_ph:
-            ind = np.linspace(np.int32(n_ph/2)-1, -n2ETL, echos_per_tr)
-            ind2 = np.linspace(np.int32(n_ph/2), n_ph-1, np.int32(echos_per_tr/2))
-            ind[1::2] = ind2
-#            ind = np.concatenate((np.linspace(np.int32(n_ph/2)-1, 0, np.int32(echos_per_tr/2)),np.linspace(np.int32(n_ph/2), n_ph-1, np.int32(echos_per_tr/2))), axis=0)
-        else:
-            for ii in range(n2ETL):
-                if ii==0:
-                    ind = np.linspace(np.int32(n_ph/2)-1, 1, echos_per_tr)
-                else:
-                    ind = np.concatenate((ind, np.linspace(np.int32(n_ph/2)-1-ii, n2ETL-1-ii, echos_per_tr)), axis=0)
-                ind = np.concatenate((ind,np.linspace(np.int32(n_ph/2)+ii, n_ph-n2ETL+ii, echos_per_tr)), axis=0)
-    elif sweep_mode==2:
-        if self.echos_per_tr==n_ph:
-            ind=np.linspace(0, n_ph-1, echos_per_tr)
-        else:
-            for ii in range(n2ETL):
-                if ii==0:
-                    ind = np.linspace(0, np.int32(n_ph/2)-1, echos_per_tr)
-                else:
-                    ind = np.concatenate(ind,np.linspace(ii, ii+np.int32(n_ph/2)-1, echos_per_tr))
-                ind = np.concatenate(ind,np.linspace(n_ph-1-ii, np.int32(n_ph/2)-ii, echos_per_tr));
+                for ii in range(n2ETL):
+                    if ii==0:
+                        ind1 = np.linspace(np.int32(n_ph/2), n2ETL, echos_per_tr)
+                        ind2 = np.linspace(np.int32(n_ph/2)+n2ETL, n_ph-n2ETL, echos_per_tr-1)
+                        ind = np.concatenate((np.linspace(np.int32(n_ph/2), n2ETL, echos_per_tr), np.linspace(np.int32(n_ph/2)+n2ETL, n_ph-n2ETL, echos_per_tr-1)), axis=0)
+                        ind2 = np.insert(ind2, 0,np.int32(n_ph/2), axis=0)
+                    else:
+                        ind = np.concatenate((ind, ind1-ii), axis=0)
+                        ind = np.concatenate((ind, ind2+ii), axis=0)
+                ind = np.insert(ind, len(ind), 0, axis=0)
+    
+    #        YV-EndComment. Final Change 210903
+        elif sweep_mode==2:
+            if self.echos_per_tr==n_ph:
+                ind=np.linspace(0, n_ph-1, echos_per_tr)
+            else:
+                for ii in range(n2ETL):
+                    if ii==0:
+                        ind = np.linspace(0, np.int32(n_ph/2)-1, echos_per_tr)
+                    else:
+                        ind = np.concatenate(ind,np.linspace(ii, ii+np.int32(n_ph/2)-1, echos_per_tr))
+                    ind = np.concatenate(ind,np.linspace(n_ph-1-ii, np.int32(n_ph/2)-ii, echos_per_tr));
 
     return np.int32(ind)
 
@@ -109,6 +130,7 @@ def turbo_spin_echo(self, plotSeq):
     init_gpa=True                
     lo_freq=self.lo_freq
     rf_amp=self.rf_amp
+#    trs=self.trs
     rf_pi_duration=None
     rf_pi2_duration=self.rf_pi2_duration
     echo_duration=self.echo_duration*1e3
@@ -376,7 +398,7 @@ def turbo_spin_echo(self, plotSeq):
             rxd, msgs = expt.run()
             data_nodecimate = rxd['rx0']
             #Decimate
-            rxd['rx0'] = sig.decimate(rxd['rx0'], oversampling_factor, ftype='fir')
+            rxd['rx0'] = sig.decimate(rxd['rx0'], oversampling_factor, ftype='fir', zero_phase=True)
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             if nS ==0:
                 n_rxd = rxd['rx0']
