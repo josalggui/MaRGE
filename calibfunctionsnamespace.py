@@ -32,6 +32,8 @@ class Namespace:
     N = "Number of points"
     step = "Step"
     rf_pi2_duration="RF excitation duration (us)"
+    rf_pi2_duration0 = "First RF excitation duration (us)"
+    rf_pi2_durationEnd = "Last RF excitation duration (us)"
     readout_duration = "Readout duration (ms)"
     rx_wait="Waiting time before readout (ms)"
     shim_initial = "Initial value for shimming"

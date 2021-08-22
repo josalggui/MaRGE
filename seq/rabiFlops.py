@@ -23,8 +23,8 @@ def rabi_flops(self):
     rf_amp=self.rf_amp # 1 = full-scale
     N=self.N 
     nScans = self.nScans
-    step=self.step  
-    rf_pi2_duration0 = self.rf_pi2_duration
+    rf_pi2_duration0 = self.rf_pi2_duration0
+    rf_pi2_durationEnd = self.rf_pi2_durationEnd
     tr_duration=self.tr_duration*1e3  # delay after end of RX before start of next TR
     echo_duration = self.echo_duration*1e3
     BW=self.BW  # us, 3.333us, 300 kHz rate
@@ -82,6 +82,10 @@ def rabi_flops(self):
             return np.array([tstart]), np.array([0]) # keep on zero otherwise
             
 ##############################################################    
+    
+    values = np.linspace(rf_pi2_duration0, rf_pi2_durationEnd, N)
+    step=values[1]-values[0]
+
     global_t = 20 # start the first TR at 20us
     k = 0
     i=0

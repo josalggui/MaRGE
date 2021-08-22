@@ -130,8 +130,8 @@ class RabiFlops:
                  rf_amp: float=None,
                  N: int=None, 
                  nScans:int=None, 
-                 step:float=None, 
-                 rf_pi2_duration:int=None, 
+                 rf_pi2_duration0:int=None, 
+                 rf_pi2_durationEnd:int=None, 
                  tr_duration: int=None, 
                  echo_duration:int=None, 
                  BW: float=None, 
@@ -144,8 +144,8 @@ class RabiFlops:
         self.rf_amp: float=rf_amp
         self.N: int=N
         self.nScans:int=nScans
-        self.step: float=step
-        self.rf_pi2_duration: int=rf_pi2_duration
+        self.rf_pi2_duration0: int=rf_pi2_duration0
+        self.rf_pi2_durationEnd: int=rf_pi2_durationEnd
         self.tr_duration: int=tr_duration
         self.echo_duration:int=echo_duration
         self.BW: float=BW
@@ -153,25 +153,19 @@ class RabiFlops:
         self.rx_wait:int=rx_wait
 
     @property
-    def sqncproperties(self) -> dict:
-        # TODO: add server cmd's as third entry in list
-        return {
+    def RFproperties(self) -> dict:
+        return{
+            cfnmspc.rf_amp: [float(self.rf_amp)],
+            cfnmspc.rf_pi2_duration0:[int(self.rf_pi2_duration0)], 
+            cfnmspc.rf_pi2_durationEnd:[int(self.rf_pi2_durationEnd)], 
             cfnmspc.N:[int(self.N)], 
             cfnmspc.nScans:[int(self.nScans)], 
-            cfnmspc.step:[int(self.step)], 
             cfnmspc.lo_freq: [float(self.lo_freq)],
             cfnmspc.BW:[int(self.BW)], 
             cfnmspc.tr_duration:[int(self.tr_duration)],             
             cfnmspc.echo_duration:[int(self.echo_duration)], 
             cfnmspc.readout_duration:[int(self.readout_duration)], 
             cfnmspc.rx_wait:[int(self.rx_wait)], 
-        }
-
-    @property
-    def RFproperties(self) -> dict:
-        return{
-            cfnmspc.rf_amp: [float(self.rf_amp)],
-            cfnmspc.rf_pi2_duration:[int(self.rf_pi2_duration)], 
         }    
 
 #    @property
@@ -311,8 +305,8 @@ Definition of default calibfunctions
 """
 defaultcalibfunctions={
 
-    #RabiFlops(lo_freq,rf_amp,N,nScans,step,rf_pi2_duration,tr_duration,echo_duration,BW,readout_duration,rx_wait)
-    'Rabi Flops': RabiFlops('Rabi Flops', 3.03, 0.6, 80, 3, 10.0, 30, 500, 100, 80, 3, 50), 
+    #RabiFlops(lo_freq,rf_amp,N,nScans,rf_pi2_duration0,rf_pi2_durationEnd,tr_duration,echo_duration,BW,readout_duration,rx_wait)
+    'Rabi Flops': RabiFlops('Rabi Flops', 3.03, 0.6, 80, 3, 30, 200,  500, 100, 80, 3, 50), 
     #InvRecov(lo_freq,rf_amp,N,step,rf_pi2_duration,tr_duration,echo_duration,BW,readout_duration,rx_wait)
     'Inversion Recovery': InvRecov('Inversion Recovery', 3.041, 0.3, 20, 5, 50, 20, 15, 31, 5, 100), 
     #larmor(lo_freq,rf_amp,nScans,N,step,rf_pi2_duration,echo_duration,BW,readout_duration,rx_wait)
