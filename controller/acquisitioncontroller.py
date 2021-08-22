@@ -22,7 +22,7 @@ from PyQt5.QtCore import QObject,  pyqtSlot,  pyqtSignal
 from manager.datamanager import DataManager
 from seq.radial import radial
 from seq.gradEcho import grad_echo
-from seq.turboSpinEcho_filter2 import turbo_spin_echo
+from seq.turboSpinEcho_filter import turbo_spin_echo
 from seq.fid import fid
 from seq.spinEcho import spin_echo
 from datetime import date,  datetime 
@@ -71,7 +71,7 @@ class AcquisitionController(QObject):
         elif self.sequence.seq == 'GE':
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
-            self.rxd, self.msgs, self.data_avg, self.data_nodecimate  = turbo_spin_echo(self.sequence, plotSeq)
+            self.rxd, self.msgs, self.data_avg  = turbo_spin_echo(self.sequence, plotSeq)
             
         self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl], self.sequence.BW)
         self.sequence.ns = [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]
@@ -89,7 +89,6 @@ class AcquisitionController(QObject):
             print('Peak Value = %0.3f' %(f_signalValue))
 #            snr=self.dataobject.get_snr()
 #            print('SNR:%0.3f' %(snr))
-
         else:
                        
             self.plot_3Dresult()

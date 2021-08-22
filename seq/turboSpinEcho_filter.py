@@ -60,7 +60,7 @@ def rect_cent(centre_t, plateau_a, rect_t, ramp_t, base_a=0):
 
 def getIndex(self, g_amps, echos_per_tr, n_ph, sweep_mode):
 #    print(self.n[1]/2/self.echos_per_tr)
-    n2ETL=np.int32(self.n_ph/2/self.echos_per_tr)
+    n2ETL=np.int32(n_ph/2/self.echos_per_tr)
     ind:np.int32 = []
 #    n_ph = self.n[1]
     if n_ph==1:
@@ -68,54 +68,32 @@ def getIndex(self, g_amps, echos_per_tr, n_ph, sweep_mode):
     
     else: 
         if sweep_mode==0:   # Sequential for T2 contrast
-            for ii in range(np.int32(n_ph/self.echos_per_tr)):
-                if ii==0:
-                    ind = np.linspace(0, n_ph-1, echos_per_tr)+ii
-                else:
-                    ind=np.concatenate((ind, np.linspace(0, n_ph-1, echos_per_tr)+ii), axis=0)
+            for ii in range(np.int32(n_ph/echos_per_tr)):
+               ind = np.concatenate((ind, np.arange(1, n_ph+1, n_ph/echos_per_tr)+ii))
+            ind = ind-1
+
         elif sweep_mode==1: # Center-out for T1 contrast
             #TGN-Ini. Kspace without spetial order.
     #        ind = np.linspace(np.int32(n_ph)-1, 0, n_ph)
             #TGN-End
     #        YV-IniComment. Final Change 210903
             if self.echos_per_tr==n_ph:
-                if (n_ph % 2) == 0:
-                    n2 = np.int32(n_ph/2)
-                else:
-                    n2 = np.int32((n_ph+1)/2)
-                    
-                ind = []
-                for ii in range(n2):
-                    ind_temp=[n2-ii-1, n2+ii]
-                    ind = ind + ind_temp            
-         
-    #            ind = np.linspace(np.int32(n_ph/2)-1, -n2ETL, echos_per_tr)
-    #            ind2 = np.linspace(np.int32(n_ph/2), n_ph-1, np.int32(echos_per_tr/2))
-    #            ind[1::2] = ind2
-    #            ind = np.concatenate((np.linspace(np.int32(n_ph/2)-1, 0, np.int32(echos_per_tr/2)),np.linspace(np.int32(n_ph/2), n_ph-1, np.int32(echos_per_tr/2))), axis=0)
+               ind = np.concatenate((np.arange(n_ph/2,0,-1),np.arange(n_ph/2+1,n_ph+1,1)),axis=0)
             else:
                 for ii in range(n2ETL):
-                    if ii==0:
-                        ind1 = np.linspace(np.int32(n_ph/2), n2ETL, echos_per_tr)
-                        ind2 = np.linspace(np.int32(n_ph/2)+n2ETL, n_ph-n2ETL, echos_per_tr-1)
-                        ind = np.concatenate((np.linspace(np.int32(n_ph/2), n2ETL, echos_per_tr), np.linspace(np.int32(n_ph/2)+n2ETL, n_ph-n2ETL, echos_per_tr-1)), axis=0)
-                        ind2 = np.insert(ind2, 0,np.int32(n_ph/2), axis=0)
-                    else:
-                        ind = np.concatenate((ind, ind1-ii), axis=0)
-                        ind = np.concatenate((ind, ind2+ii), axis=0)
-                ind = np.insert(ind, len(ind), 0, axis=0)
+                    ind = np.concatenate((ind,np.arange(n_ph/2, 0, -n2ETL)-(ii)), axis=0);
+                    ind = np.concatenate((ind,np.arange(n_ph/2+1, n_ph+1, n2ETL)+(ii)), axis=0);
+            ind = ind-1
     
     #        YV-EndComment. Final Change 210903
         elif sweep_mode==2:
             if self.echos_per_tr==n_ph:
-                ind=np.linspace(0, n_ph-1, echos_per_tr)
+                ind=np.arange(1, n_ph, 1)
             else:
                 for ii in range(n2ETL):
-                    if ii==0:
-                        ind = np.linspace(0, np.int32(n_ph/2)-1, echos_per_tr)
-                    else:
-                        ind = np.concatenate(ind,np.linspace(ii, ii+np.int32(n_ph/2)-1, echos_per_tr))
-                    ind = np.concatenate(ind,np.linspace(n_ph-1-ii, np.int32(n_ph/2)-ii, echos_per_tr));
+                    ind = np.concatenate((ind,np.arange(1, n_ph/2, n2ETL)+(ii)), axis=0);
+                    ind = np.concatenate((ind,np.arange(n_ph, n_ph/2+1, -n2ETL)-(ii)), axis=0);
+            ind = ind-1
 
     return np.int32(ind)
 
@@ -207,8 +185,7 @@ def turbo_spin_echo(self, plotSeq):
     
     # Get the phase gradient vector
     if(n_ph>1):
-        phase_amps = np.linspace(-Gph, Gph, n_ph+1)
-        phase_amps = phase_amps[1:n_ph+1]
+        phase_amps = np.linspace(-Gph, Gph, n_ph)
     else:
         phase_amps = np.linspace(-Gph, Gph, n_ph)    
     ind = getIndex(self, phase_amps, echos_per_tr, n_ph, sweep_mode)
@@ -396,26 +373,26 @@ def turbo_spin_echo(self, plotSeq):
         for nS in range(nScans):
             print('nScan=%s'%(nS))
             rxd, msgs = expt.run()
-            data_nodecimate = rxd['rx0']
+#            data_nodecimate = rxd['rx0']
             #Decimate
-            rxd['rx0'] = sig.decimate(rxd['rx0'], oversampling_factor, ftype='fir', zero_phase=True)
+#            rxd['rx0'] = sig.decimate(rxd['rx0'], oversampling_factor, ftype='fir', zero_phase=True)
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             if nS ==0:
                 n_rxd = rxd['rx0']
-                n_nodecimate = data_nodecimate
+#                n_nodecimate = data_nodecimate
             else:
                 n_rxd = np.concatenate((n_rxd, rxd['rx0']), axis=0)
-                n_nodecimate=np.concatenate((n_nodecimate, data_nodecimate), axis=0)
+#                n_nodecimate=np.concatenate((n_nodecimate, data_nodecimate), axis=0)
         if par_acq_factor==0 and nScans>1:
             n_rxd = np.reshape(n_rxd, (nScans, n_sl*n_ph*n_rd))
             data_avg = np.average(n_rxd, axis=0) 
-            n_nodecimate=np.reshape(n_nodecimate, (nScans, n_sl*n_ph*n_rd))
-            data_nodecimate = np.average(n_nodecimate, axis=0)
+#            n_nodecimate=np.reshape(n_nodecimate, (nScans, n_sl*n_ph*n_rd))
+#            data_nodecimate = np.average(n_nodecimate, axis=0)
         elif par_acq_factor>0 and nScans>1:
             n_rxd = np.reshape(n_rxd, (nScans, n_sl_par*n_ph*n_rd))
             data_avg = np.average(n_rxd, axis=0) 
-            n_nodecimate=np.reshape(n_nodecimate, (nScans, n_sl_par*n_ph*n_rd))
-            data_nodecimate = np.average(n_nodecimate, axis=0)            
+#            n_nodecimate=np.reshape(n_nodecimate, (nScans, n_sl_par*n_ph*n_rd))
+#            data_nodecimate = np.average(n_nodecimate, axis=0)            
         else:
             data_avg = n_rxd
         
@@ -432,5 +409,5 @@ def turbo_spin_echo(self, plotSeq):
         rxd_temp3[0:n_sl_par, :,  :] = rxd_temp2
         data_avg = np.reshape(rxd_temp3, -1)    # -1 means reshape to 1D array
 
-        return n_rxd, msgs, data_avg, data_nodecimate
+        return n_rxd, msgs, data_avg
 
