@@ -153,6 +153,7 @@ def turbo_spin_echo(self, plotSeq):
     true_BW = 1/true_rx_period
     true_BW = true_BW/oversampling_factor
     readout_duration = n_rd/true_BW
+    self.readout_duration = readout_duration
     
     # We calculate here the realtive sequence efficiency
     alphaRO = fov_rd/n_rd*np.sqrt(np.float(n_rd)/true_BW)
