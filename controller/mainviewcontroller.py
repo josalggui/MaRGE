@@ -23,7 +23,7 @@ from scipy.io import savemat
 from controller.sequencecontroller import SequenceList
 from seq.gradEcho import grad_echo 
 from seq.radial import radial
-from seq.turboSpinEcho import turbo_spin_echo
+from seq.turboSpinEcho_filter import turbo_spin_echo
 from seq.fid import fid
 from seq.spinEcho import spin_echo
 #from plotview.sequenceViewer import SequenceViewer
