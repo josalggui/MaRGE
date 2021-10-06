@@ -240,6 +240,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         plotSeq=1
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
 
+        self.sequence.oversampling_factor = 6
+
         if hasattr(self.sequence, 'axes'):
             self.sequence.x, self.sequence.y, self.sequence.z, self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl, self.sequence.fov_rd, self.sequence.fov_ph, self.sequence.fov_sl  = change_axes(self.sequence)
         else:
