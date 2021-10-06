@@ -1,3 +1,7 @@
+
+
+
+
 def change_axes(self):
 
     axes_x:int=self.axes[0]

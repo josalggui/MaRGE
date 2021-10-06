@@ -24,14 +24,13 @@ def larmorFreq(self):
     lo_freq=self.lo_freq # MHz
     rf_amp=self.rf_amp # 1 = full-scale
     N=self.N 
-    step=self.step_larmor  
+    step=self.step  
     rf_pi2_duration = self.rf_pi2_duration
     echo_duration = self.echo_duration*1e3
     BW=self.BW  # us, 3.333us, 300 kHz rate
     rx_wait=self.rx_wait*1e3
     readout_duration=self.readout_duration*1e3
     nScans=self.nScans
-    resolution_larmor=self.resolution_larmor*1e-3
               
 
     rx_period = 1/(BW*1e-3)

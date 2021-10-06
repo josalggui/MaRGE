@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import pdb
 st = pdb.set_trace
 import scipy.signal as sig
-import array
 
 
 def trapezoid(plateau_a, total_t, ramp_t, ramp_pts, total_t_end_to_end=True, base_a=0):
@@ -59,43 +58,40 @@ def rect_cent(centre_t, plateau_a, rect_t, ramp_t, base_a=0):
 #*********************************************************************************
 
 
+
 def getIndex(self, g_amps, echos_per_tr, n_ph, sweep_mode):
 #    print(self.n[1]/2/self.echos_per_tr)
-    n2ETL=np.int32(self.n[1]/2/self.echos_per_tr)
-    ind:np.int32 = []
+    n2ETL=np.int32(n_ph/2/self.echos_per_tr)
+    ind:np.int32 = [];
 #    n_ph = self.n[1]
     if n_ph==1:
-        ind=0
+         ind = np.linspace(np.int32(n_ph)-1, 0, n_ph)
     
-    if sweep_mode==0:   # Sequential for T2 contrast
-        for ii in range(np.int32(n_ph/self.echos_per_tr)):
-            if ii==0:
-                ind = np.linspace(0, n_ph-1, echos_per_tr)+ii
+    else: 
+        if sweep_mode==0:   # Sequential for T2 contrast
+            for ii in range(np.int32(n_ph/echos_per_tr)):
+               ind = np.concatenate((ind, np.arange(1, n_ph+1, n_ph/echos_per_tr)+ii))
+            ind = ind-1
+
+        elif sweep_mode==1: # Center-out for T1 contrast
+            if self.echos_per_tr==n_ph:
+                for ii in range(np.int32(n_ph/2)):
+                    cont = 2*ii
+                    ind = np.concatenate((ind, np.array([n_ph/2-cont/2])), axis=0);
+                    ind = np.concatenate((ind, np.array([n_ph/2+1+cont/2])), axis=0);
             else:
-                ind=np.concatenate((ind, np.linspace(0, n_ph-1, echos_per_tr)+ii), axis=0)
-    elif sweep_mode==1: # Center-out for T1 contrast
-        if self.echos_per_tr==n_ph:
-            ind = np.linspace(np.int32(n_ph/2)-1, -n2ETL, echos_per_tr)
-            ind2 = np.linspace(np.int32(n_ph/2), n_ph-1, np.int32(echos_per_tr/2))
-            ind[1::2] = ind2
-#            ind = np.concatenate((np.linspace(np.int32(n_ph/2)-1, 0, np.int32(echos_per_tr/2)),np.linspace(np.int32(n_ph/2), n_ph-1, np.int32(echos_per_tr/2))), axis=0)
-        else:
-            for ii in range(n2ETL):
-                if ii==0:
-                    ind = np.linspace(np.int32(n_ph/2)-1, 1, echos_per_tr)
-                else:
-                    ind = np.concatenate((ind, np.linspace(np.int32(n_ph/2)-1-ii, n2ETL-1-ii, echos_per_tr)), axis=0)
-                ind = np.concatenate((ind,np.linspace(np.int32(n_ph/2)+ii, n_ph-n2ETL+ii, echos_per_tr)), axis=0)
-    elif sweep_mode==2:
-        if self.echos_per_tr==n_ph:
-            ind=np.linspace(0, n_ph-1, echos_per_tr)
-        else:
-            for ii in range(n2ETL):
-                if ii==0:
-                    ind = np.linspace(0, np.int32(n_ph/2)-1, echos_per_tr)
-                else:
-                    ind = np.concatenate(ind,np.linspace(ii, ii+np.int32(n_ph/2)-1, echos_per_tr))
-                ind = np.concatenate(ind,np.linspace(n_ph-1-ii, np.int32(n_ph/2)-ii, echos_per_tr));
+                for ii in range(n2ETL):
+                    ind = np.concatenate((ind,np.arange(n_ph/2, 0, -n2ETL)-(ii)), axis=0);
+                    ind = np.concatenate((ind,np.arange(n_ph/2+1, n_ph+1, n2ETL)+(ii)), axis=0);
+            ind = ind-1
+        elif sweep_mode==2: # Out-to-center for T2 contrast
+            if self.echos_per_tr==n_ph:
+                ind=np.arange(1, n_ph+1, 1)
+            else:
+                for ii in range(n2ETL):
+                    ind = np.concatenate((ind,np.arange(1, n_ph/2+1, n2ETL)+(ii)), axis=0);
+                    ind = np.concatenate((ind,np.arange(n_ph, n_ph/2, -n2ETL)-(ii)), axis=0);
+            ind = ind-1
 
     return np.int32(ind)
 
@@ -110,6 +106,7 @@ def turbo_spin_echo(self, plotSeq):
     init_gpa=True                
     lo_freq=self.lo_freq
     rf_amp=self.rf_amp
+#    trs=self.trs
     rf_pi_duration=None
     rf_pi2_duration=self.rf_pi2_duration
     echo_duration=self.echo_duration*1e3
@@ -119,9 +116,9 @@ def turbo_spin_echo(self, plotSeq):
     shim_y: float = self.shim[1]
     shim_z: float = self.shim[2]
     nScans=self.nScans
-    fov_rd:int=self.fov[0]*1e-2
-    fov_ph:int=self.fov[1]*1e-2
-    fov_sl:int=self.fov[2]*1e-2
+    fov_x:int=self.fov_rd*1e-2
+    fov_y:int=self.fov_ph*1e-2
+    fov_z:int=self.fov_sl*1e-2
     trap_ramp_duration=self.trap_ramp_duration
     phase_grad_duration=self.phase_grad_duration
     echos_per_tr=self.echos_per_tr
@@ -134,6 +131,7 @@ def turbo_spin_echo(self, plotSeq):
     x = self.x
     y = self.y
     z = self.z
+    oversampling_factor = self.oversampling_factor
    
     BW=BW*1e-3
 #    trap_ramp_pts=np.int32(trap_ramp_duration*0.2)    # 0.2 puntos/ms
@@ -141,56 +139,51 @@ def turbo_spin_echo(self, plotSeq):
     grad_readout_delay=9   #8.83    # readout amplifier delay
     grad_phase_delay=9      #8.83
     grad_slice_delay=9        #8.83
-    rx_period=1/(BW)
+    rx_period=1/(BW*oversampling_factor)
     """
     readout gradient: x
     phase gradient: y
     slice/partition gradient: z
     """
-    #####################################
-    
-#    x, y, z, n_rd, n_ph, n_sl = change_axes(self)
-    
-     ######################################
 
     expt = ex.Experiment(lo_freq=lo_freq, rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
     true_rx_period = expt.get_rx_ts()[0]
     true_BW = 1/true_rx_period
+    true_BW = true_BW/oversampling_factor
     readout_duration = n_rd/true_BW
-        
+    
     # We calculate here the realtive sequence efficiency
-    alphaRO = fov_rd/n_rd*np.sqrt(np.float(n_rd)/true_BW)
-    alphaPH = fov_ph/n_ph*np.sqrt(np.float(echos_per_tr))
-    alphaSL = fov_sl/n_sl*np.sqrt(np.float(n_sl)/(np.float(n_sl)/2+np.float(par_acq_factor)))
+    alphaRO = fov_x/n_rd*np.sqrt(np.float(n_rd)/true_BW)
+    alphaPH = fov_y/n_ph*np.sqrt(np.float(echos_per_tr))
+    alphaSL = fov_z/n_sl*np.sqrt(np.float(n_sl)/(np.float(n_sl)/2+np.float(par_acq_factor)))
     alpha = alphaRO*alphaPH*alphaSL*10000
     print('alpha:%f'%(alpha))
 
-                        
+                    
     if rf_pi_duration is None:
         rf_pi_duration = 2 * rf_pi2_duration
         
-    
+ 
     # Calibration constans to change from T/m to DAC amplitude
     
     gammaB = 42.56e6    # Gyromagnetic ratio in Hz/T
     # Get readout, phase and slice amplitudes
     # Readout gradient amplitude
-    Grd = true_BW*1e6/(gammaB*fov_rd)
-      # Phase gradient amplitude
+    Grd = true_BW*1e6/(gammaB*fov_x)
+    # Phase gradient amplitude
     if (n_ph==1):   
         Gph=0
     else:
-        Gph = n_ph/(2*gammaB*fov_ph*phase_grad_duration*1e-6);
+        Gph = n_ph/(2*gammaB*fov_y*phase_grad_duration*1e-6);
     # Slice gradient amplitude
     if (n_sl==1):
         Gsl=0
     else:
-        Gsl = n_sl/(2*gammaB*fov_sl*phase_grad_duration*1e-6);
+        Gsl = n_sl/(2*gammaB*fov_z*phase_grad_duration*1e-6);
     
     # Get the phase gradient vector
     if(n_ph>1):
-        phase_amps = np.linspace(-Gph, Gph, n_ph+1)
-        phase_amps = phase_amps[1:n_ph+1]
+        phase_amps = np.linspace(-Gph, Gph, n_ph)
     else:
         phase_amps = np.linspace(-Gph, Gph, n_ph)    
     ind = getIndex(self, phase_amps, echos_per_tr, n_ph, sweep_mode)
@@ -198,7 +191,7 @@ def turbo_spin_echo(self, plotSeq):
     
     # Get the slice gradient vector
     if (n_sl>1):
-        slice_amps = np.linspace(-Gsl, Gsl,  n_sl+1)
+        slice_amps = np.linspce(-Gsl, Gsl,  n_sl+1)
         slice_amps = slice_amps[1:n_sl+1]
     else:
         slice_amps = np.linspace(-Gsl, Gsl, n_sl)
@@ -373,22 +366,31 @@ def turbo_spin_echo(self, plotSeq):
     if plotSeq==1:                  # What is the meaning of plotSeq??
         expt.plot_sequence()
         plt.show()
-#        expt.__del__()
+        expt.__del__()
     elif plotSeq==0:
         for nS in range(nScans):
             print('nScan=%s'%(nS))
             rxd, msgs = expt.run()
+#            data_nodecimate = rxd['rx0']
+            #Decimate
+            rxd['rx0'] = sig.decimate(rxd['rx0'], oversampling_factor, ftype='fir', zero_phase=True)
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             if nS ==0:
                 n_rxd = rxd['rx0']
+#                n_nodecimate = data_nodecimate
             else:
                 n_rxd = np.concatenate((n_rxd, rxd['rx0']), axis=0)
+#                n_nodecimate=np.concatenate((n_nodecimate, data_nodecimate), axis=0)
         if par_acq_factor==0 and nScans>1:
             n_rxd = np.reshape(n_rxd, (nScans, n_sl*n_ph*n_rd))
             data_avg = np.average(n_rxd, axis=0) 
+#            n_nodecimate=np.reshape(n_nodecimate, (nScans, n_sl*n_ph*n_rd))
+#            data_nodecimate = np.average(n_nodecimate, axis=0)
         elif par_acq_factor>0 and nScans>1:
             n_rxd = np.reshape(n_rxd, (nScans, n_sl_par*n_ph*n_rd))
             data_avg = np.average(n_rxd, axis=0) 
+#            n_nodecimate=np.reshape(n_nodecimate, (nScans, n_sl_par*n_ph*n_rd))
+#            data_nodecimate = np.average(n_nodecimate, axis=0)            
         else:
             data_avg = n_rxd
         

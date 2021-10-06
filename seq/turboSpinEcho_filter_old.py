@@ -62,7 +62,7 @@ def rect_cent(centre_t, plateau_a, rect_t, ramp_t, base_a=0):
 def getIndex(self, g_amps, echos_per_tr, n_ph, sweep_mode):
 #    print(self.n[1]/2/self.echos_per_tr)
     n2ETL=np.int32(n_ph/2/self.echos_per_tr)
-    ind:np.int32 = [];
+    ind:np.int32 = []
 #    n_ph = self.n[1]
     if n_ph==1:
          ind = np.linspace(np.int32(n_ph)-1, 0, n_ph)
@@ -74,23 +74,26 @@ def getIndex(self, g_amps, echos_per_tr, n_ph, sweep_mode):
             ind = ind-1
 
         elif sweep_mode==1: # Center-out for T1 contrast
+            #TGN-Ini. Kspace without spetial order.
+    #        ind = np.linspace(np.int32(n_ph)-1, 0, n_ph)
+            #TGN-End
+    #        YV-IniComment. Final Change 210903
             if self.echos_per_tr==n_ph:
-                for ii in range(np.int32(n_ph/2)):
-                    cont = 2*ii
-                    ind = np.concatenate((ind, np.array([n_ph/2-cont/2])), axis=0);
-                    ind = np.concatenate((ind, np.array([n_ph/2+1+cont/2])), axis=0);
+               ind = np.concatenate((np.arange(n_ph/2,0,-1),np.arange(n_ph/2+1,n_ph+1,1)),axis=0)
             else:
                 for ii in range(n2ETL):
                     ind = np.concatenate((ind,np.arange(n_ph/2, 0, -n2ETL)-(ii)), axis=0);
                     ind = np.concatenate((ind,np.arange(n_ph/2+1, n_ph+1, n2ETL)+(ii)), axis=0);
             ind = ind-1
-        elif sweep_mode==2: # Out-to-center for T2 contrast
+    
+    #        YV-EndComment. Final Change 210903
+        elif sweep_mode==2:
             if self.echos_per_tr==n_ph:
-                ind=np.arange(1, n_ph+1, 1)
+                ind=np.arange(1, n_ph, 1)
             else:
                 for ii in range(n2ETL):
-                    ind = np.concatenate((ind,np.arange(1, n_ph/2+1, n2ETL)+(ii)), axis=0);
-                    ind = np.concatenate((ind,np.arange(n_ph, n_ph/2, -n2ETL)-(ii)), axis=0);
+                    ind = np.concatenate((ind,np.arange(1, n_ph/2, n2ETL)+(ii)), axis=0);
+                    ind = np.concatenate((ind,np.arange(n_ph, n_ph/2+1, -n2ETL)-(ii)), axis=0);
             ind = ind-1
 
     return np.int32(ind)
@@ -191,7 +194,7 @@ def turbo_spin_echo(self, plotSeq):
     
     # Get the slice gradient vector
     if (n_sl>1):
-        slice_amps = np.linspce(-Gsl, Gsl,  n_sl+1)
+        slice_amps = np.linspace(-Gsl, Gsl,  n_sl+1)
         slice_amps = slice_amps[1:n_sl+1]
     else:
         slice_amps = np.linspace(-Gsl, Gsl, n_sl)

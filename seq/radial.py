@@ -3,7 +3,7 @@
 import sys
 sys.path.append('../../marcos_client')
 import numpy as np
-import experiment as ex
+import experiment as exp
 import matplotlib.pyplot as plt
 import pdb
 st = pdb.set_trace
