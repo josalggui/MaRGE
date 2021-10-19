@@ -147,22 +147,7 @@ class AcquisitionController(QObject):
         dict2['average'] = self.data_avg
             
         savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict2) 
-        #rawdata
-#        np.savetxt("/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.view(float).reshape(-1, 2))
-#        np.savetxt("/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.view(float))
 
-#        if (dict["nScans"]==1):
-#            np.savetxt("experiments/acquisitions/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.reshape(1, self.rxd.shape[0]), newline = "\r\n", fmt = '%.6f%+.6fj '*self.rxd.shape[0])
-#        else:
-#            np.savetxt("experiments/acquisitions/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.rxd.reshape(self.rxd.shape[0], self.rxd.shape[1]), newline = "\r\n", fmt = '%.6f%+.6fj '*self.rxd.shape[1])
-
-#        test = np.loadtxt("/share_vm/results_experiments/%s/%s/%s.%s.rawdata.txt" % (dt2_string, dt_string, dict["seq"],dt_string)).view(complex).reshape(-1)
-        #avg
-#        np.savetxt("experiments/acquisitions/%s/%s/%s.%s.avg.txt" % (dt2_string, dt_string, dict["seq"],dt_string), self.data_avg,  fmt='%.6e')
-#        #params
-#        f = open("experiments/acquisitions/%s/%s/%s.%s.params.txt" % (dt2_string, dt_string, dict["seq"],dt_string),"w")
-#        f.write( str(dict))
-#        f.close()     
 
         if hasattr(self.dataobject, 'f_fft2Magnitude'):
             nifti_file=nib.Nifti1Image(self.dataobject.f_fft2Magnitude, affine=np.eye(4))
@@ -174,6 +159,6 @@ class AcquisitionController(QObject):
         if hasattr(self.parent, 't_plotview'):
             exporter2 = pyqtgraph.exporters.ImageExporter(self.parent.t_plotview.scene())
             exporter2.export("experiments/acquisitions/%s/%s/Temp%s.png" % (dt2_string, dt_string, self.sequence))
-#        if hasattr(self.parent, 'plotview_layout'):
-#            exporter3 = pyqtgraph.exporters.ImageExporter(pg.scene())
-#            exporter3.export("experiments/acquisitions/%s/%s/Im%s.png" % (dt2_string, dt_string, self.sequence))
+
+
+    

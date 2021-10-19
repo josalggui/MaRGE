@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1126</width>
-    <height>800</height>
+    <width>341</width>
+    <height>613</height>
    </rect>
   </property>
   <property name="font">
@@ -16,7 +16,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>GUI for Open-Source MRI</string>
+   <string>Batch Window</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -165,105 +165,6 @@
          </layout>
         </widget>
        </item>
-       <item>
-        <widget class="QWidget" name="verticalWidget_2" native="true">
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <property name="spacing">
-           <number>5</number>
-          </property>
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QWidget" name="plotview" native="true">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>400</height>
-             </size>
-            </property>
-            <layout class="QVBoxLayout" name="plotview_layout">
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QWidget" name="console" native="true">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>100</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>200</height>
-             </size>
-            </property>
-            <property name="autoFillBackground">
-             <bool>true</bool>
-            </property>
-            <layout class="QGridLayout" name="layout_output" rowstretch="0">
-             <property name="leftMargin">
-              <number>10</number>
-             </property>
-             <property name="topMargin">
-              <number>10</number>
-             </property>
-             <property name="rightMargin">
-              <number>10</number>
-             </property>
-             <property name="bottomMargin">
-              <number>10</number>
-             </property>
-             <property name="horizontalSpacing">
-              <number>40</number>
-             </property>
-             <property name="verticalSpacing">
-              <number>16</number>
-             </property>
-            </layout>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
       </layout>
      </widget>
     </item>
@@ -334,7 +235,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1126</width>
+     <width>341</width>
      <height>27</height>
     </rect>
    </property>
@@ -349,8 +250,8 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_gpaInit"/>
-   <addaction name="action_calibration"/>
+   <addaction name="action_addProcess"/>
+   <addaction name="action_removeProcess"/>
    <addaction name="action_acquire"/>
   </widget>
   <widget class="QToolBar" name="AcquisitionControlToolbar">
@@ -363,12 +264,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_loadparams"/>
-   <addaction name="action_saveparams"/>
-   <addaction name="action_viewsequence"/>
-   <addaction name="action_batch"/>
    <addaction name="separator"/>
-   <addaction name="action_changeappearance"/>
    <addaction name="action_close"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -381,8 +277,6 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_savedata"/>
-   <addaction name="action_exportfigure"/>
   </widget>
   <action name="action_close">
    <property name="checkable">
@@ -396,25 +290,25 @@
     <string>Close</string>
    </property>
    <property name="toolTip">
-    <string>Close PhisioMRI_GUI</string>
+    <string>Close Calibration Window</string>
    </property>
    <property name="font">
     <font/>
    </property>
   </action>
-  <action name="action_connect">
+  <action name="action_addProcess">
    <property name="checkable">
     <bool>false</bool>
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>../../../../.designer/resources/icons/power.svg</normaloff>../../../../.designer/resources/icons/power.svg</iconset>
+     <normaloff>../resources/icons/plus.svg</normaloff>../resources/icons/plus.svg</iconset>
    </property>
    <property name="text">
-    <string>Connect</string>
+    <string>Add</string>
    </property>
    <property name="toolTip">
-    <string>Connect to server</string>
+    <string>Add process to the batch</string>
    </property>
    <property name="font">
     <font/>
@@ -432,109 +326,46 @@
     <string>Start Acquisition</string>
    </property>
   </action>
-  <action name="action_changeappearance">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/brush.svg</normaloff>../resources/icons/brush.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Appearance</string>
-   </property>
-   <property name="toolTip">
-    <string>Change Window Appearance</string>
-   </property>
-  </action>
-  <action name="action_loadparams">
+  <action name="action_loadbatch">
    <property name="icon">
     <iconset>
      <normaloff>../resources/icons/waves.svg</normaloff>../resources/icons/waves.svg</iconset>
    </property>
    <property name="text">
-    <string>Load sequence parameterisation</string>
+    <string>Load batch</string>
    </property>
    <property name="toolTip">
-    <string>Load parameters of a sequence from files </string>
+    <string>Load batch configuration from a file </string>
    </property>
   </action>
-  <action name="action_saveparams">
+  <action name="action_savebatch">
    <property name="icon">
     <iconset>
      <normaloff>../resources/icons/arrow-minimise.svg</normaloff>../resources/icons/arrow-minimise.svg</iconset>
    </property>
    <property name="text">
-    <string>Save Parameters</string>
+    <string>Save Batch</string>
    </property>
    <property name="toolTip">
-    <string>Save the parameters of a sequence in a file</string>
+    <string>Save batch configuration in a file</string>
    </property>
   </action>
-  <action name="action_savedata">
+  <action name="action_removeProcess">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset>
-     <normaloff>../resources/icons/clipboard.svg</normaloff>../resources/icons/clipboard.svg</iconset>
+     <normaloff>../resources/icons/minus.svg</normaloff>../resources/icons/minus.svg</iconset>
    </property>
    <property name="text">
-    <string>Save Data</string>
+    <string>Remove</string>
    </property>
    <property name="toolTip">
-    <string>Save Acquired Data</string>
+    <string>Remove process to the batch</string>
    </property>
-  </action>
-  <action name="action_exportfigure">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/chart-line.svg</normaloff>../resources/icons/chart-line.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Export Figure</string>
-   </property>
-   <property name="toolTip">
-    <string>Export the Figure of the Acquired Signal</string>
-   </property>
-  </action>
-  <action name="action_viewsequence">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/chart-bar-outline.svg</normaloff>../resources/icons/chart-bar-outline.svg</iconset>
-   </property>
-   <property name="text">
-    <string>action_viewsequence</string>
-   </property>
-   <property name="toolTip">
-    <string>View the defined sequence</string>
-   </property>
-  </action>
-  <action name="action_calibration">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/compass.svg</normaloff>../resources/icons/compass.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Calibration of the system</string>
-   </property>
-  </action>
-  <action name="action_gpaInit">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/key.svg</normaloff>../resources/icons/key.svg</iconset>
-   </property>
-   <property name="text">
-    <string>GPA Initialization</string>
-   </property>
-   <property name="toolTip">
-    <string>Initialization of the GPA</string>
-   </property>
-  </action>
-  <action name="action_batch">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/arrow-loop-outline.svg</normaloff>../resources/icons/arrow-loop-outline.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Batch Processing</string>
-   </property>
-   <property name="toolTip">
-    <string>Barch Processing</string>
+   <property name="font">
+    <font/>
    </property>
   </action>
  </widget>

@@ -87,7 +87,7 @@ class CalibrationAcqController(QObject):
                 i=i+1
             
             f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],'Frequency (kHz)', "Amplitude", "%s Spectrum (last pulse)" %(self.calibfunction.cfn) )
-            t_plotview = SpectrumPlot(np.linspace(self.calibfunction.rf_pi2_duration, self.calibfunction.rf_pi2_duration+self.calibfunction.N*self.calibfunction.step-self.calibfunction.step, self.calibfunction.N), peakValst, [],[],'Excitation duration (ms)', "pi2 pulse duration", "%s" %(self.calibfunction.cfn))
+            t_plotview = SpectrumPlot(np.linspace(self.calibfunction.rf_pi2_duration0, self.calibfunction.rf_pi2_durationEnd,  self.calibfunction.N), peakValst, [],[],'Excitation duration (us)', "pi2 pulse duration", "%s" %(self.calibfunction.cfn))
             self.parent.plotview_layout.addWidget(t_plotview)
             self.parent.plotview_layout.addWidget(f_plotview)
             

@@ -361,8 +361,6 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_loadparams"/>
-   <addaction name="action_saveparams"/>
    <addaction name="separator"/>
    <addaction name="action_close"/>
   </widget>

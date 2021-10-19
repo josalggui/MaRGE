@@ -103,27 +103,27 @@ def getIndex(n_ph, g_amps, echos_per_tr, sweep_mode):
 
 
 def turbo_spin_echo(
-    init_gpa=True,                 
-    lo_freq=3.0395, 
-    rf_amp=0.4, 
+    init_gpa=False,                 
+    lo_freq=3.03807, 
+    rf_amp=0.08, 
     rf_pi_duration=None, 
-    rf_pi2_duration=45, 
-    echo_duration=100*1e3, 
+    rf_pi2_duration=127, 
+    echo_duration=10*1e3, 
     tr_duration=500*1e3, 
     BW=31, 
     shim_x: float = 0, 
     shim_y: float = 0, 
     shim_z: float = 0, 
     nScans=1, 
-    n_rd:int=8000, 
-    n_ph:int=1, 
+    n_rd:int=80, 
+    n_ph:int=32, 
     n_sl:int=1, 
     fov_rd:int=2000000*1e-2, 
     fov_ph:int=20*1e-2, 
     fov_sl:int=20*1e-2, 
     trap_ramp_duration=100, 
     phase_grad_duration=500, 
-    echos_per_tr=1, 
+    echos_per_tr=16, 
     rd_preemph_factor:float=1, 
     sweep_mode = 1, 
     par_acq_factor=0):
@@ -382,7 +382,7 @@ def turbo_spin_echo(
     rxd_temp3[0:n_sl_par, :,  :] = rxd_temp2
     data_avg = np.reshape(rxd_temp3, -1)    # -1 means reshape to 1D array
 
-    plt.plot(data_avg)
+    plt.plot(np.abs(data_avg))
     plt.show()
     
     

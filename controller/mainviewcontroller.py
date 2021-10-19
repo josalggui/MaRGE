@@ -13,6 +13,7 @@ from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
 from controller.acquisitioncontroller import AcquisitionController
 from controller.calibrationcontroller import CalibrationController
+from controller.batchcontroller import BatchController
 import pyqtgraph.exporters
 import os
 import ast
@@ -90,6 +91,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_savedata.triggered.connect(self.save_data)
         self.action_exportfigure.triggered.connect(self.export_figure)
         self.action_viewsequence.triggered.connect(self.plot_sequence)
+        self.action_batch.triggered.connect(self.batch_system)
         
     def lines_that_start_with(self, str, f):
         return [line for line in f if line.startswith(str)]
@@ -278,3 +280,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def initgpa(self):
         expt = ex.Experiment(init_gpa=True)
         expt.run()
+
+    def batch_system(self):
+        batchW = BatchController(self, self.sequencelist)
+        batchW.show()

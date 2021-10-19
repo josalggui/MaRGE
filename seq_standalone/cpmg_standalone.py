@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Oct  14 20:41:05 2021
+Created on Thu Oct  7 12:40:05 2021
 
 @author: José Miguel Algarín Guisado
 MRILAB @ I3M
@@ -24,31 +24,25 @@ st = pdb.set_trace
 #*********************************************************************************
 
 
-def inversionRecovery_standalone(
+def cpmg_standalone(
     init_gpa=False,               # Starts the gpa
-    larmorFreq = 3.080e6,      # Larmor frequency
-    rfExAmp = 0.3,             # rf excitation pulse amplitude
+    larmorFreq = 2.993e6,      # Larmor frequency
+    rfExAmp = 0.7,             # rf excitation pulse amplitude
     rfReAmp = None,             # rf refocusing pulse amplitude
-    rfExTime =35e-6,          # rf excitation pulse time
+    rfExTime =300e-6,          # rf excitation pulse time
     rfReTime = None,          # rf refocusing pulse time
-    echoTime = 10e-3,        # time between echoes
-    repetitionTime = 5,     # TR
+    echoSpacing = 10e-3,        # time between echoes
+    repetitionTime = 500e-3,     # TR
     nPoints = 500,                 # Number of points along readout, phase and slice
-    nRepetitions = 40,                   # Echo train length
-    minIRTime = 10e-3,           # Minimum inversion recovery time
-    maxIRTime = 4000e-3,          # Maximum inversion recovery time
+    etl = 100,                   # Echo train length
     acqTime = 2e-3,             # Acquisition time
-    ): 
+    ):
 
     # Miscellaneous
-    blkTime = 15             # Deblanking time (us)
+    blkTime = 100             # Deblanking time (us)
     larmorFreq = larmorFreq*1e-6
-    if rfReAmp==None:
-        rfReAmp = rfExAmp
-    if rfReTime==None:
-        rfReTime = 2*rfExTime
-    deadTime = 250              # Dead time (us)
-    irTimeVector = np.geomspace(minIRTime,maxIRTime,num=nRepetitions)*1e6
+    rfReAmp = rfExAmp
+    rfReTime = 2*rfExTime
     
     # BW
     BW = nPoints/acqTime*1e-6
@@ -91,60 +85,61 @@ def inversionRecovery_standalone(
                 
     def finalizeExperiment(tStart, gAmp):
         expt.add_flodict({
-            'grad_vx': (np.array([tStart]), np.array([gAmp])),
-            'grad_vy': (np.array([tStart]), np.array([gAmp])),
-            'grad_vz': (np.array([tStart]), np.array([gAmp]))
+            'grad_vx': (np.array(tStart), np.array(gAmp)),
+            'grad_vy': (np.array(tStart), np.array(gAmp)),
+            'grad_vz': (np.array(tStart), np.array(gAmp))
             })
 
     # Changing time parameters to us
     rfExTime = rfExTime*1e6
     rfReTime = rfReTime*1e6
-    echoTime = echoTime*1e6
+    echoSpacing = echoSpacing*1e6
     repetitionTime = repetitionTime*1e6
+
+    # Initialize time
+    t0 = 20
     
-    # Create sequence
-    t0 = 0
-    for nRepetition in range(nRepetitions):
-        # Pi pulse
-        t0 += 20
-        rfPulse(t0, rfReTime, rfReAmp, 0)
+    # Excitation pulse
+    rfPulse(t0,rfExTime,rfExAmp,0)
+    
+    # First readout to avoid RP initial readout effect
+    rxGate(t0+blkTime+rfExTime+200, acqTime)
+    t0 += (rfExTime+echoSpacing-rfReTime)/2
+
+    # Echo train
+    for echoIndex in range(etl):
+        # Refocusing pulse
+        rfPulse(t0,rfReTime,rfReAmp,np.pi/2)
+
+        # Rx gate
+        rxGate(t0+blkTime+rfReTime/2+echoSpacing/2-acqTime/2,acqTime)
         
-        # Pi/2 pulse
-        t0 = t0+rfReTime/2+irTimeVector[nRepetition]-rfExTime/2
-        rfPulse(t0, rfExTime, rfExAmp, 0)
-        
-        # FID readout
-        t0 = t0+blkTime+rfExTime+deadTime
-        rxGate(t0, acqTime)
-        
-        # Pi pulse
-        t0 = t0-deadTime-rfExTime/2+echoTime/2-rfReTime/2-blkTime
-        rfPulse(t0, rfReTime, rfReAmp, np.pi/2)
-        
-        # Echo readout
-        t0 = t0+blkTime+rfReTime/2+echoTime/2-acqTime/2
-        rxGate(t0, acqTime)
-        
-        # Finalize repetition
-        t0 = repetitionTime*(nRepetition+1)
-        finalizeExperiment(t0, 0)
+        # Update t0
+        t0 = t0+echoSpacing
 
     # Run the experiment and get data
     rxd, msgs = expt.run()
     rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
     data = rxd['rx0']
-    data = np.reshape(data, (nRepetitions, 2*nPoints))
-    data = np.abs(data[:, int(3*2*nPoints/4)])
-    dataMinIndex = np.argmin(data)
-    T1 = irTimeVector[dataMinIndex]*1e-3/np.log(2)
-    # t = (np.arange(etl)*echoSpacing+echoSpacing)*1e-3
+    data = np.reshape(data, (etl+1, nPoints))
+    data = np.abs(data[1:etl+1, :])
+    data = np.amax(data, axis=1)
+    t = (np.arange(etl)*echoSpacing+echoSpacing)*1e-3
+    
+    # Fitting
+    dataLog = np.log(data)
+    fitting = np.polyfit(t, dataLog, 1)
+    dataFitting = np.poly1d(fitting)
+    dataFitLog = dataFitting(t)
+    dataFit = np.exp(dataFitLog)
+    T2 = -1/fitting[0]
     
     # Plot data
-    plt.plot(irTimeVector*1e-6, np.abs(data))
+    plt.plot(t, data, 'o', t, dataFit, 'r')
     plt.ylabel('Echo amplitude (mV)')
-    plt.xlabel('Inversion time (s)')
-    plt.title('IR, T1 = '+str(round(T1, 1))+' ms')
-    plt.xscale('log')
+    plt.xlabel('Echo time (ms)')
+    plt.legend(['Experimental', 'Fitting'])
+    plt.title('CPMG, T2 = '+str(round(T2, 1))+' ms')
     plt.show()
 
 #*********************************************************************************
@@ -154,4 +149,4 @@ def inversionRecovery_standalone(
 
 if __name__ == "__main__":
 
-    inversionRecovery_standalone()
+    cpmg_standalone()

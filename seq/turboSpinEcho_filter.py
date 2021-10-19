@@ -11,7 +11,6 @@ import pdb
 st = pdb.set_trace
 import scipy.signal as sig
 
-
 def trapezoid(plateau_a, total_t, ramp_t, ramp_pts, total_t_end_to_end=True, base_a=0):
     """Helper function that just generates a Numpy array starting at time
     0 and ramping down at time total_t, containing a trapezoid going from a
@@ -132,7 +131,7 @@ def turbo_spin_echo(self, plotSeq):
     y = self.y
     z = self.z
     oversampling_factor = self.oversampling_factor
-   
+    
     BW=BW*1e-3
 #    trap_ramp_pts=np.int32(trap_ramp_duration*0.2)    # 0.2 puntos/ms
     trap_ramp_pts = 10
@@ -174,12 +173,12 @@ def turbo_spin_echo(self, plotSeq):
     if (n_ph==1):   
         Gph=0
     else:
-        Gph = n_ph/(2*gammaB*fov_ph*phase_grad_duration*1e-6);
+        Gph = n_ph/(2*gammaB*fov_ph*(trap_ramp_duration+phase_grad_duration)*1e-6);
     # Slice gradient amplitude
     if (n_sl==1):
         Gsl=0
     else:
-        Gsl = n_sl/(2*gammaB*fov_sl*phase_grad_duration*1e-6);
+        Gsl = n_sl/(2*gammaB*fov_sl*(trap_ramp_duration+phase_grad_duration)*1e-6);
     
     # Get the phase gradient vector
     if(n_ph>1):
@@ -191,7 +190,7 @@ def turbo_spin_echo(self, plotSeq):
     
     # Get the slice gradient vector
     if (n_sl>1):
-        slice_amps = np.linspce(-Gsl, Gsl,  n_sl+1)
+        slice_amps = np.linspace(-Gsl, Gsl,  n_sl+1)
         slice_amps = slice_amps[1:n_sl+1]
     else:
         slice_amps = np.linspace(-Gsl, Gsl, n_sl)
@@ -378,6 +377,8 @@ def turbo_spin_echo(self, plotSeq):
             if nS ==0:
                 n_rxd = rxd['rx0']
 #                n_nodecimate = data_nodecimate
+#                plt.plot(np.abs(n_rxd))
+#                plt.show()
             else:
                 n_rxd = np.concatenate((n_rxd, rxd['rx0']), axis=0)
 #                n_nodecimate=np.concatenate((n_nodecimate, data_nodecimate), axis=0)
