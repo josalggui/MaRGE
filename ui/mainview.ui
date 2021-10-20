@@ -534,7 +534,7 @@
     <string>Batch Processing</string>
    </property>
    <property name="toolTip">
-    <string>Barch Processing</string>
+    <string>Batch Processing</string>
    </property>
   </action>
  </widget>
