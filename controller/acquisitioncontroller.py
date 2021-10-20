@@ -23,6 +23,7 @@ from manager.datamanager import DataManager
 from seq.radial import radial
 from seq.gradEcho import grad_echo
 from seq.turboSpinEcho_filter import turbo_spin_echo
+from seq.cpmg import cpmg
 from seq.fid import fid
 from seq.spinEcho import spin_echo
 from datetime import date,  datetime 
@@ -49,8 +50,9 @@ class AcquisitionController(QObject):
     
     def startAcquisition(self):
 
-        self.parent.clearPlotviewLayout()
-        self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
+        if hasattr(self.parent, 'clearPlotviewLayout'):
+            self.parent.clearPlotviewLayout()
+            self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
         
         self.sequence.oversampling_factor = 6
         
@@ -72,6 +74,10 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
             self.rxd, self.msgs, self.data_avg  = turbo_spin_echo(self.sequence, plotSeq)
+        elif self.sequence.seq == 'CPMG':
+            self.rxd, self.msgs, self.data_avg, self.sequence.BW = cpmg(self.sequence, plotSeq)
+            self.sequence.lo_freq=self.sequence.larmorFreq
+            
             
         self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl], self.sequence.BW)
         self.sequence.ns = [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]
@@ -83,12 +89,14 @@ class AcquisitionController(QObject):
             self.parent.plotview_layout.addWidget(f_plotview)
             self.parent.f_plotview = f_plotview
             self.parent.t_plotview = t_plotview
-#            [fwhm, fwhm_hz, fwhm_ppm] = self.dataobject.get_fwhm()
-#            print('FWHM:%0.3f'%(fwhm))
             [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]=self.dataobject.get_peakparameters()
             print('Peak Value = %0.3f' %(f_signalValue))
 #            snr=self.dataobject.get_snr()
 #            print('SNR:%0.3f' %(snr))
+
+#        elif(self.sequence.seq=='CPMG'):
+#            self.plot_cpmg()
+
         else:
                        
             self.plot_3Dresult()
@@ -160,5 +168,27 @@ class AcquisitionController(QObject):
             exporter2 = pyqtgraph.exporters.ImageExporter(self.parent.t_plotview.scene())
             exporter2.export("experiments/acquisitions/%s/%s/Temp%s.png" % (dt2_string, dt_string, self.sequence))
 
-
     
+    def plot_cpmg(self):
+        
+        data = self.data
+        etl = self.etl
+        echoSpacing = self.echoSpacing
+        
+        t = (np.arange(etl)*echoSpacing+echoSpacing)*1e-3
+        
+        # Fitting
+        dataLog = np.log(data)
+        fitting = np.polyfit(t, dataLog, 1)
+        dataFitting = np.poly1d(fitting)
+        dataFitLog = dataFitting(t)
+        dataFit = np.exp(dataFitLog)
+        T2 = -1/fitting[0]
+        
+        #    # Plot data
+#    plt.plot(t, data, 'o', t, dataFit, 'r')
+#    plt.ylabel('Echo amplitude (mV)')
+#    plt.xlabel('Echo time (ms)')
+#    plt.legend(['Experimental', 'Fitting'])
+#    plt.title('CPMG, T2 = '+str(round(T2, 1))+' ms')
+#    plt.show()

@@ -74,7 +74,18 @@ class Namespace:
     par_acq_factor = "Partial acquisition factor"
     axes = "Axes (rd=1,ph=2,sl=3)"
     oversampling_factor = "oversampling factor"
-   
+    larmorFreq="Larmor Frequency (Hz)"
+    rfExAmp="RF Excitation Amplitude"
+    rfReAmp="RF Refocusing Amplitude"
+    rfExTime="RF Excitation Time"
+    rfReTime="RF Refocusing Time"
+    echoSpacing="Echo Spacing"
+    nPoints="Number of Points"
+    etl="ETL"
+    acqTime="Acquisition Time"
+    CPMG="CPMG"
+    
+       
 class Tooltip_label:
     rx_period = "Sampling time"
     rf_amp = "Full scale = 1"

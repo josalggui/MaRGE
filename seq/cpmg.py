@@ -24,19 +24,20 @@ st = pdb.set_trace
 #*********************************************************************************
 
 
-def cpmg_standalone(
-    init_gpa=False,               # Starts the gpa
-    larmorFreq = 3.0865e6,      # Larmor frequency
-    rfExAmp = 1,             # rf excitation pulse amplitude
-    rfReAmp = None,             # rf refocusing pulse amplitude
-    rfExTime =300e-6,          # rf excitation pulse time
-    rfReTime = None,          # rf refocusing pulse time
-    echoSpacing = 10e-3,        # time between echoes
-    repetitionTime = 500e-3,     # TR
-    nPoints = 500,                 # Number of points along readout, phase and slice
-    etl = 100,                   # Echo train length
-    acqTime = 2e-3,             # Acquisition time
-    ):
+def cpmg(self, plotSeq):
+        
+        
+    init_gpa=False               # Starts the gpa
+    larmorFreq = self.larmorFreq       # Larmor frequency
+    rfExAmp = self.rfExAmp             # rf excitation pulse amplitude
+    rfReAmp = self.rfReAmp             # rf refocusing pulse amplitude
+    rfExTime =self.rfExTime          # rf excitation pulse time
+    rfReTime = self.rfReTime          # rf refocusing pulse time
+    echoSpacing = self.echoSpacing        # time between echoes
+    nPoints = self.nPoints                 # Number of points along readout, phase and slice
+    etl = self.etl                   # Echo train length
+    acqTime = self.acqTime             # Acquisition time
+   
 
     # Miscellaneous
     blkTime = 100             # Deblanking time (us)
@@ -94,8 +95,7 @@ def cpmg_standalone(
     rfExTime = rfExTime*1e6
     rfReTime = rfReTime*1e6
     echoSpacing = echoSpacing*1e6
-    repetitionTime = repetitionTime*1e6
-
+    
     # Initialize time
     t0 = 20
     
@@ -127,26 +127,24 @@ def cpmg_standalone(
     t = (np.arange(etl)*echoSpacing+echoSpacing)*1e-3
     
     # Fitting
-    dataLog = np.log(data)
-    fitting = np.polyfit(t, dataLog, 1)
-    dataFitting = np.poly1d(fitting)
-    dataFitLog = dataFitting(t)
-    dataFit = np.exp(dataFitLog)
-    T2 = -1/fitting[0]
+#    dataLog = np.log(data)
+#    fitting = np.polyfit(t, dataLog, 1)
+#    dataFitting = np.poly1d(fitting)
+#    dataFitLog = dataFitting(t)
+#    dataFit = np.exp(dataFitLog)
+#    T2 = -1/fitting[0]
     
-    # Plot data
-    plt.plot(t, data, 'o', t, dataFit, 'r')
-    plt.ylabel('Echo amplitude (mV)')
-    plt.xlabel('Echo time (ms)')
-    plt.legend(['Experimental', 'Fitting'])
-    plt.title('CPMG, T2 = '+str(round(T2, 1))+' ms')
+#    # Plot data
+#    plt.plot(t, data, 'o', t, dataFit, 'r')
+#    plt.ylabel('Echo amplitude (mV)')
+#    plt.xlabel('Echo time (ms)')
+#    plt.legend(['Experimental', 'Fitting'])
+#    plt.title('CPMG, T2 = '+str(round(T2, 1))+' ms')
 #    plt.show()
 
 #*********************************************************************************
 #*********************************************************************************
 #*********************************************************************************
 
+    return rxd['rx0'] , msgs, data, BW
 
-if __name__ == "__main__":
-
-    cpmg_standalone()

@@ -14,6 +14,7 @@ from PyQt5.uic import loadUiType,  loadUi
 from PyQt5.QtCore import pyqtSignal, QFileInfo
 from controller.acquisitioncontroller import AcquisitionController
 from sequencemodes import defaultsequences
+from sequencesnamespace import Namespace as nmspc
 #from PyQt5 import QtGui
 import ast
 
@@ -21,7 +22,7 @@ BatchController_Form, BatchController_Base = loadUiType('ui/batchViewer.ui')
 
 class BatchController(BatchController_Base, BatchController_Form):
 
-    onCalibFunctionChanged = pyqtSignal(str)
+#    onBatchFunctionChanged = pyqtSignal(str)
 
     def __init__(self, parent=None, batchfunctionslist=None):
         super(BatchController, self).__init__(parent)
@@ -62,7 +63,7 @@ class BatchController(BatchController_Base, BatchController_Form):
         for j in range(num_jobs):
             
             pathJob=self.jobs[j]
-            
+            new_dict = {}
             # Reading file of the parameters
             f = open(pathJob,"r")
             contents=f.read()
@@ -72,15 +73,12 @@ class BatchController(BatchController_Base, BatchController_Form):
             # Charging the parameters
             lab = 'nmspc.%s' %(new_dict['seq'])
             item=eval(lab)
-
+            self.sequence=item
             del new_dict['seq']     
             for key in new_dict:       
                 setattr(defaultsequences[self.sequence], key, new_dict[key])
-        
-            self.sequence = item
-            self.onSequenceChanged.emit(self.sequence)
 
            # Initialisation of acquisition controller
-            acqCtrl = AcquisitionController(self, self.sequencelist)
+            acqCtrl = AcquisitionController(self, defaultsequences[self.sequence])
             acqCtrl.startAcquisition()
         

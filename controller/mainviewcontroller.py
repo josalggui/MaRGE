@@ -25,6 +25,7 @@ from controller.sequencecontroller import SequenceList
 from seq.gradEcho import grad_echo 
 from seq.radial import radial
 from seq.turboSpinEcho_filter import turbo_spin_echo
+from seq.cpmg import cpmg
 from seq.fid import fid
 from seq.spinEcho import spin_echo
 #from plotview.sequenceViewer import SequenceViewer
@@ -60,7 +61,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
   
         # Initialisation of sequence list
         self.sequencelist = SequenceList(self)
-        self.sequencelist.setCurrentIndex(1)
+        self.sequencelist.setCurrentIndex(5)
         self.sequencelist.currentIndexChanged.connect(self.selectionChanged)
         self.layout_operations.addWidget(self.sequencelist)
         self.sequence = self.sequencelist.currentText()
@@ -261,9 +262,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             grad_echo(self.sequence, plotSeq)   
         elif self.sequence.seq == 'TSE':
             turbo_spin_echo(self.sequence, plotSeq)    
-#        seqViewer = SequenceViewer(self, self.sequencelist)
-#        seqViewer.plotSequence()
-#        seqViewer.show()
+        elif self.sequence.seq == 'CPMG':
+            cpmg(self.sequence, plotSeq)
   
         
     def messages(self, text):
