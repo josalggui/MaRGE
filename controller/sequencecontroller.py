@@ -48,8 +48,8 @@ class SequenceList(QComboBox):
         self.parent = parent
 #        self._currentSequence = None
 
-        self._currentSequence = "Turbo Spin Echo"
-        self.setParametersUI("Turbo Spin Echo")
+        self._currentSequence = "CPMG"
+        self.setParametersUI("CPMG")
     
     def triggeredSequenceChanged(self, sequence: str = None) -> None:
         # TODO: set sequence only once right here or on changed signal
