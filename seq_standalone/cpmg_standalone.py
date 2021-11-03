@@ -26,10 +26,10 @@ st = pdb.set_trace
 
 def cpmg_standalone(
     init_gpa=False,               # Starts the gpa
-    larmorFreq = 3.0865e6,      # Larmor frequency
-    rfExAmp = 1,             # rf excitation pulse amplitude
+    larmorFreq = 3.077e6,      # Larmor frequency
+    rfExAmp = 0.3,             # rf excitation pulse amplitude
     rfReAmp = None,             # rf refocusing pulse amplitude
-    rfExTime =300e-6,          # rf excitation pulse time
+    rfExTime =30e-6,          # rf excitation pulse time
     rfReTime = None,          # rf refocusing pulse time
     echoSpacing = 10e-3,        # time between echoes
     repetitionTime = 500e-3,     # TR
@@ -140,7 +140,7 @@ def cpmg_standalone(
     plt.xlabel('Echo time (ms)')
     plt.legend(['Experimental', 'Fitting'])
     plt.title('CPMG, T2 = '+str(round(T2, 1))+' ms')
-#    plt.show()
+    plt.show()
 
 #*********************************************************************************
 #*********************************************************************************

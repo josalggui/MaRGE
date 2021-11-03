@@ -9,12 +9,13 @@
 @status:    Under development
 
 """
-from PyQt5.QtWidgets import QFileDialog, QListWidget
+from PyQt5.QtWidgets import QFileDialog, QListWidget,  QMessageBox
 from PyQt5.uic import loadUiType,  loadUi
 from PyQt5.QtCore import pyqtSignal, QFileInfo
 from controller.acquisitioncontroller import AcquisitionController
 from sequencemodes import defaultsequences
 from sequencesnamespace import Namespace as nmspc
+from controller.sequencecontroller import SequenceList
 #from PyQt5 import QtGui
 import ast
 
@@ -23,6 +24,7 @@ BatchController_Form, BatchController_Base = loadUiType('ui/batchViewer.ui')
 class BatchController(BatchController_Base, BatchController_Form):
 
 #    onBatchFunctionChanged = pyqtSignal(str)
+#    onSequenceChanged = pyqtSignal(str)
 
     def __init__(self, parent=None, batchfunctionslist=None):
         super(BatchController, self).__init__(parent)
@@ -39,6 +41,7 @@ class BatchController(BatchController_Base, BatchController_Form):
         self.action_removeProcess.triggered.connect(self.remove_process)
         self.action_close.triggered.connect(self.close)    
         
+        self.batch = 1
         self.jobs = []
         
     def load_process(self):
@@ -78,7 +81,18 @@ class BatchController(BatchController_Base, BatchController_Form):
             for key in new_dict:       
                 setattr(defaultsequences[self.sequence], key, new_dict[key])
 
+            self.sequencelist = SequenceList(self)
+            
+
            # Initialisation of acquisition controller
-            acqCtrl = AcquisitionController(self, defaultsequences[self.sequence])
+            acqCtrl = AcquisitionController(self, self.sequencelist)
             acqCtrl.startAcquisition()
         
+        self.messages("Done")
+        
+    def messages(self, text):
+        
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText(text)
+        msg.exec();

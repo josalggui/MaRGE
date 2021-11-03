@@ -63,7 +63,7 @@ class Namespace:
     shim = "Shims (x,y,z)"
     BW= "BandWidth (KHz)"
     n="Number of points (Nx,Ny,Nz)"
-    fov="FOV (x,y,z)"
+    fov="FOV"# TSE(x,y,z); RARE(rd,ph,sl)"
     tr_duration="TR (ms)"
     nScans="nScans"
     rawdata ="rawdata"
@@ -84,7 +84,17 @@ class Namespace:
     etl="ETL"
     acqTime="Acquisition Time"
     CPMG="CPMG"
-    
+    RARE= "RARE"
+    repetitionTime = "Repetition Time"
+    inversionTime="Inversion Time" 
+    dfov="dfov"
+    axesEnable="Axes Enable (on=1, off=0)"
+    sweepMode= "Sweep Mode" 
+    phaseGradTime="Phase Grad. Time"
+    rdPreemphasis="Rd Preemphasis Factor"
+    dPhase = "dPhase" 
+    dummyPulses = "Dummy Pulses" 
+    axis = "Axes (rd=1,ph=2,sl=3)"
        
 class Tooltip_label:
     rx_period = "Sampling time"

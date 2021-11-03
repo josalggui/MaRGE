@@ -26,17 +26,17 @@ st = pdb.set_trace
 
 def inversionRecovery_standalone(
     init_gpa=False,               # Starts the gpa
-    larmorFreq = 3.080e6,      # Larmor frequency
+    larmorFreq = 3.077e6,      # Larmor frequency
     rfExAmp = 0.3,             # rf excitation pulse amplitude
     rfReAmp = None,             # rf refocusing pulse amplitude
-    rfExTime =35e-6,          # rf excitation pulse time
+    rfExTime =30e-6,          # rf excitation pulse time
     rfReTime = None,          # rf refocusing pulse time
     echoTime = 10e-3,        # time between echoes
-    repetitionTime = 5,     # TR
+    repetitionTime = 1,     # TR
     nPoints = 500,                 # Number of points along readout, phase and slice
-    nRepetitions = 40,                   # Echo train length
+    nRepetitions = 10,                   # Echo train length
     minIRTime = 10e-3,           # Minimum inversion recovery time
-    maxIRTime = 4000e-3,          # Maximum inversion recovery time
+    maxIRTime = 400e-3,          # Maximum inversion recovery time
     acqTime = 2e-3,             # Acquisition time
     ): 
 

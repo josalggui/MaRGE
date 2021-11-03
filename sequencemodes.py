@@ -174,7 +174,7 @@ class FIDSeq:
         self.rf_duration: int=rf_duration
         self.rf_tstart:int=rf_tstart
         self.rf_wait:int=rf_wait
-        self.rx_period:float=rx_period
+        self.rx_period:float=rx_period       
         self.readout_duration:int=readout_duration
 
     @property
@@ -395,7 +395,89 @@ class CPMGSeq:
             nmspc.acqTime: [float(self.acqTime)],
         }
 
+class RARE:
+    def __init__(self, 
+                 seq:str, 
+                 nScans:int=None, 
+                 
+                 larmorFreq: float=None, 
+                 rfExAmp: float=None, 
+                 rfReAmp: float=None, 
+                 rfExTime:float=None, 
+                 rfReTime:float=None, 
+                 echoSpacing:float=None, 
+                 acqTime:float=None, 
+                 
+                 repetitionTime:float = None, 
+                 inversionTime:float=None, 
+                 fov:list=None, 
+                 dfov:list=None,
+                 
+                 nPoints:list=None, 
+                 etl:int=None, 
+                 
+                 axes:list=None, 
+                 axesEnable:list=None, 
+                 sweepMode:int=None, 
+                 phaseGradTime:float=None,  
+                 rdPreemphasis:float = None,
+                 dPhase:int = None, 
+                 dummyPulses:int = None, 
+                 ):
+    
+        self.seq:str=seq
+        self.larmorFreq:float=larmorFreq
+        self.rfExAmp: float=rfExAmp
+        self.rfReAmp:float=rfReAmp
+        self.rfExTime:float=rfExTime
+        self.rfReTime:float=rfReTime
+        self.echoSpacing:float=echoSpacing
+        self.nPoints:int=nPoints
+        self.etl:int=etl
+        self.acqTime:float=acqTime
+        self.nScans:int=nScans
+        self.repetitionTime:float= repetitionTime
+        self.inversionTime:float=inversionTime
+        self.fov:list=fov
+        self.dfov:list=dfov
+        self.axes:list=axes
+        self.axesEnable:list=axesEnable
+        self.sweepMode:int=sweepMode
+        self.phaseGradTime:float=phaseGradTime 
+        self.rdPreemphasis:float = rdPreemphasis
+        self.dPhase:int = dPhase 
+        self.dummyPulses:int = dummyPulses 
+        
+    @property
+    def RFproperties(self) -> dict:
+        # TODO: add server cmd's as third entry in list
+        return {
+            nmspc.nScans: [int(self.nScans)], 
+            nmspc.larmorFreq: [float(self.larmorFreq)], 
+            nmspc.rfExAmp:[float(self.rfExAmp)], 
+            nmspc.rfReAmp:[float(self.rfReAmp)], 
+            nmspc.rfExTime:[float(self.rfExTime)], 
+            nmspc.rfReTime:[float(self.rfReTime)], 
+            nmspc.echoSpacing:[float(self.echoSpacing)], 
+            nmspc.acqTime: [float(self.acqTime)],
+            
+            nmspc. repetitionTime:[float(self. repetitionTime)], 
+            nmspc.inversionTime:[float(self.inversionTime)], 
+            nmspc.fov:[list(self.fov)], 
+            nmspc.dfov: [list(self.dfov)],
+            
+            nmspc.nPoints:[list(self.nPoints)], 
+            nmspc.etl:[int(self.etl)],
+            
+            nmspc.axes: [list(self.axes)], 
+            nmspc.axesEnable: [list(self.axesEnable)], 
+            nmspc.sweepMode:[int(self.sweepMode)], 
+            nmspc.phaseGradTime:[float(self.phaseGradTime)], 
+            nmspc.rdPreemphasis:[float(self.rdPreemphasis)], 
+            nmspc.dPhase:[int(self.dPhase)], 
+            nmspc.dummyPulses :[int(self.dummyPulses)], 
 
+        }
 
 """
 Definition of default sequences
@@ -405,7 +487,7 @@ defaultsequences={
     #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl), trap_ramp_duration,phase_grad_duration,n(x,y,z),fov(rd,ph,sl),preemph_factor)
     'Spin Echo': SpinEchoSeq('SE', 3.03, 0.6, 65, 10, 500, 31, 1, (0,  0,  0), 1000, 100, (40, 1, 1), (20, 20, 15), 1.05), 
     #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl), trap_ramp_duration,phase_grad_duration,n(x,y,z),fov(rd,ph,sl),preemph_factor,echos_per_tr,sweep_mode,par_acq_factor)
-    'Turbo Spin Echo': TurboSpinEchoSeq('TSE', 3.0807, 0.3,30, 20, 1000, 30, 1, (0,  0,  0), 100, 500, (1, 2, 3), (60, 60, 1), (15, 10, 10), 1.0, 30, 1, 0),
+    'Turbo Spin Echo': TurboSpinEchoSeq('TSE', 3.0807, 0.3,30, 20, 1000, 30, 1, (0,  0,  0), 100, 500, (1, 2, 3), (60, 1, 1), (15, 10, 10), 1.0, 1, 1, 0),
     #FID(dbg_sc,lo_freq,rf_amp,rf_duration,rf_tstart,rf_wait,rx_period,readout_duration)
     'Free Induction Decay': FIDSeq('FID', 0, 3, 0.6, 50, 100, 100, 3.333, 500), 
     #RadialSeq(dbg_sc,lo_freq,rf_amp,trs,G,grad_tstart,TR,rf_tstart,rf_tend,rx_tstart,rx_tend,rx_period,shimming(rd,ph,sl))
@@ -414,6 +496,5 @@ defaultsequences={
     'Gradient Echo': GradEchoSeq('GE',0,  3, 0.1, 2, 3.333, 100, 0.4, 0.3, 0.8, 50, 100, 100, 200, (0.01, 0.01, 0.01)), 
     #TurboSpinEcho(dbg_sc,lo_freq,rf_amp,trs,rx_period,trapRampDur,echosTR,echosDur,sliceAmp,phAmp,rdAmp,rfDur,phDur,rdDur,rdGradDur,phGint,TRPauseDur,shimming(rd,ph,sl))
 #    'Turbo Spin Echo': TSE_Seq('TSE',  0, 3, 1, 5, 3.333, 100, 5, 2000, 0.3, 0.6,0.8, 50, 150, 500, 700, 1200, 3000, (0.01, 0.01, 0.01))
-    'CPMG': CPMGSeq('CPMG', 3.08e6, 0.3, 0.3, 35e-6, 70e-6, 10e-3, 500, 100, 2e-3)
-
-}
+    'CPMG': CPMGSeq('CPMG', 3.08e6, 0.3, 0.3, 35e-6, 70e-6, 10e-3, 500, 100, 2e-3), 
+    'RARE': RARE('RARE', 1, 3.08e6, 0.3, 0.3, 35e-6, 70e-6, 20e-3, 2e-3, 500e-3, 0, (11e-3, 11e-3, 11e-3),  (0e-3, 0e-3, 0e-3), (60, 60, 1), 10, (0, 1, 2), (1, 1, 0), 1, 1000e-6, 1, 1, 1) }

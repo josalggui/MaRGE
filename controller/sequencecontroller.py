@@ -40,16 +40,22 @@ class SequenceList(QComboBox):
 
         # Add sequences to sequences list
         self.addItems(list(defaultsequences.keys()))
-        parent.onSequenceChanged.connect(self.triggeredSequenceChanged)
         
+        if hasattr(parent, 'onSequenceChanged'):
+            parent.onSequenceChanged.connect(self.triggeredSequenceChanged)
+            # Make parent reachable from outside __init__
+            self.parent = parent
+            self._currentSequence = "CPMG"
+            self.setParametersUI("CPMG")
+#        self._currentSequence = None
+        else:
+            self._currentSequence=parent.sequence
+    
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
 
-        # Make parent reachable from outside __init__
-        self.parent = parent
-#        self._currentSequence = None
+        
 
-        self._currentSequence = "CPMG"
-        self.setParametersUI("CPMG")
+
     
     def triggeredSequenceChanged(self, sequence: str = None) -> None:
         # TODO: set sequence only once right here or on changed signal

@@ -26,6 +26,7 @@ from seq.gradEcho import grad_echo
 from seq.radial import radial
 from seq.turboSpinEcho_filter import turbo_spin_echo
 from seq.cpmg import cpmg
+from seq.rare import rare
 from seq.fid import fid
 from seq.spinEcho import spin_echo
 #from plotview.sequenceViewer import SequenceViewer
@@ -264,6 +265,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             turbo_spin_echo(self.sequence, plotSeq)    
         elif self.sequence.seq == 'CPMG':
             cpmg(self.sequence, plotSeq)
+        elif  self.sequence.seq == 'RARE':
+            rare(self.sequence, plotSeq)
   
         
     def messages(self, text):

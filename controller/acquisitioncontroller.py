@@ -24,6 +24,7 @@ from seq.radial import radial
 from seq.gradEcho import grad_echo
 from seq.turboSpinEcho_filter import turbo_spin_echo
 from seq.cpmg import cpmg
+from seq.rare import rare
 from seq.fid import fid
 from seq.spinEcho import spin_echo
 from datetime import date,  datetime 
@@ -52,11 +53,12 @@ class AcquisitionController(QObject):
 
         if hasattr(self.parent, 'clearPlotviewLayout'):
             self.parent.clearPlotviewLayout()
-            self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
-        
+
+        self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
         self.sequence.oversampling_factor = 6
+
         
-        if hasattr(self.sequence, 'axes'):
+        if hasattr(self.sequence, 'axes') and self.sequence.seq != 'RARE':
             self.sequence.x, self.sequence.y, self.sequence.z, self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl, self.sequence.fov_rd, self.sequence.fov_ph, self.sequence.fov_sl = change_axes(self.sequence)
         else:
             self.sequence.n_rd=1
@@ -77,29 +79,34 @@ class AcquisitionController(QObject):
         elif self.sequence.seq == 'CPMG':
             self.rxd, self.msgs, self.data_avg, self.sequence.BW = cpmg(self.sequence, plotSeq)
             self.sequence.lo_freq=self.sequence.larmorFreq
+        elif  self.sequence.seq == 'RARE':
+            self.rxd, self.msgs, self.data_avg, self.sequence.BW = rare(self.sequence, plotSeq)
+            self.sequence.lo_freq=self.sequence.larmorFreq
+            [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl] = self.sequence.nPoints
             
             
         self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl], self.sequence.BW)
         self.sequence.ns = [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]
 
-        if (self.sequence.n_ph ==1 and self.sequence.n_sl == 1):
-            f_plotview = SpectrumPlot(self.dataobject.f_axis, self.dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude", "%s Spectrum" %(self.sequence.seq), )
-            t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.seq), )
-            self.parent.plotview_layout.addWidget(t_plotview)
-            self.parent.plotview_layout.addWidget(f_plotview)
-            self.parent.f_plotview = f_plotview
-            self.parent.t_plotview = t_plotview
-            [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]=self.dataobject.get_peakparameters()
-            print('Peak Value = %0.3f' %(f_signalValue))
-#            snr=self.dataobject.get_snr()
-#            print('SNR:%0.3f' %(snr))
-
-#        elif(self.sequence.seq=='CPMG'):
-#            self.plot_cpmg()
-
-        else:
-                       
-            self.plot_3Dresult()
+        if not hasattr(self.parent, 'batch'):
+            if (self.sequence.n_ph ==1 and self.sequence.n_sl == 1):
+                f_plotview = SpectrumPlot(self.dataobject.f_axis, self.dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude", "%s Spectrum" %(self.sequence.seq), )
+                t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.seq), )
+                self.parent.plotview_layout.addWidget(t_plotview)
+                self.parent.plotview_layout.addWidget(f_plotview)
+                self.parent.f_plotview = f_plotview
+                self.parent.t_plotview = t_plotview
+                [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]=self.dataobject.get_peakparameters()
+                print('Peak Value = %0.3f' %(f_signalValue))
+    #            snr=self.dataobject.get_snr()
+    #            print('SNR:%0.3f' %(snr))
+    
+    #        elif(self.sequence.seq=='CPMG'):
+    #            self.plot_cpmg()
+    
+            else:
+                           
+                self.plot_3Dresult()
 
         self.save_data()    
         self.parent.rxd = self.rxd
