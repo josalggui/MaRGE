@@ -63,7 +63,7 @@ class Namespace:
     shim = "Shims (x,y,z)"
     BW= "BandWidth (KHz)"
     n="Number of points (Nx,Ny,Nz)"
-    fov="FOV"# TSE(x,y,z); RARE(rd,ph,sl)"
+    fov="FOV [rd,ph,sl] (mm)"# TSE(x,y,z); RARE(rd,ph,sl)"
     tr_duration="TR (ms)"
     nScans="nScans"
     rawdata ="rawdata"
@@ -72,30 +72,40 @@ class Namespace:
     preemph_factor = "Pre emphasis factor"
     sweep_mode = "Sweep Mode"
     par_acq_factor = "Partial acquisition factor"
-    axes = "Axes (rd=1,ph=2,sl=3)"
+    axes = "Axes (rd=0,ph=1,sl=2)"
     oversampling_factor = "oversampling factor"
-    larmorFreq="Larmor Frequency (Hz)"
-    rfExAmp="RF Excitation Amplitude"
-    rfReAmp="RF Refocusing Amplitude"
-    rfExTime="RF Excitation Time"
-    rfReTime="RF Refocusing Time"
-    echoSpacing="Echo Spacing"
+    larmorFreq="Larmor Frequency (MHz)"
+    rfExAmp="RF Excitation Amplitude (a.u.)"
+    rfReAmp="RF Refocusing Amplitude (a.u.)"
+    rfExTime="RF Excitation Time (us)"
+    rfReTime="RF Refocusing Time (us)"
+    echoSpacing="Echo Spacing (ms)"
     nPoints="Number of Points"
     etl="ETL"
-    acqTime="Acquisition Time"
+    acqTime="Acquisition Time (ms)"
     CPMG="CPMG"
     RARE= "RARE"
-    repetitionTime = "Repetition Time"
-    inversionTime="Inversion Time" 
-    dfov="dfov"
+    repetitionTime = "Repetition Time (ms)"
+    inversionTime="Inversion Time (ms)" 
+    dfov="Displacement of fOV (mm)"
     axesEnable="Axes Enable (on=1, off=0)"
-    sweepMode= "Sweep Mode" 
-    phaseGradTime="Phase Grad. Time"
-    rdPreemphasis="Rd Preemphasis Factor"
-    dPhase = "dPhase" 
-    dummyPulses = "Dummy Pulses" 
-    axis = "Axes (rd=1,ph=2,sl=3)"
-       
+    sweepMode= "Sweep Mode (0=T2w, 1=T1w, 2=Rhow)" 
+    phaseGradTime="Phase Grad. Time (us)"
+    rdPreemphasis="Rd Preemphasis Factor (a.u.)"
+    drfPhase = "Phase of 90º pulse (º)" 
+    dummyPulses = "Number of Dummy Pulses" 
+    axis = "Axes (rd=0,ph=1,sl=2)"
+    n_rd = 'N rd'
+    n_ph = 'N ph'
+    n_sl = 'N sl'
+    ns = 'ns'
+    x = 'x'
+    y = 'y'
+    z = 'z'
+    fov_rd = 'fov rd'
+    fov_ph = 'fov ph'
+    fov_sl = 'fov sl'
+    shimming = 'Shimming (x, y, z)'
 class Tooltip_label:
     rx_period = "Sampling time"
     rf_amp = "Full scale = 1"

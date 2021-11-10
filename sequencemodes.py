@@ -381,7 +381,7 @@ class CPMGSeq:
         self.acqTime:float=acqTime
        
     @property
-    def RFproperties(self) -> dict:
+    def  systemproperties(self) -> dict:
         # TODO: add server cmd's as third entry in list
         return {
             nmspc.larmorFreq: [float(self.larmorFreq)], 
@@ -403,13 +403,14 @@ class RARE:
                  larmorFreq: float=None, 
                  rfExAmp: float=None, 
                  rfReAmp: float=None, 
-                 rfExTime:float=None, 
-                 rfReTime:float=None, 
-                 echoSpacing:float=None, 
-                 acqTime:float=None, 
+                 rfExTime:int=None, 
+                 rfReTime:int=None, 
+                 echoSpacing:int=None, 
+                 acqTime:int=None, 
+                 shimming:list=None, 
                  
-                 repetitionTime:float = None, 
-                 inversionTime:float=None, 
+                 repetitionTime:int = None, 
+                 inversionTime:int=None, 
                  fov:list=None, 
                  dfov:list=None,
                  
@@ -419,9 +420,9 @@ class RARE:
                  axes:list=None, 
                  axesEnable:list=None, 
                  sweepMode:int=None, 
-                 phaseGradTime:float=None,  
+                 phaseGradTime:int=None,  
                  rdPreemphasis:float = None,
-                 dPhase:int = None, 
+                 drfPhase:int = None, 
                  dummyPulses:int = None, 
                  ):
     
@@ -429,52 +430,53 @@ class RARE:
         self.larmorFreq:float=larmorFreq
         self.rfExAmp: float=rfExAmp
         self.rfReAmp:float=rfReAmp
-        self.rfExTime:float=rfExTime
-        self.rfReTime:float=rfReTime
-        self.echoSpacing:float=echoSpacing
+        self.rfExTime:int=rfExTime
+        self.rfReTime:int=rfReTime
+        self.echoSpacing:int=echoSpacing
         self.nPoints:int=nPoints
         self.etl:int=etl
-        self.acqTime:float=acqTime
+        self.acqTime:int=acqTime
+        self.shimming:list=shimming
         self.nScans:int=nScans
-        self.repetitionTime:float= repetitionTime
-        self.inversionTime:float=inversionTime
+        self.repetitionTime:int= repetitionTime
+        self.inversionTime:int=inversionTime
         self.fov:list=fov
         self.dfov:list=dfov
         self.axes:list=axes
         self.axesEnable:list=axesEnable
         self.sweepMode:int=sweepMode
-        self.phaseGradTime:float=phaseGradTime 
+        self.phaseGradTime:int=phaseGradTime 
         self.rdPreemphasis:float = rdPreemphasis
-        self.dPhase:int = dPhase 
+        self.drfPhase:int = drfPhase 
         self.dummyPulses:int = dummyPulses 
         
     @property
-    def RFproperties(self) -> dict:
+    def  systemproperties(self) -> dict:
         # TODO: add server cmd's as third entry in list
         return {
             nmspc.nScans: [int(self.nScans)], 
             nmspc.larmorFreq: [float(self.larmorFreq)], 
             nmspc.rfExAmp:[float(self.rfExAmp)], 
             nmspc.rfReAmp:[float(self.rfReAmp)], 
-            nmspc.rfExTime:[float(self.rfExTime)], 
-            nmspc.rfReTime:[float(self.rfReTime)], 
-            nmspc.echoSpacing:[float(self.echoSpacing)], 
-            nmspc.acqTime: [float(self.acqTime)],
+            nmspc.rfExTime:[int(self.rfExTime)], 
+            nmspc.rfReTime:[int(self.rfReTime)], 
+            nmspc.echoSpacing:[int(self.echoSpacing)], 
+            nmspc.acqTime: [int(self.acqTime)],
+            nmspc.shimming: [list(self.shimming)],
             
-            nmspc. repetitionTime:[float(self. repetitionTime)], 
-            nmspc.inversionTime:[float(self.inversionTime)], 
+            nmspc. repetitionTime:[int(self. repetitionTime)], 
+            nmspc.inversionTime:[int(self.inversionTime)], 
+            nmspc.axesEnable: [list(self.axesEnable)], 
+            nmspc.axes: [list(self.axes)], 
             nmspc.fov:[list(self.fov)], 
             nmspc.dfov: [list(self.dfov)],
-            
             nmspc.nPoints:[list(self.nPoints)], 
             nmspc.etl:[int(self.etl)],
-            
-            nmspc.axes: [list(self.axes)], 
-            nmspc.axesEnable: [list(self.axesEnable)], 
+    
             nmspc.sweepMode:[int(self.sweepMode)], 
-            nmspc.phaseGradTime:[float(self.phaseGradTime)], 
+            nmspc.phaseGradTime:[int(self.phaseGradTime)], 
             nmspc.rdPreemphasis:[float(self.rdPreemphasis)], 
-            nmspc.dPhase:[int(self.dPhase)], 
+            nmspc.drfPhase:[int(self.drfPhase)], 
             nmspc.dummyPulses :[int(self.dummyPulses)], 
 
         }
@@ -497,4 +499,4 @@ defaultsequences={
     #TurboSpinEcho(dbg_sc,lo_freq,rf_amp,trs,rx_period,trapRampDur,echosTR,echosDur,sliceAmp,phAmp,rdAmp,rfDur,phDur,rdDur,rdGradDur,phGint,TRPauseDur,shimming(rd,ph,sl))
 #    'Turbo Spin Echo': TSE_Seq('TSE',  0, 3, 1, 5, 3.333, 100, 5, 2000, 0.3, 0.6,0.8, 50, 150, 500, 700, 1200, 3000, (0.01, 0.01, 0.01))
     'CPMG': CPMGSeq('CPMG', 3.08e6, 0.3, 0.3, 35e-6, 70e-6, 10e-3, 500, 100, 2e-3), 
-    'RARE': RARE('RARE', 1, 3.08e6, 0.3, 0.3, 35e-6, 70e-6, 20e-3, 2e-3, 500e-3, 0, (11e-3, 11e-3, 11e-3),  (0e-3, 0e-3, 0e-3), (60, 60, 1), 10, (0, 1, 2), (1, 1, 0), 1, 1000e-6, 1, 1, 1) }
+    'RARE': RARE('RARE', 1, 3.08, 0.3, 0.3, 35, 70, 20, 4,[-70, -90, 10],  500, 0, (110, 110,110),  (-15, 5, 0), (60, 60, 1), 10, (0, 1, 2), (1, 1, 0), 1, 1000, 1, 0, 1) }

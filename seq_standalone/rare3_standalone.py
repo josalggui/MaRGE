@@ -35,26 +35,28 @@ st = pdb.set_trace
 def rare_standalone(
     init_gpa=False,              # Starts the gpa
     nScans = 1,                 # NEX
-    larmorFreq = 3.079e6,      # Larmor frequency
+    larmorFreq = 3.0778e6,      # Larmor frequency
     rfExAmp = 0.3,             # rf excitation pulse amplitude
     rfReAmp = 0.3,             # rf refocusing pulse amplitude
-    rfExTime = 35e-6,          # rf excitation pulse time
-    rfReTime = 70e-6,            # rf refocusing pulse time
+    rfExTime = 33e-6,          # rf excitation pulse time
+    rfReTime = 66,            # rf refocusing pulse time
     echoSpacing = 20e-3,        # time between echoes
     inversionTime = 0,       # Inversion recovery time
     repetitionTime = 500e-3,     # TR
-    fov = np.array([960e-2, 12e-2, 12e-2]),           # FOV along readout, phase and slice
+    fov = np.array([12e-2, 12e-2, 12e-2]),           # FOV along readout, phase and slice
     dfov = np.array([0e-2, 0e-2, 0e-2]),            # Displacement of fov center
-    nPoints = np.array([8000, 100, 40]),                 # Number of points along readout, phase and slice
+    nPoints = np.array([100, 100, 15]),                 # Number of points along readout, phase and slice
     etl = 10,                    # Echo train length
-    acqTime = 1.6e-3,             # Acquisition time
+    acqTime = 4e-3,             # Acquisition time
     axes = np.array([0, 1, 2]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
+    axesEnable = np.array([1, 1,  0]), # 1-> Enable, 0-> Disable
     sweepMode = 1,               # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
-    phaseGradTime = 500e-6,       # Phase and slice dephasing time
+    phaseGradTime = 1000e-6,       # Phase and slice dephasing time
     rdPreemphasis = 1.000,
-    drfPhase = 0, 
-    dummyPulses = 1                    # Dummy pulses for T1 stabilization
+    drfPhase = 0,                           # phase of the excitation pulse (in degrees)
+    dummyPulses = 1,                     # Dummy pulses for T1 stabilization
+    shimming = np.array([-70, -90, 10]),       # Shimming along the X,Y and Z axes (a.u. *1e4)
+    parAcqLines = 0                        # Number of additional lines, Full sweep if 0
     ):
     
     # rawData fields
@@ -85,6 +87,8 @@ def rare_standalone(
     inputs['rdPreemphasis'] = rdPreemphasis
     inputs['drfPhase'] = drfPhase 
     inputs['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
+    inputs['shimming'] = shimming
+    inputs['parAcqLines'] = parAcqLines
     
     # Miscellaneous
     blkTime = 10             # Deblanking time (us)
@@ -93,27 +97,28 @@ def rare_standalone(
     gradDelay = 9            # Gradient amplifier delay
     addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
     gammaB = 42.56e6            # Gyromagnetic ratio in Hz/T
+    rfReAmp = rfExAmp
+    rfReTime = 2*rfExTime
     deadTime = 200
-    oversamplingFactor = 1
-    addRdGradTime = 400     # Additional readout gradient time to avoid turn on/off effects on the Rx channel
-    randFactor = 2e-3           # Amplitude of the random displacement of phase lines
-    
+    oversamplingFactor = 10
+    addRdGradTime = 1000     # Additional readout gradient time to avoid turn on/off effects on the Rx channel
+    shimming = shimming*1e-4
     auxiliar['gradDelay'] = gradDelay*1e-6
     auxiliar['gradRiseTime'] = gradRiseTime
     auxiliar['oversamplingFactor'] = oversamplingFactor
     auxiliar['addRdGradTime'] = addRdGradTime*1e-6
-    auxiliar['randFactor'] = randFactor
-    auxiliar['addRdPoints'] = addRdPoints
     
     # Matrix size
     nRD = nPoints[0]+2*addRdPoints
     nPH = nPoints[1]*axesEnable[1]+(1-axesEnable[1])
-    nSL = nPoints[2]*axesEnable[2]+(1-axesEnable[2])
+    if parAcqLines==0:
+        nSL = nPoints[2]*axesEnable[2]+(1-axesEnable[2])
+    else:
+        nSL = (nPoints[2]/2+parAcqLines)*axesEnable[2]+(1-axesEnable[2])
     
     # ETL if nPH = 1
     if etl>nPH:
         etl = nPH
-        auxiliar['etl'] = etl
     
     # BW
     BW = nPoints[0]/acqTime*1e-6
@@ -133,13 +138,9 @@ def rare_standalone(
     rdGradAmplitude = nPoints[0]/(gammaB*fov[0]*acqTime)*axesEnable[0]
     phGradAmplitude = nPH/(2*gammaB*fov[1]*(phaseGradTime+gradRiseTime))*axesEnable[1]
     slGradAmplitude = nSL/(2*gammaB*fov[2]*(phaseGradTime+gradRiseTime))*axesEnable[2]
-    auxiliar['rdGradAmplitude'] = rdGradAmplitude
-    auxiliar['phGradAmplitude'] = phGradAmplitude
-    auxiliar['slGradAmplitude'] = slGradAmplitude
     
     # Change gradient values to OCRA units
     gFactor = reorganizeGfactor(axes)
-    auxiliar['gFactor'] = gFactor
     rdGradAmplitude = rdGradAmplitude/gFactor[0]*1000/10
     phGradAmplitude = phGradAmplitude
     slGradAmplitude = slGradAmplitude
@@ -147,17 +148,10 @@ def rare_standalone(
     # Phase and slice gradient vector
     phGradients = np.linspace(-phGradAmplitude,phGradAmplitude,num=nPH,endpoint=False)
     slGradients = np.linspace(-slGradAmplitude,slGradAmplitude,num=nSL,endpoint=False)
-    
-    # Add random displacemnt to phase encoding lines
-    for ii in range(nPH):
-        if ii<np.ceil(nPH/2-nPH/20) or ii>np.ceil(nPH/2+nPH/20):
-            phGradients[ii] = phGradients[ii]+randFactor*np.random.randn()
     auxiliar['phGradients'] = phGradients
     auxiliar['slGradients'] = slGradients
-    kPH = gammaB*phGradients*(gradRiseTime+phaseGradTime)
     phGradients = phGradients/gFactor[1]*1000/10
     slGradients = slGradients/gFactor[2]*1000/10
-    
     
     # Set phase vector to given sweep mode
     ind = getIndex(phGradients, etl, nPH, sweepMode)
@@ -192,22 +186,29 @@ def rare_standalone(
             })
 
     # Gradients
-    def gradPulse(tStart, gTime,gAmp, gAxes):
+    def gradPulse(tStart, gTime, gAmp,  gAxes):
         t = np.array([tStart, tStart+gradRiseTime+gTime])
         for gIndex in range(np.size(gAxes)):
             a = np.array([gAmp[gIndex], 0])
             if gAxes[gIndex]==0:
-                expt.add_flodict({'grad_vx': (t, a)})
+                expt.add_flodict({'grad_vx': (t, a+shimming[0])})
             elif gAxes[gIndex]==1:
-                expt.add_flodict({'grad_vy': (t, a)})
+                expt.add_flodict({'grad_vy': (t, a+shimming[1])})
             elif gAxes[gIndex]==2:
-                expt.add_flodict({'grad_vz': (t, a)})
+                expt.add_flodict({'grad_vz': (t, a+shimming[2])})
     
     def endSequence(tEnd):
         expt.add_flodict({
                 'grad_vx': (np.array([tEnd]),np.array([0]) ), 
                 'grad_vy': (np.array([tEnd]),np.array([0]) ), 
                 'grad_vz': (np.array([tEnd]),np.array([0]) ),
+             })
+             
+    def iniSequence(tEnd, shimming):
+        expt.add_flodict({
+                'grad_vx': (np.array([tEnd]),np.array([shimming[0]]) ), 
+                'grad_vy': (np.array([tEnd]),np.array([shimming[1]]) ), 
+                'grad_vz': (np.array([tEnd]),np.array([shimming[2]]) ),
              })
 
     # Changing time parameters to us
@@ -224,6 +225,8 @@ def rare_standalone(
     phIndex = 0
     slIndex = 0
     scanTime = (nPH*nSL/etl+dummyPulses)*repetitionTime
+    # Set shimming
+    iniSequence(20, shimming)
     for repeIndex in range(int(nPH*nSL/etl)+dummyPulses):
         # Initialize time
         t0 = 20+repetitionTime*repeIndex
@@ -297,8 +300,7 @@ def rare_standalone(
         rxd, msgs = expt.run()
         rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
         # Get data
-#        scanData = sig.decimate(rxd['rx0'], oversamplingFactor, ftype='fir', zero_phase=True)
-        scanData = rxd['rx0']
+        scanData = sig.decimate(rxd['rx0'], oversamplingFactor, ftype='fir', zero_phase=True)
         dataFull = np.concatenate((dataFull, scanData), axis = 0)
     
     # Average data
@@ -328,7 +330,7 @@ def rare_standalone(
     # Fix the position of the sample according t dfov
     kMax = nPoints/(2*fov)*axesEnable
     kRD = np.linspace(-kMax[0],kMax[0],num=nPoints[0],endpoint=False)
-#    kPH = np.linspace(-kMax[1],kMax[1],num=nPH,endpoint=False)
+    kPH = np.linspace(-kMax[1],kMax[1],num=nPH,endpoint=False)
     kSL = np.linspace(-kMax[2],kMax[2],num=nSL,endpoint=False)
     kPH = kPH[::-1]
     kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
@@ -342,6 +344,7 @@ def rare_standalone(
     auxiliar['kMax'] = kMax
     outputs['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=0)
     
+    
     # Get image with FFT
     data = np.reshape(data, (nSL, nPH, nPoints[0]))
     img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
@@ -353,17 +356,40 @@ def rare_standalone(
         plt.figure(2)
         dataPlot = data[0, 0, :]
         plt.subplot(1, 2, 1)
-        plt.plot(kRD[0, :], np.abs(dataPlot))
-        plt.yscale('log')
-        plt.xlabel('krd (mm^-1)')
-        plt.ylabel('Signal (mV)')
+        if axesEnable[0]==0:
+            dataPlot = np.abs(dataPlot)
+            tVector = np.linspace(-acqTime/2, acqTime/2, num=nPoints[0],endpoint=False)
+            sMax = np.max(dataPlot)
+            indMax = np.argmax(dataPlot)
+            timeMax = tVector[indMax]
+            sMax3 = sMax/3
+            dataPlot3 = np.abs(dataPlot-sMax3)
+            indMin = np.argmin(dataPlot3)
+            timeMin = tVector[indMin]
+            T2 = np.abs(timeMax-timeMin)
+            plt.plot(tVector, np.abs(dataPlot))
+            plt.xlabel('t (us)')
+            plt.ylabel('Signal (mV)')
+            print(T2)
+        else:
+            plt.plot(kRD[0, :], np.abs(dataPlot))
+            plt.yscale('log')
+            plt.xlabel('krd (mm^-1)')
+            plt.ylabel('Signal (mV)')
         # Plot image
-        xAxis = np.linspace(-fov[0]/2*1e2, fov[0]/2*1e2, num=nPoints[0])
-        img = img[0, 0, :]
         plt.subplot(122)
-        plt.plot(xAxis, np.abs(img))
-        plt.xlabel('Position RD (cm)')
-        plt.ylabel('Density (a.u.)')
+        img = img[0, 0, :]
+        if axesEnable[0]==0:
+            xAxis = np.linspace(-BW/2, BW/2, num=nPoints[0], endpoint=False)*1e3
+            plt.plot(xAxis, np.abs(img), '.')
+            plt.xlabel('Frequency (kHz)')
+            plt.ylabel('Density (a.u.)')
+            print(np.max(np.abs(img)))
+        else:
+            xAxis = np.linspace(-fov[0]/2*1e2, fov[0]/2*1e2, num=nPoints[0], endpoint=False)
+            plt.plot(xAxis, np.abs(img))
+            plt.xlabel('Position RD (cm)')
+            plt.ylabel('Density (a.u.)')
     else:
         # Plot k-space
         plt.figure(2)
@@ -403,15 +429,13 @@ def rare_standalone(
             
     if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
         os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
-#    rawdata = dict
-#    rawdata = {"dataFull":dataFull, "rawdata":data,  "img":img}
     inputs['name'] = "%s.%s.mat" % ("TSE",dt_string)
     rawData['inputs'] = inputs
     rawData['auxiliar'] = auxiliar
     rawData['outputs'] = outputs
     rawdata = {}
     rawdata['rawData'] = rawData
-    savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, "TSE",dt_string),  rawdata) 
+    savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, "TSE",dt_string),  rawdata)
     
     plt.show()
     

@@ -34,7 +34,7 @@ st = pdb.set_trace
 
 def rare_standalone(
     init_gpa=False,              # Starts the gpa
-    nScans = 45,                 # NEX
+    nScans = 1,                 # NEX
     larmorFreq = 3.08e6,      # Larmor frequency
     rfExAmp = 0.3,             # rf excitation pulse amplitude
     rfReAmp = None,             # rf refocusing pulse amplitude
@@ -42,14 +42,14 @@ def rare_standalone(
     rfReTime = None,            # rf refocusing pulse time
     echoSpacing = 20e-3,        # time between echoes
     inversionTime = 0,       # Inversion recovery time
-    repetitionTime = 2000e-3,     # TR
-    fov = np.array([12e-2, 9e-2, 6e-2]),           # FOV along readout, phase and slice
-    dfov = np.array([-0e-2, -1e-2, 0e-2]),            # Displacement of fov center
-    nPoints = np.array([120, 120, 20]),                 # Number of points along readout, phase and slice
-    etl = 60,                    # Echo train length
+    repetitionTime = 500e-3,     # TR
+    fov = np.array([12e-2, 12e-2, 12e-2]),           # FOV along readout, phase and slice
+    dfov = np.array([0e-2, 0e-2, 0e-2]),            # Displacement of fov center
+    nPoints = np.array([100, 100, 20]),                 # Number of points along readout, phase and slice
+    etl = 10,                    # Echo train length
     acqTime = 2e-3,             # Acquisition time
     axes = np.array([0, 1, 2]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
+    axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
     sweepMode = 1,               # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
     phaseGradTime = 500e-6,       # Phase and slice dephasing time
     rdPreemphasis = 1.000,

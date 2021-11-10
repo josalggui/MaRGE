@@ -18,7 +18,7 @@ from plotview.spectrumplot import Spectrum3DPlot
 from sequencemodes import defaultsequences
 from seq.utilities import change_axes
 from PyQt5 import QtCore
-from PyQt5.QtCore import QObject,  pyqtSlot,  pyqtSignal
+from PyQt5.QtCore import QObject,  pyqtSlot,  pyqtSignal, QThread
 from manager.datamanager import DataManager
 from seq.radial import radial
 from seq.gradEcho import grad_echo
@@ -76,13 +76,16 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
             self.rxd, self.msgs, self.data_avg  = turbo_spin_echo(self.sequence, plotSeq)
+#            nPoint = [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]
         elif self.sequence.seq == 'CPMG':
             self.rxd, self.msgs, self.data_avg, self.sequence.BW = cpmg(self.sequence, plotSeq)
             self.sequence.lo_freq=self.sequence.larmorFreq
         elif  self.sequence.seq == 'RARE':
+#            print('Start sequence')
             self.rxd, self.msgs, self.data_avg, self.sequence.BW = rare(self.sequence, plotSeq)
-            self.sequence.lo_freq=self.sequence.larmorFreq
             [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl] = self.sequence.nPoints
+            self.sequence.lo_freq=self.sequence.larmorFreq
+#            print('End sequence')
             
             
         self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl], self.sequence.BW)
@@ -175,6 +178,25 @@ class AcquisitionController(QObject):
             exporter2 = pyqtgraph.exporters.ImageExporter(self.parent.t_plotview.scene())
             exporter2.export("experiments/acquisitions/%s/%s/Temp%s.png" % (dt2_string, dt_string, self.sequence))
 
+        from controller.WorkerXNAT import Worker
+        
+        # Step 2: Create a QThread object
+        self.thread = QThread()
+        # Step 3: Create a worker object
+        self.worker = Worker()
+        # Step 4: Move worker to the thread
+        self.worker.moveToThread(self.thread)
+        # Step 5: Connect signals and slots
+        self.thread.started.connect(lambda:self.worker.run('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        
+        # Step 6: Start the thread
+        self.thread.start()
+
+#        from controller.launch_XNAT import launch_XNAT        
+#        launch_XNAT('experiments/acquisitions/%s/%s' % (dt2_string, dt_string))
     
     def plot_cpmg(self):
         

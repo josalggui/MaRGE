@@ -43,18 +43,32 @@ def rare(self, plotSeq):
     nPoints=self.nPoints
     etl=self.etl
     acqTime=self.acqTime
+    shimming=self.shimming
     nScans=self.nScans
     repetitionTime=self.repetitionTime
     inversionTime=self.inversionTime
     fov=self.fov
-    dfov=self.dfov
+    dfov = self.dfov
     axes=self.axes
     axesEnable=self.axesEnable
     sweepMode=self.sweepMode
     phaseGradTime=self.phaseGradTime
     rdPreemphasis=self.rdPreemphasis
-    dPhase = self.dPhase
+    drfPhase = self.drfPhase
     dummyPulses  = self.dummyPulses
+    
+    larmorFreq = larmorFreq*1e6
+    rfExTime = rfExTime*1e-6
+    rfReTime = rfReTime*1e-6
+    fov = np.array(fov)*1e-3
+    dfov=np.array(dfov)*1e-3
+    echoSpacing=echoSpacing*1e-3
+    acqTime=acqTime*1e-3
+    shimming = np.array(shimming)*1e-4
+    repetitionTime= repetitionTime*1e-3
+    inversionTime= inversionTime*1e-3
+    phaseGradTime=phaseGradTime*1e-6
+    
     
     init_gpa=False,              # Starts the gpa
     
@@ -68,9 +82,9 @@ def rare(self, plotSeq):
     rfReAmp = rfExAmp
     rfReTime = 2*rfExTime
     deadTime = 200
-    oversamplingFactor = 6
+    oversamplingFactor = 1
     addRdGradTime = 400     # Additional readout gradient time to avoid turn on/off effects on the Rx channel
-
+    
     # Matrix size
     nRD = nPoints[0]+2*addRdPoints
     nPH = nPoints[1]*axesEnable[1]+(1-axesEnable[1])
@@ -146,11 +160,11 @@ def rare(self, plotSeq):
         for gIndex in range(np.size(gAxes)):
             a = np.array([gAmp[gIndex], 0])
             if gAxes[gIndex]==0:
-                expt.add_flodict({'grad_vx': (t, a)})
+                expt.add_flodict({'grad_vx': (t, a+shimming[0])})
             elif gAxes[gIndex]==1:
-                expt.add_flodict({'grad_vy': (t, a)})
+                expt.add_flodict({'grad_vy': (t, a+shimming[1])})
             elif gAxes[gIndex]==2:
-                expt.add_flodict({'grad_vz': (t, a)})
+                expt.add_flodict({'grad_vz': (t, a+shimming[2])})
     
     def endSequence(tEnd):
         expt.add_flodict({
@@ -158,6 +172,13 @@ def rare(self, plotSeq):
                 'grad_vy': (np.array([tEnd]),np.array([0]) ), 
                 'grad_vz': (np.array([tEnd]),np.array([0]) ),
              })
+
+    def iniSequence(tEnd, shimming):
+            expt.add_flodict({
+                    'grad_vx': (np.array([tEnd]),np.array([shimming[0]]) ), 
+                    'grad_vy': (np.array([tEnd]),np.array([shimming[1]]) ), 
+                    'grad_vz': (np.array([tEnd]),np.array([shimming[2]]) ),
+                 })
 
     # Changing time parameters to us
     rfExTime = rfExTime*1e6
@@ -173,6 +194,8 @@ def rare(self, plotSeq):
     phIndex = 0
     slIndex = 0
     scanTime = (nPH*nSL/etl+dummyPulses)*repetitionTime
+    # Set shimming
+    iniSequence(20, shimming)
     for repeIndex in range(int(nPH*nSL/etl)+dummyPulses):
         # Initialize time
         t0 = 20+repetitionTime*repeIndex
@@ -183,7 +206,7 @@ def rare(self, plotSeq):
         
         # Excitation pulse
         t0 += rfReTime/2+inversionTime-rfExTime/2
-        rfPulse(t0,rfExTime,rfExAmp,dPhase*np.pi/180)
+        rfPulse(t0,rfExTime,rfExAmp,drfPhase*np.pi/180)
     
         # Dephasing readout
         t0 += blkTime+rfExTime-gradDelay
@@ -236,19 +259,21 @@ def rare(self, plotSeq):
             if phIndex == nPH-1 and slIndex == nSL-1:
                 endSequence(scanTime)
     
-
+    
     if plotSeq==1:  
         expt.plot_sequence()
         plt.show()
         expt.__del__()
     elif plotSeq==0:
+        print('Start sequence')
         # Run the experiment
         dataFull = []
         for ii in range(nScans):
             rxd, msgs = expt.run()
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             # Get data
-            scanData = sig.decimate(rxd['rx0'], oversamplingFactor, ftype='fir', zero_phase=True)
+            #scanData = sig.decimate(rxd['rx0'], oversamplingFactor, ftype='fir', zero_phase=True)
+            scanData = rxd['rx0']
             dataFull = np.concatenate((dataFull, scanData), axis = 0)
         
         # Average data
@@ -277,18 +302,34 @@ def rare(self, plotSeq):
         data = np.reshape(dataTemp, (1, nPoints[0]*nPH*nSL))
         
         # Fix the position of the sample according t dfov
-#        kMax = np.array(nPoints)/(2*fov)*np.array(axesEnable)
-#        kRD = np.linspace(-kMax[0],kMax[0],num=nPoints[0],endpoint=False)
-#        kPH = np.linspace(-kMax[1],kMax[1],num=nPH,endpoint=False)
-#        kSL = np.linspace(-kMax[2],kMax[2],num=nSL,endpoint=False)
-#        kPH = kPH[::-1]
-#        kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
-#        kRD = np.reshape(kRD, (1, nPoints[0]*nPH*nSL))
-#        kPH = np.reshape(kPH, (1, nPoints[0]*nPH*nSL))
-#        kSL = np.reshape(kSL, (1, nPoints[0]*nPH*nSL))
-#        dPhase = np.exp(-2*np.pi*1j*(dfov[0]*kRD+dfov[1]*kPH+dfov[2]*kSL))
+        kMax = np.array(nPoints)/(2*np.array(fov))*np.array(axesEnable)
+#        kMax = nPoints/(2*fov)*axesEnable
+        kRD = np.linspace(-kMax[0],kMax[0],num=nPoints[0],endpoint=False)
+        kPH = np.linspace(-kMax[1],kMax[1],num=nPH,endpoint=False)
+        kSL = np.linspace(-kMax[2],kMax[2],num=nSL,endpoint=False)
+        kPH = kPH[::-1]
+        kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
+        kRD = np.reshape(kRD, (1, nPoints[0]*nPH*nSL))
+        kPH = np.reshape(kPH, (1, nPoints[0]*nPH*nSL))
+        kSL = np.reshape(kSL, (1, nPoints[0]*nPH*nSL))
+        dPhase = np.exp(-2*np.pi*1j*(dfov[0]*kRD+dfov[1]*kPH+dfov[2]*kSL))
         data = np.reshape(data*dPhase, (nSL, nPH, nPoints[0]))
         data = np.reshape(data, -1) 
+
+#        img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
+#        dt = datetime.now()
+#        dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S")
+#        dt2 = date.today()
+#        dt2_string = dt2.strftime("%Y.%m.%d")
+#        if not os.path.exists('experiments/acquisitions/%s' % (dt2_string)):
+#            os.makedirs('experiments/acquisitions/%s' % (dt2_string))
+#                
+#        if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
+#            os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
+#        rawdata = dict
+#        rawdata = {"dataFull":dataFull, "rawdata":data,  "img":img}
+#        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, "TSE",dt_string),  rawdata) 
+        print('End sequence')
         return dataFull, msgs, data,  BW
     
 ##    # Get image with FFT

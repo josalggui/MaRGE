@@ -62,7 +62,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
   
         # Initialisation of sequence list
         self.sequencelist = SequenceList(self)
-        self.sequencelist.setCurrentIndex(5)
+        self.sequencelist.setCurrentIndex(6)
         self.sequencelist.currentIndexChanged.connect(self.selectionChanged)
         self.layout_operations.addWidget(self.sequencelist)
         self.sequence = self.sequencelist.currentText()

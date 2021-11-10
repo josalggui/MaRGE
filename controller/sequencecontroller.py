@@ -45,8 +45,8 @@ class SequenceList(QComboBox):
             parent.onSequenceChanged.connect(self.triggeredSequenceChanged)
             # Make parent reachable from outside __init__
             self.parent = parent
-            self._currentSequence = "CPMG"
-            self.setParametersUI("CPMG")
+            self._currentSequence = "RARE"
+            self.setParametersUI("RARE")
 #        self._currentSequence = None
         else:
             self._currentSequence=parent.sequence

@@ -1,3 +1,4 @@
+
 def upload(direct):
     #Subject, Experiment y Scan se llaman como el nombre entero de la secuencia
     #Si un metadata se encuentra vacío [], no se guarda ese field por defecto
@@ -21,15 +22,13 @@ def upload(direct):
     #Conexión XNAT
     session = xnat.connect('http://localhost', user='admin', password='admin')
     interface = Interface(server='http://localhost', user='admin', password='admin') #Para SNAPSHOTS
-    print("Conected to XNAT with API")
+    print("Connected to XNAT with API")
     
     #PROYECTO tiene que existir en XNAT
     project = session.projects['physioMRI']
     project_snapshot = interface.select.project('physioMRI').insert() #Para SNAPSHOTS
     
     #Seteamos el directorio en la carpeta de datos
-    #os.chdir("/home/physioMRI/git_repos/PhysioMRI_GUI/experiments/acquisitions/2021.10.13/2021.10.13.21.20.33") #SELECCIONAR CARPETA DONDE ESTÉN LOS ARCHIVOS
-    #direct="/home/physioMRI/git_repos/PhysioMRI_GUI/experiments/acquisitions/2021.10.25/2021.10.25.19.19.41"
     os.chdir(direct)
     
     #1-Accedemos a los files y guardamos sus nombres
@@ -42,21 +41,69 @@ def upload(direct):
         elif i.find('mat') != -1:
             mat = i 
         
-    #Si no encuentra .nii o .mat se termina el código
-    if nii == 0 or mat == 0:
-        print("Falta el archivo .mat o .nii") #################################MESSAGE FUNCTION#####################################
+  
+    #Si solo hay .mat, se sube solo .mat
+    if nii == 0 and mat != 0:
+        print("Only .mat file detected")
+        
+        #Eliminamos .nii y .mat de los nombres   
+        filename = mat.split('.mat')[0]
+        filename_date = mat.split('.mat')[0]
+        filename = filename.replace(".", "-")
+        
+        s_label = filename
+        
+        #2-subject
+        subject = session.classes.SubjectData(parent=project, label=s_label)
+                
+        #3-experiment
+        experiment = session.classes.MrSessionData(parent=subject, label=filename)
+        #Si queremos añadir FECHA
+        array_date = filename_date.split('.')[1:4]
+        date = array_date[0] + "-" + array_date[1] + "-" + array_date[2]
+        experiment.date = date
+        
+        #4-scan
+        scan = session.classes.MrScanData(parent=experiment, id=filename, type='MRI')
+        
+        print("Subject, Experiment and Scan created")
+        
+        #6-Resource y subir .mat   
+        try:
+            #XNATResponseError (status 409)
+            resource_MAT = session.classes.ResourceCatalog(parent=scan, label='MAT', type='mat')
+            resource_MAT.upload(mat, mat)
+            print(".mat uploaded")
+        except:
+            resource_MAT = scan.resources['MAT']
+            resource_MAT.upload(mat, mat)
+            print(".mat already exists")    
+
+        #7-METADATA
+        metadata = scipy.io.loadmat(mat)
+        
+        if 'BW' in metadata.keys():
+            metadata["bw"] = metadata.pop("BW")
+        
+        del metadata["average"]
+        del metadata["rawdata"]
+        
+        for key in metadata.keys():
+            experiment.fields[key] = metadata.get(key)
+        print("metadata uploaded")
+        
         session.disconnect()
         interface.disconnect()
-        exit
-    
-    else:
+        
+    elif nii != 0 and mat != 0:
+        print(".mat and .nii files detected")
+        
         #Eliminamos .nii y .mat de los nombres   
         filename = nii.split('.nii')[0]
         filename_date = nii.split('.nii')[0]
         filename = filename.replace(".", "-")
         
         s_label = filename
-        e_label = filename
         
         #2-subject
         subject = session.classes.SubjectData(parent=project, label=s_label)
@@ -99,7 +146,11 @@ def upload(direct):
         #7-METADATA
         metadata = scipy.io.loadmat(mat)
         
-        metadata["bw"] = metadata.pop("BW")
+        if 'BW' in metadata.keys():
+            metadata["bw"] = metadata.pop("BW")
+        
+        del metadata["average"]
+        del metadata["rawdata"]
         
         for key in metadata.keys():
             experiment.fields[key] = metadata.get(key)
@@ -171,13 +222,6 @@ def upload(direct):
         # =============================================================================
         # FIN SNAPSHOTS
         # =============================================================================
-        
-        #Volvemos a directorios
-        os.chdir("../")
-        
-        #elapsed_time_fl = (time.time() - start)
-        #print(elapsed_time_fl)
-        
         
         session.disconnect()
         interface.disconnect()
