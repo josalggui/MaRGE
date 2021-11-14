@@ -23,12 +23,12 @@ from sys import exit
 from controller.uploadXNAT import upload
 
 
-class Worker(QThread):
+class Worker(QObject):
     
     finished = pyqtSignal()
 
     def run(self,direct):
-
+        
         #PARA NO LIAR EL PATH
         true_path = os.getcwd()
 

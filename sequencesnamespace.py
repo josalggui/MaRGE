@@ -106,6 +106,7 @@ class Namespace:
     fov_ph = 'fov ph'
     fov_sl = 'fov sl'
     shimming = 'Shimming (x, y, z)'
+    parAcqLines = 'Partial adquisition (Off=0; 1,2...=nº lines)'
 class Tooltip_label:
     rx_period = "Sampling time"
     rf_amp = "Full scale = 1"

@@ -335,7 +335,7 @@
      <x>0</x>
      <y>0</y>
      <width>1126</width>
-     <height>27</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
@@ -351,6 +351,7 @@
    </attribute>
    <addaction name="action_gpaInit"/>
    <addaction name="action_calibration"/>
+   <addaction name="action_XNATupload"/>
    <addaction name="action_acquire"/>
   </widget>
   <widget class="QToolBar" name="AcquisitionControlToolbar">
@@ -397,24 +398,6 @@
    </property>
    <property name="toolTip">
     <string>Close PhisioMRI_GUI</string>
-   </property>
-   <property name="font">
-    <font/>
-   </property>
-  </action>
-  <action name="action_connect">
-   <property name="checkable">
-    <bool>false</bool>
-   </property>
-   <property name="icon">
-    <iconset>
-     <normaloff>../../../../.designer/resources/icons/power.svg</normaloff>../../../../.designer/resources/icons/power.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Connect</string>
-   </property>
-   <property name="toolTip">
-    <string>Connect to server</string>
    </property>
    <property name="font">
     <font/>
@@ -535,6 +518,18 @@
    </property>
    <property name="toolTip">
     <string>Batch Processing</string>
+   </property>
+  </action>
+  <action name="action_XNATupload">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/upload-outline.svg</normaloff>../resources/icons/upload-outline.svg</iconset>
+   </property>
+   <property name="text">
+    <string>XNAT_upload</string>
+   </property>
+   <property name="toolTip">
+    <string>Activate upload to XNAT</string>
    </property>
   </action>
  </widget>

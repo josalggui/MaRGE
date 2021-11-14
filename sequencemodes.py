@@ -424,6 +424,8 @@ class RARE:
                  rdPreemphasis:float = None,
                  drfPhase:int = None, 
                  dummyPulses:int = None, 
+                 
+                 parAcqLines:int = None, 
                  ):
     
         self.seq:str=seq
@@ -449,7 +451,7 @@ class RARE:
         self.rdPreemphasis:float = rdPreemphasis
         self.drfPhase:int = drfPhase 
         self.dummyPulses:int = dummyPulses 
-        
+        self.parAcqLines:int = parAcqLines
     @property
     def  systemproperties(self) -> dict:
         # TODO: add server cmd's as third entry in list
@@ -478,6 +480,7 @@ class RARE:
             nmspc.rdPreemphasis:[float(self.rdPreemphasis)], 
             nmspc.drfPhase:[int(self.drfPhase)], 
             nmspc.dummyPulses :[int(self.dummyPulses)], 
+            nmspc.parAcqLines :[int(self.parAcqLines)], 
 
         }
 
@@ -499,4 +502,4 @@ defaultsequences={
     #TurboSpinEcho(dbg_sc,lo_freq,rf_amp,trs,rx_period,trapRampDur,echosTR,echosDur,sliceAmp,phAmp,rdAmp,rfDur,phDur,rdDur,rdGradDur,phGint,TRPauseDur,shimming(rd,ph,sl))
 #    'Turbo Spin Echo': TSE_Seq('TSE',  0, 3, 1, 5, 3.333, 100, 5, 2000, 0.3, 0.6,0.8, 50, 150, 500, 700, 1200, 3000, (0.01, 0.01, 0.01))
     'CPMG': CPMGSeq('CPMG', 3.08e6, 0.3, 0.3, 35e-6, 70e-6, 10e-3, 500, 100, 2e-3), 
-    'RARE': RARE('RARE', 1, 3.08, 0.3, 0.3, 35, 70, 20, 4,[-70, -90, 10],  500, 0, (110, 110,110),  (-15, 5, 0), (60, 60, 1), 10, (0, 1, 2), (1, 1, 0), 1, 1000, 1, 0, 1) }
+    'RARE': RARE('RARE', 1, 3.08, 0.3, 0, 35, 0, 20, 4,[-70, -90, 10],  500, 0, (120, 120,120),  (0, 0, 0), (60, 1, 1), 15, (0, 1, 2), (0, 0, 0), 1, 1000, 1, 0, 1, 0) }

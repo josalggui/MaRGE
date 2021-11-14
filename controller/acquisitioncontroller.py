@@ -30,12 +30,15 @@ from seq.spinEcho import spin_echo
 from datetime import date,  datetime 
 from scipy.io import savemat
 import os
+import time
 import pyqtgraph as pg
 import numpy as np
 import scipy.signal as sig
 from scipy.signal import butter, filtfilt 
 import nibabel as nib
 import pyqtgraph.exporters
+from functools import partial
+
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, sequencelist=None):
@@ -81,11 +84,11 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs, self.data_avg, self.sequence.BW = cpmg(self.sequence, plotSeq)
             self.sequence.lo_freq=self.sequence.larmorFreq
         elif  self.sequence.seq == 'RARE':
-#            print('Start sequence')
+            print('Start sequence')
             self.rxd, self.msgs, self.data_avg, self.sequence.BW = rare(self.sequence, plotSeq)
             [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl] = self.sequence.nPoints
             self.sequence.lo_freq=self.sequence.larmorFreq
-#            print('End sequence')
+            print('End sequence')
             
             
         self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl], self.sequence.BW)
@@ -180,24 +183,23 @@ class AcquisitionController(QObject):
 
         from controller.WorkerXNAT import Worker
         
-        # Step 2: Create a QThread object
-        self.thread = QThread()
-        # Step 3: Create a worker object
-        self.worker = Worker()
-        # Step 4: Move worker to the thread
-        self.worker.moveToThread(self.thread)
-        # Step 5: Connect signals and slots
-        self.thread.started.connect(lambda:self.worker.run('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
-        
-        # Step 6: Start the thread
-        self.thread.start()
+        if self.parent.xnat_active == 'TRUE':
+            # Step 2: Create a QThread object
+            self.thread = QThread()
+            # Step 3: Create a worker object
+            self.worker = Worker()
+            # Step 4: Move worker to the thread
+            self.worker.moveToThread(self.thread)
+            # Step 5: Connect signals and slots
+            self.thread.started.connect(partial(self.worker.run, 'experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
+            self.worker.finished.connect(self.thread.quit)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.thread.finished.connect(self.thread.deleteLater)
+            
+            # Step 6: Start the thread
+            self.thread.start()
 
-#        from controller.launch_XNAT import launch_XNAT        
-#        launch_XNAT('experiments/acquisitions/%s/%s' % (dt2_string, dt_string))
-    
+   
     def plot_cpmg(self):
         
         data = self.data

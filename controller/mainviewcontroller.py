@@ -7,10 +7,11 @@ Main View Controller
 @todo:
 
 """
-from PyQt5.QtWidgets import  QMessageBox,  QFileDialog,  QTextEdit
+from PyQt5.QtWidgets import  QMessageBox,  QFileDialog,  QTextEdit,  QAction
 from PyQt5.QtCore import QFile, QTextStream,  pyqtSignal, pyqtSlot
 from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
+from PyQt5.QtGui import QIcon
 from controller.acquisitioncontroller import AcquisitionController
 from controller.calibrationcontroller import CalibrationController
 from controller.batchcontroller import BatchController
@@ -59,7 +60,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.setupUi(self)
         self.styleSheet = style.breezeLight
         self.setupStylesheet(self.styleSheet)
-  
+        
         # Initialisation of sequence list
         self.sequencelist = SequenceList(self)
         self.sequencelist.setCurrentIndex(6)
@@ -79,8 +80,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Connection to the server
         self.ip = ip_address
         
-        # Init gpa
-        
+        # XNAT upload
+        self.xnat_active = 'FALSE'
         
         # Toolbar Actions
         self.action_gpaInit.triggered.connect(self.initgpa)
@@ -94,7 +95,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_exportfigure.triggered.connect(self.export_figure)
         self.action_viewsequence.triggered.connect(self.plot_sequence)
         self.action_batch.triggered.connect(self.batch_system)
-        
+        self.action_XNATupload.triggered.connect(self.xnat)
+    
+   
     def lines_that_start_with(self, str, f):
         return [line for line in f if line.startswith(str)]
     
@@ -287,3 +290,16 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def batch_system(self):
         batchW = BatchController(self, self.sequencelist)
         batchW.show()
+
+    def xnat(self):
+        
+        if self.xnat_active == 'TRUE':
+            self.xnat_active = 'FALSE'
+            self.action_XNATupload.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/upload-outline.svg') )
+            self.action_XNATupload.setToolTip('Activate XNAT upload')
+        else:
+            self.xnat_active = 'TRUE'
+            self.action_XNATupload.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/upload.svg') )
+            self.action_XNATupload.setToolTip('Deactivate XNAT upload')
+            
+        

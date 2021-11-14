@@ -16,7 +16,7 @@ def inversion_recovery_TGN(
     tr = 3000*1e3, 
     t_ini = 200*1e3,
     t_fin = 2000*1e3,
-    N = 20,
+    N = 5,
     BW=60*1e-3, 
     n_rd=120):
     
@@ -87,8 +87,9 @@ def inversion_recovery_TGN(
         data = rxd['rx0']*13.788
         dataIndiv = np.reshape(data,  (N, n_rd))
         plt.figure(1)
-        plt.plot(np.abs(data))
-        
+        plt.plot(np.abs(dataIndiv[0, :]),  'o')
+#        plt.plot(np.abs(dataIndiv[1, :]),  'go')
+#        plt.plot(np.abs(dataIndiv[2, :]),  'bo')
         #Tratamiento resultado
         results = []
         cont = 0
