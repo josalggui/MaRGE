@@ -185,19 +185,19 @@ class AcquisitionController(QObject):
         
         if self.parent.xnat_active == 'TRUE':
             # Step 2: Create a QThread object
-            self.thread = QThread()
+            self.parent.thread = QThread()
             # Step 3: Create a worker object
             self.worker = Worker()
             # Step 4: Move worker to the thread
-            self.worker.moveToThread(self.thread)
+            self.worker.moveToThread(self.parent.thread)
             # Step 5: Connect signals and slots
-            self.thread.started.connect(partial(self.worker.run, 'experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
-            self.worker.finished.connect(self.thread.quit)
+            self.parent.thread.started.connect(partial(self.worker.run, 'experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
+            self.worker.finished.connect(self.parent.thread.quit)
             self.worker.finished.connect(self.worker.deleteLater)
-            self.thread.finished.connect(self.thread.deleteLater)
+            self.parent.thread.finished.connect(self.parent.thread.deleteLater)
             
             # Step 6: Start the thread
-            self.thread.start()
+            self.parent.thread.start()
 
    
     def plot_cpmg(self):

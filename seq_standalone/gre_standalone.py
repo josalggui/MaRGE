@@ -34,23 +34,23 @@ st = pdb.set_trace
 
 def gre_standalone(
     init_gpa=False,              # Starts the gpa
-    nScans = 10,                 # NEX
-    larmorFreq = 3.0781e6,      # Larmor frequency
-    rfExAmp = 0.3,             # rf excitation pulse amplitude
-    rfExTime = 5e-6,          # rf excitation pulse time
-    echoTime = 3e-3,              # TE
-    repetitionTime = 20e-3,     # TR
-    fov = np.array([12e-2, 12e-2, 12e-2]),           # FOV along readout, phase and slice
-    dfov = np.array([0e-2, 0e-2, 0e-2]),            # Displacement of fov center
-    nPoints = np.array([60, 60, 1]),                 # Number of points along readout, phase and slice
-    acqTime = 2e-3,             # Acquisition time
-    axes = np.array([0, 1, 2]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
+    nScans = 1,                 # NEX
+    larmorFreq = 3.0778e6,      # Larmor frequency
+    rfExAmp = 0.03,             # rf excitation pulse amplitude
+    rfExTime = 35e-6,          # rf excitation pulse time
+    echoTime = 2e-3,              # TE
+    repetitionTime = 10e-3,     # TR
+    fov = np.array([5e-2, 8e-2, 15e-2]),           # FOV along readout, phase and slice
+    dfov = np.array([-0.4e-2, 0.8e-2, 1e-2]),            # Displacement of fov center
+    nPoints = np.array([25, 40, 74]),                 # Number of points along readout, phase and slice
+    acqTime = 1e-3,             # Acquisition time
+    axes = np.array([2, 1, 0]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
+    axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
     dephaseGradTime = 1000e-6,       # Phase and slice dephasing time
     rdPreemphasis = 1,                               # Preemphasis factor for readout dephasing
     drfPhase = 0,                           # phase of the excitation pulse (in degrees)
     dummyPulses = 1,                     # Dummy pulses for T1 stabilization
-    shimming = np.array([-65, -100, 10]),       # Shimming along the X,Y and Z axes (a.u. *1e4)
+    shimming = np.array([-70, -90, 10]),       # Shimming along the X,Y and Z axes (a.u. *1e4)
     parAcqLines = 0                        # Number of additional lines, Full sweep if 0
     ):
     
@@ -65,10 +65,10 @@ def gre_standalone(
     larmorFreq = larmorFreq*1e-6
     gradRiseTime = 100e-6       # Estimated gradient rise time
     gradDelay = 9            # Gradient amplifier delay
-    addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
+    addRdPoints = 5             # Initial rd points to avoid artifact at the begining of rd
     gammaB = 42.56e6            # Gyromagnetic ratio in Hz/T
     oversamplingFactor = 6
-    addRdGradTime = 100e-6     # Additional readout gradient time to avoid turn on/off effects on the Rx channel
+    addRdGradTime = 200e-6     # Additional readout gradient time to avoid turn on/off effects on the Rx channel
     shimming = shimming*1e-4
     auxiliar['gradDelay'] = gradDelay*1e-6
     auxiliar['gradRiseTime'] = gradRiseTime
@@ -104,7 +104,7 @@ def gre_standalone(
     
     # parAcqLines in case parAcqLines = 0
     if parAcqLines==0:
-        parAcqLines = np.int(nSL/2)
+        parAcqLines = int(nSL/2)
     
     # BW
     BW = nPoints[0]/acqTime*1e-6
@@ -139,6 +139,12 @@ def gre_standalone(
     slGradAmplitude = slGradAmplitude/gFactor[2]*1000/10
     phGradients = phGradients/gFactor[1]*1000/10
     slGradients = slGradients/gFactor[2]*1000/10
+    if np.abs(rdGradAmplitude)>1:
+        return(0)
+    if np.abs(rdDephGradAmplitude)>1:
+        return(0)
+    if np.abs(phGradAmplitude)>1 or np.abs(slGradAmplitude)>1:
+        return(0)
     
     # Initialize the experiment
     expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
@@ -248,8 +254,8 @@ def gre_standalone(
             endSequence(scanTime)
     
     # Plot sequence:
-#    expt.plot_sequence()
-#    plt.show()
+    expt.plot_sequence()
+    plt.show()
     
     # Run the experiment
     dataFull = []
@@ -263,6 +269,7 @@ def gre_standalone(
     expt.__del__()
     
     # Delete the addRdPoints
+#    nPoints[0] = nRD
     dataFull = np.reshape(dataFull, (nPH*nSL*nScans, nRD))
     dataFull = dataFull[:, addRdPoints:addRdPoints+nPoints[0]]
     dataFull = np.reshape(dataFull, (1, nPoints[0]*nPH*nSL*nScans))
@@ -385,16 +392,14 @@ def gre_standalone(
         plt.imshow(np.angle(imgPlot), cmap='gray')
         plt.axis('off')
         plt.title('Image phase')
-        # Plot image in log scale
-#        plt.subplot(133)
-#        plt.imshow(np.log(np.abs(img)), cmap='gray')
-#        plt.axis('off')
-    
-    # Plot central line in k-space
-#    plt.subplot(133)
-#    data = np.abs(data[0, :])
-#    plt.plot(data)
-#    plt.show()
+        
+#        fig = plt.figure(3)
+#        img2Darg = np.angle(imgPlot)
+#        X = np.arange(-1, 1, 2/(np.size(imgPlot, 1)))
+#        Y = np.arange(-1, 1, 2/(np.size(imgPlot, 0)))
+#        X,  Y = np.meshgrid(X, Y)
+#        ax = fig.gca(projection='3d')
+#        surf = ax.plot_surface(X, Y, img2Darg)
     
     # Save data
     dt = datetime.now()

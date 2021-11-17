@@ -150,6 +150,11 @@
            </widget>
           </item>
           <item>
+           <widget class="QWidget" name="verticalWidget" native="true">
+            <layout class="QVBoxLayout" name="console_batch"/>
+           </widget>
+          </item>
+          <item>
            <spacer name="verticalSpacer">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -203,7 +208,7 @@
      <x>0</x>
      <y>0</y>
      <width>341</width>
-     <height>27</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
@@ -220,6 +225,7 @@
    <addaction name="action_addProcess"/>
    <addaction name="action_removeProcess"/>
    <addaction name="action_acquire"/>
+   <addaction name="action_XNATupload"/>
   </widget>
   <widget class="QToolBar" name="AcquisitionControlToolbar">
    <property name="windowTitle">
@@ -333,6 +339,18 @@
    </property>
    <property name="font">
     <font/>
+   </property>
+  </action>
+  <action name="action_XNATupload">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/upload-outline.svg</normaloff>../resources/icons/upload-outline.svg</iconset>
+   </property>
+   <property name="text">
+    <string>XNAT_upload</string>
+   </property>
+   <property name="toolTip">
+    <string>Activate upload to XNAT</string>
    </property>
   </action>
  </widget>

@@ -233,6 +233,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H_%M")
         dict = vars(defaultsequences[self.sequence]) 
+        dict.pop('rawdata', None)
+        dict.pop('average', None)       
         
         sequ = '%s' %(self.sequence)
         sequ = sequ.replace(" ", "")

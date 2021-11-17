@@ -9,15 +9,19 @@
 @status:    Under development
 
 """
-from PyQt5.QtWidgets import QFileDialog, QListWidget,  QMessageBox
+from PyQt5.QtWidgets import QFileDialog, QListWidget,  QMessageBox, QTextEdit
+from PyQt5 import QtGui
+from PyQt5.QtGui import QIcon
 from PyQt5.uic import loadUiType,  loadUi
-from PyQt5.QtCore import pyqtSignal, QFileInfo
+from PyQt5.QtCore import QFileInfo
 from controller.acquisitioncontroller import AcquisitionController
 from sequencemodes import defaultsequences
-from sequencesnamespace import Namespace as nmspc
 from controller.sequencecontroller import SequenceList
+from sequencesnamespace import Namespace as nmspc
 #from PyQt5 import QtGui
 import ast
+import sys
+from stream import EmittingStream
 
 BatchController_Form, BatchController_Base = loadUiType('ui/batchViewer.ui')
 
@@ -39,10 +43,19 @@ class BatchController(BatchController_Base, BatchController_Form):
         self.action_acquire.triggered.connect(self.startAcquisition)
         self.action_addProcess.triggered.connect(self.load_process)
         self.action_removeProcess.triggered.connect(self.remove_process)
-        self.action_close.triggered.connect(self.close)    
+        self.action_close.triggered.connect(self.close)  
+        self.action_XNATupload.triggered.connect(self.xnat)  
         
+        # XNAT upload
+        self.xnat_active = 'FALSE'
         self.batch = 1
         self.jobs = []
+        
+        #Console
+        self.cons = self.generateConsole('')
+        self.console_batch.addWidget(self.cons)
+        sys.stdout = EmittingStream(textWritten=self.onUpdateText)
+        sys.stderr = EmittingStream(textWritten=self.onUpdateText)        
         
     def load_process(self):
     
@@ -87,6 +100,7 @@ class BatchController(BatchController_Base, BatchController_Form):
            # Initialisation of acquisition controller
             acqCtrl = AcquisitionController(self, self.sequencelist)
             acqCtrl.startAcquisition()
+            print('Job %s finished' %pathJob)
         
         self.messages("Done")
         
@@ -95,4 +109,29 @@ class BatchController(BatchController_Base, BatchController_Form):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Information)
         msg.setText(text)
+        msg.setWindowTitle('Job finished')
         msg.exec();
+
+    def xnat(self):
+        
+        if self.xnat_active == 'TRUE':
+            self.xnat_active = 'FALSE'
+            self.action_XNATupload.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/upload-outline.svg') )
+            self.action_XNATupload.setToolTip('Activate XNAT upload')
+        else:
+            self.xnat_active = 'TRUE'
+            self.action_XNATupload.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/upload.svg') )
+            self.action_XNATupload.setToolTip('Deactivate XNAT upload')
+        
+    @staticmethod
+    def generateConsole(text):
+        con = QTextEdit()
+        con.setText(text)
+        return con
+        
+    def onUpdateText(self, text):
+        cursor = self.cons.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+        cursor.insertText(text)
+        self.cons.setTextCursor(cursor)
+        self.cons.ensureCursorVisible()

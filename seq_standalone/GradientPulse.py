@@ -22,15 +22,15 @@ def FID_EddyCurrents(
     tAdq =5*1e3,
     tEcho = 20*1e3,
     echo = 2, #0 FID, 1 Echo, 2 Both
-    tRepetition = 2000*1e3,  
+    tRepetition = 500*1e3,  #Osciloscopio 2000
 #    shimming=[-100, -70, 80],
     shimming=[0, 0, 0],
 #    shimming=[-70, -90, 10],
-    gAxis =2,
-    gNsteps =20, #50
-    gRiseTime = 150,
-    gDuration = 400,
-    gAmp = 0.2, # Max.1=50A 0.2=2V=10A; 0.2V=1A
+    gAxis =0,
+    gNsteps =40, #50
+    gRiseTime = 1000,
+    gDuration = 3000,
+    gAmp = 1, # Max.1=50A 0.2=2V=10A; 0.2V=1A
     tDelay =100, 
     plotSeq =0):
     
@@ -40,7 +40,7 @@ def FID_EddyCurrents(
     txGatePost = 1
     blkTime = 300  #Tiempo que dejo entre el rfPulse y la lectura. 
     gAmpMax = 1
-    nGOptions = 3 
+    nGOptions = 1 #Osciloscopio. Corregir a 3
     nReadout = nReadout +5
     shimming=np.array(shimming)*1e-4
     tDelayShimming = 15*1e3
@@ -143,6 +143,7 @@ def FID_EddyCurrents(
     iniSequence(10)
     timeSeq = tStart+tDelayShimming #For shimming stabilization
     for n in range(nGOptions):
+        n=2 #Osciloscopio. Delete. 
         timeSeq = gradPulse(timeSeq, gDuration, gAmp[n], gAxis)
         timeSeq = rfPulse(timeSeq+tDelay,rfExAmp, rfExTime) 
         if echo == 0:
@@ -154,7 +155,8 @@ def FID_EddyCurrents(
             readoutGate(timeSeq+blkTime,tAdq)
             timeSeq = rfPulse(timeSeq+tEcho,rfReAmp, rfReTime) 
             timeSeq = readoutGate(timeSeq+tEcho-tAdq/2,tAdq)
-        timeSeq=tRepetition*(n+1)+tStart  
+#        timeSeq=tRepetition*(n+1)+tStart  Osciloscopio. Descomentar.
+        timeSeq=tRepetition+tStart #Osciloscopio. Borrar. 
     endSequence(timeSeq-tStart)
     
     #RUN
@@ -190,14 +192,14 @@ def FID_EddyCurrents(
             plt.legend()
         elif echo == 2:
             plt.rcParams["figure.figsize"] = (16,6)
-            BWaux=(nReadout/(tAdq*1e-6))*1e-3 #kHz
+            BWaux=(nReadout/(tAdq*1e-6))*1e-3 #Hz
             x1 = np.linspace(blkTime, tAdq, nReadout-5, endpoint=True)*1e-3
             x2 = np.linspace(3*tEcho/2-tAdq/2, tAdq,  nReadout-5, endpoint=True)*1e-3
             x3=  np.linspace(-BWaux/2, BWaux/2, nReadout-5, endpoint=True)
             fig = plt.subplot(131)
             plt.plot(x1, np.abs(dataIndiv[0]), 'r', label="-g")
-            plt.plot(x1, np.abs(dataIndiv[2]), 'b', label=" 0")
-            plt.plot(x1,  np.abs(dataIndiv[4]), 'g', label="+g")
+#            plt.plot(x1, np.abs(dataIndiv[2]), 'b', label=" 0")
+#            plt.plot(x1,  np.abs(dataIndiv[4]), 'g', label="+g")
             plt.xlabel('t(ms)')
             plt.ylabel('A(mV)')
             plt.ylim(0, 200)
@@ -205,8 +207,8 @@ def FID_EddyCurrents(
             plt.legend()
             fig = plt.subplot(132)
             plt.plot(x2, np.abs(dataIndiv[1]), 'r', label="-g")
-            plt.plot(x2, np.abs(dataIndiv[3]), 'b', label="0")
-            plt.plot(x2, np.abs(dataIndiv[5]), 'g', label="+g")
+#            plt.plot(x2, np.abs(dataIndiv[3]), 'b', label="0")
+#            plt.plot(x2, np.abs(dataIndiv[5]), 'g', label="+g")
             plt.xlabel('t(ms)')
             plt.ylabel('A(mV)')
             plt.ylim(0, 200)
@@ -217,13 +219,13 @@ def FID_EddyCurrents(
             dataOr1, dataOr2 = np.split(dataIndivFft, 2, axis=1)
             dataOr = np.concatenate((dataOr2, dataOr1), axis=1)
             plt.plot(x3, np.abs(dataOr[0]), 'r', label="-g")
-            plt.plot(x3, np.abs(dataOr[2]), 'b', label=" 0")
-            plt.plot(x3, np.abs(dataOr[4]), 'g', label="+g")
+#            plt.plot(x3, np.abs(dataOr[2]), 'b', label=" 0")
+#            plt.plot(x3, np.abs(dataOr[4]), 'g', label="+g")
             plt.xlabel('f(kHz)')
             plt.ylabel('A(a.u.)')
             plt.title('FFT')
             plt.legend()
-        plt.show()
+#        plt.show()
 
 
 if __name__ == "__main__":

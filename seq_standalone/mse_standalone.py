@@ -35,26 +35,26 @@ st = pdb.set_trace
 def rare2_standalone(
     init_gpa=False,              # Starts the gpa
     nScans = 4,                 # NEX
-    larmorFreq = 3.078e6,      # Larmor frequency
+    larmorFreq = 3.07723e6,      # Larmor frequency
     rfExAmp = 0.3,             # rf excitation pulse amplitude
     rfReAmp = None,             # rf refocusing pulse amplitude
     rfExTime = 35e-6,          # rf excitation pulse time
     rfReTime = None,            # rf refocusing pulse time
     echoSpacing = 20e-3,        # time between echoes
     repetitionTime = 300e-3,     # TR
-    fov = np.array([12e-2,12e-2,12e-2]),           # FOV along readout, phase and slice
-    dfov = np.array([0e-2, 0e-2, 0e-2]),            # Displacement of fov center
-    nPoints = np.array([60, 60, 60]),                 # Number of points along readout, phase and slice
+    fov = np.array([15e-2,8e-2,5e-2]),           # FOV along readout, phase and slice
+    dfov = np.array([0e-2, 0.5e-2, 0e-2]),            # Displacement of fov center
+    nPoints = np.array([76, 40, 25]),                 # Number of points along readout, phase and slice
     etl = 10,                   # Echo train length
     acqTime = 4e-3,             # Acquisition time
-    axes = np.array([0, 1, 2]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
+    axes = np.array([0, 2, 1]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
     axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
     sweepMode = 1,               # 0->k2k,  1->02k,  2->k20, 3->Niquist modulated
-    phaseGradTime = 500e-6,       # Phase and slice dephasing time
+    phaseGradTime = 1000e-6,       # Phase and slice dephasing time
     rdPreemphasis = 1.000,
     drfPhase = 0, 
     dummyPulses = 1,                     # Dummy pulses for T1 stabilization
-    shimming = np.array([-100, -100, 10])
+    shimming = np.array([-70, -90, 10])
     ):
     
     # rawData fields

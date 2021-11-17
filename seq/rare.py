@@ -269,9 +269,9 @@ def rare(self, plotSeq):
         # Inversion pulse
         if inversionTime!=0:
             rfPulse(t0,rfReTime,rfReAmp,0)
+            t0 += rfReTime/2+inversionTime-rfExTime/2
         
         # Excitation pulse
-        t0 += rfReTime/2+inversionTime-rfExTime/2
         rfPulse(t0,rfExTime,rfExAmp,drfPhase*np.pi/180)
     
         # Dephasing readout
