@@ -30,23 +30,21 @@ from seq.spinEcho import spin_echo
 from datetime import date,  datetime 
 from scipy.io import savemat
 import os
-import time
 import pyqtgraph as pg
 import numpy as np
-import scipy.signal as sig
-from scipy.signal import butter, filtfilt 
 import nibabel as nib
 import pyqtgraph.exporters
 from functools import partial
-
+from sessionmodes import defaultsessions
 
 class AcquisitionController(QObject):
-    def __init__(self, parent=None, sequencelist=None):
+    def __init__(self, parent=None, session=None, sequencelist=None):
         super(AcquisitionController, self).__init__(parent)
 
         self.parent = parent
         self.sequencelist = sequencelist
         self.acquisitionData = None
+        self.session = session
         
         self.button = QPushButton("Change View")
         self.button.setChecked(False)
@@ -151,7 +149,8 @@ class AcquisitionController(QObject):
         
     def save_data(self):
         
-        dict = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
+        dict1 = vars(defaultsessions[self.session])
+        dict2 = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
         dt = datetime.now()
         dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S")
         dt2 = date.today()
@@ -163,11 +162,11 @@ class AcquisitionController(QObject):
         if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
             os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
             
-        dict2 = dict
-        dict2['rawdata'] = self.rxd
-        dict2['average'] = self.data_avg
+        dict = self.merge_two_dicts(dict1, dict2)
+        dict['rawdata'] = self.rxd
+        dict['average'] = self.data_avg
             
-        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict2) 
+        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict) 
 
 
         if hasattr(self.dataobject, 'f_fft2Magnitude'):
@@ -199,6 +198,10 @@ class AcquisitionController(QObject):
             # Step 6: Start the thread
             self.parent.thread.start()
 
+    def merge_two_dicts(self, x, y):
+        z = x.copy()   # start with keys and values of x
+        z.update(y)    # modifies z with keys and values of y
+        return z
    
     def plot_cpmg(self):
         

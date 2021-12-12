@@ -8,7 +8,8 @@ Startup Code
 import sys
 sys.path.append('../marcos_client')
 from PyQt5.QtWidgets import QApplication
-from controller.mainviewcontroller import MainViewController
+#from controller.mainviewcontroller import MainViewController
+from controller.sessionviewer_controller import SessionViewerController
 import cgitb 
 cgitb.enable(format = 'text')
 
@@ -21,7 +22,8 @@ if __name__ == '__main__':
     
    
     app = QApplication(sys.argv)
-    gui = MainViewController()
+#    gui = MainViewController()
+    gui = SessionViewerController('')
     gui.show()
     sys.exit(app.exec_())
 

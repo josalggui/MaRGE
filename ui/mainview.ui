@@ -300,14 +300,14 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Server Status:</string>
+          <string>Session:</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="status_connection">
+        <widget class="QLabel" name="session_label">
          <property name="text">
-          <string>Unconnected</string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -335,7 +335,7 @@
      <x>0</x>
      <y>0</y>
      <width>1126</width>
-     <height>22</height>
+     <height>27</height>
     </rect>
    </property>
   </widget>
@@ -367,6 +367,7 @@
    <addaction name="action_loadparams"/>
    <addaction name="action_saveparams"/>
    <addaction name="action_viewsequence"/>
+   <addaction name="action_session"/>
    <addaction name="action_batch"/>
    <addaction name="separator"/>
    <addaction name="action_changeappearance"/>
@@ -530,6 +531,18 @@
    </property>
    <property name="toolTip">
     <string>Activate upload to XNAT</string>
+   </property>
+  </action>
+  <action name="action_session">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/business-card.svg</normaloff>../resources/icons/business-card.svg</iconset>
+   </property>
+   <property name="text">
+    <string>New Session</string>
+   </property>
+   <property name="toolTip">
+    <string>Change Session</string>
    </property>
   </action>
  </widget>

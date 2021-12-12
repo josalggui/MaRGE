@@ -32,6 +32,7 @@ from seq.fid import fid
 from seq.spinEcho import spin_echo
 #from plotview.sequenceViewer import SequenceViewer
 from sequencemodes import defaultsequences
+from sessionmodes import defaultsessions
 from manager.datamanager import DataManager
 from datetime import date,  datetime 
 from globalvars import StyleSheets as style
@@ -54,20 +55,23 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     """
     onSequenceChanged = pyqtSignal(str)
     
-    def __init__(self):
-        super(MainViewController, self).__init__()
+    def __init__(self, session, parent=None):
+        super(MainViewController, self).__init__(parent)
         self.ui = loadUi('ui/mainview.ui')
         self.setupUi(self)
         self.styleSheet = style.breezeLight
         self.setupStylesheet(self.styleSheet)
         
         # Initialisation of sequence list
+        self.session = session
+        dict = vars(defaultsessions[self.session])
         self.sequencelist = SequenceList(self)
         self.sequencelist.setCurrentIndex(6)
         self.sequencelist.currentIndexChanged.connect(self.selectionChanged)
         self.layout_operations.addWidget(self.sequencelist)
         self.sequence = self.sequencelist.currentText()
-        
+        self.session_label.setText(dict["name_code"])
+                
         # Console
         self.cons = self.generateConsole('')
         self.layout_output.addWidget(self.cons)
@@ -75,7 +79,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         sys.stderr = EmittingStream(textWritten=self.onUpdateText)        
         
         # Initialisation of acquisition controller
-        acqCtrl = AcquisitionController(self, self.sequencelist)
+        acqCtrl = AcquisitionController(self, self.session, self.sequencelist)
         
         # Connection to the server
         self.ip = ip_address
@@ -96,7 +100,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_viewsequence.triggered.connect(self.plot_sequence)
         self.action_batch.triggered.connect(self.batch_system)
         self.action_XNATupload.triggered.connect(self.xnat)
-    
+        self.action_session.triggered.connect(self.change_session)
    
     def lines_that_start_with(self, str, f):
         return [line for line in f if line.startswith(str)]
@@ -169,6 +173,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def save_data(self):
         
         dataobject: DataManager = DataManager(self.rxd, self.lo_freq, len(self.rxd), [], self.BW)
+        dict1=vars(defaultsessions[self.session])
+        dict2 = vars(defaultsequences[self.sequence])
+        dict = self.merge_two_dicts(dict1, dict2)
         dict = vars(defaultsequences[self.sequence])
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H:%M")
@@ -204,7 +211,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         exporter2.export("experiments/acquisitions/%s/%s/Temp%s.png" % (dt2_string, dt_string, self.sequence))
         
         self.messages("Figures saved")
-
+   
+    def merge_two_dicts(self, x, y):
+        z = x.copy()   # start with keys and values of x
+        z.update(y)    # modifies z with keys and values of y
+        return z
+   
     def load_parameters(self):
     
         self.clearPlotviewLayout()
@@ -304,4 +316,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.action_XNATupload.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/upload.svg') )
             self.action_XNATupload.setToolTip('Deactivate XNAT upload')
             
-        
+    def change_session(self):
+        from controller.sessionviewer_controller import SessionViewerController
+        sessionW = SessionViewerController(self.session)
+        sessionW.show()
+        self.hide()    

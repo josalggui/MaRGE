@@ -107,6 +107,13 @@ class Namespace:
     fov_sl = 'fov sl'
     shimming = 'Shimming (x, y, z)'
     parAcqLines = 'Partial adquisition (Off=0; 1,2...=nº lines)'
+    age = "Age"
+    sex = "Sex (M/F)"
+    weight="Weight (gr)"
+    demographics = "Demographical info"
+    name_code = "ID"
+    descrip = 'Description'
+    
 class Tooltip_label:
     rx_period = "Sampling time"
     rf_amp = "Full scale = 1"
