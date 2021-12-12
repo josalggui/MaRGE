@@ -8,7 +8,7 @@ Main View Controller
 
 """
 from PyQt5.QtWidgets import  QMessageBox,  QFileDialog,  QTextEdit,  QAction
-from PyQt5.QtCore import QFile, QTextStream,  pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QFile, QTextStream,  pyqtSignal, pyqtSlot, QThread
 from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
 from PyQt5.QtGui import QIcon
@@ -16,6 +16,7 @@ from controller.acquisitioncontroller import AcquisitionController
 from controller.calibrationcontroller import CalibrationController
 from controller.batchcontroller import BatchController
 import pyqtgraph.exporters
+from functools import partial
 import os
 import ast
 import sys
@@ -95,7 +96,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_loadparams.triggered.connect(self.load_parameters)
         self.action_saveparams.triggered.connect(self.save_parameters)
         self.action_close.triggered.connect(self.close)    
-        self.action_savedata.triggered.connect(self.save_data)
+#        self.action_savedata.triggered.connect(self.save_data)
         self.action_exportfigure.triggered.connect(self.export_figure)
         self.action_viewsequence.triggered.connect(self.plot_sequence)
         self.action_batch.triggered.connect(self.batch_system)
@@ -172,11 +173,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     
     def save_data(self):
         
-        dataobject: DataManager = DataManager(self.rxd, self.lo_freq, len(self.rxd), [], self.BW)
+        dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl], self.sequence.BW)
         dict1=vars(defaultsessions[self.session])
-        dict2 = vars(defaultsequences[self.sequence])
+        dict2 = vars(self.sequence)
         dict = self.merge_two_dicts(dict1, dict2)
-        dict = vars(defaultsequences[self.sequence])
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H:%M")
         dt2 = date.today()
@@ -192,6 +192,35 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         savemat("experiments/acquisitions/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
         
         self.messages("Data saved")
+        
+#        if hasattr(self.dataobject, 'f_fft2Magnitude'):
+#            nifti_file=nib.Nifti1Image(self.dataobject.f_fft2Magnitude, affine=np.eye(4))
+#            nib.save(nifti_file, 'experiments/acquisitions/%s/%s/%s.%s.nii'% (dt2_string, dt_string, dict["seq"],dt_string))
+
+        if hasattr(self.parent, 'f_plotview'):
+            exporter1 = pyqtgraph.exporters.ImageExporter(self.f_plotview.scene())
+            exporter1.export("experiments/acquisitions/%s/%s/Freq%s.png" % (dt2_string, dt_string, self.sequence))
+        if hasattr(self.parent, 't_plotview'):
+            exporter2 = pyqtgraph.exporters.ImageExporter(self.t_plotview.scene())
+            exporter2.export("experiments/acquisitions/%s/%s/Temp%s.png" % (dt2_string, dt_string, self.sequence))
+
+        from controller.WorkerXNAT import Worker
+        
+        if self.xnat_active == 'TRUE':
+            # Step 2: Create a QThread object
+            self.thread = QThread()
+            # Step 3: Create a worker object
+            self.worker = Worker()
+            # Step 4: Move worker to the thread
+            self.worker.moveToThread(self.thread)
+            # Step 5: Connect signals and slots
+            self.thread.started.connect(partial(self.worker.run, 'experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
+            self.worker.finished.connect(self.thread.quit)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.thread.finished.connect(self.thread.deleteLater)
+            
+            # Step 6: Start the thread
+            self.thread.start()
 
     def export_figure(self):
         

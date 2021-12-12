@@ -14,9 +14,7 @@
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 import subprocess
 import os
-import requests
 import time
-import sys
 import socket
 import urllib
 from sys import exit

@@ -112,10 +112,12 @@ class AcquisitionController(QObject):
                            
                 self.plot_3Dresult()
 
-        self.save_data()    
         self.parent.rxd = self.rxd
-        self.parent.lo_freq = self.sequence.lo_freq
+        self.parent.data_avg = self.data_avg
+        self.parent.sequence = self.sequence
         print(self.msgs)
+        #self.parent.save_data()         
+        self.save_data()
         
     def plot_3Dresult(self):
         
@@ -184,19 +186,19 @@ class AcquisitionController(QObject):
         
         if self.parent.xnat_active == 'TRUE':
             # Step 2: Create a QThread object
-            self.parent.thread = QThread()
+            self.thread = QThread(parent=self)
             # Step 3: Create a worker object
             self.worker = Worker()
             # Step 4: Move worker to the thread
-            self.worker.moveToThread(self.parent.thread)
+            self.worker.moveToThread(self.thread)
             # Step 5: Connect signals and slots
-            self.parent.thread.started.connect(partial(self.worker.run, 'experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
-            self.worker.finished.connect(self.parent.thread.quit)
+            self.thread.started.connect(partial(self.worker.run, 'experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
+            self.worker.finished.connect(self.thread.quit)
             self.worker.finished.connect(self.worker.deleteLater)
-            self.parent.thread.finished.connect(self.parent.thread.deleteLater)
+            self.thread.finished.connect(self.thread.deleteLater)
             
             # Step 6: Start the thread
-            self.parent.thread.start()
+            self.thread.start()
 
     def merge_two_dicts(self, x, y):
         z = x.copy()   # start with keys and values of x
@@ -226,3 +228,4 @@ class AcquisitionController(QObject):
 #    plt.legend(['Experimental', 'Fitting'])
 #    plt.title('CPMG, T2 = '+str(round(T2, 1))+' ms')
 #    plt.show()
+
