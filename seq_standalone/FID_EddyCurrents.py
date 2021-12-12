@@ -26,7 +26,7 @@ def FID_EddyCurrents(
 #    shimming=[-100, -70, 80],
     shimming=[0, 0, 0],
 #    shimming=[-70, -90, 10],
-    gAxis =2,
+    gAxis =0,
     gNsteps =20, #50
     gRiseTime = 150,
     gDuration = 400,

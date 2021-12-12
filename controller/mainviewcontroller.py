@@ -231,7 +231,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def save_parameters(self):
         
         dt = datetime.now()
-        dt_string = dt.strftime("%d-%m-%Y_%H_%M")
+        dt_string = dt.strftime("%d-%m-%Y_%H_%M_%S")
         dict = vars(defaultsequences[self.sequence]) 
         dict.pop('rawdata', None)
         dict.pop('average', None)       
