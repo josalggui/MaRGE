@@ -93,7 +93,7 @@ class TurboSpinEchoSeq:
                  trap_ramp_duration:int=None, 
                  phase_grad_duration:int=None, 
                  axes:list=None, 
-                 n:list=None, 
+                 nPoints:list=None, 
                  fov:list=None, 
                  preemph_factor:float=None, 
                  echos_per_tr:int=None, 
@@ -112,7 +112,7 @@ class TurboSpinEchoSeq:
         self.shim:list=shim
         self.trap_ramp_duration:int=trap_ramp_duration
         self.phase_grad_duration:int=phase_grad_duration
-        self.n:list=n
+        self.nPoints:list=nPoints
         self.fov:list=fov
         self.preemph_factor:float=preemph_factor
         self.echos_per_tr:int=echos_per_tr
@@ -128,7 +128,7 @@ class TurboSpinEchoSeq:
             nmspc.BW:[int(self.BW)], 
             nmspc.nScans:[int(self.nScans)], 
             nmspc.axes:[list(self.axes)], 
-            nmspc.n:[list(self.n)], 
+            nmspc.nPoints:[list(self.nPoints)], 
             nmspc.fov:[list(self.fov)], 
             nmspc.tr_duration:[int(self.tr_duration)], 
             nmspc.echo_duration:[int(self.echo_duration)],
@@ -492,7 +492,7 @@ defaultsequences={
     #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl), trap_ramp_duration,phase_grad_duration,n(x,y,z),fov(rd,ph,sl),preemph_factor)
     'Spin Echo': SpinEchoSeq('SE', 3.03, 0.6, 65, 10, 500, 31, 1, (0,  0,  0), 1000, 100, (40, 1, 1), (20, 20, 15), 1.05), 
     #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl), trap_ramp_duration,phase_grad_duration,n(x,y,z),fov(rd,ph,sl),preemph_factor,echos_per_tr,sweep_mode,par_acq_factor)
-    'Turbo Spin Echo': TurboSpinEchoSeq('TSE', 3.0807, 0.3,30, 20, 1000, 30, 1, (0,  0,  0), 100, 500, (1, 2, 3), (60, 1, 1), (15, 10, 10), 1.0, 1, 1, 0),
+    'Turbo Spin Echo': TurboSpinEchoSeq('TSE', 3.0807, 0.3,30, 20, 1000, 30, 1, (0,  0,  0), 100, 500, (0, 1, 2), (60, 1, 1), (15, 10, 10), 1.0, 1, 1, 0),
     #FID(dbg_sc,lo_freq,rf_amp,rf_duration,rf_tstart,rf_wait,rx_period,readout_duration)
     'Free Induction Decay': FIDSeq('FID', 0, 3, 0.6, 50, 100, 100, 3.333, 500), 
     #RadialSeq(dbg_sc,lo_freq,rf_amp,trs,G,grad_tstart,TR,rf_tstart,rf_tend,rx_tstart,rx_tend,rx_period,shimming(rd,ph,sl))
