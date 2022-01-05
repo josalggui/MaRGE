@@ -168,37 +168,37 @@ class AcquisitionController(QObject):
         dict['rawdata'] = self.rxd
         dict['average'] = self.data_avg
             
-        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, dict["seq"],dt_string),  dict) 
+        savemat("experiments/acquisitions/%s/%s/%s.%s.%s.mat" % (dt2_string, dt_string, dict["name_code"], dict["seq"],dt_string),  dict) 
 
 
         if hasattr(self.dataobject, 'f_fft2Magnitude'):
             nifti_file=nib.Nifti1Image(self.dataobject.f_fft2Magnitude, affine=np.eye(4))
-            nib.save(nifti_file, 'experiments/acquisitions/%s/%s/%s.%s.nii'% (dt2_string, dt_string, dict["seq"],dt_string))
+            nib.save(nifti_file, 'experiments/acquisitions/%s/%s/%s.%s.%s.nii'% (dt2_string, dt_string, dict["name_code"],dict["seq"],dt_string))
 
         if hasattr(self.parent, 'f_plotview'):
             exporter1 = pyqtgraph.exporters.ImageExporter(self.parent.f_plotview.scene())
-            exporter1.export("experiments/acquisitions/%s/%s/Freq%s.png" % (dt2_string, dt_string, self.sequence))
+            exporter1.export("experiments/acquisitions/%s/%s/Freq.%s.%s.png" % (dt2_string, dict["name_code"], dt_string, self.sequence))
         if hasattr(self.parent, 't_plotview'):
             exporter2 = pyqtgraph.exporters.ImageExporter(self.parent.t_plotview.scene())
-            exporter2.export("experiments/acquisitions/%s/%s/Temp%s.png" % (dt2_string, dt_string, self.sequence))
+            exporter2.export("experiments/acquisitions/%s/%s/Temp.%s.%s.png" % (dt2_string, dict["name_code"], dt_string, self.sequence))
 
         from controller.WorkerXNAT import Worker
         
         if self.parent.xnat_active == 'TRUE':
             # Step 2: Create a QThread object
-            self.thread = QThread(parent=self)
+            self.parent.thread = QThread()
             # Step 3: Create a worker object
             self.worker = Worker()
             # Step 4: Move worker to the thread
-            self.worker.moveToThread(self.thread)
+            self.worker.moveToThread(self.parent.thread)
             # Step 5: Connect signals and slots
-            self.thread.started.connect(partial(self.worker.run, 'experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
-            self.worker.finished.connect(self.thread.quit)
+            self.parent.thread.started.connect(partial(self.worker.run, 'experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
+            self.worker.finished.connect(self.parent.thread.quit)
             self.worker.finished.connect(self.worker.deleteLater)
-            self.thread.finished.connect(self.thread.deleteLater)
+            self.parent.thread.finished.connect(self.parent.thread.deleteLater)
             
             # Step 6: Start the thread
-            self.thread.start()
+            self.parent.thread.start()
 
     def merge_two_dicts(self, x, y):
         z = x.copy()   # start with keys and values of x

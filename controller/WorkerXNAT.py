@@ -11,7 +11,7 @@
 #Si queremos parar XNAT: sudo docker stop `sudo docker ps -q`
 
 
-from PyQt5.QtCore import QObject, QThread, pyqtSignal
+from PyQt5.QtCore import QObject, QThread, pyqtSignal, pyqtSlot
 import subprocess
 import os
 import time
@@ -22,6 +22,10 @@ from controller.uploadXNAT import upload
 
 
 class Worker(QObject):
+    def __init__(self, parent = None):
+        QThread.__init__(self, parent)
+        self.exiting = False
+        self.stars = 0
     
     finished = pyqtSignal()
 

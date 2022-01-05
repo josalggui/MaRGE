@@ -12,10 +12,11 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import scipy.signal as sig
 import time 
+from scipy.optimize import curve_fit
 
 def EchoDelay(
     init_gpa= False,                 
-    larmorFreq=3.07535, 
+    larmorFreq=3.077, 
     rfExAmp=0.3, 
     rfReAmp=None, 
     rfExPhase = 0,
@@ -55,7 +56,7 @@ def EchoDelay(
 
 # About loop of tAdq
     nAdq = 5
-    tAdqMin = 1*1e3
+    tAdqMin = 2*1e3
     tAdqMax = 18*1e3
     tAdqAll = np.linspace(tAdqMin, tAdqMax, nAdq,  endpoint=True)
     
@@ -79,7 +80,7 @@ def EchoDelay(
         return rxTime,  rxAmp
     
 #  PLOT FUNCTION  ########################################################################################
-    def plotDataT(data, tAdqAll):
+    def plotDataT(data, tAdqAll, BWAll):
         plt.figure(1)
         colors = cm.rainbow(np.linspace(0, 0.8, len(tAdqAll)))
         for tAdqIndex in range(nAdq):
@@ -88,12 +89,17 @@ def EchoDelay(
             plt.plot(tPlot[0:4], np.abs(data[tAdqIndex, 0:4]), 'r-')
             plt.plot(tPlot[5:], np.abs(data[tAdqIndex, 5:]), label = leg, color=colors[tAdqIndex])
 #            plt.plot(tPlot, np.abs(data[tAdqIndex]), label = leg, color=colors[tAdqIndex])
-            tEchoExpected = (tAdqAll[tAdqIndex]/nReadout*5)*1e-3
+#            tEchoExpected = (tAdqAll[tAdqIndex]/nReadout*6)*1e-3+1/(2* BWAll[tAdqIndex]*1e3)
+#            tEchoExpected = (1/BWAll[tAdqIndex]*6)*1e-3+1/(2* BWAll[tAdqIndex]*1e3)
+            tEchoExpected = np.mean(np.abs(data[tAdqIndex]))
             plt.axvline(tEchoExpected, 0, 160, color=colors[tAdqIndex], linestyle="--", linewidth= 0.5)
         plt.axvline(0, 0, 160, color="black", linestyle="--")
         plt.xlabel('t(ms)')
         plt.ylabel('A(mV)')
         plt.legend()
+    
+    def lorFunc(x, xo, g):
+        return 1/np.pi/(g*((x-xo)**2+g**2))
 
     def plotDataK(data, BWAll):
             plt.figure(2)
@@ -104,10 +110,15 @@ def EchoDelay(
                 dataFft = np.fft.fft(data[tAdqIndex, 5:])
                 dataOr1, dataOr2 = np.split(dataFft, 2, axis=0)
                 dataFft= np.concatenate((dataOr2, dataOr1), axis=0)
-                plt.plot(fAdq[5:], np.abs(dataFft), '-', label = leg, color=colors[tAdqIndex])
-                print(fAdq[4])
+                plt.plot(fAdq[5:], np.abs(dataFft), '-', label = leg, color=colors[tAdqIndex], markersize = 2)
+                #AJUSTE
+#                pars, cov = curve_fit(f=lorFunc, xdata=fAdq[5:], ydata=np.abs(dataFft), p0=[1,1], bounds=(-np.inf, np.inf))
+#                fitData = lorFunc(fAdq[5:], pars[0], pars[1])
+#                plt.plot(fAdq[5:], fitData, '-', label = leg, color=colors[tAdqIndex])
+#        
+#                print(pars[0])
 #                tEchoExpected = (BWAll[tAdqIndex]*1e3/nReadout*4)
-                fMaxExpected = -BWAll[tAdqIndex]/2*1e3-fAdq[3]
+                fMaxExpected = -BWAll[tAdqIndex]/2*1e3-fAdq[5]
 #                plt.plot(fAdq[0:5], [0, 0, 0, 0, 0], 'ro')
                 plt.axvline(np.abs(fMaxExpected), 0,7000, color=colors[tAdqIndex], linestyle="--", linewidth= 0.5)
             plt.axvline(0, 0, 7000, color="black", linestyle="--")
@@ -116,6 +127,10 @@ def EchoDelay(
             plt.title('FFT')
 #            plt.xlim(-0.05,  0.05)
             plt.legend()
+            
+    
+   
+
 #  SEQUENCE  ############################################################################################
 
     for tAdqIndex in range(nAdq):
@@ -172,8 +187,8 @@ def EchoDelay(
         expt.__del__()
     elif plotSeq == 0:
         data = np.reshape(dataAll,  (nAdq,  nReadout))
-        plotDataT(data, tAdqAll)
-        plotDataK(data, BWAll)
+        plotDataT(data, tAdqAll, BWAll)
+#        plotDataK(data, BWAll)
         plt.show()
 
 #  MAIN  ######################################################################################################

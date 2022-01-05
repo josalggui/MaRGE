@@ -34,7 +34,7 @@ st = pdb.set_trace
 
 def gtse_standalone(
     init_gpa=False,              # Starts the gpa
-    larmorFreq = 3.07564e6,      # Larmor frequency
+    larmorFreq = 3.077e6,      # Larmor frequency
     rfExAmp = 0.3,             # rf excitation pulse amplitude
     rfReAmp = 0.3,             # rf refocusing pulse amplitude
     rfExTime = 35e-6,          # rf excitation pulse time
@@ -47,7 +47,7 @@ def gtse_standalone(
     etl = 1,                    # Echo train length
     acqTime = 6e-3,             # Acquisition time
     axes = np.array([0, 1, 2]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    rdPreemphasis = 1.0,
+    rdPreemphasis = 0,
     shimming = np.array([-70, -90, 10]),       # Shimming along the X,Y and Z axes (a.u. *1e4)
     ):
     

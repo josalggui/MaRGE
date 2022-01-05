@@ -19,10 +19,10 @@ def FID_EddyCurrents(
     rfExTime=38, 
     rfReTime=None,
     nReadout = 500,
-    tAdq =5*1e3,
+    tAdq =3*1e3,
     tEcho = 20*1e3,
     echo = 2, #0 FID, 1 Echo, 2 Both
-    tRepetition = 2000*1e3,  
+    tRepetition = 1000*1e3,  
 #    shimming=[-100, -70, 80],
     shimming=[0, 0, 0],
 #    shimming=[-70, -90, 10],
@@ -30,8 +30,8 @@ def FID_EddyCurrents(
     gNsteps =20, #50
     gRiseTime = 150,
     gDuration = 400,
-    gAmp = 0.2, # Max.1=50A 0.2=2V=10A; 0.2V=1A
-    tDelay =100, 
+    gAmp = 0.4, # Max.1=50A 0.2=2V=10A; 0.2V=1A
+    tDelay =17000, 
     plotSeq =0):
     
     #CONSTANTES

@@ -38,17 +38,17 @@ def gtse_standalone(
     rfExAmp = 0.3,             # rf excitation pulse amplitude
     rfReAmp = 0.3,             # rf refocusing pulse amplitude
     rfExTime = 35e-6,          # rf excitation pulse time
-    rfReTime = 75e-6,            # rf refocusing pulse time
+    rfReTime = 70e-6,            # rf refocusing pulse time
     gradAmp = 5e-3,              # Gradient amplitude in mT/m
     gradTime = 5e-3,                # Gradient flattop time
     echoSpacing = 50e-3,        # time between echoes limits
     gradDelays = np.linspace(0e-3, 10e-3, num=10, endpoint=True),            # gradient delay to sweep
-    repetitionTime = 200e-3,     # TR
+    repetitionTime = 400e-3,     # TR
     nPoints = 2000,                 # Number of acquired points
-    etl = 2,                    # Echo train length
+    etl = 4,                    # Echo train length
     acqTime = 1e-3,             # Acquisition time
     axes = np.array([0, 1, 2]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    rdPreemphasis = -0.3,
+    rdPreemphasis = 1.0,
     shimming = np.array([0, 0, 0]),       # Shimming along the X,Y and Z axes (a.u. *1e4)
     ):
     
@@ -197,24 +197,19 @@ def gtse_standalone(
         for repeIndex in range(nDelays):
             # Initialize time
             tRep = 20e3+repeIndex*repetitionTime
-            
+
 #            t0 = tRep-19e3
 #            gradTrap(t0, 19e3+echoSpacing*(etl+1), gradAmp, axes[0])
-            
+
             # Excitation pulse
             t0 = tRep-blkTime-rfExTime/2
             rfPulse(t0,rfExTime,rfExAmp,0)
         
             # Dephasing readout
-            postTime = 500
-            t0 = tRep+echoSpacing/2-gradDelays[repeIndex]-(gradTime-gradRiseTime)/2-2*gradRiseTime-gradDelay-postTime
-            gradPreemphasis(t0, (gradTime-gradRiseTime)/2, gradAmp, axes[0]),
-            
-            # Postemphasis to dephasing readout
-            t0 = tRep+echoSpacing/2-postTime-gradDelay-gradDelays[repeIndex]
-            gradTriangle(t0, postTime, -gradAmp*rdPreemphasis, axes[0])
+            t0 = tRep+echoSpacing/2-gradDelays[repeIndex]-(gradTime-gradRiseTime)/2-2*gradRiseTime-gradDelay
+            gradPreemphasis(t0, (gradTime-gradRiseTime)/2, gradAmp*rdPreemphasis, axes[0]), 
 #            t0 = tRep+echoSpacing/2-gradDelays[repeIndex]-gradTime-2*gradRiseTime-gradDelay
-#            gradTrap(t0, gradTime, gradAmp/2, axes[0])
+#            gradTrap(t0, gradTime, gradAmp/2*rdPreemphasis, axes[0])
 
             # Echo train
             for echoIndex in range(etl):
@@ -229,11 +224,7 @@ def gtse_standalone(
                 
                 # Readout gradient
                 t0 = tEcho-gradTime/2-gradRiseTime-gradDelay
-#                if echoIndex%2==1:
-#                    gradPreemphasis(t0, gradTime, gradAmp,  axes[0])
-#                else:
-#                    gradPreemphasis(t0, gradTime, gradAmp*rdPreemphasis,  axes[0])
-                gradPreemphasis(t0, gradTime, gradAmp,  axes[0])
+                gradTrap(t0, gradTime, gradAmp,  axes[0])
                 
                 # Readout rephasing gradient
 #                t0 = tEcho+gradTime/2+gradRiseTime-gradDelay
@@ -282,15 +273,23 @@ def gtse_standalone(
     data = np.reshape(data, (nDelays, nPoints*etl))
     data1 = data[:, 0:nPoints]
     data2 = data[:, nPoints:2*nPoints-1]
+    data3 = data[:, 2*nPoints:3*nPoints-1]
+    data4 = data[:, 3*nPoints:4*nPoints-1]
     data = np.reshape(data, (nDelays*etl, nPoints))
     echoTime1 = np.zeros(nDelays)
     echoTime2 = np.zeros(nDelays)
+    echoTime3 = np.zeros(nDelays)
+    echoTime4 = np.zeros(nDelays)
     for ii in range(nDelays):
         echoTime1[ii] = timeVector[np.argmax(np.abs(data1[ii, :]))];
         echoTime2[ii] = timeVector[np.argmax(np.abs(data2[ii, :]))];
+        echoTime3[ii] = timeVector[np.argmax(np.abs(data3[ii, :]))];
+        echoTime4[ii] = timeVector[np.argmax(np.abs(data4[ii, :]))];
     
     outputs['EchoTime1'] = echoTime1
     outputs['EchoTime2'] = echoTime2
+    outputs['EchoTime3'] = echoTime3
+    outputs['EchoTime4'] = echoTime4
     
     # Save data
     dt = datetime.now()
@@ -314,22 +313,24 @@ def gtse_standalone(
     fig = plt.figure(2)
     fig.set_size_inches(15, 5)
     # Plot echo map
-    ax1 = fig.add_subplot(131)
-    ax1.imshow(np.abs(data), cmap='gray', extent=(-acqTime/2*1e-3, acqTime/2*1e-3, gradDelays[-1]*1e-3, gradDelays[0]*1e-3))
-    ax1.set_aspect('auto')
-    ax1.set_xlabel('Time (ms)')
-    ax1.set_ylabel('Delay (ms)')
-    # Plot echo delay
-    ax2 = fig.add_subplot(132)
-    ax2.plot(gradDelays*1e-3, echoTime1, gradDelays*1e-3, echoTime2)
-    ax2.set_xlabel('Gradient delay (ms)')
-    ax2.set_ylabel('Echo time shift (us)')
-    ax2.set_title('Echo time shift VS gradient delay')
-    ax2.legend(['Echo1', 'Echo2', 'Echo3', 'Echo4'])
+#    ax1 = fig.add_subplot(131)
+#    ax1.imshow(np.abs(data), cmap='gray', extent=(-acqTime/2*1e-3, acqTime/2*1e-3, gradDelays[-1]*1e-3, gradDelays[0]*1e-3))
+#    ax1.set_aspect('auto')
+#    ax1.set_xlabel('Time (ms)')
+#    ax1.set_ylabel('Delay (ms)')
+#    # Plot echo delay
+#    ax2 = fig.add_subplot(132)
+#    ax2.plot(gradDelays*1e-3, echoTime1, gradDelays*1e-3, echoTime2)
+#    ax2.set_xlabel('Gradient delay (ms)')
+#    ax2.set_ylabel('Echo time shift (us)')
+#    ax2.set_title('Echo time shift VS gradient delay')
+#    ax2.legend(['Echo1', 'Echo2', 'Echo3', 'Echo4'])
     
-    ax3 = fig.add_subplot(133)
-    ax3.plot(timeVector*1e-3, np.abs(data[4, :]))
-    ax3.plot(timeVector*1e-3, np.abs(data[5, :]))
+    ax3 = fig.add_subplot(111)
+    ax3.plot(timeVector*1e-3, np.abs(data[0, :]))
+    ax3.plot(timeVector*1e-3, np.abs(data[1, :]))
+    ax3.plot(timeVector*1e-3, np.abs(data[2, :]))
+#    ax3.plot(timeVector*1e-3, np.abs(data[3, :]))
     ax3.set_xlabel('Time (ms)')
     ax3.set_ylabel('Signal (mV)')
     ax3.legend(['Echo1', 'Echo2', 'Echo3', 'Echo4'])

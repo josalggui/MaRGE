@@ -40,16 +40,14 @@ def gtse_standalone(
     rfExTime = 35e-6,          # rf excitation pulse time
     rfReTime = 75e-6,            # rf refocusing pulse time
     gradAmp = 5e-3,              # Gradient amplitude in mT/m
-    gradTime = 5e-3,                # Gradient flattop time
-    echoSpacing = 50e-3,        # time between echoes limits
-    gradDelays = np.linspace(0e-3, 10e-3, num=10, endpoint=True),            # gradient delay to sweep
+    echoSpacing = 10e-3,        # time between echoes limits
     repetitionTime = 200e-3,     # TR
     nPoints = 2000,                 # Number of acquired points
-    etl = 2,                    # Echo train length
+    etl = 4,                    # Echo train length
     acqTime = 1e-3,             # Acquisition time
     axes = np.array([0, 1, 2]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    rdPreemphasis = -0.3,
-    shimming = np.array([0, 0, 0]),       # Shimming along the X,Y and Z axes (a.u. *1e4)
+    rdPreemphasis = 1.0185,
+    shimming = np.array([-40, -100, -5]),       # Shimming along the X,Y and Z axes (a.u. *1e4)
     ):
     
     # rawData fields
@@ -62,14 +60,13 @@ def gtse_standalone(
     tau = 0
     blkTime = 10             # Deblanking time (us)
     larmorFreq = larmorFreq*1e-6
-    gradRiseTime = 1000e-6       # Estimated gradient rise time
+    gradRiseTime = 500e-6       # Estimated gradient rise time
     gSteps = int(gradRiseTime*1e6/5)    # Gradient ramp steps
     gradDelay = 9            # Gradient amplifier delay
     rfReAmp = rfExAmp
 #    rfReTime = 2*rfExTime
     oversamplingFactor = 6
     shimming = shimming*1e-4
-    nDelays = len(gradDelays)
     auxiliar['gradDelay'] = gradDelay*1e-6
     auxiliar['gradRiseTime'] = gradRiseTime
     auxiliar['oversamplingFactor'] = oversamplingFactor
@@ -81,8 +78,6 @@ def gtse_standalone(
     inputs['rfExTime'] = rfExTime          # rf excitation pulse time
     inputs['rfReTime'] = rfReTime            # rf refocusing pulse time
     inputs['gradAmp'] = gradAmp         
-    inputs['gradTime'] = gradTime
-    inputs['gradDelays'] = gradDelays
     inputs['echoSpacing'] = echoSpacing        # time between echoes
     inputs['repetitionTime'] = repetitionTime     # TR
     inputs['nPoints'] = nPoints                 # Number of points along readout, phase and slice
@@ -97,9 +92,15 @@ def gtse_standalone(
     BWov = BW*oversamplingFactor
     samplingPeriod = 1/BWov
     
+    # Calculate gradient time
+    rdDephTime = echoSpacing/2-2*gradRiseTime-rfExTime/2-rfReTime/2
+    rdRephTime = echoSpacing-2*gradRiseTime-rfReTime
+    rdDephAmp = gradAmp*(gradRiseTime+rdRephTime)/(2*(gradRiseTime+rdDephTime))
+    
     # Change gradient values to OCRA units
     gFactor = reorganizeGfactor(axes)
     gradAmp = gradAmp/gFactor[0]*1000/5
+    rdDephAmp = rdDephAmp/gFactor[0]*1000/5
     
     # Create functions
     def rfPulse(tStart,rfTime,rfAmplitude,rfPhase):
@@ -191,31 +192,25 @@ def gtse_standalone(
              })
 
     def createSequence():
-        scanTime = repetitionTime*nDelays
+        scanTime = repetitionTime
         # Set shimming
         iniSequence(20, shimming)
-        for repeIndex in range(nDelays):
+        for repeIndex in range(1):
             # Initialize time
             tRep = 20e3+repeIndex*repetitionTime
-            
-#            t0 = tRep-19e3
-#            gradTrap(t0, 19e3+echoSpacing*(etl+1), gradAmp, axes[0])
             
             # Excitation pulse
             t0 = tRep-blkTime-rfExTime/2
             rfPulse(t0,rfExTime,rfExAmp,0)
-        
-            # Dephasing readout
-            postTime = 500
-            t0 = tRep+echoSpacing/2-gradDelays[repeIndex]-(gradTime-gradRiseTime)/2-2*gradRiseTime-gradDelay-postTime
-            gradPreemphasis(t0, (gradTime-gradRiseTime)/2, gradAmp, axes[0]),
             
-            # Postemphasis to dephasing readout
-            t0 = tRep+echoSpacing/2-postTime-gradDelay-gradDelays[repeIndex]
-            gradTriangle(t0, postTime, -gradAmp*rdPreemphasis, axes[0])
-#            t0 = tRep+echoSpacing/2-gradDelays[repeIndex]-gradTime-2*gradRiseTime-gradDelay
-#            gradTrap(t0, gradTime, gradAmp/2, axes[0])
-
+            # Rx gate, data to be deleted
+            t0 = tRep+rfExTime/2-gradDelay
+            rxGate(t0, acqTime)
+            
+            # Dephasing readout
+            t0 = tRep+rfExTime/2-gradDelay
+            gradPreemphasis(t0, rdDephTime, rdDephAmp*rdPreemphasis, axes[0])
+            
             # Echo train
             for echoIndex in range(etl):
                 # Refocusing pulse
@@ -223,26 +218,10 @@ def gtse_standalone(
                 t0 = tEcho-echoSpacing/2-rfReTime/2-blkTime
                 rfPulse(t0, rfReTime, rfReAmp, np.pi/2)
                 
-                # Readout dephasing gradient
-#                t0 = tEcho-gradTime/2-3*gradRiseTime-(gradTime-gradRiseTime)/2-gradDelay-gradDelays[repeIndex]
-#                gradTrap(t0, (gradTime-gradRiseTime)/2, -gradAmp, axes[0])
-                
                 # Readout gradient
-                t0 = tEcho-gradTime/2-gradRiseTime-gradDelay
-#                if echoIndex%2==1:
-#                    gradPreemphasis(t0, gradTime, gradAmp,  axes[0])
-#                else:
-#                    gradPreemphasis(t0, gradTime, gradAmp*rdPreemphasis,  axes[0])
-                gradPreemphasis(t0, gradTime, gradAmp,  axes[0])
+                t0 = tEcho-rdRephTime/2-gradRiseTime-gradDelay
+                gradPreemphasis(t0, rdRephTime, gradAmp,  axes[0])
                 
-                # Readout rephasing gradient
-#                t0 = tEcho+gradTime/2+gradRiseTime-gradDelay
-#                gradTrap(t0, (gradTime-gradRiseTime)/2, -gradAmp, axes[0])
-                
-#                # Readout post-emphasis
-#                t0 = tEcho+echoSpacing/2-gradDelays[repeIndex]
-#                gradPreemphasis(t0, 0, gradAmp*0.015, axes[0])
-    
                 # Rx gate
                 t0 = tEcho-acqTime/2
                 rxGate(t0, acqTime)
@@ -254,10 +233,10 @@ def gtse_standalone(
     rfExTime = rfExTime*1e6
     rfReTime = rfReTime*1e6
     echoSpacing = echoSpacing*1e6
-    gradTime = gradTime*1e6
-    gradDelays = gradDelays*1e6
     repetitionTime = repetitionTime*1e6
     gradRiseTime = gradRiseTime*1e6
+    rdDephTime = rdDephTime*1e6
+    rdRephTime = rdRephTime*1e6
         
     # Create full sequence
     expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
@@ -279,18 +258,9 @@ def gtse_standalone(
     
     # Get position of each echo
     timeVector = np.linspace(-acqTime/2, acqTime/2, num=nPoints, endpoint=True)
-    data = np.reshape(data, (nDelays, nPoints*etl))
-    data1 = data[:, 0:nPoints]
-    data2 = data[:, nPoints:2*nPoints-1]
-    data = np.reshape(data, (nDelays*etl, nPoints))
-    echoTime1 = np.zeros(nDelays)
-    echoTime2 = np.zeros(nDelays)
-    for ii in range(nDelays):
-        echoTime1[ii] = timeVector[np.argmax(np.abs(data1[ii, :]))];
-        echoTime2[ii] = timeVector[np.argmax(np.abs(data2[ii, :]))];
-    
-    outputs['EchoTime1'] = echoTime1
-    outputs['EchoTime2'] = echoTime2
+    data = np.reshape(data, (etl+1, nPoints))
+    data = data[1::, :]
+    outputs['data'] = data
     
     # Save data
     dt = datetime.now()
@@ -312,24 +282,11 @@ def gtse_standalone(
     
     ## Plots
     fig = plt.figure(2)
-    fig.set_size_inches(15, 5)
+    fig.set_size_inches(5, 5)
     # Plot echo map
-    ax1 = fig.add_subplot(131)
-    ax1.imshow(np.abs(data), cmap='gray', extent=(-acqTime/2*1e-3, acqTime/2*1e-3, gradDelays[-1]*1e-3, gradDelays[0]*1e-3))
-    ax1.set_aspect('auto')
-    ax1.set_xlabel('Time (ms)')
-    ax1.set_ylabel('Delay (ms)')
-    # Plot echo delay
-    ax2 = fig.add_subplot(132)
-    ax2.plot(gradDelays*1e-3, echoTime1, gradDelays*1e-3, echoTime2)
-    ax2.set_xlabel('Gradient delay (ms)')
-    ax2.set_ylabel('Echo time shift (us)')
-    ax2.set_title('Echo time shift VS gradient delay')
-    ax2.legend(['Echo1', 'Echo2', 'Echo3', 'Echo4'])
-    
-    ax3 = fig.add_subplot(133)
-    ax3.plot(timeVector*1e-3, np.abs(data[4, :]))
-    ax3.plot(timeVector*1e-3, np.abs(data[5, :]))
+    ax3 = fig.add_subplot(111)
+    for ii in range(etl):
+        ax3.plot(timeVector*1e-3, np.abs(data[ii, :]))
     ax3.set_xlabel('Time (ms)')
     ax3.set_ylabel('Signal (mV)')
     ax3.legend(['Echo1', 'Echo2', 'Echo3', 'Echo4'])

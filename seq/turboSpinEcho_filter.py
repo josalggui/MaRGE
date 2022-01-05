@@ -102,7 +102,7 @@ def getIndex(self, g_amps, echos_per_tr, n_ph, sweep_mode):
 
 def turbo_spin_echo(self, plotSeq):
 
-    init_gpa=True                
+    init_gpa= False            
     lo_freq=self.lo_freq
     rf_amp=self.rf_amp
 #    trs=self.trs

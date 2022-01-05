@@ -18,12 +18,17 @@ def GradientPulse(
     tAdq =5*1e3,
     tPlus = 500, 
     gAxis =0,
-    gNsteps =40, #50
-    gRiseTime =10,
+    gNsteps = 8, 
+    gRiseTime = 40,
     gDuration = 16000, #Flattop gDuration-2*gRiseTime
-    gAmplitude = 0.04,
+    gAmplitude =  0.04,
+#    gNsteps = 160, #50
+#    gRiseTime =800,
+#    gDuration = 1700, #Flattop gDuration-2*gRiseTime
+#    gAmplitude =  0.2,
     tIni = 20, 
-    plotSeq =0):
+    plotSeq =0, 
+    nPulses =1):
     
     #DEFINICIÓN DE LOS PULSOS
     def endSequence(tEnd):
@@ -62,16 +67,13 @@ def GradientPulse(
     gAmp=np.concatenate((gAmp, [0]))
     expt.add_flodict({'grad_vx': (gTime,gAmp)})
     
-    
-
-    #Las concatenaciones podría meterlas en las definiciones de los pulsos
     #RUN
     if plotSeq==1:                
         expt.plot_sequence()
         plt.show()
         expt.__del__()
     elif plotSeq==0:
-        for i in range(2):
+        for i in range(nPulses):
             print(i)
             print('Running...')
             rxd, msgs = expt.run()

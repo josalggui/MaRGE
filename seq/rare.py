@@ -186,8 +186,8 @@ def rare(self, plotSeq):
     auxiliar['phGradients'] = phGradients
     auxiliar['slGradients'] = slGradients
     kPH = gammaB*phGradients*(gradRiseTime+phaseGradTime)
-    phGradients = phGradients/gFactor[1]*1000/10
-    slGradients = slGradients/gFactor[2]*1000/10
+    phGradients = phGradients/gFactor[1]*1000/5
+    slGradients = slGradients/gFactor[2]*1000/5
     
     # Set phase vector to given sweep mode
     ind = getIndex(phGradients, etl, nPH, sweepMode)
