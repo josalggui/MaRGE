@@ -17,15 +17,14 @@ cgitb.enable(format = 'text')
 VERSION = "0.1.0"
 AUTHOR = "Yolanda Vives"
 
-if __name__ == '__main__':
-    print("Graphical User Interface for Magnetic Resonance Imaging")
+print("Graphical User Interface for Magnetic Resonance Imaging")
     
    
-    app = QApplication(sys.argv)
+app = QApplication(sys.argv)
 #    gui = MainViewController()
-    gui = SessionViewerController('')
-    gui.show()
-    sys.exit(app.exec_())
+gui = SessionViewerController('')
+gui.show()
+sys.exit(app.exec_())
 
         
     

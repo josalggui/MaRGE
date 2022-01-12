@@ -29,10 +29,10 @@ def cpmg_standalone(
     larmorFreq = 3.077e6,      # Larmor frequency
     rfExAmp = 0.3,             # rf excitation pulse amplitude
     rfReAmp = None,             # rf refocusing pulse amplitude
-    rfExTime =30e-6,          # rf excitation pulse time
+    rfExTime =35e-6,          # rf excitation pulse time
     rfReTime = None,          # rf refocusing pulse time
     echoSpacing = 10e-3,        # time between echoes
-    repetitionTime = 500e-3,     # TR
+    repetitionTime = 1000e-3,     # TR
     nPoints = 500,                 # Number of points along readout, phase and slice
     etl = 100,                   # Echo train length
     acqTime = 2e-3,             # Acquisition time
