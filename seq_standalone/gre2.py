@@ -34,31 +34,28 @@ st = pdb.set_trace
 
 def gre_standalone(
     init_gpa=False,              # Starts the gpa
-    nScans = 1,                 # NEX
-    larmorFreq = 3.0778e6,      # Larmor frequency
+    nScans = 30,                 # NEX
+    larmorFreq = 3.076e6,      # Larmor frequency
     rfExAmp = 0.05,             # rf excitation pulse amplitude
-    rfExTime = 35e-6,          # rf excitation pulse time
-    echoTime = 2.5e-3,              # TE
-    repetitionTime = 7e-3,     # TR
-    fov = np.array([6e-2, 6e-2, 15e-2]),           # FOV along readout, phase and slice
-    dfov = np.array([0e-2, 0e-2, 0e-2]),            # Displacement of fov center
-    nPoints = np.array([60, 60, 1]),                 # Number of points along readout, phase and slice
+    rfExTime = 30e-6,          # rf excitation pulse time
+    echoTime = 2e-3,              # TE
+    repetitionTime = 10e-3,     # TR
+    fov = np.array([13e-2, 13e-2, 13e-2]),           # FOV along readout, phase and slice
+    dfov = np.array([0e-3, 2e-3, -5e-3]),            # Displacement of fov center
+    nPoints = np.array([60, 60, 30]),                 # Number of points along readout, phase and slice
     acqTime = 1e-3,             # Acquisition time
-    axes = np.array([0, 2, 1]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
+    axes = np.array([1, 2, 0]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
+    axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
     dephaseGradTime = 1000e-6,       # Phase and slice dephasing time
     rdPreemphasis = 1.0,                               # Preemphasis factor for readout dephasing
     drfPhase = 0,                           # phase of the excitation pulse (in degrees)
     dummyPulses = 20,                     # Dummy pulses for T1 stabilization
-    shimming = np.array([-50, -50, 0]),       # Shimming along the X,Y and Z axes (a.u. *1e4)
-    parAcqLines = 0                        # Number of additional lines, Full sweep if 0
-    ):
+    shimming = np.array([-80, -100, 10]),       # Shimming along the X,Y and Z axes (a.u. *1e4)
+    parAcqLines = 0,                         # Number of additional lines, Full sweep if 0
+    plotSeq = 0):
     
     # rawData fields
     rawData = {}
-    inputs = {}
-    outputs = {}
-    auxiliar = {}
     
     # Miscellaneous
     blkTime = 1             # Deblanking time (us)
@@ -70,10 +67,10 @@ def gre_standalone(
     oversamplingFactor = 6
     addRdGradTime = 200e-6     # Additional readout gradient time to avoid turn on/off effects on the Rx channel
     shimming = shimming*1e-4
-    auxiliar['gradDelay'] = gradDelay*1e-6
-    auxiliar['gradRiseTime'] = gradRiseTime
-    auxiliar['oversamplingFactor'] = oversamplingFactor
-    auxiliar['addRdGradTime'] = addRdGradTime*1e-6
+    rawData['gradDelay'] = gradDelay*1e-6
+    rawData['gradRiseTime'] = gradRiseTime
+    rawData['oversamplingFactor'] = oversamplingFactor
+    rawData['addRdGradTime'] = addRdGradTime*1e-6
     
     # Matrix size
     nRD = nPoints[0]+2*addRdPoints
@@ -82,25 +79,25 @@ def gre_standalone(
     nPoints[1] = nPH
     nPoints[2] = nSL
     
-    # Inputs for rawData
-    inputs['nScans'] = nScans
-    inputs['larmorFreq'] = larmorFreq      # Larmor frequency
-    inputs['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
-    inputs['rfExTime'] = rfExTime          # rf excitation pulse time
-    inputs['echoTime'] = echoTime        # TE
-    inputs['repetitionTime'] = repetitionTime     # TR
-    inputs['fov'] = fov           # FOV along readout, phase and slice
-    inputs['dfov'] = dfov            # Displacement of fov center
-    inputs['nPoints'] = nPoints                 # Number of points along readout, phase and slice
-    inputs['acqTime'] = acqTime             # Acquisition time
-    inputs['axes'] = axes       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    inputs['axesEnable'] = axesEnable # 1-> Enable, 0-> Disable
-    inputs['phaseGradTime'] = dephaseGradTime       # Phase and slice dephasing time
-    inputs['rdPreemphasis'] = rdPreemphasis
-    inputs['drfPhase'] = drfPhase 
-    inputs['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
-    inputs['shimming'] = shimming
-    inputs['parAcqLines'] = parAcqLines
+    # rawData for rawData
+    rawData['nScans'] = nScans
+    rawData['larmorFreq'] = larmorFreq      # Larmor frequency
+    rawData['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
+    rawData['rfExTime'] = rfExTime          # rf excitation pulse time
+    rawData['echoTime'] = echoTime        # TE
+    rawData['repetitionTime'] = repetitionTime     # TR
+    rawData['fov'] = fov           # FOV along readout, phase and slice
+    rawData['dfov'] = dfov            # Displacement of fov center
+    rawData['nPoints'] = nPoints                 # Number of points along readout, phase and slice
+    rawData['acqTime'] = acqTime             # Acquisition time
+    rawData['axes'] = axes       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
+    rawData['axesEnable'] = axesEnable # 1-> Enable, 0-> Disable
+    rawData['phaseGradTime'] = dephaseGradTime       # Phase and slice dephasing time
+    rawData['rdPreemphasis'] = rdPreemphasis
+    rawData['drfPhase'] = drfPhase 
+    rawData['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
+    rawData['shimming'] = shimming
+    rawData['parAcqLines'] = parAcqLines
     
     # parAcqLines in case parAcqLines = 0
     if parAcqLines==0:
@@ -128,17 +125,17 @@ def gre_standalone(
     # Phase and slice gradient vector
     phGradients = np.linspace(-phGradAmplitude,phGradAmplitude,num=nPH,endpoint=False)
     slGradients = np.linspace(-slGradAmplitude,slGradAmplitude,num=nSL,endpoint=False)
-    auxiliar['phGradients'] = phGradients
-    auxiliar['slGradients'] = slGradients
+    rawData['phGradients'] = phGradients
+    rawData['slGradients'] = slGradients
     
     # Change gradient values to OCRA units
     gFactor = reorganizeGfactor(axes)
-    rdGradAmplitude = rdGradAmplitude/gFactor[0]*1000/10
-    rdDephGradAmplitude = rdDephGradAmplitude/gFactor[0]*1000/10
-    phGradAmplitude = phGradAmplitude/gFactor[1]*1000/10
-    slGradAmplitude = slGradAmplitude/gFactor[2]*1000/10
-    phGradients = phGradients/gFactor[1]*1000/10
-    slGradients = slGradients/gFactor[2]*1000/10
+    rdGradAmplitude = rdGradAmplitude/gFactor[0]*1000/5
+    rdDephGradAmplitude = rdDephGradAmplitude/gFactor[0]*1000/5
+    phGradAmplitude = phGradAmplitude/gFactor[1]*1000/5
+    slGradAmplitude = slGradAmplitude/gFactor[2]*1000/5
+    phGradients = phGradients/gFactor[1]*1000/5
+    slGradients = slGradients/gFactor[2]*1000/5
     if np.abs(rdGradAmplitude)>1:
         return(0)
     if np.abs(rdDephGradAmplitude)>1:
@@ -151,7 +148,7 @@ def gre_standalone(
     samplingPeriod = expt.get_rx_ts()[0]
     BW = 1/samplingPeriod/oversamplingFactor
     acqTime = nPoints[0]/BW        # us
-    auxiliar['bandwidth'] = BW*1e6
+    rawData['bandwidth'] = BW*1e6
     
     # Create an rf pulse function
     def rfPulse(tStart,rfTime,rfAmplitude,rfPhase):
@@ -237,10 +234,10 @@ def gre_standalone(
             rxGate(t0, acqTime+2*addRdPoints/BW)
         
         # Spoiler
-#        t0 += acqTime+2*addRdPoints/BW+addRdGradTime+gradRiseTime
-#        gradPulse(t0, dephaseGradTime, -rdDephGradAmplitude*rdPreemphasis, axes[0])
-#        gradPulse(t0, dephaseGradTime, phGradients[phIndex], axes[1])
-#        gradPulse(t0, dephaseGradTime, slGradients[slIndex], axes[2])
+        t0 += acqTime+2*addRdPoints/BW+addRdGradTime+gradRiseTime
+        gradPulse(t0, dephaseGradTime, -rdDephGradAmplitude*rdPreemphasis, axes[0])
+        gradPulse(t0, dephaseGradTime, phGradients[phIndex], axes[1])
+        gradPulse(t0, dephaseGradTime, slGradients[slIndex], axes[2])
         
         # Update the phase and slice gradient
         if repeIndex>=dummyPulses:
@@ -254,8 +251,9 @@ def gre_standalone(
             endSequence(scanTime)
     
     # Plot sequence:
-    expt.plot_sequence()
-    plt.show()
+    if plotSeq==1:
+        expt.plot_sequence()
+        plt.show()
     
     # Run the experiment
     dataFull = []
@@ -307,13 +305,13 @@ def gre_standalone(
     kPH = np.reshape(kPH, (nPoints[0]*nPoints[1]*nPoints[2], 1))
     kSL = np.reshape(kSL, (nPoints[0]*nPoints[1]*nPoints[2], 1))
     data = np.reshape(data, (nPoints[0]*nPoints[1]*nPoints[2], 1))
-    auxiliar['kMax'] = kMax
-    outputs['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
+    rawData['kMax'] = kMax
+    rawData['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
 
     # Get image with FFT
     data = np.reshape(data, (nSL, nPH, nPoints[0]))
     img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
-    outputs['image'] = img
+    rawData['image'] = img
     
     # Plot provisional image
 #    plt.figure(1, figsize=(12, 6), dpi=80)
@@ -411,14 +409,9 @@ def gre_standalone(
             
     if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
         os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
-    inputs['name'] = "%s.%s.mat" % ("TSE",dt_string)
-    rawData['inputs'] = inputs
-    rawData['auxiliar'] = auxiliar
-    rawData['outputs'] = outputs
-    rawdata = {}
-    rawdata['rawData'] = rawData
-    savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, "TSE",dt_string),  rawdata)
-    
+    rawData['name'] = "%s.%s.mat" % ("GRE",dt_string)
+    savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, "GRE",dt_string),  rawData)
+    print(rawData['name'])
     plt.show()
     
 

@@ -10,19 +10,21 @@ from scipy.optimize import curve_fit
 
 def inversion_recovery_TGN(
     init_gpa= True,                 
-    lo_freq=3.076, 
-    rf_amp=0.3, 
+    lo_freq=3.06, 
+    rf_amp=0.8, 
     rf_pi_duration=None, 
-    rf_pi2_duration=30, 
-    tr = 1000*1e3, 
+    rf_pi2_duration=35, 
+    tr = 500*1e3, 
     t_ini =50*1e3,
     t_fin = 500*1e3,
-    N = 20,
+    N = 40,
     BW=60*1e-3, 
     n_rd=120,
-   twoT1 = 0             ,  
     plotSeq =0):
-    
+    scalingfactor=1e-1
+    NparametersFitting=2
+    p0=(0.3,70,0.7,170)
+
     if rf_pi_duration is None:
         rf_pi_duration = 2 * rf_pi2_duration
         
@@ -98,38 +100,71 @@ def inversion_recovery_TGN(
         cont = 0
         for t in tIR:
             if t == t_ini: 
-                results = [[t, max(np.abs(dataIndiv[cont]))]]
+                results = [[t, max(np.real(dataIndiv[cont]))]]
             else: 
-                results = np.append(results, [[t, max(np.abs(dataIndiv[cont]))]],axis=0)
+                results = np.append(results, [[t, max(np.real(dataIndiv[cont]))]],axis=0)
             cont += 1
         results[:,1]=results[:,1]/np.max(results[:,1])
-        plt.figure(2)
-        plt.plot(results[:, 0]*1e-3, results[:, 1], 'o')
-        if twoT1 == 0:
-            T1 = results[:,0][np.argmin(results[:,1])]*1e-3/np.log(2)
-            plt.suptitle('T1 = '+str(T1))
-        else:
-            fitData = curve_fit(lambda t,a,b, c, d: a*(1-2*np.exp(-t/b))+c*(1-2*np.exp(-t/d)),  results[:, 0],  results[:, 1] ,  p0=(0.9, 80*1e3,0.1, 50*1e3))
-            m1= fitData[0][0]
-            t1_1= fitData[0][1]
-            m2= fitData[0][2]
-            t1_2= fitData[0][3]
-            fit1=m1*(1-2*np.exp(results[:, 0]/t1_1))
-            leg1 = 'T1 = '+ str(np.round(t1_1*1e-3))+ 'ms'
-            fit2=m2*(1-2*np.exp(results[:, 0]/t1_2))
-            leg2 = 'T1 = '+ str(np.round(t1_2*1e-3))+ 'ms'
-            plt.plot(results[:, 0]*1e-3, fit1, 'b-', label=leg1)
-            plt.plot(results[:, 0]*1e-3, fit2, 'g-', label=leg2)
-            print('m1', m1)
-            print('t1_1', t1_1)
-            print('m2', m2)
-            print('t1_2',t1_2)
-        plt.xscale('log')
-        plt.xlabel('t(ms)')
-        plt.ylabel('FID max (mV)')
-        plt.legend()
+#        plt.figure(2)
+#        plt.plot(results[:, 0]*1e-3, results[:, 1], 'o')
+        
+        
+#  **************************** ****
+        invTime = results[:, 0]*1e-3
+        signal= results[:, 1]
+        signal= np.array(signal)*scalingfactor
+
+        if len(p0) != 2*NparametersFitting:
+            print ("WARNING: expected po length doesn't match with N parameters!")
+
+        if NparametersFitting == 1:
+            def func(invTime, a, b):
+                return a *(1-2*np.exp(-invTime/b))
+            popt, pcov = curve_fit(func,invTime,signal,p0)
+            print("PDa=",popt[0]," a.u." "\n" "T1a=",popt[1]," ms") 
+            p1 = popt[0]; p2 = popt[1] 
+            fittedata = func(invTime,p1,p2)
+            plt.title("T1a=" + str(round(p2,2)) + " ms")
+          
+        if NparametersFitting == 2:
+            def func(invTime, a, b, c, d):
+                return a *(1-2*np.exp(-invTime/b)) + c * (1-2*np.exp(-invTime/d))
+            popt, pcov = curve_fit(func,invTime,signal,p0)
+            print("PDa=",popt[0]," a.u." "\n" "T1a=",popt[1]," ms"  "\n"  "PDb=",popt[2]," au" "\n" "T1b=",popt[3]," ms") 
+            p1 = popt[0]; p2 = popt[1] ; p3 = popt[2] ; p4 = popt[3] ;
+            fittedata = func(invTime,p1,p2,p3,p4)
+            plt.title("T1a=" + str(round(p2,2)) + " ms,  " + "T1b=" + str(round(p4,2)) + " ms")
+            
+        if NparametersFitting == 3:
+            def func(invTime, a, b, c, d, e, f):
+                return a *(1-2*np.exp(-invTime/b)) + c * (1-2*np.exp(-invTime/d))  + e *(1-2*np.exp(-invTime/f))
+            popt, pcov = curve_fit(func,invTime,signal,p0)
+            print("PDa=",popt[0]," a.u." "\n" "T1a=",popt[1]," ms"  "\n"  "PDb=",popt[2]," au" "\n" "T1b=",popt[3]," ms"   "\n"  "PDc=",popt[4]," au" "\n" "T1c=",popt[5]," ms") 
+            p1 = popt[0]; p2 = popt[1] ; p3 = popt[2] ; p4 = popt[3] ;p5 = popt[4] ;p6 = popt[5] ;
+            fittedata = func(invTime,p1,p2,p3,p4,p5,p6)
+            plt.title("T1a=" + str(round(p2,2)) + " ms,  " + "T1b=" + str(round(p4,2)) + " ms" + ",  T1c=" + str(round(p6,2)) + " ms")
+
+
+        plt.plot(invTime, fittedata, 'red', label='Fitting')
+        plt.scatter(invTime,signal, c='b',label='Experimental data')
+        plt.legend(loc='best')
+        plt.ylabel('Real component of MRN signal at t=0 (a.u.)')
+        plt.xlabel('Inversion Time (ms)')
+        plt.grid()
         plt.show()
 
 if __name__ == "__main__":
     inversion_recovery_TGN()
+
+
+
+
+
+
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+
 

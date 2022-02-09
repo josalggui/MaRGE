@@ -62,33 +62,30 @@ def rare(self, plotSeq):
     
     # rawData fields
     rawData = {}
-    inputs = {}
-    outputs = {}
-    auxiliar = {}
     
     # Inputs for rawData
-    inputs['nScans'] = nScans
-    inputs['larmorFreq'] = larmorFreq      # Larmor frequency
-    inputs['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
-    inputs['rfReAmp'] = rfReAmp             # rf refocusing pulse amplitude
-    inputs['rfExTime'] = rfExTime          # rf excitation pulse time
-    inputs['rfReTime'] = rfReTime            # rf refocusing pulse time
-    inputs['echoSpacing'] = echoSpacing        # time between echoes
-    inputs['inversionTime'] = inversionTime       # Inversion recovery time
-    inputs['repetitionTime'] = repetitionTime     # TR
-    inputs['fov'] = np.array(fov)*1e-3           # FOV along readout, phase and slice
-    inputs['dfov'] = dfov            # Displacement of fov center
-    inputs['nPoints'] = nPoints                 # Number of points along readout, phase and slice
-    inputs['etl'] = etl                    # Echo train length
-    inputs['acqTime'] = acqTime             # Acquisition time
-    inputs['axes'] = axes       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    inputs['axesEnable'] = axesEnable # 1-> Enable, 0-> Disable
-    inputs['sweepMode'] = sweepMode               # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
-    inputs['phaseGradTime'] = phaseGradTime       # Phase and slice dephasing time
-    inputs['rdPreemphasis'] = rdPreemphasis
-    inputs['drfPhase'] = drfPhase 
-    inputs['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
-    inputs['partialAcquisition'] = parAcqLines
+    rawData['nScans'] = nScans
+    rawData['larmorFreq'] = larmorFreq      # Larmor frequency
+    rawData['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
+    rawData['rfReAmp'] = rfReAmp             # rf refocusing pulse amplitude
+    rawData['rfExTime'] = rfExTime          # rf excitation pulse time
+    rawData['rfReTime'] = rfReTime            # rf refocusing pulse time
+    rawData['echoSpacing'] = echoSpacing        # time between echoes
+    rawData['inversionTime'] = inversionTime       # Inversion recovery time
+    rawData['repetitionTime'] = repetitionTime     # TR
+    rawData['fov'] = np.array(fov)*1e-3           # FOV along readout, phase and slice
+    rawData['dfov'] = dfov            # Displacement of fov center
+    rawData['nPoints'] = nPoints                 # Number of points along readout, phase and slice
+    rawData['etl'] = etl                    # Echo train length
+    rawData['acqTime'] = acqTime             # Acquisition time
+    rawData['axesOrientation'] = axes       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
+    rawData['axesEnable'] = axesEnable # 1-> Enable, 0-> Disable
+    rawData['sweepMode'] = sweepMode               # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
+    rawData['phaseGradTime'] = phaseGradTime       # Phase and slice dephasing time in us
+    rawData['rdPreemphasis'] = rdPreemphasis
+    rawData['drfPhase'] = drfPhase 
+    rawData['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
+    rawData['partialAcquisition'] = parAcqLines
     
     # Conversion of variables to non-multiplied units
     larmorFreq = larmorFreq*1e6
@@ -123,12 +120,12 @@ def rare(self, plotSeq):
         rfReTime = 2*rfExTime
     
     
-    auxiliar['gradDelay'] = gradDelay*1e-6
-    auxiliar['gradRiseTime'] = gradRiseTime
-    auxiliar['oversamplingFactor'] = oversamplingFactor
-    auxiliar['addRdGradTime'] = addRdGradTime*1e-6
-    auxiliar['randFactor'] = randFactor
-    auxiliar['addRdPoints'] = addRdPoints
+    rawData['gradDelay'] = gradDelay*1e-6
+    rawData['gradRiseTime'] = gradRiseTime
+    rawData['oversamplingFactor'] = oversamplingFactor
+    rawData['addRdGradTime'] = addRdGradTime*1e-6
+    rawData['randFactor'] = randFactor
+    rawData['addRdPoints'] = addRdPoints
     
     # Matrix size
     nRD = nPoints[0]+2*addRdPoints
@@ -161,13 +158,13 @@ def rare(self, plotSeq):
     rdGradAmplitude = nPoints[0]/(gammaB*fov[0]*acqTime)*axesEnable[0]
     phGradAmplitude = nPH/(2*gammaB*fov[1]*(phaseGradTime+gradRiseTime))*axesEnable[1]
     slGradAmplitude = nSL/(2*gammaB*fov[2]*(phaseGradTime+gradRiseTime))*axesEnable[2]
-    auxiliar['rdGradAmplitude'] = rdGradAmplitude
-    auxiliar['phGradAmplitude'] = phGradAmplitude
-    auxiliar['slGradAmplitude'] = slGradAmplitude
+    rawData['rdGradAmplitude'] = rdGradAmplitude
+    rawData['phGradAmplitude'] = phGradAmplitude
+    rawData['slGradAmplitude'] = slGradAmplitude
     
     # Change gradient values to OCRA units
     gFactor = reorganizeGfactor(axes)
-    auxiliar['gFactor'] = gFactor
+    rawData['gFactor'] = gFactor
     rdGradAmplitude = rdGradAmplitude/gFactor[0]*1000/5
     phGradAmplitude = phGradAmplitude
     slGradAmplitude = slGradAmplitude
@@ -183,14 +180,15 @@ def rare(self, plotSeq):
     for ii in range(nPH):
         if ii<np.ceil(nPH/2-nPH/20) or ii>np.ceil(nPH/2+nPH/20):
             phGradients[ii] = phGradients[ii]+randFactor*np.random.randn()
-    auxiliar['phGradients'] = phGradients
-    auxiliar['slGradients'] = slGradients
+    rawData['phGradients'] = phGradients
+    rawData['slGradients'] = slGradients
     kPH = gammaB*phGradients*(gradRiseTime+phaseGradTime)
     phGradients = phGradients/gFactor[1]*1000/5
     slGradients = slGradients/gFactor[2]*1000/5
     
     # Set phase vector to given sweep mode
     ind = getIndex(phGradients, etl, nPH, sweepMode)
+    rawData['sweepOrder'] = ind
     phGradients = phGradients[::-1]
     phGradients = phGradients[ind]
     
@@ -211,15 +209,25 @@ def rare(self, plotSeq):
             'rx0_en':(rxGateTime, rxGateAmp), 
             'rx_gate': (rxGateTime, rxGateAmp), 
             })
-
+#FUNCION BUENA
+#    def gradTrap(tStart, gTime, gAmp, gAxis):
+#        tUp = np.linspace(tStart, tStart+gradRiseTime, num=gSteps, endpoint=False)
+#        tDown = tUp+gradRiseTime+gTime
+#        t = np.concatenate((tUp, tDown), axis=0)
+#        dAmp = gAmp/gSteps
+#        aUp = np.linspace(dAmp, gAmp, num=gSteps)
+#        aDown = np.linspace(gAmp-dAmp, 0, num=gSteps)
+#        a = np.concatenate((aUp, aDown), axis=0)
+#        if gAxis==0:
+#            expt.add_flodict({'grad_vx': (t, a+shimming[0])})
+#        elif gAxis==1:
+#            expt.add_flodict({'grad_vy': (t, a+shimming[1])})
+#        elif gAxis==2:
+#            expt.add_flodict({'grad_vz': (t, a+shimming[2])})
+    
     def gradTrap(tStart, gTime, gAmp, gAxis):
-        tUp = np.linspace(tStart, tStart+gradRiseTime, num=gSteps, endpoint=False)
-        tDown = tUp+gradRiseTime+gTime
-        t = np.concatenate((tUp, tDown), axis=0)
-        dAmp = gAmp/gSteps
-        aUp = np.linspace(dAmp, gAmp, num=gSteps)
-        aDown = np.linspace(gAmp-dAmp, 0, num=gSteps)
-        a = np.concatenate((aUp, aDown), axis=0)
+        t = np.array([tStart, tStart+gradRiseTime+gTime])
+        a = np.array([gAmp, 0])
         if gAxis==0:
             expt.add_flodict({'grad_vx': (t, a+shimming[0])})
         elif gAxis==1:
@@ -237,7 +245,7 @@ def rare(self, plotSeq):
                 expt.add_flodict({'grad_vy': (t, a+shimming[1])})
             elif gAxes[gIndex]==2:
                 expt.add_flodict({'grad_vz': (t, a+shimming[2])})
-    
+
     def endSequence(tEnd):
         expt.add_flodict({
                 'grad_vx': (np.array([tEnd]),np.array([0]) ), 
@@ -265,6 +273,9 @@ def rare(self, plotSeq):
             # Inversion pulse
             if inversionTime!=0:
                 rfPulse(t0,rfReTime,rfReAmp,0)
+                gradTrap(t0+rfReTime+50, 8000, 0.1, axes[0])
+                gradTrap(t0+rfReTime+50, 8000, 0.1, axes[1])
+                gradTrap(t0+rfReTime+50, 8000, 0.1, axes[2])
             
             # Excitation pulse
             t0 += rfReTime/2+inversionTime-rfExTime/2
@@ -358,13 +369,12 @@ def rare(self, plotSeq):
     samplingPeriod = expt.get_rx_ts()[0]
     BW = 1/samplingPeriod/oversamplingFactor
     acqTime = nPoints[0]/BW        # us
-    auxiliar['bandwidth'] = BW*1e6
+    rawData['bandwidth'] = BW*1e6
     createFreqCalSequence()
     rxd, msgs = expt.run()
     dataFreqCal = sig.decimate(rxd['rx0']*13.788, oversamplingFactor, ftype='fir', zero_phase=True)
     dataFreqCal = dataFreqCal[addRdPoints:nPoints[0]+addRdPoints]
     # Plot fid
-    plt.figure(1)
     tVector = np.linspace(-acqTime/2, acqTime/2, num=nPoints[0],endpoint=True)*1e-3
     for ii in range(nPH):
         plt.subplot(1, 2, 1)
@@ -382,7 +392,7 @@ def rare(self, plotSeq):
     dPhi = angle[-1]-angle[0]
     df = dPhi/(2*np.pi*acqTime)
     larmorFreq += df
-    auxiliar['larmorFreq'] = larmorFreq*1e6
+    rawData['larmorFreq'] = larmorFreq*1e6
     print("f0 = %s MHz" % (round(larmorFreq, 5)))
     # Delete experiment:
     expt.__del__()
@@ -407,11 +417,10 @@ def rare(self, plotSeq):
             # Get data
             scanData = sig.decimate(rxd['rx0'], oversamplingFactor, ftype='fir', zero_phase=True)
             #scanData = rxd['rx0']
-            #dataFull = np.concatenate((dataFull, scanData[nRD:]), axis = 0)
+#            dataFull = np.concatenate((dataFull, scanData[nRD:]), axis = 0)
             dataFull = np.concatenate((dataFull, scanData), axis=0)
         expt.__del__()
-        
-        # Get index for krd = 0
+    
         # Average data
         dataProv = np.reshape(dataFull, (nScans, nRD*nPH*nSL))
         dataProv = np.average(dataProv, axis=0)
@@ -424,7 +433,22 @@ def rare(self, plotSeq):
         # Check where is krd = 0
         dataProv = dataProv[int(nSL/2), int(nPH/2), :]
         indkrd0 = np.argmax(np.abs(dataProv))
+        if  indkrd0 < nPoints[0]/2:
+            indkrd0 = int(nRD/2)
+
     
+        # Get individual images
+        dataProv = np.reshape(dataFull, (nScans, nSL, nPH, nRD))
+        dataProv = dataProv[:, :, :, indkrd0-int(nPoints[0]/2):indkrd0+int(nPoints[0]/2)]
+        dataTemp = dataProv*0
+        for ii in range(nPH):
+            dataTemp[:, :, ind[ii], :] = dataProv[:, :,  ii, :]
+        imgFull = dataProv*0
+        for ii in(range(nScans)):
+            imgFull[ii, :, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataTemp[ii, :, :, :])))
+        rawData['dataFull'] = dataTemp
+        rawData['imgFull'] = imgFull
+        
         # Get required readout points
         dataFull = np.reshape(dataFull, (nPH*nSL*nScans, nRD))
         dataFull = dataFull[:, indkrd0-int(nPoints[0]/2):indkrd0+int(nPoints[0]/2)]
@@ -461,6 +485,9 @@ def rare(self, plotSeq):
         kSL = np.reshape(kSL, (1, nPoints[0]*nPoints[1]*nPoints[2]))
         dPhase = np.exp(-2*np.pi*1j*(dfov[0]*kRD+dfov[1]*kPH+dfov[2]*kSL))
         data = np.reshape(data*dPhase, (nPoints[2], nPoints[1], nPoints[0]))
+        rawData['kSpace3D'] = data
+        img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
+        rawData['image3D'] = img
         data = np.reshape(data, (1, nPoints[0]*nPoints[1]*nPoints[2]))
         
         # Create sampled data
@@ -468,8 +495,8 @@ def rare(self, plotSeq):
         kPH = np.reshape(kPH, (nPoints[0]*nPoints[1]*nPoints[2], 1))
         kSL = np.reshape(kSL, (nPoints[0]*nPoints[1]*nPoints[2], 1))
         data = np.reshape(data, (nPoints[0]*nPoints[1]*nPoints[2], 1))
-        auxiliar['kMax'] = kMax
-        outputs['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
+        rawData['kMax'] = kMax
+        rawData['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
         
         # Reshape to 0 dimensional
         data = np.reshape(data, -1) 
@@ -484,13 +511,8 @@ def rare(self, plotSeq):
                 
         if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
             os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
-        auxiliar['fileName'] = "%s.%s.mat" % ("RARE",dt_string)
-        rawData['inputs'] = inputs
-        rawData['auxiliar'] = auxiliar
-        rawData['kSpace'] = outputs
-        rawdata = {}
-        rawdata['rawData'] = rawData
-        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, "Old_RARE",dt_string),  rawdata) 
+        rawData['fileName'] = "%s.%s.mat" % ("RARE",dt_string)
+        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, "Old_RARE",dt_string),  rawData) 
         
         print('End sequence')
         return dataFull, msgs, data,  BW

@@ -7,7 +7,7 @@ Main View Controller
 @todo:
 
 """
-from PyQt5.QtWidgets import  QMessageBox,  QFileDialog,  QTextEdit,  QAction
+from PyQt5.QtWidgets import  QMessageBox,  QFileDialog,  QTextEdit
 from PyQt5.QtCore import QFile, QTextStream,  pyqtSignal, pyqtSlot, QThread
 from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
@@ -31,6 +31,7 @@ from seq.cpmg import cpmg
 from seq.rare import rare
 from seq.fid import fid
 from seq.spinEcho import spin_echo
+from sequencesnamespace import Namespace as nmspc
 #from plotview.sequenceViewer import SequenceViewer
 from sequencemodes import defaultsequences
 from sessionmodes import defaultsessions

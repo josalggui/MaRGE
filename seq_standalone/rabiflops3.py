@@ -15,14 +15,14 @@ import time
 
 def rabiflops_standalone(
     init_gpa= False,                 
-    larmorFreq=3.062, 
-    rfExAmp=0.8, 
+    larmorFreq=3.076, 
+    rfExAmp=0.6, 
     rfReAmp=None, 
     rfExPhase = 0,
     rfExTimeIni=10, 
-    rfExTimeEnd = 100, 
-    nExTime =30, 
-    nReadout =800,
+    rfExTimeEnd = 150, 
+    nExTime = 60, 
+    nReadout = 160,
     tAdq = 4*1e3,
     tEcho = 20*1e3,
     tRepetition = 500*1e3, 
@@ -111,8 +111,8 @@ def rabiflops_standalone(
 
     for indexExTime in range(nExTime):
         
-        rfReTime = 2*rfExTime[indexExTime]
-    
+        rfReTime = 60
+        
         txTime=[]
         txAmp=[]
         txGateTime=[]

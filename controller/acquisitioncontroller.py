@@ -77,7 +77,7 @@ class AcquisitionController(QObject):
             self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
         elif self.sequence.seq == 'TSE':
             self.rxd, self.msgs, self.data_avg  = turbo_spin_echo(self.sequence, plotSeq)
-#            nPoint = [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]
+            nPoint = [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]
         elif self.sequence.seq == 'CPMG':
             self.rxd, self.msgs, self.data_avg, self.sequence.BW = cpmg(self.sequence, plotSeq)
             self.sequence.lo_freq=self.sequence.larmorFreq

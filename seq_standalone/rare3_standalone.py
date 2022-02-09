@@ -46,10 +46,10 @@ def rare_standalone(
     fov = np.array([12e-2, 12e-2, 12e-2]),           # FOV along readout, phase and slice
     dfov = np.array([0e-2, 0e-2, 0e-2]),            # Displacement of fov center
     nPoints = np.array([60, 60, 30]),                 # Number of points along readout, phase and slice
-    etl = 30,                    # Echo train length
+    etl = 15,                    # Echo train length
     acqTime = 2e-3,             # Acquisition time
-    axes = np.array([0, 2, 1]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 0, 0]), # 1-> Enable, 0-> Disable
+    axes = np.array([0, 1, 2]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
+    axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
     sweepMode = 1,               # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
     phaseGradTime = 1000e-6,       # Phase and slice dephasing time
     rdPreemphasis = 1.025,
@@ -444,7 +444,7 @@ def rare_standalone(
 
     # Get image with FFT
     data = np.reshape(data, (nSL, nPH, nPoints[0]))
-    img=np.fft.ifftshift(np.fft.ifftn(data))
+    img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
     outputs['image'] = img
     
     # Save data
@@ -522,7 +522,7 @@ def rare_standalone(
         else:
             imgPlot = img[round(nSL/2), :, :]
         plt.subplot(122)
-        plt.imshow(np.abs(imgPlot), cmap='gray')
+        plt.imshow(np.angle(imgPlot), cmap='gray')
         plt.axis('off')
         plt.title("RARE.%s.mat" % (dt_string))
     

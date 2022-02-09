@@ -12,26 +12,26 @@ import matplotlib.pyplot as plt
 
 def FID_EddyCurrents(
     init_gpa= False,                 
-    larmorFreq=3.077, 
+    larmorFreq=3.074, 
     rfExAmp=0.3, 
     rfReAmp=None, 
     rfExPhase = 0,
-    rfExTime=38, 
+    rfExTime=32, 
     rfReTime=None,
     nReadout = 500,
     tAdq =3*1e3,
     tEcho = 20*1e3,
-    echo = 2, #0 FID, 1 Echo, 2 Both
-    tRepetition = 1000*1e3,  
+    echo = 0, #0 FID, 1 Echo, 2 Both
+    tRepetition = 500*1e3,  
 #    shimming=[-100, -70, 80],
     shimming=[0, 0, 0],
 #    shimming=[-70, -90, 10],
-    gAxis =0,
+    gAxis =3,
     gNsteps =20, #50
     gRiseTime = 150,
     gDuration = 400,
-    gAmp = 0.4, # Max.1=50A 0.2=2V=10A; 0.2V=1A
-    tDelay =17000, 
+    gAmp = 0, # Max.1=50A 0.2=2V=10A; 0.2V=1A
+    tDelay =0, 
     plotSeq =0):
     
     #CONSTANTES

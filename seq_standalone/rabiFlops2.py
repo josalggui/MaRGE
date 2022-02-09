@@ -15,18 +15,19 @@ import time
 
 def rabiflops_standalone(
     init_gpa= False,                 
-    larmorFreq=3.062, 
+    larmorFreq=3.076, 
     rfExAmp=0.8, 
     rfReAmp=None, 
     rfExPhase = 0,
     rfExTimeIni=10, 
-    rfExTimeEnd = 100, 
-    nExTime =30, 
-    nReadout =800,
-    tAdq = 4*1e3,
+    rfExTimeEnd = 200, 
+    nExTime = 60, 
+    nReadout = 160,
+    tAdq =4*1e3,
     tEcho = 20*1e3,
     tRepetition = 500*1e3, 
-    plotSeq = 0, 
+    plotSeq =0, 
+#    shimming=[0, 0, 0]):
     shimming=[-80, -100, 10]):
 
 #  INITALISATION OF VARIABLES  ################################################################################
@@ -51,7 +52,7 @@ def rabiflops_standalone(
         rfReAmp = rfExAmp
     rfExPhase = rfExPhase*np.pi/180
     rfExAmp = rfExAmp*np.exp(1j*rfExPhase)
-    rfRePhase = 0
+    rfRePhase = np.pi/2
     rfReAmp = rfReAmp *np.exp(1j*rfRePhase)
     #Excitation times
     rfExTime= np.linspace(rfExTimeIni, rfExTimeEnd, nExTime,  endpoint=True)
@@ -83,27 +84,33 @@ def rabiflops_standalone(
        for indexExTime in range(nExTime):
             tPlot = np.linspace(-tAdqReal/2, tAdqReal/2, nReadout,  endpoint ='True')*1e-3
             leg = 'Time = '+ str(np.round(rfExTime[indexExTime]))+ 'us'
-            plt.plot(tPlot[5:], np.abs(data[indexExTime, 5:]),  label = leg, color=colors[indexExTime])
+            plt.plot(tPlot[8:], np.abs(data[indexExTime, 8:]),  label = leg, color=colors[indexExTime])
 #            plt.plot(tPlot[5:], np.real(data[indexExTime, 5:]))
 #            plt.plot(tPlot[5:], np.imag(data[indexExTime, 5:]))
        plt.xlabel('t(ms)')
        plt.ylabel('A(mV)')
        plt.legend()
+#        plt.figure(1)
+#        plt.imshow(np.abs(data))
+        
+ 
     
     def  plotRabiFlop(data, rfExTime, tAdqReal):
        for indexExTime in range(nExTime):
 #            np.max(np.abs(data[indexExTime, 5:]))
             if indexExTime == 0:
-                maxEchoes = np.max(np.abs(data[indexExTime,5:]))
+#                maxEchoes = np.max(np.abs(data[indexExTime,5:]))
+                maxEchoes = np.abs(data[indexExTime,9])
             else:
-                maxEchoes=np.append(maxEchoes,np.max(np.abs(data[indexExTime, 5:])))
+#                maxEchoes=np.append(maxEchoes,np.max(np.abs(data[indexExTime, 5:])))
+                maxEchoes=np.append(maxEchoes,np.abs(data[indexExTime,9]))
        plt.figure(2)
        plt.plot(rfExTime, maxEchoes)
        plt.xlabel('t(us)')
        plt.ylabel('A(mV)')
        titleRF= 'RF Amp = '+ str(np.real(rfExAmp))
        plt.title(titleRF)
- 
+       
 
 
 
@@ -111,8 +118,9 @@ def rabiflops_standalone(
 
     for indexExTime in range(nExTime):
         
-        rfReTime = 2*rfExTime[indexExTime]
-    
+#        rfReTime = 2*rfExTime[indexExTime]
+        rfReTime=60
+        
         txTime=[]
         txAmp=[]
         txGateTime=[]
@@ -138,10 +146,11 @@ def rabiflops_standalone(
         # TR    
         tRef = tStart+rfExTime[indexExTime]/2+tIni+100
         txTime, txAmp,txGateTime,txGateAmp = rfPulse(tRef,rfExAmp, rfExTime[indexExTime], txTime, txAmp, txGateTime, txGateAmp)
-        tRef = tRef+tEcho/2
-        txTime, txAmp, txGateTime, txGateAmp = rfPulse(tRef,rfReAmp, rfReTime, txTime, txAmp, txGateTime, txGateAmp)
-        tRef = tRef+tEcho/2
-        rxTime, rxAmp = readoutGate(tRef, tAdqReal, rxTime, rxAmp)
+#        tRef = tRef+tEcho/2
+#        txTime, txAmp, txGateTime, txGateAmp = rfPulse(tRef,rfReAmp, rfReTime, txTime, txAmp, txGateTime, txGateAmp)
+#        tRef = tRef+tEcho/2
+#        rxTime, rxAmp = readoutGate(tRef, tAdqReal, rxTime, rxAmp)
+        rxTime, rxAmp = readoutGate(tRef+rfExTime[indexExTime]/2+300+tAdqReal/2, tAdqReal, rxTime, rxAmp)
         
         expt.add_flodict({
                             'tx0': (txTime, txAmp),
@@ -149,6 +158,7 @@ def rabiflops_standalone(
                             'rx0_en': (rxTime, rxAmp),
                             'rx_gate': (rxTime, rxAmp),
                             })
+        # End sequence
         tEnd = tRepetition
         expt.add_flodict({
             'grad_vx': (np.array([tEnd]),np.array([0])), 

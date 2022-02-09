@@ -98,9 +98,9 @@ def inversion_recovery_TGN(
         cont = 0
         for t in tIR:
             if t == t_ini: 
-                results = [[t, max(np.abs(dataIndiv[cont]))]]
+                results = [[t, max(np.real(dataIndiv[cont]))]]
             else: 
-                results = np.append(results, [[t, max(np.abs(dataIndiv[cont]))]],axis=0)
+                results = np.append(results, [[t, max(np.real(dataIndiv[cont]))]],axis=0)
             cont += 1
         results[:,1]=results[:,1]/np.max(results[:,1])
         plt.figure(2)
