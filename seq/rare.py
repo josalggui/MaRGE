@@ -63,6 +63,19 @@ def rare(self, plotSeq):
     # rawData fields
     rawData = {}
     
+    # Conversion of variables to non-multiplied units
+    larmorFreq = larmorFreq*1e6
+    rfExTime = rfExTime*1e-6
+    rfReTime = rfReTime*1e-6
+    fov = np.array(fov)*1e-3
+    dfov=np.array(dfov)*1e-3
+    echoSpacing=echoSpacing*1e-3
+    acqTime=acqTime*1e-3
+    shimming = np.array(shimming)*1e-4
+    repetitionTime= repetitionTime*1e-3
+    inversionTime= inversionTime*1e-3
+    phaseGradTime=phaseGradTime*1e-6
+    
     # Inputs for rawData
     rawData['nScans'] = nScans
     rawData['larmorFreq'] = larmorFreq      # Larmor frequency
@@ -86,19 +99,6 @@ def rare(self, plotSeq):
     rawData['drfPhase'] = drfPhase 
     rawData['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
     rawData['partialAcquisition'] = parAcqLines
-    
-    # Conversion of variables to non-multiplied units
-    larmorFreq = larmorFreq*1e6
-    rfExTime = rfExTime*1e-6
-    rfReTime = rfReTime*1e-6
-    fov = np.array(fov)*1e-3
-    dfov=np.array(dfov)*1e-3
-    echoSpacing=echoSpacing*1e-3
-    acqTime=acqTime*1e-3
-    shimming = np.array(shimming)*1e-4
-    repetitionTime= repetitionTime*1e-3
-    inversionTime= inversionTime*1e-3
-    phaseGradTime=phaseGradTime*1e-6
     
     init_gpa=False              # Starts the gpa
     
@@ -369,7 +369,7 @@ def rare(self, plotSeq):
     samplingPeriod = expt.get_rx_ts()[0]
     BW = 1/samplingPeriod/oversamplingFactor
     acqTime = nPoints[0]/BW        # us
-    rawData['bandwidth'] = BW*1e6
+    rawData['bw'] = BW*1e6
     createFreqCalSequence()
     rxd, msgs = expt.run()
     dataFreqCal = sig.decimate(rxd['rx0']*13.788, oversamplingFactor, ftype='fir', zero_phase=True)
@@ -464,7 +464,7 @@ def rare(self, plotSeq):
         for ii in range(nPH):
             dataTemp[:, ind[ii], :] = data[:,  ii, :]
         
-        # Do zero padding
+        # Do zero padding if partial acquisition
         data = np.zeros((nPoints[2], nPoints[1], nPoints[0]))
         data = data+1j*data
         if nSL==1:

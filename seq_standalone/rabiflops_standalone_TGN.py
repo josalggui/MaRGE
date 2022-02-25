@@ -15,8 +15,8 @@ import time
 
 def rabiflops_standalone(
     init_gpa= False,                 
-    larmorFreq=3.062, 
-    rfExAmp=0.8, 
+    larmorFreq=3.071, 
+    rfExAmp=0.3, 
     rfReAmp=None, 
     rfExPhase = 0,
     rfExTimeIni=10, 

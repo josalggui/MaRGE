@@ -169,7 +169,7 @@ class AcquisitionController(QObject):
         dict['average'] = self.data_avg
             
         savemat("experiments/acquisitions/%s/%s/%s.%s.%s.mat" % (dt2_string, dt_string, dict["name_code"], dict["seq"],dt_string),  dict) 
-
+#        savemat("/media/physiomri/TOSHIBA\ EXT/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
 
         if hasattr(self.dataobject, 'f_fft2Magnitude'):
             nifti_file=nib.Nifti1Image(self.dataobject.f_fft2Magnitude, affine=np.eye(4))

@@ -191,6 +191,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
             
         savemat("experiments/acquisitions/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
+#        savemat("/media/physiomri/TOSHIBA\ EXT/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
         
         self.messages("Data saved")
         

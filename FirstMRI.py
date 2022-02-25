@@ -26,6 +26,5 @@ gui = SessionViewerController('')
 gui.show()
 sys.exit(app.exec_())
 
-        
     
     

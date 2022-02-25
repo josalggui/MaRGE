@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 
 def FID_EddyCurrents(
     init_gpa= False,                 
-    larmorFreq=3.074, 
-    rfExAmp=0.3, 
+    larmorFreq=3.075, 
+    rfExAmp=0.9, 
     rfReAmp=None, 
     rfExPhase = 0,
     rfExTime=32, 
@@ -21,17 +21,17 @@ def FID_EddyCurrents(
     nReadout = 500,
     tAdq =3*1e3,
     tEcho = 20*1e3,
-    echo = 0, #0 FID, 1 Echo, 2 Both
+    echo = 2, #0 FID, 1 Echo, 2 Both
     tRepetition = 500*1e3,  
 #    shimming=[-100, -70, 80],
     shimming=[0, 0, 0],
 #    shimming=[-70, -90, 10],
-    gAxis =3,
+    gAxis =2,
     gNsteps =20, #50
     gRiseTime = 150,
+    gAmp = 0.4, # Max.1=50A 0.2=2V=10A; 0.2V=1A
     gDuration = 400,
-    gAmp = 0, # Max.1=50A 0.2=2V=10A; 0.2V=1A
-    tDelay =0, 
+    tDelay =1400, 
     plotSeq =0):
     
     #CONSTANTES
@@ -194,35 +194,35 @@ def FID_EddyCurrents(
             x1 = np.linspace(blkTime, tAdq, nReadout-5, endpoint=True)*1e-3
             x2 = np.linspace(3*tEcho/2-tAdq/2, tAdq,  nReadout-5, endpoint=True)*1e-3
             x3=  np.linspace(-BWaux/2, BWaux/2, nReadout-5, endpoint=True)
-            fig = plt.subplot(131)
+            fig = plt.subplot(121)
             plt.plot(x1, np.abs(dataIndiv[0]), 'r', label="-g")
             plt.plot(x1, np.abs(dataIndiv[2]), 'b', label=" 0")
             plt.plot(x1,  np.abs(dataIndiv[4]), 'g', label="+g")
             plt.xlabel('t(ms)')
             plt.ylabel('A(mV)')
-            plt.ylim(0, 200)
+            plt.ylim(0, 20)
             plt.title('FID')
             plt.legend()
-            fig = plt.subplot(132)
+            fig = plt.subplot(122)
             plt.plot(x2, np.abs(dataIndiv[1]), 'r', label="-g")
             plt.plot(x2, np.abs(dataIndiv[3]), 'b', label="0")
             plt.plot(x2, np.abs(dataIndiv[5]), 'g', label="+g")
             plt.xlabel('t(ms)')
             plt.ylabel('A(mV)')
-            plt.ylim(0, 200)
+            plt.ylim(0, 20)
             plt.title('Echo')
             plt.legend()
-            fig = plt.subplot(133)
-            dataIndivFft = np.fft.fft(dataIndiv)
-            dataOr1, dataOr2 = np.split(dataIndivFft, 2, axis=1)
-            dataOr = np.concatenate((dataOr2, dataOr1), axis=1)
-            plt.plot(x3, np.abs(dataOr[0]), 'r', label="-g")
-            plt.plot(x3, np.abs(dataOr[2]), 'b', label=" 0")
-            plt.plot(x3, np.abs(dataOr[4]), 'g', label="+g")
-            plt.xlabel('f(kHz)')
-            plt.ylabel('A(a.u.)')
-            plt.title('FFT')
-            plt.legend()
+#            fig = plt.subplot(133)
+#            dataIndivFft = np.fft.fft(dataIndiv)
+#            dataOr1, dataOr2 = np.split(dataIndivFft, 2, axis=1)
+#            dataOr = np.concatenate((dataOr2, dataOr1), axis=1)
+#            plt.plot(x3, np.abs(dataOr[0]), 'r', label="-g")
+#            plt.plot(x3, np.abs(dataOr[2]), 'b', label=" 0")
+#            plt.plot(x3, np.abs(dataOr[4]), 'g', label="+g")
+#            plt.xlabel('f(kHz)')
+#            plt.ylabel('A(a.u.)')
+#            plt.title('FFT')
+#            plt.legend()
         plt.show()
 
 
