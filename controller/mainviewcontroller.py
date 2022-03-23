@@ -21,6 +21,7 @@ import os
 import ast
 import sys
 sys.path.append('../marcos_client')
+sys.path.append('/media/physiomri/TOSHIBA\ EXT/')
 import experiment as ex
 from scipy.io import savemat
 from controller.sequencecontroller import SequenceList
@@ -190,8 +191,14 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
             os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
             
+        if not os.path.exists('/media/physiomri/TOSHIBA\ EXT/experiments/acquisitions/%s' % (dt2_string)):
+            os.makedirs('/media/physiomri/TOSHIBA\ EXT/%s'% (dt2_string) )
+            
+        if not os.path.exists('/media/physiomri/TOSHIBA\ EXT/experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
+            os.makedirs('/media/physiomri/TOSHIBA\ EXT/%s/%s'% (dt2_string, dt_string) )   
+            
         savemat("experiments/acquisitions/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
-#        savemat("/media/physiomri/TOSHIBA\ EXT/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
+        savemat("/media/physiomri/TOSHIBA\ EXT/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
         
         self.messages("Data saved")
         
@@ -331,6 +338,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def initgpa(self):
         expt = ex.Experiment(init_gpa=True)
         expt.run()
+        expt._del_()
 
     def batch_system(self):
         batchW = BatchController(self, self.sequencelist)

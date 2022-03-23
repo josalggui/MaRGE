@@ -1,6 +1,7 @@
 """
-@author: Teresa
+@author: T. Guallart Naval, november 2021
 @modifield: J.M. algarín, february 25th 2022
+MRILAB @ I3M
 """
 import sys
 sys.path.append('../marcos_client')
@@ -12,21 +13,24 @@ from datetime import date,  datetime
 import os
 from scipy.io import savemat
 
-def inversion_recovery_TGN(
+def inversionrecoveryStandalone(
     init_gpa= False,                 
-    lo_freq=3.07264, 
+    lo_freq=3.074, 
     rf_amp=0.3, 
     rf_pi_duration=None, 
-    rf_pi2_duration=32, 
-    tr = 4,                 # s
-    t_ini = 10e-3,      # s
+    rf_pi2_duration=33, 
+    tr = 5,                 # s
+    t_ini = 10e-4,      # s
     t_fin = 3,             # s
-    N = 10):                
+    N = 20, 
+    shimming=[-80, -100, 10]):                
     
-    BW=60*1e-3,                     # MHz
-    n_rd=120,
+    BW=60*1e-3                     # MHz
+    n_rd=120
     plotSeq =0
-    point = 10
+    point =8        
+    blk_delay = 300
+    shimming = np.array(shimming)*1e-4
     
     if rf_pi_duration is None:
         rf_pi_duration = 2 * rf_pi2_duration
@@ -53,11 +57,32 @@ def inversion_recovery_TGN(
 
     expt = ex.Experiment(lo_freq=lo_freq, rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
 
-    t_start = 20 
+    # Create functions
+    def endSequence(tEnd):
+        expt.add_flodict({
+                'grad_vx': (np.array([tEnd]),np.array([0]) ), 
+                'grad_vy': (np.array([tEnd]),np.array([0]) ), 
+                'grad_vz': (np.array([tEnd]),np.array([0]) ),
+             })
+             
+    def iniSequence(tEnd, shimming):
+        expt.add_flodict({
+                'grad_vx': (np.array([tEnd]),np.array([shimming[0]]) ), 
+                'grad_vy': (np.array([tEnd]),np.array([shimming[1]]) ), 
+                'grad_vz': (np.array([tEnd]),np.array([shimming[2]]) ),
+             })
+             
+
+    tIni = 20 
     t = t_ini*1e6
-    blk_delay = 300
     tIR = np.geomspace(t_ini, t_fin, N)*1e6             # in us to be used in the sequence
     tr = tr*1e6
+    
+    
+ # Shimming
+    iniSequence(tIni, shimming)
+    t_start = 2*tIni
+    
     for t in tIR:
         
         tx_t = np.array([t_start, t_start+rf_pi_duration,t_start+t+rf_pi2_duration/2,t_start+t+3*rf_pi2_duration/2])
@@ -79,25 +104,17 @@ def inversion_recovery_TGN(
                         'rx_gate': (rx_gate_t, rx_gate_a),
                         })
     
-        expt.add_flodict({
-                        'grad_vx': (np.array([t_start]),np.array([0]) ), 
-                        'grad_vy': (np.array([t_start]),np.array([0]) ), 
-                        'grad_vz': (np.array([t_start]),np.array([0]) ),
-             })
         
         t_start += tr
 
-    expt.add_flodict({
-                        'grad_vx': (np.array([t_start]),np.array([0]) ), 
-                        'grad_vy': (np.array([t_start]),np.array([0]) ), 
-                        'grad_vz': (np.array([t_start]),np.array([0]) ),
-             })
+    
 
-
+    tFin = t_start
+    endSequence(tFin)
+    
 # Representar Secuencia o tomar los datos.
     tIR1 = np.geomspace(t_ini, t_fin, N)
     tIR2 = np.geomspace(t_ini, t_fin, 10*N)
-    tIR
     if plotSeq==1:                
         expt.plot_sequence()
         plt.show()
@@ -111,7 +128,7 @@ def inversion_recovery_TGN(
         rawData['fullData'] = data
         dataIndiv = np.reshape(data,  (N, n_rd))
         dataIndiv = np.real(dataIndiv[:, point]*np.exp(-1j*(np.angle(dataIndiv[0, 1])+np.pi)))
-        results = np.transpose(np.array([tIR1, dataIndiv]))
+        results = np.transpose(np.array([tIR1, dataIndiv/np.max(dataIndiv)]))
         rawData['signalVsTime'] = results
         
         # For 1 component
@@ -123,7 +140,7 @@ def inversion_recovery_TGN(
         rawData['M1'] = fitData1[0]
         
         # For 2 components
-        fitData2, xxx = curve_fit(func2, results[:, 0],  results[:, 1])
+        fitData2, xxx = curve_fit(func2, results[:, 0],  results[:, 1], p0=(1, 0.1, 0.5, 0.05), bounds=(0., 5.))
         print('For two components:')
         print('Ma', round(fitData2[0], 1))
         print('Mb', round(fitData2[2], 1))
@@ -132,17 +149,17 @@ def inversion_recovery_TGN(
         rawData['T12'] = [fitData2[1], fitData2[3]]
         rawData['M2'] = [fitData2[0], fitData2[2]]
         
-#        # For 3 components
-#        fitData3, xxx = curve_fit(func3, results[:, 0],  results[:, 1])
-#        print('For two components:')
-#        print('Ma', round(fitData3[0], 1), ' ms')
-#        print('Mb', round(fitData3[2], 1), ' ms')
-#        print('Mc', round(fitData3[4], 1), ' ms')
-#        print('T1a', round(fitData3[1]*1e3), ' ms')
-#        print('T1b', round(fitData3[3]*1e3), ' ms')
-#        print('T1c', round(fitData3[5]*1e3), ' ms')
-#        rawData['T13'] = [fitData3[1], fitData3[3], fitData3[5]]
-#        rawData['M3'] = [fitData3[0], fitData3[2], fitData3[4]]
+        # For 3 components
+        fitData3, xxx = curve_fit(func3, results[:, 0],  results[:, 1], p0=(1, 0.1, 0.5, 0.05, 1, 0.01), bounds=(0., 5.))
+        print('For three components:')
+        print('Ma', round(fitData3[0], 1), ' ms')
+        print('Mb', round(fitData3[2], 1), ' ms')
+        print('Mc', round(fitData3[4], 1), ' ms')
+        print('T1a', round(fitData3[1]*1e3), ' ms')
+        print('T1b', round(fitData3[3]*1e3), ' ms')
+        print('T1c', round(fitData3[5]*1e3), ' ms')
+        rawData['T13'] = [fitData3[1], fitData3[3], fitData3[5]]
+        rawData['M3'] = [fitData3[0], fitData3[2], fitData3[4]]
         
         # Save data
         name = saveMyData(rawData)
@@ -152,12 +169,12 @@ def inversion_recovery_TGN(
         plt.plot(results[:, 0], results[:, 1], 'o')
         plt.plot(tIR2, func1(tIR2, *fitData1))
         plt.plot(tIR2, func2(tIR2, *fitData2))
-#        plt.plot(tIR2, func3(tIR2, *fitData3))
+        plt.plot(tIR2, func3(tIR2, *fitData3))
         plt.title(name)
         plt.xscale('log')
         plt.xlabel('t(ms)')
         plt.ylabel('Signal (mV)')
-        plt.legend(['Experimental', 'Fitting 1 component', 'Fitting 2 components'])
+        plt.legend(['Experimental', 'Fitting 1 component', 'Fitting 2 components','Fitting 3 components' ])
         plt.title(name)
         plt.show()
         
@@ -186,5 +203,5 @@ def saveMyData(rawData):
     return rawData['name']
 
 if __name__ == "__main__":
-    inversion_recovery_TGN()
+    inversionrecoveryStandalone()
 

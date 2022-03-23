@@ -1,4 +1,4 @@
-"""FirstMRI.py
+"""FirstMRI.pFirstMRI.pyy
 Startup Code
 
 #@author:    Yolanda Vives

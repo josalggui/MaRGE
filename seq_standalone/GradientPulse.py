@@ -12,16 +12,16 @@ import matplotlib.pyplot as plt
 import time 
 
 def GradientPulse(
-    init_gpa= False,                 
+    init_gpa= True,                 
     larmorFreq=3.077, 
     nReadout = 500,
     tAdq =5*1e3,
     tPlus = 500, 
-    gAxis =0,
+    gAxis =1,
     gNsteps = 8, 
     gRiseTime = 40,
     gDuration = 16000, #Flattop gDuration-2*gRiseTime
-    gAmplitude =  0.04,
+    gAmplitude =  1,
 #    gNsteps = 160, #50
 #    gRiseTime =800,
 #    gDuration = 1700, #Flattop gDuration-2*gRiseTime
@@ -53,8 +53,8 @@ def GradientPulse(
     #Ini Experiment
     BW = nReadout/tAdq
     rx_period = 1/BW
-    expt = ex.Experiment(lo_freq=larmorFreq, rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-    
+#    expt = ex.Experiment(lo_freq=larmorFreq, rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+    expt = ex.Experiment(lo_freq=larmorFreq, rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=10/3)
     #Gradient Pulse
     if gNsteps == 1:
         gRiseTime = 0

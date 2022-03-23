@@ -100,7 +100,7 @@ def rare(self, plotSeq):
     rawData['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
     rawData['partialAcquisition'] = parAcqLines
     
-    init_gpa=False              # Starts the gpa
+    init_gpa= False              # Starts the gpa
     
     # Miscellaneous
     blkTime = 10             # Deblanking time (us)
@@ -114,6 +114,7 @@ def rare(self, plotSeq):
     oversamplingFactor = 6
     addRdGradTime = 1000     # Additional readout gradient time to avoid turn on/off effects on the Rx channel
     randFactor = 0e-3                        # Random amplitude to add to the phase gradients
+    
     if rfReAmp==0:
         rfReAmp = rfExAmp
     if rfReTime==0:
@@ -364,38 +365,39 @@ def rare(self, plotSeq):
     rdDephTime = rdDephTime*1e6
     inversionTime = inversionTime*1e6
     
-    # Calibrate frequency
-    expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-    samplingPeriod = expt.get_rx_ts()[0]
-    BW = 1/samplingPeriod/oversamplingFactor
-    acqTime = nPoints[0]/BW        # us
-    rawData['bw'] = BW*1e6
-    createFreqCalSequence()
-    rxd, msgs = expt.run()
-    dataFreqCal = sig.decimate(rxd['rx0']*13.788, oversamplingFactor, ftype='fir', zero_phase=True)
-    dataFreqCal = dataFreqCal[addRdPoints:nPoints[0]+addRdPoints]
-    # Plot fid
-    tVector = np.linspace(-acqTime/2, acqTime/2, num=nPoints[0],endpoint=True)*1e-3
-    for ii in range(nPH):
-        plt.subplot(1, 2, 1)
-        plt.plot(tVector, np.abs(dataFreqCal))
-        plt.title("Signal amplitude")
-        plt.xlabel("Time (ms)")
-        plt.ylabel("Amplitude (mV)")
-        plt.subplot(1, 2, 2)
-        angle = np.unwrap(np.angle(dataFreqCal))
-        plt.title("Signal phase")
-        plt.xlabel("Time (ms)")
-        plt.ylabel("Phase (rad)")
-        plt.plot(tVector, angle)
-    # Get larmor frequency
-    dPhi = angle[-1]-angle[0]
-    df = dPhi/(2*np.pi*acqTime)
-    larmorFreq += df
-    rawData['larmorFreq'] = larmorFreq*1e6
-    print("f0 = %s MHz" % (round(larmorFreq, 5)))
-    # Delete experiment:
-    expt.__del__()
+    if rfExAmp != 0.0: 
+        # Calibrate frequency
+        expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+        samplingPeriod = expt.get_rx_ts()[0]
+        BW = 1/samplingPeriod/oversamplingFactor
+        acqTime = nPoints[0]/BW        # us
+        rawData['bw'] = BW*1e6
+        createFreqCalSequence()
+        rxd, msgs = expt.run()
+        dataFreqCal = sig.decimate(rxd['rx0']*13.788, oversamplingFactor, ftype='fir', zero_phase=True)
+        dataFreqCal = dataFreqCal[addRdPoints:nPoints[0]+addRdPoints]
+        # Plot fid
+        tVector = np.linspace(-acqTime/2, acqTime/2, num=nPoints[0],endpoint=True)*1e-3
+        for ii in range(nPH):
+            plt.subplot(1, 2, 1)
+            plt.plot(tVector, np.abs(dataFreqCal))
+            plt.title("Signal amplitude")
+            plt.xlabel("Time (ms)")
+            plt.ylabel("Amplitude (mV)")
+            plt.subplot(1, 2, 2)
+            angle = np.unwrap(np.angle(dataFreqCal))
+            plt.title("Signal phase")
+            plt.xlabel("Time (ms)")
+            plt.ylabel("Phase (rad)")
+            plt.plot(tVector, angle)
+        # Get larmor frequency
+        dPhi = angle[-1]-angle[0]
+        df = dPhi/(2*np.pi*acqTime)
+        larmorFreq += df
+        rawData['larmorFreq'] = larmorFreq*1e6
+        print("f0 = %s MHz" % (round(larmorFreq, 5)))
+        # Delete experiment:
+        expt.__del__()
     
     
     # Create full sequence
@@ -515,7 +517,8 @@ def rare(self, plotSeq):
         savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, "Old_RARE",dt_string),  rawData) 
         
         print('End sequence')
-        return dataFull, msgs, data,  BW
+        #return dataFull, msgs, data,  BW
+        return rawData,  msgs, data,  BW
     
 
 #*********************************************************************************

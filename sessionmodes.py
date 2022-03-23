@@ -77,7 +77,7 @@ defaultsessions={
 
     #SpinEchoSeq(lo_freq,rf_amp,rf_pi2_duration,TE,TR,BW,nScans,shimming(rd,ph,sl), trap_ramp_duration,phase_grad_duration,n(x,y,z),fov(rd,ph,sl),preemph_factor)
 #    'Subject':Subject('Subj ID',42, 'F', 60),
-    'Subject':Subject('Subj ID','Age', 'Sex', 'Weight'),  
+    'Subject':Subject('Subj_ID','Age', 'Sex', 'Weight'),  
     'Fruit':Fruit('Fruit\'s name', 'Weigth'), 
-    'Test':Test('Test ID', '')
+    'Test':Test('Test_ID', '')
 }

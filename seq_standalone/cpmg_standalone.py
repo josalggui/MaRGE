@@ -26,16 +26,17 @@ st = pdb.set_trace
 
 def cpmg_standalone(
     init_gpa=False,               # Starts the gpa
-    larmorFreq = 3.075e6,      # Larmor frequency
+    larmorFreq = 3.074e6,      # Larmor frequency
     rfExAmp = 0.3,             # rf excitation pulse amplitude
     rfReAmp = None,             # rf refocusing pulse amplitude
-    rfExTime =22e-6,          # rf excitation pulse time
+    rfExTime =30e-6,          # rf excitation pulse time
     rfReTime = None,          # rf refocusing pulse time
     echoSpacing = 10e-3,        # time between echoes
     repetitionTime = 2000e-3,     # TR
     nPoints = 500,                 # Number of points along readout, phase and slice
     etl = 100,                   # Echo train length
     acqTime = 2e-3,             # Acquisition time
+    shimming = [-80, -100, 10]
     ):
 
     # Miscellaneous
@@ -54,6 +55,21 @@ def cpmg_standalone(
     BW = 1/samplingPeriod
     acqTime = nPoints/BW        # us
     
+    # Create functions
+    def endSequence(tEnd):
+        expt.add_flodict({
+                'grad_vx': (np.array([tEnd]),np.array([0]) ), 
+                'grad_vy': (np.array([tEnd]),np.array([0]) ), 
+                'grad_vz': (np.array([tEnd]),np.array([0]) ),
+             })
+             
+    def iniSequence(tEnd, shimming):
+        expt.add_flodict({
+                'grad_vx': (np.array([tEnd]),np.array([shimming[0]]) ), 
+                'grad_vy': (np.array([tEnd]),np.array([shimming[1]]) ), 
+                'grad_vz': (np.array([tEnd]),np.array([shimming[2]]) ),
+             })
+             
     # Create an rf pulse function
     def rfPulse(tStart,rfTime,rfAmplitude,rfPhase):
         txTime = np.array([tStart+blkTime,tStart+blkTime+rfTime])
@@ -97,7 +113,11 @@ def cpmg_standalone(
     repetitionTime = repetitionTime*1e6
 
     # Initialize time
-    t0 = 20
+    tIni= 20
+    
+    # Shimming
+    iniSequence(tIni, shimming)
+    t0 = 2*tIni
     
     # Excitation pulse
     rfPulse(t0,rfExTime,rfExAmp,0)
@@ -116,7 +136,8 @@ def cpmg_standalone(
         
         # Update t0
         t0 = t0+echoSpacing
-
+    
+    endSequence(t0)
     # Run the experiment and get data
     rxd, msgs = expt.run()
     rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV

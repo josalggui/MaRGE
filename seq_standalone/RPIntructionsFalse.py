@@ -1,7 +1,6 @@
 """
-Created on Tue Nov  9 10:37:29 2021
-
-@author: Teresa
+@author: Teresa Guallart Naval
+MRILAB @ I3M
 """
 
 import sys
@@ -11,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def RPInstructionsFalse(
-    init_gpa= False,                 
+    init_gpa= True,                 
     larmorFreq=3.07419, 
     rfExAmp=0.3, 
     rfReAmp=None, 
@@ -21,10 +20,10 @@ def RPInstructionsFalse(
     nReadout = 500,
     tAdq =5*1e3,
     gAxis =0,
-    gNsteps =4, #50
+    gNsteps =4, 
     gRiseTime = 100,
     gDuration = 500, #Flattop gDuration-2*gRiseTime
-    gAmplitude = 0.2,
+    gAmplitude = 1,
     tIni = 20, 
     plotSeq =0):
     
@@ -79,7 +78,7 @@ def RPInstructionsFalse(
     if gNsteps == 1:
         gRiseTime = 0
    
-#Primero
+#FIRST run()
     tSequence = tIni
     txTime,  txAmp, txGateTime,  txGateAmp,  tRef = rfPulse(tIni, rfExAmp, rfExTime)
     tSequence = tRef+200
@@ -89,15 +88,18 @@ def RPInstructionsFalse(
     gTime = np.concatenate((gTime,gTimeAux),  axis=0)
     gAmp = np.concatenate((gAmp,gAmpAux),  axis=0)
     tSequence = tEnd+500
-    expt.add_flodict({'grad_vx': (gTime,gAmp)})
+    expt.add_flodict({'grad_vz': (gTime,gAmp)})
     expt.add_flodict({
                         'tx0': (txTime, txAmp),
                         'tx_gate': (txGateTime, txGateAmp)})
     
     if plotSeq == 0:
         rxd, msgs = expt.run()
-    
-#Segundo
+    elif plotSeq==1:                
+        expt.plot_sequence()
+        plt.show()
+
+#SECOND run()
     tSequence = tIni #Para tiempos de inicio
     txTime,  txAmp, txGateTime,  txGateAmp,  tRef = rfPulse(tSequence, rfReAmp, rfReTime)
     tSequence = tRef+200
@@ -122,9 +124,13 @@ def RPInstructionsFalse(
     
     if plotSeq == 0:
         rxd, msgs = expt.run()
-
-#Tercero
-    tSequence = tIni #Para tiempos de inicio
+    elif plotSeq==1:                
+        expt.plot_sequence()
+        plt.show()
+    
+    
+# THIRD run()
+    tSequence = tIni 
     txTime,  txAmp, txGateTime,  txGateAmp,  tRef = rfPulse(tSequence, rfReAmp, rfReTime)
     tSequence = tRef+200
     gTime,  gAmp,  tEnd = gradPulse(tSequence)
@@ -146,15 +152,20 @@ def RPInstructionsFalse(
 
     if plotSeq == 0:
         rxd, msgs = expt.run()
+    elif plotSeq==1:                
+        expt.plot_sequence()
+        plt.show()
 
-
-#Cuarto
+# FOURTH run()
     expt.add_flodict({'grad_vx': (gTime,gAmp*2)}, False)
     
     if plotSeq == 0:
         rxd, msgs = expt.run()
+    elif plotSeq==1:                
+        expt.plot_sequence()
+        plt.show()
 
-#Quinto
+# FIFTH run()
     tSequence = tIni+10 #Para tiempos de inicio
     txTime = np.array([tSequence])
     txAmp = np.array([0])
@@ -170,6 +181,9 @@ def RPInstructionsFalse(
     
     if plotSeq == 0:
         rxd, msgs = expt.run()
+    elif plotSeq==1:                
+        expt.plot_sequence()
+        plt.show()
 #    
     #Las concatenaciones mejor meterlas en las definiciones de los pulsos
     #RUN

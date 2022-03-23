@@ -152,7 +152,9 @@ class AcquisitionController(QObject):
     def save_data(self):
         
         dict1 = vars(defaultsessions[self.session])
-        dict2 = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
+        #dict2 = vars(defaultsequences[self.sequencelist.getCurrentSequence()])
+        dict2 = self.rxd
+        
         dt = datetime.now()
         dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S")
         dt2 = date.today()
@@ -164,16 +166,23 @@ class AcquisitionController(QObject):
         if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
             os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
             
-        dict = self.merge_two_dicts(dict1, dict2)
-        dict['rawdata'] = self.rxd
-        dict['average'] = self.data_avg
+        if not os.path.exists('/media/physiomri/TOSHIBA EXT/experiments/acquisitions/%s' % (dt2_string)):
+            os.makedirs('/media/physiomri/TOSHIBA EXT/experiments/acquisitions/%s'% (dt2_string) )
             
-        savemat("experiments/acquisitions/%s/%s/%s.%s.%s.mat" % (dt2_string, dt_string, dict["name_code"], dict["seq"],dt_string),  dict) 
-#        savemat("/media/physiomri/TOSHIBA\ EXT/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
+        if not os.path.exists('/media/physiomri/TOSHIBA EXT/experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
+            os.makedirs('/media/physiomri/TOSHIBA EXT/experiments/acquisitions/%s/%s'% (dt2_string, dt_string) )
+            
+        dict = self.merge_two_dicts(dict1, dict2)
+        #dict['rawdata'] = self.rxd
+        #dict['average'] = self.data_avg
+            
+        savemat("experiments/acquisitions/%s/%s/%s.%s.%s.mat" % (dt2_string, dt_string, dict["name_code"], self.sequence.seq, dt_string),  dict) 
+        savemat("/media/physiomri/TOSHIBA EXT/experiments/acquisitions/%s/%s/%s.%s.%s.mat" %(dt2_string, dt_string, dict["name_code"], self.sequence.seq,dt_string), dict)
 
         if hasattr(self.dataobject, 'f_fft2Magnitude'):
             nifti_file=nib.Nifti1Image(self.dataobject.f_fft2Magnitude, affine=np.eye(4))
-            nib.save(nifti_file, 'experiments/acquisitions/%s/%s/%s.%s.%s.nii'% (dt2_string, dt_string, dict["name_code"],dict["seq"],dt_string))
+            nib.save(nifti_file, 'experiments/acquisitions/%s/%s/%s.%s.%s.nii'% (dt2_string, dt_string, dict["name_code"],self.sequence.seq,dt_string))
+            nib.save(nifti_file, '/media/physiomri/TOSHIBA EXT/experiments/acquisitions/%s/%s/%s.%s.%s.nii'% (dt2_string, dt_string, dict["name_code"],self.sequence.seq,dt_string))
 
         if hasattr(self.parent, 'f_plotview'):
             exporter1 = pyqtgraph.exporters.ImageExporter(self.parent.f_plotview.scene())
@@ -182,23 +191,27 @@ class AcquisitionController(QObject):
             exporter2 = pyqtgraph.exporters.ImageExporter(self.parent.t_plotview.scene())
             exporter2.export("experiments/acquisitions/%s/%s/Temp.%s.%s.png" % (dt2_string, dict["name_code"], dt_string, self.sequence))
 
-        from controller.WorkerXNAT import Worker
+        from controller.WorkerXNAT2 import run
         
+#        if self.parent.xnat_active == 'TRUE':
+#            # Step 2: Create a QThread object
+#            self.parent.thread = QThread()
+#            # Step 3: Create a worker object
+#            self.worker = Worker()
+#            # Step 4: Move worker to the thread
+#            self.worker.moveToThread(self.parent.thread)
+#            # Step 5: Connect signals and slots
+#            self.parent.thread.started.connect(partial(self.worker.run, 'experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
+#            self.worker.finished.connect(self.parent.thread.quit)
+#            self.worker.finished.connect(self.worker.deleteLater)
+#            self.parent.thread.finished.connect(self.parent.thread.deleteLater)
+#            
+#            # Step 6: Start the thread
+#            self.parent.thread.start()
+
         if self.parent.xnat_active == 'TRUE':
-            # Step 2: Create a QThread object
-            self.parent.thread = QThread()
-            # Step 3: Create a worker object
-            self.worker = Worker()
-            # Step 4: Move worker to the thread
-            self.worker.moveToThread(self.parent.thread)
-            # Step 5: Connect signals and slots
-            self.parent.thread.started.connect(partial(self.worker.run, 'experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
-            self.worker.finished.connect(self.parent.thread.quit)
-            self.worker.finished.connect(self.worker.deleteLater)
-            self.parent.thread.finished.connect(self.parent.thread.deleteLater)
-            
-            # Step 6: Start the thread
-            self.parent.thread.start()
+            run(self,'experiments/acquisitions/%s/%s' % (dt2_string, dt_string))
+    
 
     def merge_two_dicts(self, x, y):
         z = x.copy()   # start with keys and values of x

@@ -1,7 +1,6 @@
 """
-Created on Tue Nov  9 10:37:29 2021
-
-@author: Teresa
+@author: Teresa Guallart Naval
+MRILAB @ I3M
 """
 
 import sys
@@ -11,21 +10,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import scipy.signal as sig
-import time 
+from datetime import date,  datetime 
+import os
+from scipy.io import savemat
 
-def rabiflops_standalone(
+
+def rabiflopStandalone(
     init_gpa= False,                 
-    larmorFreq=3.07431, 
+    larmorFreq=3.07556, 
     rfExAmp=0.3, 
     rfReAmp=None, 
     rfExPhase = 0,
     rfExTimeIni=10, 
-    rfExTimeEnd = 100, 
+    rfExTimeEnd = 120, 
     nExTime =30, 
     nReadout =800,
     tAdq = 4*1e3,
     tEcho = 20*1e3,
-    tRepetition = 500*1e3, 
+    tRepetition =500*1e3, 
     plotSeq = 0, 
     shimming=[-80, -100, 10]):
 
@@ -49,6 +51,21 @@ def rabiflops_standalone(
     #RF PULSES
     if rfReAmp is None:
         rfReAmp = rfExAmp
+    
+    # Inputs for rawData
+    rawData={}
+    rawData['larmorFreq'] = larmorFreq      # Larmor frequency
+    rawData['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
+    rawData['rfReAmp'] = rfReAmp             # rf refocusing pulse amplitude
+    rawData['rfExTimeIni'] = rfExTimeIni          # rf excitation pulse time
+    rawData['rfExTimeEnd'] = rfExTimeEnd           # rf refocusing pulse time
+    rawData['nExTime'] = nExTime
+    rawData['echoSpacing'] = tEcho        # time between echoes
+    rawData['repetitionTime'] = tRepetition     # TR
+    rawData['nReadout'] = nReadout
+    rawData['tAdq'] = tAdq
+    rawData['shimming'] = shimming
+    
     rfExPhase = rfExPhase*np.pi/180
     rfExAmp = rfExAmp*np.exp(1j*rfExPhase)
     rfRePhase = 0
@@ -89,21 +106,37 @@ def rabiflops_standalone(
        plt.ylabel('A(mV)')
        plt.legend()
     
-    def  plotRabiFlop(data, rfExTime, tAdqReal):
+    def  getRabiFlopData(data, rfExTime, tAdqReal):
        for indexExTime in range(nExTime):
-#            np.max(np.abs(data[indexExTime, 5:]))
             if indexExTime == 0:
                 maxEchoes = np.max(np.abs(data[indexExTime,5:]))
             else:
                 maxEchoes=np.append(maxEchoes,np.max(np.abs(data[indexExTime, 5:])))
+       rabiFlopData= np.transpose(np.array([rfExTime, maxEchoes]))
+       return rabiFlopData 
+    
+    def  plotRabiFlop(rabiFlopData,  name):
        plt.figure(2)
-       plt.plot(rfExTime, maxEchoes)
+       plt.plot(rabiFlopData[:, 0], rabiFlopData[:, 1])
        plt.xlabel('t(us)')
        plt.ylabel('A(mV)')
-       titleRF= 'RF Amp = '+ str(np.real(rfExAmp))
+       titleRF= 'RF Amp = '+ str(np.real(rfExAmp)) + ';  ' + name
        plt.title(titleRF)
+       return rabiFlopData 
  
-
+    def saveMyData(rawData):
+        # Save data
+        dt = datetime.now()
+        dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S")
+        dt2 = date.today()
+        dt2_string = dt2.strftime("%Y.%m.%d")
+        if not os.path.exists('experiments/acquisitions/%s' % (dt2_string)):
+            os.makedirs('experiments/acquisitions/%s' % (dt2_string))
+        if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
+            os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
+        rawData['name'] = "%s.%s.mat" % ("RABIFLOP",dt_string)
+        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, "RABIFLOP",dt_string),  rawData)
+        return rawData['name']
 
 
 #  SEQUENCE  ############################################################################################
@@ -162,11 +195,11 @@ def rabiflops_standalone(
             print('   End')
             data = sig.decimate(rxd['rx0']*13.788, oversamplingFactor, ftype='fir', zero_phase=True)
             dataAll = np.concatenate((dataAll, data), axis=0)
+            rawData['dataFull'] = dataAll
         elif plotSeq == 1:
             expt.plot_sequence()
             plt.show()
             expt.__del__()
-
    
     if plotSeq == 1:
         expt.plot_sequence()
@@ -175,9 +208,12 @@ def rabiflops_standalone(
     elif plotSeq == 0:
         data = np.reshape(dataAll,  (nExTime,  nReadout))
         plotData(data, rfExTime, tAdqReal)
-        plotRabiFlop(data, rfExTime, tAdqReal)
+        rabiFlopData = getRabiFlopData(data, rfExTime, tAdqReal)
+        rawData['rabiFlopData'] = rabiFlopData
+        name = saveMyData(rawData)
+        plotRabiFlop(rabiFlopData,  name)
         plt.show()
 
 #  MAIN  ######################################################################################################
 if __name__ == "__main__":
-    rabiflops_standalone()
+    rabiflopStandalone()

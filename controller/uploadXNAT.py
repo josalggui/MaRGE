@@ -1,4 +1,14 @@
-
+    # -*- coding: utf-8 -*-
+import xnat
+import os
+import scipy.io
+from pyxnat import Interface
+import imageio
+import nibabel as nib
+import numpy as np
+from pylab import imsave
+import shutil
+    
 def upload(direct):
     #Subject, Experiment y Scan se llaman como el nombre entero de la secuencia
     #Si un metadata se encuentra vacío [], no se guarda ese field por defecto
@@ -6,18 +16,6 @@ def upload(direct):
     #BW se ha cambiado a bw, XNAT no emplea bien las mayúsculas parece ser
     
     #Cada archivo le cuesta 26 segundos para subirse
-    
-    # -*- coding: utf-8 -*-
-    import xnat
-    import os
-    import scipy.io
-    from pyxnat import Interface
-    import imageio
-    import nibabel as nib
-    import numpy as np
-    from pylab import imsave
-    import shutil
-    
 
     #Conexión XNAT
     session = xnat.connect('http://localhost', user='admin', password='admin')
@@ -25,8 +23,8 @@ def upload(direct):
     print("Connected to XNAT with API")
     
     #PROYECTO tiene que existir en XNAT
-    project = session.projects['physioMRI']
-    project_snapshot = interface.select.project('physioMRI').insert() #Para SNAPSHOTS
+    project = session.projects['physio']
+    project_snapshot = interface.select.project('physio').insert() #Para SNAPSHOTS
     
     #Seteamos el directorio en la carpeta de datos
     os.chdir(direct)
@@ -85,34 +83,47 @@ def upload(direct):
         if 'BW' in metadata.keys():
             metadata["bw"] = metadata.pop("BW")
         
-        del metadata["average"]
-        del metadata["rawdata"]
+        del metadata["image3D"]
+        del metadata["kSpace3D"]
+        del metadata["dataFull"]
+        del metadata["imgFull"]
+        del metadata["sampled"]
+        del metadata["__header__"]
+        del metadata["__version__"]
+        del metadata["__globals__"]
+        del metadata["phGradients"]
+#        del metadata["average"]
+#        del metadata["rawdata"]
         
         for key in metadata.keys():
             experiment.fields[key] = metadata.get(key)
-        print("metadata uploaded")
+
         
         session.disconnect()
         interface.disconnect()
         
     elif nii != 0 and mat != 0:
         print(".mat and .nii files detected")
-        
+
         #Eliminamos .nii y .mat de los nombres   
         filename = nii.split('.nii')[0]
         filename_date = nii.split('.nii')[0]
         filename = filename.replace(".", "-")
         
-        s_label = filename
+        s_label = filename.split('-')[0]
+        exp_label = filename.split('-')[1]
         
         #2-subject
         subject = session.classes.SubjectData(parent=project, label=s_label)
-                
+
         #3-experiment
-        experiment = session.classes.MrSessionData(parent=subject, label=filename)
+        experiment = session.classes.MrSessionData(parent=subject, label=exp_label)
+
         #Si queremos añadir FECHA
-        array_date = filename_date.split('.')[1:4]
+        array_date = filename_date.split('.')[2:5]
         date = array_date[0] + "-" + array_date[1] + "-" + array_date[2]
+        print(date)
+
         experiment.date = date
         
         #4-scan
@@ -149,8 +160,15 @@ def upload(direct):
         if 'BW' in metadata.keys():
             metadata["bw"] = metadata.pop("BW")
         
-        del metadata["average"]
-        del metadata["rawdata"]
+        del metadata["image3D"]
+        del metadata["kSpace3D"]
+        del metadata["dataFull"]
+        del metadata["imgFull"]
+        del metadata["sampled"]
+        del metadata["__header__"]
+        del metadata["__version__"]
+        del metadata["__globals__"]
+        del metadata["phGradients"]
         
         for key in metadata.keys():
             experiment.fields[key] = metadata.get(key)
@@ -202,16 +220,16 @@ def upload(direct):
             imageio.mimsave(filename + '.gif', images)
             
             #Subir snapshot   
-            subject_snapshot = project_snapshot.subject(filename)
+            subject_snapshot = project_snapshot.subject(s_label)
             
-            experiment = subject_snapshot.experiment(filename)
+            experiment = subject_snapshot.experiment(exp_label)
             
-            experiment.scan(filename).resource('SNAPSHOTS').file(filename + '.gif').insert(filename + '.gif',
+            experiment.scan(filename).resource('SNAPSHOTS').file(filename+ '.gif').insert(filename + '.gif',
                                                                  format="GIF",
                                                                  content = "ORIGINAL",
                                                                  tags = None)
             
-            experiment.scan(filename).resource('SNAPSHOTS').file(filename + '_t.gif').insert(filename + '.gif',
+            experiment.scan(filename).resource('SNAPSHOTS').file(filename+ '_t.gif').insert(filename + '.gif',
                                                                  format="GIF",
                                                                  content = "THUMBNAIL",
                                                                  tags = None)
