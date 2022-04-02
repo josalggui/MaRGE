@@ -19,9 +19,7 @@ import os
 from scipy.io import savemat
 from datetime import date,  datetime 
 import pdb
-from configs.hw_config import Gx_factor
-from configs.hw_config import Gy_factor
-from configs.hw_config import Gz_factor
+from mrilabMethods.mrilabMethods import *
 st = pdb.set_trace
 
 
@@ -35,14 +33,14 @@ def rare_standalone(
     init_gpa=False, # Starts the gpa
     nScans = 1, # NEX
     larmorFreq = 3.07403, # MHz, Larmor frequency
-    rfExAmp = 0.8, # a.u., rf excitation pulse amplitude
-    rfReAmp = 0.8, # a.u., rf refocusing pulse amplitude
-    rfExTime = 10, # us, rf excitation pulse time
-    rfReTime = 20, # us, rf refocusing pulse time
+    rfExAmp = 0.4, # a.u., rf excitation pulse amplitude
+    rfReAmp = 0.4, # a.u., rf refocusing pulse amplitude
+    rfExTime = 24, # us, rf excitation pulse time
+    rfReTime = 48, # us, rf refocusing pulse time
     echoSpacing = 10., # ms, time between echoes
     preExTime = 0., # ms, Time from preexcitation pulse to inversion pulse
-    inversionTime = 400., # ms, Inversion recovery time
-    repetitionTime = 5000., # ms, TR
+    inversionTime = 0., # ms, Inversion recovery time
+    repetitionTime = 1000., # ms, TR
     fov = np.array([120., 120., 120.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
     nPoints = np.array([60, 60, 1]), # Number of points along readout, phase and slice
@@ -51,17 +49,17 @@ def rare_standalone(
     axes = np.array([2, 0, 1]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
     axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
     sweepMode = 1, # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
-    rdGradTime = 5,  # ms, readout gradient time
+    rdGradTime = 6,  # ms, readout gradient time
     rdDephTime = 1,  # ms, readout dephasing time
     phGradTime = 1, # ms, phase and slice dephasing time
     rdPreemphasis = 1.005, # readout dephasing gradient is multiplied by this factor
     drfPhase = 0, # degrees, phase of the excitation pulse
-    dummyPulses = 0, # number of dummy pulses for T1 stabilization
+    dummyPulses = 1, # number of dummy pulses for T1 stabilization
     shimming = np.array([-70., -90., 10.]), # a.u.*1e4, shimming along the X,Y and Z axes
     parAcqLines = 0 # number of additional lines, Full sweep if 0
     ):
     
-    freqCal = 0
+    freqCal = 1
     
     # rawData fields
     rawData = {}
@@ -195,9 +193,8 @@ def rare_standalone(
     slGradients = slGradients/gFactor[2]*1000/5
     
     # Set phase vector to given sweep mode
-    ind = getIndex(phGradients, etl, nPH, sweepMode)
+    ind = getIndex(etl, nPH, sweepMode)
     rawData['sweepOrder'] = ind
-    phGradients = phGradients[::-1]
     phGradients = phGradients[ind]
 
     # Create functions
@@ -273,7 +270,7 @@ def rare_standalone(
         iniSequence(20)
         for repeIndex in range(nRepetitions):
             # Initialize time
-            tEx = 20e3+repetitionTime*repeIndex+inversionTime+preExTime+blkTime+rfExTime/2
+            tEx = 20e3+repetitionTime*repeIndex+inversionTime+preExTime
             
             # Pre-excitation pulse
             if repeIndex>=dummyPulses and preExTime!=0:
@@ -432,83 +429,78 @@ def rare_standalone(
         
     # Run the experiment
     dataFull = []
+    dummyData = []
+    overData = []
     for ii in range(nScans):
         print("Scan %s ..." % (ii+1))
         rxd, msgs = expt.run()
         rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
         # Get data
         if dummyPulses>0:
-            dummyData = rxd['rx0'][0:nRD*etl*oversamplingFactor]
-            dummyData = np.reshape(dummyData, (etl, nRD*oversamplingFactor))
-            rawData['echoCal'] = dummyData
-            overData = rxd['rx0'][nRD*etl*oversamplingFactor::]
-            overData = np.reshape(overData, (int(nPH/etl*nSL), etl,  nRD*oversamplingFactor))
-            overData = fixEchoPosition(dummyData, overData)
-            overData = np.squeeze(np.reshape(overData, (1, nRD*oversamplingFactor*nPH*nSL)))
+            dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*etl*oversamplingFactor]), axis = 0)
+            overData = np.concatenate((overData, rxd['rx0'][nRD*etl*oversamplingFactor::]), axis = 0)
         else:
-            overData = rxd['rx0']
-        scanData = sig.decimate(overData, oversamplingFactor, ftype='fir', zero_phase=True)
-#        scanData = sig.decimate(rxd['rx0'], oversamplingFactor, ftype='fir', zero_phase=True)
-        dataFull = np.concatenate((dataFull, scanData), axis = 0)
+            overData = np.concatenate((overData, rxd['rx0']), axis = 0)
     expt.__del__()
     print('Scans done!')
     
+    # Fix the echo position using oversampled data
+    dummyData = np.reshape(dummyData,  (nScans, etl, nRD*oversamplingFactor))
+    dummyData = np.average(dummyData, axis=0)
+    rawData['dummyData'] = dummyData
     rawData['overData'] = overData
+    overData = np.reshape(overData, (nScans, int(nPH/etl*nSL), etl,  nRD*oversamplingFactor))
+    for ii in range(nScans):
+        overData[ii, :, :, :] = fixEchoPosition(dummyData, overData[ii, :, :, :])
+        
+    # Generate dataFull
+    overData = np.squeeze(np.reshape(overData, (1, nRD*oversamplingFactor*nPH*nSL*nScans)))
+    dataFull = sig.decimate(overData, oversamplingFactor, ftype='fir', zero_phase=True)
     
     # Get index for krd = 0
     # Average data
     dataProv = np.reshape(dataFull, (nScans, nRD*nPH*nSL))
     dataProv = np.average(dataProv, axis=0)
-    dataProv = np.reshape(dataProv, (nSL, nPH, nRD))
     # Reorganize the data acording to sweep mode
+    dataProv = np.reshape(dataProv, (nSL, nPH, nRD))
     dataTemp = dataProv*0
     for ii in range(nPH):
         dataTemp[:, ind[ii], :] = dataProv[:,  ii, :]
     dataProv = dataTemp
     # Check where is krd = 0
-    dataProv = dataProv[int(nSL/2), int(nPH/2), :]
+    dataProv = dataProv[int(nPoints[2]/2), int(nPH/2), :]
     indkrd0 = np.argmax(np.abs(dataProv))
     if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD+addRdPoints:
         indkrd0 = int(nRD/2)
     indkrd0 = int(nRD/2)
 
     # Get individual images
-    dataProv = np.reshape(dataFull, (nScans, nSL, nPH, nRD))
-    dataProv = dataProv[:, :, :, indkrd0-int(nPoints[0]/2):indkrd0+int(nPoints[0]/2)]
-    dataTemp = dataProv*0
+    dataFull = np.reshape(dataFull, (nScans, nSL, nPH, nRD))
+    dataFull = dataFull[:, :, :, indkrd0-int(nPoints[0]/2):indkrd0+int(nPoints[0]/2)]
+    dataTemp = dataFull*0
     for ii in range(nPH):
-        dataTemp[:, :, ind[ii], :] = dataProv[:, :,  ii, :]
-    imgFull = dataProv*0
-    for ii in(range(nScans)):
-        imgFull[ii, :, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataTemp[ii, :, :, :])))
-    rawData['dataFull'] = dataTemp
+        dataTemp[:, :, ind[ii], :] = dataFull[:, :,  ii, :]
+    dataFull = dataTemp
+    imgFull = dataFull*0
+    for ii in range(nScans):
+        imgFull[ii, :, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[ii, :, :, :])))
+    rawData['dataFull'] = dataFull
     rawData['imgFull'] = imgFull    
-
-    # Get required readout points
-    dataFull = np.reshape(dataFull, (nPH*nSL*nScans, nRD))
-    dataFull = dataFull[:, indkrd0-int(nPoints[0]/2):indkrd0+int(nPoints[0]/2)]
-    dataFull = np.reshape(dataFull, (1, nPoints[0]*nPH*nSL*nScans))
     
     # Average data
-    data = np.reshape(dataFull, (nScans, nPoints[0]*nPH*nSL))
-    data = np.average(data, axis=0)
+    data = np.average(dataFull, axis=0)
     data = np.reshape(data, (nSL, nPH, nPoints[0]))
     
-    # Reorganize the data acording to sweep mode
-    dataTemp = data*0
-    for ii in range(nPH):
-        dataTemp[:, ind[ii], :] = data[:,  ii, :]
-    
     # Do zero padding
-    data = np.zeros((nPoints[2], nPoints[1], nPoints[0]))
-    data = data+1j*data
-    if nSL==1:
-        data = dataTemp
-    else:
-        data[0:nSL-1, :, :] = dataTemp[0:nSL-1, :, :]
-    data = np.reshape(data, (1, nPoints[0]*nPoints[1]*nPoints[2]))
-        
-    # Fix the position of the sample according t dfov
+    dataTemp = np.zeros((nPoints[2], nPoints[1], nPoints[0]))
+    dataTemp = dataTemp+1j*dataTemp
+    if nSL==1 or (nSL>1 and parAcqLines==0):
+        dataTemp = data
+    elif nSL>1 and parAcqLines>0:
+        dataTemp[0:nSL-1, :, :] = data[0:nSL-1, :, :]
+    data = np.reshape(dataTemp, (1, nPoints[0]*nPoints[1]*nPoints[2]))
+    
+    # Fix the position of the sample according to dfov
     kMax = np.array(nPoints)/(2*np.array(fov))*np.array(axesEnable)
     kRD = np.linspace(-kMax[0],kMax[0],num=nPoints[0],endpoint=False)
 #        kPH = np.linspace(-kMax[1],kMax[1],num=nPoints[1],endpoint=False)
@@ -533,7 +525,6 @@ def rare_standalone(
     rawData['kMax'] = kMax
     rawData['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
     data = np.reshape(data, (nPoints[2], nPoints[1], nPoints[0]))
-    
     
     # Save data
     dt = datetime.now()
@@ -632,46 +623,46 @@ def rare_standalone(
 #*********************************************************************************
 
 
-def getIndex(g_amps, echos_per_tr, n_ph, sweep_mode):
-    n2ETL=int(n_ph/2/echos_per_tr)
-    ind:int = [];
-    if n_ph==1:
-         ind = np.linspace(int(n_ph)-1, 0, n_ph)
-    
-    else: 
-        if sweep_mode==0:   # Sequential for T2 contrast
-            for ii in range(int(n_ph/echos_per_tr)):
-               ind = np.concatenate((ind, np.arange(1, n_ph+1, n_ph/echos_per_tr)+ii))
-            ind = ind-1
-
-        elif sweep_mode==1: # Center-out for T1 contrast
-            if echos_per_tr==n_ph:
-                for ii in range(int(n_ph/2)):
-                    cont = 2*ii
-                    ind = np.concatenate((ind, np.array([n_ph/2-cont/2])), axis=0);
-                    ind = np.concatenate((ind, np.array([n_ph/2+1+cont/2])), axis=0);
-            else:
-                for ii in range(n2ETL):
-                    ind = np.concatenate((ind,np.arange(n_ph/2, 0, -n2ETL)-(ii)), axis=0);
-                    ind = np.concatenate((ind,np.arange(n_ph/2+1, n_ph+1, n2ETL)+(ii)), axis=0);
-            ind = ind-1
-        elif sweep_mode==2: # Out-to-center for T2 contrast
-            if echos_per_tr==n_ph:
-                ind=np.arange(1, n_ph+1, 1)
-            else:
-                for ii in range(n2ETL):
-                    ind = np.concatenate((ind,np.arange(1, n_ph/2+1, n2ETL)+(ii)), axis=0);
-                    ind = np.concatenate((ind,np.arange(n_ph, n_ph/2, -n2ETL)-(ii)), axis=0);
-            ind = ind-1
-        elif sweep_mode==3:
-            if echos_per_tr==n_ph:
-                ind = np.arange(0, n_ph, 1)
-            else:
-                for ii in range(int(n2ETL)):
-                    ind = np.concatenate((ind, np.arange(0, n_ph, 2*n2ETL)+2*ii), axis=0)
-                    ind = np.concatenate((ind, np.arange(n_ph-1, 0, -2*n2ETL)-2*ii), axis=0)
-
-    return np.int32(ind)
+#def getIndex(echos_per_tr, n_ph, sweep_mode):
+#    n2ETL=int(n_ph/2/echos_per_tr)
+#    ind:int = [];
+#    if n_ph==1:
+#         ind = np.linspace(int(n_ph)-1, 0, n_ph)
+#    
+#    else: 
+#        if sweep_mode==0:   # Sequential for T2 contrast
+#            for ii in range(int(n_ph/echos_per_tr)):
+#               ind = np.concatenate((ind, np.arange(1, n_ph+1, n_ph/echos_per_tr)+ii))
+#            ind = ind-1
+#
+#        elif sweep_mode==1: # Center-out for T1 contrast
+#            if echos_per_tr==n_ph:
+#                for ii in range(int(n_ph/2)):
+#                    cont = 2*ii
+#                    ind = np.concatenate((ind, np.array([n_ph/2-cont/2])), axis=0);
+#                    ind = np.concatenate((ind, np.array([n_ph/2+1+cont/2])), axis=0);
+#            else:
+#                for ii in range(n2ETL):
+#                    ind = np.concatenate((ind,np.arange(n_ph/2, 0, -n2ETL)-(ii)), axis=0);
+#                    ind = np.concatenate((ind,np.arange(n_ph/2+1, n_ph+1, n2ETL)+(ii)), axis=0);
+#            ind = ind-1
+#        elif sweep_mode==2: # Out-to-center for T2 contrast
+#            if echos_per_tr==n_ph:
+#                ind=np.arange(1, n_ph+1, 1)
+#            else:
+#                for ii in range(n2ETL):
+#                    ind = np.concatenate((ind,np.arange(1, n_ph/2+1, n2ETL)+(ii)), axis=0);
+#                    ind = np.concatenate((ind,np.arange(n_ph, n_ph/2, -n2ETL)-(ii)), axis=0);
+#            ind = ind-1
+#        elif sweep_mode==3:
+#            if echos_per_tr==n_ph:
+#                ind = np.arange(0, n_ph, 1)
+#            else:
+#                for ii in range(int(n2ETL)):
+#                    ind = np.concatenate((ind, np.arange(0, n_ph, 2*n2ETL)+2*ii), axis=0)
+#                    ind = np.concatenate((ind, np.arange(n_ph-1, 0, -2*n2ETL)-2*ii), axis=0)
+#
+#    return np.int32(ind)
 
 
 #*********************************************************************************
@@ -679,40 +670,40 @@ def getIndex(g_amps, echos_per_tr, n_ph, sweep_mode):
 #*********************************************************************************
 
 
-def reorganizeGfactor(axes):
-    gFactor = np.array([0., 0., 0.])
-    
-    # Set the normalization factor for readout, phase and slice gradient
-    for ii in range(3):
-        if axes[ii]==0:
-            gFactor[ii] = Gx_factor
-        elif axes[ii]==1:
-            gFactor[ii] = Gy_factor
-        elif axes[ii]==2:
-            gFactor[ii] = Gz_factor
-    
-    return(gFactor)
+#def reorganizeGfactor(axes):
+#    gFactor = np.array([0., 0., 0.])
+#    
+#    # Set the normalization factor for readout, phase and slice gradient
+#    for ii in range(3):
+#        if axes[ii]==0:
+#            gFactor[ii] = Gx_factor
+#        elif axes[ii]==1:
+#            gFactor[ii] = Gy_factor
+#        elif axes[ii]==2:
+#            gFactor[ii] = Gz_factor
+#    
+#    return(gFactor)
 
 #*********************************************************************************
 #*********************************************************************************
 #*********************************************************************************
 
 
-def fixEchoPosition(echoes, data0):
-    etl = np.size(echoes, axis=0)
-    n = np.size(echoes, axis=1)
-    idx = np.argmax(np.abs(echoes), axis=1)
-    idx = idx-int(n/2)
-    data1 = data0*0
-    for ii in range(etl):
-        if idx[ii]>0:
-            idx[ii] = 0
-        echoes[ii, -idx[ii]::] = echoes[ii, 0:n+idx[ii]]
-        data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n+idx[ii]]
-#    plt.figure(5)
-#    plt.imshow(np.abs(echoes), cmap='gray')
-#    plt.show()
-    return(data1)
+#def fixEchoPosition(echoes, data0):
+#    etl = np.size(echoes, axis=0)
+#    n = np.size(echoes, axis=1)
+#    idx = np.argmax(np.abs(echoes), axis=1)
+#    idx = idx-int(n/2)
+#    data1 = data0*0
+#    for ii in range(etl):
+#        if idx[ii]>0:
+#            idx[ii] = 0
+#        echoes[ii, -idx[ii]::] = echoes[ii, 0:n+idx[ii]]
+#        data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n+idx[ii]]
+##    plt.figure(5)
+##    plt.imshow(np.abs(echoes), cmap='gray')
+##    plt.show()
+#    return(data1)
 
 
 #*********************************************************************************
