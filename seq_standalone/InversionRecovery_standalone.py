@@ -14,20 +14,20 @@ from scipy.io import savemat
 
 def inversionrecoveryStandalone(
     init_gpa= False,                 
-    lo_freq=3.07431, 
-    rf_amp=0.3, 
+    lo_freq=3.07393, 
+    rf_amp=0.4, 
     rf_pi_duration=None, 
-    rf_pi2_duration=30, 
-    tr = 10,                 # s
-    t_ini = 10e-4,      # s
-    t_fin = 3,             # s
+    rf_pi2_duration=24, 
+    tr = 10,                 # s, repetition time
+    t_ini = 0.001,      # s
+    t_fin = 8,             # s
     N = 10, 
     shimming=[-80, -100, 10]):                
     
     BW=60*1e-3                     # MHz
     n_rd=120
     plotSeq =0
-    point =8        
+    point =15       
     blk_delay = 300
     shimming = np.array(shimming)*1e-4
     
@@ -83,7 +83,6 @@ def inversionrecoveryStandalone(
     t_start = 2*tIni
     
     for t in tIR:
-        
         tx_t = np.array([t_start, t_start+rf_pi_duration,t_start+t+rf_pi2_duration/2,t_start+t+3*rf_pi2_duration/2])
         tx_a = np.array([1j*rf_amp,0,rf_amp,0])
         
@@ -171,7 +170,7 @@ def inversionrecoveryStandalone(
         plt.plot(tIR2, func3(tIR2, *fitData3))
         plt.title(name)
         plt.xscale('log')
-        plt.xlabel('t(ms)')
+        plt.xlabel('t(s)')
         plt.ylabel('Signal (mV)')
         plt.legend(['Experimental', 'Fitting 1 component', 'Fitting 2 components','Fitting 3 components' ])
         plt.title(name)

@@ -15,23 +15,20 @@ import time
 
 def rabiflops_standalone(
     init_gpa= False,                 
-    larmorFreq=3.07232, 
-    rfExAmp=0.0, 
+    larmorFreq=3.07436, 
+    rfExAmp=0.4, 
     rfReAmp=None, 
     rfExPhase = 0,
-    rfExTimeIni=0, 
-    rfExTimeEnd = 0, 
-    nExTime =1, 
-    nReadout =2501,
-    tAdq = 50*1e3,
-    tEcho =300*1e3,
-    tRepetition = 500*1e3, 
+    rfExTimeIni=6, 
+    rfExTimeEnd = 60, 
+    nExTime =10, 
+    nReadout =800,
+    tAdq = 4*1e3,
+    tEcho = 20*1e3,
+    tRepetition = 3000*1e3, 
     plotSeq = 0, 
-    shimming=[0, 0, 0]):
-
-
-#BW 500 tAcq 5
-#BW 50   tAcq 50
+    pulse = 'Rec',  # 'Rec' to Rectangular pulse, 'Sinc' for sinc pulse
+    shimming=[-80, -100, 10]):
 
 #  INITALISATION OF VARIABLES  ################################################################################
     #CONTANTS
@@ -61,6 +58,15 @@ def rabiflops_standalone(
     rfExTime= np.linspace(rfExTimeIni, rfExTimeEnd, nExTime,  endpoint=True)
     
 #  DEFINITION OF PULSES   ####################################################################################
+    def rfSincPulse(tStart, rfTime, nLobes, rfAmplitude, rfPhase):
+        txTime = np.linspace(tStart, tStart+rfTime, num=100, endpoint=True)+txGatePre
+        tMax = (nLobes+1)/2
+        tx = np.linspace(-tMax, tMax, num = 100, endpoint=True)
+        txAmp = rfAmplitude*np.abs(np.sinc(tx))
+        txGateTime = np.array([tStart,tStart+txGatePre+rfTime])
+        txGateAmp = np.array([1,0])
+        return txTime, txAmp, txGateTime, txGateAmp
+            
     def rfPulse(tRef, rfAmp, rfDuration, txTimePrevious,txAmpPrevious,  txGateTimePrevious, txGateAmpPrevious):
         txTime = np.array([tRef-rfDuration/2,tRef+rfDuration/2])
         txAmp = np.array([rfAmp,0.])
@@ -79,33 +85,35 @@ def rabiflops_standalone(
         rxAmp=np.concatenate((rxAmpPrevious, rxAmp),  axis=0)
         return rxTime,  rxAmp
 
-
 #  SPECIFIC FUNCTIONS   ####################################################################################
-    def  plotData(data, rfExTime, tAdqReal, nRd):
+    def  plotData(data, rfExTime, tAdqReal):
        plt.figure(1)
+       colors = cm.rainbow(np.linspace(0, 0.8, len(rfExTime)))
        for indexExTime in range(nExTime):
-            tPlot = np.linspace(0, tAdqReal, nReadout,  endpoint ='True')*1e-3+indexExTime*tAdqReal*1e-3
-            plt.plot(tPlot[5:], np.abs(data[indexExTime, 5:]))
-            plt.plot(tPlot[5:], np.real(data[indexExTime, 5:]))
-            plt.plot(tPlot[5:], np.imag(data[indexExTime, 5:]))
+            tPlot = np.linspace(-tAdqReal/2, tAdqReal/2, nReadout,  endpoint ='True')*1e-3
+            leg = 'Time = '+ str(np.round(rfExTime[indexExTime]))+ 'us'
+            plt.plot(tPlot[5:], np.abs(data[indexExTime, 5:]),  label = leg, color=colors[indexExTime])
+#            plt.plot(tPlot[5:], np.real(data[indexExTime, 5:]))
+#            plt.plot(tPlot[5:], np.imag(data[indexExTime, 5:]))
        plt.xlabel('t(ms)')
        plt.ylabel('A(mV)')
-       vRMS=np.std(np.abs(data[0, 5:]))
-       titleRF= 'BW = '+ str(np.round(nRd/(tAdqReal)*1e3))+'kHz; Vrms ='+str(vRMS)
+       plt.legend()
+    
+    def  plotRabiFlop(data, rfExTime, tAdqReal):
+       for indexExTime in range(nExTime):
+#            np.max(np.abs(data[indexExTime, 5:]))
+            if indexExTime == 0:
+                maxEchoes = np.max(np.abs(data[indexExTime,5:]))
+            else:
+                maxEchoes=np.append(maxEchoes,np.max(np.abs(data[indexExTime, 5:])))
+       plt.figure(2)
+       plt.plot(rfExTime, maxEchoes)
+       plt.xlabel('t(us)')
+       plt.ylabel('A(mV)')
+       titleRF= 'RF Amp = '+ str(np.real(rfExAmp))
        plt.title(titleRF)
-       
-    def plotDataK(data, BW, nReadout):
-            plt.figure(2)
-            fAdq =  np.linspace(-BW/2, BW/2, nReadout, endpoint=True)*1e3
-            dataFft = np.fft.fft(data[0, 5:])
-            dataOr1, dataOr2 = np.split(dataFft, 2, axis=0)
-            dataFft= np.concatenate((dataOr2, dataOr1), axis=0)
-            plt.plot(fAdq[5:], np.abs(dataFft), 'r-')
-            plt.xlabel('f(kHz)')
-            plt.ylabel('A(a.u.)')
-            plt.title('FFT')
-#            plt.xlim(-0.05,  0.05)
-            plt.legend()
+ 
+
 
 
 #  SEQUENCE  ############################################################################################
@@ -129,11 +137,24 @@ def rabiflops_standalone(
         samplingPeriod = expt.get_rx_ts()[0]
         BWReal = 1/samplingPeriod/oversamplingFactor
         tAdqReal = nReadout/BWReal  
+        tIni=20  #us initial time
+    # Shimming
+        expt.add_flodict({
+            'grad_vx': (np.array([tIni]),np.array([shimming[0]])), 
+            'grad_vy': (np.array([tIni]),np.array([shimming[1]])),  
+            'grad_vz': (np.array([tIni]),np.array([shimming[2]])),
+        })
         # TR    
-        tRef = tStart+rfExTime[indexExTime]/2
+        tRef = tStart+rfExTime[indexExTime]/2+tIni+100
+#        if pulse=='Rec':
         txTime, txAmp,txGateTime,txGateAmp = rfPulse(tRef,rfExAmp, rfExTime[indexExTime], txTime, txAmp, txGateTime, txGateAmp)
+#        elif pulse=='Sinc':
+#            txTime, txAmp,txGateTime,txGateAmp = rfSincPulse(tRef,rfExAmp, rfExTime[indexExTime], txTime, txAmp, txGateTime, txGateAmp)
         tRef = tRef+tEcho/2
+#        if pulse=='Rec':
         txTime, txAmp, txGateTime, txGateAmp = rfPulse(tRef,rfReAmp, rfReTime, txTime, txAmp, txGateTime, txGateAmp)
+#        if pulse=='Sinc':
+#            txTime, txAmp, txGateTime, txGateAmp = rfSincPulse(tRef,rfReAmp, rfReTime, txTime, txAmp, txGateTime, txGateAmp)
         tRef = tRef+tEcho/2
         rxTime, rxAmp = readoutGate(tRef, tAdqReal, rxTime, rxAmp)
         
@@ -143,6 +164,13 @@ def rabiflops_standalone(
                             'rx0_en': (rxTime, rxAmp),
                             'rx_gate': (rxTime, rxAmp),
                             })
+        tEnd = tRepetition
+        expt.add_flodict({
+            'grad_vx': (np.array([tEnd]),np.array([0])), 
+            'grad_vy': (np.array([tEnd]),np.array([0])), 
+            'grad_vz': (np.array([tEnd]),np.array([0])),
+        })
+
         if plotSeq == 0:
             print(indexExTime,  '.- Running...')
             rxd, msgs = expt.run()
@@ -162,8 +190,8 @@ def rabiflops_standalone(
         expt.__del__()
     elif plotSeq == 0:
         data = np.reshape(dataAll,  (nExTime,  nReadout))
-        plotData(data, rfExTime, tAdqReal, nReadout)
-        plotDataK(data, BWReal, nReadout)
+        plotData(data, rfExTime, tAdqReal)
+        plotRabiFlop(data, rfExTime, tAdqReal)
         plt.show()
 
 #  MAIN  ######################################################################################################

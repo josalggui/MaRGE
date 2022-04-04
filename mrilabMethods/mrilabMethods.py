@@ -9,6 +9,7 @@ import numpy as np
 from configs.hw_config import Gx_factor
 from configs.hw_config import Gy_factor
 from configs.hw_config import Gz_factor
+from configs.hw_config import blkTime #us
 
 ##############################################################
 ##############################################################
@@ -113,3 +114,118 @@ def fixEchoPosition(echoes, data0):
         echoes[ii, -idx[ii]::] = echoes[ii, 0:n+idx[ii]]
         data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n+idx[ii]]
     return(data1)
+    
+
+##############################################################
+##############################################################
+##############################################################
+
+
+def rfSincPulse(expt, tStart, rfTime, nLobes, rfAmplitude, rfPhase):
+    """"
+    @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+    @email: josalggui@i3m.upv.es
+    Rf pulse with sinc pulse shape. I use a Hanning window to reduce the banding of the frequency profile.
+    """
+    txTime = np.linspace(tStart, tStart+rfTime, num=100, endpoint=True)+blkTime
+    nZeros = (nLobes+1)
+    tx = np.linspace(-nZeros/2, nZeros/2, num = 100, endpoint=True)
+    hanning = 0.5*(1+np.cos(2*np.pi*tx/nZeros))
+    txAmp = rfAmplitude*np.exp(1j*rfPhase)*hanning*np.abs(np.sinc(tx))
+    txGateTime = np.array([tStart,tStart+blkTime+rfTime])
+    txGateAmp = np.array([1,0])
+    expt.add_flodict({
+        'tx0': (txTime, txAmp),
+        'tx_gate': (txGateTime, txGateAmp)
+        })
+
+
+##############################################################
+##############################################################
+##############################################################
+
+
+def rfRecPulse(expt, tStart,rfTime,rfAmplitude,rfPhase):
+    """"
+    @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+    @email: josalggui@i3m.upv.es
+    Rf pulse with square pulse shape
+    """
+    txTime = np.array([tStart+blkTime,tStart+blkTime+rfTime])
+    txAmp = np.array([rfAmplitude*np.exp(1j*rfPhase),0.])
+    txGateTime = np.array([tStart,tStart+blkTime+rfTime])
+    txGateAmp = np.array([1,0])
+    expt.add_flodict({
+        'tx0': (txTime, txAmp),
+        'tx_gate': (txGateTime, txGateAmp)
+        })
+
+
+##############################################################
+##############################################################
+##############################################################
+
+
+def rxGate(expt, tStart, gateTime):
+    """"
+    @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+    @email: josalggui@i3m.upv.es
+    """
+    rxGateTime = np.array([tStart,tStart+gateTime])
+    rxGateAmp = np.array([1,0])
+    expt.add_flodict({
+        'rx0_en':(rxGateTime, rxGateAmp), 
+        'rx_gate': (rxGateTime, rxGateAmp), 
+        })
+
+
+##############################################################
+##############################################################
+##############################################################
+
+
+def gradTrap(expt, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming):
+    """"
+    @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+    @email: josalggui@i3m.upv.es
+    gradient pulse with trapezoidal shape. Use 1 step to generate a square pulse.
+    """
+    tUp = np.linspace(tStart, tStart+gRiseTime, num=gSteps, endpoint=False)
+    tDown = tUp+gRiseTime+gFlattopTime
+    t = np.concatenate((tUp, tDown), axis=0)
+    dAmp = gAmp/gSteps
+    aUp = np.linspace(dAmp, gAmp, num=gSteps)
+    aDown = np.linspace(gAmp-dAmp, 0, num=gSteps)
+    a = np.concatenate((aUp, aDown), axis=0)
+    if gAxis==0:
+        expt.add_flodict({'grad_vx': (t, a+shimming[0])})
+    elif gAxis==1:
+        expt.add_flodict({'grad_vy': (t, a+shimming[1])})
+    elif gAxis==2:
+        expt.add_flodict({'grad_vz': (t, a+shimming[2])})
+
+
+##############################################################
+##############################################################
+##############################################################
+
+
+def endSequence(expt, tEnd):
+    expt.add_flodict({
+            'grad_vx': (np.array([tEnd]),np.array([0]) ), 
+            'grad_vy': (np.array([tEnd]),np.array([0]) ), 
+            'grad_vz': (np.array([tEnd]),np.array([0]) ),
+         })
+
+
+##############################################################
+##############################################################
+##############################################################
+
+
+def iniSequence(expt, t0, shimming):
+    expt.add_flodict({
+            'grad_vx': (np.array([t0]),np.array([shimming[0]]) ), 
+            'grad_vy': (np.array([t0]),np.array([shimming[1]]) ), 
+            'grad_vz': (np.array([t0]),np.array([shimming[2]]) ),
+         })

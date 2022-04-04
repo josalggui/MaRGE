@@ -52,7 +52,7 @@ def gre_standalone(
     dummyPulses = 20,                     # Dummy pulses for T1 stabilization
     shimming = np.array([-80, -100, 10]),       # Shimming along the X,Y and Z axes (a.u. *1e4)
     parAcqLines = 0,                         # Number of additional lines, Full sweep if 0
-    plotSeq = 0):
+    plotSeq = 1):
     
     # rawData fields
     rawData = {}

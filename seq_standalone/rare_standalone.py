@@ -32,11 +32,11 @@ st = pdb.set_trace
 def rare_standalone(
     init_gpa=False, # Starts the gpa
     nScans = 1, # NEX
-    larmorFreq = 3.07403, # MHz, Larmor frequency
+    larmorFreq = 3.0743, # MHz, Larmor frequency
     rfExAmp = 0.4, # a.u., rf excitation pulse amplitude
     rfReAmp = 0.4, # a.u., rf refocusing pulse amplitude
-    rfExTime = 24, # us, rf excitation pulse time
-    rfReTime = 48, # us, rf refocusing pulse time
+    rfExTime = 25, # us, rf excitation pulse time
+    rfReTime = 50, # us, rf refocusing pulse time
     echoSpacing = 10., # ms, time between echoes
     preExTime = 0., # ms, Time from preexcitation pulse to inversion pulse
     inversionTime = 0., # ms, Inversion recovery time
@@ -198,63 +198,63 @@ def rare_standalone(
     phGradients = phGradients[ind]
 
     # Create functions
-    def rfPulse(tStart,rfTime,rfAmplitude,rfPhase):
-        txTime = np.array([tStart+blkTime,tStart+blkTime+rfTime])
-        txAmp = np.array([rfAmplitude*np.exp(1j*rfPhase),0.])
-        txGateTime = np.array([tStart,tStart+blkTime+rfTime])
-        txGateAmp = np.array([1,0])
-        expt.add_flodict({
-            'tx0': (txTime, txAmp),
-            'tx_gate': (txGateTime, txGateAmp)
-            })
-
-    def rxGate(tStart,gateTime):
-        rxGateTime = np.array([tStart,tStart+gateTime])
-        rxGateAmp = np.array([1,0])
-        expt.add_flodict({
-            'rx0_en':(rxGateTime, rxGateAmp), 
-            'rx_gate': (rxGateTime, rxGateAmp), 
-            })
-
-    def gradTrap(tStart, gTime, gAmp, gAxis):
-        tUp = np.linspace(tStart, tStart+gradRiseTime, num=gSteps, endpoint=False)
-        tDown = tUp+gradRiseTime+gTime
-        t = np.concatenate((tUp, tDown), axis=0)
-        dAmp = gAmp/gSteps
-        aUp = np.linspace(dAmp, gAmp, num=gSteps)
-        aDown = np.linspace(gAmp-dAmp, 0, num=gSteps)
-        a = np.concatenate((aUp, aDown), axis=0)
-        if gAxis==0:
-            expt.add_flodict({'grad_vx': (t, a+shimming[0])})
-        elif gAxis==1:
-            expt.add_flodict({'grad_vy': (t, a+shimming[1])})
-        elif gAxis==2:
-            expt.add_flodict({'grad_vz': (t, a+shimming[2])})
-    
-    def gradPulse(tStart, gTime, gAmp,  gAxes):
-        t = np.array([tStart, tStart+gradRiseTime+gTime])
-        for gIndex in range(np.size(gAxes)):
-            a = np.array([gAmp[gIndex], 0])
-            if gAxes[gIndex]==0:
-                expt.add_flodict({'grad_vx': (t, a+shimming[0])})
-            elif gAxes[gIndex]==1:
-                expt.add_flodict({'grad_vy': (t, a+shimming[1])})
-            elif gAxes[gIndex]==2:
-                expt.add_flodict({'grad_vz': (t, a+shimming[2])})
-    
-    def endSequence(tEnd):
-        expt.add_flodict({
-                'grad_vx': (np.array([tEnd]),np.array([0]) ), 
-                'grad_vy': (np.array([tEnd]),np.array([0]) ), 
-                'grad_vz': (np.array([tEnd]),np.array([0]) ),
-             })
-             
-    def iniSequence(tEnd):
-        expt.add_flodict({
-                'grad_vx': (np.array([tEnd]),np.array([shimming[0]]) ), 
-                'grad_vy': (np.array([tEnd]),np.array([shimming[1]]) ), 
-                'grad_vz': (np.array([tEnd]),np.array([shimming[2]]) ),
-             })
+#    def rfPulse(tStart,rfTime,rfAmplitude,rfPhase):
+#        txTime = np.array([tStart+blkTime,tStart+blkTime+rfTime])
+#        txAmp = np.array([rfAmplitude*np.exp(1j*rfPhase),0.])
+#        txGateTime = np.array([tStart,tStart+blkTime+rfTime])
+#        txGateAmp = np.array([1,0])
+#        expt.add_flodict({
+#            'tx0': (txTime, txAmp),
+#            'tx_gate': (txGateTime, txGateAmp)
+#            })
+#
+#    def rxGate(tStart,gateTime):
+#        rxGateTime = np.array([tStart,tStart+gateTime])
+#        rxGateAmp = np.array([1,0])
+#        expt.add_flodict({
+#            'rx0_en':(rxGateTime, rxGateAmp), 
+#            'rx_gate': (rxGateTime, rxGateAmp), 
+#            })
+#
+#    def gradTrap(tStart, gTime, gAmp, gAxis):
+#        tUp = np.linspace(tStart, tStart+gradRiseTime, num=gSteps, endpoint=False)
+#        tDown = tUp+gradRiseTime+gTime
+#        t = np.concatenate((tUp, tDown), axis=0)
+#        dAmp = gAmp/gSteps
+#        aUp = np.linspace(dAmp, gAmp, num=gSteps)
+#        aDown = np.linspace(gAmp-dAmp, 0, num=gSteps)
+#        a = np.concatenate((aUp, aDown), axis=0)
+#        if gAxis==0:
+#            expt.add_flodict({'grad_vx': (t, a+shimming[0])})
+#        elif gAxis==1:
+#            expt.add_flodict({'grad_vy': (t, a+shimming[1])})
+#        elif gAxis==2:
+#            expt.add_flodict({'grad_vz': (t, a+shimming[2])})
+#    
+#    def gradPulse(tStart, gTime, gAmp,  gAxes):
+#        t = np.array([tStart, tStart+gradRiseTime+gTime])
+#        for gIndex in range(np.size(gAxes)):
+#            a = np.array([gAmp[gIndex], 0])
+#            if gAxes[gIndex]==0:
+#                expt.add_flodict({'grad_vx': (t, a+shimming[0])})
+#            elif gAxes[gIndex]==1:
+#                expt.add_flodict({'grad_vy': (t, a+shimming[1])})
+#            elif gAxes[gIndex]==2:
+#                expt.add_flodict({'grad_vz': (t, a+shimming[2])})
+#    
+#    def endSequence(tEnd):
+#        expt.add_flodict({
+#                'grad_vx': (np.array([tEnd]),np.array([0]) ), 
+#                'grad_vy': (np.array([tEnd]),np.array([0]) ), 
+#                'grad_vz': (np.array([tEnd]),np.array([0]) ),
+#             })
+#             
+#    def iniSequence(tEnd):
+#        expt.add_flodict({
+#                'grad_vx': (np.array([tEnd]),np.array([shimming[0]]) ), 
+#                'grad_vy': (np.array([tEnd]),np.array([shimming[1]]) ), 
+#                'grad_vz': (np.array([tEnd]),np.array([shimming[2]]) ),
+#             })
 
     def createSequence():
         phIndex = 0
@@ -267,7 +267,7 @@ def rare_standalone(
         else:
             dc = False
         # Set shimming
-        iniSequence(20)
+        iniSequence(expt, 20, shimming)
         for repeIndex in range(nRepetitions):
             # Initialize time
             tEx = 20e3+repetitionTime*repeIndex+inversionTime+preExTime
@@ -275,32 +275,32 @@ def rare_standalone(
             # Pre-excitation pulse
             if repeIndex>=dummyPulses and preExTime!=0:
                 t0 = tEx-preExTime-inversionTime-rfExTime/2-blkTime
-                rfPulse(t0,rfExTime,rfExAmp/90*90,0)
-                gradTrap(t0+blkTime+rfReTime, preExTime*0.5, -0.2, axes[0])
-                gradTrap(t0+blkTime+rfReTime, preExTime*0.5, -0.2, axes[1])
-                gradTrap(t0+blkTime+rfReTime, preExTime*0.5, -0.2, axes[2])
+                rfRecPulse(expt, t0,rfExTime,rfExAmp/90*90,0)
+                gradTrap(expt, t0+blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.2, gSteps, axes[0], shimming)
+                gradTrap(expt, t0+blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.2, gSteps, axes[1], shimming)
+                gradTrap(expt, t0+blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.2, gSteps, axes[2], shimming)
                 
             # Inversion pulse
             if repeIndex>=dummyPulses and inversionTime!=0:
                 t0 = tEx-inversionTime-rfReTime/2-blkTime
-                rfPulse(t0,rfReTime,rfReAmp/180*180,0)
-                gradTrap(t0+blkTime+rfReTime, inversionTime*0.5, 0.2, axes[0])
-                gradTrap(t0+blkTime+rfReTime, inversionTime*0.5, 0.2, axes[1])
-                gradTrap(t0+blkTime+rfReTime, inversionTime*0.5, 0.2, axes[2])
+                rfPulse(expt, t0,rfReTime,rfReAmp/180*180,0)
+                gradTrap(expt, t0+blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.2, gSteps, axes[0], shimming)
+                gradTrap(expt, t0+blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.2, gSteps, axes[1], shimming)
+                gradTrap(expt, t0+blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.2, gSteps, axes[2], shimming)
             
             # DC gradient if desired
             if (repeIndex==0 or repeIndex>=dummyPulses) and dc==True:
                 t0 = tEx-10e3
-                gradTrap(t0, 10e3+echoSpacing*(etl+1), rdGradAmplitude, axes[0])
+                gradTrap(expt, t0, gradRiseTime, 10e3+echoSpacing*(etl+1), rdGradAmplitude, gSteps, axes[0], shimming)
             
             # Excitation pulse
             t0 = tEx-blkTime-rfExTime/2
-            rfPulse(t0,rfExTime,rfExAmp,drfPhase*np.pi/180)
+            rfRecPulse(expt, t0,rfExTime,rfExAmp,drfPhase*np.pi/180)
         
             # Dephasing readout
             t0 = tEx+rfExTime/2-gradDelay
             if (repeIndex==0 or repeIndex>=dummyPulses) and dc==False:
-                gradTrap(t0, rdDephTime, rdDephAmplitude*rdPreemphasis, axes[0])
+                gradTrap(expt, t0, gradRiseTime, rdDephTime, rdDephAmplitude*rdPreemphasis, gSteps, axes[0], shimming)
             
             # Echo train
             for echoIndex in range(etl):
@@ -308,32 +308,32 @@ def rare_standalone(
                 
                 # Refocusing pulse
                 t0 = tEcho-echoSpacing/2-rfReTime/2-blkTime
-                rfPulse(t0, rfReTime, rfReAmp, np.pi/2)
+                rfRecPulse(expt, t0, rfReTime, rfReAmp, np.pi/2)
     
                 # Dephasing phase and slice gradients
                 t0 = tEcho-echoSpacing/2+rfReTime/2-gradDelay
                 if repeIndex>=dummyPulses:         # This is to account for dummy pulses
-                    gradTrap(t0, phGradTime, phGradients[phIndex], axes[1])
-                    gradTrap(t0, phGradTime, slGradients[slIndex], axes[2])
+                    gradTrap(expt, t0, gradRiseTime, phGradTime, phGradients[phIndex], gSteps, axes[1], shimming)
+                    gradTrap(expt, t0, gradRiseTime, phGradTime, slGradients[slIndex], gSteps, axes[2], shimming)
                 
                 # Readout gradient
                 t0 = tEcho-rdGradTime/2-gradRiseTime-gradDelay
                 if (repeIndex==0 or repeIndex>=dummyPulses) and dc==False:         # This is to account for dummy pulses
-                    gradTrap(t0, rdGradTime, rdGradAmplitude, axes[0])
+                    gradTrap(expt, t0, gradRiseTime, rdGradTime, rdGradAmplitude, gSteps, axes[0], shimming)
     
                 # Rx gate
                 if (repeIndex==0 or repeIndex>=dummyPulses):
                     t0 = tEcho-acqTime/2-addRdPoints/BW
-                    rxGate(t0, acqTime+2*addRdPoints/BW)
+                    rxGate(expt, t0, acqTime+2*addRdPoints/BW)
     
                 # Rephasing phase and slice gradients
                 t0 = tEcho+acqTime/2+addRdPoints/BW-gradDelay
                 if (echoIndex<etl-1 and repeIndex>=dummyPulses):
-                    gradTrap(t0, phGradTime, -phGradients[phIndex], axes[1])
-                    gradTrap(t0, phGradTime, -slGradients[slIndex], axes[2])
+                    gradTrap(expt, t0, gradRiseTime, phGradTime, -phGradients[phIndex], gSteps, axes[1], shimming)
+                    gradTrap(expt, t0, gradRiseTime, phGradTime, -slGradients[slIndex], gSteps, axes[2], shimming)
                 elif(echoIndex==etl-1 and repeIndex>=dummyPulses):
-                    gradTrap(t0, phGradTime, +phGradients[phIndex], axes[1])
-                    gradTrap(t0, phGradTime, +slGradients[slIndex], axes[2])
+                    gradTrap(expt, t0, gradRiseTime, phGradTime, +phGradients[phIndex], gSteps, axes[1], shimming)
+                    gradTrap(expt, t0, gradRiseTime, phGradTime, +slGradients[slIndex], gSteps, axes[2], shimming)
     
                 # Update the phase and slice gradient
                 if repeIndex>=dummyPulses:
@@ -344,28 +344,28 @@ def rare_standalone(
                         phIndex += 1
                 
             if repeIndex==nRepetitions-1:
-                endSequence(scanTime)
+                endSequence(expt, scanTime)
     
     
     def createFreqCalSequence():
         t0 = 20
         
         # Shimming
-        iniSequence(t0)
+        iniSequence(expt, t0, shimming)
             
         # Excitation pulse
-        rfPulse(t0,rfExTime,rfExAmp,drfPhase*np.pi/180)
+        rfRecPulse(expt, t0,rfExTime,rfExAmp,drfPhase*np.pi/180)
         
         # Refocusing pulse
         t0 += rfExTime/2+echoSpacing/2-rfReTime/2
-        rfPulse(t0, rfReTime, rfReAmp, np.pi/2)
+        rfRecPulse(expt, t0, rfReTime, rfReAmp, np.pi/2)
         
         # Rx
         t0 += blkTime+rfReTime/2+echoSpacing/2-acqTime/2-addRdPoints/BW
-        rxGate(t0, acqTime+2*addRdPoints/BW)
+        rxGate(expt, t0, acqTime+2*addRdPoints/BW)
         
         # Finalize sequence
-        endSequence(repetitionTime)
+        endSequence(expt, repetitionTime)
         
     
     # Changing time parameters to us

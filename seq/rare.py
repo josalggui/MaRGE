@@ -86,7 +86,7 @@ def rare(self, plotSeq):
     rawData['echoSpacing'] = echoSpacing        # time between echoes
     rawData['inversionTime'] = inversionTime       # Inversion recovery time
     rawData['repetitionTime'] = repetitionTime     # TR
-    rawData['fov'] = np.array(fov)*1e-3           # FOV along readout, phase and slice
+    rawData['fov'] = fov           # FOV along readout, phase and slice
     rawData['dfov'] = dfov            # Displacement of fov center
     rawData['nPoints'] = nPoints                 # Number of points along readout, phase and slice
     rawData['etl'] = etl                    # Echo train length

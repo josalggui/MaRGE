@@ -26,17 +26,17 @@ st = pdb.set_trace
 
 def cpmg_standalone(
     init_gpa=False,               # Starts the gpa
-    larmorFreq = 3.074e6,      # Larmor frequency
-    rfExAmp = 0.3,             # rf excitation pulse amplitude
+    larmorFreq = 3.07439e6,      # Larmor frequency
+    rfExAmp = 0.4,             # rf excitation pulse amplitude
     rfReAmp = None,             # rf refocusing pulse amplitude
-    rfExTime =30e-6,          # rf excitation pulse time
+    rfExTime =24e-6,          # rf excitation pulse time
     rfReTime = None,          # rf refocusing pulse time
-    echoSpacing = 10e-3,        # time between echoes
+    echoSpacing = 20e-3,        # time between echoes
     repetitionTime = 2000e-3,     # TR
     nPoints = 500,                 # Number of points along readout, phase and slice
     etl = 100,                   # Echo train length
     acqTime = 2e-3,             # Acquisition time
-    shimming = [-80, -100, 10]
+    shimming = [-70, -90, 10]
     ):
 
     # Miscellaneous
