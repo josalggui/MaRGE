@@ -29,7 +29,7 @@ def getIndex(etl=1, nPH=1, sweepMode=1):
     n2ETL=int(nPH/2/etl)
     ind = []
     if nPH==1:
-         ind = 0
+         ind = np.array([0])
     else: 
         if sweepMode==0:   # Sequential for T2 contrast
             for ii in range(int(nPH/etl)):
@@ -121,7 +121,7 @@ def fixEchoPosition(echoes, data0):
 ##############################################################
 
 
-def rfSincPulse(expt, tStart, rfTime, nLobes, rfAmplitude, rfPhase):
+def rfSincPulse(expt, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, rewrite=True):
     """"
     @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
     @email: josalggui@i3m.upv.es
@@ -137,7 +137,7 @@ def rfSincPulse(expt, tStart, rfTime, nLobes, rfAmplitude, rfPhase):
     expt.add_flodict({
         'tx0': (txTime, txAmp),
         'tx_gate': (txGateTime, txGateAmp)
-        })
+        }, rewrite)
 
 
 ##############################################################
@@ -145,7 +145,7 @@ def rfSincPulse(expt, tStart, rfTime, nLobes, rfAmplitude, rfPhase):
 ##############################################################
 
 
-def rfRecPulse(expt, tStart,rfTime,rfAmplitude,rfPhase):
+def rfRecPulse(expt, tStart, rfTime, rfAmplitude, rfPhase=0, rewrite=True):
     """"
     @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
     @email: josalggui@i3m.upv.es
@@ -158,7 +158,7 @@ def rfRecPulse(expt, tStart,rfTime,rfAmplitude,rfPhase):
     expt.add_flodict({
         'tx0': (txTime, txAmp),
         'tx_gate': (txGateTime, txGateAmp)
-        })
+        }, rewrite)
 
 
 ##############################################################
@@ -166,7 +166,7 @@ def rfRecPulse(expt, tStart,rfTime,rfAmplitude,rfPhase):
 ##############################################################
 
 
-def rxGate(expt, tStart, gateTime):
+def rxGate(expt, tStart, gateTime, rewrite=True):
     """"
     @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
     @email: josalggui@i3m.upv.es
@@ -184,7 +184,7 @@ def rxGate(expt, tStart, gateTime):
 ##############################################################
 
 
-def gradTrap(expt, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming):
+def gradTrap(expt, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming, rewrite=True):
     """"
     @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
     @email: josalggui@i3m.upv.es
@@ -198,11 +198,11 @@ def gradTrap(expt, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimmin
     aDown = np.linspace(gAmp-dAmp, 0, num=gSteps)
     a = np.concatenate((aUp, aDown), axis=0)
     if gAxis==0:
-        expt.add_flodict({'grad_vx': (t, a+shimming[0])})
+        expt.add_flodict({'grad_vx': (t, a+shimming[0])}, rewrite)
     elif gAxis==1:
-        expt.add_flodict({'grad_vy': (t, a+shimming[1])})
+        expt.add_flodict({'grad_vy': (t, a+shimming[1])}, rewrite)
     elif gAxis==2:
-        expt.add_flodict({'grad_vz': (t, a+shimming[2])})
+        expt.add_flodict({'grad_vz': (t, a+shimming[2])}, rewrite)
 
 
 ##############################################################
@@ -229,3 +229,17 @@ def iniSequence(expt, t0, shimming):
             'grad_vy': (np.array([t0]),np.array([shimming[1]]) ), 
             'grad_vz': (np.array([t0]),np.array([shimming[2]]) ),
          })
+
+
+##############################################################
+##############################################################
+##############################################################
+
+
+def setGradient(expt, t0, gAmp, gAxis, rewrite=True):
+    if gAxis==0:
+        expt.add_flodict({'grad_vx':(np.array([t0]), np.array([gAmp]))}, rewrite)
+    elif gAxis==1:
+        expt.add_flodict({'grad_vy':(np.array([t0]), np.array([gAmp]))}, rewrite)
+    elif gAxis==2:
+        expt.add_flodict({'grad_vz':(np.array([t0]), np.array([gAmp]))}, rewrite)
