@@ -1,13 +1,19 @@
-#Gradients amplifier conversion factor
-Gx_factor =   5.0 # mT/m/V
-Gy_factor =   8.0 # mT/m/V
-Gz_factor =   7.0 # mT/m/V
+# Config file for Physio MRI scanner at MRILab, i3M, CSIC, Spain.
 
-#Gradinets pulse parameters
-slewRate = 20 #20us/A*(5V/A)^-1 NO TENGO CLARAS LAS UNIDADES, COMPROBAR!
-stepsRate = 4 #steps/A #Tengo que convertirlo a unidades de la RP
-gamma = 42.56e6             #Gyromagnetic ratio in Hz/T
-chageOcra1RP = 5            #Ocra1 to RP conversion factor A/V
+# Note: I write Ocra1 Units as o.u.
+# Ocra1 gain = 10 V/o.u.
+# AE Techrom transductance 5 A/V
+# From Ocra1 to current: 50 A/o.u.
+# X axis: 25 mT/m/o.u., 0.5 mT/m/A, 2.5 mT/m/V
+# Y axis: 40 mT/m/o.u., 0.8 mT/m/A, 4.0 mT/m/V
+# Z axis: 35 mT/m/o.u., 0.7 mT/m/A, 3.5 mT/m/V
+
+gFactor = [0.025, 0.040, 0.035] # (X, Y, Z) in T/m/o.u.
+slewRate = 1e-3 # o.u./us, this is 50 mA/us or 50 A/ms
+stepsRate = 0.2 # steps/us, this is the minimun to avoid current jumps with defoult tuning circuit
+gammaB = 42.56e6 # Hz/T, Gyromagnetic ratio
 blkTime = 15 # us, blanking time of Barthel's RFPA
 gradDelay = 9 # Gradient amplifier delay (us)
-oversamplingFactor = 6
+oversamplingFactor = 6 # Rx oversampling
+maxRdPoints = 240 # Maximum number of points to be acquired by the red pitaya
+

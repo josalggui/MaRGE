@@ -6,10 +6,13 @@ Created on Sat Apr  2 11:10:48 2022
 @email: josalggui@i3m.upv.es
 """
 import numpy as np
-from configs.hw_config import Gx_factor
-from configs.hw_config import Gy_factor
-from configs.hw_config import Gz_factor
-from configs.hw_config import blkTime #us
+from datetime import date,  datetime
+import os
+from scipy.io import savemat
+import scipy.signal as sig
+import experiment as ex
+import configs.hw_config as hw
+
 
 ##############################################################
 ##############################################################
@@ -70,31 +73,6 @@ def getIndex(etl=1, nPH=1, sweepMode=1):
 ##############################################################
 
 
-def reorganizeGfactor(axes):
-    """"
-    @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-    @email: josalggui@i3m.upv.es
-    Create an array of 3 elements with the gradient conversion factor corresponding to the given axes order
-    """
-    
-    # Set the normalization factor for readout, phase and slice gradient
-    gFactor = np.array([0., 0., 0.])
-    for ii in range(3):
-        if axes[ii]==0:
-            gFactor[ii] = Gx_factor
-        elif axes[ii]==1:
-            gFactor[ii] = Gy_factor
-        elif axes[ii]==2:
-            gFactor[ii] = Gz_factor
-    
-    return(gFactor)
-
-
-##############################################################
-##############################################################
-##############################################################
-
-
 def fixEchoPosition(echoes, data0):
     """"
     @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -127,12 +105,12 @@ def rfSincPulse(expt, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, rewrite=
     @email: josalggui@i3m.upv.es
     Rf pulse with sinc pulse shape. I use a Hanning window to reduce the banding of the frequency profile.
     """
-    txTime = np.linspace(tStart, tStart+rfTime, num=100, endpoint=True)+blkTime
+    txTime = np.linspace(tStart, tStart+rfTime, num=100, endpoint=True)+hw.blkTime
     nZeros = (nLobes+1)
     tx = np.linspace(-nZeros/2, nZeros/2, num = 100, endpoint=True)
     hanning = 0.5*(1+np.cos(2*np.pi*tx/nZeros))
     txAmp = rfAmplitude*np.exp(1j*rfPhase)*hanning*np.abs(np.sinc(tx))
-    txGateTime = np.array([tStart,tStart+blkTime+rfTime])
+    txGateTime = np.array([tStart,tStart+hw.blkTime+rfTime])
     txGateAmp = np.array([1,0])
     expt.add_flodict({
         'tx0': (txTime, txAmp),
@@ -151,9 +129,9 @@ def rfRecPulse(expt, tStart, rfTime, rfAmplitude, rfPhase=0, rewrite=True):
     @email: josalggui@i3m.upv.es
     Rf pulse with square pulse shape
     """
-    txTime = np.array([tStart+blkTime,tStart+blkTime+rfTime])
+    txTime = np.array([tStart+hw.blkTime,tStart+hw.blkTime+rfTime])
     txAmp = np.array([rfAmplitude*np.exp(1j*rfPhase),0.])
-    txGateTime = np.array([tStart,tStart+blkTime+rfTime])
+    txGateTime = np.array([tStart,tStart+hw.blkTime+rfTime])
     txGateAmp = np.array([1,0])
     expt.add_flodict({
         'tx0': (txTime, txAmp),
@@ -184,11 +162,32 @@ def rxGate(expt, tStart, gateTime, rewrite=True):
 ##############################################################
 
 
+# def gradTrap(expt, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming, rewrite=True):
+#     """"
+#     @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+#     @email: josalggui@i3m.upv.es
+#     gradient pulse with trapezoidal shape. Use 1 step to generate a square pulse.
+#     """
+#     tUp = np.linspace(tStart, tStart+gRiseTime, num=gSteps, endpoint=False)
+#     tDown = tUp+gRiseTime+gFlattopTime
+#     t = np.concatenate((tUp, tDown), axis=0)
+#     dAmp = gAmp/gSteps
+#     aUp = np.linspace(dAmp, gAmp, num=gSteps)
+#     aDown = np.linspace(gAmp-dAmp, 0, num=gSteps)
+#     a = np.concatenate((aUp, aDown), axis=0)
+#     if gAxis==0:
+#         expt.add_flodict({'grad_vx': (t, a+shimming[0])}, rewrite)
+#     elif gAxis==1:
+#         expt.add_flodict({'grad_vy': (t, a+shimming[1])}, rewrite)
+#     elif gAxis==2:
+#         expt.add_flodict({'grad_vz': (t, a+shimming[2])}, rewrite)
 def gradTrap(expt, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming, rewrite=True):
     """"
     @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
     @email: josalggui@i3m.upv.es
     gradient pulse with trapezoidal shape. Use 1 step to generate a square pulse.
+    Time inputs in us
+    Amplitude inputs in T/m
     """
     tUp = np.linspace(tStart, tStart+gRiseTime, num=gSteps, endpoint=False)
     tDown = tUp+gRiseTime+gFlattopTime
@@ -196,7 +195,7 @@ def gradTrap(expt, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimmin
     dAmp = gAmp/gSteps
     aUp = np.linspace(dAmp, gAmp, num=gSteps)
     aDown = np.linspace(gAmp-dAmp, 0, num=gSteps)
-    a = np.concatenate((aUp, aDown), axis=0)
+    a = np.concatenate((aUp, aDown), axis=0)/hw.gFactor[gAxis] 
     if gAxis==0:
         expt.add_flodict({'grad_vx': (t, a+shimming[0])}, rewrite)
     elif gAxis==1:
@@ -210,11 +209,41 @@ def gradTrap(expt, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimmin
 ##############################################################
 
 
+# def gradMomentTrap(expt, tStart, gFlattopTime, gMoment, gAxis, shimming, gSteps, rewrite=True):
+#     """"
+#     @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+#     @email: josalggui@i3m.upv.es
+#     gradient pulse with trapezoidal shape. Use 1 step to generate a square pulse.
+#     """
+#     tUp = np.linspace(tStart, tStart+gRiseTime, num=gSteps, endpoint=False)
+#     tDown = tUp+gRiseTime+gFlattopTime
+#     t = np.concatenate((tUp, tDown), axis=0)
+#     dAmp = gAmp/gSteps
+#     aUp = np.linspace(dAmp, gAmp, num=gSteps)
+#     aDown = np.linspace(gAmp-dAmp, 0, num=gSteps)
+#     a = np.concatenate((aUp, aDown), axis=0)
+#     if gAxis==0:
+#         expt.add_flodict({'grad_vx': (t, a+shimming[0])}, rewrite)
+#     elif gAxis==1:
+#         expt.add_flodict({'grad_vy': (t, a+shimming[1])}, rewrite)
+#     elif gAxis==2:
+#         expt.add_flodict({'grad_vz': (t, a+shimming[2])}, rewrite)
+        
+
+##############################################################
+##############################################################
+##############################################################
+
+
 def endSequence(expt, tEnd):
     expt.add_flodict({
-            'grad_vx': (np.array([tEnd]),np.array([0]) ), 
-            'grad_vy': (np.array([tEnd]),np.array([0]) ), 
-            'grad_vz': (np.array([tEnd]),np.array([0]) ),
+            'grad_vx': (np.array([tEnd]),np.array([0])), 
+            'grad_vy': (np.array([tEnd]),np.array([0])), 
+            'grad_vz': (np.array([tEnd]),np.array([0])),
+            'rx0_en':(np.array([tEnd]),np.array([0])), 
+            'rx_gate': (np.array([tEnd]),np.array([0])),
+            'tx0': (np.array([tEnd]),np.array([0])),
+            'tx_gate': (np.array([tEnd]),np.array([0]))
          })
 
 
@@ -223,12 +252,16 @@ def endSequence(expt, tEnd):
 ##############################################################
 
 
-def iniSequence(expt, t0, shimming):
+def iniSequence(expt, t0, shimming, rewrite=True):
     expt.add_flodict({
             'grad_vx': (np.array([t0]),np.array([shimming[0]]) ), 
             'grad_vy': (np.array([t0]),np.array([shimming[1]]) ), 
             'grad_vz': (np.array([t0]),np.array([shimming[2]]) ),
-         })
+            'rx0_en':(np.array([t0]),np.array([0])), 
+            'rx_gate': (np.array([t0]),np.array([0])),
+            'tx0': (np.array([t0]),np.array([0])),
+            'tx_gate': (np.array([t0]),np.array([0]))
+         }, rewrite)
 
 
 ##############################################################
@@ -237,9 +270,131 @@ def iniSequence(expt, t0, shimming):
 
 
 def setGradient(expt, t0, gAmp, gAxis, rewrite=True):
+    """"
+    @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+    @email: josalggui@i3m.upv.es
+    Set the one gradient to a given value
+    Time inputs in us
+    Amplitude inputs in Ocra1 units
+    """
     if gAxis==0:
         expt.add_flodict({'grad_vx':(np.array([t0]), np.array([gAmp]))}, rewrite)
     elif gAxis==1:
         expt.add_flodict({'grad_vy':(np.array([t0]), np.array([gAmp]))}, rewrite)
     elif gAxis==2:
         expt.add_flodict({'grad_vz':(np.array([t0]), np.array([gAmp]))}, rewrite)
+
+
+##############################################################
+##############################################################
+##############################################################
+
+
+def saveRawData(rawData):
+    """"
+    @author: T. Guallart-Naval, MRILab, i3M, CSIC, Valencia, Spain
+    @email: teresa.guallart@tesoroimaging.com
+    Save the rawData
+    """
+    # Save data
+    dt = datetime.now()
+    dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S")
+    dt2 = date.today()
+    dt2_string = dt2.strftime("%Y.%m.%d")
+    if not os.path.exists('experiments/acquisitions/%s' % (dt2_string)):
+        os.makedirs('experiments/acquisitions/%s' % (dt2_string))
+    if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
+        os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
+    rawData['fileName'] = "%s.%s.mat" % (rawData['seqName'],dt_string)
+    savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, rawData['seqName'],dt_string),  rawData)
+    return(rawData)
+    
+
+##############################################################
+##############################################################
+##############################################################
+
+
+def freqCalibration(rawData):
+    # Create inputs from rawData
+    larmorFreq = rawData['larmorFreq']*1e-6
+    samplingPeriod = rawData['samplingPeriod']
+    nPoints = rawData['nPoints']
+    addRdPoints = rawData['addRdPoints']
+    
+    expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=False, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+    samplingPeriod = expt.get_rx_ts()[0]
+    BW = 1/samplingPeriod/hw.oversamplingFactor
+    acqTime = nPoints[0]/BW        # us
+    rawData['bw'] = BW
+    rawData['acqTime'] = acqTime*1e-6
+    createFreqCalSequence(expt, rawData)
+    rxd, msgs = expt.run()
+    dataFreqCal = sig.decimate(rxd['rx0']*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+    dataFreqCal = dataFreqCal[addRdPoints:nPoints[0]+addRdPoints]
+    # Plot fid
+#    plt.figure(1)
+#    tVector = np.linspace(-acqTime/2, acqTime/2, num=nPoints[0],endpoint=True)*1e-3
+#    plt.subplot(1, 2, 1)
+#    plt.plot(tVector, np.abs(dataFreqCal))
+#    plt.title("Signal amplitude")
+#    plt.xlabel("Time (ms)")
+#    plt.ylabel("Amplitude (mV)")
+#    plt.subplot(1, 2, 2)
+    angle = np.unwrap(np.angle(dataFreqCal))
+#    plt.title("Signal phase")
+#    plt.xlabel("Time (ms)")
+#    plt.ylabel("Phase (rad)")
+#    plt.plot(tVector, angle)
+    # Get larmor frequency
+    dPhi = angle[-1]-angle[0]
+    df = dPhi/(2*np.pi*acqTime)
+    larmorFreq += df
+    rawData['larmorFreq'] = larmorFreq*1e6
+    print("f0 = %s MHz" % (round(larmorFreq, 5)))
+    # Plot sequence:
+#    expt.plot_sequence()
+#    plt.show()
+    # Delete experiment:
+    expt.__del__()
+    return(rawData)
+
+
+##############################################################
+##############################################################
+##############################################################
+
+
+def createFreqCalSequence(expt, rawData):
+    # Def variables
+    shimming = rawData['shimming']
+    rfExTime = rawData['rfExTime']*1e6
+    rfExAmp = rawData['rfExAmp']
+    rfReTime = rawData['rfReTime']*1e6
+    rfReAmp = rawData['rfReAmp']
+    echoSpacing = rawData['echoSpacing']*1e6
+    acqTime = rawData['acqTime']*1e6
+    addRdPoints = rawData['addRdPoints']
+    BW = rawData['bw']
+    repetitionTime = rawData['repetitionTime']*1e6
+    
+    
+    t0 = 20
+    
+    # Shimming
+    iniSequence(expt, t0, shimming)
+        
+    # Excitation pulse
+    t0 +=20e3
+    rfRecPulse(expt, t0,rfExTime,rfExAmp)
+    
+    # Refocusing pulse
+    t0 += rfExTime/2+echoSpacing/2-rfReTime/2
+    rfRecPulse(expt, t0, rfReTime, rfReAmp, np.pi/2)
+    
+    # Rx
+    t0 += hw.blkTime+rfReTime/2+echoSpacing/2-acqTime/2-addRdPoints/BW
+    rxGate(expt, t0, acqTime+2*addRdPoints/BW)
+    
+    # Finalize sequence
+    endSequence(expt, repetitionTime)
