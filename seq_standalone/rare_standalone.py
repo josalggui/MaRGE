@@ -15,13 +15,10 @@ import numpy as np
 import experiment as ex
 import matplotlib.pyplot as plt
 import scipy.signal as sig
-import os
-from scipy.io import savemat
-from datetime import date,  datetime 
 import pdb
-from mrilabMethods.mrilabMethods import *
+import configs.hw_config as hw # Import the scanner hardware config
+import mrilabMethods.mrilabMethods as mri # This import all methods inside the mrilabMethods module
 st = pdb.set_trace
-
 
 
 #*********************************************************************************
@@ -32,29 +29,29 @@ st = pdb.set_trace
 def rare_standalone(
     init_gpa=False, # Starts the gpa
     nScans = 1, # NEX
-    larmorFreq = 3.0743, # MHz, Larmor frequency
+    larmorFreq = 3.07491, # MHz, Larmor frequency
     rfExAmp = 0.4, # a.u., rf excitation pulse amplitude
     rfReAmp = 0.4, # a.u., rf refocusing pulse amplitude
-    rfExTime = 25, # us, rf excitation pulse time
-    rfReTime = 50, # us, rf refocusing pulse time
+    rfExTime = 22, # us, rf excitation pulse time
+    rfReTime = 44, # us, rf refocusing pulse time
     echoSpacing = 10., # ms, time between echoes
     preExTime = 0., # ms, Time from preexcitation pulse to inversion pulse
-    inversionTime = 0., # ms, Inversion recovery time
-    repetitionTime = 1000., # ms, TR
-    fov = np.array([120., 120., 120.]), # mm, FOV along readout, phase and slice
+    inversionTime = 3000., # ms, Inversion recovery time
+    repetitionTime = 10000., # ms, TR
+    fov = np.array([150., 200., 120.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
-    nPoints = np.array([60, 60, 1]), # Number of points along readout, phase and slice
+    nPoints = np.array([60, 60, 4]), # Number of points along readout, phase and slice
     etl = 60, # Echo train length
     acqTime = 4, # ms, acquisition time
     axes = np.array([2, 0, 1]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
+    axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
     sweepMode = 1, # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
     rdGradTime = 6,  # ms, readout gradient time
     rdDephTime = 1,  # ms, readout dephasing time
     phGradTime = 1, # ms, phase and slice dephasing time
     rdPreemphasis = 1.005, # readout dephasing gradient is multiplied by this factor
     drfPhase = 0, # degrees, phase of the excitation pulse
-    dummyPulses = 1, # number of dummy pulses for T1 stabilization
+    dummyPulses = 0, # number of dummy pulses for T1 stabilization
     shimming = np.array([-70., -90., 10.]), # a.u.*1e4, shimming along the X,Y and Z axes
     parAcqLines = 0 # number of additional lines, Full sweep if 0
     ):
@@ -81,6 +78,7 @@ def rare_standalone(
     phGradTime = phGradTime*1e-3
     
     # Inputs for rawData
+    rawData['seqName'] = 'RARE_Standalone'
     rawData['nScans'] = nScans
     rawData['larmorFreq'] = larmorFreq      # Larmor frequency
     rawData['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
@@ -104,16 +102,13 @@ def rare_standalone(
     rawData['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
     rawData['partialAcquisition'] = parAcqLines
     rawData['rdDephTime'] = rdDephTime
+    rawData['shimming'] = shimming
     
     # Miscellaneous
-    blkTime = 10             # Deblanking time (us)
     larmorFreq = larmorFreq*1e-6
     gradRiseTime = 400e-6       # Estimated gradient rise time
     gSteps = int(gradRiseTime*1e6/5)*0+1
-    gradDelay = 9            # Gradient amplifier delay
     addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
-    gammaB = 42.56e6            # Gyromagnetic ratio in Hz/T
-    oversamplingFactor = 6
     randFactor = 0e-3                        # Random amplitude to add to the phase gradients
     if rfReAmp==0:
         rfReAmp = rfExAmp
@@ -121,9 +116,7 @@ def rare_standalone(
         rfReTime = 2*rfExTime
     resolution = fov/nPoints
     rawData['resolution'] = resolution
-    rawData['gradDelay'] = gradDelay*1e-6
     rawData['gradRiseTime'] = gradRiseTime
-    rawData['oversamplingFactor'] = oversamplingFactor
     rawData['randFactor'] = randFactor
     rawData['addRdPoints'] = addRdPoints
     
@@ -142,8 +135,9 @@ def rare_standalone(
     
     # BW
     BW = nPoints[0]/acqTime*1e-6
-    BWov = BW*oversamplingFactor
+    BWov = BW*hw.oversamplingFactor
     samplingPeriod = 1/BWov
+    rawData['samplingPeriod'] = samplingPeriod
     
     # Readout gradient time
     if rdGradTime>0 and rdGradTime<acqTime:
@@ -156,9 +150,9 @@ def rare_standalone(
     rawData['phGradTime'] = phGradTime
     
     # Max gradient amplitude
-    rdGradAmplitude = nPoints[0]/(gammaB*fov[0]*acqTime)*axesEnable[0]
-    phGradAmplitude = nPH/(2*gammaB*fov[1]*(phGradTime+gradRiseTime))*axesEnable[1]
-    slGradAmplitude = nSL/(2*gammaB*fov[2]*(phGradTime+gradRiseTime))*axesEnable[2]
+    rdGradAmplitude = nPoints[0]/(hw.gammaB*fov[0]*acqTime)*axesEnable[0]
+    phGradAmplitude = nPH/(2*hw.gammaB*fov[1]*(phGradTime+gradRiseTime))*axesEnable[1]
+    slGradAmplitude = nSL/(2*hw.gammaB*fov[2]*(phGradTime+gradRiseTime))*axesEnable[2]
     rawData['rdGradAmplitude'] = rdGradAmplitude
     rawData['phGradAmplitude'] = phGradAmplitude
     rawData['slGradAmplitude'] = slGradAmplitude
@@ -167,10 +161,6 @@ def rare_standalone(
     rdDephAmplitude = 0.5*rdGradAmplitude*(gradRiseTime+rdGradTime)/(gradRiseTime+rdDephTime)
     rawData['rdDephAmplitude'] = rdDephAmplitude
 
-    # Get factors to OCRA1 units
-    gFactor = reorganizeGfactor(axes)
-    rawData['gFactor'] = gFactor
-    
     # Phase and slice gradient vector
     phGradients = np.linspace(-phGradAmplitude,phGradAmplitude,num=nPH,endpoint=False)
     slGradients = np.linspace(-slGradAmplitude,slGradAmplitude,num=nSL,endpoint=False)
@@ -182,79 +172,14 @@ def rare_standalone(
     for ii in range(nPH):
         if ii<np.ceil(nPH/2-nPH/20) or ii>np.ceil(nPH/2+nPH/20):
             phGradients[ii] = phGradients[ii]+randFactor*np.random.randn()
-    kPH = gammaB*phGradients*(gradRiseTime+phGradTime)
+    kPH = hw.gammaB*phGradients*(gradRiseTime+phGradTime)
     rawData['phGradients'] = phGradients
     rawData['slGradients'] = slGradients
     
-    # Change units to OCRA1 board
-    rdGradAmplitude = rdGradAmplitude/gFactor[0]*1000/5
-    rdDephAmplitude = rdDephAmplitude/gFactor[0]*1000/5
-    phGradients = phGradients/gFactor[1]*1000/5
-    slGradients = slGradients/gFactor[2]*1000/5
-    
     # Set phase vector to given sweep mode
-    ind = getIndex(etl, nPH, sweepMode)
+    ind = mri.getIndex(etl, nPH, sweepMode)
     rawData['sweepOrder'] = ind
     phGradients = phGradients[ind]
-
-    # Create functions
-#    def rfPulse(tStart,rfTime,rfAmplitude,rfPhase):
-#        txTime = np.array([tStart+blkTime,tStart+blkTime+rfTime])
-#        txAmp = np.array([rfAmplitude*np.exp(1j*rfPhase),0.])
-#        txGateTime = np.array([tStart,tStart+blkTime+rfTime])
-#        txGateAmp = np.array([1,0])
-#        expt.add_flodict({
-#            'tx0': (txTime, txAmp),
-#            'tx_gate': (txGateTime, txGateAmp)
-#            })
-#
-#    def rxGate(tStart,gateTime):
-#        rxGateTime = np.array([tStart,tStart+gateTime])
-#        rxGateAmp = np.array([1,0])
-#        expt.add_flodict({
-#            'rx0_en':(rxGateTime, rxGateAmp), 
-#            'rx_gate': (rxGateTime, rxGateAmp), 
-#            })
-#
-#    def gradTrap(tStart, gTime, gAmp, gAxis):
-#        tUp = np.linspace(tStart, tStart+gradRiseTime, num=gSteps, endpoint=False)
-#        tDown = tUp+gradRiseTime+gTime
-#        t = np.concatenate((tUp, tDown), axis=0)
-#        dAmp = gAmp/gSteps
-#        aUp = np.linspace(dAmp, gAmp, num=gSteps)
-#        aDown = np.linspace(gAmp-dAmp, 0, num=gSteps)
-#        a = np.concatenate((aUp, aDown), axis=0)
-#        if gAxis==0:
-#            expt.add_flodict({'grad_vx': (t, a+shimming[0])})
-#        elif gAxis==1:
-#            expt.add_flodict({'grad_vy': (t, a+shimming[1])})
-#        elif gAxis==2:
-#            expt.add_flodict({'grad_vz': (t, a+shimming[2])})
-#    
-#    def gradPulse(tStart, gTime, gAmp,  gAxes):
-#        t = np.array([tStart, tStart+gradRiseTime+gTime])
-#        for gIndex in range(np.size(gAxes)):
-#            a = np.array([gAmp[gIndex], 0])
-#            if gAxes[gIndex]==0:
-#                expt.add_flodict({'grad_vx': (t, a+shimming[0])})
-#            elif gAxes[gIndex]==1:
-#                expt.add_flodict({'grad_vy': (t, a+shimming[1])})
-#            elif gAxes[gIndex]==2:
-#                expt.add_flodict({'grad_vz': (t, a+shimming[2])})
-#    
-#    def endSequence(tEnd):
-#        expt.add_flodict({
-#                'grad_vx': (np.array([tEnd]),np.array([0]) ), 
-#                'grad_vy': (np.array([tEnd]),np.array([0]) ), 
-#                'grad_vz': (np.array([tEnd]),np.array([0]) ),
-#             })
-#             
-#    def iniSequence(tEnd):
-#        expt.add_flodict({
-#                'grad_vx': (np.array([tEnd]),np.array([shimming[0]]) ), 
-#                'grad_vy': (np.array([tEnd]),np.array([shimming[1]]) ), 
-#                'grad_vz': (np.array([tEnd]),np.array([shimming[2]]) ),
-#             })
 
     def createSequence():
         phIndex = 0
@@ -267,73 +192,73 @@ def rare_standalone(
         else:
             dc = False
         # Set shimming
-        iniSequence(expt, 20, shimming)
+        mri.iniSequence(expt, 20, shimming)
         for repeIndex in range(nRepetitions):
             # Initialize time
             tEx = 20e3+repetitionTime*repeIndex+inversionTime+preExTime
             
             # Pre-excitation pulse
             if repeIndex>=dummyPulses and preExTime!=0:
-                t0 = tEx-preExTime-inversionTime-rfExTime/2-blkTime
-                rfRecPulse(expt, t0,rfExTime,rfExAmp/90*90,0)
-                gradTrap(expt, t0+blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.2, gSteps, axes[0], shimming)
-                gradTrap(expt, t0+blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.2, gSteps, axes[1], shimming)
-                gradTrap(expt, t0+blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.2, gSteps, axes[2], shimming)
+                t0 = tEx-preExTime-inversionTime-rfExTime/2-hw.blkTime
+                mri.rfRecPulse(expt, t0,rfExTime,rfExAmp/90*90,0)
+                mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.005, gSteps, axes[0], shimming)
+                mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.005, gSteps, axes[1], shimming)
+                mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.005, gSteps, axes[2], shimming)
                 
             # Inversion pulse
             if repeIndex>=dummyPulses and inversionTime!=0:
-                t0 = tEx-inversionTime-rfReTime/2-blkTime
-                rfPulse(expt, t0,rfReTime,rfReAmp/180*180,0)
-                gradTrap(expt, t0+blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.2, gSteps, axes[0], shimming)
-                gradTrap(expt, t0+blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.2, gSteps, axes[1], shimming)
-                gradTrap(expt, t0+blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.2, gSteps, axes[2], shimming)
+                t0 = tEx-inversionTime-rfReTime/2-hw.blkTime
+                mri.rfRecPulse(expt, t0,rfReTime,rfReAmp/180*180,0)
+                mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[0], shimming)
+                mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[1], shimming)
+                mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[2], shimming)
             
             # DC gradient if desired
             if (repeIndex==0 or repeIndex>=dummyPulses) and dc==True:
                 t0 = tEx-10e3
-                gradTrap(expt, t0, gradRiseTime, 10e3+echoSpacing*(etl+1), rdGradAmplitude, gSteps, axes[0], shimming)
+                mri.gradTrap(expt, t0, gradRiseTime, 10e3+echoSpacing*(etl+1), rdGradAmplitude, gSteps, axes[0], shimming)
             
             # Excitation pulse
-            t0 = tEx-blkTime-rfExTime/2
-            rfRecPulse(expt, t0,rfExTime,rfExAmp,drfPhase*np.pi/180)
+            t0 = tEx-hw.blkTime-rfExTime/2
+            mri.rfRecPulse(expt, t0,rfExTime,rfExAmp,drfPhase*np.pi/180)
         
             # Dephasing readout
-            t0 = tEx+rfExTime/2-gradDelay
+            t0 = tEx+rfExTime/2-hw.gradDelay
             if (repeIndex==0 or repeIndex>=dummyPulses) and dc==False:
-                gradTrap(expt, t0, gradRiseTime, rdDephTime, rdDephAmplitude*rdPreemphasis, gSteps, axes[0], shimming)
+                mri.gradTrap(expt, t0, gradRiseTime, rdDephTime, rdDephAmplitude*rdPreemphasis, gSteps, axes[0], shimming)
             
             # Echo train
             for echoIndex in range(etl):
                 tEcho = tEx+echoSpacing*(echoIndex+1)
                 
                 # Refocusing pulse
-                t0 = tEcho-echoSpacing/2-rfReTime/2-blkTime
-                rfRecPulse(expt, t0, rfReTime, rfReAmp, np.pi/2)
+                t0 = tEcho-echoSpacing/2-rfReTime/2-hw.blkTime
+                mri.rfRecPulse(expt, t0, rfReTime, rfReAmp, np.pi/2)
     
                 # Dephasing phase and slice gradients
-                t0 = tEcho-echoSpacing/2+rfReTime/2-gradDelay
                 if repeIndex>=dummyPulses:         # This is to account for dummy pulses
-                    gradTrap(expt, t0, gradRiseTime, phGradTime, phGradients[phIndex], gSteps, axes[1], shimming)
-                    gradTrap(expt, t0, gradRiseTime, phGradTime, slGradients[slIndex], gSteps, axes[2], shimming)
+                    t0 = tEcho-echoSpacing/2+rfReTime/2-hw.gradDelay
+                    mri.gradTrap(expt, t0, gradRiseTime, phGradTime, phGradients[phIndex], gSteps, axes[1], shimming)
+                    mri.gradTrap(expt, t0, gradRiseTime, phGradTime, slGradients[slIndex], gSteps, axes[2], shimming)
                 
                 # Readout gradient
-                t0 = tEcho-rdGradTime/2-gradRiseTime-gradDelay
                 if (repeIndex==0 or repeIndex>=dummyPulses) and dc==False:         # This is to account for dummy pulses
-                    gradTrap(expt, t0, gradRiseTime, rdGradTime, rdGradAmplitude, gSteps, axes[0], shimming)
+                    t0 = tEcho-rdGradTime/2-gradRiseTime-hw.gradDelay
+                    mri.gradTrap(expt, t0, gradRiseTime, rdGradTime, rdGradAmplitude, gSteps, axes[0], shimming)
     
                 # Rx gate
                 if (repeIndex==0 or repeIndex>=dummyPulses):
                     t0 = tEcho-acqTime/2-addRdPoints/BW
-                    rxGate(expt, t0, acqTime+2*addRdPoints/BW)
+                    mri.rxGate(expt, t0, acqTime+2*addRdPoints/BW)
     
                 # Rephasing phase and slice gradients
-                t0 = tEcho+acqTime/2+addRdPoints/BW-gradDelay
+                t0 = tEcho+acqTime/2+addRdPoints/BW-hw.gradDelay
                 if (echoIndex<etl-1 and repeIndex>=dummyPulses):
-                    gradTrap(expt, t0, gradRiseTime, phGradTime, -phGradients[phIndex], gSteps, axes[1], shimming)
-                    gradTrap(expt, t0, gradRiseTime, phGradTime, -slGradients[slIndex], gSteps, axes[2], shimming)
+                    mri.gradTrap(expt, t0, gradRiseTime, phGradTime, -phGradients[phIndex], gSteps, axes[1], shimming)
+                    mri.gradTrap(expt, t0, gradRiseTime, phGradTime, -slGradients[slIndex], gSteps, axes[2], shimming)
                 elif(echoIndex==etl-1 and repeIndex>=dummyPulses):
-                    gradTrap(expt, t0, gradRiseTime, phGradTime, +phGradients[phIndex], gSteps, axes[1], shimming)
-                    gradTrap(expt, t0, gradRiseTime, phGradTime, +slGradients[slIndex], gSteps, axes[2], shimming)
+                    mri.gradTrap(expt, t0, gradRiseTime, phGradTime, +phGradients[phIndex], gSteps, axes[1], shimming)
+                    mri.gradTrap(expt, t0, gradRiseTime, phGradTime, +slGradients[slIndex], gSteps, axes[2], shimming)
     
                 # Update the phase and slice gradient
                 if repeIndex>=dummyPulses:
@@ -344,29 +269,7 @@ def rare_standalone(
                         phIndex += 1
                 
             if repeIndex==nRepetitions-1:
-                endSequence(expt, scanTime)
-    
-    
-    def createFreqCalSequence():
-        t0 = 20
-        
-        # Shimming
-        iniSequence(expt, t0, shimming)
-            
-        # Excitation pulse
-        rfRecPulse(expt, t0,rfExTime,rfExAmp,drfPhase*np.pi/180)
-        
-        # Refocusing pulse
-        t0 += rfExTime/2+echoSpacing/2-rfReTime/2
-        rfRecPulse(expt, t0, rfReTime, rfReAmp, np.pi/2)
-        
-        # Rx
-        t0 += blkTime+rfReTime/2+echoSpacing/2-acqTime/2-addRdPoints/BW
-        rxGate(expt, t0, acqTime+2*addRdPoints/BW)
-        
-        # Finalize sequence
-        endSequence(expt, repetitionTime)
-        
+                mri.endSequence(expt, scanTime)
     
     # Changing time parameters to us
     rfExTime = rfExTime*1e6
@@ -381,46 +284,12 @@ def rare_standalone(
     preExTime = preExTime*1e6
     
     # Calibrate frequency
-    if freqCal==1:
-        expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = expt.get_rx_ts()[0]
-        BW = 1/samplingPeriod/oversamplingFactor
-        acqTime = nPoints[0]/BW        # us
-        rawData['bw'] = BW*1e6
-        createFreqCalSequence()
-        rxd, msgs = expt.run()
-        dataFreqCal = sig.decimate(rxd['rx0']*13.788, oversamplingFactor, ftype='fir', zero_phase=True)
-        dataFreqCal = dataFreqCal[addRdPoints:nPoints[0]+addRdPoints]
-        # Plot fid
-    #    plt.figure(1)
-        tVector = np.linspace(-acqTime/2, acqTime/2, num=nPoints[0],endpoint=True)*1e-3
-    #    plt.subplot(1, 2, 1)
-    #    plt.plot(tVector, np.abs(dataFreqCal))
-    #    plt.title("Signal amplitude")
-    #    plt.xlabel("Time (ms)")
-    #    plt.ylabel("Amplitude (mV)")
-    #    plt.subplot(1, 2, 2)
-        angle = np.unwrap(np.angle(dataFreqCal))
-    #    plt.title("Signal phase")
-    #    plt.xlabel("Time (ms)")
-    #    plt.ylabel("Phase (rad)")
-    #    plt.plot(tVector, angle)
-        # Get larmor frequency
-        dPhi = angle[-1]-angle[0]
-        df = dPhi/(2*np.pi*acqTime)
-        larmorFreq += df
-        rawData['larmorFreq'] = larmorFreq*1e6
-        print("f0 = %s MHz" % (round(larmorFreq, 5)))
-        # Plot sequence:
-    #    expt.plot_sequence()
-    #    plt.show()
-        # Delete experiment:
-        expt.__del__()
+    if freqCal==1: mri.freqCalibration(rawData)
     
     # Create full sequence
     expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
     samplingPeriod = expt.get_rx_ts()[0]
-    BW = 1/samplingPeriod/oversamplingFactor
+    BW = 1/samplingPeriod/hw.oversamplingFactor
     acqTime = nPoints[0]/BW        # us
     createSequence()
 
@@ -437,25 +306,26 @@ def rare_standalone(
         rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
         # Get data
         if dummyPulses>0:
-            dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*etl*oversamplingFactor]), axis = 0)
-            overData = np.concatenate((overData, rxd['rx0'][nRD*etl*oversamplingFactor::]), axis = 0)
+            dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*etl*hw.oversamplingFactor]), axis = 0)
+            overData = np.concatenate((overData, rxd['rx0'][nRD*etl*hw.oversamplingFactor::]), axis = 0)
         else:
             overData = np.concatenate((overData, rxd['rx0']), axis = 0)
     expt.__del__()
     print('Scans done!')
+    rawData['overData'] = overData
     
     # Fix the echo position using oversampled data
-    dummyData = np.reshape(dummyData,  (nScans, etl, nRD*oversamplingFactor))
-    dummyData = np.average(dummyData, axis=0)
-    rawData['dummyData'] = dummyData
-    rawData['overData'] = overData
-    overData = np.reshape(overData, (nScans, int(nPH/etl*nSL), etl,  nRD*oversamplingFactor))
-    for ii in range(nScans):
-        overData[ii, :, :, :] = fixEchoPosition(dummyData, overData[ii, :, :, :])
-        
+    if dummyPulses>0:
+        dummyData = np.reshape(dummyData,  (nScans, etl, nRD*hw.oversamplingFactor))
+        dummyData = np.average(dummyData, axis=0)
+        rawData['dummyData'] = dummyData
+        overData = np.reshape(overData, (nScans, int(nPH/etl*nSL), etl,  nRD*hw.oversamplingFactor))
+        for ii in range(nScans):
+            overData[ii, :, :, :] = mri.fixEchoPosition(dummyData, overData[ii, :, :, :])
+        overData = np.squeeze(np.reshape(overData, (1, nRD*hw.oversamplingFactor*nPH*nSL*nScans)))
+    
     # Generate dataFull
-    overData = np.squeeze(np.reshape(overData, (1, nRD*oversamplingFactor*nPH*nSL*nScans)))
-    dataFull = sig.decimate(overData, oversamplingFactor, ftype='fir', zero_phase=True)
+    dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
     
     # Get index for krd = 0
     # Average data
@@ -527,18 +397,8 @@ def rare_standalone(
     data = np.reshape(data, (nPoints[2], nPoints[1], nPoints[0]))
     
     # Save data
-    dt = datetime.now()
-    dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S")
-    dt2 = date.today()
-    dt2_string = dt2.strftime("%Y.%m.%d")
-    if not os.path.exists('experiments/acquisitions/%s' % (dt2_string)):
-        os.makedirs('experiments/acquisitions/%s' % (dt2_string))
-            
-    if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
-        os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
-    rawData['fileName'] = "%s.%s.mat" % ("RARE",dt_string)
-    savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, "Old_RARE",dt_string),  rawData) 
-        
+    mri.saveRawData(rawData)
+    
     # Plot data for 1D case
     if (nPH==1 and nSL==1):
         # Plot k-space
@@ -561,6 +421,7 @@ def rare_standalone(
             plt.xlabel('t (ms)')
             plt.ylabel('Signal (mV)')
             print("T2 = %s us" % (T2))
+            plt.title(rawData['fileName'])
         else:
             plt.plot(kRD[:, 0], np.abs(dataPlot))
             plt.yscale('log')
@@ -569,6 +430,7 @@ def rare_standalone(
             echoTime = np.argmax(np.abs(dataPlot))
             echoTime = kRD[echoTime, 0]
             print("Echo position = %s mm^{-1}" %round(echoTime, 1))
+            plt.title(rawData['fileName'])
         
         # Plot image
         plt.subplot(122)
@@ -579,11 +441,13 @@ def rare_standalone(
             plt.xlabel('Frequency (kHz)')
             plt.ylabel('Density (a.u.)')
             print("Smax = %s mV" % (np.max(np.abs(img))))
+            plt.title(rawData['fileName'])
         else:
             xAxis = np.linspace(-fov[0]/2*1e2, fov[0]/2*1e2, num=nPoints[0], endpoint=False)
             plt.plot(xAxis, np.abs(img))
             plt.xlabel('Position RD (cm)')
             plt.ylabel('Density (a.u.)')
+            plt.title(rawData['fileName'])
     else:
         # Plot k-space
         plt.figure(3)
@@ -599,7 +463,7 @@ def rare_standalone(
         plt.subplot(132)
         plt.imshow(np.abs(imgPlot), cmap='gray')
         plt.axis('off')
-        plt.title("RARE.%s.mat" % (dt_string))
+        plt.title(rawData['fileName'])
         plt.subplot(133)
         plt.imshow(np.angle(imgPlot), cmap='gray')
         plt.axis('off')
@@ -613,97 +477,9 @@ def rare_standalone(
             img2d[:, ii*nPoints[0]:(ii+1)*nPoints[0]] = img[ii, :, :]
         plt.imshow(np.abs(img2d), cmap='gray')
         plt.axis('off')
-        plt.title("RARE.%s.mat" % (dt_string))
+        plt.title(rawData['fileName'])
     
     plt.show()
-    
-
-#*********************************************************************************
-#*********************************************************************************
-#*********************************************************************************
-
-
-#def getIndex(echos_per_tr, n_ph, sweep_mode):
-#    n2ETL=int(n_ph/2/echos_per_tr)
-#    ind:int = [];
-#    if n_ph==1:
-#         ind = np.linspace(int(n_ph)-1, 0, n_ph)
-#    
-#    else: 
-#        if sweep_mode==0:   # Sequential for T2 contrast
-#            for ii in range(int(n_ph/echos_per_tr)):
-#               ind = np.concatenate((ind, np.arange(1, n_ph+1, n_ph/echos_per_tr)+ii))
-#            ind = ind-1
-#
-#        elif sweep_mode==1: # Center-out for T1 contrast
-#            if echos_per_tr==n_ph:
-#                for ii in range(int(n_ph/2)):
-#                    cont = 2*ii
-#                    ind = np.concatenate((ind, np.array([n_ph/2-cont/2])), axis=0);
-#                    ind = np.concatenate((ind, np.array([n_ph/2+1+cont/2])), axis=0);
-#            else:
-#                for ii in range(n2ETL):
-#                    ind = np.concatenate((ind,np.arange(n_ph/2, 0, -n2ETL)-(ii)), axis=0);
-#                    ind = np.concatenate((ind,np.arange(n_ph/2+1, n_ph+1, n2ETL)+(ii)), axis=0);
-#            ind = ind-1
-#        elif sweep_mode==2: # Out-to-center for T2 contrast
-#            if echos_per_tr==n_ph:
-#                ind=np.arange(1, n_ph+1, 1)
-#            else:
-#                for ii in range(n2ETL):
-#                    ind = np.concatenate((ind,np.arange(1, n_ph/2+1, n2ETL)+(ii)), axis=0);
-#                    ind = np.concatenate((ind,np.arange(n_ph, n_ph/2, -n2ETL)-(ii)), axis=0);
-#            ind = ind-1
-#        elif sweep_mode==3:
-#            if echos_per_tr==n_ph:
-#                ind = np.arange(0, n_ph, 1)
-#            else:
-#                for ii in range(int(n2ETL)):
-#                    ind = np.concatenate((ind, np.arange(0, n_ph, 2*n2ETL)+2*ii), axis=0)
-#                    ind = np.concatenate((ind, np.arange(n_ph-1, 0, -2*n2ETL)-2*ii), axis=0)
-#
-#    return np.int32(ind)
-
-
-#*********************************************************************************
-#*********************************************************************************
-#*********************************************************************************
-
-
-#def reorganizeGfactor(axes):
-#    gFactor = np.array([0., 0., 0.])
-#    
-#    # Set the normalization factor for readout, phase and slice gradient
-#    for ii in range(3):
-#        if axes[ii]==0:
-#            gFactor[ii] = Gx_factor
-#        elif axes[ii]==1:
-#            gFactor[ii] = Gy_factor
-#        elif axes[ii]==2:
-#            gFactor[ii] = Gz_factor
-#    
-#    return(gFactor)
-
-#*********************************************************************************
-#*********************************************************************************
-#*********************************************************************************
-
-
-#def fixEchoPosition(echoes, data0):
-#    etl = np.size(echoes, axis=0)
-#    n = np.size(echoes, axis=1)
-#    idx = np.argmax(np.abs(echoes), axis=1)
-#    idx = idx-int(n/2)
-#    data1 = data0*0
-#    for ii in range(etl):
-#        if idx[ii]>0:
-#            idx[ii] = 0
-#        echoes[ii, -idx[ii]::] = echoes[ii, 0:n+idx[ii]]
-#        data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n+idx[ii]]
-##    plt.figure(5)
-##    plt.imshow(np.abs(echoes), cmap='gray')
-##    plt.show()
-#    return(data1)
 
 
 #*********************************************************************************
