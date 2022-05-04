@@ -1,5 +1,7 @@
 # PhisioMRI_GUI
 
+Python code associated to the Graphical User Interface of PhysioMRI scanner from MRILab.
+
 - FirstMRI.py --> Executes the application.
 
 - Folders and files:
