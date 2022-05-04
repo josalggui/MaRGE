@@ -15,5 +15,6 @@ gammaB = 42.56e6 # Hz/T, Gyromagnetic ratio
 blkTime = 15 # us, blanking time of Barthel's RFPA
 gradDelay = 9 # Gradient amplifier delay (us)
 oversamplingFactor = 6 # Rx oversampling
-maxRdPoints = 240 # Maximum number of points to be acquired by the red pitaya
+maxRdPoints = 2**14 # Maximum number of points to be acquired by the red pitaya
+deadTime = 400 # us, RF coil dead time
 

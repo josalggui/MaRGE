@@ -32,7 +32,7 @@ def rabiflopStandalone(
     dShimming = [10, 10, 10] # shimming step in each direction
     ):
     
-    freqCal = 0
+    freqCal = 1
     plt.ion()
 
     # Miscellaneous

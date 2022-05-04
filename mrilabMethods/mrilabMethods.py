@@ -12,6 +12,7 @@ from scipy.io import savemat
 import scipy.signal as sig
 import experiment as ex
 import configs.hw_config as hw
+import matplotlib.pyplot as plt
 
 
 ##############################################################
@@ -315,12 +316,22 @@ def saveRawData(rawData):
 ##############################################################
 
 
-def freqCalibration(rawData):
-    # Create inputs from rawData
+def freqCalibration(rawData, bw=0.05):
+    # Create custom inputs
     larmorFreq = rawData['larmorFreq']*1e-6
-    samplingPeriod = rawData['samplingPeriod']
-    nPoints = rawData['nPoints']
+    ov = hw.oversamplingFactor
+    hw.oversamplingFactor = 60
+    BW = bw # MHz
+    BW = BW*hw.oversamplingFactor
+    samplingPeriod = 1/BW
+    nPoints = np.array([50, 1, 1])
     addRdPoints = rawData['addRdPoints']
+    
+    # Create inputs from rawData
+#    larmorFreq = rawData['larmorFreq']*1e-6
+#    samplingPeriod = rawData['samplingPeriod']
+#    nPoints = rawData['nPoints']
+#    addRdPoints = rawData['addRdPoints']
     
     expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=False, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
     samplingPeriod = expt.get_rx_ts()[0]
@@ -332,31 +343,39 @@ def freqCalibration(rawData):
     rxd, msgs = expt.run()
     dataFreqCal = sig.decimate(rxd['rx0']*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
     dataFreqCal = dataFreqCal[addRdPoints:nPoints[0]+addRdPoints]
+    # Get phase
+    angle = np.unwrap(np.angle(dataFreqCal))
+    idx = np.argmax(np.abs(dataFreqCal))
+    dPhase = angle[idx]
+    rawData['drfPhase'] = dPhase+np.pi/2
+    # Get larmor frequency through fft
+    spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFreqCal))))
+    fVector = np.linspace(-BW/2, BW/2, num=nPoints[0], endpoint=False)
+    idx = np.argmax(spectrum)
+    dfFFT = -fVector[idx]
+    larmorFreq += dfFFT
+    rawData['larmorFreq'] = larmorFreq*1e6
+    print("f0 = %s MHz" % (round(larmorFreq, 5)))
+    expt.__del__()
+    
+    # Plots:
     # Plot fid
-#    plt.figure(1)
+#    plt.figure(2)
 #    tVector = np.linspace(-acqTime/2, acqTime/2, num=nPoints[0],endpoint=True)*1e-3
 #    plt.subplot(1, 2, 1)
 #    plt.plot(tVector, np.abs(dataFreqCal))
 #    plt.title("Signal amplitude")
 #    plt.xlabel("Time (ms)")
 #    plt.ylabel("Amplitude (mV)")
+#    # Plot FFT
 #    plt.subplot(1, 2, 2)
-    angle = np.unwrap(np.angle(dataFreqCal))
-#    plt.title("Signal phase")
-#    plt.xlabel("Time (ms)")
-#    plt.ylabel("Phase (rad)")
-#    plt.plot(tVector, angle)
-    # Get larmor frequency
-    dPhi = angle[-1]-angle[0]
-    df = dPhi/(2*np.pi*acqTime)
-    larmorFreq += df
-    rawData['larmorFreq'] = larmorFreq*1e6
-    print("f0 = %s MHz" % (round(larmorFreq, 5)))
-    # Plot sequence:
-#    expt.plot_sequence()
+#    plt.plot(fVector*1e3, spectrum)
+#    plt.title('FFT')
+#    plt.xlabel('Frequency (kHz)')
+#    plt.ylabel('Amplitude (a.u.)')
 #    plt.show()
-    # Delete experiment:
-    expt.__del__()
+    
+    hw.oversamplingFactor = ov
     return(rawData)
 
 
@@ -372,7 +391,8 @@ def createFreqCalSequence(expt, rawData):
     rfExAmp = rawData['rfExAmp']
     rfReTime = rawData['rfReTime']*1e6
     rfReAmp = rawData['rfReAmp']
-    echoSpacing = rawData['echoSpacing']*1e6
+    echoSpacing = 20e3 # us
+#    echoSpacing = rawData['echoSpacing']*1e6
     acqTime = rawData['acqTime']*1e6
     addRdPoints = rawData['addRdPoints']
     BW = rawData['bw']
@@ -380,20 +400,21 @@ def createFreqCalSequence(expt, rawData):
     
     
     t0 = 20
+    tEx = 20e3
     
     # Shimming
     iniSequence(expt, t0, shimming)
         
     # Excitation pulse
-    t0 +=20e3
+    t0 = tEx-hw.blkTime-rfExTime/2
     rfRecPulse(expt, t0,rfExTime,rfExAmp)
     
     # Refocusing pulse
-    t0 += rfExTime/2+echoSpacing/2-rfReTime/2
+    t0 = tEx+echoSpacing/2-rfReTime/2-hw.blkTime
     rfRecPulse(expt, t0, rfReTime, rfReAmp, np.pi/2)
     
     # Rx
-    t0 += hw.blkTime+rfReTime/2+echoSpacing/2-acqTime/2-addRdPoints/BW
+    t0 = tEx+echoSpacing-acqTime/2-addRdPoints/BW
     rxGate(expt, t0, acqTime+2*addRdPoints/BW)
     
     # Finalize sequence
