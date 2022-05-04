@@ -1,4 +1,4 @@
-"""
+"""FirstMRI.pFirstMRI.pyy
 Startup Code
 
 #@author:    Yolanda Vives
@@ -8,7 +8,8 @@ Startup Code
 import sys
 sys.path.append('../marcos_client')
 from PyQt5.QtWidgets import QApplication
-from controller.mainviewcontroller import MainViewController
+#from controller.mainviewcontroller import MainViewController,1
+from controller.sessionviewer_controller import SessionViewerController
 import cgitb 
 cgitb.enable(format = 'text')
 
@@ -16,15 +17,14 @@ cgitb.enable(format = 'text')
 VERSION = "0.1.0"
 AUTHOR = "Yolanda Vives"
 
-if __name__ == '__main__':
-    print("Graphical User Interface for Magnetic Resonance Imaging {} by {}".format(VERSION, AUTHOR))
+print("Graphical User Interface for Magnetic Resonance Imaging")
     
    
-    app = QApplication(sys.argv)
-    gui = MainViewController()
-    gui.show()
-    sys.exit(app.exec_())
+app = QApplication(sys.argv)
+#    gui = MainViewController()
+gui = SessionViewerController('')
+gui.show()
+sys.exit(app.exec_())
 
-        
     
     

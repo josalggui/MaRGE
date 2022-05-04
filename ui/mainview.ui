@@ -300,14 +300,14 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Server Status:</string>
+          <string>Session:</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="status_connection">
+        <widget class="QLabel" name="session_label">
          <property name="text">
-          <string>Unconnected</string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -335,7 +335,7 @@
      <x>0</x>
      <y>0</y>
      <width>1126</width>
-     <height>27</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
@@ -349,7 +349,9 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="action_gpaInit"/>
    <addaction name="action_calibration"/>
+   <addaction name="action_XNATupload"/>
    <addaction name="action_acquire"/>
   </widget>
   <widget class="QToolBar" name="AcquisitionControlToolbar">
@@ -365,6 +367,8 @@
    <addaction name="action_loadparams"/>
    <addaction name="action_saveparams"/>
    <addaction name="action_viewsequence"/>
+   <addaction name="action_session"/>
+   <addaction name="action_batch"/>
    <addaction name="separator"/>
    <addaction name="action_changeappearance"/>
    <addaction name="action_close"/>
@@ -379,7 +383,6 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_savedata"/>
    <addaction name="action_exportfigure"/>
   </widget>
   <action name="action_close">
@@ -395,24 +398,6 @@
    </property>
    <property name="toolTip">
     <string>Close PhisioMRI_GUI</string>
-   </property>
-   <property name="font">
-    <font/>
-   </property>
-  </action>
-  <action name="action_connect">
-   <property name="checkable">
-    <bool>false</bool>
-   </property>
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/power.svg</normaloff>../resources/icons/power.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Connect</string>
-   </property>
-   <property name="toolTip">
-    <string>Connect to server</string>
    </property>
    <property name="font">
     <font/>
@@ -466,18 +451,6 @@
     <string>Save the parameters of a sequence in a file</string>
    </property>
   </action>
-  <action name="action_savedata">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/clipboard.svg</normaloff>../resources/icons/clipboard.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Save Data</string>
-   </property>
-   <property name="toolTip">
-    <string>Save Acquired Data</string>
-   </property>
-  </action>
   <action name="action_exportfigure">
    <property name="icon">
     <iconset>
@@ -509,6 +482,54 @@
    </property>
    <property name="text">
     <string>Calibration of the system</string>
+   </property>
+  </action>
+  <action name="action_gpaInit">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/key.svg</normaloff>../resources/icons/key.svg</iconset>
+   </property>
+   <property name="text">
+    <string>GPA Initialization</string>
+   </property>
+   <property name="toolTip">
+    <string>Initialization of the GPA</string>
+   </property>
+  </action>
+  <action name="action_batch">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/arrow-loop-outline.svg</normaloff>../resources/icons/arrow-loop-outline.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Batch Processing</string>
+   </property>
+   <property name="toolTip">
+    <string>Batch Processing</string>
+   </property>
+  </action>
+  <action name="action_XNATupload">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/upload-outline.svg</normaloff>../resources/icons/upload-outline.svg</iconset>
+   </property>
+   <property name="text">
+    <string>XNAT_upload</string>
+   </property>
+   <property name="toolTip">
+    <string>Activate upload to XNAT</string>
+   </property>
+  </action>
+  <action name="action_session">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/business-card.svg</normaloff>../resources/icons/business-card.svg</iconset>
+   </property>
+   <property name="text">
+    <string>New Session</string>
+   </property>
+   <property name="toolTip">
+    <string>Change Session</string>
    </property>
   </action>
  </widget>

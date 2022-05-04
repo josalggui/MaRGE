@@ -7,30 +7,42 @@ Main View Controller
 @todo:
 
 """
-from PyQt5.QtWidgets import QListWidgetItem,  QMessageBox,  QFileDialog,  QTextEdit
-from PyQt5.QtCore import QFile, QTextStream,  pyqtSignal, pyqtSlot
+from PyQt5.QtWidgets import  QMessageBox,  QFileDialog,  QTextEdit
+from PyQt5.QtCore import QFile, QTextStream,  pyqtSignal, pyqtSlot, QThread
 from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
+from PyQt5.QtGui import QIcon
 from controller.acquisitioncontroller import AcquisitionController
+from controller.calibrationcontroller import CalibrationController
+from controller.batchcontroller import BatchController
 import pyqtgraph.exporters
+from functools import partial
 import os
 import ast
 import sys
+sys.path.append('../marcos_client')
+sys.path.append('/media/physiomri/TOSHIBA\ EXT/')
+import experiment as ex
 from scipy.io import savemat
 from controller.sequencecontroller import SequenceList
 from seq.gradEcho import grad_echo 
 from seq.radial import radial
-from seq.turboSpinEcho import turbo_spin_echo
+from seq.turboSpinEcho_filter import turbo_spin_echo
+from seq.cpmg import cpmg
+from seq.rare import rare
 from seq.fid import fid
 from seq.spinEcho import spin_echo
+from sequencesnamespace import Namespace as nmspc
+#from plotview.sequenceViewer import SequenceViewer
 from sequencemodes import defaultsequences
+from sessionmodes import defaultsessions
 from manager.datamanager import DataManager
 from datetime import date,  datetime 
 from globalvars import StyleSheets as style
 from stream import EmittingStream
 sys.path.append('../marcos_client')
 from local_config import ip_address
-
+from seq.utilities import change_axes
 
 import cgitb 
 cgitb.enable(format = 'text')
@@ -46,18 +58,23 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     """
     onSequenceChanged = pyqtSignal(str)
     
-    def __init__(self):
-        super(MainViewController, self).__init__()
+    def __init__(self, session, parent=None):
+        super(MainViewController, self).__init__(parent)
         self.ui = loadUi('ui/mainview.ui')
         self.setupUi(self)
         self.styleSheet = style.breezeLight
         self.setupStylesheet(self.styleSheet)
-  
-        # Initialisation of sequence list
-        self.sequencelist = SequenceList(self)
-        self.sequencelist.itemClicked.connect(self.sequenceChangedSlot)
-        self.layout_operations.addWidget(self.sequencelist)
         
+        # Initialisation of sequence list
+        self.session = session
+        dict = vars(defaultsessions[self.session])
+        self.sequencelist = SequenceList(self)
+        self.sequencelist.setCurrentIndex(6)
+        self.sequencelist.currentIndexChanged.connect(self.selectionChanged)
+        self.layout_operations.addWidget(self.sequencelist)
+        self.sequence = self.sequencelist.currentText()
+        self.session_label.setText(dict["name_code"])
+                
         # Console
         self.cons = self.generateConsole('')
         self.layout_output.addWidget(self.cons)
@@ -65,23 +82,29 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         sys.stderr = EmittingStream(textWritten=self.onUpdateText)        
         
         # Initialisation of acquisition controller
-        acqCtrl = AcquisitionController(self, self.sequencelist)
+        acqCtrl = AcquisitionController(self, self.session, self.sequencelist)
         
         # Connection to the server
         self.ip = ip_address
         
-#        ServerConnection.connectClientToServer(self)
+        # XNAT upload
+        self.xnat_active = 'FALSE'
         
         # Toolbar Actions
+        self.action_gpaInit.triggered.connect(self.initgpa)
+        self.action_calibration.triggered.connect(self.calibrate)
         self.action_changeappearance.triggered.connect(self.changeAppearanceSlot)
         self.action_acquire.triggered.connect(acqCtrl.startAcquisition)
         self.action_loadparams.triggered.connect(self.load_parameters)
         self.action_saveparams.triggered.connect(self.save_parameters)
         self.action_close.triggered.connect(self.close)    
-        self.action_savedata.triggered.connect(self.save_data)
+#        self.action_savedata.triggered.connect(self.save_data)
         self.action_exportfigure.triggered.connect(self.export_figure)
         self.action_viewsequence.triggered.connect(self.plot_sequence)
-        
+        self.action_batch.triggered.connect(self.batch_system)
+        self.action_XNATupload.triggered.connect(self.xnat)
+        self.action_session.triggered.connect(self.change_session)
+   
     def lines_that_start_with(self, str, f):
         return [line for line in f if line.startswith(str)]
     
@@ -134,15 +157,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         stream = QTextStream(file)
         stylesheet = stream.readAll()
         self.setStyleSheet(stylesheet)  
-        
-    @pyqtSlot(QListWidgetItem)
-    def sequenceChangedSlot(self, item: QListWidgetItem = None) -> None:
-        """
-        Operation changed slot function
-        @param item:    Selected Operation Item
-        @return:        None
-        """
-        self.sequence = item.text()
+
+    def selectionChanged(self,item):
+        self.sequence = self.sequencelist.currentText()
         self.onSequenceChanged.emit(self.sequence)
         self.action_acquire.setEnabled(True)
         self.clearPlotviewLayout()
@@ -158,8 +175,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     
     def save_data(self):
         
-        dataobject: DataManager = DataManager(self.rxd, self.lo_freq, len(self.rxd))
-        dict = vars(defaultsequences[self.sequence])
+        dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl], self.sequence.BW)
+        dict1=vars(defaultsessions[self.session])
+        dict2 = vars(self.sequence)
+        dict = self.merge_two_dicts(dict1, dict2)
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H:%M")
         dt2 = date.today()
@@ -172,9 +191,45 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
             os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
             
+        if not os.path.exists('/media/physiomri/TOSHIBA\ EXT/experiments/acquisitions/%s' % (dt2_string)):
+            os.makedirs('/media/physiomri/TOSHIBA\ EXT/%s'% (dt2_string) )
+            
+        if not os.path.exists('/media/physiomri/TOSHIBA\ EXT/experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
+            os.makedirs('/media/physiomri/TOSHIBA\ EXT/%s/%s'% (dt2_string, dt_string) )   
+            
         savemat("experiments/acquisitions/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
+        savemat("/media/physiomri/TOSHIBA\ EXT/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
         
         self.messages("Data saved")
+        
+#        if hasattr(self.dataobject, 'f_fft2Magnitude'):
+#            nifti_file=nib.Nifti1Image(self.dataobject.f_fft2Magnitude, affine=np.eye(4))
+#            nib.save(nifti_file, 'experiments/acquisitions/%s/%s/%s.%s.nii'% (dt2_string, dt_string, dict["seq"],dt_string))
+
+        if hasattr(self.parent, 'f_plotview'):
+            exporter1 = pyqtgraph.exporters.ImageExporter(self.f_plotview.scene())
+            exporter1.export("experiments/acquisitions/%s/%s/Freq%s.png" % (dt2_string, dt_string, self.sequence))
+        if hasattr(self.parent, 't_plotview'):
+            exporter2 = pyqtgraph.exporters.ImageExporter(self.t_plotview.scene())
+            exporter2.export("experiments/acquisitions/%s/%s/Temp%s.png" % (dt2_string, dt_string, self.sequence))
+
+        from controller.WorkerXNAT import Worker
+        
+        if self.xnat_active == 'TRUE':
+            # Step 2: Create a QThread object
+            self.thread = QThread()
+            # Step 3: Create a worker object
+            self.worker = Worker()
+            # Step 4: Move worker to the thread
+            self.worker.moveToThread(self.thread)
+            # Step 5: Connect signals and slots
+            self.thread.started.connect(partial(self.worker.run, 'experiments/acquisitions/%s/%s' % (dt2_string, dt_string)))
+            self.worker.finished.connect(self.thread.quit)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.thread.finished.connect(self.thread.deleteLater)
+            
+            # Step 6: Start the thread
+            self.thread.start()
 
     def export_figure(self):
         
@@ -194,7 +249,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         exporter2.export("experiments/acquisitions/%s/%s/Temp%s.png" % (dt2_string, dt_string, self.sequence))
         
         self.messages("Figures saved")
-
+   
+    def merge_two_dicts(self, x, y):
+        z = x.copy()   # start with keys and values of x
+        z.update(y)    # modifies z with keys and values of y
+        return z
+   
     def load_parameters(self):
     
         self.clearPlotviewLayout()
@@ -221,10 +281,14 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def save_parameters(self):
         
         dt = datetime.now()
-        dt_string = dt.strftime("%d-%m-%Y_%H:%M")
+        dt_string = dt.strftime("%d-%m-%Y_%H_%M_%S")
         dict = vars(defaultsequences[self.sequence]) 
-    
-        f = open("experiments/parameterisations/%s_params_%s.txt" % (self.sequence, dt_string),"w")
+        dict.pop('rawdata', None)
+        dict.pop('average', None)       
+        
+        sequ = '%s' %(self.sequence)
+        sequ = sequ.replace(" ", "")
+        f = open("experiments/parameterisations/%s_params_%s.txt" % (sequ, dt_string),"w")
         f.write( str(dict) )
         f.close()
   
@@ -234,7 +298,16 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
         plotSeq=1
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
-        
+
+        self.sequence.oversampling_factor = 6
+
+        if hasattr(self.sequence, 'axes'):
+            self.sequence.x, self.sequence.y, self.sequence.z, self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl, self.sequence.fov_rd, self.sequence.fov_ph, self.sequence.fov_sl  = change_axes(self)
+        else:
+            self.sequence.n_rd=1
+            self.sequence.n_ph=1
+            self.sequence.n_sl=1
+            
         if self.sequence.seq == 'FID':
             fid(self.sequence, plotSeq)
         if self.sequence.seq=='SE':
@@ -245,9 +318,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             grad_echo(self.sequence, plotSeq)   
         elif self.sequence.seq == 'TSE':
             turbo_spin_echo(self.sequence, plotSeq)    
-#        seqViewer = SequenceViewer(self, self.sequencelist)
-#        seqViewer.plotSequence()
-#        seqViewer.show()
+        elif self.sequence.seq == 'CPMG':
+            cpmg(self.sequence, plotSeq)
+        elif  self.sequence.seq == 'RARE':
+            rare(self.sequence, plotSeq)
   
         
     def messages(self, text):
@@ -257,3 +331,32 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         msg.setText(text)
         msg.exec();
         
+    def calibrate(self):
+        seqCalib = CalibrationController(self, self.sequencelist)
+        seqCalib.show()
+        
+    def initgpa(self):
+        expt = ex.Experiment(init_gpa=True)
+        expt.run()
+        expt._del_()
+
+    def batch_system(self):
+        batchW = BatchController(self, self.sequencelist)
+        batchW.show()
+
+    def xnat(self):
+        
+        if self.xnat_active == 'TRUE':
+            self.xnat_active = 'FALSE'
+            self.action_XNATupload.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/upload-outline.svg') )
+            self.action_XNATupload.setToolTip('Activate XNAT upload')
+        else:
+            self.xnat_active = 'TRUE'
+            self.action_XNATupload.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/upload.svg') )
+            self.action_XNATupload.setToolTip('Deactivate XNAT upload')
+            
+    def change_session(self):
+        from controller.sessionviewer_controller import SessionViewerController
+        sessionW = SessionViewerController(self.session)
+        sessionW.show()
+        self.hide()    

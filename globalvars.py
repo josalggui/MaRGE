@@ -24,10 +24,16 @@ class Sequences:
     Class with predefined sequences as sequence objects
     """
     SE = SqncObject('Spin Echo', 'seq/spinEcho.py')
+    SE1D=SqncObject('Spin Echo 1D', 'seq/spinEcho1D.py')
+    SE2D=SqncObject('Spin Echo 2D', 'seq/spinEcho2D.py')
+    SE3D=SqncObject('Spin Echo 3D', 'seq/spinEcho3D.py')
     FID = SqncObject('Free Induction Decay', 'seq/fid.py')
     GE = SqncObject('Gradient Echo', 'seq/gradEcho.py')
     R = SqncObject('Radial', 'seq/radial.py')
     TSE = SqncObject('Turbo Spin Echo', 'seq/turboSpinEcho.py')
+
+class Calibfunctions:
+    RabiFlops = SqncObject('Rabi Flops', 'seq/rabiFlops.py')
 
 
 class Gradients:
@@ -58,3 +64,4 @@ sqncs = Sequences()
 grads = Gradients()
 rlxs = Relaxations()
 pax = ProjectionAxes()
+calibs = Calibfunctions()

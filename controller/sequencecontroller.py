@@ -12,7 +12,7 @@ Operations Controller
 @todo:      Extend construction of parameter section (headers, more categories, etc. )
 
 """
-from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel
+from PyQt5.QtWidgets import QSizePolicy, QLabel,  QComboBox
 from PyQt5.QtCore import Qt, QRegExp
 from sequencemodes import defaultsequences
 from sequencesnamespace import Namespace as nmspc
@@ -21,10 +21,13 @@ from sequencesnamespace import Tooltip_inValue as tlt_inV
 from PyQt5.uic import loadUiType
 from PyQt5.QtGui import QRegExpValidator
 
+
 Parameter_Form, Parameter_Base = loadUiType('ui/inputparameter.ui')
+#Parameter_FormG, Parameter_BaseG = loadUIType('ui/gradients.ui')
 
 
-class SequenceList(QListWidget):
+#class SequenceList(QListWidget):
+class SequenceList(QComboBox):
     """
     Sequence List Class
     """
@@ -37,14 +40,22 @@ class SequenceList(QListWidget):
 
         # Add sequences to sequences list
         self.addItems(list(defaultsequences.keys()))
-        parent.onSequenceChanged.connect(self.triggeredSequenceChanged)
+        
+        if hasattr(parent, 'onSequenceChanged'):
+            parent.onSequenceChanged.connect(self.triggeredSequenceChanged)
+            # Make parent reachable from outside __init__
+            self.parent = parent
+            self._currentSequence = "RARE"
+            self.setParametersUI("RARE")
+#        self._currentSequence = None
+        else:
+            self._currentSequence=parent.sequence
+    
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
 
-        # Make parent reachable from outside __init__
-        self.parent = parent
-#        self._currentSequence = None
-        self._currentSequence = "Radial"
-        self.setParametersUI("Radial")
+        
+
+
     
     def triggeredSequenceChanged(self, sequence: str = None) -> None:
         # TODO: set sequence only once right here or on changed signal
@@ -78,15 +89,25 @@ class SequenceList(QListWidget):
             seqs_prop = defaultsequences[sequence].sqncproperties
             inputwidgets += [self.generateLabelItem(nmspc.sqncproperties)]
             inputwidgets += self.generateWidgetsFromDict(seqs_prop, sequence)
-
+                        
+        if hasattr(defaultsequences[sequence], 'RFproperties'):
+            sys_prop = defaultsequences[sequence].RFproperties
+            inputwidgets += [self.generateLabelItem(nmspc.RFproperties)]
+            inputwidgets += self.generateWidgetsFromDict(sys_prop, sequence)
+            
+        if hasattr(defaultsequences[sequence], 'Gproperties'):
+            sys_prop = defaultsequences[sequence].Gproperties
+            inputwidgets += [self.generateLabelItem(nmspc.Gproperties)]
+#            inputwidgets += [self.generateTickItem()]
+            inputwidgets += self.generateWidgetsFromDict(sys_prop, sequence)     
+     
         if hasattr(defaultsequences[sequence], 'gradientshims'):
             shims = defaultsequences[sequence].gradientshims
             inputwidgets += [(self.generateLabelItem(nmspc.gradientshims))]
-            inputwidgets += (self.generateWidgetsFromDict(shims, sequence))
+            inputwidgets += (self.generateWidgetsFromDict(shims, sequence))     
             
         for item in inputwidgets:
             self.parent.layout_parameters.addWidget(item)
-        
        
     @staticmethod
     def generateWidgetsFromDict(obj: dict = None, sequence: str = None) -> list:
@@ -102,6 +123,15 @@ class SequenceList(QListWidget):
         label.setText(text)
         label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
         return label
+        
+#    def generateTickItem(text):
+#        Qx = QCheckBox("Qx")
+#        Qx.setChecked(True)
+        
+#        Qy = QRadioButton('Qy')
+#        Qy.setChecked(True)
+#        Qz = QRadioButton('Qz')
+#        return Qx
 
     def get_items(self, struct: dict = None, sequence:str = None) -> list:
         itemlist: list = []
@@ -177,6 +207,17 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
                         setattr(defaultsequences[self.sequence], item, value)
                     elif (t is int): 
                         value: int = int(self.input_value.text())
+                        setattr(defaultsequences[self.sequence], item, value)
+                    else:
+                        v = self.input_value.text()
+                        v=v.replace("[", "")
+                        v=v.replace("]", "")
+                        v2 = list(v.split(","))
+                        if item=='shim':
+                            value: list = list([float(v2[0]), float(v2[1]), float(v2[2])])
+                        else:
+                            if (v2[0] != ''):
+                                value: list = list([int(v2[0]), int(v2[1]), int(v2[2])])
                         setattr(defaultsequences[self.sequence], item, value)
 
                 

@@ -1,1 +1,0 @@
-{'seq': 'R', 'dbg_sc': 0.5, 'lo_freq': 0.3, 'rf_amp': 0.2, 'trs': 4, 'G': 0.5, 'grad_tstart': 0, 'tr_total_time': 220, 'rf_tstart': 5, 'rf_tend': 50, 'rx_tstart': 70, 'rx_tend': 180, 'rx_period': 3.333}

@@ -3,7 +3,7 @@
 import sys
 sys.path.append('../../marcos_client')
 import numpy as np
-import experiment as ex
+import experiment as exp
 import matplotlib.pyplot as plt
 import pdb
 st = pdb.set_trace
@@ -58,4 +58,4 @@ def radial(self, plotSeq):
     elif plotSeq==0:
         rxd, msgs = expt.run()
         expt.__del__()
-        return rxd['rx0'].real, msgs
+        return rxd['rx0'], msgs
