@@ -7,19 +7,21 @@ Python code associated to the Graphical User Interface of PhysioMRI scanner from
 
 **FirstMRI.py** --> Executes the application.
 
-## How to operate with the GUI
+## How to use with the GUI
 
 The first window to appear is the sessionWindow (Figure 1), where you can first select the object that is going to be imaged and introduce parameters like the ID, demographic variables, etc.
 
-![Figure 1.- Session Window](images/SessionWindow_completo.png)
+Figure 1.- Session Window
+<img src="images/SessionWindow_completo.png" alt="alt text" width=200 height=350>
 
-Then, we launch the GUI main window by clicking to the corresponding icon (Figure 2). We distinguish 4 different zones in the GUI main window: 1) Main menu icons, 2) Sequence selection, 3) Parameters area, 4) Plotting area and 5) Console area.
+Then, we launch the GUI main window by clicking to the corresponding icon. We distinguish 5 different areas in the GUI main window: 1) Main menu icons, 2) Sequence selection, 3) Parameters area, 4) Plotting area and 5) Console area. Figure 2.
 
-![Figure 2.- Main Window](images/MainWindow_completo.png)
+Figure 2.- Main Window
+<img src="images/MainWindow_completo.png" alt="alt text" width=600 height=450>
 
 ### GUI main menu
 
-![GUI main menu](images/GUI_main_icons.png)
+<img src="images/GUI_main_icons.png" alt="alt text">
 
 1) Initialization of the GPA: makes the initilization of the GPA gradients card.
 2) Calibration of the system: launches a window with all the calibration functions.
@@ -35,16 +37,17 @@ Then, we launch the GUI main window by clicking to the corresponding icon (Figur
 
 #### Calibration of the system
 
-![Figure 3.- Calibration window](images/CalibrationWindow_completo.png)
+Figure 3.- Calibration window
+<img src="images/CalibrationWindow_completo.png" alt="alt text" width=600 height=450>
 
 #### Batch acquisition
 
 It allows acquiring multiple images with different sequences sequentially, without human intervention (Figure 4). 
 
-![Figure 4.- Batch acquisition window](images/BatchWindow_completo.png)
+Figure 4.- Batch acquisition window 
+<img src="images/batchWindow_completo.png" alt="alt text" width=200 height=350>
 
-With the `plus` button we can add files previously saved in the GUI main window. We can remove these acquisitions with the `minus` button.
-
+With the `plus` button you can add files previously saved in the GUI main window. You can remove them with the `minus` button.
 
 ## Structure of the folders and files in the GUI     
 
@@ -53,15 +56,18 @@ With the `plus` button we can add files previously saved in the GUI main window.
 There are different kinds of ui files in the GUI. On the one hand, we have the general structure of the four windows: session window, main window, calibration window and batch window.
 Main and calibration uis are very similar with each other (Figure 5), and session and batch uis are also similar with each other (Figure 6).
 
-	![Figure 5.- Main and calibration uis](images/main_calib.png)
-	![Figure 6.- Session and batch uis](images/session_batch.png)
+Figure 5.- Main and calibration uis
+<img src="images/main_calib.png" width=900 height=350>
+
+Figure 6.- Session and batch uis
+<img src="images/session_batch.png" width=400 height=350>
 
 On the other hand, there are ui files that represent single elements that will be introduced programally to the general structure of the windows (to one of the four previous windows).
 These elements are:
 
-		- inputparameter.ui	
-		- gradients.ui
-		- inputshimming.ui
+- inputparameter.ui (Figure 7a)	
+- gradients.ui (Figure 7b)
+- inputshimming.ui (Figure 7c)
 		 
 ![Figure 7.- Input parameter ui](images/ui_elements.png)
 
