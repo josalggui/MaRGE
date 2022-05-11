@@ -20,9 +20,9 @@ import os
 from scipy.io import savemat
 from datetime import date,  datetime 
 import pdb
-from configs.hw_config import Gx_factor
-from configs.hw_config import Gy_factor
-from configs.hw_config import Gz_factor
+from configs.hw_config_2 import Gx_factor
+from configs.hw_config_2 import Gy_factor
+from configs.hw_config_2 import Gz_factor
 st = pdb.set_trace
 
 
@@ -35,20 +35,20 @@ st = pdb.set_trace
 def rare2_standalone(
     init_gpa=False,              # Starts the gpa
     nScans = 1,                 # NEX
-    larmorFreq = 3.07345e6,      # Larmor frequency
+    larmorFreq = 3.0771e6,      # Larmor frequency
     rfExAmp = 0.4,             # rf excitation pulse amplitude
     rfReAmp = None,             # rf refocusing pulse amplitude
-    rfExTime = 25e-6,          # rf excitation pulse time
+    rfExTime = 40e-6,          # rf excitation pulse time
     rfReTime = None,            # rf refocusing pulse time
     echoSpacing = 10e-3,        # time between echoes
     repetitionTime = 1000e-3,     # TR
     fov = np.array([150e-3,200e-3,120e-3]),           # FOV along readout, phase and slice
-    dfov = np.array([0, -10e-3, 0]),            # Displacement of fov center
-    nPoints = np.array([60, 60, 1]),                 # Number of points along readout, phase and slice
+    dfov = np.array([0, 15e-3, 15e-3]),            # Displacement of fov center
+    nPoints = np.array([60, 60, 4]),                 # Number of points along readout, phase and slice
     etl = 60,                   # Echo train length
     acqTime = 4e-3,             # Acquisition time
     axes = np.array([2, 0, 1]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
+    axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
     sweepMode = 1,               # 0->k2k,  1->02k,  2->k20, 3->Niquist modulated
     phaseGradTime = 1000e-6,       # Phase and slice dephasing time
     rdPreemphasis = 1.008,

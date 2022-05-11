@@ -12,107 +12,55 @@ Operations Namespace
 
 
 class Namespace:
+    seq = "sequence"
     dbg_sc = "Debug"
-    systemproperties = "System Properties"
+#    systemproperties = "System Properties"
+    systemproperties = ""
     RFproperties = "RF and System Properties"
     Gproperties = "Gradients Properties"
-    lo_freq = "Frequency (MHz)"
-    rf_amp = "RF Amplitude"
-    G = "Gradients amplification"
-    trs = "Number of TRs"
-    grad_tstart = "Gradients start time"
-    tr_total_time = "TR"
-    rf_tstart = "RF start time (us)"
-    rf_tend = "RF end time (us)"
-    rx_tstart = "RX start time"
-    rx_tend = "RX end time"
-    rx_period = "RX period"
-    rx_wait="Waiting time before readout (ms)"
-    sampletime = "Sample Time"
-    samples = "RX Samples"
-    x_shim = "X shim gradient"
-    y_shim = "Y shim gradient"
-    z_shim = "Z shim gradient"
-    z2_shim = "Z² shim gradient"
-    seq = "sequence"
-    sqncproperties = "Sequence Properties"
-    slice_start_amp = "Slice start amplitude"
-    phase_amp = "Phase amplitude"
-    phase_start_amp = "Phase start amplitude"
-    readout_amp = "Readout amplitude"
-    trap_ramp_duration = "Gradients ramp duration (us)"
-    phase_delay = "Phase Delay"
-    echos_per_tr = "Echos per TR"
-    echo_duration = "TE (ms)"
-    phase_duration = "Phase Duration (us)"
-    readout_duration = "Readout Duration (ms)"
-    readout_grad_duration = "Readout Gradient Duration"
-    phase_grad_interval = "Phase interval"
-    phase_grad_duration = "Phase and Slice Duration (us)"
-    tr_pause_duration = "TR pause Duration"
-    plot_rx = "plot rx"
-    init_gpa = "GPA initialisation"
-    slice_amp = "Slice amplitude"
-    rf_pi2_duration = "RF excitation duration (us)"
-    rf_pi_duration = "RF refocusing duration (us)"
-    R = "Radial"
-    GE = "Gradient Echo"
-    TSE = "Turbo Spin Echo"
-    SE1D = "Spin Echo 1D"
-    gradientshims = "Gradients shim values"
-    shim = "Shims (x,y,z)"
-    BW= "BandWidth (KHz)"
-    n="Number of points (Nx,Ny,Nz)"
-    fov="FOV [rd,ph,sl] (mm)"# TSE(x,y,z); RARE(rd,ph,sl)"
-    tr_duration="TR (ms)"
-    nScans="nScans"
-    rawdata ="rawdata"
-    average = "average"
-    fft = "fft"
-    preemph_factor = "Pre emphasis factor"
-    sweep_mode = "Sweep Mode"
-    par_acq_factor = "Partial acquisition factor"
-    axes = "Axes (rd=0,ph=1,sl=2)"
-    oversampling_factor = "oversampling factor"
+    age = "Age"
+    sex = "Sex (M/F)"
+    weight="Weight (gr)"
+    demographics = "Demographical info"
+    name_code = "ID"
+    descrip = "Description"
+    n_rd = 'N rd'
+    n_ph = 'N ph'
+    n_sl = 'N sl'
+    ns = 'ns'
+    
+    RARE= "RARE"
+    nScans = "nScans"
     larmorFreq="Larmor Frequency (MHz)"
     rfExAmp="RF Excitation Amplitude (a.u.)"
     rfReAmp="RF Refocusing Amplitude (a.u.)"
     rfExTime="RF Excitation Time (us)"
     rfReTime="RF Refocusing Time (us)"
     echoSpacing="Echo Spacing (ms)"
+    preExTime="Time from preexcitation pulse to inversion pulse (us)"
+    inversionTime="Inversion Time (ms)" 
+    repetitionTime = "Repetition Time (ms)"
+    fov="FOV [rd,ph,sl] (mm)"
+    dfov="Displacement of fOV (mm)"
     nPoints="Number of Points"
     etl="ETL"
     acqTime="Acquisition Time (ms)"
-    CPMG="CPMG"
-    RARE= "RARE"
-    repetitionTime = "Repetition Time (ms)"
-    inversionTime="Inversion Time (ms)" 
-    dfov="Displacement of fOV (mm)"
+    axes = "Axes (rd=0,ph=1,sl=2)"
     axesEnable="Axes Enable (on=1, off=0)"
     sweepMode= "Sweep Mode (0=T2w, 1=T1w, 2=Rhow)" 
-    phaseGradTime="Phase Grad. Time (us)"
+    rdGradTime="Readout grad. Time (us)"
+    rdDephTime="Readout dephasing grad. Time (us)"
+    phGradTime="Phase and Slice grad. Time (us)"
     rdPreemphasis="Rd Preemphasis Factor (a.u.)"
     drfPhase = "Phase of 90º pulse (º)" 
     dummyPulses = "Number of Dummy Pulses" 
-    axis = "Axes (rd=0,ph=1,sl=2)"
-    n_rd = 'N rd'
-    n_ph = 'N ph'
-    n_sl = 'N sl'
-    ns = 'ns'
-    x = 'x'
-    y = 'y'
-    z = 'z'
-    fov_rd = 'fov rd'
-    fov_ph = 'fov ph'
-    fov_sl = 'fov sl'
     shimming = 'Shimming (x, y, z)'
     parAcqLines = 'Partial adquisition (Off=0; 1,2...=nº lines)'
-    age = "Age"
-    sex = "Sex (M/F)"
-    weight="Weight (gr)"
-    demographics = "Demographical info"
-    name_code = "ID"
-    descrip = 'Description'
+
+
+
+
+
     
 class Tooltip_label:
     rx_period = "Sampling time"

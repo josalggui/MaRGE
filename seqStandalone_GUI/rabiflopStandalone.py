@@ -17,7 +17,7 @@ from scipy.io import savemat
 
 def rabiflopStandalone(
     init_gpa= False,                 
-    larmorFreq=3.074, 
+    larmorFreq=3.0774, 
     rfExAmp=0.3, 
     rfReAmp=None, 
     rfExPhase = 0,

@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def RPInstructionsFalse(
-    init_gpa= True,                 
+    init_gpa= False,                 
     larmorFreq=3.07419, 
     rfExAmp=0.3, 
     rfReAmp=None, 
@@ -25,7 +25,7 @@ def RPInstructionsFalse(
     gDuration = 500, #Flattop gDuration-2*gRiseTime
     gAmplitude = 1,
     tIni = 20, 
-    plotSeq =0):
+    plotSeq =1):
     
     txGatePre = 15
     txGatePost = 1

@@ -25,13 +25,6 @@ sys.path.append('/media/physiomri/TOSHIBA\ EXT/')
 import experiment as ex
 from scipy.io import savemat
 from controller.sequencecontroller import SequenceList
-from seq.gradEcho import grad_echo 
-from seq.radial import radial
-from seq.turboSpinEcho_filter import turbo_spin_echo
-from seq.cpmg import cpmg
-from seq.rare import rare
-from seq.fid import fid
-from seq.spinEcho import spin_echo
 from sequencesnamespace import Namespace as nmspc
 #from plotview.sequenceViewer import SequenceViewer
 from sequencemodes import defaultsequences
@@ -42,7 +35,8 @@ from globalvars import StyleSheets as style
 from stream import EmittingStream
 sys.path.append('../marcos_client')
 from local_config import ip_address
-from seq.utilities import change_axes
+from seq.rare import rare
+
 
 import cgitb 
 cgitb.enable(format = 'text')
@@ -69,7 +63,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.session = session
         dict = vars(defaultsessions[self.session])
         self.sequencelist = SequenceList(self)
-        self.sequencelist.setCurrentIndex(6)
+        self.sequencelist.setCurrentIndex(0)
         self.sequencelist.currentIndexChanged.connect(self.selectionChanged)
         self.layout_operations.addWidget(self.sequencelist)
         self.sequence = self.sequencelist.currentText()
@@ -301,27 +295,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         self.sequence.oversampling_factor = 6
 
-        if hasattr(self.sequence, 'axes'):
-            self.sequence.x, self.sequence.y, self.sequence.z, self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl, self.sequence.fov_rd, self.sequence.fov_ph, self.sequence.fov_sl  = change_axes(self)
-        else:
-            self.sequence.n_rd=1
-            self.sequence.n_ph=1
-            self.sequence.n_sl=1
-            
-        if self.sequence.seq == 'FID':
-            fid(self.sequence, plotSeq)
-        if self.sequence.seq=='SE':
-            spin_echo(self.sequence, plotSeq) 
-        if self.sequence.seq == 'R':
-            radial(self.sequence, plotSeq)    
-        elif self.sequence.seq == 'GE':
-            grad_echo(self.sequence, plotSeq)   
-        elif self.sequence.seq == 'TSE':
-            turbo_spin_echo(self.sequence, plotSeq)    
-        elif self.sequence.seq == 'CPMG':
-            cpmg(self.sequence, plotSeq)
-        elif  self.sequence.seq == 'RARE':
+        if  self.sequence.seq == 'RARE':
             rare(self.sequence, plotSeq)
+#        elif self.sequence.seq == 'CPMG':
+#            cpmg(self.sequence, plotSeq)
   
         
     def messages(self, text):

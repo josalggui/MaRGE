@@ -8,111 +8,139 @@ import experiment as ex
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-from datetime import date,  datetime 
-import os
-from scipy.io import savemat
+import configs.hw_config as hw # Import the scanner hardware config
+import mrilabMethods.mrilabMethods as mri
+import scipy.signal as sig
 
 def inversionrecoveryStandalone(
     init_gpa= False,                 
-    lo_freq=3.07393, 
-    rf_amp=0.4, 
-    rf_pi_duration=None, 
-    rf_pi2_duration=24, 
-    tr = 10,                 # s, repetition time
-    t_ini = 0.001,      # s
-    t_fin = 8,             # s
-    N = 10, 
-    shimming=[-80, -100, 10]):                
+    larmorFreq = 3.077*(1-0.0015),  # MHz 
+    rfExAmp = 0.4,
+    rfReAmp = 0.4, 
+    rfExTime = 21, # us 
+    rfReTime = 42, # us
+    acqTime = 4,  # ms
+    echoTime = 20, # ms
+    repetitionTime = 5, # s
+    tInvIni = 0.005, # s
+    tInvFin = 4, # s
+    nRepetitions = 2, # number of samples
+    nRD=100, 
+    plotSeq =0,
+    shimming=[-70, -90, 10]):                
     
-    BW=60*1e-3                     # MHz
-    n_rd=120
-    plotSeq =0
-    point =15       
-    blk_delay = 300
     shimming = np.array(shimming)*1e-4
     
-    if rf_pi_duration is None:
-        rf_pi_duration = 2 * rf_pi2_duration
+    if rfReTime is None:
+        rfReTime = 2*rfExTime
+    
+    rfExTime = rfExTime*1e-6
+    rfReTime = rfReTime*1e-6
+    acqTime = acqTime*1e-3
+    echoTime = echoTime*1e-3
     
     rawData = {}
-    rawData['larmorFreq'] = lo_freq*1e6
-    rawData['rfAmp'] = rf_amp
-    rawData['rfInTime'] = rf_pi_duration
-    rawData['rfExtime'] = rf_pi2_duration
-    rawData['TR'] = tr*1e-6
-    rawData['tInvIni'] = t_ini*1e-6
-    rawData['tInvFin'] = t_fin*1e-6
-    rawData['nRepetitions'] = N
-    rawData['bw'] = BW*1e6
-    rawData['nRD'] = n_rd
-    rawData['point'] = point
+    rawData['seqName'] = 'inversionRecovery'
+    rawData['larmorFreq'] = larmorFreq*1e6
+    rawData['rfExAmp'] = rfExAmp
+    rawData['rfReAmp'] = rfReAmp
+    rawData['rfExTime'] = rfExTime
+    rawData['rfRetime'] = rfReTime
+    rawData['repetitionTime'] = repetitionTime
+    rawData['tInvIni'] = tInvIni
+    rawData['tInvFin'] = tInvFin
+    rawData['nRepetitions'] = nRepetitions
+    rawData['acqTime'] = acqTime
+    rawData['nRD'] = nRD
+    rawData['echoTime'] = echoTime
     
-    t_adq = n_rd/BW
+    # Miscellaneous
+    gradRiseTime = 200 # us
+    crusherTime = 1000 # us
+    gSteps = int(gradRiseTime/5)
+    axes = np.array([0, 1, 2])
+    rawData['gradRiseTime'] = gradRiseTime
+    rawData['gSteps'] = gSteps
     
-    tx_gate_pre = 15 # us, time to start the TX gate before each RF pulse begins
-    tx_gate_post = 1 # us, time to keep the TX gate on after an RF pulse ends
-    
-    rx_period = 1/BW
+    # Bandwidth and sampling rate
+    bw = nRD/acqTime*1e-6 # MHz
+    bwov = bw*hw.oversamplingFactor
+    samplingPeriod = 1/bwov
 
-    expt = ex.Experiment(lo_freq=lo_freq, rx_t=rx_period, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-
-    # Create functions
-    def endSequence(tEnd):
-        expt.add_flodict({
-                'grad_vx': (np.array([tEnd]),np.array([0]) ), 
-                'grad_vy': (np.array([tEnd]),np.array([0]) ), 
-                'grad_vz': (np.array([tEnd]),np.array([0]) ),
-             })
-             
-    def iniSequence(tEnd, shimming):
-        expt.add_flodict({
-                'grad_vx': (np.array([tEnd]),np.array([shimming[0]]) ), 
-                'grad_vy': (np.array([tEnd]),np.array([shimming[1]]) ), 
-                'grad_vz': (np.array([tEnd]),np.array([shimming[2]]) ),
-             })
-             
-
-    tIni = 20 
-    t = t_ini*1e6
-    tIR = np.geomspace(t_ini, t_fin, N)*1e6             # in us to be used in the sequence
-    tr = tr*1e6
+    tIR = np.geomspace(tInvIni, tInvFin, nRepetitions)
+    rawData['tIR'] = tIR
     
     
- # Shimming
-    iniSequence(tIni, shimming)
-    t_start = 2*tIni
-    
-    for t in tIR:
-        tx_t = np.array([t_start, t_start+rf_pi_duration,t_start+t+rf_pi2_duration/2,t_start+t+3*rf_pi2_duration/2])
-        tx_a = np.array([1j*rf_amp,0,rf_amp,0])
+    def createSequence():
+        # Set shimming
+        mri.iniSequence(expt, 20, shimming)
         
-        tx_gate_t = np.array([t_start-tx_gate_pre, t_start+rf_pi_duration+tx_gate_post,t_start+t+rf_pi2_duration/2-tx_gate_pre,t_start+t+3*rf_pi2_duration/2+tx_gate_post])
-        tx_gate_a = np.array([1,0,1,0])
-    
-        readout_t = np.array([t_start, t_start+t+3*rf_pi2_duration/2+blk_delay,t_start+t+3*rf_pi2_duration/2+t_adq+blk_delay])
-        readout_a = np.array([0,1,0])
-        
-        rx_gate_t = readout_t
-        rx_gate_a = readout_a
-        
-        expt.add_flodict({
-                        'tx0': (tx_t, tx_a),
-                        'tx_gate': (tx_gate_t, tx_gate_a),
-                        'rx0_en': (readout_t, readout_a),
-                        'rx_gate': (rx_gate_t, rx_gate_a),
-                        })
-    
-        
-        t_start += tr
+        for repeIndex in range(nRepetitions):
+            # Initialize time
+            tEx = 20e3+np.max(tIR)+repetitionTime*repeIndex
+            
+            # Inversion time for current iteration
+            inversionTime = tIR[repeIndex]
+            
+            # Crusher gradient for inversion rf pulse
+#            t0 = tEx-inversionTime-crusherTime/2-gradRiseTime-hw.gradDelay-50
+#            mri.gradTrap(expt, t0, gradRiseTime, crusherTime, 0.005, gSteps, axes[0], shimming)
+#            mri.gradTrap(expt, t0, gradRiseTime, crusherTime, 0.005, gSteps, axes[1], shimming)
+#            mri.gradTrap(expt, t0, gradRiseTime, crusherTime, 0.005, gSteps, axes[2], shimming)
 
+            # Inversion pulse
+            t0 = tEx-inversionTime-hw.blkTime-rfReTime/2
+            mri.rfRecPulse(expt, t0, rfReTime, rfReAmp, 0)
+            
+            # Spoiler gradients to destroy residual transversal signal detected for ultrashort inversion times
+#            mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[0], shimming)
+#            mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[1], shimming)
+#            mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[2], shimming)
+            
+            # Excitation pulse
+            t0 = tEx-hw.blkTime-rfExTime/2
+            mri.rfRecPulse(expt, t0, rfExTime, rfExAmp, 0)
+            
+#            # Rx gating
+#            t0 = tEx+rfExTime/2+hw.deadTime
+#            mri.rxGate(expt, t0, acqTime)
+            
+            # Crusher gradient
+            t0 = tEx+echoTime/2-crusherTime/2-gradRiseTime-hw.gradDelay-50
+            mri.gradTrap(expt, t0, gradRiseTime, crusherTime, 0.005, gSteps, axes[0], shimming)
+            mri.gradTrap(expt, t0, gradRiseTime, crusherTime, 0.005, gSteps, axes[1], shimming)
+            mri.gradTrap(expt, t0, gradRiseTime, crusherTime, 0.005, gSteps, axes[2], shimming)
+            
+            # Refocusing pulse
+            t0 = tEx+echoTime/2-rfReTime/2-hw.blkTime
+            mri.rfRecPulse(expt, t0, rfReTime, rfReAmp, np.pi/2)
+            
+            # Rx gating
+            t0 = tEx+echoTime-acqTime/2
+            mri.rxGate(expt, t0, acqTime)
+        
+        # End sequence
+        mri.endSequence(expt, scanTime)
     
-
-    tFin = t_start
-    endSequence(tFin)
+    # Time variables in us
+    rfExTime *= 1e6
+    rfReTime *= 1e6
+    repetitionTime *= 1e6
+    echoTime *= 1e6
+    tIR *= 1e6
+    scanTime = nRepetitions*repetitionTime # us
     
-# Representar Secuencia o tomar los datos.
-    tIR1 = np.geomspace(t_ini, t_fin, N)
-    tIR2 = np.geomspace(t_ini, t_fin, 10*N)
+    expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+    samplingPeriod = expt.get_rx_ts()[0] # us
+    bw = 1/samplingPeriod/hw.oversamplingFactor # MHz
+    acqTime = nRD/bw # us
+    rawData['samplingPeriod'] = samplingPeriod*1e-6
+    rawData['bw'] = bw*1e6
+    createSequence()
+    
+    # Representar Secuencia o tomar los datos.
+    tIR1 = np.geomspace(tInvIni, tInvFin, nRepetitions)
+    tIR2 = np.geomspace(tInvIni, tInvFin, 10*nRepetitions)
     if plotSeq==1:                
         expt.plot_sequence()
         plt.show()
@@ -123,11 +151,16 @@ def inversionrecoveryStandalone(
         print('End')
         data = rxd['rx0']*13.788
         expt.__del__()
+        data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
         rawData['fullData'] = data
-        dataIndiv = np.reshape(data,  (N, n_rd))
-        dataIndiv = np.real(dataIndiv[:, point]*np.exp(-1j*(np.angle(dataIndiv[0, 1])+np.pi)))
+        dataIndiv = np.reshape(data,  (nRepetitions, nRD))
+        dataIndiv = np.real(dataIndiv[:, int(nRD/2)]*np.exp(-1j*(np.angle(dataIndiv[0, int(nRD/2)])+np.pi)))
         results = np.transpose(np.array([tIR1, dataIndiv/np.max(dataIndiv)]))
+#        results = np.transpose(np.array([tIR1, dataIndiv]))
         rawData['signalVsTime'] = results
+        
+        plt.figure(1)
+        plt.plot(np.abs(data))
         
         # For 1 component
         fitData1, xxx = curve_fit(func1, results[:, 0],  results[:, 1])
@@ -160,20 +193,20 @@ def inversionrecoveryStandalone(
         rawData['M3'] = [fitData3[0], fitData3[2], fitData3[4]]
         
         # Save data
-        name = saveMyData(rawData)
+        mri.saveRawData(rawData)
         
         # Plots
-        plt.figure(2, figsize=(5, 5))
+        plt.figure(2, figsize=(10, 5))
         plt.plot(results[:, 0], results[:, 1], 'o')
         plt.plot(tIR2, func1(tIR2, *fitData1))
         plt.plot(tIR2, func2(tIR2, *fitData2))
         plt.plot(tIR2, func3(tIR2, *fitData3))
-        plt.title(name)
+        plt.title(rawData['fileName'])
         plt.xscale('log')
         plt.xlabel('t(s)')
         plt.ylabel('Signal (mV)')
         plt.legend(['Experimental', 'Fitting 1 component', 'Fitting 2 components','Fitting 3 components' ])
-        plt.title(name)
+        plt.title(rawData['fileName'])
         plt.show()
         
 
@@ -185,20 +218,6 @@ def func2(x, ma, t1a, mb, t1b):
 
 def func3(x, ma, t1a, mb, t1b, mc, t1c):
     return ma*(1-2*np.exp(-x/t1a))+mb*(1-2*np.exp(-x/t1b))+mc*(1-2*np.exp(-x/t1c))
-
-def saveMyData(rawData):
-    # Save data
-    dt = datetime.now()
-    dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S")
-    dt2 = date.today()
-    dt2_string = dt2.strftime("%Y.%m.%d")
-    if not os.path.exists('experiments/acquisitions/%s' % (dt2_string)):
-        os.makedirs('experiments/acquisitions/%s' % (dt2_string))
-    if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
-        os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
-    rawData['name'] = "%s.%s.mat" % ("IR",dt_string)
-    savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, "IR",dt_string),  rawData)
-    return rawData['name']
 
 if __name__ == "__main__":
     inversionrecoveryStandalone()

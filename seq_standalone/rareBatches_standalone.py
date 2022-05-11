@@ -34,21 +34,21 @@ def rare_standalone(
     init_gpa=False, # Starts the gpa
     nScans = 1, # NEX
     larmorFreq = 3.0743, # MHz, Larmor frequency
-    rfExAmp = 0.4, # a.u., rf excitation pulse amplitude
-    rfReAmp = 0.4, # a.u., rf refocusing pulse amplitude
-    rfExTime = 25, # us, rf excitation pulse time
-    rfReTime = 50, # us, rf refocusing pulse time
+    rfExAmp = 0.3, # a.u., rf excitation pulse amplitude
+    rfReAmp = 0.3, # a.u., rf refocusing pulse amplitude
+    rfExTime = 35, # us, rf excitation pulse time
+    rfReTime = 70, # us, rf refocusing pulse time
     echoSpacing = 10., # ms, time between echoes
     preExTime = 0., # ms, Time from preexcitation pulse to inversion pulse
     inversionTime = 0., # ms, Inversion recovery time
-    repetitionTime = 1000., # ms, TR
-    fov = np.array([120., 120., 40.]), # mm, FOV along readout, phase and slice
-    dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
-    nPoints = np.array([60, 60, 4]), # Number of points along readout, phase and slice
-    etl = 60, # Echo train length
+    repetitionTime = 500., # ms, TR
+    fov = np.array([120, 120, 40]), # mm, FOV along readout, phase and slice
+    dfov = np.array([0, 0, 0]), # mm, displacement of fov center
+    nPoints = np.array([60, 60, 1]), # Number of points along readout, phase and slice
+    etl = 30, # Echo train length
     acqTime = 4, # ms, acquisition time
-    axes = np.array([2, 0, 1]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
+    axes = np.array([2, 1, 0]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
+    axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
     sweepMode = 1, # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
     rdGradTime = 6,  # ms, readout gradient time
     rdDephTime = 1,  # ms, readout dephasing time
@@ -56,7 +56,7 @@ def rare_standalone(
     rdPreemphasis = 1.005, # readout dephasing gradient is multiplied by this factor
     drfPhase = 0, # degrees, phase of the excitation pulse
     dummyPulses = 1, # number of dummy pulses for T1 stabilization
-    shimming = np.array([-70., -90., 10.]), # a.u.*1e4, shimming along the X,Y and Z axes
+    shimming = np.array([-70, -90, 10]), # a.u.*1e4, shimming along the X,Y and Z axes
     parAcqLines = 0 # number of additional lines, Full sweep if 0
     ):
     

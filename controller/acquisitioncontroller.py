@@ -16,17 +16,10 @@ from plotview.spectrumplot import SpectrumPlot
 from plotview.spectrumplot import Spectrum2DPlot
 from plotview.spectrumplot import Spectrum3DPlot
 from sequencemodes import defaultsequences
-from seq.utilities import change_axes
+#from seq.utilities import change_axes
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject,  pyqtSlot,  pyqtSignal, QThread
 from manager.datamanager import DataManager
-from seq.radial import radial
-from seq.gradEcho import grad_echo
-from seq.turboSpinEcho_filter import turbo_spin_echo
-from seq.cpmg import cpmg
-from seq.rare import rare
-from seq.fid import fid
-from seq.spinEcho import spin_echo
 from datetime import date,  datetime 
 from scipy.io import savemat
 import os
@@ -36,6 +29,7 @@ import nibabel as nib
 import pyqtgraph.exporters
 from functools import partial
 from sessionmodes import defaultsessions
+from seq.rare import rare
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, session=None, sequencelist=None):
@@ -58,39 +52,18 @@ class AcquisitionController(QObject):
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
         self.sequence.oversampling_factor = 6
 
-        
-        if hasattr(self.sequence, 'axes') and self.sequence.seq != 'RARE':
-            self.sequence.x, self.sequence.y, self.sequence.z, self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl, self.sequence.fov_rd, self.sequence.fov_ph, self.sequence.fov_sl = change_axes(self.sequence)
-        else:
-            self.sequence.n_rd=1
-            self.sequence.n_ph=1
-            self.sequence.n_sl=1
-
         plotSeq=0
-        if self.sequence.seq == 'SE':
-            self.rxd, self.msgs, self.data_avg=spin_echo(self.sequence, plotSeq)
-        elif self.sequence.seq == 'FID':
-            self.rxd, self.msgs, self.data_avg=fid(self.sequence, plotSeq)
-        elif self.sequence.seq == 'R':
-            self.rxd, self.msgs = radial(self.sequence, plotSeq)
-        elif self.sequence.seq == 'GE':
-            self.rxd, self.msgs = grad_echo(self.sequence, plotSeq)
-        elif self.sequence.seq == 'TSE':
-            self.rxd, self.msgs, self.data_avg  = turbo_spin_echo(self.sequence, plotSeq)
-            nPoint = [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]
-        elif self.sequence.seq == 'CPMG':
-            self.rxd, self.msgs, self.data_avg, self.sequence.BW = cpmg(self.sequence, plotSeq)
-            self.sequence.lo_freq=self.sequence.larmorFreq
-        elif  self.sequence.seq == 'RARE':
+        if  self.sequence.seq == 'RARE':
             print('Start sequence')
             self.rxd, self.msgs, self.data_avg, self.sequence.BW = rare(self.sequence, plotSeq)
-            [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl] = self.sequence.nPoints
-            self.sequence.lo_freq=self.sequence.larmorFreq
             print('End sequence')
+#        elif self.sequence.seq == 'CPMG':
+#            self.rxd, self.msgs, self.data_avg, self.sequence.BW = cpmg(self.sequence, plotSeq)
+#            self.sequence.lo_freq=self.sequence.larmorFreq
             
-            
-        self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.lo_freq, len(self.data_avg), [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl], self.sequence.BW)
-        self.sequence.ns = [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]
+        [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]= self.sequence.nPoints
+        self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.larmorFreq, len(self.data_avg), self.sequence.nPoints, self.sequence.BW)
+        self.sequence.ns = self.sequence.nPoints
 
         if not hasattr(self.parent, 'batch'):
             if (self.sequence.n_ph ==1 and self.sequence.n_sl == 1):
