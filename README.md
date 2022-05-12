@@ -20,7 +20,7 @@ Execute the GUI by running ***FirstMRI.py***.
 
 ## How to use the GUI
 
-### Start system
+### Start the connection with the Red Pitaya
 
 In a linux terminal, start the connection between the Red Pitaya and execute marcos_server:
 
@@ -96,8 +96,8 @@ On the other hand, there are ui files that represent single elements that will b
 These elements are:
 
 - inputparameter.ui (Figure 7a)	
-- gradients.ui (Figure 7b)
-- inputshimming.ui (Figure 7c)
+- inputshimming.ui (Figure 7b)
+- gradients.ui (Figure 7c)
 
 <img src="images/ui_elements.png" width=300 height=250>
 
