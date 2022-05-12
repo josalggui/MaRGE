@@ -157,3 +157,5 @@ Some stylesheets are stored in this folder, which allow changing the appearance 
 - **Modes functions**: these files contain the default sequences or calibration functions that are displayed in the GUI when it is executed. These functions are *sequencemodes.py*, *sessionmodes.py* and *calibfunctionsmodes.py*.
 - **Console function**: *stream.py* is a class used to write error messages in the console of the GUI.  
 
+## How to add a new sequence to the GUI
+
