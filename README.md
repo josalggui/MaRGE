@@ -67,13 +67,11 @@ Then, we launch the GUI main window by clicking to the corresponding icon. We di
 
 #### Batch acquisition
 
-It allows acquiring multiple images with different sequences sequentially, without human intervention (Figure 4). 
+It allows acquiring multiple images with different sequences sequentially, without human intervention (Figure 4). With the `plus` button you can add files with sequence parameters previously saved in the GUI main window. You can remove them with the `minus` button.
 
 <img src="images/batchWindow_completo.png" alt="alt text" width=200 height=350>
 
 **Figure 4.- Batch acquisition window** 
-
-With the `plus` button you can add files previously saved in the GUI main window. You can remove them with the `minus` button.
 
 ## Structure of the folders and files in the GUI     
 
@@ -159,3 +157,5 @@ Some stylesheets are stored in this folder, which allow changing the appearance 
 
 ## How to add a new sequence to the GUI
 
+
+## How to add new calibration functions to the GUI
