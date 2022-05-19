@@ -47,7 +47,7 @@ def rare_standalone(
     repetitionTime = 200., # ms, TR
     fov = np.array([140., 150., 180.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
-    nPoints = np.array([140, 80, 18]), # Number of points along readout, phase and slice
+    nPoints = np.array([140, 80, 10]), # Number of points along readout, phase and slice
     etl = 10, # Echo train length
     acqTime = 4, # ms, acquisition time
     axes = np.array([2, 1, 0]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
@@ -354,7 +354,7 @@ def rare_standalone(
     indkrd0 = np.argmax(np.abs(dataProv))
     if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD+addRdPoints:
         indkrd0 = int(nRD/2)
-    indkrd0 = int(nRD/2)
+#    indkrd0 = int(nRD/2)
 
     # Get individual images
     dataFull = np.reshape(dataFull, (nScans, nSL, nPH, nRD))

@@ -3,15 +3,23 @@
 Created on Thu Oct  7 12:40:05 2021
 @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
 @Summary: this code used rare_standalone.py on Feb 4 2022 as source. It divide the 3d acquisition
-in batches in such a way that each batch acquires a k-space slice.
+in batches in such a way that each batch acquires a number of points smaller than a given maximum number.
 """
 
 import sys
-# marcos_client path for linux
-sys.path.append('../marcos_client')
-# marcos_client and PhysioMRI_GUI for Windows
-sys.path.append('D:\CSIC\REPOSITORIOS\marcos_client')
-sys.path.append('D:\CSIC\REPOSITORIOS\PhysioMRI_GUI')
+import os
+#******************************************************************************
+# Add path to the working directory
+path = os.path.realpath(__file__)
+ii = 0
+for char in path:
+    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
+        # sys.path.append(path[0:ii])
+        print("Path: ",path[0:ii+1])
+        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
+        sys.path.append(path[0:ii+1]+'marcos_client')
+    ii += 1
+#******************************************************************************
 import numpy as np
 import experiment as ex
 import matplotlib.pyplot as plt
@@ -33,31 +41,31 @@ st = pdb.set_trace
 def rare_standalone(
     init_gpa=False, # Starts the gpa
     nScans = 1, # NEX
-    larmorFreq = 3.0743, # MHz, Larmor frequency
-    rfExAmp = 0.4, # a.u., rf excitation pulse amplitude
-    rfReAmp = 0.8, # a.u., rf refocusing pulse amplitude
-    rfExTime = 22, # us, rf excitation pulse time
-    rfReTime = 22, # us, rf refocusing pulse time
-    echoSpacing = 10., # ms, time between echoes
+    larmorFreq = 3.08, # MHz, Larmor frequency
+    rfExAmp = 0.3, # a.u., rf excitation pulse amplitude
+    rfReAmp = 0.3, # a.u., rf refocusing pulse amplitude
+    rfExTime = 35, # us, rf excitation pulse time
+    rfReTime = 70, # us, rf refocusing pulse time
+    echoSpacing = 10, # ms, time between echoes
     preExTime = 0., # ms, Time from preexcitation pulse to inversion pulse
     inversionTime = 0., # ms, Inversion recovery time
-    repetitionTime = 250., # ms, TR
-    fov = np.array([120., 120., 120.]), # mm, FOV along readout, phase and slice
+    repetitionTime = 200., # ms, TR
+    fov = np.array([140., 150., 180.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
-    nPoints = np.array([120, 120, 120]), # Number of points along readout, phase and slice
-    etl = 15, # Echo train length
+    nPoints = np.array([140, 80, 10]), # Number of points along readout, phase and slice
+    etl = 10, # Echo train length
     acqTime = 4, # ms, acquisition time
-    axes = np.array([0, 1, 2]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
+    axes = np.array([2, 1, 0]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
     axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
     sweepMode = 1, # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
     rdGradTime = 5,  # ms, readout gradient time
     rdDephTime = 1,  # ms, readout dephasing time
     phGradTime = 1, # ms, phase and slice dephasing time
-    rdPreemphasis = 1.005, # readout dephasing gradient is multiplied by this factor
+    rdPreemphasis = 1.00, # readout dephasing gradient is multiplied by this factor
     drfPhase = 0, # degrees, phase of the excitation pulse
     dummyPulses = 1, # number of dummy pulses for T1 stabilization
-    shimming = np.array([-57.5, -85., 5]), # a.u.*1e4, shimming along the X,Y and Z axes
-    parAcqLines = 0 # number of additional lines, Full sweep if 0
+    shimming = np.array([-70, -90., 10]), # a.u.*1e4, shimming along the X,Y and Z axes
+    parFourierFraction = 1.0 # fraction of acquired k-space along phase direction
     ):
     
     freqCal = 1
@@ -82,7 +90,7 @@ def rare_standalone(
     phGradTime = phGradTime*1e-3
     
     # Inputs for rawData
-    rawData['seqName'] = 'rareBatches'
+    rawData['seqName'] = 'RareBatchesPoints_standalone'
     rawData['nScans'] = nScans
     rawData['larmorFreq'] = larmorFreq      # Larmor frequency
     rawData['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
@@ -104,7 +112,7 @@ def rare_standalone(
     rawData['rdPreemphasis'] = rdPreemphasis
     rawData['drfPhase'] = drfPhase 
     rawData['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
-    rawData['partialAcquisition'] = parAcqLines
+    rawData['parFourierFraction'] = parFourierFraction
     rawData['rdDephTime'] = rdDephTime
     rawData['shimming'] = shimming
     
@@ -134,8 +142,8 @@ def rare_standalone(
         etl = nPH
     
     # parAcqLines in case parAcqLines = 0
-    if parAcqLines==0:
-        parAcqLines = int(nSL/2)
+    parAcqLines = int(int(nPoints[2]*parFourierFraction)-nPoints[2]/2)
+    rawData['partialAcquisition'] = parAcqLines
     
     # BW
     BW = nPoints[0]/acqTime*1e-6
@@ -351,7 +359,7 @@ def rare_standalone(
         dummyData = np.average(dummyData, axis=0)
         rawData['dummyData'] = dummyData
         overData = np.reshape(overData, (nScans*nSL, int(nPH/etl), etl,  nRD*hw.oversamplingFactor))
-        for ii in range(nScans):
+        for ii in range(nScans*nSL):
             overData[ii, :, :, :] = mri.fixEchoPosition(dummyData, overData[ii, :, :, :])
         overData = np.squeeze(np.reshape(overData, (1, nRD*hw.oversamplingFactor*nPH*nSL*nScans)))
     
@@ -373,7 +381,7 @@ def rare_standalone(
     indkrd0 = np.argmax(np.abs(dataProv))
     if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD+addRdPoints:
         indkrd0 = int(nRD/2)
-    indkrd0 = int(nRD/2)
+#    indkrd0 = int(nRD/2)
 
     # Get individual images
     dataFull = np.reshape(dataFull, (nSL, nScans, nPH, nRD))
@@ -395,10 +403,7 @@ def rare_standalone(
     # Do zero padding
     dataTemp = np.zeros((nPoints[2], nPoints[1], nPoints[0]))
     dataTemp = dataTemp+1j*dataTemp
-    if nSL==1 or (nSL>1 and parAcqLines==0):
-        dataTemp = data
-    elif nSL>1 and parAcqLines>0:
-        dataTemp[0:nSL-1, :, :] = data[0:nSL-1, :, :]
+    dataTemp[0:nSL, :, :] = data
     data = np.reshape(dataTemp, (1, nPoints[0]*nPoints[1]*nPoints[2]))
     
     # Fix the position of the sample according to dfov

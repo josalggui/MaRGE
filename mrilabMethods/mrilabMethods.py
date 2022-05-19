@@ -81,7 +81,7 @@ def fixEchoPosition(echoes, data0):
     Oversampled data obtained with a given echo train length and readout gradient only is used here to determine the true position of k=0.
     After getting the position of k = 0 for each gradient-spin-echo, it shift the sampled data to place k = 0 at the center of each acquisition window.
     """
-    
+    echoes
     etl = np.size(echoes, axis=0)
     n = np.size(echoes, axis=1)
     idx = np.argmax(np.abs(echoes), axis=1)
@@ -90,7 +90,6 @@ def fixEchoPosition(echoes, data0):
     for ii in range(etl):
         if idx[ii]>0:
             idx[ii] = 0
-        echoes[ii, -idx[ii]::] = echoes[ii, 0:n+idx[ii]]
         data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n+idx[ii]]
     return(data1)
     
