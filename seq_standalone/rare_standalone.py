@@ -36,22 +36,22 @@ st = pdb.set_trace
 def rare_standalone(
     init_gpa=False, # Starts the gpa
     nScans = 1, # NEX
-    larmorFreq = 3.08, # MHz, Larmor frequency
+    larmorFreq = 3.075, # MHz, Larmor frequency
     rfExAmp = 0.3, # a.u., rf excitation pulse amplitude
     rfReAmp = 0.3, # a.u., rf refocusing pulse amplitude
-    rfExTime = 35, # us, rf excitation pulse time
-    rfReTime = 70, # us, rf refocusing pulse time
+    rfExTime = 40, # us, rf excitation pulse time
+    rfReTime = 80, # us, rf refocusing pulse time
     echoSpacing = 10, # ms, time between echoes
     preExTime = 0., # ms, Time from preexcitation pulse to inversion pulse
     inversionTime = 0., # ms, Inversion recovery time
     repetitionTime = 200., # ms, TR
     fov = np.array([140., 150., 180.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
-    nPoints = np.array([140, 80, 10]), # Number of points along readout, phase and slice
+    nPoints = np.array([140, 1, 1]), # Number of points along readout, phase and slice
     etl = 10, # Echo train length
     acqTime = 4, # ms, acquisition time
     axes = np.array([2, 1, 0]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
+    axesEnable = np.array([0, 0, 0]), # 1-> Enable, 0-> Disable
     sweepMode = 1, # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
     rdGradTime = 5,  # ms, readout gradient time
     rdDephTime = 2,  # ms, readout dephasing time
@@ -60,7 +60,7 @@ def rare_standalone(
     drfPhase = 0, # degrees, phase of the excitation pulse
     dummyPulses = 1, # number of dummy pulses for T1 stabilization
     shimming = np.array([-70, -90., 10]), # a.u.*1e4, shimming along the X,Y and Z axes
-    parFourierFraction = 1.0 # fraction of acquired k-space along phase direction
+    parFourierFraction = 1 # fraction of acquired k-space along phase direction
     ):
     
     freqCal = 1
@@ -352,9 +352,8 @@ def rare_standalone(
     # Check where is krd = 0
     dataProv = dataProv[int(nPoints[2]/2), int(nPH/2), :]
     indkrd0 = np.argmax(np.abs(dataProv))
-    if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD+addRdPoints:
+    if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
         indkrd0 = int(nRD/2)
-#    indkrd0 = int(nRD/2)
 
     # Get individual images
     dataFull = np.reshape(dataFull, (nScans, nSL, nPH, nRD))

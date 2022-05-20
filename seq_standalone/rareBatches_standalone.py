@@ -344,7 +344,7 @@ def rare_standalone(
     # Check where is krd = 0
     dataProv = dataProv[int(nPoints[2]/2), int(nPH/2), :]
     indkrd0 = np.argmax(np.abs(dataProv))
-    if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD+addRdPoints:
+    if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
         indkrd0 = int(nRD/2)
 #    indkrd0 = int(nRD/2)
 
