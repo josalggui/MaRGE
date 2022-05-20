@@ -3,7 +3,9 @@
 Created on Thu Oct  7 12:40:05 2021
 @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
 @Summary: this code used rare_standalone.py on Feb 4 2022 as source. It divide the 3d acquisition
-in batches in such a way that each batch acquires a number of points smaller than a given maximum number.
+in batches in such a way that each batch acquires taking into account:
+    number of points smaller than a given maximum number.
+    number of instruction smaller than a given maximum number.
 """
 
 import sys
@@ -52,7 +54,7 @@ def rare_standalone(
     repetitionTime = 200., # ms, TR
     fov = np.array([140., 150., 180.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
-    nPoints = np.array([140, 80, 10]), # Number of points along readout, phase and slice
+    nPoints = np.array([140, 80, 18]), # Number of points along readout, phase and slice
     etl = 10, # Echo train length
     acqTime = 4, # ms, acquisition time
     axes = np.array([2, 1, 0]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
@@ -199,13 +201,14 @@ def rare_standalone(
         else:
             dc = False
         acqPoints = 0
+        orders = 0
         # Check in case of dummy pulse fill the cache
         if (dummyPulses>0 and etl*nRD*2>hw.maxRdPoints) or (dummyPulses==0 and etl*nRD>hw.maxRdPoints):
             print('ERROR: Too many acquired points.')
             return()
         # Set shimming
         mri.iniSequence(expt, 20, shimming, rewrite=rewrite)
-        while acqPoints+etl*nRD<=hw.maxRdPoints and repeIndexGlobal<nRepetitions:
+        while acqPoints+etl*nRD<=hw.maxRdPoints and orders<=hw.maxOrders and repeIndexGlobal<nRepetitions:
             # Initialize time
             tEx = 20e3+repetitionTime*repeIndex+inversionTime+preExTime
             
@@ -216,6 +219,7 @@ def rare_standalone(
                 mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.005, gSteps, axes[0], shimming)
                 mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.005, gSteps, axes[1], shimming)
                 mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.005, gSteps, axes[2], shimming)
+                orders = orders+gSteps*6
                 
             # Inversion pulse
             if repeIndex>=dummyPulses and inversionTime!=0:
@@ -224,12 +228,14 @@ def rare_standalone(
                 mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[0], shimming)
                 mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[1], shimming)
                 mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[2], shimming)
-            
+                orders = orders+gSteps*6
+                
             # DC gradient if desired
             if (repeIndex==0 or repeIndex>=dummyPulses) and dc==True:
                 t0 = tEx-10e3
                 mri.gradTrap(expt, t0, gradRiseTime, 10e3+echoSpacing*(etl+1), rdGradAmplitude, gSteps, axes[0], shimming)
-            
+                orders = orders+gSteps*2
+                
             # Excitation pulse
             t0 = tEx-hw.blkTime-rfExTime/2
             mri.rfRecPulse(expt, t0,rfExTime,rfExAmp,drfPhase)
@@ -238,7 +244,8 @@ def rare_standalone(
             if (repeIndex==0 or repeIndex>=dummyPulses) and dc==False:
                 t0 = tEx+rfExTime/2-hw.gradDelay
                 mri.gradTrap(expt, t0, gradRiseTime, rdDephTime, rdDephAmplitude*rdPreemphasis, gSteps, axes[0], shimming)
-            
+                orders = orders+gSteps*2
+                
             # Echo train
             for echoIndex in range(etl):
                 tEcho = tEx+echoSpacing*(echoIndex+1)
@@ -252,12 +259,14 @@ def rare_standalone(
                     t0 = tEcho-echoSpacing/2+rfReTime/2-hw.gradDelay
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, phGradients[phIndex], gSteps, axes[1], shimming)
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, slGradients[slIndex], gSteps, axes[2], shimming)
-                
+                    orders = orders+gSteps*4
+                    
                 # Readout gradient
                 if (repeIndex==0 or repeIndex>=dummyPulses) and dc==False:         # This is to account for dummy pulses
                     t0 = tEcho-rdGradTime/2-gradRiseTime-hw.gradDelay
                     mri.gradTrap(expt, t0, gradRiseTime, rdGradTime, rdGradAmplitude, gSteps, axes[0], shimming)
-    
+                    orders = orders+gSteps*2
+                    
                 # Rx gate
                 if (repeIndex==0 or repeIndex>=dummyPulses):
                     t0 = tEcho-acqTime/2-addRdPoints/BW
@@ -269,9 +278,12 @@ def rare_standalone(
                 if (echoIndex<etl-1 and repeIndex>=dummyPulses):
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, -phGradients[phIndex], gSteps, axes[1], shimming)
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, -slGradients[slIndex], gSteps, axes[2], shimming)
+                    orders = orders+gSteps*4
                 elif(echoIndex==etl-1 and repeIndex>=dummyPulses):
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, +phGradients[phIndex], gSteps, axes[1], shimming)
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, +slGradients[slIndex], gSteps, axes[2], shimming)
+                    orders = orders+gSteps*4
+                    
     
                 # Update the phase and slice gradient
                 if repeIndex>=dummyPulses:
@@ -381,7 +393,6 @@ def rare_standalone(
     indkrd0 = np.argmax(np.abs(dataProv))
     if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD+addRdPoints:
         indkrd0 = int(nRD/2)
-#    indkrd0 = int(nRD/2)
 
     # Get individual images
     dataFull = np.reshape(dataFull, (nSL, nScans, nPH, nRD))
@@ -522,94 +533,6 @@ def rare_standalone(
         plt.title("RARE.%s.mat" % (dt_string))
     
     plt.show()
-    
-
-#*********************************************************************************
-#*********************************************************************************
-#*********************************************************************************
-
-
-#def getIndex(echos_per_tr, n_ph, sweep_mode):
-#    n2ETL=int(n_ph/2/echos_per_tr)
-#    ind:int = [];
-#    if n_ph==1:
-#         ind = np.linspace(int(n_ph)-1, 0, n_ph)
-#    
-#    else: 
-#        if sweep_mode==0:   # Sequential for T2 contrast
-#            for ii in range(int(n_ph/echos_per_tr)):
-#               ind = np.concatenate((ind, np.arange(1, n_ph+1, n_ph/echos_per_tr)+ii))
-#            ind = ind-1
-#
-#        elif sweep_mode==1: # Center-out for T1 contrast
-#            if echos_per_tr==n_ph:
-#                for ii in range(int(n_ph/2)):
-#                    cont = 2*ii
-#                    ind = np.concatenate((ind, np.array([n_ph/2-cont/2])), axis=0);
-#                    ind = np.concatenate((ind, np.array([n_ph/2+1+cont/2])), axis=0);
-#            else:
-#                for ii in range(n2ETL):
-#                    ind = np.concatenate((ind,np.arange(n_ph/2, 0, -n2ETL)-(ii)), axis=0);
-#                    ind = np.concatenate((ind,np.arange(n_ph/2+1, n_ph+1, n2ETL)+(ii)), axis=0);
-#            ind = ind-1
-#        elif sweep_mode==2: # Out-to-center for T2 contrast
-#            if echos_per_tr==n_ph:
-#                ind=np.arange(1, n_ph+1, 1)
-#            else:
-#                for ii in range(n2ETL):
-#                    ind = np.concatenate((ind,np.arange(1, n_ph/2+1, n2ETL)+(ii)), axis=0);
-#                    ind = np.concatenate((ind,np.arange(n_ph, n_ph/2, -n2ETL)-(ii)), axis=0);
-#            ind = ind-1
-#        elif sweep_mode==3:
-#            if echos_per_tr==n_ph:
-#                ind = np.arange(0, n_ph, 1)
-#            else:
-#                for ii in range(int(n2ETL)):
-#                    ind = np.concatenate((ind, np.arange(0, n_ph, 2*n2ETL)+2*ii), axis=0)
-#                    ind = np.concatenate((ind, np.arange(n_ph-1, 0, -2*n2ETL)-2*ii), axis=0)
-#
-#    return np.int32(ind)
-
-
-#*********************************************************************************
-#*********************************************************************************
-#*********************************************************************************
-
-
-#def reorganizeGfactor(axes):
-#    gFactor = np.array([0., 0., 0.])
-#    
-#    # Set the normalization factor for readout, phase and slice gradient
-#    for ii in range(3):
-#        if axes[ii]==0:
-#            gFactor[ii] = Gx_factor
-#        elif axes[ii]==1:
-#            gFactor[ii] = Gy_factor
-#        elif axes[ii]==2:
-#            gFactor[ii] = Gz_factor
-#    
-#    return(gFactor)
-
-#*********************************************************************************
-#*********************************************************************************
-#*********************************************************************************
-
-
-#def fixEchoPosition(echoes, data0):
-#    etl = np.size(echoes, axis=0)
-#    n = np.size(echoes, axis=1)
-#    idx = np.argmax(np.abs(echoes), axis=1)
-#    idx = idx-int(n/2)
-#    data1 = data0*0
-#    for ii in range(etl):
-#        if idx[ii]>0:
-#            idx[ii] = 0
-#        echoes[ii, -idx[ii]::] = echoes[ii, 0:n+idx[ii]]
-#        data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n+idx[ii]]
-##    plt.figure(5)
-##    plt.imshow(np.abs(echoes), cmap='gray')
-##    plt.show()
-#    return(data1)
 
 
 #*********************************************************************************
