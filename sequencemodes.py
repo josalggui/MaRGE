@@ -47,7 +47,7 @@ class RARE:
                  dummyPulses:int = None, 
                  
                  shimming:list=None, 
-                 parAcqLines:int = None, 
+                 parFourierFraction:float = None, 
                  ):
     
         self.seq:str=seq 
@@ -76,7 +76,7 @@ class RARE:
         self.drfPhase:int = drfPhase
         self.dummyPulses:int = dummyPulses
         self.shimming:list=shimming
-        self.parAcqLines:int = parAcqLines
+        self.parFourierFraction:float = parFourierFraction
 
     @property 
     def  systemproperties(self) -> dict:
@@ -106,7 +106,7 @@ class RARE:
             nmspc.rdPreemphasis:[float(self.rdPreemphasis)], 
             nmspc.dummyPulses:[int(self.dummyPulses)], 
             nmspc.shimming:[list(self.shimming)], 
-            nmspc.parAcqLines:[int(self.parAcqLines)], 
+            nmspc.parFourierFraction:[float(self.parFourierFraction)], 
             nmspc.drfPhase:[int(self.drfPhase)], 
         }
 
@@ -116,7 +116,7 @@ Definition of default sequences
 defaultsequences={
 #    'RARE': RARE(seq,nScans, larmorFreq, rfExAmp, rfReAmp, rfExTime, rfReTime, echoSpacing, preExTime, inversionTime, repetitionTime, fov, dfov, nPoints, etl, ...
 #                            acqTime, axes, axesEnable, sweepMode, rdGradTime, rdDephTime, phGradTime, rdPreemphasis, drfPhase, dummyPulses,shimming, parAcqLines)
-    'RARE': RARE('RARE', 1, 3.076, 0.3, 0, 35, 0, 10., 0., 0.,500., (120, 120, 120),  (0, 0, 0), (60, 1, 1), 30, 4, (0, 1, 2), (0, 0, 0), 1, 6, 1, 1, 1.005, 0, 1, (-70, -90, 10), 0) 
+    'RARE': RARE('RARE', 1, 3.04, 0.3, 0, 35, 0, 10., 0., 0.,500., (120, 120, 120),  (0, 0, 0), (60, 1, 1), 30, 4, (0, 1, 2), (0, 0, 0), 1, 6, 1, 1, 1.005, 0, 1, (-70, -90, 10), 1.0) 
     }
     
 #class CPMGSeq:

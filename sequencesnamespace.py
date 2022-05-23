@@ -49,13 +49,13 @@ class Namespace:
     axesEnable="Axes Enable (on=1, off=0)"
     sweepMode= "Sweep Mode (0=T2w, 1=T1w, 2=Rhow)" 
     rdGradTime="Readout grad. Time (us)"
-    rdDephTime="Readout dephasing grad. Time (us)"
-    phGradTime="Phase and Slice grad. Time (us)"
+    rdDephTime="Readout dephasing grad. Time (ms)"
+    phGradTime="Phase and Slice grad. Time (ms)"
     rdPreemphasis="Rd Preemphasis Factor (a.u.)"
     drfPhase = "Phase of 90º pulse (º)" 
     dummyPulses = "Number of Dummy Pulses" 
     shimming = 'Shimming (x, y, z)'
-    parAcqLines = 'Partial adquisition (Off=0; 1,2...=nº lines)'
+    parFourierFraction= 'Fraction of acquired k-space along phase direction'
 
 
 
