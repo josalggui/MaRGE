@@ -212,6 +212,11 @@ def rare_standalone(
             # Initialize time
             tEx = 20e3+repetitionTime*repeIndex+inversionTime+preExTime
             
+            # First I do a noise measurement.
+            if repeIndex==0:
+                t0 = tEx-preExTime-inversionTime-4*acqTime
+                mri.rxGate(expt, t0, acqTime+2*addRdPoints/BW)
+            
             # Pre-excitation pulse
             if repeIndex>=dummyPulses and preExTime!=0:
                 t0 = tEx-preExTime-inversionTime-rfExTime/2-hw.blkTime
@@ -329,6 +334,7 @@ def rare_standalone(
     dataFull = []
     dummyData = []
     overData = []
+    noise = []
     batchIndex = 0
     repeIndexArray = np.array([0])
     repeIndexGlobal = repeIndexArray[0]
@@ -354,6 +360,9 @@ def rare_standalone(
         for ii in range(nScans):
             rxd, msgs = expt.run()
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
+            # Get noise data
+            noise = np.concatenate((noise, rxd['rx0'][0:nRD]), axis = 0)
+            rxd['rx0'] = rxd['rx0'][nRD::]
             # Get data
             if dummyPulses>0:
                 dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*etl*hw.oversamplingFactor]), axis = 0)
@@ -363,6 +372,7 @@ def rare_standalone(
         expt.__del__()
         
     print('Scans done!')
+    rawData['noiseData'] = noise
     rawData['overData'] = overData
     
     # Fix the echo position using oversampled data
