@@ -315,8 +315,8 @@ def rare_standalone(
             rxd, msgs = expt.run()
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             # Get noise data
-            noise = np.concatenate((noise, rxd['rx0'][0:nRD]), axis = 0)
-            rxd['rx0'] = rxd['rx0'][nRD::]
+            noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
+            rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
             # Get data
             if dummyPulses>0:
                 dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*etl*hw.oversamplingFactor]), axis = 0)

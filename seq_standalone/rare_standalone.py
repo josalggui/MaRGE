@@ -37,8 +37,8 @@ def rare_standalone(
     init_gpa=False, # Starts the gpa
     nScans = 1, # NEX
     larmorFreq = 3.075, # MHz, Larmor frequency
-    rfExAmp = 0.3, # a.u., rf excitation pulse amplitude
-    rfReAmp = 0.3, # a.u., rf refocusing pulse amplitude
+    rfExAmp = 0.0, # a.u., rf excitation pulse amplitude
+    rfReAmp = 0.0, # a.u., rf refocusing pulse amplitude
     rfExTime = 40, # us, rf excitation pulse time
     rfReTime = 80, # us, rf refocusing pulse time
     echoSpacing = 10, # ms, time between echoes
@@ -47,7 +47,7 @@ def rare_standalone(
     repetitionTime = 200., # ms, TR
     fov = np.array([140., 150., 180.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
-    nPoints = np.array([140, 1, 1]), # Number of points along readout, phase and slice
+    nPoints = np.array([80, 1, 1]), # Number of points along readout, phase and slice
     etl = 10, # Echo train length
     acqTime = 4, # ms, acquisition time
     axes = np.array([2, 1, 0]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
@@ -323,8 +323,8 @@ def rare_standalone(
         rxd, msgs = expt.run()
         rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
         # Get noise data
-        noise = np.concatenate((noise, rxd['rx0'][0:nRD]), axis = 0)
-        rxd['rx0'] = rxd['rx0'][nRD::]
+        noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
+        rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
         # Get data
         if dummyPulses>0:
             dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*etl*hw.oversamplingFactor]), axis = 0)
