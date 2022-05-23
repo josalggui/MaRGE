@@ -19,7 +19,7 @@ import mrilabMethods.mrilabMethods as mri
 
 def rabiflopStandalone(
     init_gpa= False,                 
-    larmorFreq=3.0807,
+    larmorFreq=3.07953,
     rfExAmp=0.4, 
     rfExPhase = 0,
     rfExTimeIni=6, 
@@ -28,10 +28,10 @@ def rabiflopStandalone(
     nReadout =100,
     tAdq = 4*1e3,
     tEcho = 40*1e3,
-    tRepetition = 1000*1e3,
+    tRepetition = 500*1e3,
     plotSeq = 0, 
     pulseShape = 'Rec',  # 'Rec' for square pulse shape, 'Sinc' for sinc pulse shape
-    method='Amp', # 'Amp' -> rfReAmp=2*rfExAmp, 'Time' -> rfReTime=2*rfReTime
+    method='Time', # 'Amp' -> rfReAmp=2*rfExAmp, 'Time' -> rfReTime=2*rfReTime
     shimming=[-70, -90, 10]):
 
     # Miscellaneous

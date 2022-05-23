@@ -21,13 +21,13 @@ def GradientPulse(
     gNsteps = 8, 
     gRiseTime = 40,
     gDuration = 16000, #Flattop gDuration-2*gRiseTime
-    gAmplitude =  1,
+    gAmplitude =  0.05,
 #    gNsteps = 160, #50
 #    gRiseTime =800,
 #    gDuration = 1700, #Flattop gDuration-2*gRiseTime
 #    gAmplitude =  0.2,
     tIni = 20, 
-    plotSeq =0, 
+    plotSeq =1, 
     nPulses =1):
     
     #DEFINICIÓN DE LOS PULSOS
@@ -65,7 +65,7 @@ def GradientPulse(
     tSequence = tSequence + tPlus
     gTime=np.concatenate((gTime, [tSequence]))
     gAmp=np.concatenate((gAmp, [0]))
-    expt.add_flodict({'grad_vx': (gTime,gAmp)})
+    expt.add_flodict({'grad_vz': (gTime,gAmp)})
     
     #RUN
     if plotSeq==1:                

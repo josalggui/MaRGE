@@ -42,7 +42,7 @@ st = pdb.set_trace
 
 def rare_standalone(
     init_gpa=False, # Starts the gpa
-    nScans = 2, # NEX
+    nScans = 1, # NEX
     larmorFreq = 3.04, # MHz, Larmor frequency
     rfExAmp = 0.3, # a.u., rf excitation pulse amplitude
     rfReAmp = 0.3, # a.u., rf refocusing pulse amplitude
@@ -54,11 +54,11 @@ def rare_standalone(
     repetitionTime = 500., # ms, TR
     fov = np.array([120., 120., 120.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
-    nPoints = np.array([60, 60, 4]), # Number of points along readout, phase and slice
+    nPoints = np.array([60, 60, 1]), # Number of points along readout, phase and slice
     etl = 30, # Echo train length
     acqTime = 4, # ms, acquisition time
     axes = np.array([2, 1, 0]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
+    axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
     sweepMode = 1, # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
     rdGradTime = 5,  # ms, readout gradient time
     rdDephTime = 1,  # ms, readout dephasing time
