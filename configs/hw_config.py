@@ -9,8 +9,8 @@
 # Z axis: 35 mT/m/o.u., 0.7 mT/m/A, 3.5 mT/m/V
 
 gFactor = [0.025, 0.040, 0.035] # (X, Y, Z) in T/m/o.u.
-slewRate = 1e-3 # o.u./us, this is 50 mA/us or 50 A/ms
-stepsRate = 0.2 # steps/us, this is the minimun to avoid current jumps with defoult tuning circuit
+slewRate = 1000 # us/o.u., slew rate for gradient rises
+stepsRate = 200 # steps/o.u., steps rate for gradient rises
 gammaB = 42.56e6 # Hz/T, Gyromagnetic ratio
 blkTime = 15 # us, blanking time of Barthel's RFPA
 gradDelay = 9 # Gradient amplifier delay (us)

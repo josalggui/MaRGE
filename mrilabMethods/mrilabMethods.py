@@ -233,6 +233,80 @@ def gradTrap(expt, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimmin
 ##############################################################
 ##############################################################
 ##############################################################
+def gradTrapMomentum(expt, tStart, kMax, gTotalTime, gAxis, shimming, rewrite=True):
+    """"
+    @author: T. Guallart-Naval, MRILab, Tesoro Imaging S.L., Valencia, Spain
+    @email: teresa.guallart@tesoroimaging.com
+    Gradient pulse with trapezoidal shape according to slewrate.
+    Time inputs in us
+    kMax inputs in 1/m
+    
+    """
+    kMax=kMax/hw.gammaB*1e6
+    
+    #Changing from Ocra1 units
+    slewRate = hw.slewRate/hw.gFactor[gAxis]      #Convert to units [s*m/T]
+    stepsRate = hw.stepsRate/hw.gFactor[gAxis]      #Convert to units [steps*m/T]
+    
+    # Calculating amplitude
+    gAmplitude = (gTotalTime-np.sqrt(gTotalTime**2-4*slewRate*kMax))/(2*slewRate)
+    
+    # Trapezoid characteristics
+    gRiseTime = gAmplitude*slewRate
+    nSteps = int(np.ceil(gAmplitude*stepsRate))
+    
+    # # Creating trapezoid
+    tRise = np.linspace(tStart, tStart+gRiseTime, nSteps, endpoint=True)
+    aRise = np.linspace(0, gAmplitude, nSteps, endpoint=True)
+    tDown = np.linspace(tStart+gTotalTime-gRiseTime,tStart+gTotalTime,nSteps,endpoint=True)
+    aDown = np.linspace(gAmplitude,0,nSteps,endpoint=True)
+    gTime = np.concatenate((tRise,tDown),  axis=0)
+    gAmp = np.concatenate((aRise,aDown),  axis=0)/hw.gFactor[gAxis] 
+    if gAxis==0:
+        expt.add_flodict({'grad_vx': (gTime, gAmp+shimming[0])}, rewrite)
+    elif gAxis==1:
+        expt.add_flodict({'grad_vy': (gTime, gAmp+shimming[1])}, rewrite)
+    elif gAxis==2:
+        expt.add_flodict({'grad_vz': (gTime, gAmp+shimming[2])}, rewrite)
+
+##############################################################
+##############################################################
+##############################################################
+def gradTrapAmplitude(expt, tStart, gAmplitude, gTotalTime, gAxis, shimming, rewrite=True):
+    """"
+    @author: T. Guallart-Naval, MRILab, Tesoro Imaging S.L., Valencia, Spain
+    @email: teresa.guallart@tesoroimaging.com
+    Gradient pulse with trapezoidal shape according to slewrate.
+    Time inputs in us
+    gAmplitude inputs in T/m
+    
+    """
+    #Changing from Ocra1 units
+    slewRate = hw.slewRate/hw.gFactor[gAxis]      #Convert to units [s*m/T]
+    stepsRate = hw.stepsRate/hw.gFactor[gAxis]      #Convert to units [steps*m/T]
+    
+    # Trapezoid characteristics
+    gRiseTime = gAmplitude*slewRate
+    nSteps = int(np.ceil(gAmplitude*stepsRate))
+    
+    # # Creating trapezoid
+    tRise = np.linspace(tStart, tStart+gRiseTime, nSteps, endpoint=True)
+    aRise = np.linspace(0, gAmplitude, nSteps, endpoint=True)
+    tDown = np.linspace(tStart+gTotalTime-gRiseTime,tStart+gTotalTime,nSteps,endpoint=True)
+    aDown = np.linspace(gAmplitude,0,nSteps,endpoint=True)
+    gTime = np.concatenate((tRise,tDown),  axis=0)
+    gAmp = np.concatenate((aRise,aDown),  axis=0)/hw.gFactor[gAxis] 
+    if gAxis==0:
+        expt.add_flodict({'grad_vx': (gTime, gAmp+shimming[0])}, rewrite)
+    elif gAxis==1:
+        expt.add_flodict({'grad_vy': (gTime, gAmp+shimming[1])}, rewrite)
+    elif gAxis==2:
+        expt.add_flodict({'grad_vz': (gTime, gAmp+shimming[2])}, rewrite)
+
+
+##############################################################
+##############################################################
+##############################################################
 
 
 def endSequence(expt, tEnd):
