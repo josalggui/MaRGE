@@ -51,14 +51,14 @@ def rare_standalone(
     echoSpacing = 10, # ms, time between echoes
     preExTime = 0., # ms, Time from preexcitation pulse to inversion pulse
     inversionTime = 0., # ms, Inversion recovery time
-    repetitionTime = 500., # ms, TR
+    repetitionTime = 200., # ms, TR
     fov = np.array([120., 120., 120.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
-    nPoints = np.array([60, 60, 4]), # Number of points along readout, phase and slice
-    etl = 30, # Echo train length
+    nPoints = np.array([60, 60, 1]), # Number of points along readout, phase and slice
+    etl = 5, # Echo train length
     acqTime = 4, # ms, acquisition time
     axes = np.array([2, 1, 0]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
+    axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
     sweepMode = 1, # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
     rdGradTime = 5,  # ms, readout gradient time
     rdDephTime = 1,  # ms, readout dephasing time
@@ -430,7 +430,7 @@ def rare_standalone(
     # Fix the position of the sample according to dfov
     kMax = np.array(nPoints)/(2*np.array(fov))*np.array(axesEnable)
     kRD = np.linspace(-kMax[0],kMax[0],num=nPoints[0],endpoint=False)
-#        kPH = np.linspace(-kMax[1],kMax[1],num=nPoints[1],endpoint=False)
+#    kPH = np.linspace(-kMax[1],kMax[1],num=nPoints[1],endpoint=False)
     kSL = np.linspace(-kMax[2],kMax[2],num=nPoints[2],endpoint=False)
     kPH = kPH[::-1]
     kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
@@ -541,7 +541,7 @@ def rare_standalone(
         plt.imshow(np.abs(img2d), cmap='gray')
         plt.axis('off')
         plt.title("RARE.%s.mat" % (dt_string))
-    
+ 
     plt.show()
 
 

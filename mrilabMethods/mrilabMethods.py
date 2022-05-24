@@ -272,7 +272,7 @@ def gradTrapMomentum(expt, tStart, kMax, gTotalTime, gAxis, shimming, rewrite=Tr
 ##############################################################
 ##############################################################
 ##############################################################
-def gradTrapAmplitude(expt, tStart, gAmplitude, gTotalTime, gAxis, shimming, rewrite=True):
+def gradTrapAmplitude(expt, tStart, gAmplitude, gTotalTime, gAxis, shimming, orders,  rewrite=True):
     """"
     @author: T. Guallart-Naval, MRILab, Tesoro Imaging S.L., Valencia, Spain
     @email: teresa.guallart@tesoroimaging.com
@@ -286,9 +286,10 @@ def gradTrapAmplitude(expt, tStart, gAmplitude, gTotalTime, gAxis, shimming, rew
     stepsRate = hw.stepsRate/hw.gFactor[gAxis]      #Convert to units [steps*m/T]
     
     # Trapezoid characteristics
-    gRiseTime = gAmplitude*slewRate
-    nSteps = int(np.ceil(gAmplitude*stepsRate))
-    
+    gRiseTime = np.abs(gAmplitude*slewRate)
+    nSteps = int(np.ceil(np.abs(gAmplitude*stepsRate)))
+    orders = orders+2*nSteps
+
     # # Creating trapezoid
     tRise = np.linspace(tStart, tStart+gRiseTime, nSteps, endpoint=True)
     aRise = np.linspace(0, gAmplitude, nSteps, endpoint=True)
@@ -302,7 +303,7 @@ def gradTrapAmplitude(expt, tStart, gAmplitude, gTotalTime, gAxis, shimming, rew
         expt.add_flodict({'grad_vy': (gTime, gAmp+shimming[1])}, rewrite)
     elif gAxis==2:
         expt.add_flodict({'grad_vz': (gTime, gAmp+shimming[2])}, rewrite)
-
+    
 
 ##############################################################
 ##############################################################

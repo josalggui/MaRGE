@@ -41,21 +41,21 @@ st = pdb.set_trace
 
 
 def rare_standalone(
-    init_gpa=False, # Starts the gpa
+    init_gpa=True, # Starts the gpa
     nScans = 1, # NEX
     larmorFreq = 3.04, # MHz, Larmor frequency
     rfExAmp = 0.3, # a.u., rf excitation pulse amplitude
     rfReAmp = 0.3, # a.u., rf refocusing pulse amplitude
     rfExTime = 35, # us, rf excitation pulse time
     rfReTime = 70, # us, rf refocusing pulse time
-    echoSpacing = 10, # ms, time between echoes
+    echoSpacing = 20, # ms, time between echoes
     preExTime = 0., # ms, Time from preexcitation pulse to inversion pulse
     inversionTime = 0., # ms, Inversion recovery time
-    repetitionTime = 500., # ms, TR
+    repetitionTime = 200., # ms, TR
     fov = np.array([120., 120., 120.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
     nPoints = np.array([60, 60, 1]), # Number of points along readout, phase and slice
-    etl = 30, # Echo train length
+    etl = 5, # Echo train length
     acqTime = 4, # ms, acquisition time
     axes = np.array([2, 1, 0]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
     axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
@@ -120,8 +120,6 @@ def rare_standalone(
     
     # Miscellaneous
     larmorFreq = larmorFreq*1e-6
-    gradRiseTime = 400e-6       # Estimated gradient rise time
-    gSteps = int(gradRiseTime*1e6/5)*0+1
     addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
     randFactor = 0e-3                        # Random amplitude to add to the phase gradients
     if rfReAmp==0:
@@ -130,7 +128,6 @@ def rare_standalone(
         rfReTime = 2*rfExTime
     resolution = fov/nPoints
     rawData['resolution'] = resolution
-    rawData['gradRiseTime'] = gradRiseTime
     rawData['randFactor'] = randFactor
     rawData['addRdPoints'] = addRdPoints
     
@@ -158,20 +155,25 @@ def rare_standalone(
     rawData['rdGradTime'] = rdGradTime
     
     # Phase and slice de- and re-phasing time
-    if phGradTime==0 or phGradTime>echoSpacing/2-rfExTime/2-rfReTime/2-2*gradRiseTime:
-        phGradTime = echoSpacing/2-rfExTime/2-rfReTime/2-2*gradRiseTime
+    if phGradTime==0 or phGradTime>echoSpacing/2-rfExTime/2-rfReTime/2:
+        phGradTime = echoSpacing/2-rfExTime/2-rfReTime/2
     rawData['phGradTime'] = phGradTime
     
     # Max gradient amplitude
     rdGradAmplitude = nPoints[0]/(hw.gammaB*fov[0]*acqTime)*axesEnable[0]
-    phGradAmplitude = nPH/(2*hw.gammaB*fov[1]*(phGradTime+gradRiseTime))*axesEnable[1]
-    slGradAmplitude = nSL/(2*hw.gammaB*fov[2]*(phGradTime+gradRiseTime))*axesEnable[2]
+    phGradAmplitude = nPH/(2*hw.gammaB*fov[1]*(phGradTime))*axesEnable[1]
+    slGradAmplitude = nSL/(2*hw.gammaB*fov[2]*(phGradTime))*axesEnable[2]
     rawData['rdGradAmplitude'] = rdGradAmplitude
     rawData['phGradAmplitude'] = phGradAmplitude
     rawData['slGradAmplitude'] = slGradAmplitude
 
+    #Readout rise time
+    slewRate = hw.slewRate/hw.gFactor[axes[0]]
+    gRiseTimeRd =rdGradAmplitude*slewRate
+    rawData['gRiseTimeRd'] = gRiseTimeRd
+
     # Readout dephasing amplitude
-    rdDephAmplitude = 0.5*rdGradAmplitude*(gradRiseTime+rdGradTime)/(gradRiseTime+rdDephTime)
+    rdDephAmplitude = 0.5*rdGradAmplitude
     rawData['rdDephAmplitude'] = rdDephAmplitude
 
     # Phase and slice gradient vector
@@ -185,7 +187,7 @@ def rare_standalone(
     for ii in range(nPH):
         if ii<np.ceil(nPH/2-nPH/20) or ii>np.ceil(nPH/2+nPH/20):
             phGradients[ii] = phGradients[ii]+randFactor*np.random.randn()
-    kPH = hw.gammaB*phGradients*(gradRiseTime+phGradTime)
+    kPH = hw.gammaB*phGradients*(phGradTime)
     rawData['phGradients'] = phGradients
     rawData['slGradients'] = slGradients
     
@@ -221,35 +223,32 @@ def rare_standalone(
             if repeIndex>=dummyPulses and preExTime!=0:
                 t0 = tEx-preExTime-inversionTime-rfExTime/2-hw.blkTime
                 mri.rfRecPulse(expt, t0, rfExTime, rfExAmp/90*90, 0)
-                mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.005, gSteps, axes[0], shimming)
-                mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.005, gSteps, axes[1], shimming)
-                mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.005, gSteps, axes[2], shimming)
-                orders = orders+gSteps*6
+                mri.gradTrapAmplitude(expt, t0+hw.blkTime+rfReTime,-0.005, preExTime*0.5, axes[0], shimming, orders)
+                mri.gradTrapAmplitude(expt, t0+hw.blkTime+rfReTime,-0.005, preExTime*0.5, axes[1], shimming, orders)
+                mri.gradTrapAmplitude(expt, t0+hw.blkTime+rfReTime,-0.005, preExTime*0.5, axes[2], shimming, orders)
                 
             # Inversion pulse
             if repeIndex>=dummyPulses and inversionTime!=0:
                 t0 = tEx-inversionTime-rfReTime/2-hw.blkTime
                 mri.rfPulse(expt, t0, rfReTime, rfReAmp/180*180, 0)
-                mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[0], shimming)
-                mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[1], shimming)
-                mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[2], shimming)
-                orders = orders+gSteps*6
+                mri.gradTrapAmplitude(expt,t0+hw.blkTime+rfReTime, 0.005, inversionTime*0.5, axes[0], shimming, orders)
+                mri.gradTrapAmplitude(expt,t0+hw.blkTime+rfReTime, 0.005, inversionTime*0.5, axes[1], shimming, orders)
+                mri.gradTrapAmplitude(expt,t0+hw.blkTime+rfReTime, 0.005, inversionTime*0.5, axes[2], shimming, orders)
                 
             # DC gradient if desired
             if (repeIndex==0 or repeIndex>=dummyPulses) and dc==True:
                 t0 = tEx-10e3
-                mri.gradTrap(expt, t0, gradRiseTime, 10e3+echoSpacing*(etl+1), rdGradAmplitude, gSteps, axes[0], shimming)
-                orders = orders+gSteps*2
+                mri.gradTrapAmplitude(expt, t0,rdGradAmplitude, 10e3+echoSpacing*(etl+1), axes[0], shimming, orders)
                 
             # Excitation pulse
             t0 = tEx-hw.blkTime-rfExTime/2
+            
             mri.rfRecPulse(expt, t0,rfExTime,rfExAmp,drfPhase)
         
             # Dephasing readout
             if (repeIndex==0 or repeIndex>=dummyPulses) and dc==False:
                 t0 = tEx+rfExTime/2-hw.gradDelay
-                mri.gradTrap(expt, t0, gradRiseTime, rdDephTime, rdDephAmplitude*rdPreemphasis, gSteps, axes[0], shimming)
-                orders = orders+gSteps*2
+                mri.gradTrapAmplitude(expt, t0,rdDephAmplitude*rdPreemphasis,  rdDephTime, axes[0], shimming, orders)
                 
             # Echo train
             for echoIndex in range(etl):
@@ -262,15 +261,13 @@ def rare_standalone(
                 # Dephasing phase and slice gradients
                 if repeIndex>=dummyPulses:         # This is to account for dummy pulses
                     t0 = tEcho-echoSpacing/2+rfReTime/2-hw.gradDelay
-                    mri.gradTrap(expt, t0, gradRiseTime, phGradTime, phGradients[phIndex], gSteps, axes[1], shimming)
-                    mri.gradTrap(expt, t0, gradRiseTime, phGradTime, slGradients[slIndex], gSteps, axes[2], shimming)
-                    orders = orders+gSteps*4
+                    mri.gradTrapAmplitude(expt, t0, phGradients[phIndex], phGradTime, axes[1], shimming, orders)
+                    mri.gradTrapAmplitude(expt, t0, slGradients[slIndex], phGradTime, axes[2], shimming, orders)
                     
                 # Readout gradient
                 if (repeIndex==0 or repeIndex>=dummyPulses) and dc==False:         # This is to account for dummy pulses
-                    t0 = tEcho-rdGradTime/2-gradRiseTime-hw.gradDelay
-                    mri.gradTrap(expt, t0, gradRiseTime, rdGradTime, rdGradAmplitude, gSteps, axes[0], shimming)
-                    orders = orders+gSteps*2
+                    t0 = tEcho-rdGradTime/2-gRiseTimeRd-hw.gradDelay
+                    mri.gradTrapAmplitude(expt, t0, rdGradAmplitude, rdGradTime+2*gRiseTimeRd, axes[0], shimming, orders)
                     
                 # Rx gate
                 if (repeIndex==0 or repeIndex>=dummyPulses):
@@ -281,14 +278,11 @@ def rare_standalone(
                 # Rephasing phase and slice gradients
                 t0 = tEcho+acqTime/2+addRdPoints/BW-hw.gradDelay
                 if (echoIndex<etl-1 and repeIndex>=dummyPulses):
-                    mri.gradTrap(expt, t0, gradRiseTime, phGradTime, -phGradients[phIndex], gSteps, axes[1], shimming)
-                    mri.gradTrap(expt, t0, gradRiseTime, phGradTime, -slGradients[slIndex], gSteps, axes[2], shimming)
-                    orders = orders+gSteps*4
+                    mri.gradTrapAmplitude(expt, t0, -phGradients[phIndex], phGradTime, axes[1], shimming, orders)
+                    mri.gradTrapAmplitude(expt, t0, -slGradients[slIndex], phGradTime, axes[2], shimming, orders)
                 elif(echoIndex==etl-1 and repeIndex>=dummyPulses):
-                    mri.gradTrap(expt, t0, gradRiseTime, phGradTime, +phGradients[phIndex], gSteps, axes[1], shimming)
-                    mri.gradTrap(expt, t0, gradRiseTime, phGradTime, +slGradients[slIndex], gSteps, axes[2], shimming)
-                    orders = orders+gSteps*4
-                    
+                    mri.gradTrapAmplitude(expt, t0, phGradients[phIndex], phGradTime, axes[1], shimming, orders)
+                    mri.gradTrapAmplitude(expt, t0, slGradients[slIndex], phGradTime, axes[2], shimming, orders)
     
                 # Update the phase and slice gradient
                 if repeIndex>=dummyPulses:
@@ -312,7 +306,6 @@ def rare_standalone(
     rfReTime = rfReTime*1e6
     echoSpacing = echoSpacing*1e6
     repetitionTime = repetitionTime*1e6
-    gradRiseTime = gradRiseTime*1e6
     phGradTime = phGradTime*1e6
     rdGradTime = rdGradTime*1e6
     rdDephTime = rdDephTime*1e6
@@ -355,7 +348,7 @@ def rare_standalone(
         repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
         
         # Plot sequence:
-#        expt.plot_sequence()
+        expt.plot_sequence()
         
         for ii in range(nScans):
             rxd, msgs = expt.run()
@@ -541,7 +534,7 @@ def rare_standalone(
         plt.imshow(np.abs(img2d), cmap='gray')
         plt.axis('off')
         plt.title("RARE.%s.mat" % (dt_string))
-    
+
     plt.show()
 
 
