@@ -42,7 +42,7 @@ st = pdb.set_trace
 
 def rare_standalone(
     init_gpa=True, # Starts the gpa
-    nScans = 2, # NEX
+    nScans = 1, # NEX
     larmorFreq = 3.04, # MHz, Larmor frequency
     rfExAmp = 0.3, # a.u., rf excitation pulse amplitude
     rfReAmp = 0.3, # a.u., rf refocusing pulse amplitude
