@@ -44,8 +44,8 @@ def rare_standalone(
     init_gpa=False, # Starts the gpa
     nScans = 2, # NEX
     larmorFreq = 3.04, # MHz, Larmor frequency
-    rfExAmp = 0.3, # a.u., rf excitation pulse amplitude
-    rfReAmp = 0.3, # a.u., rf refocusing pulse amplitude
+    rfExAmp = 0.0, # a.u., rf excitation pulse amplitude
+    rfReAmp = 0.0, # a.u., rf refocusing pulse amplitude
     rfExTime = 35, # us, rf excitation pulse time
     rfReTime = 70, # us, rf refocusing pulse time
     echoSpacing = 10, # ms, time between echoes
@@ -216,6 +216,7 @@ def rare_standalone(
             if repeIndex==0:
                 t0 = tEx-preExTime-inversionTime-4*acqTime
                 mri.rxGate(expt, t0, acqTime+2*addRdPoints/BW)
+                acqPoints += nRD
             
             # Pre-excitation pulse
             if repeIndex>=dummyPulses and preExTime!=0:
@@ -288,8 +289,7 @@ def rare_standalone(
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, +phGradients[phIndex], gSteps, axes[1], shimming)
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, +slGradients[slIndex], gSteps, axes[2], shimming)
                     orders = orders+gSteps*4
-                    
-    
+
                 # Update the phase and slice gradient
                 if repeIndex>=dummyPulses:
                     if phIndex == nPH-1:
@@ -304,7 +304,7 @@ def rare_standalone(
         mri.endSequence(expt, repeIndex*repetitionTime)
         
         # Return the output variables
-        return(phIndex, slIndex, repeIndexGlobal)
+        return(phIndex, slIndex, repeIndexGlobal, acqPoints)
 
 
     # Changing time parameters to us
@@ -335,29 +335,31 @@ def rare_standalone(
     dummyData = []
     overData = []
     noise = []
-    batchIndex = 0
+    nBatches = 0
     repeIndexArray = np.array([0])
     repeIndexGlobal = repeIndexArray[0]
     phIndex = 0
     slIndex = 0
+    acqPointsPerBatch = []
     while repeIndexGlobal<nRepetitions:
         
         expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
         samplingPeriod = expt.get_rx_ts()[0]
         BW = 1/samplingPeriod/hw.oversamplingFactor
         acqTime = nPoints[0]/BW        # us
-        batchIndex += 1
-        print('Batch ', batchIndex, ' runing...')
-        phIndex, slIndex, repeIndexGlobal = createSequence(phIndex=phIndex,
+        nBatches += 1
+        phIndex, slIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
                                                            slIndex=slIndex,
                                                            repeIndexGlobal=repeIndexGlobal,
-                                                           rewrite=batchIndex==1)
+                                                           rewrite=nBatches==1)
         repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
+        acqPointsPerBatch.append(aa)
         
         # Plot sequence:
 #        expt.plot_sequence()
         
         for ii in range(nScans):
+            print('Batch ', nBatches, ', Scan ', ii, ' runing...')
             rxd, msgs = expt.run()
             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             # Get noise data
@@ -370,28 +372,33 @@ def rare_standalone(
             else:
                 overData = np.concatenate((overData, rxd['rx0']), axis = 0)
         expt.__del__()
-        
+    del aa
+    acqPointsPerBatch = (acqPointsPerBatch-etl*nRD*(dummyPulses>0)-nRD)*nScans
     print('Scans done!')
     rawData['noiseData'] = noise
     rawData['overData'] = overData
     
     # Fix the echo position using oversampled data
     if dummyPulses>0:
-        dummyData = np.reshape(dummyData,  (batchIndex, etl, nRD*hw.oversamplingFactor))
+        dummyData = np.reshape(dummyData,  (nBatches*nScans, etl, nRD*hw.oversamplingFactor))
         dummyData = np.average(dummyData, axis=0)
         rawData['dummyData'] = dummyData
-        overData = np.reshape(overData, (nScans*nSL, int(nPH/etl), etl,  nRD*hw.oversamplingFactor))
-        for ii in range(nScans*nSL):
-            overData[ii, :, :, :] = mri.fixEchoPosition(dummyData, overData[ii, :, :, :])
-        overData = np.squeeze(np.reshape(overData, (1, nRD*hw.oversamplingFactor*nPH*nSL*nScans)))
+        overData = np.reshape(overData, (-1, etl, nRD*hw.oversamplingFactor))
+        overData = mri.fixEchoPosition(dummyData, overData)
+        overData = np.reshape(overData, -1)
     
     # Generate dataFull
     dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+    dataFullA = dataFull[0:np.sum(acqPointsPerBatch[0:-1])]
+    dataFullB = dataFull[np.sum(acqPointsPerBatch[0:-1])::]
+    dataFullA = np.reshape(dataFullA, (nBatches-1, nScans, -1, nRD*hw.oversamplingFactor))
+    dataFullB = np.reshape(dataFullB, (1, nScans, -1, nRD*hw.oversamplingFactor))
     
     # Get index for krd = 0
     # Average data
-    dataProv = np.reshape(dataFull, (nSL, nScans, nRD*nPH))
-    dataProv = np.average(dataProv, axis=1)
+    dataProvA = np.reshape(np.average(dataFullA, axis=1), -1)
+    dataProvB = np.reshape(np.average(dataFullB, axis=1), -1)
+    dataProv = np.concatenate((dataProvA, dataProvB), axis=0)
     # Reorganize the data acording to sweep mode
     dataProv = np.reshape(dataProv, (nSL, nPH, nRD))
     dataTemp = dataProv*0
@@ -405,11 +412,20 @@ def rare_standalone(
         indkrd0 = int(nRD/2)
 
     # Get individual images
-    dataFull = np.reshape(dataFull, (nSL, nScans, nPH, nRD))
-    dataFull = dataFull[:, :, :, indkrd0-int(nPoints[0]/2):indkrd0+int(nPoints[0]/2)]
-    dataTemp = dataFull*0
-    for ii in range(nPH):
-        dataTemp[:, :, ind[ii], :] = dataFull[:, :,  ii, :]
+    imgFull = np.zeros(nScans, nSL, nPH, nRD)
+    dataFullA = np.reshape(dataFullA, (nBatches-1, nScans, -1, nRD))
+    dataFullB = np.reshape(dataFullB, (1, nScans, -1, nRD))    
+    dataFullA = dataFullA[:, :, :, indkrd0-int(nPoints[0]/2):indkrd0+int(nPoints[0]/2)]
+    dataFullB = dataFullB[:, :, :, indkrd0-int(nPoints[0]/2):indkrd0+int(nPoints[0]/2)]
+    for ii in range(nScans):
+        dataProvA = np.reshape(dataFullA[:, ii, :, :], -1)
+        dataProvB = np.reshape(dataFullB[:, ii, :, :], -1)
+        dataProv = np.reshape(np.concatenate((dataProvA, dataProvB), axis=0), [nSL, nPH, nRD])
+        dataTemp = dataProv*0
+        for ii in range(nPH):
+            dataTemp[:, ind[ii], :] = dataProv[:, ii, :]
+        imgFull
+
     dataFull = dataTemp
     imgFull = dataFull*0
     for ii in range(nScans):
