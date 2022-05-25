@@ -29,7 +29,8 @@ import nibabel as nib
 import pyqtgraph.exporters
 from functools import partial
 from sessionmodes import defaultsessions
-import seq
+from seq.rare import rare
+from seq.haste import haste
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, session=None, sequencelist=None):
@@ -55,11 +56,11 @@ class AcquisitionController(QObject):
         plotSeq=0
         if  self.sequence.seq == 'RARE':
             print('Start sequence')
-            self.rxd, self.msgs, self.data_avg, self.sequence.BW = seq.rare(self.sequence, plotSeq)
+            self.rxd, self.msgs, self.data_avg, self.sequence.BW = rare(self.sequence, plotSeq)
             print('End sequence')
         elif self.sequence.seq=='HASTE':
             print('Start sequence')
-            self.rxd, self.msgs, self.data_avg, self.sequence.BW = seq.haste(self.sequence, plotSeq)
+            self.rxd, self.msgs, self.data_avg, self.sequence.BW = haste(self.sequence, plotSeq)
             print('End sequence')
 
             

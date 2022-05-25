@@ -120,7 +120,7 @@ class HASTE:
                  inversionTime:float=0,             # ms
                  repetitionTime:int = 500,          # ms
                  fov:list=[120., 120., 20.],         # mm 
-                 dfov:list=[0, 0, 0],                 # mm
+                 dfov:list=[0., 0., 0.],                 # mm
                  nPoints:list=[60, 60, 1],          # points 
                  acqTime:int=4,                     # ms 
                  axes:list=[0, 1, 2],               # [rd, ph, sl], 0->x, 1->y, 2->z 
@@ -134,7 +134,7 @@ class HASTE:
                  crusherDelay:float=0,              # us
                  drfPhase:float = 0,                # degrees, excitation pulse phase 
                  dummyPulses:int = 1,               # pulses 
-                 shimming:list=[0, 0, 0],           # a.u.*1e4, shimming along the X,Y and Z axes
+                 shimming:list=[-70., -90., 10.],           # a.u.*1e4, shimming along the X,Y and Z axes
                  parFourierFraction:float=1.0,      # fraction of acquired k-space along phase direction 
                  ):
         self.seq:str=seq 

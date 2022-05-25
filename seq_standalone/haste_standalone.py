@@ -6,18 +6,23 @@ MRILAB @ I3M
 """
 
 import sys
-# marcos_client path for linux
-sys.path.append('../marcos_client')
-# marcos_client and PhysioMRI_GUI for Windows
-sys.path.append('D:\CSIC\REPOSITORIOS\marcos_client')
-sys.path.append('D:\CSIC\REPOSITORIOS\PhysioMRI_GUI')
+import os
+#******************************************************************************
+# Add path to the working directory
+path = os.path.realpath(__file__)
+ii = 0
+for char in path:
+    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
+        # sys.path.append(path[0:ii])
+        print("Path: ",path[0:ii+1])
+        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
+        sys.path.append(path[0:ii+1]+'marcos_client')
+    ii += 1
+#******************************************************************************
 import numpy as np
 import experiment as ex
 import matplotlib.pyplot as plt
 import scipy.signal as sig
-import os
-from scipy.io import savemat
-from datetime import date,  datetime 
 import pdb
 import configs.hw_config as hw # Import the scanner hardware config
 import mrilabMethods.mrilabMethods as mri # This import all methods inside the mrilabMethods module
@@ -45,7 +50,6 @@ def haste_standalone(
     fov = np.array([120., 120., 20.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
     nPoints = np.array([60, 60, 1]), # Number of points along readout, phase and slice
-    slThickness = 20, # mm, slice thickness
     acqTime = 4, # ms, acquisition time
     axes = np.array([0, 2, 1]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
     axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
@@ -82,7 +86,6 @@ def haste_standalone(
     rdGradTime = rdGradTime*1e-3
     rdDephTime = rdDephTime*1e-3
     phGradTime = phGradTime*1e-3
-    slThickness = slThickness*1e-3
     crusherDelay = crusherDelay*1e-6
     
     # Inputs for rawData
@@ -110,7 +113,6 @@ def haste_standalone(
     rawData['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
     rawData['partialFourierFraction'] = parFourierFraction
     rawData['rdDephTime'] = rdDephTime
-    rawData['sliceThickness'] = slThickness
     rawData['crusherDelay'] = crusherDelay
     rawData['shimming'] = shimming
     
@@ -386,7 +388,7 @@ def haste_standalone(
     # Check where is krd = 0
     dataProv = dataProv[int(nPoints[1]/2), :]
     indkrd0 = np.argmax(np.abs(dataProv))
-    if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD+addRdPoints:
+    if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
         indkrd0 = int(nRD/2)
 
     # Get individual images

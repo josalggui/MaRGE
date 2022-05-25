@@ -50,9 +50,9 @@ def haste(self, plotSeq):
     dummyPulses = self.dummyPulses # number of dummy pulses for T1 stabilization
     shimming = self.shimming # a.u.*1e4, shimming along the X,Y and Z axes
     parFourierFraction = self.parFourierFraction # fraction of acquired k-space along phase direction
-
     
-    freqCal = 1
+    freqCal = True
+    demo = False
     
     # rawData fields
     rawData = {}
@@ -65,7 +65,7 @@ def haste(self, plotSeq):
     dfov = np.array(dfov)*1e-3
     echoSpacing = echoSpacing*1e-3
     acqTime = acqTime*1e-3
-    shimming = shimming*1e-4
+    shimming = np.array(shimming)*1e-4
     repetitionTime= repetitionTime*1e-3
     inversionTime = inversionTime*1e-3
     rdGradTime = rdGradTime*1e-3
@@ -74,7 +74,7 @@ def haste(self, plotSeq):
     crusherDelay = crusherDelay*1e-6
     
     # Inputs for rawData
-    rawData['seqName'] = self.seq
+    rawData['seqName'] = 'HASTE'
     rawData['nScans'] = nScans
     rawData['larmorFreq'] = larmorFreq      # Larmor frequency
     rawData['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
@@ -180,6 +180,20 @@ def haste(self, plotSeq):
     phGradients = phGradients[ind]
     rawData['phGradients'] = phGradients
     
+    def createSequenceDemo():
+        nRepetitions = int(1+dummyPulses)
+        scanTime = 20e3+nRepetitions*repetitionTime
+        rawData['scanTime'] = scanTime*1e-6
+        acqPoints = 0
+        data = []
+        for repeIndex in range(nRepetitions):
+            for echoIndex in range(nPH):
+                if (repeIndex==0 or repeIndex>=dummyPulses):
+                    acqPoints += nRD*hw.oversamplingFactor
+                    data = np.concatenate((data, np.random.randn(nRD*hw.oversamplingFactor)+1j*np.random.randn(nRD*hw.oversamplingFactor)), axis=0)
+        return data, acqPoints
+                
+        
     def createSequence():
         nRepetitions = int(1+dummyPulses)
         scanTime = 20e3+nRepetitions*repetitionTime
@@ -289,17 +303,18 @@ def haste(self, plotSeq):
     ssDephGradTime = ssDephGradTime*1e6
     
     # Calibrate frequency
-    if freqCal==1: 
+    if not demo and freqCal: 
         mri.freqCalibration(rawData, bw=0.05)
         mri.freqCalibration(rawData, bw=0.005)
         larmorFreq = rawData['larmorFreq']*1e-6
     
     # Create full sequence
-    expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-    samplingPeriod = expt.get_rx_ts()[0]
-    BW = 1/samplingPeriod/hw.oversamplingFactor
-    acqTime = nPoints[0]/BW        # us
-    createSequence()
+    if not demo:
+        expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+        samplingPeriod = expt.get_rx_ts()[0]
+        BW = 1/samplingPeriod/hw.oversamplingFactor
+        acqTime = nPoints[0]/BW        # us
+        createSequence()
 
     # Plot sequence:
     # expt.plot_sequence()
@@ -310,15 +325,25 @@ def haste(self, plotSeq):
     overData = []
     for ii in range(nScans):
         print("Scan %s ..." % (ii+1))
-        rxd, msgs = expt.run()
-        rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
-        # Get data
-        if dummyPulses>0:
-            dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*nPH*hw.oversamplingFactor]), axis = 0)
-            overData = np.concatenate((overData, rxd['rx0'][nRD*nPH*hw.oversamplingFactor::]), axis = 0)
+        if not demo:
+            rxd, msgs = expt.run()
+            rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
         else:
-            overData = np.concatenate((overData, rxd['rx0']), axis = 0)
-    expt.__del__()
+            data, acqPoints = createSequenceDemo()
+        # Get data
+        if not demo:
+            if dummyPulses>0:
+                dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*nPH*hw.oversamplingFactor]), axis = 0)
+                overData = np.concatenate((overData, rxd['rx0'][nRD*nPH*hw.oversamplingFactor::]), axis = 0)
+            else:
+                overData = np.concatenate((overData, rxd['rx0']), axis = 0)
+        else:
+            if dummyPulses>0:
+                dummyData = np.concatenate((dummyData, data[0:nRD*nPH*hw.oversamplingFactor]), axis = 0)
+                overData = np.concatenate((overData, data[nRD*nPH*hw.oversamplingFactor::]), axis = 0)
+            else:
+                overData = np.concatenate((overData, data), axis = 0)
+    if not demo: expt.__del__()
     print('Scans done!')
     rawData['overData'] = overData
     
@@ -348,7 +373,7 @@ def haste(self, plotSeq):
     # Check where is krd = 0
     dataProv = dataProv[int(nPoints[1]/2), :]
     indkrd0 = np.argmax(np.abs(dataProv))
-    if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD+addRdPoints:
+    if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
         indkrd0 = int(nRD/2)
 
     # Get individual images
@@ -398,89 +423,6 @@ def haste(self, plotSeq):
     
     # Save data
     mri.saveRawData(rawData)
-        
-    # Plot data for 1D case
-    if (nPH==1):
-        # Plot k-space
-        plt.figure(3)
-        dataPlot = data[0, :]
-        plt.subplot(1, 2, 1)
-        if axesEnable[0]==0:
-            tVector = np.linspace(-acqTime/2, acqTime/2, num=nPoints[0],endpoint=False)*1e-3
-            sMax = np.max(np.abs(dataPlot))
-            indMax = np.argmax(np.abs(dataPlot))
-            timeMax = tVector[indMax]
-            sMax3 = sMax/3
-            dataPlot3 = np.abs(np.abs(dataPlot)-sMax3)
-            indMin = np.argmin(dataPlot3)
-            timeMin = tVector[indMin]
-            T2 = np.abs(timeMax-timeMin)
-            plt.plot(tVector, np.abs(dataPlot))
-            plt.plot(tVector, np.real(dataPlot))
-            plt.plot(tVector, np.imag(dataPlot))
-            plt.xlabel('t (ms)')
-            plt.ylabel('Signal (mV)')
-            print("T2 = %s us" % (T2))
-        else:
-            plt.plot(kRD[:, 0], np.abs(dataPlot))
-            plt.yscale('log')
-            plt.xlabel('krd (mm^-1)')
-            plt.ylabel('Signal (mV)')
-            echoTime = np.argmax(np.abs(dataPlot))
-            echoTime = kRD[echoTime, 0]
-            print("Echo position = %s mm^{-1}" %round(echoTime, 1))
-        # Plot image
-        plt.subplot(122)
-        img = img[0, :]
-        if axesEnable[0]==0:
-            xAxis = np.linspace(-BW/2, BW/2, num=nPoints[0], endpoint=False)*1e3
-            plt.plot(xAxis, np.abs(img), '.')
-            plt.xlabel('Frequency (kHz)')
-            plt.ylabel('Density (a.u.)')
-            print("Smax = %s mV" % (np.max(np.abs(img))))
-        else:
-            xAxis = np.linspace(-fov[0]/2*1e2, fov[0]/2*1e2, num=nPoints[0], endpoint=False)
-            plt.plot(xAxis, np.abs(img))
-            plt.xlabel('Position RD (cm)')
-            plt.ylabel('Density (a.u.)')
-    
-    # Plot data for 2D case
-    else:
-        # Plot k-space
-        plt.figure(3)
-        dataPlot = data
-        plt.subplot(131)
-        plt.imshow(np.log(np.abs(dataPlot)),cmap='gray')
-        plt.axis('off')
-        # Plot image
-        if sweepMode==3:
-            imgPlot = img[round(nPH/4):round(3*nPH/4), :]
-        else:
-            imgPlot = img
-        plt.subplot(132)
-        plt.imshow(np.abs(imgPlot), cmap='gray')
-        plt.axis('off')
-        plt.title(rawData['fileName'])
-        plt.subplot(133)
-        plt.imshow(np.angle(imgPlot), cmap='gray')
-        plt.axis('off')
-        
-    plt.figure(5)
-    plt.subplot(121)
-    data1d = data[:, int(nPoints[0]/2)]
-    plt.plot(abs(data1d))
-    plt.subplot(122)
-    img1d = img[:, int(nPoints[0]/2)]
-    plt.plot(np.abs(img1d)*1e3)
-    
-    plt.show()
 
-
-#*********************************************************************************
-#*********************************************************************************
-#*********************************************************************************
-
-
-if __name__ == "__main__":
-
-    haste_standalone()
+    msg = 'Hola'
+    return rawData, msg, data,  BW
