@@ -5,19 +5,10 @@ Created on Fri Apr  1 18:05:53 2022
 MRILAB @ I3M
 """
 
-import sys
-# marcos_client path for linux
-sys.path.append('../marcos_client')
-# marcos_client and PhysioMRI_GUI for Windows
-sys.path.append('D:\CSIC\REPOSITORIOS\marcos_client')
-sys.path.append('D:\CSIC\REPOSITORIOS\PhysioMRI_GUI')
 import numpy as np
 import experiment as ex
 import matplotlib.pyplot as plt
 import scipy.signal as sig
-import os
-from scipy.io import savemat
-from datetime import date,  datetime 
 import pdb
 import configs.hw_config as hw # Import the scanner hardware config
 import mrilabMethods.mrilabMethods as mri # This import all methods inside the mrilabMethods module
@@ -30,40 +21,38 @@ st = pdb.set_trace
 #*********************************************************************************
 
 
-def haste_standalone(
-    init_gpa=False, # Starts the gpa
-    nScans = 1, # NEX
-    larmorFreq = 3.07547, # MHz, Larmor frequency
-    rfExAmp = 0.058, # a.u., rf excitation pulse amplitude
-    rfReAmp = 2*0.058, # a.u., rf refocusing pulse amplitude
-    rfExTime = 170, # us, rf excitation pulse time
-    rfReTime = 170, # us, rf refocusing pulse time
-    rfEnvelope = 'Rec',  # 'Rec' -> square pulse, 'Sinc' -> sinc pulse
-    echoSpacing = 10., # ms, time between echoes
-    inversionTime = 500., # ms, Inversion recovery time
-    repetitionTime = 2000., # ms, TR
-    fov = np.array([120., 120., 20.]), # mm, FOV along readout, phase and slice
-    dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
-    nPoints = np.array([60, 60, 1]), # Number of points along readout, phase and slice
-    slThickness = 20, # mm, slice thickness
-    acqTime = 4, # ms, acquisition time
-    axes = np.array([0, 2, 1]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
-    sweepMode = 1, # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
-    rdGradTime = 4.5,  # ms, readout gradient time
-    rdDephTime = 1,  # ms, readout dephasing time
-    phGradTime = 1, # ms, phase and slice dephasing time
-    rdPreemphasis = 1.005, # readout dephasing gradient is multiplied by this factor
-    ssPreemphasis = 1, # ssGradAmplitue is multiplied by this number for rephasing
-    crusherDelay = 0,  # us, delay of the crusher gradient
-    drfPhase = 0, # degrees, phase of the excitation pulse
-    dummyPulses = 1, # number of dummy pulses for T1 stabilization
-    shimming = np.array([-70., -90., 10.]), # a.u.*1e4, shimming along the X,Y and Z axes
-    parFourierFraction = 1.0 # fraction of acquired k-space along phase direction
-    ):
+def haste(self, plotSeq):
+    init_gpa=False # Starts the gpa
+    nScans = self.nScans # NEX
+    larmorFreq = self.larmorFreq # MHz, Larmor frequency
+    rfExAmp = self.rfExAmp # a.u., rf excitation pulse amplitude
+    rfReAmp = self.rfReAmp # a.u., rf refocusing pulse amplitude
+    rfExTime = self.rfExTime # us, rf excitation pulse time
+    rfReTime = self.rfReTime # us, rf refocusing pulse time
+    rfEnvelope = self.rfEnvelope  # 'Rec' -> square pulse, 'Sinc' -> sinc pulse
+    echoSpacing = self.echoSpacing # ms, time between echoes
+    inversionTime = self.inversionTime # ms, Inversion recovery time
+    repetitionTime = self.repetitionTime # ms, TR
+    fov = np.array(self.fov) # mm, FOV along readout, phase and slice
+    dfov = np.array(self.dfov) # mm, displacement of fov center
+    nPoints = np.array(self.nPoints) # Number of points along readout, phase and slice
+    acqTime = self.acqTime # ms, acquisition time
+    axes = np.array(self.axes) # 0->x, 1->y and 2->z defined as [rd,ph,sl]
+    axesEnable = self.axesEnable # 1-> Enable, 0-> Disable
+    sweepMode = self.sweepMode # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
+    rdGradTime = self.rdGradTime  # ms, readout gradient time
+    rdDephTime = self.rdDephTime  # ms, readout dephasing time
+    phGradTime = self.phGradTime # ms, phase and slice dephasing time
+    rdPreemphasis = self.rdPreemphasis # readout dephasing gradient is multiplied by this factor
+    ssPreemphasis = self.ssPreemphasis # slice rephasing gradient is multiplied by this factor
+    crusherDelay = self.crusherDelay # delay of the crusher gradient
+    drfPhase = self.drfPhase # degrees, phase of the excitation pulse
+    dummyPulses = self.dummyPulses # number of dummy pulses for T1 stabilization
+    shimming = self.shimming # a.u.*1e4, shimming along the X,Y and Z axes
+    parFourierFraction = self.parFourierFraction # fraction of acquired k-space along phase direction
+
     
-    freqCal = False
-    demo = True
+    freqCal = 1
     
     # rawData fields
     rawData = {}
@@ -82,11 +71,10 @@ def haste_standalone(
     rdGradTime = rdGradTime*1e-3
     rdDephTime = rdDephTime*1e-3
     phGradTime = phGradTime*1e-3
-    slThickness = slThickness*1e-3
     crusherDelay = crusherDelay*1e-6
     
     # Inputs for rawData
-    rawData['seqName'] = 'HASTE'
+    rawData['seqName'] = self.seq
     rawData['nScans'] = nScans
     rawData['larmorFreq'] = larmorFreq      # Larmor frequency
     rawData['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
@@ -110,7 +98,6 @@ def haste_standalone(
     rawData['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
     rawData['partialFourierFraction'] = parFourierFraction
     rawData['rdDephTime'] = rdDephTime
-    rawData['sliceThickness'] = slThickness
     rawData['crusherDelay'] = crusherDelay
     rawData['shimming'] = shimming
     
@@ -193,20 +180,6 @@ def haste_standalone(
     phGradients = phGradients[ind]
     rawData['phGradients'] = phGradients
     
-    def createSequenceDemo():
-        nRepetitions = int(1+dummyPulses)
-        scanTime = 20e3+nRepetitions*repetitionTime
-        rawData['scanTime'] = scanTime*1e-6
-        acqPoints = 0
-        data = []
-        for repeIndex in range(nRepetitions):
-            for echoIndex in range(nPH):
-                if (repeIndex==0 or repeIndex>=dummyPulses):
-                    acqPoints += nRD*hw.oversamplingFactor
-                    data = np.concatenate((data, np.random.randn(nRD*hw.oversamplingFactor)+1j*np.random.randn(nRD*hw.oversamplingFactor)), axis=0)
-        return data, acqPoints
-                
-        
     def createSequence():
         nRepetitions = int(1+dummyPulses)
         scanTime = 20e3+nRepetitions*repetitionTime
@@ -316,18 +289,17 @@ def haste_standalone(
     ssDephGradTime = ssDephGradTime*1e6
     
     # Calibrate frequency
-    if not demo and freqCal: 
+    if freqCal==1: 
         mri.freqCalibration(rawData, bw=0.05)
         mri.freqCalibration(rawData, bw=0.005)
         larmorFreq = rawData['larmorFreq']*1e-6
     
     # Create full sequence
-    if not demo:
-        expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = expt.get_rx_ts()[0]
-        BW = 1/samplingPeriod/hw.oversamplingFactor
-        acqTime = nPoints[0]/BW        # us
-        createSequence()
+    expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+    samplingPeriod = expt.get_rx_ts()[0]
+    BW = 1/samplingPeriod/hw.oversamplingFactor
+    acqTime = nPoints[0]/BW        # us
+    createSequence()
 
     # Plot sequence:
     # expt.plot_sequence()
@@ -338,25 +310,15 @@ def haste_standalone(
     overData = []
     for ii in range(nScans):
         print("Scan %s ..." % (ii+1))
-        if not demo:
-            rxd, msgs = expt.run()
-            rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
-        else:
-            data, acqPoints = createSequenceDemo()
+        rxd, msgs = expt.run()
+        rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
         # Get data
-        if not demo:
-            if dummyPulses>0:
-                dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*nPH*hw.oversamplingFactor]), axis = 0)
-                overData = np.concatenate((overData, rxd['rx0'][nRD*nPH*hw.oversamplingFactor::]), axis = 0)
-            else:
-                overData = np.concatenate((overData, rxd['rx0']), axis = 0)
+        if dummyPulses>0:
+            dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*nPH*hw.oversamplingFactor]), axis = 0)
+            overData = np.concatenate((overData, rxd['rx0'][nRD*nPH*hw.oversamplingFactor::]), axis = 0)
         else:
-            if dummyPulses>0:
-                dummyData = np.concatenate((dummyData, data[0:nRD*nPH*hw.oversamplingFactor]), axis = 0)
-                overData = np.concatenate((overData, data[nRD*nPH*hw.oversamplingFactor::]), axis = 0)
-            else:
-                overData = np.concatenate((overData, data), axis = 0)
-    if not demo: expt.__del__()
+            overData = np.concatenate((overData, rxd['rx0']), axis = 0)
+    expt.__del__()
     print('Scans done!')
     rawData['overData'] = overData
     

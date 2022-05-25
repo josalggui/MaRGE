@@ -29,7 +29,7 @@ import nibabel as nib
 import pyqtgraph.exporters
 from functools import partial
 from sessionmodes import defaultsessions
-from seq.rare import rare
+import seq
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, session=None, sequencelist=None):
@@ -55,11 +55,13 @@ class AcquisitionController(QObject):
         plotSeq=0
         if  self.sequence.seq == 'RARE':
             print('Start sequence')
-            self.rxd, self.msgs, self.data_avg, self.sequence.BW = rare(self.sequence, plotSeq)
+            self.rxd, self.msgs, self.data_avg, self.sequence.BW = seq.rare(self.sequence, plotSeq)
             print('End sequence')
-#        elif self.sequence.seq == 'CPMG':
-#            self.rxd, self.msgs, self.data_avg, self.sequence.BW = cpmg(self.sequence, plotSeq)
-#            self.sequence.lo_freq=self.sequence.larmorFreq
+        elif self.sequence.seq=='HASTE':
+            print('Start sequence')
+            self.rxd, self.msgs, self.data_avg, self.sequence.BW = seq.haste(self.sequence, plotSeq)
+            print('End sequence')
+
             
         [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]= self.sequence.nPoints
         self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.larmorFreq, len(self.data_avg), self.sequence.nPoints, self.sequence.BW)
