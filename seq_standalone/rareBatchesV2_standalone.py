@@ -44,8 +44,8 @@ def rare_standalone(
     init_gpa=False, # Starts the gpa
     nScans = 2, # NEX
     larmorFreq = 3.04, # MHz, Larmor frequency
-    rfExAmp = 0.0, # a.u., rf excitation pulse amplitude
-    rfReAmp = 0.0, # a.u., rf refocusing pulse amplitude
+    rfExAmp = 0.3, # a.u., rf excitation pulse amplitude
+    rfReAmp = 0.3, # a.u., rf refocusing pulse amplitude
     rfExTime = 35, # us, rf excitation pulse time
     rfReTime = 70, # us, rf refocusing pulse time
     echoSpacing = 10, # ms, time between echoes
@@ -70,8 +70,8 @@ def rare_standalone(
     parFourierFraction = 1.0 # fraction of acquired k-space along phase direction
     ):
     
-    freqCal = False
-    demo = True
+    freqCal = True
+    demo = False
     
     # rawData fields
     rawData = {}
@@ -439,16 +439,22 @@ def rare_standalone(
     
     # Generate dataFull
     dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-    dataFullA = dataFull[0:sum(acqPointsPerBatch[0:-1])]
-    dataFullB = dataFull[sum(acqPointsPerBatch[0:-1])::]
+    if nBatches>1:
+        dataFullA = dataFull[0:sum(acqPointsPerBatch[0:-1])]
+        dataFullB = dataFull[sum(acqPointsPerBatch[0:-1])::]
     
     # Reorganize dataFull
     dataProv = np.zeros([nScans,nSL*nPH*nRD])
     dataProv = dataProv+1j*dataProv
-    dataFullA = np.reshape(dataFullA, (nBatches-1, nScans, -1, nRD))
-    dataFullB = np.reshape(dataFullB, (1, nScans, -1, nRD))
+    dataFull = np.reshape(dataFull, (nBatches, nScans, -1, nRD))
+    if nBatches>1:
+        dataFullA = np.reshape(dataFullA, (nBatches-1, nScans, -1, nRD))
+        dataFullB = np.reshape(dataFullB, (1, nScans, -1, nRD))
     for scan in range(nScans):
-        dataProv[ii, :] = np.concatenate((np.reshape(dataFullA[:,ii,:,:],-1), np.reshape(dataFullB[:,ii,:,:],-1)), axis=0)
+        if nBatches>1:
+            dataProv[ii, :] = np.concatenate((np.reshape(dataFullA[:,ii,:,:],-1), np.reshape(dataFullB[:,ii,:,:],-1)), axis=0)
+        else:
+            dataProv[ii, :] = np.reshape(dataFull[:,ii,:,:],-1)
     dataFull = np.reshape(dataProv,-1)
     
     # Get index for krd = 0
