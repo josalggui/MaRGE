@@ -68,7 +68,8 @@ def rare(self, plotSeq):
     shimming = self.shimming # a.u.*1e4, shimming along the X,Y and Z axes
     parFourierFraction = self.parFourierFraction # fraction of acquired k-space along phase direction
     
-    freqCal = 1
+    freqCal = True
+    demo = False
     
     # rawData fields
     rawData = {}
@@ -89,8 +90,8 @@ def rare(self, plotSeq):
     rdDephTime = rdDephTime*1e-3
     phGradTime = phGradTime*1e-3
     
-    # Inputs for rawData
-    rawData['seqName'] = 'RARE'
+# Inputs for rawData
+    rawData['seqName'] = 'RareBatchesPoints_standalone'
     rawData['nScans'] = nScans
     rawData['larmorFreq'] = larmorFreq      # Larmor frequency
     rawData['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
@@ -192,6 +193,34 @@ def rare(self, plotSeq):
     rawData['sweepOrder'] = ind
     phGradients = phGradients[ind]
     
+    def createSequenceDemo(phIndex=0, slIndex=0, repeIndexGlobal=0, rewrite=True):
+        repeIndex = 0
+        acqPoints = 0
+        orders = 0
+        data = []
+        while acqPoints+etl*nRD<=hw.maxRdPoints and orders<=hw.maxOrders and repeIndexGlobal<nRepetitions:
+            if repeIndex==0:
+                acqPoints += nRD
+                data = np.concatenate((data, np.random.randn(nRD*hw.oversamplingFactor)), axis = 0)
+            
+            for echoIndex in range(etl):
+                if (repeIndex==0 or repeIndex>=dummyPulses):
+                    acqPoints += nRD
+                    data = np.concatenate((data, np.random.randn(nRD*hw.oversamplingFactor)), axis = 0)
+            
+                # Update the phase and slice gradient
+                if repeIndex>=dummyPulses:
+                    if phIndex == nPH-1:
+                        phIndex = 0
+                        slIndex += 1
+                    else:
+                        phIndex += 1
+            if repeIndex>=dummyPulses: repeIndexGlobal += 1 # Update the global repeIndex
+            repeIndex+=1 # Update the repeIndex after the ETL
+    
+        # Return the output variables
+        return(phIndex, slIndex, repeIndexGlobal, acqPoints, data)
+            
     def createSequence(phIndex=0, slIndex=0, repeIndexGlobal=0, rewrite=True):
         repeIndex = 0
         if rdGradTime==0:   # Check if readout gradient is dc or pulsed
@@ -214,6 +243,7 @@ def rare(self, plotSeq):
             if repeIndex==0:
                 t0 = tEx-preExTime-inversionTime-4*acqTime
                 mri.rxGate(expt, t0, acqTime+2*addRdPoints/BW)
+                acqPoints += nRD
             
             # Pre-excitation pulse
             if repeIndex>=dummyPulses and preExTime!=0:
@@ -286,8 +316,7 @@ def rare(self, plotSeq):
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, +phGradients[phIndex], gSteps, axes[1], shimming)
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, +slGradients[slIndex], gSteps, axes[2], shimming)
                     orders = orders+gSteps*4
-                    
-    
+
                 # Update the phase and slice gradient
                 if repeIndex>=dummyPulses:
                     if phIndex == nPH-1:
@@ -302,7 +331,7 @@ def rare(self, plotSeq):
         mri.endSequence(expt, repeIndex*repetitionTime)
         
         # Return the output variables
-        return(phIndex, slIndex, repeIndexGlobal)
+        return(phIndex, slIndex, repeIndexGlobal, acqPoints)
 
 
     # Changing time parameters to us
@@ -321,7 +350,7 @@ def rare(self, plotSeq):
     rawData['scanTime'] = scanTime*nSL*1e-6
         
     # Calibrate frequency
-    if freqCal==1: 
+    if (not demo) and freqCal: 
         mri.freqCalibration(rawData, bw=0.05)
         mri.freqCalibration(rawData, bw=0.005)
         larmorFreq = rawData['larmorFreq']*1e-6
@@ -333,63 +362,103 @@ def rare(self, plotSeq):
     dummyData = []
     overData = []
     noise = []
-    batchIndex = 0
+    nBatches = 0
     repeIndexArray = np.array([0])
     repeIndexGlobal = repeIndexArray[0]
     phIndex = 0
     slIndex = 0
+    acqPointsPerBatch = []
     while repeIndexGlobal<nRepetitions:
         
-        expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = expt.get_rx_ts()[0]
-        BW = 1/samplingPeriod/hw.oversamplingFactor
-        acqTime = nPoints[0]/BW        # us
-        batchIndex += 1
-        print('Batch ', batchIndex, ' runing...')
-        phIndex, slIndex, repeIndexGlobal = createSequence(phIndex=phIndex,
-                                                           slIndex=slIndex,
-                                                           repeIndexGlobal=repeIndexGlobal,
-                                                           rewrite=batchIndex==1)
-        repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
+        nBatches += 1
+        if not demo:
+            expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+            samplingPeriod = expt.get_rx_ts()[0]
+            BW = 1/samplingPeriod/hw.oversamplingFactor
+            acqTime = nPoints[0]/BW        # us
+            phIndex, slIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
+                                                               slIndex=slIndex,
+                                                               repeIndexGlobal=repeIndexGlobal,
+                                                               rewrite=nBatches==1)
+            repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
+            acqPointsPerBatch.append(aa)
+        else:
+            phIndex, slIndex, repeIndexGlobal, aa, dataA = createSequenceDemo(phIndex=phIndex,
+                                                               slIndex=slIndex,
+                                                               repeIndexGlobal=repeIndexGlobal,
+                                                               rewrite=nBatches==1)
+            repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
+            acqPointsPerBatch.append(aa)
+            
         
         # Plot sequence:
 #        expt.plot_sequence()
         
         for ii in range(nScans):
-            rxd, msgs = expt.run()
-            rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
-            # Get noise data
-            noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
-            rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
-            # Get data
-            if dummyPulses>0:
-                dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*etl*hw.oversamplingFactor]), axis = 0)
-                overData = np.concatenate((overData, rxd['rx0'][nRD*etl*hw.oversamplingFactor::]), axis = 0)
+            print('Batch ', nBatches, ', Scan ', ii, ' runing...')
+            if not demo:
+                rxd, msgs = expt.run()
+                rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
+                # Get noise data
+                noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
+                rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
+                # Get data
+                if dummyPulses>0:
+                    dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*etl*hw.oversamplingFactor]), axis = 0)
+                    overData = np.concatenate((overData, rxd['rx0'][nRD*etl*hw.oversamplingFactor::]), axis = 0)
+                else:
+                    overData = np.concatenate((overData, rxd['rx0']), axis = 0)
             else:
-                overData = np.concatenate((overData, rxd['rx0']), axis = 0)
-        expt.__del__()
-        
+                data = dataA
+                noise = np.concatenate((noise, data[0:nRD*hw.oversamplingFactor]), axis = 0)
+                data = data[nRD*hw.oversamplingFactor::]
+                # Get data
+                if dummyPulses>0:
+                    dummyData = np.concatenate((dummyData, data[0:nRD*etl*hw.oversamplingFactor]), axis = 0)
+                    overData = np.concatenate((overData, data[nRD*etl*hw.oversamplingFactor::]), axis = 0)
+                else:
+                    overData = np.concatenate((overData, data), axis = 0)
+                
+        if not demo: expt.__del__()
+    del aa
+    acqPointsPerBatch= (np.array(acqPointsPerBatch)-etl*nRD*(dummyPulses>0)-nRD)*nScans
     print('Scans done!')
     rawData['noiseData'] = noise
     rawData['overData'] = overData
     
     # Fix the echo position using oversampled data
     if dummyPulses>0:
-        dummyData = np.reshape(dummyData,  (batchIndex, etl, nRD*hw.oversamplingFactor))
+        dummyData = np.reshape(dummyData,  (nBatches*nScans, etl, nRD*hw.oversamplingFactor))
         dummyData = np.average(dummyData, axis=0)
         rawData['dummyData'] = dummyData
-        overData = np.reshape(overData, (nScans*nSL, int(nPH/etl), etl,  nRD*hw.oversamplingFactor))
-        for ii in range(nScans*nSL):
-            overData[ii, :, :, :] = mri.fixEchoPosition(dummyData, overData[ii, :, :, :])
-        overData = np.squeeze(np.reshape(overData, (1, nRD*hw.oversamplingFactor*nPH*nSL*nScans)))
+        overData = np.reshape(overData, (-1, etl, nRD*hw.oversamplingFactor))
+        overData = mri.fixEchoPosition(dummyData, overData)
+        overData = np.reshape(overData, -1)
     
     # Generate dataFull
     dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+    if nBatches>1:
+        dataFullA = dataFull[0:sum(acqPointsPerBatch[0:-1])]
+        dataFullB = dataFull[sum(acqPointsPerBatch[0:-1])::]
+    
+    # Reorganize dataFull
+    dataProv = np.zeros([nScans,nSL*nPH*nRD])
+    dataProv = dataProv+1j*dataProv
+    dataFull = np.reshape(dataFull, (nBatches, nScans, -1, nRD))
+    if nBatches>1:
+        dataFullA = np.reshape(dataFullA, (nBatches-1, nScans, -1, nRD))
+        dataFullB = np.reshape(dataFullB, (1, nScans, -1, nRD))
+    for scan in range(nScans):
+        if nBatches>1:
+            dataProv[ii, :] = np.concatenate((np.reshape(dataFullA[:,ii,:,:],-1), np.reshape(dataFullB[:,ii,:,:],-1)), axis=0)
+        else:
+            dataProv[ii, :] = np.reshape(dataFull[:,ii,:,:],-1)
+    dataFull = np.reshape(dataProv,-1)
     
     # Get index for krd = 0
     # Average data
-    dataProv = np.reshape(dataFull, (nSL, nScans, nRD*nPH))
-    dataProv = np.average(dataProv, axis=1)
+    dataProv = np.reshape(dataFull, (nScans, nRD*nPH*nSL))
+    dataProv = np.average(dataProv, axis=0)
     # Reorganize the data acording to sweep mode
     dataProv = np.reshape(dataProv, (nSL, nPH, nRD))
     dataTemp = dataProv*0
@@ -403,7 +472,7 @@ def rare(self, plotSeq):
         indkrd0 = int(nRD/2)
 
     # Get individual images
-    dataFull = np.reshape(dataFull, (nSL, nScans, nPH, nRD))
+    dataFull = np.reshape(dataFull, (nScans, nSL, nPH, nRD))
     dataFull = dataFull[:, :, :, indkrd0-int(nPoints[0]/2):indkrd0+int(nPoints[0]/2)]
     dataTemp = dataFull*0
     for ii in range(nPH):
@@ -411,12 +480,12 @@ def rare(self, plotSeq):
     dataFull = dataTemp
     imgFull = dataFull*0
     for ii in range(nScans):
-        imgFull[:, ii, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[:, ii, :, :])))
+        imgFull[ii, :, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[ii, :, :, :])))
     rawData['dataFull'] = dataFull
     rawData['imgFull'] = imgFull    
     
     # Average data
-    data = np.average(dataFull, axis=1)
+    data = np.average(dataFull, axis=0)
     data = np.reshape(data, (nSL, nPH, nPoints[0]))
     
     # Do zero padding
@@ -452,18 +521,7 @@ def rare(self, plotSeq):
     data = np.reshape(data, (nPoints[2], nPoints[1], nPoints[0]))
     
     # Save data
-    dt = datetime.now()
-    dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S")
-    dt2 = date.today()
-    dt2_string = dt2.strftime("%Y.%m.%d")
-    if not os.path.exists('experiments/acquisitions/%s' % (dt2_string)):
-        os.makedirs('experiments/acquisitions/%s' % (dt2_string))
-            
-    if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
-        os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)) 
-    rawData['fileName'] = "%s.%s.mat" % ("RARE",dt_string)
-    savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, "Old_RARE",dt_string),  rawData) 
-    
+    mri.saveRawData(rawData)
     # Reshape to 0 dimensional
     data = np.reshape(data, -1) 
     
