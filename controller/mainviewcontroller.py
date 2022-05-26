@@ -35,7 +35,7 @@ from globalvars import StyleSheets as style
 from stream import EmittingStream
 sys.path.append('../marcos_client')
 from local_config import ip_address
-from seq.rare import rare
+import seq
 
 
 import cgitb 
@@ -296,9 +296,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.sequence.oversampling_factor = 6
 
         if  self.sequence.seq == 'RARE':
-            rare(self.sequence, plotSeq)
-#        elif self.sequence.seq == 'CPMG':
-#            cpmg(self.sequence, plotSeq)
+            seq.rare(self.sequence, plotSeq)
+        elif self.sequence.seq == 'HASTE':
+            seq.haste(self.sequence, plotSeq)
   
         
     def messages(self, text):

@@ -14,10 +14,6 @@ Operations Namespace
 class Namespace:
     seq = "sequence"
     dbg_sc = "Debug"
-#    systemproperties = "System Properties"
-    systemproperties = ""
-    RFproperties = "RF and System Properties"
-    Gproperties = "Gradients Properties"
     age = "Age"
     sex = "Sex (M/F)"
     weight="Weight (gr)"
@@ -30,6 +26,7 @@ class Namespace:
     ns = 'ns'
     
     RARE= "RARE"
+    HASTE = "HASTE"
     nScans = "nScans"
     larmorFreq="Larmor Frequency (MHz)"
     rfExAmp="RF Excitation Amplitude (a.u.)"
@@ -51,11 +48,14 @@ class Namespace:
     rdGradTime="Readout grad. Time (us)"
     rdDephTime="Readout dephasing grad. Time (ms)"
     phGradTime="Phase and Slice grad. Time (ms)"
-    rdPreemphasis="Rd Preemphasis Factor (a.u.)"
+    rdPreemphasis="Rd Preemphasis Factor"
     drfPhase = "Phase of 90º pulse (º)" 
     dummyPulses = "Number of Dummy Pulses" 
     shimming = 'Shimming (x, y, z)'
-    parFourierFraction= 'Fraction of acquired k-space along phase direction'
+    parFourierFraction= 'Fraction of acquired k-space'
+    ssPreemphasis='Sl Preemphasis Factor'
+    crusherDelay='Crusher Delay (ms)'
+    rfEnvelope='Envelope of RF pulse (Rec or Sinc)'
 
 
 

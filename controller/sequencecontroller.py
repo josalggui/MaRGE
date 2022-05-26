@@ -1,10 +1,9 @@
 """
 Operations Controller
 
-@author:    David Schote
-@contact:   david.schote@ovgu.de
+@author:    Yolanda Vives
 @version:   2.0 (Beta)
-@change:    13/06/2020
+@change:    25/05/2022
 
 @summary:   TBD
 
@@ -12,7 +11,7 @@ Operations Controller
 @todo:      Extend construction of parameter section (headers, more categories, etc. )
 
 """
-from PyQt5.QtWidgets import QSizePolicy, QLabel,  QComboBox
+from PyQt5.QtWidgets import QSizePolicy, QLabel,  QComboBox, QTabWidget, QWidget, QVBoxLayout
 from PyQt5.QtCore import Qt, QRegExp
 from sequencemodes import defaultsequences
 from sequencesnamespace import Namespace as nmspc
@@ -78,37 +77,39 @@ class SequenceList(QComboBox):
             self.parent.layout_parameters.itemAt(i).widget().setParent(None)
 
         # Add input parameters to row layout
-        inputwidgets: list = []
+        inputwidgets1: list = []
+        inputwidgets2: list = []
+        inputwidgets3: list = []
+        inputwidgets4: list = []
 
-        if hasattr(defaultsequences[sequence], 'systemproperties'):
-            sys_prop = defaultsequences[sequence].systemproperties
-            inputwidgets += [self.generateLabelItem(nmspc.systemproperties)]
-            inputwidgets += self.generateWidgetsFromDict(sys_prop, sequence)
-            
-        if hasattr(defaultsequences[sequence], 'sqncproperties'):
-            seqs_prop = defaultsequences[sequence].sqncproperties
-            inputwidgets += [self.generateLabelItem(nmspc.sqncproperties)]
-            inputwidgets += self.generateWidgetsFromDict(seqs_prop, sequence)
-                        
+        self.tabwidget = QTabWidget()
+
         if hasattr(defaultsequences[sequence], 'RFproperties'):
-            sys_prop = defaultsequences[sequence].RFproperties
-            inputwidgets += [self.generateLabelItem(nmspc.RFproperties)]
-            inputwidgets += self.generateWidgetsFromDict(sys_prop, sequence)
+            rf_prop = defaultsequences[sequence].RFproperties
+            inputwidgets1 += self.generateWidgetsFromDict(rf_prop, sequence)
+            self.tab = self.generateTab(inputwidgets1)
+            self.tabwidget.addTab(self.tab,"RF")
+
+        if hasattr(defaultsequences[sequence], 'IMproperties'):
+            im_prop = defaultsequences[sequence].IMproperties
+            inputwidgets2 += self.generateWidgetsFromDict(im_prop, sequence)
+            self.tab = self.generateTab(inputwidgets2)
+            self.tabwidget.addTab(self.tab,"Image")
+                        
+        if hasattr(defaultsequences[sequence], 'SEQproperties'):
+            seq_prop = defaultsequences[sequence].SEQproperties
+            inputwidgets3 += self.generateWidgetsFromDict(seq_prop, sequence)
+            self.tab = self.generateTab(inputwidgets3)
+            self.tabwidget.addTab(self.tab,"Sequence")
             
-        if hasattr(defaultsequences[sequence], 'Gproperties'):
-            sys_prop = defaultsequences[sequence].Gproperties
-            inputwidgets += [self.generateLabelItem(nmspc.Gproperties)]
-#            inputwidgets += [self.generateTickItem()]
-            inputwidgets += self.generateWidgetsFromDict(sys_prop, sequence)     
+        if hasattr(defaultsequences[sequence], 'OTHproperties'):
+            oth_prop = defaultsequences[sequence].OTHproperties
+            inputwidgets4 += self.generateWidgetsFromDict(oth_prop, sequence)
+            self.tab = self.generateTab(inputwidgets4)
+            self.tabwidget.addTab(self.tab,"Others")
      
-        if hasattr(defaultsequences[sequence], 'gradientshims'):
-            shims = defaultsequences[sequence].gradientshims
-            inputwidgets += [(self.generateLabelItem(nmspc.gradientshims))]
-            inputwidgets += (self.generateWidgetsFromDict(shims, sequence))     
-            
-        for item in inputwidgets:
-            self.parent.layout_parameters.addWidget(item)
-       
+        self.parent.layout_parameters.addWidget(self.tabwidget)
+
     @staticmethod
     def generateWidgetsFromDict(obj: dict = None, sequence: str = None) -> list:
         widgetlist: list = []
@@ -124,6 +125,18 @@ class SequenceList(QComboBox):
         label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
         return label
         
+    @staticmethod
+    def generateTab(inputwidgets):
+        tab = QWidget()
+        tab.layout = QVBoxLayout()
+        for item in inputwidgets:
+            tab.layout.addWidget(item)
+
+        tab.layout.addStretch()
+        tab.setLayout(tab.layout)
+        return tab
+
+
 #    def generateTickItem(text):
 #        Qx = QCheckBox("Qx")
 #        Qx.setChecked(True)

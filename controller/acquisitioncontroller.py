@@ -30,6 +30,7 @@ import pyqtgraph.exporters
 from functools import partial
 from sessionmodes import defaultsessions
 from seq.rare import rare
+from seq.haste import haste
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, session=None, sequencelist=None):
@@ -57,9 +58,11 @@ class AcquisitionController(QObject):
             print('Start sequence')
             self.rxd, self.msgs, self.data_avg, self.sequence.BW = rare(self.sequence, plotSeq)
             print('End sequence')
-#        elif self.sequence.seq == 'CPMG':
-#            self.rxd, self.msgs, self.data_avg, self.sequence.BW = cpmg(self.sequence, plotSeq)
-#            self.sequence.lo_freq=self.sequence.larmorFreq
+        elif self.sequence.seq=='HASTE':
+            print('Start sequence')
+            self.rxd, self.msgs, self.data_avg, self.sequence.BW = haste(self.sequence, plotSeq)
+            print('End sequence')
+
             
         [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]= self.sequence.nPoints
         self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.larmorFreq, len(self.data_avg), self.sequence.nPoints, self.sequence.BW)
@@ -94,7 +97,6 @@ class AcquisitionController(QObject):
         
     def plot_3Dresult(self):
         
-        self.kspace=self.dataobject.k_space
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
         self.label = QLabel("%s %s" % (self.sequence.seq, dt_string))
@@ -104,7 +106,8 @@ class AcquisitionController(QObject):
             self.parent.plotview_layout.addWidget(self.button)
 
         self.parent.plotview_layout.addWidget(self.label)
-        self.parent.plotview_layout.addWidget(pg.image( self.dataobject.f_fft2Magnitude))
+        #self.parent.plotview_layout.addWidget(pg.image(self.kspace))
+        self.parent.plotview_layout.addWidget(pg.image(self.dataobject.f_fft2Magnitude))
 
     @pyqtSlot()
     def button_clicked(self):

@@ -5,20 +5,6 @@ Created on Fri Apr  1 18:05:53 2022
 MRILAB @ I3M
 """
 
-import sys
-import os
-#******************************************************************************
-# Add path to the working directory
-path = os.path.realpath(__file__)
-ii = 0
-for char in path:
-    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
-        # sys.path.append(path[0:ii])
-        print("Path: ",path[0:ii+1])
-        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
-        sys.path.append(path[0:ii+1]+'marcos_client')
-    ii += 1
-#******************************************************************************
 import numpy as np
 import experiment as ex
 import matplotlib.pyplot as plt
@@ -35,36 +21,35 @@ st = pdb.set_trace
 #*********************************************************************************
 
 
-def haste_standalone(
-    init_gpa=False, # Starts the gpa
-    nScans = 1, # NEX
-    larmorFreq = 3.07547, # MHz, Larmor frequency
-    rfExAmp = 0.058, # a.u., rf excitation pulse amplitude
-    rfReAmp = 2*0.058, # a.u., rf refocusing pulse amplitude
-    rfExTime = 170, # us, rf excitation pulse time
-    rfReTime = 170, # us, rf refocusing pulse time
-    rfEnvelope = 'Rec',  # 'Rec' -> square pulse, 'Sinc' -> sinc pulse
-    echoSpacing = 10., # ms, time between echoes
-    inversionTime = 0., # ms, Inversion recovery time
-    repetitionTime = 700., # ms, TR
-    fov = np.array([120., 120., 20.]), # mm, FOV along readout, phase and slice
-    dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
-    nPoints = np.array([60, 60, 1]), # Number of points along readout, phase and slice
-    acqTime = 4, # ms, acquisition time
-    axes = np.array([0, 2, 1]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
-    sweepMode = 1, # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
-    rdGradTime = 4.5,  # ms, readout gradient time
-    rdDephTime = 1,  # ms, readout dephasing time
-    phGradTime = 1, # ms, phase and slice dephasing time
-    rdPreemphasis = 1.00, # readout dephasing gradient is multiplied by this factor
-    ssPreemphasis = 1, # ssGradAmplitue is multiplied by this number for rephasing
-    crusherDelay = 0,  # us, delay of the crusher gradient
-    drfPhase = 0, # degrees, phase of the excitation pulse
-    dummyPulses = 1, # number of dummy pulses for T1 stabilization
-    shimming = np.array([-70., -90., 10.]), # a.u.*1e4, shimming along the X,Y and Z axes
-    parFourierFraction = 1.0 # fraction of acquired k-space along phase direction
-    ):
+def haste(self, plotSeq):
+    init_gpa=False # Starts the gpa
+    nScans = self.nScans # NEX
+    larmorFreq = self.larmorFreq # MHz, Larmor frequency
+    rfExAmp = self.rfExAmp # a.u., rf excitation pulse amplitude
+    rfReAmp = self.rfReAmp # a.u., rf refocusing pulse amplitude
+    rfExTime = self.rfExTime # us, rf excitation pulse time
+    rfReTime = self.rfReTime # us, rf refocusing pulse time
+    rfEnvelope = self.rfEnvelope  # 'Rec' -> square pulse, 'Sinc' -> sinc pulse
+    echoSpacing = self.echoSpacing # ms, time between echoes
+    inversionTime = self.inversionTime # ms, Inversion recovery time
+    repetitionTime = self.repetitionTime # ms, TR
+    fov = np.array(self.fov) # mm, FOV along readout, phase and slice
+    dfov = np.array(self.dfov) # mm, displacement of fov center
+    nPoints = np.array(self.nPoints) # Number of points along readout, phase and slice
+    acqTime = self.acqTime # ms, acquisition time
+    axes = np.array(self.axes) # 0->x, 1->y and 2->z defined as [rd,ph,sl]
+    axesEnable = self.axesEnable # 1-> Enable, 0-> Disable
+    sweepMode = self.sweepMode # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
+    rdGradTime = self.rdGradTime  # ms, readout gradient time
+    rdDephTime = self.rdDephTime  # ms, readout dephasing time
+    phGradTime = self.phGradTime # ms, phase and slice dephasing time
+    rdPreemphasis = self.rdPreemphasis # readout dephasing gradient is multiplied by this factor
+    ssPreemphasis = self.ssPreemphasis # slice rephasing gradient is multiplied by this factor
+    crusherDelay = self.crusherDelay # delay of the crusher gradient
+    drfPhase = self.drfPhase # degrees, phase of the excitation pulse
+    dummyPulses = self.dummyPulses # number of dummy pulses for T1 stabilization
+    shimming = self.shimming # a.u.*1e4, shimming along the X,Y and Z axes
+    parFourierFraction = self.parFourierFraction # fraction of acquired k-space along phase direction
     
     freqCal = True
     demo = False
@@ -434,93 +419,9 @@ def haste_standalone(
     data = np.reshape(data, (nPoints[0]*nPoints[1], 1))
     rawData['kMax'] = kMax
     rawData['sampled'] = np.concatenate((kRD, kPH, data), axis=1)
-    data = np.reshape(data, (nPoints[1], nPoints[0]))
+    data = np.reshape(data, -1)
     
     # Save data
     mri.saveRawData(rawData)
-        
-    # Plot data for 1D case
-    if (nPH==1):
-        # Plot k-space
-        plt.figure(3)
-        dataPlot = data[0, :]
-        plt.subplot(1, 2, 1)
-        if axesEnable[0]==0:
-            tVector = np.linspace(-acqTime/2, acqTime/2, num=nPoints[0],endpoint=False)*1e-3
-            sMax = np.max(np.abs(dataPlot))
-            indMax = np.argmax(np.abs(dataPlot))
-            timeMax = tVector[indMax]
-            sMax3 = sMax/3
-            dataPlot3 = np.abs(np.abs(dataPlot)-sMax3)
-            indMin = np.argmin(dataPlot3)
-            timeMin = tVector[indMin]
-            T2 = np.abs(timeMax-timeMin)
-            plt.plot(tVector, np.abs(dataPlot))
-            plt.plot(tVector, np.real(dataPlot))
-            plt.plot(tVector, np.imag(dataPlot))
-            plt.xlabel('t (ms)')
-            plt.ylabel('Signal (mV)')
-            print("T2 = %s us" % (T2))
-        else:
-            plt.plot(kRD[:, 0], np.abs(dataPlot))
-            plt.yscale('log')
-            plt.xlabel('krd (mm^-1)')
-            plt.ylabel('Signal (mV)')
-            echoTime = np.argmax(np.abs(dataPlot))
-            echoTime = kRD[echoTime, 0]
-            print("Echo position = %s mm^{-1}" %round(echoTime, 1))
-        # Plot image
-        plt.subplot(122)
-        img = img[0, :]
-        if axesEnable[0]==0:
-            xAxis = np.linspace(-BW/2, BW/2, num=nPoints[0], endpoint=False)*1e3
-            plt.plot(xAxis, np.abs(img), '.')
-            plt.xlabel('Frequency (kHz)')
-            plt.ylabel('Density (a.u.)')
-            print("Smax = %s mV" % (np.max(np.abs(img))))
-        else:
-            xAxis = np.linspace(-fov[0]/2*1e2, fov[0]/2*1e2, num=nPoints[0], endpoint=False)
-            plt.plot(xAxis, np.abs(img))
-            plt.xlabel('Position RD (cm)')
-            plt.ylabel('Density (a.u.)')
-    
-    # Plot data for 2D case
-    else:
-        # Plot k-space
-        plt.figure(3)
-        dataPlot = data
-        plt.subplot(131)
-        plt.imshow(np.log(np.abs(dataPlot)),cmap='gray')
-        plt.axis('off')
-        # Plot image
-        if sweepMode==3:
-            imgPlot = img[round(nPH/4):round(3*nPH/4), :]
-        else:
-            imgPlot = img
-        plt.subplot(132)
-        plt.imshow(np.abs(imgPlot), cmap='gray')
-        plt.axis('off')
-        plt.title(rawData['fileName'])
-        plt.subplot(133)
-        plt.imshow(np.angle(imgPlot), cmap='gray')
-        plt.axis('off')
-        
-    plt.figure(5)
-    plt.subplot(121)
-    data1d = data[:, int(nPoints[0]/2)]
-    plt.plot(abs(data1d))
-    plt.subplot(122)
-    img1d = img[:, int(nPoints[0]/2)]
-    plt.plot(np.abs(img1d)*1e3)
-    
-    plt.show()
 
-
-#*********************************************************************************
-#*********************************************************************************
-#*********************************************************************************
-
-
-if __name__ == "__main__":
-
-    haste_standalone()
+    return rawData, msgs, data,  BW
