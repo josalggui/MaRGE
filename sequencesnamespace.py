@@ -14,10 +14,6 @@ Operations Namespace
 class Namespace:
     seq = "sequence"
     dbg_sc = "Debug"
-#    systemproperties = "System Properties"
-    systemproperties = ""
-    RFproperties = "RF and System Properties"
-    Gproperties = "Gradients Properties"
     age = "Age"
     sex = "Sex (M/F)"
     weight="Weight (gr)"
