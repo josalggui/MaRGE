@@ -30,7 +30,7 @@ class RARE:
                  fov:list=[120, 120, 120], 
                  dfov:list=[0, 0, 0],
                  nPoints:list=[60, 1, 1], 
-                 etl:int=1, 
+                 etl:int=15, 
                  acqTime:int=4, 
                  axes:list=[0, 1, 2], 
                  axesEnable:list=[0, 0, 0], 
@@ -73,56 +73,51 @@ class RARE:
         self.shimming:list=shimming
         self.parFourierFraction:float = parFourierFraction
 
-    @property 
-    def  RFproperties(self) -> dict:
-        # TODO: add server cmd's as third entry in list
-        return {
-            nmspc.larmorFreq:[float(self.larmorFreq)], 
+    @property
+    def RFproperties(self) -> dict:
+        return{
+            nmspc.larmorFreq:[float(self.larmorFreq)],
             nmspc.rfExAmp:[float(self.rfExAmp)], 
             nmspc.rfReAmp:[float(self.rfReAmp)], 
             nmspc.rfExTime:[int(self.rfExTime)], 
             nmspc.rfReTime:[int(self.rfReTime)], 
-            nmspc.echoSpacing:[float(self.echoSpacing)], 
-            nmspc.repetitionTime:[int(self.repetitionTime)], 
-            nmspc.acqTime:[int(self.acqTime)], 
-            nmspc.axes:[list(self.axes)], 
-            nmspc.axesEnable:[list(self.axesEnable)], 
-            nmspc.preExTime:[float(self.preExTime)], 
-            nmspc.inversionTime:[float(self.inversionTime)], 
-            nmspc.fov:[list(self.fov)], 
-            nmspc.dfov:[list(self.dfov)], 
-            nmspc.sweepMode:[int(self.sweepMode)], 
-            nmspc.rdGradTime:[int(self.rdGradTime)], 
-            nmspc.rdDephTime:[int(self.rdDephTime)], 
-            nmspc.phGradTime:[int(self.phGradTime)], 
-            nmspc.rdPreemphasis:[float(self.rdPreemphasis)], 
-            nmspc.dummyPulses:[int(self.dummyPulses)], 
-<<<<<<< HEAD
-            nmspc.shimming:[list(self.shimming)], 
-            nmspc.parFourierFraction:[float(self.parFourierFraction)], 
-=======
-            nmspc.parAcqLines:[int(self.parAcqLines)], 
->>>>>>> GUI_changes
             nmspc.drfPhase:[int(self.drfPhase)], 
-        }
+            }
+    
     @property
     def IMproperties(self) -> dict:
         return{
             nmspc.nScans:[int(self.nScans)],
-            nmspc.nPoints:[list(self.nPoints)],             
-        }
+            nmspc.nPoints:[list(self.nPoints)],  
+            nmspc.axes:[list(self.axes)], 
+            nmspc.axesEnable:[list(self.axesEnable)], 
+            nmspc.fov:[list(self.fov)], 
+            nmspc.dfov:[list(self.dfov)], 
+            }
     
     @property
     def SEQproperties(self) -> dict:
         return{
-            nmspc.etl:[int(self.etl)]
-        }
+            nmspc.etl:[int(self.etl)],
+            nmspc.echoSpacing:[float(self.echoSpacing)], 
+            nmspc.repetitionTime:[int(self.repetitionTime)], 
+            nmspc.acqTime:[int(self.acqTime)],
+            nmspc.preExTime:[float(self.preExTime)], 
+            nmspc.inversionTime:[float(self.inversionTime)], 
+            nmspc.sweepMode:[int(self.sweepMode)],
+            nmspc.dummyPulses:[int(self.dummyPulses)], 
+            nmspc.parFourierFraction:[float(self.parFourierFraction)],
+            }
         
     @property
     def OTHproperties(self) -> dict:
         return{
             nmspc.shimming:[list(self.shimming)],
-        }
+            nmspc.rdGradTime:[int(self.rdGradTime)], 
+            nmspc.rdDephTime:[int(self.rdDephTime)], 
+            nmspc.phGradTime:[int(self.phGradTime)],
+            nmspc.rdPreemphasis:[float(self.rdPreemphasis)],
+            }
 
 class HASTE:
     def __init__(self, 
@@ -187,39 +182,53 @@ class HASTE:
         self.parFourierFraction:float = parFourierFraction
         
     @property 
-    def  systemproperties(self) -> dict:
+    def  RFproperties(self) -> dict:
         # TODO: add server cmd's as third entry in list
         return {
-            nmspc.nScans:[int(self.nScans)], 
             nmspc.larmorFreq:[float(self.larmorFreq)], 
             nmspc.rfExAmp:[float(self.rfExAmp)], 
             nmspc.rfReAmp:[float(self.rfReAmp)], 
             nmspc.rfExTime:[int(self.rfExTime)], 
             nmspc.rfReTime:[int(self.rfReTime)],
             nmspc.rfEnvelope:[str(self.rfEnvelope)],
-            nmspc.echoSpacing:[float(self.echoSpacing)], 
-            nmspc.repetitionTime:[int(self.repetitionTime)], 
-            nmspc.nPoints:[list(self.nPoints)], 
-            nmspc.acqTime:[int(self.acqTime)], 
+            nmspc.drfPhase:[int(self.drfPhase)], 
+            }
+    
+    @property
+    def IMproperties(self) -> dict:
+        return{
+            nmspc.nScans:[int(self.nScans)],
+            nmspc.nPoints:[list(self.nPoints)],  
             nmspc.axes:[list(self.axes)], 
             nmspc.axesEnable:[list(self.axesEnable)], 
-            nmspc.preExTime:[float(self.preExTime)], 
-            nmspc.inversionTime:[float(self.inversionTime)], 
             nmspc.fov:[list(self.fov)], 
             nmspc.dfov:[list(self.dfov)], 
-            nmspc.sweepMode:[int(self.sweepMode)], 
+            }
+    
+    @property
+    def SEQproperties(self) -> dict:
+        return{
+            nmspc.echoSpacing:[float(self.echoSpacing)], 
+            nmspc.repetitionTime:[int(self.repetitionTime)], 
+            nmspc.acqTime:[int(self.acqTime)],
+            nmspc.preExTime:[float(self.preExTime)], 
+            nmspc.inversionTime:[float(self.inversionTime)], 
+            nmspc.sweepMode:[int(self.sweepMode)],
+            nmspc.dummyPulses:[int(self.dummyPulses)], 
+            nmspc.parFourierFraction:[float(self.parFourierFraction)],
+            }
+        
+    @property
+    def OTHproperties(self) -> dict:
+        return{
+            nmspc.shimming:[list(self.shimming)],
             nmspc.rdGradTime:[int(self.rdGradTime)], 
             nmspc.rdDephTime:[int(self.rdDephTime)], 
-            nmspc.phGradTime:[int(self.phGradTime)], 
-            nmspc.rdPreemphasis:[float(self.rdPreemphasis)], 
+            nmspc.phGradTime:[int(self.phGradTime)],
+            nmspc.rdPreemphasis:[float(self.rdPreemphasis)],
             nmspc.ssPreemphasis:[float(self.ssPreemphasis)],
             nmspc.crusherDelay:[float(self.crusherDelay)],
-            nmspc.dummyPulses:[int(self.dummyPulses)], 
-            nmspc.shimming:[list(self.shimming)], 
-            nmspc.parFourierFraction:[float(self.parFourierFraction)], 
-            nmspc.drfPhase:[int(self.drfPhase)], 
-        }
-
+            }
 
 
 """
