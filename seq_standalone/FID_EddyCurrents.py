@@ -32,7 +32,7 @@ def FID_EddyCurrents(
     gAmp = 0.4, # Max.1=50A 0.2=2V=10A; 0.2V=1A
     gDuration = 400,
     tDelay =1400, 
-    plotSeq =0):
+    plotSeq =1):
     
     #CONSTANTES
     tStart = 20
