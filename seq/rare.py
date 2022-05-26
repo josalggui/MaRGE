@@ -397,17 +397,23 @@ def rare(self, plotSeq):
         for ii in range(nScans):
             print('Batch ', nBatches, ', Scan ', ii, ' runing...')
             if not demo:
-                rxd, msgs = expt.run()
-                rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
-                # Get noise data
-                noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
-                rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
-                # Get data
-                if dummyPulses>0:
-                    dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*etl*hw.oversamplingFactor]), axis = 0)
-                    overData = np.concatenate((overData, rxd['rx0'][nRD*etl*hw.oversamplingFactor::]), axis = 0)
-                else:
-                    overData = np.concatenate((overData, rxd['rx0']), axis = 0)
+                if plotSeq==1:                  # What is the meaning of plotSeq??
+                    expt.plot_sequence()
+                    plt.show()
+                    expt.__del__()
+                    break
+                elif plotSeq==0:
+                    rxd, msgs = expt.run()
+                    rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
+                    # Get noise data
+                    noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
+                    rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
+                    # Get data
+                    if dummyPulses>0:
+                        dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*etl*hw.oversamplingFactor]), axis = 0)
+                        overData = np.concatenate((overData, rxd['rx0'][nRD*etl*hw.oversamplingFactor::]), axis = 0)
+                    else:
+                        overData = np.concatenate((overData, rxd['rx0']), axis = 0)
             else:
                 data = dataA
                 noise = np.concatenate((noise, data[0:nRD*hw.oversamplingFactor]), axis = 0)
@@ -420,109 +426,113 @@ def rare(self, plotSeq):
                     overData = np.concatenate((overData, data), axis = 0)
                 
         if not demo: expt.__del__()
+        if plotSeq ==1:
+            break
     del aa
-    acqPointsPerBatch= (np.array(acqPointsPerBatch)-etl*nRD*(dummyPulses>0)-nRD)*nScans
-    print('Scans done!')
-    rawData['noiseData'] = noise
-    rawData['overData'] = overData
     
-    # Fix the echo position using oversampled data
-    if dummyPulses>0:
-        dummyData = np.reshape(dummyData,  (nBatches*nScans, etl, nRD*hw.oversamplingFactor))
-        dummyData = np.average(dummyData, axis=0)
-        rawData['dummyData'] = dummyData
-        overData = np.reshape(overData, (-1, etl, nRD*hw.oversamplingFactor))
-        overData = mri.fixEchoPosition(dummyData, overData)
-        overData = np.reshape(overData, -1)
-    
-    # Generate dataFull
-    dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-    if nBatches>1:
-        dataFullA = dataFull[0:sum(acqPointsPerBatch[0:-1])]
-        dataFullB = dataFull[sum(acqPointsPerBatch[0:-1])::]
-    
-    # Reorganize dataFull
-    dataProv = np.zeros([nScans,nSL*nPH*nRD])
-    dataProv = dataProv+1j*dataProv
-    dataFull = np.reshape(dataFull, (nBatches, nScans, -1, nRD))
-    if nBatches>1:
-        dataFullA = np.reshape(dataFullA, (nBatches-1, nScans, -1, nRD))
-        dataFullB = np.reshape(dataFullB, (1, nScans, -1, nRD))
-    for scan in range(nScans):
+    if plotSeq ==0:
+        acqPointsPerBatch= (np.array(acqPointsPerBatch)-etl*nRD*(dummyPulses>0)-nRD)*nScans
+        print('Scans done!')
+        rawData['noiseData'] = noise
+        rawData['overData'] = overData
+        
+        # Fix the echo position using oversampled data
+        if dummyPulses>0:
+            dummyData = np.reshape(dummyData,  (nBatches*nScans, etl, nRD*hw.oversamplingFactor))
+            dummyData = np.average(dummyData, axis=0)
+            rawData['dummyData'] = dummyData
+            overData = np.reshape(overData, (-1, etl, nRD*hw.oversamplingFactor))
+            overData = mri.fixEchoPosition(dummyData, overData)
+            overData = np.reshape(overData, -1)
+        
+        # Generate dataFull
+        dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
         if nBatches>1:
-            dataProv[ii, :] = np.concatenate((np.reshape(dataFullA[:,ii,:,:],-1), np.reshape(dataFullB[:,ii,:,:],-1)), axis=0)
-        else:
-            dataProv[ii, :] = np.reshape(dataFull[:,ii,:,:],-1)
-    dataFull = np.reshape(dataProv,-1)
-    
-    # Get index for krd = 0
-    # Average data
-    dataProv = np.reshape(dataFull, (nScans, nRD*nPH*nSL))
-    dataProv = np.average(dataProv, axis=0)
-    # Reorganize the data acording to sweep mode
-    dataProv = np.reshape(dataProv, (nSL, nPH, nRD))
-    dataTemp = dataProv*0
-    for ii in range(nPH):
-        dataTemp[:, ind[ii], :] = dataProv[:,  ii, :]
-    dataProv = dataTemp
-    # Check where is krd = 0
-    dataProv = dataProv[int(nPoints[2]/2), int(nPH/2), :]
-    indkrd0 = np.argmax(np.abs(dataProv))
-    if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
-        indkrd0 = int(nRD/2)
+            dataFullA = dataFull[0:sum(acqPointsPerBatch[0:-1])]
+            dataFullB = dataFull[sum(acqPointsPerBatch[0:-1])::]
+        
+        # Reorganize dataFull
+        dataProv = np.zeros([nScans,nSL*nPH*nRD])
+        dataProv = dataProv+1j*dataProv
+        dataFull = np.reshape(dataFull, (nBatches, nScans, -1, nRD))
+        if nBatches>1:
+            dataFullA = np.reshape(dataFullA, (nBatches-1, nScans, -1, nRD))
+            dataFullB = np.reshape(dataFullB, (1, nScans, -1, nRD))
+        for scan in range(nScans):
+            if nBatches>1:
+                dataProv[ii, :] = np.concatenate((np.reshape(dataFullA[:,ii,:,:],-1), np.reshape(dataFullB[:,ii,:,:],-1)), axis=0)
+            else:
+                dataProv[ii, :] = np.reshape(dataFull[:,ii,:,:],-1)
+        dataFull = np.reshape(dataProv,-1)
+        
+        # Get index for krd = 0
+        # Average data
+        dataProv = np.reshape(dataFull, (nScans, nRD*nPH*nSL))
+        dataProv = np.average(dataProv, axis=0)
+        # Reorganize the data acording to sweep mode
+        dataProv = np.reshape(dataProv, (nSL, nPH, nRD))
+        dataTemp = dataProv*0
+        for ii in range(nPH):
+            dataTemp[:, ind[ii], :] = dataProv[:,  ii, :]
+        dataProv = dataTemp
+        # Check where is krd = 0
+        dataProv = dataProv[int(nPoints[2]/2), int(nPH/2), :]
+        indkrd0 = np.argmax(np.abs(dataProv))
+        if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
+            indkrd0 = int(nRD/2)
 
-    # Get individual images
-    dataFull = np.reshape(dataFull, (nScans, nSL, nPH, nRD))
-    dataFull = dataFull[:, :, :, indkrd0-int(nPoints[0]/2):indkrd0+int(nPoints[0]/2)]
-    dataTemp = dataFull*0
-    for ii in range(nPH):
-        dataTemp[:, :, ind[ii], :] = dataFull[:, :,  ii, :]
-    dataFull = dataTemp
-    imgFull = dataFull*0
-    for ii in range(nScans):
-        imgFull[ii, :, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[ii, :, :, :])))
-    rawData['dataFull'] = dataFull
-    rawData['imgFull'] = imgFull    
-    
-    # Average data
-    data = np.average(dataFull, axis=0)
-    data = np.reshape(data, (nSL, nPH, nPoints[0]))
-    
-    # Do zero padding
-    dataTemp = np.zeros((nPoints[2], nPoints[1], nPoints[0]))
-    dataTemp = dataTemp+1j*dataTemp
-    dataTemp[0:nSL, :, :] = data
-    data = np.reshape(dataTemp, (1, nPoints[0]*nPoints[1]*nPoints[2]))
-    
-    # Fix the position of the sample according to dfov
-    kMax = np.array(nPoints)/(2*np.array(fov))*np.array(axesEnable)
-    kRD = np.linspace(-kMax[0],kMax[0],num=nPoints[0],endpoint=False)
-#        kPH = np.linspace(-kMax[1],kMax[1],num=nPoints[1],endpoint=False)
-    kSL = np.linspace(-kMax[2],kMax[2],num=nPoints[2],endpoint=False)
-    kPH = kPH[::-1]
-    kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
-    kRD = np.reshape(kRD, (1, nPoints[0]*nPoints[1]*nPoints[2]))
-    kPH = np.reshape(kPH, (1, nPoints[0]*nPoints[1]*nPoints[2]))
-    kSL = np.reshape(kSL, (1, nPoints[0]*nPoints[1]*nPoints[2]))
-    dPhase = np.exp(-2*np.pi*1j*(dfov[0]*kRD+dfov[1]*kPH+dfov[2]*kSL))
-    data = np.reshape(data*dPhase, (nPoints[2], nPoints[1], nPoints[0]))
-    rawData['kSpace3D'] = data
-    img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
-    rawData['image3D'] = img
-    data = np.reshape(data, (1, nPoints[0]*nPoints[1]*nPoints[2]))
-    
-    # Create sampled data
-    kRD = np.reshape(kRD, (nPoints[0]*nPoints[1]*nPoints[2], 1))
-    kPH = np.reshape(kPH, (nPoints[0]*nPoints[1]*nPoints[2], 1))
-    kSL = np.reshape(kSL, (nPoints[0]*nPoints[1]*nPoints[2], 1))
-    data = np.reshape(data, (nPoints[0]*nPoints[1]*nPoints[2], 1))
-    rawData['kMax'] = kMax
-    rawData['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
-    data = np.reshape(data, (nPoints[2], nPoints[1], nPoints[0]))
-    
-    # Save data
-    mri.saveRawData(rawData)
-    # Reshape to 0 dimensional
-    data = np.reshape(data, -1) 
+        # Get individual images
+        dataFull = np.reshape(dataFull, (nScans, nSL, nPH, nRD))
+        dataFull = dataFull[:, :, :, indkrd0-int(nPoints[0]/2):indkrd0+int(nPoints[0]/2)]
+        dataTemp = dataFull*0
+        for ii in range(nPH):
+            dataTemp[:, :, ind[ii], :] = dataFull[:, :,  ii, :]
+        dataFull = dataTemp
+        imgFull = dataFull*0
+        for ii in range(nScans):
+            imgFull[ii, :, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[ii, :, :, :])))
+        rawData['dataFull'] = dataFull
+        rawData['imgFull'] = imgFull    
+        
+        # Average data
+        data = np.average(dataFull, axis=0)
+        data = np.reshape(data, (nSL, nPH, nPoints[0]))
+        
+        # Do zero padding
+        dataTemp = np.zeros((nPoints[2], nPoints[1], nPoints[0]))
+        dataTemp = dataTemp+1j*dataTemp
+        dataTemp[0:nSL, :, :] = data
+        data = np.reshape(dataTemp, (1, nPoints[0]*nPoints[1]*nPoints[2]))
+        
+        # Fix the position of the sample according to dfov
+        kMax = np.array(nPoints)/(2*np.array(fov))*np.array(axesEnable)
+        kRD = np.linspace(-kMax[0],kMax[0],num=nPoints[0],endpoint=False)
+    #        kPH = np.linspace(-kMax[1],kMax[1],num=nPoints[1],endpoint=False)
+        kSL = np.linspace(-kMax[2],kMax[2],num=nPoints[2],endpoint=False)
+        kPH = kPH[::-1]
+        kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
+        kRD = np.reshape(kRD, (1, nPoints[0]*nPoints[1]*nPoints[2]))
+        kPH = np.reshape(kPH, (1, nPoints[0]*nPoints[1]*nPoints[2]))
+        kSL = np.reshape(kSL, (1, nPoints[0]*nPoints[1]*nPoints[2]))
+        dPhase = np.exp(-2*np.pi*1j*(dfov[0]*kRD+dfov[1]*kPH+dfov[2]*kSL))
+        data = np.reshape(data*dPhase, (nPoints[2], nPoints[1], nPoints[0]))
+        rawData['kSpace3D'] = data
+        img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
+        rawData['image3D'] = img
+        data = np.reshape(data, (1, nPoints[0]*nPoints[1]*nPoints[2]))
+        
+        # Create sampled data
+        kRD = np.reshape(kRD, (nPoints[0]*nPoints[1]*nPoints[2], 1))
+        kPH = np.reshape(kPH, (nPoints[0]*nPoints[1]*nPoints[2], 1))
+        kSL = np.reshape(kSL, (nPoints[0]*nPoints[1]*nPoints[2], 1))
+        data = np.reshape(data, (nPoints[0]*nPoints[1]*nPoints[2], 1))
+        rawData['kMax'] = kMax
+        rawData['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
+        data = np.reshape(data, (nPoints[2], nPoints[1], nPoints[0]))
+        
+        # Save data
+        mri.saveRawData(rawData)
+        # Reshape to 0 dimensional
+        data = np.reshape(data, -1) 
     
     return rawData,  msgs, data,  BW
