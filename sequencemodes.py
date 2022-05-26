@@ -44,7 +44,7 @@ class RARE:
                  shimming:list=[-70, -90, 10], 
                  parFourierFraction:float = 1, 
                  ):
-    
+
         self.seq:str=seq 
         self.nScans:int=nScans
         self.larmorFreq: float=larmorFreq
@@ -74,19 +74,16 @@ class RARE:
         self.parFourierFraction:float = parFourierFraction
 
     @property 
-    def  systemproperties(self) -> dict:
+    def  RFproperties(self) -> dict:
         # TODO: add server cmd's as third entry in list
         return {
-            nmspc.nScans:[int(self.nScans)], 
             nmspc.larmorFreq:[float(self.larmorFreq)], 
             nmspc.rfExAmp:[float(self.rfExAmp)], 
             nmspc.rfReAmp:[float(self.rfReAmp)], 
             nmspc.rfExTime:[int(self.rfExTime)], 
             nmspc.rfReTime:[int(self.rfReTime)], 
             nmspc.echoSpacing:[float(self.echoSpacing)], 
-            nmspc.etl:[int(self.etl)], 
             nmspc.repetitionTime:[int(self.repetitionTime)], 
-            nmspc.nPoints:[list(self.nPoints)], 
             nmspc.acqTime:[int(self.acqTime)], 
             nmspc.axes:[list(self.axes)], 
             nmspc.axesEnable:[list(self.axesEnable)], 
@@ -100,9 +97,31 @@ class RARE:
             nmspc.phGradTime:[int(self.phGradTime)], 
             nmspc.rdPreemphasis:[float(self.rdPreemphasis)], 
             nmspc.dummyPulses:[int(self.dummyPulses)], 
+<<<<<<< HEAD
             nmspc.shimming:[list(self.shimming)], 
             nmspc.parFourierFraction:[float(self.parFourierFraction)], 
+=======
+            nmspc.parAcqLines:[int(self.parAcqLines)], 
+>>>>>>> GUI_changes
             nmspc.drfPhase:[int(self.drfPhase)], 
+        }
+    @property
+    def IMproperties(self) -> dict:
+        return{
+            nmspc.nScans:[int(self.nScans)],
+            nmspc.nPoints:[list(self.nPoints)],             
+        }
+    
+    @property
+    def SEQproperties(self) -> dict:
+        return{
+            nmspc.etl:[int(self.etl)]
+        }
+        
+    @property
+    def OTHproperties(self) -> dict:
+        return{
+            nmspc.shimming:[list(self.shimming)],
         }
 
 class HASTE:

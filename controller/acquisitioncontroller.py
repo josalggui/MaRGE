@@ -97,7 +97,6 @@ class AcquisitionController(QObject):
         
     def plot_3Dresult(self):
         
-        self.kspace=self.dataobject.k_space
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
         self.label = QLabel("%s %s" % (self.sequence.seq, dt_string))
@@ -107,7 +106,8 @@ class AcquisitionController(QObject):
             self.parent.plotview_layout.addWidget(self.button)
 
         self.parent.plotview_layout.addWidget(self.label)
-        self.parent.plotview_layout.addWidget(pg.image( self.dataobject.f_fft2Magnitude))
+        #self.parent.plotview_layout.addWidget(pg.image(self.kspace))
+        self.parent.plotview_layout.addWidget(pg.image(self.dataobject.f_fft2Magnitude))
 
     @pyqtSlot()
     def button_clicked(self):
