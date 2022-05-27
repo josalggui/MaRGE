@@ -8,16 +8,6 @@ Startup Code
 import os
 import sys
 # sys.path.append('../marcos_client')
-from PyQt5.QtWidgets import QApplication
-#from controller.mainviewcontroller import MainViewController,1
-from controller.sessionviewer_controller import SessionViewerController
-import cgitb 
-cgitb.enable(format = 'text')
-
-VERSION = "0.1.0"
-AUTHOR = "Yolanda Vives"
-
-print("Graphical User Interface for Magnetic Resonance Imaging")
 
 #******************************************************************************
 # Add path to the working directory
@@ -31,7 +21,18 @@ for char in path:
         sys.path.append(path[0:ii+1]+'marcos_client')
     ii += 1
 #******************************************************************************
-   
+
+from PyQt5.QtWidgets import QApplication
+#from controller.mainviewcontroller import MainViewController,1
+from controller.sessionviewer_controller import SessionViewerController
+import cgitb 
+cgitb.enable(format = 'text')
+
+VERSION = "0.1.0"
+AUTHOR = "Yolanda Vives"
+
+print("Graphical User Interface for Magnetic Resonance Imaging")
+
 app = QApplication(sys.argv)
 #    gui = MainViewController()
 gui = SessionViewerController('')

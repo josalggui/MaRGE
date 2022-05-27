@@ -303,7 +303,7 @@ def haste(self, plotSeq):
     ssDephGradTime = ssDephGradTime*1e6
     
     # Calibrate frequency
-    if not demo and freqCal: 
+    if not demo and freqCal and (not plotSeq): 
         mri.freqCalibration(rawData, bw=0.05)
         mri.freqCalibration(rawData, bw=0.005)
         larmorFreq = rawData['larmorFreq']*1e-6
@@ -316,33 +316,36 @@ def haste(self, plotSeq):
         acqTime = nPoints[0]/BW        # us
         createSequence()
 
-    # Plot sequence:
-    expt.plot_sequence()
-        
     # Run the experiment
     dataFull = []
     dummyData = []
     overData = []
+
     for ii in range(nScans):
-        print("Scan %s ..." % (ii+1))
-        if not demo:
-            rxd, msgs = expt.run()
-            rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
+        if plotSeq:
+            expt.plot_sequence()
+            plt.show()
+            break
         else:
-            data, acqPoints = createSequenceDemo()
-        # Get data
-        if not demo:
-            if dummyPulses>0:
-                dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*nPH*hw.oversamplingFactor]), axis = 0)
-                overData = np.concatenate((overData, rxd['rx0'][nRD*nPH*hw.oversamplingFactor::]), axis = 0)
+            print("Scan %s ..." % (ii+1))
+            if not demo:
+                rxd, msgs = expt.run()
+                rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
             else:
-                overData = np.concatenate((overData, rxd['rx0']), axis = 0)
-        else:
-            if dummyPulses>0:
-                dummyData = np.concatenate((dummyData, data[0:nRD*nPH*hw.oversamplingFactor]), axis = 0)
-                overData = np.concatenate((overData, data[nRD*nPH*hw.oversamplingFactor::]), axis = 0)
+                data, acqPoints = createSequenceDemo()
+            # Get data
+            if not demo:
+                if dummyPulses>0:
+                    dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*nPH*hw.oversamplingFactor]), axis = 0)
+                    overData = np.concatenate((overData, rxd['rx0'][nRD*nPH*hw.oversamplingFactor::]), axis = 0)
+                else:
+                    overData = np.concatenate((overData, rxd['rx0']), axis = 0)
             else:
-                overData = np.concatenate((overData, data), axis = 0)
+                if dummyPulses>0:
+                    dummyData = np.concatenate((dummyData, data[0:nRD*nPH*hw.oversamplingFactor]), axis = 0)
+                    overData = np.concatenate((overData, data[nRD*nPH*hw.oversamplingFactor::]), axis = 0)
+                else:
+                    overData = np.concatenate((overData, data), axis = 0)
     if not demo: expt.__del__()
     print('Scans done!')
     rawData['overData'] = overData

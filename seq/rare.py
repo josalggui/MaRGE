@@ -8,27 +8,10 @@ in batches in such a way that each batch acquires taking into account:
     number of instruction smaller than a given maximum number.
 """
 
-import sys
-import os
-#******************************************************************************
-# Add path to the working directory
-path = os.path.realpath(__file__)
-ii = 0
-for char in path:
-    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
-        # sys.path.append(path[0:ii])
-        print("Path: ",path[0:ii+1])
-        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
-        sys.path.append(path[0:ii+1]+'marcos_client')
-    ii += 1
-#******************************************************************************
 import numpy as np
 import experiment as ex
 import matplotlib.pyplot as plt
 import scipy.signal as sig
-import os
-from scipy.io import savemat
-from datetime import date,  datetime 
 import pdb
 import configs.hw_config as hw # Import the scanner hardware config
 import mrilabMethods.mrilabMethods as mri   # This import all methods inside the mrilabMethods module
@@ -91,7 +74,7 @@ def rare(self, plotSeq):
     phGradTime = phGradTime*1e-3
     
 # Inputs for rawData
-    rawData['seqName'] = 'RareBatchesPoints_standalone'
+    rawData['seqName'] = 'RARE'
     rawData['nScans'] = nScans
     rawData['larmorFreq'] = larmorFreq      # Larmor frequency
     rawData['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
@@ -350,7 +333,7 @@ def rare(self, plotSeq):
     rawData['scanTime'] = scanTime*nSL*1e-6
         
     # Calibrate frequency
-    if (not demo) and freqCal: 
+    if (not demo) and freqCal and (not plotSeq): 
         mri.freqCalibration(rawData, bw=0.05)
         mri.freqCalibration(rawData, bw=0.005)
         larmorFreq = rawData['larmorFreq']*1e-6
@@ -389,20 +372,17 @@ def rare(self, plotSeq):
                                                                rewrite=nBatches==1)
             repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
             acqPointsPerBatch.append(aa)
-            
-        
-        # Plot sequence:
-#        expt.plot_sequence()
         
         for ii in range(nScans):
-            print('Batch ', nBatches, ', Scan ', ii, ' runing...')
             if not demo:
                 if plotSeq==1:                  # What is the meaning of plotSeq??
+                    print('Ploting sequence...')
                     expt.plot_sequence()
                     plt.show()
                     expt.__del__()
                     break
                 elif plotSeq==0:
+                    print('Batch ', nBatches, ', Scan ', ii, ' runing...')
                     rxd, msgs = expt.run()
                     rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
                     # Get noise data
@@ -415,6 +395,7 @@ def rare(self, plotSeq):
                     else:
                         overData = np.concatenate((overData, rxd['rx0']), axis = 0)
             else:
+                print('Batch ', nBatches, ', Scan ', ii, ' runing...')
                 data = dataA
                 noise = np.concatenate((noise, data[0:nRD*hw.oversamplingFactor]), axis = 0)
                 data = data[nRD*hw.oversamplingFactor::]
