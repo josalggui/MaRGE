@@ -25,8 +25,6 @@ import experiment as ex
 import matplotlib.pyplot as plt
 import scipy.signal as sig
 import os
-from scipy.io import savemat
-from datetime import date,  datetime 
 import pdb
 import configs.hw_config as hw # Import the scanner hardware config
 import mrilabMethods.mrilabMethods as mri # This import all methods inside the mrilabMethods module
@@ -42,28 +40,28 @@ st = pdb.set_trace
 def gre_standalone(
     init_gpa=False, # Starts the gpa
     nScans = 1, # NEX
-    larmorFreq = 3.0778, # MHz, Larmor frequency
-    rfExAmp = 0.05, # a.u. rf excitation pulse amplitude
+    larmorFreq = 3.078, # MHz, Larmor frequency
+    rfExAmp = 0.2, # a.u. rf excitation pulse amplitude
     rfExTime = 35., # us, rf excitation pulse time
     echoTime = 2.5, # ms, TE
-    repetitionTime = 7., # ms, TR
-    fov = np.array([6., 6., 15.]), # mm, FOV along readout, phase and slice
+    repetitionTime = 200., # ms, TR
+    fov = np.array([120., 120., 120.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, Displacement of fov center
     nPoints = np.array([60, 60, 1]), # Number of points along readout, phase and slice
     acqTime = 1., # ms, Acquisition time
-    axes = np.array([0, 2, 1]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([0, 0, 0]), # 1-> Enable, 0-> Disable
-    rdGradTime = 1.5, # ms, readout rephasing gradient time
-    dephGradTime = 1., # ms, Phase and slice dephasing time
-    rdPreemphasis = 1.0, # Preemphasis factor for readout dephasing
+    axes = np.array([1, 0, 2]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
+    rdGradTime = 1.1, # ms, readout rephasing gradient time
+    dephGradTime = 1.0, # ms, Phase and slice dephasing time
+    rdPreemphasis = 1.00, # Preemphasis factor for readout dephasing
     drfPhase = 0., # degrees, phase of the excitation pulse
-    dummyPulses = 20, # Dummy pulses for T1 stabilization
+    dummyPulses = 0, # Dummy pulses for T1 stabilization
     shimming = np.array([-70., -90., 10.]), # a.u.*1e4, Shimming along the X,Y and Z axes
-    parFourierFraction = 1.0 # fraction of acquired k-space along phase direction
+    parFourierFraction = 1.0, # fraction of acquired k-space along phase direction
+    spoiler = 0 # set 1 or 0 if you want or do not want to apply spoiler gradients
     ):
     
     freqCal = False
-    demo = True
+    demo = False
     
     # rawData fields
     rawData = {}
@@ -93,7 +91,6 @@ def gre_standalone(
     rawData['nPoints'] = nPoints                 # Number of points along readout, phase and slice
     rawData['acqTime'] = acqTime             # Acquisition time
     rawData['axesOrientation'] = axes       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    rawData['axesEnable'] = axesEnable
     rawData['rdGradTime'] = rdGradTime
     rawData['dephGradTime'] = dephGradTime
     rawData['rdPreemphasis'] = rdPreemphasis
@@ -101,17 +98,19 @@ def gre_standalone(
     rawData['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
     rawData['shimming'] = shimming
     rawData['partialFourierFraction'] = parFourierFraction
+    rawData['spoiler'] = spoiler
     
     # Miscellaneous
-    blkTime = 7.             # Deblanking time (us)
     larmorFreq = larmorFreq*1e-6
-    gradRiseTime = 100e-6       # Estimated gradient rise time
+    gradRiseTime = 200e-6       # Estimated gradient rise time
     gSteps = int(gradRiseTime*1e6/5)*0+1
     addRdPoints = 5             # Initial rd points to avoid artifact at the begining of rd
-    gammaB = 42.56e6            # Gyromagnetic ratio in Hz/T
-    shimming = shimming*1e-4
     resolution = fov/nPoints
     randFactor = 0.
+    axesEnable = np.array([1, 1, 1])
+    for ii in range(3):
+        if nPoints[ii]==1: axesEnable[ii] = 0
+    if fov[0]>1 and nPoints[1]==1: axesEnable[0] = 0
     rawData['randFactor'] = randFactor
     rawData['resolution'] = resolution
     rawData['gradRiseTime'] = gradRiseTime
@@ -140,10 +139,10 @@ def gre_standalone(
         dephGradTime = maxDephGradTime
     
     # Max gradient amplitude
-    rdGradAmplitude = nPoints[0]/(gammaB*fov[0]*acqTime)*axesEnable[0]
+    rdGradAmplitude = nPoints[0]/(hw.gammaB*fov[0]*acqTime)
     rdDephAmplitude = -rdGradAmplitude*(rdGradTime+gradRiseTime)/(2*(dephGradTime+gradRiseTime))
-    phGradAmplitude = nPH/(2*gammaB*fov[1]*(dephGradTime+gradRiseTime))
-    slGradAmplitude = nSL/(2*gammaB*fov[2]*(dephGradTime+gradRiseTime))
+    phGradAmplitude = nPH/(2*hw.gammaB*fov[1]*(dephGradTime+gradRiseTime))*axesEnable[1]
+    slGradAmplitude = nSL/(2*hw.gammaB*fov[2]*(dephGradTime+gradRiseTime))*axesEnable[2]
     rawData['rdGradAmplitude'] = rdGradAmplitude
     rawData['rdDephAmplitude'] = rdDephAmplitude
     rawData['phGradAmplitude'] = phGradAmplitude
@@ -154,7 +153,10 @@ def gre_standalone(
     slGradients = np.linspace(-slGradAmplitude,slGradAmplitude,num=nSL,endpoint=False)
     
     # Now fix the number of slices to partailly acquired k-space
-    nSL = (int(nPoints[2]/2)+parAcqLines)*axesEnable[2]+(1-axesEnable[2])
+    if nPoints[2]==1:
+        nSL = 1
+    else:
+        nSL = int(nPoints[2]/2)+parAcqLines
     nRepetitions = nPH*nSL
     
     # Add random displacemnt to phase encoding lines
@@ -257,36 +259,38 @@ def gre_standalone(
             mri.rfRecPulse(expt, t0, rfExTime, rfExAmp, drfPhase)
             
             # Dephasing readout, phase and slice
-            t0 = tEx+rfExTime/2-hw.gradDelay
             if (repeIndex==0 or repeIndex>=dummyPulses):
-                mri.gradPulse(t0, dephGradTime, rdDephAmplitude*rdPreemphasis, axes[0])
+                t0 = tEx+rfExTime/2-hw.gradDelay
+                mri.gradTrap(expt, t0, gradRiseTime, dephGradTime, rdDephAmplitude*rdPreemphasis, gSteps,  axes[0],  shimming)
                 orders = orders+gSteps*2
             if repeIndex>=dummyPulses:
-                mri.gradPulse(t0, dephGradTime, phGradients[phIndex], axes[1])
-                mri.gradPulse(t0, dephGradTime, slGradients[slIndex], axes[2])
+                t0 = tEx+rfExTime/2-hw.gradDelay
+                mri.gradTrap(expt, t0, gradRiseTime,  dephGradTime, phGradients[phIndex], gSteps,  axes[1], shimming)
+                mri.gradTrap(expt, t0, gradRiseTime,  dephGradTime, slGradients[slIndex], gSteps,  axes[2], shimming)
                 orders = orders+gSteps*4
             
             # Rephasing readout gradient
             if (repeIndex==0 or repeIndex>=dummyPulses):
-                t0 = tEx+echoTime/2-rdGradTime/2-gradRiseTime-hw.gradDelay
+                t0 = tEx+echoTime-rdGradTime/2-gradRiseTime-hw.gradDelay
                 mri.gradTrap(expt, t0, gradRiseTime, rdGradTime, rdGradAmplitude, gSteps, axes[0], shimming)
                 orders = orders+gSteps*2
             
             # Rx gate
             if (repeIndex==0 or repeIndex>=dummyPulses):
-                t0 = tEx+echoTime/2-acqTime/2-addRdPoints/BW
+                t0 = tEx+echoTime-acqTime/2-addRdPoints/BW
                 mri.rxGate(expt, t0, acqTime+2*addRdPoints/BW)
                 acqPoints += nRD
         
             # Spoiler
-            t0 = tEx+echoTime/2+rdGradTime/2+gradRiseTime-hw.gradDelay
-            if (repeIndex==0 or repeIndex>=dummyPulses):
-                mri.gradPulse(t0, dephGradTime, -rdDephAmplitude*rdPreemphasis, axes[0])
-                orders = orders+gSteps*2
-            if repeIndex>=dummyPulses:
-                mri.gradPulse(t0, dephGradTime, phGradients[phIndex], axes[1])
-                mri.gradPulse(t0, dephGradTime, slGradients[slIndex], axes[2])
-                orders = orders+gSteps*4
+            if spoiler:
+                t0 = tEx+echoTime+rdGradTime/2+gradRiseTime-hw.gradDelay
+                if (repeIndex==0 or repeIndex>=dummyPulses):
+                    mri.gradTrap(expt, t0, gradRiseTime, dephGradTime, -rdDephAmplitude*rdPreemphasis, gSteps,  axes[0],  shimming)
+                    orders = orders+gSteps*2
+                if repeIndex>=dummyPulses:
+                    mri.gradTrap(expt, t0, gradRiseTime,  dephGradTime, phGradients[phIndex], gSteps,  axes[1], shimming)
+                    mri.gradTrap(expt, t0, gradRiseTime,  dephGradTime, slGradients[slIndex], gSteps,  axes[2], shimming)
+                    orders = orders+gSteps*4
                 
             # Update the phase and slice gradient
             if repeIndex>=dummyPulses:
@@ -333,13 +337,14 @@ def gre_standalone(
             phIndex, slIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
                                                                slIndex=slIndex,
                                                                repeIndexGlobal=repeIndexGlobal,
-                                                               rewrite=nBatches==1)
+                                                               rewrite=False)
             repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
             acqPointsPerBatch.append(aa)
+            expt.plot_sequence()
         else:
             phIndex, slIndex, repeIndexGlobal, aa, dataA = createSequenceDemo(phIndex=phIndex,
                                                                slIndex=slIndex,
-                                                               repeIndexGlobal=repeIndexGlobal,)
+                                                               repeIndexGlobal=repeIndexGlobal)
             repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
             acqPointsPerBatch.append(aa)
         
@@ -414,6 +419,7 @@ def gre_standalone(
     indkrd0 = np.argmax(np.abs(dataProv))
     if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
         indkrd0 = int(nRD/2)
+    indkrd0 = int(nRD/2)
         
     # Get individual images
     dataFull = np.reshape(dataFull, (nScans, nSL, nPH, nRD))
