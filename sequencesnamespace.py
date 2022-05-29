@@ -27,36 +27,42 @@ class Namespace:
     
     RARE= "RARE"
     HASTE = "HASTE"
-    nScans = "nScans"
+    GRE3D = "GRE3D"
+    
+    acqTime="Acquisition Time (ms)"
+    axes = "Axes (rd=0,ph=1,sl=2)"
+    axesEnable="Axes Enable (on=1, off=0)"
+    crusherDelay='Crusher Delay (ms)'
+    drfPhase = "Phase of 90º pulse (º)" 
+    dummyPulses = "Number of Dummy Pulses" 
+    dfov="Displacement of fOV (mm)"
+    dephGradTime="Dephasing Gradient Time (ms)"
+    echoSpacing="Echo Spacing (ms)"
+    echoTime = "Echo Time (ms)"
+    etl="ETL"
+    fov="FOV [rd,ph,sl] (mm)"
+    inversionTime="Inversion Time (ms)" 
     larmorFreq="Larmor Frequency (MHz)"
+    nScans = "nScans"
+    nPoints="Number of Points"
+    preExTime="Time from preexcitation pulse to inversion pulse (us)"
+    parFourierFractionSl= 'Fraction of acquired k-space (Sl)'
+    parFourierFractionPh='Fraction of acquired k-space (Ph)'
+    phGradTime="Phase and Slice grad. Time (ms)"
+    repetitionTime = "Repetition Time (ms)"
+    rdGradTime="Readout grad. Time (us)"
+    rdDephTime="Readout dephasing grad. Time (ms)"
+    rdPreemphasis="Rd Preemphasis Factor"
     rfExAmp="RF Excitation Amplitude (a.u.)"
     rfReAmp="RF Refocusing Amplitude (a.u.)"
     rfExTime="RF Excitation Time (us)"
     rfReTime="RF Refocusing Time (us)"
-    echoSpacing="Echo Spacing (ms)"
-    preExTime="Time from preexcitation pulse to inversion pulse (us)"
-    inversionTime="Inversion Time (ms)" 
-    repetitionTime = "Repetition Time (ms)"
-    fov="FOV [rd,ph,sl] (mm)"
-    dfov="Displacement of fOV (mm)"
-    nPoints="Number of Points"
-    etl="ETL"
-    acqTime="Acquisition Time (ms)"
-    axes = "Axes (rd=0,ph=1,sl=2)"
-    axesEnable="Axes Enable (on=1, off=0)"
-    sweepMode= "Sweep Mode (0=T2w, 1=T1w, 2=Rhow)" 
-    rdGradTime="Readout grad. Time (us)"
-    rdDephTime="Readout dephasing grad. Time (ms)"
-    phGradTime="Phase and Slice grad. Time (ms)"
-    rdPreemphasis="Rd Preemphasis Factor"
-    drfPhase = "Phase of 90º pulse (º)" 
-    dummyPulses = "Number of Dummy Pulses" 
-    shimming = 'Shimming (x, y, z)'
-    parFourierFraction= 'Fraction of acquired k-space'
-    ssPreemphasis='Sl Preemphasis Factor'
-    crusherDelay='Crusher Delay (ms)'
     rfEnvelope='Envelope of RF pulse (Rec or Sinc)'
-
+    shimming = 'Shimming (x, y, z)'
+    ssPreemphasis='Sl Preemphasis Factor'
+    sweepMode= "Sweep Mode (0=T2w, 1=T1w, 2=Rhow)" 
+    spoiler = "Spoiler (0 or 1)"
+    
 
 
 

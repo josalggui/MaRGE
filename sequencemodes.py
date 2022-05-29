@@ -42,7 +42,7 @@ class RARE:
                  drfPhase:float = 0.0, 
                  dummyPulses:int = 1, 
                  shimming:list=[-70.0, -90.0, 10.0], 
-                 parFourierFraction:float = 1.0, 
+                 parFourierFractionSl:float = 1.0, 
                  ):
 
         self.seq:str=seq 
@@ -71,7 +71,7 @@ class RARE:
         self.drfPhase:float = drfPhase
         self.dummyPulses:int = dummyPulses
         self.shimming:list=shimming
-        self.parFourierFraction:float = parFourierFraction
+        self.parFourierFractionSl:float = parFourierFractionSl
 
     @property
     def RFproperties(self) -> dict:
@@ -106,7 +106,7 @@ class RARE:
             nmspc.inversionTime:[float(self.inversionTime)], 
             nmspc.sweepMode:[int(self.sweepMode)],
             nmspc.dummyPulses:[int(self.dummyPulses)], 
-            nmspc.parFourierFraction:[float(self.parFourierFraction)],
+            nmspc.parFourierFractionSl:[float(self.parFourierFractionSl)],
             }
         
     @property
@@ -149,7 +149,7 @@ class HASTE:
                  drfPhase:float = 0.,                # degrees, excitation pulse phase 
                  dummyPulses:int = 1,               # pulses 
                  shimming:list=[-70., -90., 10.],           # a.u.*1e4, shimming along the X,Y and Z axes
-                 parFourierFraction:float=1.0,      # fraction of acquired k-space along phase direction 
+                 parFourierFractionPh:float=1.0,      # fraction of acquired k-space along phase direction 
                  ):
         self.seq:str=seq 
         self.nScans:int=nScans
@@ -179,7 +179,7 @@ class HASTE:
         self.drfPhase:int = drfPhase
         self.dummyPulses:int = dummyPulses
         self.shimming:list=shimming
-        self.parFourierFraction:float = parFourierFraction
+        self.parFourierFractionPh:float = parFourierFractionPh
         
     @property 
     def  RFproperties(self) -> dict:
@@ -215,7 +215,7 @@ class HASTE:
             nmspc.inversionTime:[float(self.inversionTime)], 
             nmspc.sweepMode:[int(self.sweepMode)],
             nmspc.dummyPulses:[int(self.dummyPulses)], 
-            nmspc.parFourierFraction:[float(self.parFourierFraction)],
+            nmspc.parFourierFractionPh:[float(self.parFourierFractionPh)],
             }
         
     @property
@@ -230,13 +230,91 @@ class HASTE:
             nmspc.crusherDelay:[float(self.crusherDelay)],
             }
 
+class GRE3D:
+    def __init__(self, 
+                 seq:str='GRE3D', 
+                 nScans:int=1, 
+                 larmorFreq: float=3.08, 
+                 rfExAmp: float=0.05, 
+                 rfExTime:float=30.0, 
+                 echoTime:float=2.0, 
+                 repetitionTime:float=10.0, 
+                 fov:list=[120.0, 120.0, 120.0], 
+                 dfov:list=[0.0, 0.0, 0.0],
+                 nPoints:list=[60, 60, 1], 
+                 acqTime:float=1.0, 
+                 axes:list=[0, 1, 2], 
+                 rdGradTime:float=1.4, 
+                 dephGradTime:float=1.0,
+                 dummyPulses:int=20, 
+                 shimming:list=[-70.0, -90.0, 10.0], 
+                 parFourierFractionSl:float = 1.0, 
+                 spoiler:int = 1, 
+                 ):
+        self.seq = seq
+        self.nScans = nScans
+        self.larmorFreq = larmorFreq
+        self.rfExAmp = rfExAmp
+        self.rfExTime = rfExTime
+        self.echoTime = echoTime
+        self.repetitionTime = repetitionTime
+        self.fov:list = fov
+        self.dfov = dfov
+        self.nPoints = nPoints
+        self.acqTime = acqTime
+        self.axes = axes
+        self.rdGradTime = rdGradTime
+        self.dephGradTime = dephGradTime
+        self.dummyPulses = dummyPulses
+        self.shimming = shimming
+        self.parFourierFractionSl = parFourierFractionSl
+        self.spoiler = spoiler
+        
+    @property 
+    def  RFproperties(self) -> dict:
+        # TODO: add server cmd's as third entry in list
+        return {
+            nmspc.larmorFreq:[float(self.larmorFreq)], 
+            nmspc.rfExAmp:[float(self.rfExAmp)], 
+            nmspc.rfExTime:[int(self.rfExTime)], 
+            }
+    
+    @property
+    def IMproperties(self) -> dict:
+        return{
+            nmspc.nScans:[int(self.nScans)],
+            nmspc.nPoints:[list(self.nPoints)],  
+            nmspc.axes:[list(self.axes)],  
+            nmspc.fov:[list(self.fov)], 
+            nmspc.dfov:[list(self.dfov)], 
+            }
+    
+    @property
+    def SEQproperties(self) -> dict:
+        return{
+            nmspc.echoTime:[float(self.echoTime)], 
+            nmspc.repetitionTime:[int(self.repetitionTime)], 
+            nmspc.acqTime:[int(self.acqTime)],
+            nmspc.dummyPulses:[int(self.dummyPulses)], 
+            nmspc.parFourierFractionSl:[float(self.parFourierFractionSl)],
+            nmspc.spoiler:[int(self.spoiler)], 
+            }
+        
+    @property
+    def OTHproperties(self) -> dict:
+        return{
+            nmspc.shimming:[list(self.shimming)],
+            nmspc.rdGradTime:[int(self.rdGradTime)], 
+            nmspc.dephGradTime:[int(self.dephGradTime)],
+            }
 
 """
 Definition of default sequences
 """
 defaultsequences={
     'RARE': RARE(),
-    'HASTE': HASTE()
+    'HASTE': HASTE(), 
+    'GRE3D': GRE3D(), 
     }
 
 

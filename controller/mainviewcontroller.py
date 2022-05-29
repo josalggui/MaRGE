@@ -37,6 +37,7 @@ sys.path.append('../marcos_client')
 from local_config import ip_address
 from seq.rare import rare
 from seq.haste import haste
+from seq.gre3d import gre3d
 
 
 import cgitb 
@@ -300,6 +301,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             rare(self.sequence, plotSeq)
         elif self.sequence.seq == 'HASTE':
             haste(self.sequence, plotSeq)
+        elif self.sequence.seq == 'GRE3D':
+            gre3d(self.sequence, plotSeq)
   
         
     def messages(self, text):

@@ -20,9 +20,9 @@ import os
 from scipy.io import savemat
 from datetime import date,  datetime 
 import pdb
-from configs.hw_config import Gx_factor
-from configs.hw_config import Gy_factor
-from configs.hw_config import Gz_factor
+from configs.hw_config_2 import Gx_factor
+from configs.hw_config_2 import Gy_factor
+from configs.hw_config_2 import Gz_factor
 st = pdb.set_trace
 
 
@@ -34,18 +34,18 @@ st = pdb.set_trace
 
 def gre_standalone(
     init_gpa=False,              # Starts the gpa
-    nScans = 30,                 # NEX
-    larmorFreq = 3.076e6,      # Larmor frequency
+    nScans = 1,                 # NEX
+    larmorFreq = 3.0797e6,      # Larmor frequency
     rfExAmp = 0.05,             # rf excitation pulse amplitude
     rfExTime = 30e-6,          # rf excitation pulse time
     echoTime = 2e-3,              # TE
     repetitionTime = 10e-3,     # TR
     fov = np.array([13e-2, 13e-2, 13e-2]),           # FOV along readout, phase and slice
     dfov = np.array([0e-3, 2e-3, -5e-3]),            # Displacement of fov center
-    nPoints = np.array([60, 60, 30]),                 # Number of points along readout, phase and slice
+    nPoints = np.array([60, 60, 1]),                 # Number of points along readout, phase and slice
     acqTime = 1e-3,             # Acquisition time
     axes = np.array([1, 2, 0]),       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 1]), # 1-> Enable, 0-> Disable
+    axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
     dephaseGradTime = 1000e-6,       # Phase and slice dephasing time
     rdPreemphasis = 1.0,                               # Preemphasis factor for readout dephasing
     drfPhase = 0,                           # phase of the excitation pulse (in degrees)
@@ -225,7 +225,7 @@ def gre_standalone(
         gradPulse(t0, dephaseGradTime, slGradients[slIndex], axes[2])
         
         # Rephasing readout gradient
-        t0 = 20+repetitionTime*repeIndex+blkTime+rfExTime/2+echoTime-rdRephTime-gradRiseTime-gradDelay
+        t0 = 20+repetitionTime*repeIndex+blkTime+rfExTime/2+echoTime-rdRephTime/2-gradRiseTime-gradDelay
         gradPulse(t0, rdRephTime, rdGradAmplitude, axes[0])
         
         # Rx gate
@@ -253,7 +253,6 @@ def gre_standalone(
     # Plot sequence:
     if plotSeq==1:
         expt.plot_sequence()
-        plt.show()
     
     # Run the experiment
     dataFull = []

@@ -31,6 +31,7 @@ from functools import partial
 from sessionmodes import defaultsessions
 from seq.rare import rare
 from seq.haste import haste
+from seq.gre3d import gre3d
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, session=None, sequencelist=None):
@@ -61,6 +62,10 @@ class AcquisitionController(QObject):
         elif self.sequence.seq=='HASTE':
             print('Start sequence')
             self.rxd, self.msgs, self.data_avg, self.sequence.BW = haste(self.sequence, plotSeq)
+            print('End sequence')
+        elif self.sequence.seq=='GRE3D':
+            print('Start sequence')
+            self.rxd, self.msgs, self.data_avg, self.sequence.BW = gre3d(self.sequence, plotSeq)
             print('End sequence')
 
             
