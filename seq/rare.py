@@ -49,7 +49,7 @@ def rare(self, plotSeq):
     drfPhase = self.drfPhase # degrees, phase of the excitation pulse
     dummyPulses = self.dummyPulses # number of dummy pulses for T1 stabilization
     shimming = self.shimming # a.u.*1e4, shimming along the X,Y and Z axes
-    parFourierFraction = self.parFourierFractionSL # fraction of acquired k-space along phase direction
+    parFourierFraction = self.parFourierFractionSl # fraction of acquired k-space along phase direction
     
     freqCal = True
     demo = False
