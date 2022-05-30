@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Oct  7 12:40:05 2021
-@author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-@Summary: this code used rare_standalone.py on Feb 4 2022 as source. It divide the 3d acquisition
-in batches in such a way that each batch acquires taking into account:
-    number of points smaller than a given maximum number.
-    number of instruction smaller than a given maximum number.
+@author: José Miguel Algarín Guisado
+MRILAB @ I3M
 """
 
 import sys
@@ -26,14 +23,10 @@ import numpy as np
 import experiment as ex
 import matplotlib.pyplot as plt
 import scipy.signal as sig
-import os
-from scipy.io import savemat
-from datetime import date,  datetime 
 import pdb
 import configs.hw_config as hw # Import the scanner hardware config
-import mrilabMethods.mrilabMethods as mri   # This import all methods inside the mrilabMethods module
+import mrilabMethods.mrilabMethods as mri # This import all methods inside the mrilabMethods module
 st = pdb.set_trace
-
 
 #*********************************************************************************
 #*********************************************************************************
@@ -42,36 +35,35 @@ st = pdb.set_trace
 
 def rare_standalone(
     init_gpa=False, # Starts the gpa
-    nScans = 2, # NEX
-    larmorFreq = 3.04, # MHz, Larmor frequency
-    rfExAmp = 0.3, # a.u., rf excitation pulse amplitude
-    rfReAmp = 0.3, # a.u., rf refocusing pulse amplitude
-    rfExTime = 35, # us, rf excitation pulse time
-    rfReTime = 70, # us, rf refocusing pulse time
+    nScans = 1, # NEX
+    larmorFreq = 3.075, # MHz, Larmor frequency
+    rfExAmp = 0.0, # a.u., rf excitation pulse amplitude
+    rfReAmp = 0.0, # a.u., rf refocusing pulse amplitude
+    rfExTime = 40, # us, rf excitation pulse time
+    rfReTime = 80, # us, rf refocusing pulse time
     echoSpacing = 10, # ms, time between echoes
     preExTime = 0., # ms, Time from preexcitation pulse to inversion pulse
     inversionTime = 0., # ms, Inversion recovery time
     repetitionTime = 200., # ms, TR
-    fov = np.array([120., 120., 120.]), # mm, FOV along readout, phase and slice
+    fov = np.array([140., 150., 180.]), # mm, FOV along readout, phase and slice
     dfov = np.array([0., 0., 0.]), # mm, displacement of fov center
-    nPoints = np.array([60, 60, 1]), # Number of points along readout, phase and slice
-    etl = 5, # Echo train length
+    nPoints = np.array([80, 1, 1]), # Number of points along readout, phase and slice
+    etl = 10, # Echo train length
     acqTime = 4, # ms, acquisition time
     axes = np.array([2, 1, 0]), # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-    axesEnable = np.array([1, 1, 0]), # 1-> Enable, 0-> Disable
+    axesEnable = np.array([0, 0, 0]), # 1-> Enable, 0-> Disable
     sweepMode = 1, # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
     rdGradTime = 5,  # ms, readout gradient time
-    rdDephTime = 1,  # ms, readout dephasing time
+    rdDephTime = 2,  # ms, readout dephasing time
     phGradTime = 1, # ms, phase and slice dephasing time
     rdPreemphasis = 1.00, # readout dephasing gradient is multiplied by this factor
     drfPhase = 0, # degrees, phase of the excitation pulse
     dummyPulses = 1, # number of dummy pulses for T1 stabilization
     shimming = np.array([-70, -90., 10]), # a.u.*1e4, shimming along the X,Y and Z axes
-    parFourierFraction = 1.0 # fraction of acquired k-space along phase direction
+    parFourierFraction = 1 # fraction of acquired k-space along phase direction
     ):
     
-    freqCal = True
-    demo = False
+    freqCal = 1
     
     # rawData fields
     rawData = {}
@@ -93,7 +85,7 @@ def rare_standalone(
     phGradTime = phGradTime*1e-3
     
     # Inputs for rawData
-    rawData['seqName'] = 'RareBatchesPoints_standalone'
+    rawData['seqName'] = 'RARE_Standalone'
     rawData['nScans'] = nScans
     rawData['larmorFreq'] = larmorFreq      # Larmor frequency
     rawData['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
@@ -152,6 +144,8 @@ def rare_standalone(
     BW = nPoints[0]/acqTime*1e-6
     BWov = BW*hw.oversamplingFactor
     samplingPeriod = 1/BWov
+    rawData['bw'] = BW
+    rawData['samplingPeriod'] = samplingPeriod
     
     # Readout gradient time
     if rdGradTime>0 and rdGradTime<acqTime:
@@ -194,50 +188,20 @@ def rare_standalone(
     ind = mri.getIndex(etl, nPH, sweepMode)
     rawData['sweepOrder'] = ind
     phGradients = phGradients[ind]
-    
-    def createSequenceDemo(phIndex=0, slIndex=0, repeIndexGlobal=0, rewrite=True):
-        repeIndex = 0
-        acqPoints = 0
-        orders = 0
-        data = []
-        while acqPoints+etl*nRD<=hw.maxRdPoints and orders<=hw.maxOrders and repeIndexGlobal<nRepetitions:
-            if repeIndex==0:
-                acqPoints += nRD
-                data = np.concatenate((data, np.random.randn(nRD*hw.oversamplingFactor)), axis = 0)
-            
-            for echoIndex in range(etl):
-                if (repeIndex==0 or repeIndex>=dummyPulses):
-                    acqPoints += nRD
-                    data = np.concatenate((data, np.random.randn(nRD*hw.oversamplingFactor)), axis = 0)
-            
-                # Update the phase and slice gradient
-                if repeIndex>=dummyPulses:
-                    if phIndex == nPH-1:
-                        phIndex = 0
-                        slIndex += 1
-                    else:
-                        phIndex += 1
-            if repeIndex>=dummyPulses: repeIndexGlobal += 1 # Update the global repeIndex
-            repeIndex+=1 # Update the repeIndex after the ETL
-    
-        # Return the output variables
-        return(phIndex, slIndex, repeIndexGlobal, acqPoints, data)
-            
-    def createSequence(phIndex=0, slIndex=0, repeIndexGlobal=0, rewrite=True):
-        repeIndex = 0
+
+    def createSequence():
+        phIndex = 0
+        slIndex = 0
+        nRepetitions = int(nPH*nSL/etl+dummyPulses)
+        scanTime = 20e3+nRepetitions*repetitionTime
+        rawData['scanTime'] = scanTime*1e-6
         if rdGradTime==0:   # Check if readout gradient is dc or pulsed
             dc = True
         else:
             dc = False
-        acqPoints = 0
-        orders = 0
-        # Check in case of dummy pulse fill the cache
-        if (dummyPulses>0 and etl*nRD*2>hw.maxRdPoints) or (dummyPulses==0 and etl*nRD>hw.maxRdPoints):
-            print('ERROR: Too many acquired points.')
-            return()
         # Set shimming
-        mri.iniSequence(expt, 20, shimming, rewrite=rewrite)
-        while acqPoints+etl*nRD<=hw.maxRdPoints and orders<=hw.maxOrders and repeIndexGlobal<nRepetitions:
+        mri.iniSequence(expt, 20, shimming)
+        for repeIndex in range(nRepetitions):
             # Initialize time
             tEx = 20e3+repetitionTime*repeIndex+inversionTime+preExTime
             
@@ -245,42 +209,37 @@ def rare_standalone(
             if repeIndex==0:
                 t0 = tEx-preExTime-inversionTime-4*acqTime
                 mri.rxGate(expt, t0, acqTime+2*addRdPoints/BW)
-                acqPoints += nRD
             
             # Pre-excitation pulse
             if repeIndex>=dummyPulses and preExTime!=0:
                 t0 = tEx-preExTime-inversionTime-rfExTime/2-hw.blkTime
-                mri.rfRecPulse(expt, t0, rfExTime, rfExAmp/90*90, 0)
+                mri.rfRecPulse(expt, t0,rfExTime,rfExAmp/90*90,0)
                 mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.005, gSteps, axes[0], shimming)
                 mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.005, gSteps, axes[1], shimming)
                 mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, preExTime*0.5, -0.005, gSteps, axes[2], shimming)
-                orders = orders+gSteps*6
                 
             # Inversion pulse
             if repeIndex>=dummyPulses and inversionTime!=0:
                 t0 = tEx-inversionTime-rfReTime/2-hw.blkTime
-                mri.rfPulse(expt, t0, rfReTime, rfReAmp/180*180, 0)
+                mri.rfRecPulse(expt, t0,rfReTime,rfReAmp/180*180,0)
                 mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[0], shimming)
                 mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[1], shimming)
                 mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[2], shimming)
-                orders = orders+gSteps*6
-                
+            
             # DC gradient if desired
             if (repeIndex==0 or repeIndex>=dummyPulses) and dc==True:
                 t0 = tEx-10e3
                 mri.gradTrap(expt, t0, gradRiseTime, 10e3+echoSpacing*(etl+1), rdGradAmplitude, gSteps, axes[0], shimming)
-                orders = orders+gSteps*2
-                
+            
             # Excitation pulse
             t0 = tEx-hw.blkTime-rfExTime/2
             mri.rfRecPulse(expt, t0,rfExTime,rfExAmp,drfPhase)
         
             # Dephasing readout
+            t0 = tEx+rfExTime/2-hw.gradDelay
             if (repeIndex==0 or repeIndex>=dummyPulses) and dc==False:
-                t0 = tEx+rfExTime/2-hw.gradDelay
                 mri.gradTrap(expt, t0, gradRiseTime, rdDephTime, rdDephAmplitude*rdPreemphasis, gSteps, axes[0], shimming)
-                orders = orders+gSteps*2
-                
+            
             # Echo train
             for echoIndex in range(etl):
                 tEcho = tEx+echoSpacing*(echoIndex+1)
@@ -294,31 +253,26 @@ def rare_standalone(
                     t0 = tEcho-echoSpacing/2+rfReTime/2-hw.gradDelay
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, phGradients[phIndex], gSteps, axes[1], shimming)
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, slGradients[slIndex], gSteps, axes[2], shimming)
-                    orders = orders+gSteps*4
-                    
+                
                 # Readout gradient
                 if (repeIndex==0 or repeIndex>=dummyPulses) and dc==False:         # This is to account for dummy pulses
                     t0 = tEcho-rdGradTime/2-gradRiseTime-hw.gradDelay
                     mri.gradTrap(expt, t0, gradRiseTime, rdGradTime, rdGradAmplitude, gSteps, axes[0], shimming)
-                    orders = orders+gSteps*2
-                    
+    
                 # Rx gate
                 if (repeIndex==0 or repeIndex>=dummyPulses):
                     t0 = tEcho-acqTime/2-addRdPoints/BW
                     mri.rxGate(expt, t0, acqTime+2*addRdPoints/BW)
-                    acqPoints += nRD
     
                 # Rephasing phase and slice gradients
                 t0 = tEcho+acqTime/2+addRdPoints/BW-hw.gradDelay
                 if (echoIndex<etl-1 and repeIndex>=dummyPulses):
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, -phGradients[phIndex], gSteps, axes[1], shimming)
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, -slGradients[slIndex], gSteps, axes[2], shimming)
-                    orders = orders+gSteps*4
                 elif(echoIndex==etl-1 and repeIndex>=dummyPulses):
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, +phGradients[phIndex], gSteps, axes[1], shimming)
                     mri.gradTrap(expt, t0, gradRiseTime, phGradTime, +slGradients[slIndex], gSteps, axes[2], shimming)
-                    orders = orders+gSteps*4
-
+    
                 # Update the phase and slice gradient
                 if repeIndex>=dummyPulses:
                     if phIndex == nPH-1:
@@ -326,16 +280,10 @@ def rare_standalone(
                         slIndex += 1
                     else:
                         phIndex += 1
-            if repeIndex>=dummyPulses: repeIndexGlobal += 1 # Update the global repeIndex
-            repeIndex+=1 # Update the repeIndex after the ETL
-
-        # Turn off the gradients after the end of the batch
-        mri.endSequence(expt, repeIndex*repetitionTime)
-        
-        # Return the output variables
-        return(phIndex, slIndex, repeIndexGlobal, acqPoints)
-
-
+                
+            if repeIndex==nRepetitions-1:
+                mri.endSequence(expt, scanTime)
+    
     # Changing time parameters to us
     rfExTime = rfExTime*1e6
     rfReTime = rfReTime*1e6
@@ -347,115 +295,59 @@ def rare_standalone(
     rdDephTime = rdDephTime*1e6
     inversionTime = inversionTime*1e6
     preExTime = preExTime*1e6
-    nRepetitions = int(nSL*nPH/etl)
-    scanTime = nRepetitions*repetitionTime
-    rawData['scanTime'] = scanTime*nSL*1e-6
-        
+    
     # Calibrate frequency
-    if (not demo) and freqCal: 
+    if freqCal==1: 
         mri.freqCalibration(rawData, bw=0.05)
         mri.freqCalibration(rawData, bw=0.005)
         larmorFreq = rawData['larmorFreq']*1e-6
         drfPhase = rawData['drfPhase']
     
     # Create full sequence
+    expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+    samplingPeriod = expt.get_rx_ts()[0]
+    BW = 1/samplingPeriod/hw.oversamplingFactor
+    acqTime = nPoints[0]/BW        # us
+    createSequence()
+
+    # Plot sequence:
+#    expt.plot_sequence()
+        
     # Run the experiment
     dataFull = []
     dummyData = []
     overData = []
     noise = []
-    nBatches = 0
-    repeIndexArray = np.array([0])
-    repeIndexGlobal = repeIndexArray[0]
-    phIndex = 0
-    slIndex = 0
-    acqPointsPerBatch = []
-    while repeIndexGlobal<nRepetitions:
-        
-        nBatches += 1
-        if not demo:
-            expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-            samplingPeriod = expt.get_rx_ts()[0]
-            BW = 1/samplingPeriod/hw.oversamplingFactor
-            acqTime = nPoints[0]/BW        # us
-            phIndex, slIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
-                                                               slIndex=slIndex,
-                                                               repeIndexGlobal=repeIndexGlobal,
-                                                               rewrite=nBatches==1)
-            repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
-            acqPointsPerBatch.append(aa)
+    for ii in range(nScans):
+        print("Scan %s ..." % (ii+1))
+        rxd, msgs = expt.run()
+        rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
+        # Get noise data
+        noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
+        rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
+        # Get data
+        if dummyPulses>0:
+            dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*etl*hw.oversamplingFactor]), axis = 0)
+            overData = np.concatenate((overData, rxd['rx0'][nRD*etl*hw.oversamplingFactor::]), axis = 0)
         else:
-            phIndex, slIndex, repeIndexGlobal, aa, dataA = createSequenceDemo(phIndex=phIndex,
-                                                               slIndex=slIndex,
-                                                               repeIndexGlobal=repeIndexGlobal,
-                                                               rewrite=nBatches==1)
-            repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
-            acqPointsPerBatch.append(aa)
-            
-        
-        # Plot sequence:
-#        expt.plot_sequence()
-        
-        for ii in range(nScans):
-            print('Batch ', nBatches, ', Scan ', ii, ' runing...')
-            if not demo:
-                rxd, msgs = expt.run()
-                rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
-                # Get noise data
-                noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
-                rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
-                # Get data
-                if dummyPulses>0:
-                    dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*etl*hw.oversamplingFactor]), axis = 0)
-                    overData = np.concatenate((overData, rxd['rx0'][nRD*etl*hw.oversamplingFactor::]), axis = 0)
-                else:
-                    overData = np.concatenate((overData, rxd['rx0']), axis = 0)
-            else:
-                data = dataA
-                noise = np.concatenate((noise, data[0:nRD*hw.oversamplingFactor]), axis = 0)
-                data = data[nRD*hw.oversamplingFactor::]
-                # Get data
-                if dummyPulses>0:
-                    dummyData = np.concatenate((dummyData, data[0:nRD*etl*hw.oversamplingFactor]), axis = 0)
-                    overData = np.concatenate((overData, data[nRD*etl*hw.oversamplingFactor::]), axis = 0)
-                else:
-                    overData = np.concatenate((overData, data), axis = 0)
-                
-        if not demo: expt.__del__()
-    del aa
-    acqPointsPerBatch = (acqPointsPerBatch-etl*nRD*(dummyPulses>0)-nRD)*nScans
+            overData = np.concatenate((overData, rxd['rx0']), axis = 0)
+    expt.__del__()
     print('Scans done!')
     rawData['noiseData'] = noise
     rawData['overData'] = overData
     
     # Fix the echo position using oversampled data
     if dummyPulses>0:
-        dummyData = np.reshape(dummyData,  (nBatches*nScans, etl, nRD*hw.oversamplingFactor))
+        dummyData = np.reshape(dummyData,  (nScans, etl, nRD*hw.oversamplingFactor))
         dummyData = np.average(dummyData, axis=0)
         rawData['dummyData'] = dummyData
-        overData = np.reshape(overData, (-1, etl, nRD*hw.oversamplingFactor))
-        overData = mri.fixEchoPosition(dummyData, overData)
-        overData = np.reshape(overData, -1)
+        overData = np.reshape(overData, (nScans, int(nPH/etl*nSL), etl,  nRD*hw.oversamplingFactor))
+        for ii in range(nScans):
+            overData[ii, :, :, :] = mri.fixEchoPosition(dummyData, overData[ii, :, :, :])
+        overData = np.squeeze(np.reshape(overData, (1, nRD*hw.oversamplingFactor*nPH*nSL*nScans)))
     
     # Generate dataFull
     dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-    if nBatches>1:
-        dataFullA = dataFull[0:sum(acqPointsPerBatch[0:-1])]
-        dataFullB = dataFull[sum(acqPointsPerBatch[0:-1])::]
-    
-    # Reorganize dataFull
-    dataProv = np.zeros([nScans,nSL*nPH*nRD])
-    dataProv = dataProv+1j*dataProv
-    dataFull = np.reshape(dataFull, (nBatches, nScans, -1, nRD))
-    if nBatches>1:
-        dataFullA = np.reshape(dataFullA, (nBatches-1, nScans, -1, nRD))
-        dataFullB = np.reshape(dataFullB, (1, nScans, -1, nRD))
-    for scan in range(nScans):
-        if nBatches>1:
-            dataProv[ii, :] = np.concatenate((np.reshape(dataFullA[:,ii,:,:],-1), np.reshape(dataFullB[:,ii,:,:],-1)), axis=0)
-        else:
-            dataProv[ii, :] = np.reshape(dataFull[:,ii,:,:],-1)
-    dataFull = np.reshape(dataProv,-1)
     
     # Get index for krd = 0
     # Average data
@@ -524,7 +416,7 @@ def rare_standalone(
     
     # Save data
     mri.saveRawData(rawData)
-        
+    
     # Plot data for 1D case
     if (nPH==1 and nSL==1):
         # Plot k-space
