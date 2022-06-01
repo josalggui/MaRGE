@@ -111,8 +111,12 @@ class AcquisitionController(QObject):
             self.parent.plotview_layout.addWidget(self.button)
 
         self.parent.plotview_layout.addWidget(self.label)
-        #self.parent.plotview_layout.addWidget(pg.image(self.kspace))
-        self.parent.plotview_layout.addWidget(pg.image(self.dataobject.f_fft2Magnitude))
+
+        # Plot image
+        self.parent.plotview_layout.addWidget(pg.image(np.abs(self.rxd['image3D'])))
+
+        # Plot k-space
+        self.parent.plotview_layout.addWidget(pg.image(np.log10(np.abs(self.rxd['kSpace3D']))))
 
     @pyqtSlot()
     def button_clicked(self):
