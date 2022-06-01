@@ -20,7 +20,6 @@ from functools import partial
 import os
 import ast
 import sys
-sys.path.append('../marcos_client')
 sys.path.append('/media/physiomri/TOSHIBA\ EXT/')
 import experiment as ex
 from scipy.io import savemat
@@ -38,8 +37,7 @@ from local_config import ip_address
 from seq.rare import rare
 from seq.haste import haste
 from seq.gre3d import gre3d
-
-
+import mrilabMethods.mrilabMethods as mri
 import cgitb 
 cgitb.enable(format = 'text')
 import pdb
@@ -318,8 +316,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
     def initgpa(self):
         expt = ex.Experiment(init_gpa=True)
+        mri.endSequence(expt, 100)
         expt.run()
-        expt._del_()
+        expt.__del__()
 
     def batch_system(self):
         batchW = BatchController(self, self.sequencelist)
