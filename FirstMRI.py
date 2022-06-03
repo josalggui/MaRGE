@@ -27,15 +27,17 @@ from PyQt5.QtWidgets import QApplication
 from controller.sessionviewer_controller import SessionViewerController
 import cgitb 
 cgitb.enable(format = 'text')
-import seq.rare2 as rare
 
-VERSION = "0.1.0"
-AUTHOR = "Yolanda Vives"
+#****************************#
+#import seq.sequences as seqs#
+#****************************#
 
+VERSION = "0.2.0"
+AUTHORA = "Yolanda Vives"
+AUTHORB = "J.M. Algarín"
 print("Graphical User Interface for Magnetic Resonance Imaging")
 
-seq = rare.RARE()
-seq.sequenceRun(demo=True)
+#mySeq = seqs.RARE()
 app = QApplication(sys.argv)
 #    gui = MainViewController()
 gui = SessionViewerController('')
