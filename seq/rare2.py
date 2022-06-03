@@ -90,61 +90,45 @@ class RARE(blankSeq.MRIBLANKSEQ):
     #     # self.expt.plot_sequence()
     #     # plt.show()
 
-    def sequenceRun2(self):
-        init_gpa = False
-
-        # Create input parameters automatically from self.mapVals. It should be greate to include this as a method into
-        # the mri blank sequence, but to be honest I have no idea about how to do it.
-        # for key in self.mapKeys:
-        #     if type(self.mapVals[key]) is list:
-        #         if type(self.mapVals[key][0]) is int:
-        #             exec("%s = np.array([%d, %d, %d])" % (
-        #                     key, self.mapVals[key][0], self.mapVals[key][1], self.mapVals[key][2]))
-        #         else:
-        #             exec("%s = np.array([%f, %f, %f])" % (
-        #                 key, self.mapVals[key][0], self.mapVals[key][1], self.mapVals[key][2]))
-        #     else:
-        #         if type(self.mapVals[key]) is int:
-        #             exec("%s = %d" % (key, self.mapVals[key]))
-        #         elif type(self.mapVals[key]) is float:
-        #             exec("%s = %f" % (key, self.mapVals[key]))
-        #         else:
-        #             exec("%s = '%s'" % (key, self.mapVals[key]))
-
-        for key in self.mapKeys:
-            if type(self.mapVals[key]) is list:
-                locals()[key] = np.array([self.mapVals[key][0], self.mapVals[key][1], self.mapVals[key][2]])
-            else:
-                locals()[key] = self.mapVals[key]
-
-        # Create experiment
-        self.expt = ex.Experiment(lo_freq=3.0, rx_t=20, init_gpa=False, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-
-        # Introduce instructions into de code
-        self.iniSequence(20, np.array([0., 0., 0.]), rewrite=True)
-        self.rxGate(1000, 1000)
-        self.endSequence(3000)
-
-        # Plot sequence
-        # self.expt.plot_sequence()
-        # plt.show()
-
-
     def sequenceRun(self):
         init_gpa=False # Starts the gpa
 
-        # Create input parameters automatically from self.mapVals. It should be greate to include this as a method into
-        # the mri blank sequence, but to be honest I have no idea about how to do it.
+        # Create the inputs automatically. For some reason it only works if there is a few code later...
         # for key in self.mapKeys:
-            # if type(self.mapVals[key]) is list:
-            #     locals()[key] = np.array([self.mapVals[key][0], self.mapVals[key][1], self.mapVals[key][2]])
-            # else:
-        for key in self.mapKeys:
-            x = key
-            locals()[x] = self.mapVals[x]
-            if not key in locals():
-                print('Error')
-                locals()[key] = self.mapVals[key]
+        #     locals()[key] = self.mapVals[key]
+        #     if not key in locals():
+        #         print('Error')
+        #         locals()[key] = self.mapVals[key]
+
+        # Create the inputs manually, pufff
+        seqName = self.mapVals['seqName']
+        nScans = self.mapVals['nScans']
+        larmorFreq = self.mapVals['larmorFreq']# MHz
+        rfExAmp = self.mapVals['rfExAmp'] # a.u.
+        rfReAmp = self.mapVals['rfReAmp'] # a.u.
+        rfExTime = self.mapVals['rfExTime'] # us
+        rfReTime = self.mapVals['rfReTime'] # us
+        echoSpacing = self.mapVals['echoSpacing'] # ms
+        preExTime = self.mapVals['preExTime'] # ms
+        inversionTime = self.mapVals['inversionTime'] # ms
+        repetitionTime = self.mapVals['repetitionTime'] # ms
+        fov = np.array(self.mapVals['fov']) # mm
+        dfov = np.array(self.mapVals['dfov']) # mm
+        nPoints = np.array(self.mapVals['nPoints'])
+        etl = self.mapVals['etl']
+        acqTime = self.mapVals['acqTime'] # ms
+        axes = self.mapVals['axes']
+        axesEnable = self.mapVals['axesEnable']
+        sweepMode = self.mapVals['sweepMode']
+        rdGradTime = self.mapVals['rdGradTime'] # ms
+        rdDephTime = self.mapVals['rdDephTime'] # ms
+        phGradTime = self.mapVals['phGradTime'] # ms
+        rdPreemphasis = self.mapVals['rdPreemphasis']
+        drfPhase = self.mapVals['drfPhase'] # degrees
+        dummyPulses = self.mapVals['dummyPulses']
+        shimming = np.array(self.mapVals['shimming']) # *1e4
+        parFourierFraction = self.mapVals['parFourierFraction']
+
         freqCal = False # Swich off only if you want and you are on debug mode
 
         # rawData fields
@@ -154,11 +138,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
         larmorFreq = larmorFreq*1e6
         rfExTime = rfExTime*1e-6
         rfReTime = rfReTime*1e-6
-        fov = np.array(fov)*1e-3
-        dfov = np.array(dfov)*1e-3
+        fov = fov*1e-3
+        dfov = dfov*1e-3
         echoSpacing = echoSpacing*1e-3
         acqTime = acqTime*1e-3
-        shimming = np.array(shimming)*1e-4
+        shimming = shimming*1e-4
         repetitionTime= repetitionTime*1e-3
         preExTime = preExTime*1e-3
         inversionTime = inversionTime*1e-3
