@@ -1,3 +1,15 @@
+"""
+Created on Thu June 2 2022
+@author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+@email: josalggui@i3m.upv.es
+@Summary: mri blank sequence with common methods that will be inherited by any sequence
+"""
+
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+
+
 class MRIBLANKSEQ:
     # Properties
     mapKeys = []         # keys for the maps
@@ -5,6 +17,7 @@ class MRIBLANKSEQ:
     mapVals = {}         # values to show in the gui
     mapUnits = {}        # units to show in the gui
     mapFields = {}       # fields to classify the input parameter
+    plotSeq = 1          # it plots the sequence
 
     def __init__(self):
         self.mapKeys = []
@@ -84,7 +97,6 @@ class MRIBLANKSEQ:
         Oversampled data obtained with a given echo train length and readout gradient only is used here to determine the true position of k=0.
         After getting the position of k = 0 for each gradient-spin-echo, it shift the sampled data to place k = 0 at the center of each acquisition window.
         """
-        echoes
         etl = np.size(echoes, axis=0)
         n = np.size(echoes, axis=1)
         idx = np.argmax(np.abs(echoes), axis=1)
@@ -102,7 +114,7 @@ class MRIBLANKSEQ:
     ##############################################################
 
 
-    def rfSincPulse(self, expt, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, rewrite=True):
+    def rfSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -115,7 +127,7 @@ class MRIBLANKSEQ:
         txAmp = rfAmplitude * np.exp(1j * rfPhase) * hanning * np.abs(np.sinc(tx))
         txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
         txGateAmp = np.array([1, 0])
-        expt.add_flodict({
+        self.expt.add_flodict({
             'tx0': (txTime, txAmp),
             'tx_gate': (txGateTime, txGateAmp)
         }, rewrite)
@@ -126,7 +138,7 @@ class MRIBLANKSEQ:
     ##############################################################
 
 
-    def rfRecPulse(self, expt, tStart, rfTime, rfAmplitude, rfPhase=0, rewrite=True):
+    def rfRecPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -136,7 +148,7 @@ class MRIBLANKSEQ:
         txAmp = np.array([rfAmplitude * np.exp(1j * rfPhase), 0.])
         txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
         txGateAmp = np.array([1, 0])
-        expt.add_flodict({
+        self.expt.add_flodict({
             'tx0': (txTime, txAmp),
             'tx_gate': (txGateTime, txGateAmp)
         }, rewrite)
@@ -165,7 +177,7 @@ class MRIBLANKSEQ:
     ##############################################################
 
 
-    def gradTrap(self, expt, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming, rewrite=True):
+    def gradTrap(self, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -181,11 +193,11 @@ class MRIBLANKSEQ:
         aDown = np.linspace(gAmp - dAmp, 0, num=gSteps)
         a = np.concatenate((aUp, aDown), axis=0) / hw.gFactor[gAxis]
         if gAxis == 0:
-            expt.add_flodict({'grad_vx': (t, a + shimming[0])}, rewrite)
+            self.expt.add_flodict({'grad_vx': (t, a + shimming[0])}, rewrite)
         elif gAxis == 1:
-            expt.add_flodict({'grad_vy': (t, a + shimming[1])}, rewrite)
+            self.expt.add_flodict({'grad_vy': (t, a + shimming[1])}, rewrite)
         elif gAxis == 2:
-            expt.add_flodict({'grad_vz': (t, a + shimming[2])}, rewrite)
+            self.expt.add_flodict({'grad_vz': (t, a + shimming[2])}, rewrite)
 
 
     ##############################################################
@@ -193,7 +205,7 @@ class MRIBLANKSEQ:
     ##############################################################
 
 
-    def gradTrapMomentum(self, expt, tStart, kMax, gTotalTime, gAxis, shimming, rewrite=True):
+    def gradTrapMomentum(self, tStart, kMax, gTotalTime, gAxis, shimming, rewrite=True):
         """"
         @author: T. Guallart-Naval, MRILab, Tesoro Imaging S.L., Valencia, Spain
         @email: teresa.guallart@tesoroimaging.com
@@ -223,16 +235,18 @@ class MRIBLANKSEQ:
         gTime = np.concatenate((tRise, tDown), axis=0)
         gAmp = np.concatenate((aRise, aDown), axis=0) / hw.gFactor[gAxis]
         if gAxis == 0:
-            expt.add_flodict({'grad_vx': (gTime, gAmp + shimming[0])}, rewrite)
+            self.expt.add_flodict({'grad_vx': (gTime, gAmp + shimming[0])}, rewrite)
         elif gAxis == 1:
-            expt.add_flodict({'grad_vy': (gTime, gAmp + shimming[1])}, rewrite)
+            self.expt.add_flodict({'grad_vy': (gTime, gAmp + shimming[1])}, rewrite)
         elif gAxis == 2:
-            expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
+            self.expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
 
     ##############################################################
     ##############################################################
     ##############################################################
-    def gradTrapAmplitude(self, expt, tStart, gAmplitude, gTotalTime, gAxis, shimming, orders, rewrite=True):
+
+
+    def gradTrapAmplitude(self, tStart, gAmplitude, gTotalTime, gAxis, shimming, orders, rewrite=True):
         """"
         @author: T. Guallart-Naval, MRILab, Tesoro Imaging S.L., Valencia, Spain
         @email: teresa.guallart@tesoroimaging.com
@@ -258,11 +272,11 @@ class MRIBLANKSEQ:
         gTime = np.concatenate((tRise, tDown), axis=0)
         gAmp = np.concatenate((aRise, aDown), axis=0) / hw.gFactor[gAxis]
         if gAxis == 0:
-            expt.add_flodict({'grad_vx': (gTime, gAmp + shimming[0])}, rewrite)
+            self.expt.add_flodict({'grad_vx': (gTime, gAmp + shimming[0])}, rewrite)
         elif gAxis == 1:
-            expt.add_flodict({'grad_vy': (gTime, gAmp + shimming[1])}, rewrite)
+            self.expt.add_flodict({'grad_vy': (gTime, gAmp + shimming[1])}, rewrite)
         elif gAxis == 2:
-            expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
+            self.expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
 
     ##############################################################
     ##############################################################
@@ -298,7 +312,7 @@ class MRIBLANKSEQ:
     ##############################################################
     ##############################################################
 
-    def setGradient(self, expt, t0, gAmp, gAxis, rewrite=True):
+    def setGradient(self, t0, gAmp, gAxis, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -307,15 +321,17 @@ class MRIBLANKSEQ:
         Amplitude inputs in Ocra1 units
         """
         if gAxis == 0:
-            expt.add_flodict({'grad_vx': (np.array([t0]), np.array([gAmp]))}, rewrite)
+            self.expt.add_flodict({'grad_vx': (np.array([t0]), np.array([gAmp]))}, rewrite)
         elif gAxis == 1:
-            expt.add_flodict({'grad_vy': (np.array([t0]), np.array([gAmp]))}, rewrite)
+            self.expt.add_flodict({'grad_vy': (np.array([t0]), np.array([gAmp]))}, rewrite)
         elif gAxis == 2:
-            expt.add_flodict({'grad_vz': (np.array([t0]), np.array([gAmp]))}, rewrite)
+            self.expt.add_flodict({'grad_vz': (np.array([t0]), np.array([gAmp]))}, rewrite)
+
 
     ##############################################################
     ##############################################################
     ##############################################################
+
 
     def saveRawData(self, rawData):
         """"
@@ -391,7 +407,7 @@ class MRIBLANKSEQ:
     ##############################################################
     ##############################################################
 
-    def createFreqCalSequence(self, expt, rawData):
+    def createFreqCalSequence(self, rawData):
         # Def variables
         shimming = rawData['shimming']
         rfExTime = rawData['rfExTime'] * 1e6
