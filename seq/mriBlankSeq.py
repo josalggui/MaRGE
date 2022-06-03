@@ -8,6 +8,7 @@ Created on Thu June 2 2022
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import configs.hw_config as hw
 
 
 class MRIBLANKSEQ:

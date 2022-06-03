@@ -35,8 +35,7 @@ AUTHOR = "Yolanda Vives"
 print("Graphical User Interface for Magnetic Resonance Imaging")
 
 seq = rare.RARE()
-# seq.sequenceRun2()
-seq.sequenceRun()
+seq.sequenceRun(demo=True)
 app = QApplication(sys.argv)
 #    gui = MainViewController()
 gui = SessionViewerController('')
