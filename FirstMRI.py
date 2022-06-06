@@ -7,7 +7,6 @@ Startup Code
 
 import os
 import sys
-# sys.path.append('../marcos_client')
 
 #******************************************************************************
 # Add path to the working directory
@@ -29,15 +28,18 @@ import cgitb
 cgitb.enable(format = 'text')
 
 #****************************#
-#import seq.sequences as seqs#
+# import seq.sequences as seqs#
 #****************************#
+# import sequencemodes as seqs
+# from seq.sequences import defaultsequences
 
 VERSION = "0.2.0"
 AUTHORA = "Yolanda Vives"
 AUTHORB = "J.M. Algarín"
 print("Graphical User Interface for Magnetic Resonance Imaging")
 
-#mySeq = seqs.RARE()
+# mySeq = seqs.RARE()
+# defaultsequences['RARE'].sequenceRun()
 app = QApplication(sys.argv)
 #    gui = MainViewController()
 gui = SessionViewerController('')

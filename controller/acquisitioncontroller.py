@@ -15,7 +15,8 @@ from PyQt5.QtWidgets import QLabel, QPushButton
 from plotview.spectrumplot import SpectrumPlot
 from plotview.spectrumplot import Spectrum2DPlot
 from plotview.spectrumplot import Spectrum3DPlot
-from sequencemodes import defaultsequences
+from seq.sequences import defaultsequences
+# import seq.sequences as seqs
 #from seq.utilities import change_axes
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject,  pyqtSlot,  pyqtSignal, QThread
@@ -51,24 +52,19 @@ class AcquisitionController(QObject):
         if hasattr(self.parent, 'clearPlotviewLayout'):
             self.parent.clearPlotviewLayout()
 
+        # Load sequence and sequence name
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
+        self.seqName = self.sequence.mapVals['seqName']
+
+        # To be deleted on near future
         self.sequence.oversampling_factor = 6
 
+        # Execute selected sequence
         plotSeq=0
-        if  self.sequence.seq == 'RARE':
-            print('Start sequence')
-            self.rxd, self.msgs, self.data_avg, self.sequence.BW = rare(self.sequence, plotSeq)
-            print('End sequence')
-        elif self.sequence.seq=='HASTE':
-            print('Start sequence')
-            self.rxd, self.msgs, self.data_avg, self.sequence.BW = haste(self.sequence, plotSeq)
-            print('End sequence')
-        elif self.sequence.seq=='GRE3D':
-            print('Start sequence')
-            self.rxd, self.msgs, self.data_avg, self.sequence.BW = gre3d(self.sequence, plotSeq)
-            print('End sequence')
+        print('Start sequence')
+        self.rxd, self.msgs, self.data_avg, self.sequence.BW = defaultsequences[self.seqName].sequenceRun(plotSeq=plotSeq)
+        print('End sequence')
 
-            
         [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]= self.sequence.nPoints
         self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.larmorFreq, len(self.data_avg), self.sequence.nPoints, self.sequence.BW)
         self.sequence.ns = self.sequence.nPoints

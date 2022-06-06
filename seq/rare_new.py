@@ -53,43 +53,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH')
 
 
-        #*********************************************************************************
-        #*********************************************************************************
-        #*********************************************************************************
-
-    # def sequencePlot(self):
-    #     init_gpa = False
-    #
-    #     # Create input parameters automatically from self.mapVals. It should be greate to include this as a method into
-    #     # the mri blank sequence, but to be honest I have no idea about how to do it.
-    #     for key in self.mapKeys:
-    #         if type(self.mapVals[key]) is list:
-    #             if type(self.mapVals[key][0]) is int:
-    #                 exec("%s = np.array([%d, %d, %d])" % (
-    #                     key, self.mapVals[key][0], self.mapVals[key][1], self.mapVals[key][2]))
-    #             else:
-    #                 exec("%s = np.array([%f, %f, %f])" % (
-    #                     key, self.mapVals[key][0], self.mapVals[key][1], self.mapVals[key][2]))
-    #         else:
-    #             if type(self.mapVals[key]) is int:
-    #                 exec("%s = %d" % (key, self.mapVals[key]))
-    #             elif type(self.mapVals[key]) is float:
-    #                 exec("%s = %f" % (key, self.mapVals[key]))
-    #             else:
-    #                 exec("%s = '%s'" % (key, self.mapVals[key]))
-    #
-    #     # Create experiment
-    #     self.expt = ex.Experiment(lo_freq=3.0, rx_t=20, init_gpa=False, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-    #
-    #     # Introduce instructions into de code
-    #     self.iniSequence(20, np.array([0., 0., 0.]), rewrite=True)
-    #     self.rxGate(1000, 1000)
-    #     self.endSequence(3000)
-    #
-    #     # Plot sequence
-    #     # self.expt.plot_sequence()
-    #     # plt.show()
-
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa=False # Starts the gpa
 

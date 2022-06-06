@@ -29,6 +29,48 @@ class MRIBLANKSEQ:
         self.mapUnits = {}
         self.mapFields = {}
 
+    # *********************************************************************************
+    # *********************************************************************************
+    # *********************************************************************************
+
+    # Create dictionaries of inputs classified by field (RF, SEQ, IM or OTH)
+
+    @property
+    def RFproperties(self):
+        # Automatically select the inputs related to RF fields
+        out = {}
+        for key in self.mapKeys:
+            if self.mapFields[key] == 'RF':
+                out[self.mapNmspc[key]] = [self.mapVals[key]]
+        return out
+
+    @property
+    def IMproperties(self) -> dict:
+        # Automatically select the inputs related to IM fields
+        out = {}
+        for key in self.mapKeys:
+            if self.mapFields[key] == 'IM':
+                out[self.mapNmspc[key]] = [self.mapVals[key]]
+        return out
+
+    @property
+    def SEQproperties(self) -> dict:
+        # Automatically select the inputs related to SEQ fields
+        out = {}
+        for key in self.mapKeys:
+            if self.mapFields[key] == 'SEQ':
+                out[self.mapNmspc[key]] = [self.mapVals[key]]
+        return out
+
+    @property
+    def OTHproperties(self) -> dict:
+        # Automatically select the inputs related to OTH fields
+        out = {}
+        for key in self.mapKeys:
+            if self.mapFields[key] == 'OTH':
+                out[self.mapNmspc[key]] = [self.mapVals[key]]
+        return out
+
 
     ##############################################################
     ##############################################################

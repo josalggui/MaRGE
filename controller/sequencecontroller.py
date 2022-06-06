@@ -2,8 +2,10 @@
 Operations Controller
 
 @author:    Yolanda Vives
+@author:    J.M. Algarín
 @version:   2.0 (Beta)
 @change:    25/05/2022
+@change     06/06/2022: adapted to the new structure of the sequences
 
 @summary:   TBD
 
@@ -13,13 +15,15 @@ Operations Controller
 """
 from PyQt5.QtWidgets import QSizePolicy, QLabel,  QComboBox, QTabWidget, QWidget, QVBoxLayout
 from PyQt5.QtCore import Qt, QRegExp
-from sequencemodes import defaultsequences
+# from sequencemodes import defaultsequences
 from sequencesnamespace import Namespace as nmspc
 from sequencesnamespace import Tooltip_label as tlt_l
 from sequencesnamespace import Tooltip_inValue as tlt_inV
 from PyQt5.uic import loadUiType
 from PyQt5.QtGui import QRegExpValidator
 
+# Test from J.M. Algarín
+from seq.sequences import defaultsequences
 
 Parameter_Form, Parameter_Base = loadUiType('ui/inputparameter.ui')
 #Parameter_FormG, Parameter_BaseG = loadUIType('ui/gradients.ui')
@@ -172,67 +176,50 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
         self.sequence = sequence
         self.parameter = parameter
         self.label_name.setText(name)
-        
-        # Tooltips
-        temp = vars(defaultsequences[self.sequence])
-        for item in temp:
-            label = 'nmspc.%s' %item
-            res=eval(label)
-            if (res == name):
-                lab = 'tlt_l.%s' %(item)
-                if (hasattr(tlt_l, item)):
-                    res2=eval(lab)
-                    self.label_name.setToolTip(res2)
-                inV = 'tlt_inV.%s' %(item)
-                if (hasattr(tlt_inV, item)):
-                    res3 = eval(inV)
-                    self.input_value.setToolTip(res3)    
-                    
         self.input_value.setText(str(parameter[0]))
-        
-        
+
         # Connect text changed signal to getValue function
         self.input_value.textChanged.connect(self.get_value)
         
     def get_value(self) -> None:
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        Here is where input values obtained from the gui are input into the sequence property mapVals
+        """
+        temp = defaultsequences[self.sequence].mapVals
 
-        temp = vars(defaultsequences[self.sequence])
-        for item in temp:
-            lab = 'nmspc.%s' %(item)
-            res=eval(lab)
-            if (res == self.label_name.text()):
-                t = type(getattr(defaultsequences[self.sequence], item))     
-                inV = 'tlt_inV.%s' %(item)
-                if (hasattr(tlt_inV, item)):
-                    res3 = eval(inV)
-                    if res3 == 'Value between 0 and 1':  
-                        val=self.validate_input()
-                        if val == 1:           
-                            if (t is float): 
-                                value: float = float(self.input_value.text())
-                                setattr(defaultsequences[self.sequence], item, value)
-                            elif (t is int): 
-                                value: int = int(self.input_value.text())
-                                setattr(defaultsequences[self.sequence], item, value)  
-                else:
-                    if (t is float): 
-                        value: float = float(self.input_value.text())
-                        setattr(defaultsequences[self.sequence], item, value)
-                    elif (t is int): 
-                        value: int = int(self.input_value.text())
-                        setattr(defaultsequences[self.sequence], item, value)
-                    else:
-                        v = self.input_value.text()
-                        v=v.replace("[", "")
-                        v=v.replace("]", "")
-                        v2 = list(v.split(","))
-                        if item=='shim':
-                            value: list = list([float(v2[0]), float(v2[1]), float(v2[2])])
-                        else:
-                            if (v2[0] != ''):
-                                value: list = list([int(v2[0]), int(v2[1]), int(v2[2])])
-                        setattr(defaultsequences[self.sequence], item, value)
+        # Get key for corresponding modified parameter
+        names = defaultsequences[self.sequence].mapNmspc            # Map with GUI names
+        modName = self.label_name.text()                            # GUI name of the modified value
+        key = [k for k, v in names.items() if v == modName][0]      # Get corresponding key of the modified value
+        valOld = defaultsequences[self.sequence].mapVals[key]       # Current value to be saved again in case of error
 
+        # Modify the corresponding value into the sequence
+        inputStr = self.input_value.text()                          # Input value (gui allways gives strings)
+        inputStr = inputStr.replace('[','')
+        inputStr = inputStr.replace(']','')
+        inputStr = inputStr.split(',')
+        inputNum = []
+        for ii in range(len(inputStr)):
+            if len(inputStr)==1:                                    # Get type of data expected by the key
+                t = type([defaultsequences[self.sequence].mapVals[key]][ii])
+                valOld = [valOld]
+            else:
+                t = type(defaultsequences[self.sequence].mapVals[key][ii])
+            if t==float:
+                try: inputNum.append(float(inputStr[ii]))
+                except: inputNum.append(valOld[ii])
+            elif t==int:
+                try: inputNum.append(int(inputStr[ii]))
+                except: inputNum.append(valOld[ii])
+            else:
+                try: inputNum.append(str(inputStr[ii]))
+                except: inputNum.append(valOld[ii])
+        if len(inputStr)==1:                                                # Save value into mapVals
+            defaultsequences[self.sequence].mapVals[key] = inputNum[0]
+        else:
+            defaultsequences[self.sequence].mapVals[key] = inputNum
                 
     def validate_input(self):
         reg_ex = QRegExp('^(?:0*(?:\.\d+)?|1(\.0*)?)$')
