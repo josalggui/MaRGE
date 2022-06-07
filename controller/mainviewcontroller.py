@@ -25,19 +25,14 @@ import experiment as ex
 from scipy.io import savemat
 from controller.sequencecontroller import SequenceList
 from sequencesnamespace import Namespace as nmspc
-#from plotview.sequenceViewer import SequenceViewer
-from sequencemodes import defaultsequences
 from sessionmodes import defaultsessions
 from manager.datamanager import DataManager
 from datetime import date,  datetime 
 from globalvars import StyleSheets as style
 from stream import EmittingStream
-sys.path.append('../marcos_client')
 from local_config import ip_address
-from seq.rare import rare
-from seq.haste import haste
-from seq.gre3d import gre3d
 import mrilabMethods.mrilabMethods as mri
+from seq.sequences import defaultsequences
 import cgitb 
 cgitb.enable(format = 'text')
 import pdb
@@ -98,16 +93,19 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_batch.triggered.connect(self.batch_system)
         self.action_XNATupload.triggered.connect(self.xnat)
         self.action_session.triggered.connect(self.change_session)
-   
+
+        self.seqName = defaultsequences[self.sequencelist.getCurrentSequence()].mapVals['seqName']
+        defaultsequences[self.seqName].sequenceInfo()
+
     def lines_that_start_with(self, str, f):
         return [line for line in f if line.startswith(str)]
     
-    @staticmethod
-    def generateConsole(text):
+    # @staticmethod
+    def generateConsole(self, text):
         con = QTextEdit()
         con.setText(text)
         return con
-    
+
     def onUpdateText(self, text):
         cursor = self.cons.textCursor()
         cursor.movePosition(QtGui.QTextCursor.End)
@@ -292,16 +290,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
         plotSeq=1
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
-
-        self.sequence.oversampling_factor = 6
-
-        if  self.sequence.seq == 'RARE':
-            rare(self.sequence, plotSeq)
-        elif self.sequence.seq == 'HASTE':
-            haste(self.sequence, plotSeq)
-        elif self.sequence.seq == 'GRE3D':
-            gre3d(self.sequence, plotSeq)
-  
+        self.seqName = self.sequence.mapVals['seqName']
+        defaultsequences[self.seqName].sequenceRun(plotSeq=plotSeq)
         
     def messages(self, text):
         
@@ -316,9 +306,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
     def initgpa(self):
         expt = ex.Experiment(init_gpa=True)
-        mri.endSequence(expt, 100)
+        expt.add_flodict({
+            'grad_vx': (np.array([100]), np.array([0])),
+        })
         expt.run()
         expt.__del__()
+        print("GPA init done!")
 
     def batch_system(self):
         batchW = BatchController(self, self.sequencelist)

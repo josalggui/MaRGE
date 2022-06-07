@@ -2,10 +2,10 @@
 Operations Controller
 
 @author:    Yolanda Vives
-@author:    J.M. Algarín
+@author:    J.M. Algarín, josalggui@i3m.upv.es
 @version:   2.0 (Beta)
 @change:    25/05/2022
-@change     06/06/2022: adapted to the new structure of the sequences
+@change     06/06/2022 (J.M. Algarín): adapted to the new structure of the sequences
 
 @summary:   TBD
 
@@ -49,16 +49,10 @@ class SequenceList(QComboBox):
             # Make parent reachable from outside __init__
             self.parent = parent
             self._currentSequence = "RARE"
-            self.setParametersUI("RARE")
-#        self._currentSequence = None
+            self.setParametersUI(self._currentSequence)
         else:
             self._currentSequence=parent.sequence
-    
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
-
-        
-
-
     
     def triggeredSequenceChanged(self, sequence: str = None) -> None:
         # TODO: set sequence only once right here or on changed signal
@@ -66,6 +60,7 @@ class SequenceList(QComboBox):
         # Com.sendPacket(packet)
         self._currentSequence = sequence
         self.setParametersUI(sequence)
+        defaultsequences[sequence].sequenceInfo()
 
     def getCurrentSequence(self) -> str:
         return self._currentSequence
@@ -99,13 +94,13 @@ class SequenceList(QComboBox):
             inputwidgets2 += self.generateWidgetsFromDict(im_prop, sequence)
             self.tab = self.generateTab(inputwidgets2)
             self.tabwidget.addTab(self.tab,"Image")
-                        
+
         if hasattr(defaultsequences[sequence], 'SEQproperties'):
             seq_prop = defaultsequences[sequence].SEQproperties
             inputwidgets3 += self.generateWidgetsFromDict(seq_prop, sequence)
             self.tab = self.generateTab(inputwidgets3)
             self.tabwidget.addTab(self.tab,"Sequence")
-            
+
         if hasattr(defaultsequences[sequence], 'OTHproperties'):
             oth_prop = defaultsequences[sequence].OTHproperties
             inputwidgets4 += self.generateWidgetsFromDict(oth_prop, sequence)
@@ -194,6 +189,9 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
         modName = self.label_name.text()                            # GUI name of the modified value
         key = [k for k, v in names.items() if v == modName][0]      # Get corresponding key of the modified value
         valOld = defaultsequences[self.sequence].mapVals[key]       # Current value to be saved again in case of error
+        dataLen = defaultsequences[self.sequence].mapLen[key]
+        if dataLen == 1: valOld = [valOld]
+        dataType = type(valOld[0])
 
         # Modify the corresponding value into the sequence
         inputStr = self.input_value.text()                          # Input value (gui allways gives strings)
@@ -201,25 +199,24 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
         inputStr = inputStr.replace(']','')
         inputStr = inputStr.split(',')
         inputNum = []
-        for ii in range(len(inputStr)):
-            if len(inputStr)==1:                                    # Get type of data expected by the key
-                t = type([defaultsequences[self.sequence].mapVals[key]][ii])
-                valOld = [valOld]
-            else:
-                t = type(defaultsequences[self.sequence].mapVals[key][ii])
-            if t==float:
+        for ii in range(dataLen):
+            if dataType==float:
                 try: inputNum.append(float(inputStr[ii]))
-                except: inputNum.append(valOld[ii])
-            elif t==int:
+                except: inputNum.append(float(valOld[ii]))
+            elif dataType==int:
                 try: inputNum.append(int(inputStr[ii]))
-                except: inputNum.append(valOld[ii])
+                except: inputNum.append(int(valOld[ii]))
             else:
                 try: inputNum.append(str(inputStr[ii]))
-                except: inputNum.append(valOld[ii])
-        if len(inputStr)==1:                                                # Save value into mapVals
+                except: inputNum.append(str(valOld[ii]))
+        if dataLen==1:                                                # Save value into mapVals
             defaultsequences[self.sequence].mapVals[key] = inputNum[0]
         else:
             defaultsequences[self.sequence].mapVals[key] = inputNum
+
+        # Print value into the console (I have to ask how to show into the GUI)
+        seqTime = defaultsequences[self.sequence].sequenceTime()
+        print('Sequence time %1.1d minutes' % seqTime)
                 
     def validate_input(self):
         reg_ex = QRegExp('^(?:0*(?:\.\d+)?|1(\.0*)?)$')

@@ -4,44 +4,37 @@ Startup Code
 #@author:    Yolanda Vives
 
 """
-
+#*****************************************************************************
+# Add path to the working directory
 import os
 import sys
-
-#******************************************************************************
-# Add path to the working directory
 path = os.path.realpath(__file__)
 ii = 0
 for char in path:
     if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
-        # sys.path.append(path[0:ii])
-        print("Path: ",path[0:ii+1])
         sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
         sys.path.append(path[0:ii+1]+'marcos_client')
     ii += 1
 #******************************************************************************
 
 from PyQt5.QtWidgets import QApplication
-#from controller.mainviewcontroller import MainViewController,1
 from controller.sessionviewer_controller import SessionViewerController
 import cgitb 
 cgitb.enable(format = 'text')
 
-#****************************#
-# import seq.sequences as seqs#
-#****************************#
-# import sequencemodes as seqs
-# from seq.sequences import defaultsequences
 
 VERSION = "0.2.0"
 AUTHORA = "Yolanda Vives"
 AUTHORB = "J.M. Algarín"
-print("Graphical User Interface for Magnetic Resonance Imaging")
+print("****************************************************************************************")
+print("Graphical User Interface for MaRCoS                                                    *")
+print("Dr. Y. Vives, and Dr. J.M. Algarín                                                     *")
+print("mriLab @ i3M, CSIC, Spain                                                              *")
+print("https://www.i3m-stim.i3m.upv.es/research/magnetic-resonance-imaging-laboratory-mrilab/ *")
+print("https://github.com/yvives/PhysioMRI_GUI                                                *")
+print("****************************************************************************************")
 
-# mySeq = seqs.RARE()
-# defaultsequences['RARE'].sequenceRun()
 app = QApplication(sys.argv)
-#    gui = MainViewController()
 gui = SessionViewerController('')
 gui.show()
 sys.exit(app.exec_())

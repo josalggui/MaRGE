@@ -16,7 +16,6 @@ from plotview.spectrumplot import SpectrumPlot
 from plotview.spectrumplot import Spectrum2DPlot
 from plotview.spectrumplot import Spectrum3DPlot
 from seq.sequences import defaultsequences
-# import seq.sequences as seqs
 #from seq.utilities import change_axes
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject,  pyqtSlot,  pyqtSignal, QThread
@@ -30,9 +29,6 @@ import nibabel as nib
 import pyqtgraph.exporters
 from functools import partial
 from sessionmodes import defaultsessions
-from seq.rare import rare
-from seq.haste import haste
-from seq.gre3d import gre3d
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, session=None, sequencelist=None):
@@ -65,25 +61,20 @@ class AcquisitionController(QObject):
         self.rxd, self.msgs, self.data_avg, self.sequence.BW = defaultsequences[self.seqName].sequenceRun(plotSeq=plotSeq)
         print('End sequence')
 
-        [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]= self.sequence.nPoints
-        self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.larmorFreq, len(self.data_avg), self.sequence.nPoints, self.sequence.BW)
-        self.sequence.ns = self.sequence.nPoints
+        [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]= self.sequence.mapVals['nPoints']
+        self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.mapVals['larmorFreq'], len(self.data_avg), self.sequence.mapVals['nPoints'], self.sequence.BW)
+        self.sequence.ns = self.sequence.mapVals['nPoints']
 
         if not hasattr(self.parent, 'batch'):
             if (self.sequence.n_ph ==1 and self.sequence.n_sl == 1):
-                f_plotview = SpectrumPlot(self.dataobject.f_axis, self.dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude", "%s Spectrum" %(self.sequence.seq), )
-                t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.seq), )
+                f_plotview = SpectrumPlot(self.dataobject.f_axis, self.dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude", "%s Spectrum" %(self.sequence.mapVals['seqName']), )
+                t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.mapVals['seqName']), )
                 self.parent.plotview_layout.addWidget(t_plotview)
                 self.parent.plotview_layout.addWidget(f_plotview)
                 self.parent.f_plotview = f_plotview
                 self.parent.t_plotview = t_plotview
                 [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]=self.dataobject.get_peakparameters()
                 print('Peak Value = %0.3f' %(f_signalValue))
-    #            snr=self.dataobject.get_snr()
-    #            print('SNR:%0.3f' %(snr))
-    
-    #        elif(self.sequence.seq=='CPMG'):
-    #            self.plot_cpmg()
     
             else:
                            
@@ -100,7 +91,7 @@ class AcquisitionController(QObject):
         
         dt = datetime.now()
         dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
-        self.label = QLabel("%s %s" % (self.sequence.seq, dt_string))
+        self.label = QLabel("%s %s" % (self.sequence.mapVals['seqName'], dt_string))
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setStyleSheet("background-color: black;color: white")
         if (self.sequence.n_ph !=1 & self.sequence.n_sl != 1):  #Add button to change the view only if 3D image
@@ -157,13 +148,13 @@ class AcquisitionController(QObject):
         #dict['rawdata'] = self.rxd
         #dict['average'] = self.data_avg
             
-        savemat("experiments/acquisitions/%s/%s/%s.%s.%s.mat" % (dt2_string, dt_string, dict["name_code"], self.sequence.seq, dt_string),  dict) 
-        savemat("/media/physiomri/TOSHIBA EXT/experiments/acquisitions/%s/%s/%s.%s.%s.mat" %(dt2_string, dt_string, dict["name_code"], self.sequence.seq,dt_string), dict)
+        savemat("experiments/acquisitions/%s/%s/%s.%s.%s.mat" % (dt2_string, dt_string, dict["name_code"], self.sequence.mapVals['seqName'], dt_string),  dict)
+        savemat("/media/physiomri/TOSHIBA EXT/experiments/acquisitions/%s/%s/%s.%s.%s.mat" %(dt2_string, dt_string, dict["name_code"], self.sequence.mapVals['seqName'],dt_string), dict)
 
         if hasattr(self.dataobject, 'f_fft2Magnitude'):
             nifti_file=nib.Nifti1Image(self.dataobject.f_fft2Magnitude, affine=np.eye(4))
-            nib.save(nifti_file, 'experiments/acquisitions/%s/%s/%s.%s.%s.nii'% (dt2_string, dt_string, dict["name_code"],self.sequence.seq,dt_string))
-            nib.save(nifti_file, '/media/physiomri/TOSHIBA EXT/experiments/acquisitions/%s/%s/%s.%s.%s.nii'% (dt2_string, dt_string, dict["name_code"],self.sequence.seq,dt_string))
+            nib.save(nifti_file, 'experiments/acquisitions/%s/%s/%s.%s.%s.nii'% (dt2_string, dt_string, dict["name_code"],self.sequence.mapVals['seqName'],dt_string))
+            nib.save(nifti_file, '/media/physiomri/TOSHIBA EXT/experiments/acquisitions/%s/%s/%s.%s.%s.nii'% (dt2_string, dt_string, dict["name_code"],self.sequence.mapVals['seqName'],dt_string))
 
         if hasattr(self.parent, 'f_plotview'):
             exporter1 = pyqtgraph.exporters.ImageExporter(self.parent.f_plotview.scene())

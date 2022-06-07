@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import configs.hw_config as hw
 from datetime import date,  datetime
 from scipy.io import savemat
+import experiment as ex
+import scipy.signal as sig
 
 
 class MRIBLANKSEQ:
@@ -18,16 +20,24 @@ class MRIBLANKSEQ:
     mapKeys = []         # keys for the maps
     mapNmspc = {}        # name to show in the gui
     mapVals = {}         # values to show in the gui
-    mapUnits = {}        # units to show in the gui
     mapFields = {}       # fields to classify the input parameter
+    mapLen = {}
     plotSeq = 1          # it plots the sequence
 
     def __init__(self):
         self.mapKeys = []
         self.mapNmspc = {}
         self.mapVals = {}
-        self.mapUnits = {}
         self.mapFields = {}
+        self.mapLen = {}
+
+        # Some common inputs goes here
+        self.addParameter(key='seqName', string='mriBlankSequence', val='mriBlankSeq')
+        self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
+        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
 
     # *********************************************************************************
     # *********************************************************************************
@@ -70,11 +80,6 @@ class MRIBLANKSEQ:
             if self.mapFields[key] == 'OTH':
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
         return out
-
-
-    ##############################################################
-    ##############################################################
-    ##############################################################
 
 
     def getIndex(self, etl=1, nPH=1, sweepMode=1):
@@ -130,11 +135,6 @@ class MRIBLANKSEQ:
         return np.int32(ind)
 
 
-    ##############################################################
-    ##############################################################
-    ##############################################################
-
-
     def fixEchoPosition(self, echoes, data0):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -152,11 +152,6 @@ class MRIBLANKSEQ:
                 idx[ii] = 0
             data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n + idx[ii]]
         return (data1)
-
-
-    ##############################################################
-    ##############################################################
-    ##############################################################
 
 
     def rfSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, rewrite=True):
@@ -178,11 +173,6 @@ class MRIBLANKSEQ:
         }, rewrite)
 
 
-    ##############################################################
-    ##############################################################
-    ##############################################################
-
-
     def rfRecPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -199,11 +189,6 @@ class MRIBLANKSEQ:
         }, rewrite)
 
 
-    ##############################################################
-    ##############################################################
-    ##############################################################
-
-
     def rxGate(self, tStart, gateTime, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -215,11 +200,6 @@ class MRIBLANKSEQ:
             'rx0_en': (rxGateTime, rxGateAmp),
             'rx_gate': (rxGateTime, rxGateAmp),
         })
-
-
-    ##############################################################
-    ##############################################################
-    ##############################################################
 
 
     def gradTrap(self, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming, rewrite=True):
@@ -243,11 +223,6 @@ class MRIBLANKSEQ:
             self.expt.add_flodict({'grad_vy': (t, a + shimming[1])}, rewrite)
         elif gAxis == 2:
             self.expt.add_flodict({'grad_vz': (t, a + shimming[2])}, rewrite)
-
-
-    ##############################################################
-    ##############################################################
-    ##############################################################
 
 
     def gradTrapMomentum(self, tStart, kMax, gTotalTime, gAxis, shimming, rewrite=True):
@@ -286,10 +261,6 @@ class MRIBLANKSEQ:
         elif gAxis == 2:
             self.expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
 
-    ##############################################################
-    ##############################################################
-    ##############################################################
-
 
     def gradTrapAmplitude(self, tStart, gAmplitude, gTotalTime, gAxis, shimming, orders, rewrite=True):
         """"
@@ -323,9 +294,6 @@ class MRIBLANKSEQ:
         elif gAxis == 2:
             self.expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
 
-    ##############################################################
-    ##############################################################
-    ##############################################################
 
     def endSequence(self, tEnd):
         self.expt.add_flodict({
@@ -334,13 +302,10 @@ class MRIBLANKSEQ:
             'grad_vz': (np.array([tEnd]), np.array([0])),
             'rx0_en': (np.array([tEnd]), np.array([0])),
             'rx_gate': (np.array([tEnd]), np.array([0])),
-            'tx0': (np.array([tEnd]), np.array([0])),
+            'tx0': (np.array([tEnd]), np.array([0*np.exp(0)])),
             'tx_gate': (np.array([tEnd]), np.array([0]))
         })
 
-    ##############################################################
-    ##############################################################
-    ##############################################################
 
     def iniSequence(self, t0, shimming, rewrite=True):
         self.expt.add_flodict({
@@ -353,9 +318,6 @@ class MRIBLANKSEQ:
             'tx_gate': (np.array([t0]), np.array([0]))
         }, rewrite)
 
-    ##############################################################
-    ##############################################################
-    ##############################################################
 
     def setGradient(self, t0, gAmp, gAxis, rewrite=True):
         """"
@@ -371,11 +333,6 @@ class MRIBLANKSEQ:
             self.expt.add_flodict({'grad_vy': (np.array([t0]), np.array([gAmp]))}, rewrite)
         elif gAxis == 2:
             self.expt.add_flodict({'grad_vz': (np.array([t0]), np.array([gAmp]))}, rewrite)
-
-
-    ##############################################################
-    ##############################################################
-    ##############################################################
 
 
     def saveRawData(self, rawData):
@@ -398,101 +355,83 @@ class MRIBLANKSEQ:
                 rawData)
         return (rawData)
 
-    ##############################################################
-    ##############################################################
-    ##############################################################
 
-    def freqCalibration(self, rawData, bw=0.05):
+    def freqCalibration(self, bw=0.05, dbw = 0.0001):
+        """
+        @author: J.M. ALgarín
+        @contact: josalggui@i3m.upv.es
+        :param bw: acquisition bandwdith
+        :param dbw: frequency resolution
+        :return: the central frequency of the acquired data
+        """
+
         # Create custom inputs
-        larmorFreq = rawData['larmorFreq'] * 1e-6
-        ov = hw.oversamplingFactor
-        hw.oversamplingFactor = 60
-        BW = bw  # MHz
-        BW = BW * hw.oversamplingFactor
-        samplingPeriod = 1 / BW
-        nPoints = np.array([50, 1, 1])
-        addRdPoints = rawData['addRdPoints']
+        nPoints = int(bw / dbw)
+        larmorFreq = self.mapVals['larmorFreq']
+        ov = 10
+        bw = bw*ov
+        samplingPeriod = 1/bw
+        acqTime = 1/dbw
+        addRdPoints = 5
 
-        # Create inputs from rawData
-        #    larmorFreq = rawData['larmorFreq']*1e-6
-        #    samplingPeriod = rawData['samplingPeriod']
-        #    nPoints = rawData['nPoints']
-        #    addRdPoints = rawData['addRdPoints']
-
-        expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=False,
+        self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=False,
                              gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = expt.get_rx_ts()[0]
-        BW = 1 / samplingPeriod / hw.oversamplingFactor
-        acqTime = nPoints[0] / BW  # us
-        rawData['bw'] = BW
-        rawData['acqTime'] = acqTime * 1e-6
-        createFreqCalSequence(expt, rawData)
-        rxd, msgs = expt.run()
-        dataFreqCal = sig.decimate(rxd['rx0'] * 13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-        dataFreqCal = dataFreqCal[addRdPoints:nPoints[0] + addRdPoints]
+        samplingPeriod = self.expt.get_rx_ts()[0]
+        bw = 1/samplingPeriod/ov
+        acqTime = nPoints/bw  # us
+        self.createFreqCalSequence(bw, acqTime)
+        rxd, msgs = self.expt.run()
+        dataFreqCal = sig.decimate(rxd['rx0'] * 13.788, ov, ftype='fir', zero_phase=True)
+        dataFreqCal = dataFreqCal[addRdPoints:nPoints+addRdPoints]
         # Get phase
         angle = np.unwrap(np.angle(dataFreqCal))
         idx = np.argmax(np.abs(dataFreqCal))
         dPhase = angle[idx]
-        rawData['drfPhase'] = dPhase + np.pi / 2
+        self.mapVals['drfPhase'] = dPhase
         # Get larmor frequency through fft
         spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFreqCal))))
-        fVector = np.linspace(-BW / 2, BW / 2, num=nPoints[0], endpoint=False)
+        fVector = np.linspace(-bw / 2, bw / 2, num=nPoints, endpoint=False)
         idx = np.argmax(spectrum)
         dfFFT = -fVector[idx]
         larmorFreq += dfFFT
-        rawData['larmorFreq'] = larmorFreq * 1e6
+        self.mapVals['larmorFreq'] = larmorFreq # MHz
         print("f0 = %s MHz" % (round(larmorFreq, 5)))
-        expt.__del__()
+        self.expt.__del__()
 
-        hw.oversamplingFactor = ov
-        return (rawData)
+        return(larmorFreq)
 
-    ##############################################################
-    ##############################################################
-    ##############################################################
-
-    def createFreqCalSequence(self, rawData):
+    def createFreqCalSequence(self, bw, acqTime):
         # Def variables
-        shimming = rawData['shimming']
-        rfExTime = rawData['rfExTime'] * 1e6
-        rfExAmp = rawData['rfExAmp']
-        rfReTime = rawData['rfReTime'] * 1e6
-        rfReAmp = rawData['rfReAmp']
-        echoSpacing = 20e3  # us
-        #    echoSpacing = rawData['echoSpacing']*1e6
-        acqTime = rawData['acqTime'] * 1e6
-        addRdPoints = rawData['addRdPoints']
-        BW = rawData['bw']
-        repetitionTime = rawData['repetitionTime'] * 1e6
+        shimming = np.array(self.mapVals['shimming'])*1e-4
+        rfExTime = self.mapVals['rfExTime'] # us
+        rfExAmp = self.mapVals['rfExAmp']
+        repetitionTime = self.mapVals['repetitionTime']*1e3 # us
+        addRdPoints = 5
 
         t0 = 20
-        tEx = 20e3
+        tEx = 200
 
         # Shimming
-        iniSequence(expt, t0, shimming)
+        self.iniSequence(t0, shimming)
 
         # Excitation pulse
-        t0 = tEx - hw.blkTime - rfExTime / 2
-        rfRecPulse(expt, t0, rfExTime, rfExAmp)
-
-        # Refocusing pulse
-        t0 = tEx + echoSpacing / 2 - rfReTime / 2 - hw.blkTime
-        rfRecPulse(expt, t0, rfReTime, rfReAmp, np.pi / 2)
+        t0 = tEx-hw.blkTime-rfExTime/2
+        self.rfRecPulse(t0, rfExTime, rfExAmp*np.exp(0.))
 
         # Rx
-        t0 = tEx + echoSpacing - acqTime / 2 - addRdPoints / BW
-        rxGate(expt, t0, acqTime + 2 * addRdPoints / BW)
+        t0 = tEx+rfExTime/2+hw.deadTime
+        self.rxGate(t0, acqTime+2*addRdPoints/bw)
 
         # Finalize sequence
-        endSequence(expt, repetitionTime)
+        self.endSequence(repetitionTime)
 
-    def addParameter(self, key = '', string = '', val = 0, unit = '', field=''):
-        self.mapKeys.append(key)
+    def addParameter(self, key='', string='', val=0, field=''):
+        if key is not self.mapVals.keys(): self.mapKeys.append(key)
         self.mapNmspc[key] = string
         self.mapVals[key] = val
-        self.mapUnits[key] = unit
         self.mapFields[key] = field
+        try: self.mapLen[key] = len(val)
+        except: self.mapLen[key] = 1
 
     def getParameter(self, key):
         return(self.mapVals[key])
