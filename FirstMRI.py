@@ -28,8 +28,8 @@ AUTHORA = "Yolanda Vives"
 AUTHORB = "J.M. Algarín"
 print("****************************************************************************************")
 print("Graphical User Interface for MaRCoS                                                    *")
-print("Dr. Y. Vives, and Dr. J.M. Algarín                                                     *")
-print("mriLab @ i3M, CSIC, Spain                                                              *")
+print("Dr. Y. Vives, Department of Electronic Engineering, Universitat de València, Spain     *")
+print("Dr. J.M. Algarín, mriLab @ i3M, CSIC, Spain                                            *")
 print("https://www.i3m-stim.i3m.upv.es/research/magnetic-resonance-imaging-laboratory-mrilab/ *")
 print("https://github.com/yvives/PhysioMRI_GUI                                                *")
 print("****************************************************************************************")
