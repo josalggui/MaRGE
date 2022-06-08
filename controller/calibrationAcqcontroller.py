@@ -11,12 +11,6 @@ from plotview.spectrumplot import SpectrumPlot
 from seq.sequencesCalibration import defaultCalibFunctions
 from PyQt5.QtCore import QObject,  pyqtSlot
 from manager.datamanager import DataManager
-from seq.shimming import shimming
-from seq.rabiFlops import rabi_flops
-from seq.larmor import larmorFreq
-from seq.flipAngle import flipAngle
-# from seq.inversionRecovery import inversionRecovery
-#from scipy.io import savemat
 import numpy as np
 
 class CalibrationAcqController(QObject):

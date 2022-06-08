@@ -1,40 +1,41 @@
 """
-Rabi map
-
-@author:    Yolanda Vives
-
-@summary: increase the pulse width and plot the peak value of the signal received 
-@status: under development
-@todo:
-
+@author: T. Guallart Naval, november 2021
+@modifield: J.M. algarín, february 25th 2022
+MRILAB @ I3M
+@summary: spin echo with inversion recovery where we sweep the time between the IR pulse and the excitation pulse.
 """
-import sys
-sys.path.append('../marcos_client')
-import matplotlib.pyplot as plt
-#from spinEcho_standalone import spin_echo
-import numpy as np
+
+
 import experiment as ex
+import numpy as np
+import matplotlib.pyplot as plt
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+import scipy.signal as sig
+import configs.hw_config as hw
+from plotview.spectrumplot import SpectrumPlot
 
 class InversionRecovery(blankSeq.MRIBLANKSEQ):
     def __init__(self):
-        super(RARE, self).__init__()
+        super(InversionRecovery, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='InverionRecovery', val='InversionRecovery')
-        self.addParameter(key='nScans', string='Number of scans', val=1, field='ALL')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='ALL')
-        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='ALL')
-        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='ALL')
-        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='ALL')
-        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='ALL')
-        self.addParameter(key='echoTime', string='Echo time (ms)', val=10.0, field='ALL')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='ALL')
-        self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[60, 1, 1], field='ALL')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='ALL')
-        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='ALL')
-        self.addParameter(key='tInvIni', string='Ini IT (ms)', val=50.0, field='ALL')
-        self.addParameter(key='tInvFin', string='Fin IT (ms)', val=1000.0, field='ALL')
-        self.addParameter(key='nRepetitions', string='n Samples', val=10, field='ALL')
+        self.addParameter(key='nScans', string='Number of scans', val=1, field='OTH')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='OTH')
+        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='OTH')
+        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='OTH')
+        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='OTH')
+        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='OTH')
+        self.addParameter(key='echoTime', string='Echo time (ms)', val=10.0, field='OTH')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='OTH')
+        self.addParameter(key='nPoints', string='nPoints', val=60, field='OTH')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='OTH')
+        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
+        self.addParameter(key='crusherAmp', string='Crusher grad amp (mT/m)', val=5, field='OTH')
+        self.addParameter(key='crusherTime', string='Crusher grad time (us)', val=100, field='OTH')
+        self.addParameter(key='crusherDelay', string='Crusher grad delay (us)', val=50, field='OTH')
+        self.addParameter(key='tInv0', string='Inversion time, Start (ms)', val=50.0, field='OTH')
+        self.addParameter(key='tInv1', string='Inversion time, End (ms)', val=1000.0, field='OTH')
+        self.addParameter(key='nSteps', string='Number of steps', val=10, field='OTH')
 
 
     def sequenceRun(self, plotSeq):
@@ -50,7 +51,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         # Create the inputs manually, pufff
         seqName = self.mapVals['seqName']
         nScans = self.mapVals['nScans']
-        larmorFreq = self.mapVals['larmoFreq']  # MHz
+        larmorFreq = self.mapVals['larmorFreq']  # MHz
         rfExAmp = self.mapVals['rfExAmp']
         rfReAmp = self.mapVals['rfReAmp']
         rfExTime = self.mapVals['rfExTime']  # us
@@ -58,22 +59,26 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         acqTime = self.mapVals['acqTime']  # ms
         echoTime = self.mapVals['echoTime']  # ms
         repetitionTime = self.mapVals['repetitionTime']  # ms
-        tInvIni = self.mapVals['tInvIni']  # s
-        tInvFin = self.mapVals['tInvFin']  # s
-        nRepetitions = self.mapVals['nRepetitions']  # number of samples
+        tInv0 = self.mapVals['tInv0']  # ms
+        tInv1 = self.mapVals['tInv1']  # ms
+        nSteps = self.mapVals['nSteps']  # number of samples
         nPoints = self.mapVals['nPoints'] # number of readout points
         shimming = self.mapVals['shimming']
+        crusherAmp = self.mapVals['crusherAmp']
+        crusherTime = self.mapVals['crusherTime']
+        crusherDelay = self.mapVals['crusherDelay']
 
-        shimming = np.array(shimming) * 1e-4
-
-        if rfReTime is None:
-            rfReTime = 2 * rfExTime
-
+        # Parameters in fundamental units
         rfExTime = rfExTime * 1e-6
         rfReTime = rfReTime * 1e-6
         acqTime = acqTime * 1e-3
         echoTime = echoTime * 1e-3
         repetitionTime = repetitionTime*1e-3
+        shimming = np.array(shimming) * 1e-4
+        crusherTime = crusherTime*1e-6
+        crusherDelay = crusherDelay*1e-6
+        tInv0 = tInv0*1e-3
+        tInv1 = tInv1*1e-3
 
         rawData = {}
         rawData['seqName'] = seqName
@@ -83,96 +88,117 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         rawData['rfExTime'] = rfExTime
         rawData['rfRetime'] = rfReTime
         rawData['repetitionTime'] = repetitionTime
-        rawData['tInvIni'] = tInvIni
-        rawData['tInvFin'] = tInvFin
-        rawData['nRepetitions'] = nRepetitions
+        rawData['tInv0'] = tInv0
+        rawData['tInv1'] = tInv1
+        rawData['nSteps'] = nSteps
         rawData['acqTime'] = acqTime
         rawData['nPoints'] = nPoints
         rawData['echoTime'] = echoTime
+        rawData['crusherAmp'] = crusherAmp
+        rawData['crusherTime'] = crusherTime
+        rawData['crusherDelay'] = crusherDelay
 
         # Miscellaneous
         gradRiseTime = 200  # us
-        crusherTime = 1000  # us
         gSteps = int(gradRiseTime / 5)
         axes = np.array([0, 1, 2])
         rawData['gradRiseTime'] = gradRiseTime
         rawData['gSteps'] = gSteps
 
-        # Bandwidth and sampling rate
-        bw = nRD / acqTime * 1e-6  # MHz
-        bwov = bw * hw.oversamplingFactor
-        samplingPeriod = 1 / bwov
-
-        tIR = np.geomspace(tInvIni, tInvFin, nRepetitions)
-        rawData['tIR'] = tIR
+        # Inversion time vector
+        irTimeVector = np.geomspace(tInv0, tInv1, nSteps)
+        rawData['irTimeVector'] = irTimeVector
 
         def createSequence():
             # Set shimming
-            mri.iniSequence(expt, 20, shimming)
+            self.iniSequence(20, shimming)
 
-            for repeIndex in range(nRepetitions):
-                # Initialize time
-                tEx = 20e3 + np.max(tIR) + repetitionTime * repeIndex
-
+            for repeIndex in range(nSteps):
                 # Inversion time for current iteration
-                inversionTime = tIR[repeIndex]
+                inversionTime = irTimeVector[repeIndex]
 
-                # Crusher gradient for inversion rf pulse
-                #            t0 = tEx-inversionTime-crusherTime/2-gradRiseTime-hw.gradDelay-50
-                #            mri.gradTrap(expt, t0, gradRiseTime, crusherTime, 0.005, gSteps, axes[0], shimming)
-                #            mri.gradTrap(expt, t0, gradRiseTime, crusherTime, 0.005, gSteps, axes[1], shimming)
-                #            mri.gradTrap(expt, t0, gradRiseTime, crusherTime, 0.005, gSteps, axes[2], shimming)
+                # Initialize time
+                tEx = 20e3 + np.max(irTimeVector) + repetitionTime * repeIndex
 
                 # Inversion pulse
-                t0 = tEx - inversionTime - hw.blkTime - rfReTime / 2
-                mri.rfRecPulse(expt, t0, rfReTime, rfReAmp, 0)
+                t0 = tEx-inversionTime-hw.blkTime-rfReTime/2
+                self.rfRecPulse(t0, rfReTime, rfReAmp, 0)
 
                 # Spoiler gradients to destroy residual transversal signal detected for ultrashort inversion times
-                #            mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[0], shimming)
-                #            mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[1], shimming)
-                #            mri.gradTrap(expt, t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[2], shimming)
+                t0 = tEx-inversionTime+rfReTime/2
+                self.gradTrap(t0, gradRiseTime, inversionTime*0.5, crusherAmp, gSteps, axes[0], shimming)
+                self.gradTrap(t0, gradRiseTime, inversionTime*0.5, crusherAmp, gSteps, axes[1], shimming)
+                self.gradTrap(t0, gradRiseTime, inversionTime*0.5, crusherAmp, gSteps, axes[2], shimming)
 
                 # Excitation pulse
-                t0 = tEx - hw.blkTime - rfExTime / 2
-                mri.rfRecPulse(expt, t0, rfExTime, rfExAmp, 0)
+                t0 = tEx-hw.blkTime-rfExTime/2
+                self.rfRecPulse(t0, rfExTime, rfExAmp, 0)
 
                 # Crusher gradient
-                t0 = tEx + echoTime / 2 - crusherTime / 2 - gradRiseTime - hw.gradDelay - 50
-                mri.gradTrap(expt, t0, gradRiseTime, crusherTime, 0.005, gSteps, axes[0], shimming)
-                mri.gradTrap(expt, t0, gradRiseTime, crusherTime, 0.005, gSteps, axes[1], shimming)
-                mri.gradTrap(expt, t0, gradRiseTime, crusherTime, 0.005, gSteps, axes[2], shimming)
+                t0 = tEx + echoTime / 2 - crusherTime / 2 - gradRiseTime - hw.gradDelay - crusherDelay
+                self.gradTrap(t0, gradRiseTime, crusherTime, crusherAmp, gSteps, axes[0], shimming)
+                self.gradTrap(t0, gradRiseTime, crusherTime, crusherAmp, gSteps, axes[1], shimming)
+                self.gradTrap(t0, gradRiseTime, crusherTime, crusherAmp, gSteps, axes[2], shimming)
 
                 # Refocusing pulse
                 t0 = tEx + echoTime / 2 - rfReTime / 2 - hw.blkTime
-                mri.rfRecPulse(expt, t0, rfReTime, rfReAmp, np.pi / 2)
+                self.rfRecPulse(t0, rfReTime, rfReAmp, np.pi / 2)
 
                 # Rx gating
                 t0 = tEx + echoTime - acqTime / 2
-                mri.rxGate(expt, t0, acqTime)
+                self.rxGate(t0, acqTime)
 
             # End sequence
-            mri.endSequence(expt, scanTime)
+            self.endSequence(scanTime)
 
         # Time variables in us
         rfExTime *= 1e6
         rfReTime *= 1e6
         repetitionTime *= 1e6
         echoTime *= 1e6
-        tIR *= 1e6
-        scanTime = nRepetitions * repetitionTime  # us
+        irTimeVector *= 1e6
+        scanTime = nSteps*repetitionTime  # us
+        crusherDelay *= 1e6
+        crusherTime *= 1e6
+        acqTime *= 1e6
 
-        expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa,
-                             gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = expt.get_rx_ts()[0]  # us
+        # Bandwidth and sampling rate
+        bw = nPoints / acqTime * hw.oversamplingFactor # MHz
+        samplingPeriod = 1 / bw # us
+        self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+        samplingPeriod = self.expt.get_rx_ts()[0]  # us
         bw = 1 / samplingPeriod / hw.oversamplingFactor  # MHz
-        acqTime = nRD / bw  # us
+        acqTime = nPoints / bw  # us
         rawData['samplingPeriod'] = samplingPeriod * 1e-6
         rawData['bw'] = bw * 1e6
         createSequence()
+        if plotSeq:
+            self.expt.plot_sequence()
+            plt.show()
+            self.expt.__del__()
+        else:
+            rxd, msgs = self.expt.run()
+            print(msgs)
+            data = sig.decimate(rxd['rx0']*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            rawData['data'] = data
+            name = self.saveRawData(rawData)
+            self.expt.__del__()
 
-        rxd, msgs = expt.run()
+            # Process data to be plotted
+            data = np.reshape(data, (nSteps, -1))
+            data = data[:, int(nPoints / 2)]
+            self.data = [irTimeVector*1e-3, data]
 
-        expt.__del__()
-        return rxd['rx0'], msgs
+    def sequenceAnalysisGUI(self, obj):
+        # Signal vs inverion time
+        plot = SpectrumPlot(self.data[0],
+                                np.abs(self.data[1]),
+                                [], [],
+                                'Time (ms)', 'Signal amplitude (mV)',
+                                "%s" % (self.mapVals['seqName']))
+
+        # Update figures
+        obj.parent.plotview_layout.addWidget(plot)
+
 
 

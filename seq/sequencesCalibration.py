@@ -1,5 +1,6 @@
-import seq.rabiFlopsNew as rabiFlops
+import seq.rabiFlops as rabiFlops
 import seq.noise as noise
+import seq.inversionRecovery as inversionRecovery
 
 
 class RabiFlops(rabiFlops.RabiFlops):
@@ -7,9 +8,9 @@ class RabiFlops(rabiFlops.RabiFlops):
 
 class Noise(noise.Noise):
     def __init__(self): super(Noise, self).__init__()
-#
-# class HASTE(haste.HASTE):
-#     def __init__(self): super(HASTE, self).__init__()
+
+class InversionRecovery(inversionRecovery.InversionRecovery):
+    def __init__(self): super(InversionRecovery, self).__init__()
 
 """
 Definition of default sequences
@@ -17,5 +18,5 @@ Definition of default sequences
 defaultCalibFunctions={
     'RabiFlops': RabiFlops(),
     'Noise': Noise(),
-    # 'HASTE': HASTE(),
+    'InversionRecovery': InversionRecovery(),
 }
