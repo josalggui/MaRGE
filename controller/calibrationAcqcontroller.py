@@ -69,15 +69,10 @@ class CalibrationAcqController(QObject):
 
         # Execute selected sequence
         print('Start sequence')
-        self.msgs = defaultCalibFunctions[self.funName].sequenceRun(0)  # Run sequence
+        defaultCalibFunctions[self.funName].sequenceRun(0)  # Run sequence
         defaultCalibFunctions[self.funName].sequenceAnalysisGUI(self)   # Plot results
         print('End sequence')
 
-        print(self.msgs)
-
-
-
-           
     def plot_shim(self, axis):
         
         shim_values = np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N)

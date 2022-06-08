@@ -34,6 +34,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq):
         init_gpa = False  # Starts the gpa
+        demo = False
 
         # # Create the inputs automatically. For some reason it only works if there is a few code later...
         # for key in self.mapKeys:
@@ -80,6 +81,12 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         rfTime = np.linspace(rfExTime0, rfExTime1, num=nSteps, endpoint=True) # us
         rawData['rfTime'] = rfTime*1e-6 # s
 
+        def createSequenceDemo():
+            data = []
+            for repeIndex in range(nSteps):
+                data = np.concatenate((data, np.random.randn(nPoints*hw.oversamplingFactor)), axis=0)
+            return(data)
+
         def createSequence():
 
             tIni = 1000
@@ -108,28 +115,34 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # Create experiment
         bw = nPoints/acqTime*hw.oversamplingFactor # MHz
         samplingPeriod = 1/bw
-        self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = self.expt.get_rx_ts()[0]
-        bw = 1/samplingPeriod/hw.oversamplingFactor
-        rawData['bw'] = bw*1e6
-        acqTime = nPoints/bw
 
         # Execute the experiment
-        createSequence()
-        print('Runing...')
-        rxd, msgs = self.expt.run()
-        rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
-        data = sig.decimate(rxd['rx0'], hw.oversamplingFactor, ftype='fir', zero_phase=True)
-        rawData['data'] = data
-        name = self.saveRawData(rawData)
+        if demo:
+            data = createSequenceDemo()
+            data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            rawData['data'] = data
+            name = self.saveRawData(rawData)
+        else:
+            self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+            samplingPeriod = self.expt.get_rx_ts()[0]
+            bw = 1 / samplingPeriod / hw.oversamplingFactor
+            rawData['bw'] = bw * 1e6
+            acqTime = nPoints / bw
+            createSequence()
+            print('Runing...')
+            rxd, msgs = self.expt.run()
+            print(msgs)
+            rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
+            data = sig.decimate(rxd['rx0'], hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            rawData['data'] = data
+            name = self.saveRawData(rawData)
+            self.expt.__del__()
 
         # Process data to be plotted
         data = np.reshape(data, (nSteps, -1))
         data = data[:, int(nPoints/2)]
 
         self.data = [rfTime, data]
-
-        return msgs
 
     def sequenceAnalysisGUI(self, obj):
         # Signal versus time

@@ -22,6 +22,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq):
         init_gpa = False
+        demo = False
 
         # Create inputs parameters
         seqName = self.mapVals['seqName']
@@ -38,37 +39,44 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
         # INIT EXPERIMENT
         bw = bw*hw.oversamplingFactor
-        samplingPeriod = 1/bw
-        self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = self.expt.get_rx_ts()[0]
-        bw = 1/samplingPeriod/hw.oversamplingFactor
-        acqTime = nPoints/bw
+        samplingPeriod = 1 / bw
 
-        # SEQUENCE
-        # Rx gate
-        t0 = 20
-        self.rxGate(t0, acqTime)
+        if demo:
+            data = np.random.randn(nPoints*hw.oversamplingFactor)
+            acqTime = nPoints/bw
+        else:
+            self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+            samplingPeriod = self.expt.get_rx_ts()[0]
+            bw = 1/samplingPeriod/hw.oversamplingFactor
+            acqTime = nPoints/bw
+
+            # SEQUENCE
+            # Rx gate
+            t0 = 20
+            self.rxGate(t0, acqTime)
 
         if plotSeq == 0:
             print('Running...')
-            rxd, msgs = self.expt.run()
-            self.expt.__del__()
-            print('End')
-            data = sig.decimate(rxd['rx0']*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            if not demo:
+                rxd, msgs = self.expt.run()
+                print(msgs)
+                self.expt.__del__()
+                data = sig.decimate(rxd['rx0']*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            else:
+                data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             rawData['data'] = data
             name = self.saveRawData(rawData)
+            print('End')
         elif plotSeq == 1:
-            expt.plot_sequence()
+            self.expt.plot_sequence()
             plt.show()
-            expt.__del__()
+            self.expt.__del__()
 
         tVector = np.linspace(0, acqTime, num=nPoints)*1e-3 # ms
         spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
         fVector = np.linspace(-bw/2, bw/2, num=nPoints)*1e3 # kHz
         self.dataTime = [tVector, data]
         self.dataSpec = [fVector, spectrum]
-
-        return msgs
 
     def sequenceAnalysisGUI(self, obj):
 
