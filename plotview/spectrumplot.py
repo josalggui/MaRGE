@@ -66,9 +66,9 @@ class SpectrumPlot (GraphicsLayoutWidget):
         pos = e[0] ## using signal proxy turns original arguments into a tuple
         if self.plotitem.sceneBoundingRect().contains(pos):
             mousePoint = self.plotitem.vb.mapSceneToView(pos)
-            self.label.setText("x=%0.4f, y(Magnitude)=%0.4f" % (mousePoint.x(), mousePoint.y()))
+            self.label.setText("x = %0.4f, y = %0.4f" % (mousePoint.x(), mousePoint.y()))
             self.crosshair_v.setPos(mousePoint.x())
-            self.crosshair_h.setPos(mousePoint.y()) 
+            self.crosshair_h.setPos(mousePoint.y())
 
 
 class Spectrum2DPlot(GraphicsLayoutWidget):

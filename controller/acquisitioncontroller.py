@@ -52,9 +52,6 @@ class AcquisitionController(QObject):
         self.sequence = defaultsequences[self.sequencelist.getCurrentSequence()]
         self.seqName = self.sequence.mapVals['seqName']
 
-        # To be deleted on near future
-        self.sequence.oversampling_factor = 6
-
         # Execute selected sequence
         plotSeq=0
         print('Start sequence')

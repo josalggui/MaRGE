@@ -21,6 +21,7 @@ from sequencesnamespace import Tooltip_label as tlt_l
 from sequencesnamespace import Tooltip_inValue as tlt_inV
 from PyQt5.uic import loadUiType
 from PyQt5.QtGui import QRegExpValidator
+import numpy
 
 # Test from J.M. Algarín
 from seq.sequences import defaultsequences
@@ -87,25 +88,25 @@ class SequenceList(QComboBox):
             rf_prop = defaultsequences[sequence].RFproperties
             inputwidgets1 += self.generateWidgetsFromDict(rf_prop, sequence)
             self.tab = self.generateTab(inputwidgets1)
-            self.tabwidget.addTab(self.tab,"RF")
+            self.tabwidget.addTab(self.tab, "RF")
 
         if hasattr(defaultsequences[sequence], 'IMproperties'):
             im_prop = defaultsequences[sequence].IMproperties
             inputwidgets2 += self.generateWidgetsFromDict(im_prop, sequence)
             self.tab = self.generateTab(inputwidgets2)
-            self.tabwidget.addTab(self.tab,"Image")
+            self.tabwidget.addTab(self.tab, "Image")
 
         if hasattr(defaultsequences[sequence], 'SEQproperties'):
             seq_prop = defaultsequences[sequence].SEQproperties
             inputwidgets3 += self.generateWidgetsFromDict(seq_prop, sequence)
             self.tab = self.generateTab(inputwidgets3)
-            self.tabwidget.addTab(self.tab,"Sequence")
+            self.tabwidget.addTab(self.tab, "Sequence")
 
         if hasattr(defaultsequences[sequence], 'OTHproperties'):
             oth_prop = defaultsequences[sequence].OTHproperties
             inputwidgets4 += self.generateWidgetsFromDict(oth_prop, sequence)
             self.tab = self.generateTab(inputwidgets4)
-            self.tabwidget.addTab(self.tab,"Others")
+            self.tabwidget.addTab(self.tab, "Others")
      
         self.parent.layout_parameters.addWidget(self.tabwidget)
 
@@ -200,7 +201,7 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
         inputStr = inputStr.split(',')
         inputNum = []
         for ii in range(dataLen):
-            if dataType==float:
+            if dataType==float or dataType==numpy.float64:
                 try: inputNum.append(float(inputStr[ii]))
                 except: inputNum.append(float(valOld[ii]))
             elif dataType==int:
@@ -214,7 +215,7 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
         else:
             defaultsequences[self.sequence].mapVals[key] = inputNum
 
-        # Print value into the console (I have to ask how to show into the GUI)
+        # Print value into the console
         seqTime = defaultsequences[self.sequence].sequenceTime()
         print('Sequence time %1.1d minutes' % seqTime)
                 

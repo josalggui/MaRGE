@@ -14,8 +14,8 @@ Operations Controller
 """
 from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel
 from PyQt5.QtCore import Qt, QRegExp
-#from sequencemodes import defaultsequences
-from calibfunctionsmodes import defaultcalibfunctions
+# from calibfunctionsmodes import defaultCalibFunctions
+from seq.sequencesCalibration import defaultCalibFunctions
 from calibfunctionsnamespace import Namespace as cfnmspc
 from calibfunctionsnamespace import Tooltip_label as tlt_l
 from calibfunctionsnamespace import Tooltip_inValue as tlt_inV
@@ -37,15 +37,15 @@ class CalibFunctionsList(QListWidget):
         super(CalibFunctionsList, self).__init__(parent)
 
         # Add calibfunctions to calibfunctionslist
-        self.addItems(list(defaultcalibfunctions.keys()))
+        self.addItems(list(defaultCalibFunctions.keys()))
         parent.onCalibFunctionChanged.connect(self.triggeredCalibfunctionChanged)
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
 
         # Make parent reachable from outside __init__
         self.parent = parent
 #        self._currentSequence = None
-        self._currentCalibfunction = "Rabi Flops"
-        self.setParametersUI("Rabi Flops")
+        self._currentCalibfunction = "RabiFlops"
+        self.setParametersUI("RabiFlops")
     
     def triggeredCalibfunctionChanged(self, calibfunction: str = None) -> None:
         # TODO: set calibfunction only once right here or on changed signal
@@ -70,30 +70,15 @@ class CalibFunctionsList(QListWidget):
         # Add input parameters to row layout
         inputwidgets: list = []
         self.calibfunction = calibfunction
- 
-        if hasattr(defaultcalibfunctions[self.calibfunction], 'systemproperties'):
-            sys_prop = defaultcalibfunctions[self.calibfunction].systemproperties
-            inputwidgets += [self.generateLabelItem(cfnmspc.systemproperties)]
-            inputwidgets += self.generateWidgetsFromDict(sys_prop, calibfunction)  
-       
-        if hasattr(defaultcalibfunctions[self.calibfunction], 'RFproperties'):
-            rf_prop = defaultcalibfunctions[self.calibfunction].RFproperties
-            inputwidgets += [self.generateLabelItem(cfnmspc.RFproperties)]
-            inputwidgets += self.generateWidgetsFromDict(rf_prop, calibfunction)       
 
-        if hasattr(defaultcalibfunctions[self.calibfunction], 'sqncproperties'):
-            seqs_prop = defaultcalibfunctions[self.calibfunction].sqncproperties
-            inputwidgets += [self.generateLabelItem(cfnmspc.sqncproperties)]
-            inputwidgets += self.generateWidgetsFromDict(seqs_prop, calibfunction)
-        
-        if hasattr(defaultcalibfunctions[self.calibfunction], 'gradientshims'):
-            shims = defaultcalibfunctions[self.calibfunction].gradientshims
-            inputwidgets += [(self.generateLabelItem(cfnmspc.gradientshims))]
-            inputwidgets += (self.generateWidgetsFromDict(shims, calibfunction))
+        if hasattr(defaultCalibFunctions[self.calibfunction], 'OTHproperties'):
+            sys_prop = defaultCalibFunctions[self.calibfunction].OTHproperties
+            inputwidgets += [self.generateLabelItem(cfnmspc.systemproperties)]
+            inputwidgets += self.generateWidgetsFromDict(sys_prop, calibfunction)
             
         for item in inputwidgets:
             self.parent.layout_parameters.addWidget(item)
-        
+
        
     @staticmethod
     def generateWidgetsFromDict(obj: dict = None, calibfunction: str = None) -> list:
@@ -136,55 +121,56 @@ class CalibfunctionParameter(Parameter_Base, Parameter_Form):
         self.calibfunction = calibfunction
         self.parameter = parameter
         self.label_name.setText(name)
-        
-        # Tooltips
-        temp = vars(defaultcalibfunctions[self.calibfunction])
-        for item in temp:
-            label = 'cfnmspc.%s' %item
-            res=eval(label)
-            if (res == name):
-                lab = 'tlt_l.%s' %(item)
-                if (hasattr(tlt_l, item)):
-                    res2=eval(lab)
-                    self.label_name.setToolTip(res2)
-                inV = 'tlt_inV.%s' %(item)
-                if (hasattr(tlt_inV, item)):
-                    res3 = eval(inV)
-                    self.input_value.setToolTip(res3)    
-                    
+
         self.input_value.setText(str(parameter[0]))
-        
-        
+
         # Connect text changed signal to getValue function
         self.input_value.textChanged.connect(self.get_value)
         
     def get_value(self) -> None:
+        """"
+                @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+                @email: josalggui@i3m.upv.es
+                Here is where input values obtained from the gui are input into the sequence property mapVals
+                """
+        temp = defaultCalibFunctions[self.calibfunction].mapVals
 
-        temp = vars(defaultcalibfunctions[self.calibfunction])
-        for item in temp:
-            lab = 'cfnmspc.%s' %(item)
-            res=eval(lab)
-            if (res == self.label_name.text()):
-                t = type(getattr(defaultcalibfunctions[self.calibfunction], item))     
-                inV = 'tlt_inV.%s' %(item)
-                if (hasattr(tlt_inV, item)):
-                    res3 = eval(inV)
-                    if res3 == 'Value between 0 and 1':  
-                        val=self.validate_input()
-                        if val == 1:           
-                            if (t is float): 
-                                value: float = float(self.input_value.text())
-                                setattr(defaultcalibfunctions[self.calibfunction], item, value)
-                            elif (t is int): 
-                                value: int = int(self.input_value.text())
-                                setattr(defaultcalibfunctions[self.calibfunction], item, value)  
-                else:
-                    if (t is float): 
-                        value: float = float(self.input_value.text())
-                        setattr(defaultcalibfunctions[self.calibfunction], item, value)
-                    elif (t is int): 
-                        value: int = int(self.input_value.text())
-                        setattr(defaultcalibfunctions[self.calibfunction], item, value)
+        # Get key for corresponding modified parameter
+        names = defaultCalibFunctions[self.calibfunction].mapNmspc  # Map with GUI names
+        modName = self.label_name.text()  # GUI name of the modified value
+        key = [k for k, v in names.items() if v == modName][0]  # Get corresponding key of the modified value
+        valOld = defaultCalibFunctions[self.calibfunction].mapVals[key]  # Current value to be saved again in case of error
+        dataLen = defaultCalibFunctions[self.calibfunction].mapLen[key]
+        if dataLen == 1: valOld = [valOld]
+        dataType = type(valOld[0])
+
+        # Modify the corresponding value into the sequence
+        inputStr = self.input_value.text()  # Input value (gui allways gives strings)
+        inputStr = inputStr.replace('[', '')
+        inputStr = inputStr.replace(']', '')
+        inputStr = inputStr.split(',')
+        inputNum = []
+        for ii in range(dataLen):
+            if dataType == float:
+                try:
+                    inputNum.append(float(inputStr[ii]))
+                except:
+                    inputNum.append(float(valOld[ii]))
+            elif dataType == int:
+                try:
+                    inputNum.append(int(inputStr[ii]))
+                except:
+                    inputNum.append(int(valOld[ii]))
+            else:
+                try:
+                    inputNum.append(str(inputStr[ii]))
+                except:
+                    inputNum.append(str(valOld[ii]))
+        if dataLen == 1:  # Save value into mapVals
+            defaultCalibFunctions[self.calibfunction].mapVals[key] = inputNum[0]
+        else:
+            defaultCalibFunctions[self.calibfunction].mapVals[key] = inputNum
+
 
                 
     def validate_input(self):

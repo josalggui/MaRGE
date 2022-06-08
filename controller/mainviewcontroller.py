@@ -36,6 +36,7 @@ from seq.sequences import defaultsequences
 import cgitb 
 cgitb.enable(format = 'text')
 import pdb
+import numpy as np
 st = pdb.set_trace
 
 MainWindow_Form, MainWindow_Base = loadUiType('ui/mainview.ui')

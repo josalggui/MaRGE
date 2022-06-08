@@ -34,6 +34,10 @@ print("https://www.i3m-stim.i3m.upv.es/research/magnetic-resonance-imaging-labor
 print("https://github.com/yvives/PhysioMRI_GUI                                                *")
 print("****************************************************************************************")
 
+# import seq.sequencesCalibration as seqs
+# rabi = seqs.RabiFlops()
+# rabi.sequenceRun()
+
 app = QApplication(sys.argv)
 gui = SessionViewerController('')
 gui.show()

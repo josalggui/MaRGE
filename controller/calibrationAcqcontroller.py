@@ -8,16 +8,14 @@
 
 from PyQt5.QtWidgets import QTextEdit, QCheckBox, QHBoxLayout
 from plotview.spectrumplot import SpectrumPlot
-#from plotview.spectrumplot import Spectrum2DPlot
-#from plotview.spectrumplot import Spectrum3DPlot
-from calibfunctionsmodes import defaultcalibfunctions
+from seq.sequencesCalibration import defaultCalibFunctions
 from PyQt5.QtCore import QObject,  pyqtSlot
 from manager.datamanager import DataManager
 from seq.shimming import shimming
 from seq.rabiFlops import rabi_flops
 from seq.larmor import larmorFreq
 from seq.flipAngle import flipAngle
-from seq.inversionRecovery import inversionRecovery
+# from seq.inversionRecovery import inversionRecovery
 #from scipy.io import savemat
 import numpy as np
 
@@ -65,144 +63,20 @@ class CalibrationAcqController(QObject):
     
         self.layout.setParent(None)
         self.parent.clearPlotviewLayout()
-        self.calibfunction = defaultcalibfunctions[self.calibfunctionslist.getCurrentCalibfunction()]
-       
-        if self.calibfunction.cfn == 'Rabi Flops':
-            self.rxd, self.msgs=rabi_flops(self.calibfunction)
-            values = self.rxd
-            samples = np.int32(len(values)/self.calibfunction.N)
-            i=0
-            s=0
-            peakValsf =[]
-            peakValst = []
-            while i < self.calibfunction.N:
-                d_cropped = values[s:s+samples] 
-                
-                dataobject: DataManager = DataManager(d_cropped, self.calibfunction.lo_freq, len(d_cropped),  [], self.calibfunction.BW)
-                f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency = dataobject.get_peakparameters()
-                peakValsf.append(f_signalValue)
-                peakValst.append(dataobject.t_magnitude[0])
 
-                s=s+samples
-                i=i+1
-            
-            f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],'Frequency (kHz)', "Amplitude", "%s Spectrum (last pulse)" %(self.calibfunction.cfn) )
-            t_plotview = SpectrumPlot(np.linspace(self.calibfunction.rf_pi2_duration0, self.calibfunction.rf_pi2_durationEnd,  self.calibfunction.N), peakValst, [],[],'Excitation duration (us)', "pi2 pulse duration", "%s" %(self.calibfunction.cfn))
-            self.parent.plotview_layout.addWidget(t_plotview)
-            self.parent.plotview_layout.addWidget(f_plotview)
-            
-        elif self.calibfunction.cfn == 'Inversion Recovery':
-            self.rxd, self.msgs=inversionRecovery(self.calibfunction)
-            values = self.rxd
-            samples = np.int32(len(values)/self.calibfunction.N)
-            i=0
-            s=0
-            peakValsf =[]
-            peakValst = []
-            while i < self.calibfunction.N:
-                d_cropped = values[s:s+samples] 
-                
-                dataobject: DataManager = DataManager(d_cropped, self.calibfunction.lo_freq, len(d_cropped),  [], self.calibfunction.BW)
-                f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency = dataobject.get_peakparameters()
-                peakValsf.append(f_signalValue)
-                peakValst.append(dataobject.t_magnitude[0])
+        self.calibfunction = defaultCalibFunctions[self.calibfunctionslist.getCurrentCalibfunction()]
+        self.funName = self.calibfunction.mapVals['seqName']
 
-                s=s+samples
-                i=i+1
-            
-            f_plotview = SpectrumPlot(dataobject.f_axis, dataobject.f_fftMagnitude,[],[],'Frequency (kHz)', "Amplitude", "%s Spectrum (last pulse)" %(self.calibfunction.cfn) )
-            t_plotview = SpectrumPlot(np.linspace(self.calibfunction.echo_duration/2-self.calibfunction.rf_duration*1e-3, self.calibfunction.echo_duration/2-self.calibfunction.rf_duration*1e-3+self.calibfunction.N*self.calibfunction.step-self.calibfunction.step, self.calibfunction.N), peakValst, [],[],'Time between pulses (ms)', "Amplitude", "%s" %(self.calibfunction.cfn))
-            self.parent.plotview_layout.addWidget(t_plotview)
-            self.parent.plotview_layout.addWidget(f_plotview)
-            
-        elif self.calibfunction.cfn == 'Shimming':
-            self.rxd, self.msgs=shimming(self.calibfunction, 'x')
-            values_x = self.rxd
-            self.rxd, self.msgs=shimming(self.calibfunction, 'y')
-            values_y = self.rxd
-            self.rxd, self.msgs=shimming(self.calibfunction, 'z')
-            values_z = self.rxd
-            
-            samples = np.int32(len(values_x)/self.calibfunction.N)
-            
-            i=0
-            s=0
-            self.peakValsf_x =[]
-            self.fwhmf_x = []
-            self.peakValsf_y =[]
-            self.fwhmf_y = []
-            self.peakValsf_z =[]
-            self.fwhmf_z = []
-            while i < self.calibfunction.N:
-                #############################
-                
-                d_cropped_x = values_x[s:s+samples] 
-                d_cropped_y = values_y[s:s+samples] 
-                d_cropped_z = values_z[s:s+samples] 
-                
-                #############################
+        # Execute selected sequence
+        print('Start sequence')
+        self.msgs = defaultCalibFunctions[self.funName].sequenceRun(0)  # Run sequence
+        defaultCalibFunctions[self.funName].sequenceAnalysisGUI(self)   # Plot results
+        print('End sequence')
 
-                dataobject_x: DataManager = DataManager(d_cropped_x, self.calibfunction.lo_freq, len(d_cropped_x),  [], self.calibfunction.BW)
-                f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency = dataobject_x.get_peakparameters()
-                self.peakValsf_x.append(f_signalValue)
-                fwhm, fwhm_hz, fwhm_ppm = dataobject_x.get_fwhm()
-                self.fwhmf_x.append(fwhm_hz)
-                
-                #############################
-                
-                dataobject_y: DataManager = DataManager(d_cropped_y, self.calibfunction.lo_freq, len(d_cropped_y),  [], self.calibfunction.BW)
-                f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency = dataobject_y.get_peakparameters()
-                self.peakValsf_y.append(f_signalValue)
-                fwhm, fwhm_hz, fwhm_ppm = dataobject_y.get_fwhm()
-                self.fwhmf_y.append(fwhm_hz)              
-                
-                #############################
-                
-                dataobject_z: DataManager = DataManager(d_cropped_z, self.calibfunction.lo_freq, len(d_cropped_z),  [], self.calibfunction.BW)
-                f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency = dataobject_z.get_peakparameters()
-                self.peakValsf_z.append(f_signalValue)
-                fwhm, fwhm_hz, fwhm_ppm = dataobject_z.get_fwhm()
-                self.fwhmf_z.append(fwhm_hz)                 
-                
-                ##############################
-                
-                s=s+samples
-                i=i+1
+        print(self.msgs)
 
-            self.plot_shim(axis='x')
-            
-        elif self.calibfunction.cfn == 'Larmor Frequency':
-            repetitions = np.int32(self.calibfunction.step/self.calibfunction.resolution)
-            while i < repetitions:            
-                self.peakVals, self.freqs=larmorFreq(self.calibfunction)
-                t_plotview = SpectrumPlot(self.freqs, self.peakVals, [],[],'Larmor Frequency variation (MHz)', "Amplitude (mV)", "%s" %(self.calibfunction.cfn))
-                self.parent.plotview_layout.addWidget(t_plotview)
-                self.calibfunction.step = self.calibfunction.step/2
-                f_signalValue: float = round(np.max(self.peakVals), 4)
-                f_signalIdx: int = np.argmax(self.f_signalValue)  
-                self.calibfunction.lo_freq=self.freqs[f_signalIdx]
-                i = i+1
-                            
-        elif self.calibfunction.cfn == 'Amplitude':
-            self.rxd, self.msgs, self.amps=flipAngle(self.calibfunction)
-            values = self.rxd
-            samples = np.int32(len(values)/self.calibfunction.N)
-            i=0
-            s=0
-            peakValsf =[]
-            while i < self.calibfunction.N:
-                d_cropped = values[s:s+samples] 
-                
-                dataobject: DataManager = DataManager(d_cropped, self.calibfunction.lo_freq, len(d_cropped),  [], self.calibfunction.BW)
-                f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency = dataobject.get_peakparameters()
-                peakValsf.append(f_signalValue)
 
-                s=s+samples
-                i=i+1
-            
-#            t_plotview = SpectrumPlot(np.linspace(-self.calibfunction.N/2*self.calibfunction.step, self.calibfunction.N/2*self.calibfunction.step, self.calibfunction.N), peakValsf, [],[],'Flip Angle value', "Amplitude (mV)", "%s" %(self.calibfunction.cfn))
-            t_plotview = SpectrumPlot(self.amps, peakValsf, [],[],'Flip Angle value', "Amplitude (mV)", "%s" %(self.calibfunction.cfn))
-            self.parent.plotview_layout.addWidget(t_plotview)
+
            
     def plot_shim(self, axis):
         
