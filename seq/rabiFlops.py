@@ -19,7 +19,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RabiFlops, self).__init__()
         # Input the parameters
-        self.addParameter(key='seqName', string='RabiFlops', val='RabiFlops')
+        self.addParameter(key='seqName', string='RabiFlopsInfo', val='RabiFlops')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='OTH')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='OTH')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='OTH')
@@ -58,28 +58,15 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         nSteps = self.mapVals['nSteps']
         drfPhase = self.mapVals['drfPhase']
 
-        rawData = {}
-        rawData['seqName'] = seqName
-        rawData['nScans'] = nScans
-        rawData['larmorFreq'] = larmorFreq*1e6
-        rawData['rfExAmp'] = rfExAmp
-        rawData['echoTime'] = echoTime*1e-3
-        rawData['repetitionTime'] = repetitionTime*1e-3
-        rawData['nPoints'] = nPoints
-        rawData['acqTime'] = acqTime*1e-3
-        rawData['shimming'] = shimming*1e-4
-        rawData['rfExTime0'] = rfExTime0*1e-6
-        rawData['rfExTime1'] = rfExTime1*1e-6
-        rawData['nSteps'] = nSteps
-
         # Time variables in us
         echoTime *= 1e3
         repetitionTime *= 1e3
         acqTime *= 1e3
+        shimming = shimming * 1e-4
 
         # Rf excitation time vector
         rfTime = np.linspace(rfExTime0, rfExTime1, num=nSteps, endpoint=True) # us
-        rawData['rfTime'] = rfTime*1e-6 # s
+        self.mapVals['rfTime'] = rfTime*1e-6 # s
 
         def createSequenceDemo():
             data = []
@@ -120,13 +107,12 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         if demo:
             data = createSequenceDemo()
             data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            rawData['data'] = data
-            name = self.saveRawData(rawData)
+            self.mapVals['data'] = data
         else:
             self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
             samplingPeriod = self.expt.get_rx_ts()[0]
             bw = 1 / samplingPeriod / hw.oversamplingFactor
-            rawData['bw'] = bw * 1e6
+            self.mapVals['bw'] = bw * 1e6
             acqTime = nPoints / bw
             createSequence()
             print('Runing...')
@@ -134,8 +120,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
             print(msgs)
             rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
             data = sig.decimate(rxd['rx0'], hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            rawData['data'] = data
-            name = self.saveRawData(rawData)
+            self.mapVals['data'] = data
             self.expt.__del__()
 
         # Process data to be plotted
@@ -145,6 +130,8 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.data = [rfTime, data]
 
     def sequenceAnalysisGUI(self, obj):
+        self.saveRawData()
+
         # Signal vs rf time
         plot = SpectrumPlot(self.data[0],
                                 np.abs(self.data[1]),

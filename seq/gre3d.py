@@ -13,30 +13,34 @@ import matplotlib.pyplot as plt
 import pdb
 import configs.hw_config as hw # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-
+from plotview.spectrumplot import SpectrumPlot # To plot nice 1d images
+from PyQt5.QtWidgets import QLabel  # To set the figure title
+from PyQt5 import QtCore            # To set the figure title
+import pyqtgraph as pg              # To plot nice 3d images
 
 class GRE3D(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(GRE3D, self).__init__()
         # Input the parameters
-        self.addParameter(key='seqName', string='RARE', val='RARE')
+        self.addParameter(key='seqName', string='GRE3DInfo', val='GRE3D')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
+        self.addParameter(key='echoTime', string='Echo time (ms)', val=4.0, field='SEQ')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
         self.addParameter(key='fov', string='FOV (cm)', val=[12.0, 12.0, 12.0], field='IM')
         self.addParameter(key='dfov', string='dFOV (mm)', val=[0.0, 0.0, 0.0], field='IM')
-        self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[60, 1, 1], field='IM')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
+        self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[60, 60, 1], field='IM')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=1.0, field='SEQ')
         self.addParameter(key='axes', string='Axes', val=[0, 1, 2], field='IM')
-        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 0, 0], field='IM')
+        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 0], field='IM')
         self.addParameter(key='sweepMode', string='Sweep mode, 0->k20, 1->02k, 2->k2k', val=1, field='SEQ')
-        self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=5.0, field='OTH')
+        self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=1.5, field='OTH')
         self.addParameter(key='dephGradTime', string='Rd dephasing time (ms)', val=1.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ')
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
-        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH')
+        self.addParameter(key='parFourierFractionSl', string='Partial fourier fraction', val=1.0, field='OTH')
         self.addParameter(key='spoiler', string='Spoiler gradient', val=0, field='SEQ')
 
 
@@ -61,7 +65,6 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
         nPoints = np.array(self.mapVals['nPoints'])
-        etl = self.mapVals['etl']
         repetitionTime = self.mapVals['repetitionTime']
         return(nPoints[1]*nPoints[2]*repetitionTime*1e-3*nScans/60)  # minutes, scanTime
 
@@ -94,9 +97,6 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         freqCal = False
         demo = False
 
-        # rawData fields
-        rawData = {}
-
         # Conversion of variables to non-multiplied units
         larmorFreq = larmorFreq*1e6
         rfExTime = rfExTime*1e-6
@@ -110,26 +110,6 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         rdGradTime = rdGradTime*1e-3
         dephGradTime = dephGradTime*1e-3
 
-        # Inputs for rawData
-        rawData['seqName'] = self.seq
-        rawData['nScans'] = nScans
-        rawData['larmorFreq'] = larmorFreq      # Larmor frequency
-        rawData['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
-        rawData['rfExTime'] = rfExTime          # rf excitation pulse time
-        rawData['echoTime'] = echoTime        # time between echoes
-        rawData['repetitionTime'] = repetitionTime     # TR
-        rawData['fov'] = fov           # FOV along readout, phase and slice
-        rawData['dfov'] = dfov            # Displacement of fov center
-        rawData['nPoints'] = nPoints                 # Number of points along readout, phase and slice
-        rawData['acqTime'] = acqTime             # Acquisition time
-        rawData['axesOrientation'] = axes       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-        rawData['rdGradTime'] = rdGradTime
-        rawData['dephGradTime'] = dephGradTime
-        rawData['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
-        rawData['shimming'] = shimming
-        rawData['partialFourierFraction'] = parFourierFraction
-        rawData['spoiler'] = spoiler
-
         # Miscellaneous
         larmorFreq = larmorFreq*1e-6
         gradRiseTime = 100e-6       # Estimated gradient rise time
@@ -141,10 +121,10 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         for ii in range(3):
             if nPoints[ii]==1: axesEnable[ii] = 0
         if fov[0]>1 and nPoints[1]==1: axesEnable[0] = 0
-        rawData['randFactor'] = randFactor
-        rawData['resolution'] = resolution
-        rawData['gradRiseTime'] = gradRiseTime
-        rawData['addRdPoints'] = addRdPoints
+        self.mapVals['randFactor'] = randFactor
+        self.mapVals['resolution'] = resolution
+        self.mapVals['gradRiseTime'] = gradRiseTime
+        self.mapVals['addRdPoints'] = addRdPoints
 
         # Matrix size
         nRD = nPoints[0]+2*addRdPoints
@@ -154,14 +134,14 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         # parAcqLines
         nSLreal = int(nPoints[2]*parFourierFraction)
         parAcqLines = int(nSLreal-nPoints[2]/2)
-        rawData['parAcqLines'] = parAcqLines
+        self.mapVals['parAcqLines'] = parAcqLines
         del nSLreal
 
         # BW
         BW = nPoints[0]/acqTime*1e-6
         BWov = BW*hw.oversamplingFactor
         samplingPeriod = 1/BWov
-        rawData['samplingPeriod'] = samplingPeriod
+        self.mapVals['samplingPeriod'] = samplingPeriod
 
         # Check if dephasing grad time is ok
         maxDephGradTime = echoTime-(rfExTime+rdGradTime)-3*gradRiseTime
@@ -173,10 +153,10 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         rdDephAmplitude = -rdGradAmplitude*(rdGradTime+gradRiseTime)/(2*(dephGradTime+gradRiseTime))
         phGradAmplitude = nPH/(2*hw.gammaB*fov[1]*(dephGradTime+gradRiseTime))*axesEnable[1]
         slGradAmplitude = nSL/(2*hw.gammaB*fov[2]*(dephGradTime+gradRiseTime))*axesEnable[2]
-        rawData['rdGradAmplitude'] = rdGradAmplitude
-        rawData['rdDephAmplitude'] = rdDephAmplitude
-        rawData['phGradAmplitude'] = phGradAmplitude
-        rawData['slGradAmplitude'] = slGradAmplitude
+        self.mapVals['rdGradAmplitude'] = rdGradAmplitude
+        self.mapVals['rdDephAmplitude'] = rdDephAmplitude
+        self.mapVals['phGradAmplitude'] = phGradAmplitude
+        self.mapVals['slGradAmplitude'] = slGradAmplitude
 
         # Phase and slice gradient vector
         phGradients = np.linspace(-phGradAmplitude,phGradAmplitude,num=nPH,endpoint=False)
@@ -194,8 +174,8 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             if ii<np.ceil(nPH/2-nPH/20) or ii>np.ceil(nPH/2+nPH/20):
                 phGradients[ii] = phGradients[ii]+randFactor*np.random.randn()
         kPH = hw.gammaB*phGradients*(gradRiseTime+dephGradTime)
-        rawData['phGradients'] = phGradients
-        rawData['slGradients'] = slGradients
+        self.mapVals['phGradients'] = phGradients
+        self.mapVals['slGradients'] = slGradients
 
         # Changing time parameters to us
         rfExTime = rfExTime*1e6
@@ -205,7 +185,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         dephGradTime = dephGradTime*1e6
         rdGradTime = rdGradTime*1e6
         scanTime = nRepetitions*repetitionTime
-        rawData['scanTime'] = scanTime*nSL*1e-6
+        self.mapVals['scanTime'] = scanTime*nSL*1e-6
 
         # Create demo
         def createSequenceDemo(phIndex=0, slIndex=0, repeIndexGlobal=0):
@@ -335,7 +315,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             return(phIndex, slIndex, repeIndexGlobal, acqPoints)
 
         # Calibrate frequency
-        if freqCal and (not plotSeq):
+        if freqCal and (not plotSeq) and (not demo):
             larmorFreq = self.freqCalibration(bw=0.05)
             larmorFreq = self.freqCalibration(bw=0.005)
             drfPhase = self.mapVals['drfPhase']
@@ -354,9 +334,10 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         while repeIndexGlobal<nRepetitions:
             nBatches += 1
             if not demo:
-                expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-                samplingPeriod = expt.get_rx_ts()[0]
+                self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+                samplingPeriod = self.expt.get_rx_ts()[0]
                 BW = 1/samplingPeriod/hw.oversamplingFactor
+                self.mapVals['bw'] = BW
                 acqTime = nPoints[0]/BW        # us
                 phIndex, slIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
                                                                    slIndex=slIndex,
@@ -364,7 +345,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                                                                    rewrite=False)
                 repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
                 acqPointsPerBatch.append(aa)
-                expt.plot_sequence()
+                self.expt.plot_sequence()
             else:
                 phIndex, slIndex, repeIndexGlobal, aa, dataA = createSequenceDemo(phIndex=phIndex,
                                                                    slIndex=slIndex,
@@ -377,12 +358,12 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                 if not demo:
                     if plotSeq==1:                  # What is the meaning of plotSeq??
                         print('Ploting sequence...')
-                        expt.plot_sequence()
+                        self.expt.plot_sequence()
                         plt.show()
-                        expt.__del__()
+                        self.expt.__del__()
                         break
                     else:
-                        rxd, msgs = expt.run()
+                        rxd, msgs = self.expt.run()
                         rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
                         # Get noise data
                         noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
@@ -393,7 +374,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                             overData = np.concatenate((overData, rxd['rx0'][nRD*hw.oversamplingFactor::]), axis = 0)
                         else:
                             overData = np.concatenate((overData, rxd['rx0']), axis = 0)
-                else:
+                else: # Demo
                     data = dataA
                     noise = np.concatenate((noise, data[0:nRD*hw.oversamplingFactor]), axis = 0)
                     data = data[nRD*hw.oversamplingFactor::]
@@ -404,7 +385,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                     else:
                         overData = np.concatenate((overData, data), axis = 0)
 
-            if not demo: expt.__del__()
+            if not demo: self.expt.__del__()
             if plotSeq ==1:
                 break
         del aa
@@ -412,14 +393,14 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         if not plotSeq:
             acqPointsPerBatch = (acqPointsPerBatch-nRD*(dummyPulses>0)-nRD)*nScans
             print('Scans done!')
-            rawData['noiseData'] = noise
-            rawData['overData'] = overData
+            self.mapVals['noiseData'] = noise
+            self.mapVals['overData'] = overData
 
             # Fix the echo position using oversampled data
             if dummyPulses>0:
                 dummyData = np.reshape(dummyData,  (nBatches*nScans, 1, nRD*hw.oversamplingFactor))
                 dummyData = np.average(dummyData, axis=0)
-                rawData['dummyData'] = dummyData
+                self.mapVals['dummyData'] = dummyData
                 overData = np.reshape(overData, (-1, 1, nRD*hw.oversamplingFactor))
                 overData = self.fixEchoPosition(dummyData, overData)
                 overData = np.reshape(overData, -1)
@@ -461,8 +442,8 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             imgFull = dataFull*0
             for ii in range(nScans):
                 imgFull[ii, :, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[ii, :, :, :])))
-            rawData['dataFull'] = dataFull
-            rawData['imgFull'] = imgFull
+            self.mapVals['dataFull'] = dataFull
+            self.mapVals['imgFull'] = imgFull
 
             # Average data
             data = np.average(dataFull, axis=0)
@@ -486,9 +467,9 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             kSL = np.reshape(kSL, (1, nPoints[0]*nPoints[1]*nPoints[2]))
             dPhase = np.exp(-2*np.pi*1j*(dfov[0]*kRD+dfov[1]*kPH+dfov[2]*kSL))
             data = np.reshape(data*dPhase, (nPoints[2], nPoints[1], nPoints[0]))
-            rawData['kSpace3D'] = data
+            self.mapVals['kSpace3D'] = data
             img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
-            rawData['image3D'] = img
+            self.mapVals['image3D'] = img
             data = np.reshape(data, (1, nPoints[0]*nPoints[1]*nPoints[2]))
 
             # Create sampled data
@@ -496,14 +477,43 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             kPH = np.reshape(kPH, (nPoints[0]*nPoints[1]*nPoints[2], 1))
             kSL = np.reshape(kSL, (nPoints[0]*nPoints[1]*nPoints[2], 1))
             data = np.reshape(data, (nPoints[0]*nPoints[1]*nPoints[2], 1))
-            rawData['kMax'] = kMax
-            rawData['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
+            self.mapVals['kMax'] = kMax
+            self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
             data = np.reshape(data, (nPoints[2], nPoints[1], nPoints[0]))
 
-            # Save data
-            self.saveRawData(rawData)
+    def sequenceAnalysis(self, obj):
+        self.saveRawData()
+        nPoints = self.mapVals['nPoints']
+        axesEnable = self.mapVals['axesEnable']
+        if not hasattr(obj.parent, 'batch'):
+            if (axesEnable[1] == 0 and axesEnable[2] == 0):
+                bw = self.mapVals['bw']*1e-3 # kHz
+                acqTime = self.mapVals['acqTime'] # ms
+                tVector = np.linspace(-acqTime/2, acqTime/2, nPoints[0])
+                sVector = self.mapVals['sampled'][:, 3]
+                fVector = np.linspace(-bw/2, bw/2, nPoints[0])
+                iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
 
-            # Reshape to 0 dimensional
-            data = np.reshape(data, -1)
+                f_plotview = SpectrumPlot(fVector, np.abs(iVector), [], [],
+                                          "Frequency (kHz)", "Amplitude (a.u.)",
+                                          "%s Spectrum" % (obj.sequence.mapVals['seqName']), )
+                t_plotview = SpectrumPlot(tVector, np.abs(sVector), np.real(sVector),
+                                          np.imag(sVector), 'Time (ms)', "Signal amplitude (mV)",
+                                          "%s Signal" % (obj.sequence.mapVals['seqName']), )
+                obj.parent.plotview_layout.addWidget(t_plotview)
+                obj.parent.plotview_layout.addWidget(f_plotview)
+                obj.parent.f_plotview = f_plotview
+                obj.parent.t_plotview = t_plotview
 
-            return rawData,  msgs, data,  BW
+            else:
+                # Create label with rawdata name
+                obj.label = QLabel(self.mapVals['fileName'])
+                obj.label.setAlignment(QtCore.Qt.AlignCenter)
+                obj.label.setStyleSheet("background-color: black;color: white")
+                obj.parent.plotview_layout.addWidget(obj.label)
+
+                # Plot image
+                obj.parent.plotview_layout.addWidget(pg.image(np.abs(self.mapVals['image3D'])))
+
+                # Plot k-space
+                obj.parent.plotview_layout.addWidget(pg.image(np.log10(np.abs(self.mapVals['kSpace3D']))))

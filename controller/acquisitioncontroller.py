@@ -53,36 +53,37 @@ class AcquisitionController(QObject):
         self.seqName = self.sequence.mapVals['seqName']
 
         # Execute selected sequence
-        plotSeq=0
         print('Start sequence')
-        self.rxd, self.msgs, self.data_avg, self.sequence.BW = defaultsequences[self.seqName].sequenceRun(plotSeq=plotSeq)
+        # self.rxd, self.msgs, self.data_avg, self.sequence.BW = defaultsequences[self.seqName].sequenceRun(plotSeq=0)
+        defaultsequences[self.seqName].sequenceRun(plotSeq=0)
+        defaultsequences[self.seqName].sequenceAnalysis(self)
         print('End sequence')
 
-        [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]= self.sequence.mapVals['nPoints']
-        self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.mapVals['larmorFreq'], len(self.data_avg), self.sequence.mapVals['nPoints'], self.sequence.BW)
-        self.sequence.ns = self.sequence.mapVals['nPoints']
-
-        if not hasattr(self.parent, 'batch'):
-            if (self.sequence.n_ph ==1 and self.sequence.n_sl == 1):
-                f_plotview = SpectrumPlot(self.dataobject.f_axis, self.dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude", "%s Spectrum" %(self.sequence.mapVals['seqName']), )
-                t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.mapVals['seqName']), )
-                self.parent.plotview_layout.addWidget(t_plotview)
-                self.parent.plotview_layout.addWidget(f_plotview)
-                self.parent.f_plotview = f_plotview
-                self.parent.t_plotview = t_plotview
-                [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]=self.dataobject.get_peakparameters()
-                print('Peak Value = %0.3f' %(f_signalValue))
-    
-            else:
-                           
-                self.plot_3Dresult()
-
-        self.parent.rxd = self.rxd
-        self.parent.data_avg = self.data_avg
-        self.parent.sequence = self.sequence
-        print(self.msgs)
-        #self.parent.save_data()         
-        self.save_data()
+        # [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]= self.sequence.mapVals['nPoints']
+        # self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.mapVals['larmorFreq'], len(self.data_avg), self.sequence.mapVals['nPoints'], self.sequence.BW)
+        # self.sequence.ns = self.sequence.mapVals['nPoints']
+        #
+        # if not hasattr(self.parent, 'batch'):
+        #     if (self.sequence.n_ph ==1 and self.sequence.n_sl == 1):
+        #         f_plotview = SpectrumPlot(self.dataobject.f_axis, self.dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude", "%s Spectrum" %(self.sequence.mapVals['seqName']), )
+        #         t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.mapVals['seqName']), )
+        #         self.parent.plotview_layout.addWidget(t_plotview)
+        #         self.parent.plotview_layout.addWidget(f_plotview)
+        #         self.parent.f_plotview = f_plotview
+        #         self.parent.t_plotview = t_plotview
+        #         [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]=self.dataobject.get_peakparameters()
+        #         print('Peak Value = %0.3f' %(f_signalValue))
+        #
+        #     else:
+        #
+        #         self.plot_3Dresult()
+        #
+        # self.parent.rxd = self.rxd
+        # self.parent.data_avg = self.data_avg
+        # self.parent.sequence = self.sequence
+        # print(self.msgs)
+        # #self.parent.save_data()
+        # self.save_data()
         
     def plot_3Dresult(self):
         
@@ -91,8 +92,8 @@ class AcquisitionController(QObject):
         self.label = QLabel("%s %s" % (self.sequence.mapVals['seqName'], dt_string))
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setStyleSheet("background-color: black;color: white")
-        if (self.sequence.n_ph !=1 & self.sequence.n_sl != 1):  #Add button to change the view only if 3D image
-            self.parent.plotview_layout.addWidget(self.button)
+        # if (self.sequence.n_ph !=1 & self.sequence.n_sl != 1):  #Add button to change the view only if 3D image
+        #     self.parent.plotview_layout.addWidget(self.button)
 
         self.parent.plotview_layout.addWidget(self.label)
 

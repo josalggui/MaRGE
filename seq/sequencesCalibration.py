@@ -1,6 +1,7 @@
 import seq.rabiFlops as rabiFlops
 import seq.noise as noise
 import seq.inversionRecovery as inversionRecovery
+import seq.cpmg as cpmg
 
 
 class RabiFlops(rabiFlops.RabiFlops):
@@ -12,11 +13,15 @@ class Noise(noise.Noise):
 class InversionRecovery(inversionRecovery.InversionRecovery):
     def __init__(self): super(InversionRecovery, self).__init__()
 
+class CPMG(cpmg.CPMG):
+    def __init__(self): super(CPMG, self).__init__()
+
 """
 Definition of default sequences
 """
-defaultCalibFunctions={
+defaultCalibFunctions = {
     'RabiFlops': RabiFlops(),
     'Noise': Noise(),
     'InversionRecovery': InversionRecovery(),
+    'CPMG': CPMG(),
 }

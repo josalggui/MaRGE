@@ -336,10 +336,11 @@ class MRIBLANKSEQ:
             self.expt.add_flodict({'grad_vz': (np.array([t0]), np.array([gAmp]))}, rewrite)
 
 
-    def saveRawData(self, rawData):
+    def saveRawData(self):
         """"
         @author: T. Guallart-Naval, MRILab, i3M, CSIC, Valencia, Spain
         @email: teresa.guallart@tesoroimaging.com
+        @modified: J.M. Algarín, MRILab, i3M, CSIC, Spain
         Save the rawData
         """
         # Save data
@@ -351,10 +352,11 @@ class MRIBLANKSEQ:
             os.makedirs('experiments/acquisitions/%s' % (dt2_string))
         if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
             os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string))
-        rawData['fileName'] = "%s.%s.mat" % (rawData['seqName'], dt_string)
-        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, rawData['seqName'], dt_string),
-                rawData)
-        return (rawData)
+        self.mapVals['fileName'] = "%s.%s.mat" % (self.mapVals['seqName'], dt_string)
+        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, self.mapVals['seqName'],
+            dt_string), self.mapVals)
+        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, self.mapNmspc['seqName'],
+            dt_string), self.mapVals)
 
 
     def freqCalibration(self, bw=0.05, dbw = 0.0001):

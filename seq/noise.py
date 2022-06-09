@@ -15,7 +15,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(Noise, self).__init__()
         # Input the parameters
-        self.addParameter(key='seqName', string='Noise', val='Noise')
+        self.addParameter(key='seqName', string='NoiseInfo', val='Noise')
         self.addParameter(key='larmorFreq', string='Central frequency (MHz)', val=3.00, field='OTH')
         self.addParameter(key='nPoints', string='Number of points', val=2500, field='OTH')
         self.addParameter(key='bw', string='Acquision bandwidth (kHz)', val=50, field='OTH')
@@ -30,21 +30,12 @@ class Noise(blankSeq.MRIBLANKSEQ):
         nPoints = self.mapVals['nPoints']
         bw = self.mapVals['bw']*1e-3 # MHz
 
-        # Create rawData
-        rawData = {}
-        rawData['seqName'] = seqName
-        rawData['larmorFreq'] = larmorFreq*1e6
-        rawData['nPoints'] = nPoints
-        rawData['bandwidth'] = bw*1e6
-
-        # INIT EXPERIMENT
-        bw = bw*hw.oversamplingFactor
-        samplingPeriod = 1 / bw
-
         if demo:
             data = np.random.randn(nPoints*hw.oversamplingFactor)
             acqTime = nPoints/bw
         else:
+            bw = bw * hw.oversamplingFactor
+            samplingPeriod = 1 / bw
             self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
             samplingPeriod = self.expt.get_rx_ts()[0]
             bw = 1/samplingPeriod/hw.oversamplingFactor
@@ -64,8 +55,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
                 data = sig.decimate(rxd['rx0']*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             else:
                 data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            rawData['data'] = data
-            name = self.saveRawData(rawData)
+            self.mapVals['data'] = data
             print('End')
         elif plotSeq == 1:
             self.expt.plot_sequence()
@@ -79,6 +69,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.dataSpec = [fVector, spectrum]
 
     def sequenceAnalysisGUI(self, obj):
+        self.saveRawData()
 
         # Signal versus time
         timePlot = SpectrumPlot(self.dataTime[0],

@@ -1,6 +1,7 @@
 """
 @author: T. Guallart Naval, november 2021
-@modifield: J.M. algarín, february 25th 2022
+@modifield: J.M. Algarín, february 25th 2022
+@modified: J.M. Algarín, june 8th 2022, adapted to new gui structure
 MRILAB @ I3M
 @summary: spin echo with inversion recovery where we sweep the time between the IR pulse and the excitation pulse.
 """
@@ -18,7 +19,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(InversionRecovery, self).__init__()
         # Input the parameters
-        self.addParameter(key='seqName', string='InverionRecovery', val='InversionRecovery')
+        self.addParameter(key='seqName', string='InverionRecoveryInfo', val='InversionRecovery')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='OTH')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='OTH')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='OTH')
@@ -80,34 +81,16 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         tInv0 = tInv0*1e-3
         tInv1 = tInv1*1e-3
 
-        rawData = {}
-        rawData['seqName'] = seqName
-        rawData['larmorFreq'] = larmorFreq * 1e6
-        rawData['rfExAmp'] = rfExAmp
-        rawData['rfReAmp'] = rfReAmp
-        rawData['rfExTime'] = rfExTime
-        rawData['rfRetime'] = rfReTime
-        rawData['repetitionTime'] = repetitionTime
-        rawData['tInv0'] = tInv0
-        rawData['tInv1'] = tInv1
-        rawData['nSteps'] = nSteps
-        rawData['acqTime'] = acqTime
-        rawData['nPoints'] = nPoints
-        rawData['echoTime'] = echoTime
-        rawData['crusherAmp'] = crusherAmp
-        rawData['crusherTime'] = crusherTime
-        rawData['crusherDelay'] = crusherDelay
-
         # Miscellaneous
         gradRiseTime = 200  # us
         gSteps = int(gradRiseTime / 5)
         axes = np.array([0, 1, 2])
-        rawData['gradRiseTime'] = gradRiseTime
-        rawData['gSteps'] = gSteps
+        self.mapVals['gradRiseTime'] = gradRiseTime
+        self.mapVals['gSteps'] = gSteps
 
         # Inversion time vector
         irTimeVector = np.geomspace(tInv0, tInv1, nSteps)
-        rawData['irTimeVector'] = irTimeVector
+        self.mapVals['irTimeVector'] = irTimeVector
 
         def createSequence():
             # Set shimming
@@ -169,8 +152,8 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         samplingPeriod = self.expt.get_rx_ts()[0]  # us
         bw = 1 / samplingPeriod / hw.oversamplingFactor  # MHz
         acqTime = nPoints / bw  # us
-        rawData['samplingPeriod'] = samplingPeriod * 1e-6
-        rawData['bw'] = bw * 1e6
+        self.mapVals['samplingPeriod'] = samplingPeriod * 1e-6
+        self.mapVals['bw'] = bw * 1e6
         createSequence()
         if plotSeq:
             self.expt.plot_sequence()
@@ -180,8 +163,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
             rxd, msgs = self.expt.run()
             print(msgs)
             data = sig.decimate(rxd['rx0']*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            rawData['data'] = data
-            name = self.saveRawData(rawData)
+            self.mapVals['data'] = data
             self.expt.__del__()
 
             # Process data to be plotted
@@ -190,6 +172,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
             self.data = [irTimeVector*1e-3, data]
 
     def sequenceAnalysisGUI(self, obj):
+        self.saveRawData()
         # Signal vs inverion time
         plot = SpectrumPlot(self.data[0],
                                 np.abs(self.data[1]),

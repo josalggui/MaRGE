@@ -13,6 +13,10 @@ import scipy.signal as sig
 import pdb
 import configs.hw_config as hw # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+from plotview.spectrumplot import SpectrumPlot # To plot nice 1d images
+from PyQt5.QtWidgets import QLabel  # To set the figure title
+from PyQt5 import QtCore            # To set the figure title
+import pyqtgraph as pg              # To plot nice 3d images
 
 #*********************************************************************************
 #*********************************************************************************
@@ -22,7 +26,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RARE, self).__init__()
         # Input the parameters
-        self.addParameter(key='seqName', string='RARE', val='RARE')
+        self.addParameter(key='seqName', string='RAREInfo', val='RARE')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
@@ -109,9 +113,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
         freqCal = True # Swich off only if you want and you are on debug mode
         demo = False
 
-        # rawData fields
-        rawData = {}
-
         # Conversion of variables to non-multiplied units
         larmorFreq = larmorFreq*1e6
         rfExTime = rfExTime*1e-6
@@ -128,33 +129,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
         rdDephTime = rdDephTime*1e-3
         phGradTime = phGradTime*1e-3
 
-        # Inputs for rawData
-        rawData['seqName'] = seqName
-        rawData['nScans'] = nScans
-        rawData['larmorFreq'] = larmorFreq      # Larmor frequency
-        rawData['rfExAmp'] = rfExAmp             # rf excitation pulse amplitude
-        rawData['rfReAmp'] = rfReAmp             # rf refocusing pulse amplitude
-        rawData['rfExTime'] = rfExTime          # rf excitation pulse time
-        rawData['rfReTime'] = rfReTime            # rf refocusing pulse time
-        rawData['echoSpacing'] = echoSpacing        # time between echoes
-        rawData['preExTime'] = preExTime
-        rawData['inversionTime'] = inversionTime       # Inversion recovery time
-        rawData['repetitionTime'] = repetitionTime     # TR
-        rawData['fov'] = fov           # FOV along readout, phase and slice
-        rawData['dfov'] = dfov            # Displacement of fov center
-        rawData['nPoints'] = nPoints                 # Number of points along readout, phase and slice
-        rawData['etl'] = etl                    # Echo train length
-        rawData['acqTime'] = acqTime             # Acquisition time
-        rawData['axesOrientation'] = axes       # 0->x, 1->y and 2->z defined as [rd,ph,sl]
-        rawData['axesEnable'] = axesEnable # 1-> Enable, 0-> Disable
-        rawData['sweepMode'] = sweepMode               # 0->k2k (T2),  1->02k (T1),  2->k20 (T2), 3->Niquist modulated (T2)
-        rawData['rdPreemphasis'] = rdPreemphasis
-        rawData['drfPhase'] = drfPhase
-        rawData['dummyPulses'] = dummyPulses                    # Dummy pulses for T1 stabilization
-        rawData['parFourierFraction'] = parFourierFraction
-        rawData['rdDephTime'] = rdDephTime
-        rawData['shimming'] = shimming
-
         # Miscellaneous
         larmorFreq = larmorFreq*1e-6    # MHz
         gradRiseTime = 400e-6       # s
@@ -162,10 +136,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
         addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
         randFactor = 0e-3                        # Random amplitude to add to the phase gradients
         resolution = fov/nPoints
-        rawData['resolution'] = resolution
-        rawData['gradRiseTime'] = gradRiseTime
-        rawData['randFactor'] = randFactor
-        rawData['addRdPoints'] = addRdPoints
+        self.mapVals['resolution'] = resolution
+        self.mapVals['gradRiseTime'] = gradRiseTime
+        self.mapVals['randFactor'] = randFactor
+        self.mapVals['addRdPoints'] = addRdPoints
 
         # Matrix size
         nRD = nPoints[0]+2*addRdPoints
@@ -178,7 +152,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         # parAcqLines in case parAcqLines = 0
         parAcqLines = int(int(nPoints[2]*parFourierFraction)-nPoints[2]/2)
-        rawData['partialAcquisition'] = parAcqLines
+        self.mapVals['partialAcquisition'] = parAcqLines
 
         # BW
         BW = nPoints[0]/acqTime*1e-6        # MHz
@@ -188,24 +162,24 @@ class RARE(blankSeq.MRIBLANKSEQ):
         # Readout gradient time
         if rdGradTime<acqTime:
             rdGradTime = acqTime
-        rawData['rdGradTime'] = rdGradTime
+        self.mapVals['rdGradTime'] = rdGradTime
 
         # Phase and slice de- and re-phasing time
         if phGradTime==0 or phGradTime>echoSpacing/2-rfExTime/2-rfReTime/2-2*gradRiseTime:
             phGradTime = echoSpacing/2-rfExTime/2-rfReTime/2-2*gradRiseTime
-        rawData['phGradTime'] = phGradTime
+        self.mapVals['phGradTime'] = phGradTime
 
         # Max gradient amplitude
         rdGradAmplitude = nPoints[0]/(hw.gammaB*fov[0]*acqTime)*axesEnable[0]
         phGradAmplitude = nPH/(2*hw.gammaB*fov[1]*(phGradTime+gradRiseTime))*axesEnable[1]
         slGradAmplitude = nSL/(2*hw.gammaB*fov[2]*(phGradTime+gradRiseTime))*axesEnable[2]
-        rawData['rdGradAmplitude'] = rdGradAmplitude
-        rawData['phGradAmplitude'] = phGradAmplitude
-        rawData['slGradAmplitude'] = slGradAmplitude
+        self.mapVals['rdGradAmplitude'] = rdGradAmplitude
+        self.mapVals['phGradAmplitude'] = phGradAmplitude
+        self.mapVals['slGradAmplitude'] = slGradAmplitude
 
         # Readout dephasing amplitude
         rdDephAmplitude = 0.5*rdGradAmplitude*(gradRiseTime+rdGradTime)/(gradRiseTime+rdDephTime)
-        rawData['rdDephAmplitude'] = rdDephAmplitude
+        self.mapVals['rdDephAmplitude'] = rdDephAmplitude
 
         # Phase and slice gradient vector
         phGradients = np.linspace(-phGradAmplitude,phGradAmplitude,num=nPH,endpoint=False)
@@ -219,12 +193,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
             if ii<np.ceil(nPH/2-nPH/20) or ii>np.ceil(nPH/2+nPH/20):
                 phGradients[ii] = phGradients[ii]+randFactor*np.random.randn()
         kPH = hw.gammaB*phGradients*(gradRiseTime+phGradTime)
-        rawData['phGradients'] = phGradients
-        rawData['slGradients'] = slGradients
+        self.mapVals['phGradients'] = phGradients
+        self.mapVals['slGradients'] = slGradients
 
         # Set phase vector to given sweep mode
         ind = self.getIndex(etl, nPH, sweepMode)
-        rawData['sweepOrder'] = ind
+        self.mapVals['sweepOrder'] = ind
         phGradients = phGradients[ind]
 
         def createSequenceDemo(phIndex=0, slIndex=0, repeIndexGlobal=0, rewrite=True):
@@ -381,7 +355,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         preExTime = preExTime*1e6
         nRepetitions = int(nSL*nPH/etl)
         scanTime = nRepetitions*repetitionTime
-        rawData['scanTime'] = scanTime*nSL*1e-6
+        self.mapVals['scanTime'] = scanTime*nSL*1e-6
 
         # Calibrate frequency
         if freqCal and (not plotSeq):
@@ -408,6 +382,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 samplingPeriod = self.expt.get_rx_ts()[0]
                 BW = 1/samplingPeriod/hw.oversamplingFactor
                 acqTime = nPoints[0]/BW        # us
+                self.mapVals['bw'] = BW
                 phIndex, slIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
                                                                    slIndex=slIndex,
                                                                    repeIndexGlobal=repeIndexGlobal,
@@ -463,14 +438,14 @@ class RARE(blankSeq.MRIBLANKSEQ):
         if plotSeq ==0:
             acqPointsPerBatch= (np.array(acqPointsPerBatch)-etl*nRD*(dummyPulses>0)-nRD)*nScans
             print('Scans done!')
-            rawData['noiseData'] = noise
-            rawData['overData'] = overData
+            self.mapVals['noiseData'] = noise
+            self.mapVals['overData'] = overData
 
             # Fix the echo position using oversampled data
             if dummyPulses>0:
                 dummyData = np.reshape(dummyData,  (nBatches*nScans, etl, nRD*hw.oversamplingFactor))
                 dummyData = np.average(dummyData, axis=0)
-                rawData['dummyData'] = dummyData
+                self.mapVals['dummyData'] = dummyData
                 overData = np.reshape(overData, (-1, etl, nRD*hw.oversamplingFactor))
                 overData = self.fixEchoPosition(dummyData, overData)
                 overData = np.reshape(overData, -1)
@@ -521,8 +496,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
             imgFull = dataFull*0
             for ii in range(nScans):
                 imgFull[ii, :, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[ii, :, :, :])))
-            rawData['dataFull'] = dataFull
-            rawData['imgFull'] = imgFull
+            self.mapVals['dataFull'] = dataFull
+            self.mapVals['imgFull'] = imgFull
 
             # Average data
             data = np.average(dataFull, axis=0)
@@ -546,9 +521,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
             kSL = np.reshape(kSL, (1, nPoints[0]*nPoints[1]*nPoints[2]))
             dPhase = np.exp(-2*np.pi*1j*(dfov[0]*kRD+dfov[1]*kPH+dfov[2]*kSL))
             data = np.reshape(data*dPhase, (nPoints[2], nPoints[1], nPoints[0]))
-            rawData['kSpace3D'] = data
+            self.mapVals['kSpace3D'] = data
             img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
-            rawData['image3D'] = img
+            self.mapVals['image3D'] = img
             data = np.reshape(data, (1, nPoints[0]*nPoints[1]*nPoints[2]))
 
             # Create sampled data
@@ -556,13 +531,44 @@ class RARE(blankSeq.MRIBLANKSEQ):
             kPH = np.reshape(kPH, (nPoints[0]*nPoints[1]*nPoints[2], 1))
             kSL = np.reshape(kSL, (nPoints[0]*nPoints[1]*nPoints[2], 1))
             data = np.reshape(data, (nPoints[0]*nPoints[1]*nPoints[2], 1))
-            rawData['kMax'] = kMax
-            rawData['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
+            self.mapVals['kMax'] = kMax
+            self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
             data = np.reshape(data, (nPoints[2], nPoints[1], nPoints[0]))
 
-            # Save data
-            self.saveRawData(rawData)
-            # Reshape to 0 dimensional
-            data = np.reshape(data, -1)
 
-        return rawData, msgs, data,  BW
+    def sequenceAnalysis(self, obj):
+        self.saveRawData()
+        nPoints = self.mapVals['nPoints']
+        axesEnable = self.mapVals['axesEnable']
+        if not hasattr(obj.parent, 'batch'):
+            if (axesEnable[1] == 0 and axesEnable[2] == 0):
+                bw = self.mapVals['bw']*1e-3 # kHz
+                acqTime = self.mapVals['acqTime'] # ms
+                tVector = np.linspace(-acqTime/2, acqTime/2, nPoints[0])
+                sVector = self.mapVals['sampled'][:, 3]
+                fVector = np.linspace(-bw/2, bw/2, nPoints[0])
+                iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
+
+                f_plotview = SpectrumPlot(fVector, np.abs(iVector), [], [],
+                                          "Frequency (kHz)", "Amplitude (a.u.)",
+                                          "%s Spectrum" % (obj.sequence.mapVals['seqName']), )
+                t_plotview = SpectrumPlot(tVector, np.abs(sVector), np.real(sVector),
+                                          np.imag(sVector), 'Time (ms)', "Signal amplitude (mV)",
+                                          "%s Signal" % (obj.sequence.mapVals['seqName']), )
+                obj.parent.plotview_layout.addWidget(t_plotview)
+                obj.parent.plotview_layout.addWidget(f_plotview)
+                obj.parent.f_plotview = f_plotview
+                obj.parent.t_plotview = t_plotview
+
+            else:
+                # Create label with rawdata name
+                obj.label = QLabel(self.mapVals['fileName'])
+                obj.label.setAlignment(QtCore.Qt.AlignCenter)
+                obj.label.setStyleSheet("background-color: black;color: white")
+                obj.parent.plotview_layout.addWidget(obj.label)
+
+                # Plot image
+                obj.parent.plotview_layout.addWidget(pg.image(np.abs(self.mapVals['image3D'])))
+
+                # Plot k-space
+                obj.parent.plotview_layout.addWidget(pg.image(np.log10(np.abs(self.mapVals['kSpace3D']))))
