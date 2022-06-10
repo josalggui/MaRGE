@@ -76,7 +76,7 @@ class CPMG(blankSeq.MRIBLANKSEQ):
 
                 # Refocusing pulse
                 t0 = tEcho - echoSpacing / 2 - hw.blkTime - rfReTime / 2
-                self.rfRecPulse(t0, rfReTime * 2, rfReAmp, np.pi / 2)
+                self.rfRecPulse(t0, rfReTime, rfReAmp, np.pi / 2)
 
                 # Rx gate
                 t0 = tEcho - acqTime / 2

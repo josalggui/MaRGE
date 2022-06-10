@@ -102,6 +102,12 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # Create experiment
         bw = nPoints/acqTime*hw.oversamplingFactor # MHz
         samplingPeriod = 1/bw
+        self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa,
+                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+        samplingPeriod = self.expt.get_rx_ts()[0]
+        bw = 1 / samplingPeriod / hw.oversamplingFactor
+        self.mapVals['bw'] = bw * 1e6
+        acqTime = nPoints / bw
 
         # Execute the experiment
         if demo:
@@ -109,25 +115,28 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
             data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = data
         else:
-            self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-            samplingPeriod = self.expt.get_rx_ts()[0]
-            bw = 1 / samplingPeriod / hw.oversamplingFactor
-            self.mapVals['bw'] = bw * 1e6
-            acqTime = nPoints / bw
             createSequence()
-            print('Runing...')
-            rxd, msgs = self.expt.run()
-            print(msgs)
-            rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
-            data = sig.decimate(rxd['rx0'], hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            self.mapVals['data'] = data
-            self.expt.__del__()
+            if plotSeq:
+                print('Ploting sequence...')
+                self.expt.plot_sequence()
+                plt.show()
+                self.expt.__del__()
+                return 0
+            else:
+                print('Runing...')
+                rxd, msgs = self.expt.run()
+                print(msgs)
+                rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
+                data = sig.decimate(rxd['rx0'], hw.oversamplingFactor, ftype='fir', zero_phase=True)
+                self.mapVals['data'] = data
+        self.expt.__del__()
 
         # Process data to be plotted
         data = np.reshape(data, (nSteps, -1))
         data = data[:, int(nPoints/2)]
-
         self.data = [rfTime, data]
+
+        return 0
 
     def sequenceAnalysisGUI(self, obj):
         self.saveRawData()
