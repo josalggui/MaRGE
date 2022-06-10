@@ -3,6 +3,7 @@ import seq.noise as noise
 import seq.inversionRecovery as inversionRecovery
 import seq.cpmg as cpmg
 import seq.larmor as larmor
+import seq.shimmingSweep as shimmingSweep
 
 
 class RabiFlops(rabiFlops.RabiFlops):
@@ -20,6 +21,10 @@ class CPMG(cpmg.CPMG):
 class Larmor(larmor.Larmor):
     def __init__(self): super(Larmor, self).__init__()
 
+class ShimmingSweep(shimmingSweep.ShimmingSweep):
+    def __init__(self): super(ShimmingSweep, self).__init__()
+
+
 """
 Definition of default sequences
 """
@@ -29,4 +34,5 @@ defaultCalibFunctions = {
     'InversionRecovery': InversionRecovery(),
     'CPMG': CPMG(),
     'Larmor': Larmor(),
+    'ShimmingSweep': ShimmingSweep(),
 }

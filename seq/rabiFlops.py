@@ -25,7 +25,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='OTH')
         self.addParameter(key='echoTime', string='Echo time (ms)', val=10.0, field='OTH')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=100., field='OTH')
-        self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=60, field='OTH')
+        self.addParameter(key='nPoints', string='nPoints', val=60, field='OTH')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='OTH')
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
         self.addParameter(key='rfExTime0', string='Rf pulse time, Start (us)', val=5.0, field='OTH')
