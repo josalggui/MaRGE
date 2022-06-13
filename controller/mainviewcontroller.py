@@ -15,12 +15,12 @@ from PyQt5.QtGui import QIcon
 from controller.acquisitioncontroller import AcquisitionController
 from controller.calibrationcontroller import CalibrationController
 from controller.batchcontroller import BatchController
+from controller.sweepcontroller import SweepController
 import pyqtgraph.exporters
 from functools import partial
 import os
 import ast
 import sys
-sys.path.append('/media/physiomri/TOSHIBA\ EXT/')
 import experiment as ex
 from scipy.io import savemat
 from controller.sequencecontroller import SequenceList
@@ -88,10 +88,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_loadparams.triggered.connect(self.load_parameters)
         self.action_saveparams.triggered.connect(self.save_parameters)
         self.action_close.triggered.connect(self.close)    
-#        self.action_savedata.triggered.connect(self.save_data)
         self.action_exportfigure.triggered.connect(self.export_figure)
         self.action_viewsequence.triggered.connect(self.plot_sequence)
         self.action_batch.triggered.connect(self.batch_system)
+        self.action_sweep.triggered.connect(self.sweep_system)
         self.action_XNATupload.triggered.connect(self.xnat)
         self.action_session.triggered.connect(self.change_session)
 
@@ -317,6 +317,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def batch_system(self):
         batchW = BatchController(self, self.sequencelist)
         batchW.show()
+
+    def sweep_system(self):
+        sweep = SweepController(self, self.sequencelist, defaultsequences)
+        sweep.show()
 
     def xnat(self):
         

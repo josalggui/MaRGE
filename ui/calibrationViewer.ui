@@ -330,6 +330,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="action_acquire"/>
+   <addaction name="action_sweep"/>
   </widget>
   <widget class="QToolBar" name="AcquisitionControlToolbar">
    <property name="windowTitle">
@@ -451,6 +452,18 @@
    </property>
    <property name="toolTip">
     <string>Export the Figure of the Acquired Signal</string>
+   </property>
+  </action>
+  <action name="action_sweep">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/refresh.svg</normaloff>../resources/icons/refresh.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Sweep</string>
+   </property>
+   <property name="toolTip">
+    <string>Sweep calibration sequence</string>
    </property>
   </action>
  </widget>

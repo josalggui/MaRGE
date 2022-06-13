@@ -118,7 +118,7 @@ class CPMG(blankSeq.MRIBLANKSEQ):
             echoTimeVector = np.linspace(echoSpacing, echoSpacing * etl, num=etl, endpoint=True)
             self.results = [echoTimeVector, data]
 
-    def sequenceAnalysisGUI(self, obj):
+    def sequenceAnalysis(self, obj=''):
         results = self.results
 
         # Functions for fitting
@@ -164,12 +164,13 @@ class CPMG(blankSeq.MRIBLANKSEQ):
 
         self.saveRawData()
 
-        # Signal vs rf time
-        plot = SpectrumPlot(results[0]*1e-3,
-                            results[1],
-                            func1(results[0], *fitData1), func2(results[0], *fitData2),
-                            'Echo time (ms)', 'Echo amplitude (mV)',
-                            "%s" % (self.mapVals['seqName']))
+        if obj != '':
+            # Signal vs rf time
+            plot = SpectrumPlot(results[0]*1e-3,
+                                results[1],
+                                func1(results[0], *fitData1), func2(results[0], *fitData2),
+                                'Echo time (ms)', 'Echo amplitude (mV)',
+                                "%s" % (self.mapVals['seqName']))
 
-        # Update figures
-        obj.parent.plotview_layout.addWidget(plot)
+            # Update figures
+            obj.parent.plotview_layout.addWidget(plot)

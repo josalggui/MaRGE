@@ -158,7 +158,6 @@ class SequenceList(QComboBox):
 
         return itemlist
 
-
 class SequenceParameter(Parameter_Base, Parameter_Form):
     """
     Operation Parameter Widget-Class

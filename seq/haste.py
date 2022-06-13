@@ -443,39 +443,40 @@ class HASTE(blankSeq.MRIBLANKSEQ):
             self.mapVals['kMax'] = kMax
             self.mapVals['sampled'] = np.concatenate((kRD, kPH, data), axis=1)
 
-    def sequenceAnalysis(self, obj):
+    def sequenceAnalysis(self, obj=''):
         self.saveRawData()
-        nPoints = self.mapVals['nPoints']
-        axesEnable = self.mapVals['axesEnable']
-        if not hasattr(obj.parent, 'batch'):
-            if (axesEnable[1] == 0 and axesEnable[2] == 0):
-                bw = self.mapVals['bw'] * 1e-3  # kHz
-                acqTime = self.mapVals['acqTime']  # ms
-                tVector = np.linspace(-acqTime / 2, acqTime / 2, nPoints[0])
-                sVector = self.mapVals['sampled'][:, 3]
-                fVector = np.linspace(-bw / 2, bw / 2, nPoints[0])
-                iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
+        if obj!='':
+            nPoints = self.mapVals['nPoints']
+            axesEnable = self.mapVals['axesEnable']
+            if not hasattr(obj.parent, 'batch'):
+                if (axesEnable[1] == 0 and axesEnable[2] == 0):
+                    bw = self.mapVals['bw'] * 1e-3  # kHz
+                    acqTime = self.mapVals['acqTime']  # ms
+                    tVector = np.linspace(-acqTime / 2, acqTime / 2, nPoints[0])
+                    sVector = self.mapVals['sampled'][:, 3]
+                    fVector = np.linspace(-bw / 2, bw / 2, nPoints[0])
+                    iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
 
-                f_plotview = SpectrumPlot(fVector, np.abs(iVector), [], [],
-                                          "Frequency (kHz)", "Amplitude (a.u.)",
-                                          "%s Spectrum" % (obj.sequence.mapVals['seqName']), )
-                t_plotview = SpectrumPlot(tVector, np.abs(sVector), np.real(sVector),
-                                          np.imag(sVector), 'Time (ms)', "Signal amplitude (mV)",
-                                          "%s Signal" % (obj.sequence.mapVals['seqName']), )
-                obj.parent.plotview_layout.addWidget(t_plotview)
-                obj.parent.plotview_layout.addWidget(f_plotview)
-                obj.parent.f_plotview = f_plotview
-                obj.parent.t_plotview = t_plotview
+                    f_plotview = SpectrumPlot(fVector, np.abs(iVector), [], [],
+                                              "Frequency (kHz)", "Amplitude (a.u.)",
+                                              "%s Spectrum" % (obj.sequence.mapVals['seqName']), )
+                    t_plotview = SpectrumPlot(tVector, np.abs(sVector), np.real(sVector),
+                                              np.imag(sVector), 'Time (ms)', "Signal amplitude (mV)",
+                                              "%s Signal" % (obj.sequence.mapVals['seqName']), )
+                    obj.parent.plotview_layout.addWidget(t_plotview)
+                    obj.parent.plotview_layout.addWidget(f_plotview)
+                    obj.parent.f_plotview = f_plotview
+                    obj.parent.t_plotview = t_plotview
 
-            else:
-                # Create label with rawdata name
-                obj.label = QLabel(self.mapVals['fileName'])
-                obj.label.setAlignment(QtCore.Qt.AlignCenter)
-                obj.label.setStyleSheet("background-color: black;color: white")
-                obj.parent.plotview_layout.addWidget(obj.label)
+                else:
+                    # Create label with rawdata name
+                    obj.label = QLabel(self.mapVals['fileName'])
+                    obj.label.setAlignment(QtCore.Qt.AlignCenter)
+                    obj.label.setStyleSheet("background-color: black;color: white")
+                    obj.parent.plotview_layout.addWidget(obj.label)
 
-                # Plot image
-                obj.parent.plotview_layout.addWidget(pg.image(np.abs(self.mapVals['image3D'])))
+                    # Plot image
+                    obj.parent.plotview_layout.addWidget(pg.image(np.abs(self.mapVals['image3D'])))
 
-                # Plot k-space
-                obj.parent.plotview_layout.addWidget(pg.image(np.log10(np.abs(self.mapVals['kSpace3D']))))
+                    # Plot k-space
+                    obj.parent.plotview_layout.addWidget(pg.image(np.log10(np.abs(self.mapVals['kSpace3D']))))

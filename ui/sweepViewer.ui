@@ -16,7 +16,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>GUI for Open-Source MRI</string>
+   <string>Calibration Window</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -162,51 +162,6 @@
             </property>
            </spacer>
           </item>
-          <item>
-           <widget class="QWidget" name="console" native="true">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>100</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>200</height>
-             </size>
-            </property>
-            <property name="autoFillBackground">
-             <bool>true</bool>
-            </property>
-            <layout class="QGridLayout" name="layout_output" rowstretch="0">
-             <property name="leftMargin">
-              <number>10</number>
-             </property>
-             <property name="topMargin">
-              <number>10</number>
-             </property>
-             <property name="rightMargin">
-              <number>10</number>
-             </property>
-             <property name="bottomMargin">
-              <number>10</number>
-             </property>
-             <property name="horizontalSpacing">
-              <number>40</number>
-             </property>
-             <property name="verticalSpacing">
-              <number>16</number>
-             </property>
-            </layout>
-           </widget>
-          </item>
          </layout>
         </widget>
        </item>
@@ -261,6 +216,51 @@
             </layout>
            </widget>
           </item>
+          <item>
+           <widget class="QWidget" name="console" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>100</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>200</height>
+             </size>
+            </property>
+            <property name="autoFillBackground">
+             <bool>true</bool>
+            </property>
+            <layout class="QGridLayout" name="layout_output" rowstretch="0">
+             <property name="leftMargin">
+              <number>10</number>
+             </property>
+             <property name="topMargin">
+              <number>10</number>
+             </property>
+             <property name="rightMargin">
+              <number>10</number>
+             </property>
+             <property name="bottomMargin">
+              <number>10</number>
+             </property>
+             <property name="horizontalSpacing">
+              <number>40</number>
+             </property>
+             <property name="verticalSpacing">
+              <number>16</number>
+             </property>
+            </layout>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
@@ -291,26 +291,6 @@
        <property name="bottomMargin">
         <number>10</number>
        </property>
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Session:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="session_label">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
        <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
@@ -349,9 +329,6 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_gpaInit"/>
-   <addaction name="action_calibration"/>
-   <addaction name="action_XNATupload"/>
    <addaction name="action_acquire"/>
   </widget>
   <widget class="QToolBar" name="AcquisitionControlToolbar">
@@ -364,15 +341,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_loadparams"/>
-   <addaction name="action_saveparams"/>
-   <addaction name="action_viewsequence"/>
-   <addaction name="action_session"/>
-   <addaction name="action_batch"/>
-   <addaction name="action_sweep"/>
-   <addaction name="action_ProcessingToolbox"/>
    <addaction name="separator"/>
-   <addaction name="action_changeappearance"/>
    <addaction name="action_close"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
@@ -385,6 +354,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="action_savedata"/>
    <addaction name="action_exportfigure"/>
   </widget>
   <action name="action_close">
@@ -399,7 +369,25 @@
     <string>Close</string>
    </property>
    <property name="toolTip">
-    <string>Close PhisioMRI_GUI</string>
+    <string>Close Calibration Window</string>
+   </property>
+   <property name="font">
+    <font/>
+   </property>
+  </action>
+  <action name="action_connect">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>../../../.designer/resources/icons/power.svg</normaloff>../../../.designer/resources/icons/power.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Connect</string>
+   </property>
+   <property name="toolTip">
+    <string>Connect to server</string>
    </property>
    <property name="font">
     <font/>
@@ -415,18 +403,6 @@
    </property>
    <property name="toolTip">
     <string>Start Acquisition</string>
-   </property>
-  </action>
-  <action name="action_changeappearance">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/brush.svg</normaloff>../resources/icons/brush.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Appearance</string>
-   </property>
-   <property name="toolTip">
-    <string>Change Window Appearance</string>
    </property>
   </action>
   <action name="action_loadparams">
@@ -453,6 +429,18 @@
     <string>Save the parameters of a sequence in a file</string>
    </property>
   </action>
+  <action name="action_savedata">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/clipboard.svg</normaloff>../resources/icons/clipboard.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Save Data</string>
+   </property>
+   <property name="toolTip">
+    <string>Save Acquired Data</string>
+   </property>
+  </action>
   <action name="action_exportfigure">
    <property name="icon">
     <iconset>
@@ -463,99 +451,6 @@
    </property>
    <property name="toolTip">
     <string>Export the Figure of the Acquired Signal</string>
-   </property>
-  </action>
-  <action name="action_viewsequence">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/chart-bar-outline.svg</normaloff>../resources/icons/chart-bar-outline.svg</iconset>
-   </property>
-   <property name="text">
-    <string>action_viewsequence</string>
-   </property>
-   <property name="toolTip">
-    <string>View the defined sequence</string>
-   </property>
-  </action>
-  <action name="action_calibration">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/compass.svg</normaloff>../resources/icons/compass.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Calibration of the system</string>
-   </property>
-  </action>
-  <action name="action_gpaInit">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/key.svg</normaloff>../resources/icons/key.svg</iconset>
-   </property>
-   <property name="text">
-    <string>GPA Initialization</string>
-   </property>
-   <property name="toolTip">
-    <string>Initialization of the GPA</string>
-   </property>
-  </action>
-  <action name="action_batch">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/arrow-loop-outline.svg</normaloff>../resources/icons/arrow-loop-outline.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Batch Processing</string>
-   </property>
-   <property name="toolTip">
-    <string>Batch Processing</string>
-   </property>
-  </action>
-  <action name="action_XNATupload">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/upload-outline.svg</normaloff>../resources/icons/upload-outline.svg</iconset>
-   </property>
-   <property name="text">
-    <string>XNAT_upload</string>
-   </property>
-   <property name="toolTip">
-    <string>Activate upload to XNAT</string>
-   </property>
-  </action>
-  <action name="action_session">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/business-card.svg</normaloff>../resources/icons/business-card.svg</iconset>
-   </property>
-   <property name="text">
-    <string>New Session</string>
-   </property>
-   <property name="toolTip">
-    <string>Change Session</string>
-   </property>
-  </action>
-  <action name="action_ProcessingToolbox">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/image.svg</normaloff>../resources/icons/image.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Processing Toolbox</string>
-   </property>
-   <property name="toolTip">
-    <string>Open Processing Toolbox</string>
-   </property>
-  </action>
-  <action name="action_sweep">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/refresh.svg</normaloff>../resources/icons/refresh.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Sweep Sequence</string>
-   </property>
-   <property name="toolTip">
-    <string>Sweep Sequence</string>
    </property>
   </action>
  </widget>

@@ -56,7 +56,6 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         rfExTime0 = self.mapVals['rfExTime0']
         rfExTime1 = self.mapVals['rfExTime1']
         nSteps = self.mapVals['nSteps']
-        drfPhase = self.mapVals['drfPhase']
 
         # Time variables in us
         echoTime *= 1e3
@@ -86,11 +85,11 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
                 # Excitation pulse
                 t0 = tEx - hw.blkTime - rfTime[repeIndex]/2
-                self.rfRecPulse(t0, rfTime[repeIndex], rfExAmp, drfPhase)
+                self.rfRecPulse(t0, rfTime[repeIndex], rfExAmp, 0)
 
                 # Refocusing pulse
                 t0 = tEx + echoTime/2 - hw.blkTime - rfTime[repeIndex]
-                self.rfRecPulse(t0, rfTime[repeIndex]*2, rfExAmp, drfPhase+np.pi/2)
+                self.rfRecPulse(t0, rfTime[repeIndex]*2, rfExAmp, 0+np.pi/2)
 
                 # Rx gate
                 t0 = tEx + echoTime - acqTime/2
@@ -135,18 +134,20 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         data = np.reshape(data, (nSteps, -1))
         data = data[:, int(nPoints/2)]
         self.data = [rfTime, data]
+        self.mapVals['sampledSignal'] = data
 
         return 0
 
-    def sequenceAnalysisGUI(self, obj):
+    def sequenceAnalysis(self, obj=''):
         self.saveRawData()
 
-        # Signal vs rf time
-        plot = SpectrumPlot(self.data[0],
-                                np.abs(self.data[1]),
-                                [], [],
-                                'Time (ms)', 'Signal amplitude (mV)',
-                                "%s" % (self.mapVals['seqName']))
+        if obj != '':
+            # Signal vs rf time
+            plot = SpectrumPlot(self.data[0],
+                                    np.abs(self.data[1]),
+                                    [], [],
+                                    'Time (ms)', 'Signal amplitude (mV)',
+                                    "%s" % (self.mapVals['seqName']))
 
-        # Update figures
-        obj.parent.plotview_layout.addWidget(plot)
+            # Update figures
+            obj.parent.plotview_layout.addWidget(plot)

@@ -1,3 +1,10 @@
+"""
+Created on Thu June 2 2022
+@author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+@email: josalggui@i3m.upv.es
+@Summary: All sequences on the GUI must be here
+"""
+
 import seq.rare as rare
 import seq.haste as haste
 import seq.gre3d as gre

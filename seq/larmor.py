@@ -120,10 +120,11 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         # Process data to be plotted
         self.results = [data]
+        self.mapVals['sampledSignal'] = data[nPoints/2]
 
         return 0
 
-    def sequenceAnalysisGUI(self, obj):
+    def sequenceAnalysis(self, obj=''):
         signal = self.results
         signal = np.reshape(signal, (-1))
         acqTime = self.mapVals['acqTime']*1e3 # ms
@@ -145,18 +146,20 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         self.saveRawData()
 
-        # Add larmor frequency to the layout
-        obj.label = QLabel('Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
-        obj.label.setAlignment(QtCore.Qt.AlignCenter)
-        obj.label.setStyleSheet("background-color: black;color: white")
-        obj.parent.plotview_layout.addWidget(obj.label)
+        if obj != '':
 
-        # Add time signal to the layout
-        signalPlot = SpectrumPlot(tVector, np.abs(signal), [], [], 'Time (ms)', 'Signal amplitude (mV)',
-                                    "%s" % (self.mapVals['seqName']))
-        obj.parent.plotview_layout.addWidget(signalPlot)
+            # Add larmor frequency to the layout
+            obj.label = QLabel('Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
+            obj.label.setAlignment(QtCore.Qt.AlignCenter)
+            obj.label.setStyleSheet("background-color: black;color: white")
+            obj.parent.plotview_layout.addWidget(obj.label)
 
-        # Add frequency spectrum to the layout
-        spectrumPlot = SpectrumPlot(fVector, np.abs(spectrum), [], [], 'Frequency (kHz)', 'Spectrum amplitude (a.u.)',
-                                    '')
-        obj.parent.plotview_layout.addWidget(spectrumPlot)
+            # Add time signal to the layout
+            signalPlot = SpectrumPlot(tVector, np.abs(signal), [], [], 'Time (ms)', 'Signal amplitude (mV)',
+                                        "%s" % (self.mapVals['seqName']))
+            obj.parent.plotview_layout.addWidget(signalPlot)
+
+            # Add frequency spectrum to the layout
+            spectrumPlot = SpectrumPlot(fVector, np.abs(spectrum), [], [], 'Frequency (kHz)', 'Spectrum amplitude (a.u.)',
+                                        '')
+            obj.parent.plotview_layout.addWidget(spectrumPlot)

@@ -32,13 +32,13 @@ class MRIBLANKSEQ:
         self.mapLen = {}
 
         # Some common inputs goes here
-        self.addParameter(key='seqName', string='mriBlankSequence', val='mriBlankSeq')
-        self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
-        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
-        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
-        self.addParameter(key='drfPhase', string='Phase of exciation pulse (º)', val=0.0, field='RF')
+        # self.addParameter(key='seqName', string='mriBlankSequence', val='mriBlankSeq')
+        # self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
+        # self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
+        # self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
+        # self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
+        # self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
+        # self.addParameter(key='drfPhase', string='Phase of exciation pulse (º)', val=0.0, field='RF')
 
     # *********************************************************************************
     # *********************************************************************************

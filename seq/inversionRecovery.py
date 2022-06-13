@@ -170,18 +170,21 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
             data = np.reshape(data, (nSteps, -1))
             data = data[:, int(nPoints / 2)]
             self.data = [irTimeVector*1e-3, data]
+            self.mapVals['sampledSignal'] = data
 
-    def sequenceAnalysisGUI(self, obj):
+    def sequenceAnalysis(self, obj=''):
         self.saveRawData()
-        # Signal vs inverion time
-        plot = SpectrumPlot(self.data[0],
-                                np.abs(self.data[1]),
-                                [], [],
-                                'Time (ms)', 'Signal amplitude (mV)',
-                                "%s" % (self.mapVals['seqName']))
 
-        # Update figures
-        obj.parent.plotview_layout.addWidget(plot)
+        if obj != '':
+            # Signal vs inverion time
+            plot = SpectrumPlot(self.data[0],
+                                    np.abs(self.data[1]),
+                                    [], [],
+                                    'Time (ms)', 'Signal amplitude (mV)',
+                                    "%s" % (self.mapVals['seqName']))
+
+            # Update figures
+            obj.parent.plotview_layout.addWidget(plot)
 
 
 

@@ -68,23 +68,24 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.dataTime = [tVector, data]
         self.dataSpec = [fVector, spectrum]
 
-    def sequenceAnalysisGUI(self, obj):
+    def sequenceAnalysis(self, obj=''):
         self.saveRawData()
 
-        # Signal versus time
-        timePlot = SpectrumPlot(self.dataTime[0],
-                                np.abs(self.dataTime[1]),
-                                [], [],
-                                'Time (ms)', 'Signal amplitude (mV)',
-                                "%s" % (self.mapVals['seqName']))
+        if obj!='':
+            # Signal versus time
+            timePlot = SpectrumPlot(self.dataTime[0],
+                                    np.abs(self.dataTime[1]),
+                                    [], [],
+                                    'Time (ms)', 'Signal amplitude (mV)',
+                                    "%s" % (self.mapVals['seqName']))
 
-        # Spectrum
-        freqPlot = SpectrumPlot(self.dataSpec[0],
-                                np.abs(self.dataSpec[1]),
-                                [], [],
-                                'Frequency (kHz)', 'Mag FFT (a.u.)',
-                                "%s" % (self.mapVals['seqName']))
+            # Spectrum
+            freqPlot = SpectrumPlot(self.dataSpec[0],
+                                    np.abs(self.dataSpec[1]),
+                                    [], [],
+                                    'Frequency (kHz)', 'Mag FFT (a.u.)',
+                                    "%s" % (self.mapVals['seqName']))
 
-        # Update figures
-        obj.parent.plotview_layout.addWidget(timePlot)
-        obj.parent.plotview_layout.addWidget(freqPlot)
+            # Update figures
+            obj.parent.plotview_layout.addWidget(timePlot)
+            obj.parent.plotview_layout.addWidget(freqPlot)

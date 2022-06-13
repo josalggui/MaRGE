@@ -1,24 +1,23 @@
 """
-
-@summary:   Class for controlling the acquisition of the calibration
-
-@status:    Under development
-
+Created on Thu June 2 2022
+@author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+@email: josalggui@i3m.upv.es
+@Summary: All sequences on the GUI must be here
 """
 
 from PyQt5.QtWidgets import QTextEdit, QCheckBox, QHBoxLayout
 from plotview.spectrumplot import SpectrumPlot
-from seq.sequencesCalibration import defaultCalibFunctions
+from seq.sweepImage import defaultSweep     # Import general sweep
 from PyQt5.QtCore import QObject,  pyqtSlot
 from manager.datamanager import DataManager
 import numpy as np
 
-class CalibrationAcqController(QObject):
-    def __init__(self, parent=None, calibfunctionslist=None):
-        super(CalibrationAcqController, self).__init__(parent)
+class AcqController(QObject):
+    def __init__(self, parent=None, functionslist=None):
+        super(AcqController, self).__init__(parent)
 
         self.parent = parent
-        self.calibfunctionslist = calibfunctionslist
+        self.functionslist = functionslist
         self.acquisitionData = None
         
         self.layout = QHBoxLayout()
@@ -53,18 +52,18 @@ class CalibrationAcqController(QObject):
         self.layout.addWidget(self.b3)
 
     @pyqtSlot(bool)
-    def startCalibAcq(self):
+    def startAcquisition(self): # It runs when you press acquire buttom
     
         self.layout.setParent(None)
         self.parent.clearPlotviewLayout()
 
-        self.calibfunction = defaultCalibFunctions[self.calibfunctionslist.getCurrentCalibfunction()]
-        self.funName = self.calibfunction.mapVals['seqName']
+
+        self.funName = defaultSweep[self.functionslist.getCurrentFunction()].mapVals['seqName']
 
         # Execute selected sequence
         print('Start sequence')
-        defaultCalibFunctions[self.funName].sequenceRun(0)  # Run sequence
-        defaultCalibFunctions[self.funName].sequenceAnalysis(self)   # Plot results
+        defaultSweep[self.funName].sequenceRun(0, self.parent.defaultsequences)  # Run sequence
+        defaultSweep[self.funName].sequenceAnalysis(self)   # Plot results
         print('End sequence')
 
     def plot_shim(self, axis):
@@ -121,7 +120,3 @@ class CalibrationAcqController(QObject):
                 self.plot_shim(axis='z')
                 self.b1.setChecked(False)
                 self.b2.setChecked(False)  
-
-    
-
-

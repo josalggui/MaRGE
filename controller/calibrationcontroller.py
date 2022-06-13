@@ -16,6 +16,8 @@ from PyQt5.QtCore import pyqtSignal,  pyqtSlot
 from controller.calibfunctionscontroller import CalibFunctionsList
 from controller.calibrationAcqcontroller import CalibrationAcqController
 from PyQt5 import QtGui
+from seq.sequencesCalibration import defaultCalibFunctions
+from controller.sweepcontroller import SweepController
 
 CalibrationController_Form, CalibrationController_Base = loadUiType('ui/calibrationViewer.ui')
 
@@ -36,6 +38,7 @@ class CalibrationController(CalibrationController_Base, CalibrationController_Fo
         
         calibAcqCtrl = CalibrationAcqController(self, self.calibfunctionslist)
         self.action_acquire.triggered.connect(calibAcqCtrl.startCalibAcq)
+        self.action_sweep.triggered.connect(self.sweep_system)
         self.action_close.triggered.connect(self.close) 
        
     
@@ -71,7 +74,6 @@ class CalibrationController(CalibrationController_Base, CalibrationController_Fo
             else:
                 self.plotview_layout.itemAt(i).widget().setParent(None)
 
-
-    
-       
-    
+    def sweep_system(self):
+        sweep = SweepController(self, self.calibfunctionslist, defaultCalibFunctions)
+        sweep.show()
