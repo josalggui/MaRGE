@@ -35,7 +35,6 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=1.0, field='SEQ')
         self.addParameter(key='axes', string='Axes', val=[0, 1, 2], field='IM')
         self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 0], field='IM')
-        self.addParameter(key='sweepMode', string='Sweep mode, 0->k20, 1->02k, 2->k2k', val=1, field='SEQ')
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=1.5, field='OTH')
         self.addParameter(key='dephGradTime', string='Rd dephasing time (ms)', val=1.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ')
@@ -483,11 +482,12 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                     fVector = np.linspace(-bw/2, bw/2, nPoints[0])
                     iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
 
-                    f_plotview = SpectrumPlot(fVector, np.abs(iVector), [], [],
+                    f_plotview = SpectrumPlot(fVector, [np.abs(iVector)], ['Spectrum magnitude'],
                                               "Frequency (kHz)", "Amplitude (a.u.)",
                                               "%s Spectrum" % (obj.sequence.mapVals['seqName']), )
-                    t_plotview = SpectrumPlot(tVector, np.abs(sVector), np.real(sVector),
-                                              np.imag(sVector), 'Time (ms)', "Signal amplitude (mV)",
+                    t_plotview = SpectrumPlot(tVector, [np.abs(sVector), np.real(sVector), np.imag(sVector)],
+                                              ['Magnitude', 'Real', 'Imaginary'],
+                                              'Time (ms)', "Signal amplitude (mV)",
                                               "%s Signal" % (obj.sequence.mapVals['seqName']), )
                     obj.parent.plotview_layout.addWidget(t_plotview)
                     obj.parent.plotview_layout.addWidget(f_plotview)

@@ -10,6 +10,9 @@ import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new se
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
+from PyQt5.QtWidgets import QLabel  # To set the figure title
+from PyQt5 import QtCore            # To set the figure title
+import pyqtgraph as pg              # To plot nice 3d images
 
 class Noise(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -69,23 +72,26 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.dataSpec = [fVector, spectrum]
 
     def sequenceAnalysis(self, obj=''):
+        noise = np.abs(self.dataTime[1])
+        noiserms = np.mean(noise)
+        self.mapVals['RMS noise'] = noiserms
         self.saveRawData()
 
         if obj!='':
-            # Signal versus time
-            timePlot = SpectrumPlot(self.dataTime[0],
-                                    np.abs(self.dataTime[1]),
-                                    [], [],
+            # Create label with rawdata name
+            obj.label = QLabel(self.mapVals['fileName'])
+            obj.label.setAlignment(QtCore.Qt.AlignCenter)
+            obj.label.setStyleSheet("background-color: black;color: white")
+            obj.parent.plotview_layout.addWidget(obj.label)
+
+            # Plot signal versus time
+            timePlot = SpectrumPlot(self.dataTime[0], [np.abs(self.dataTime[1])], [''],
                                     'Time (ms)', 'Signal amplitude (mV)',
-                                    "%s" % (self.mapVals['seqName']))
-
-            # Spectrum
-            freqPlot = SpectrumPlot(self.dataSpec[0],
-                                    np.abs(self.dataSpec[1]),
-                                    [], [],
-                                    'Frequency (kHz)', 'Mag FFT (a.u.)',
-                                    "%s" % (self.mapVals['seqName']))
-
-            # Update figures
+                                    'Signal vs time, rms noise: %1.3f mV' %noiserms)
             obj.parent.plotview_layout.addWidget(timePlot)
+
+            # Plot spectrum
+            freqPlot = SpectrumPlot(self.dataSpec[0], [np.abs(self.dataSpec[1])], [''],
+                                    'Frequency (kHz)', 'Mag FFT (a.u.)',
+                                    'Signal spectrum')
             obj.parent.plotview_layout.addWidget(freqPlot)

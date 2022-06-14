@@ -14,6 +14,9 @@ import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new se
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
+from PyQt5.QtWidgets import QLabel  # To set the figure title
+from PyQt5 import QtCore            # To set the figure title
+import pyqtgraph as pg              # To plot nice 3d images
 
 class InversionRecovery(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -176,12 +179,16 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         if obj != '':
+            # Add larmor frequency to the layout
+            obj.label = QLabel(self.mapVals['fileName'])
+            obj.label.setAlignment(QtCore.Qt.AlignCenter)
+            obj.label.setStyleSheet("background-color: black;color: white")
+            obj.parent.plotview_layout.addWidget(obj.label)
+
             # Signal vs inverion time
-            plot = SpectrumPlot(self.data[0],
-                                    np.abs(self.data[1]),
-                                    [], [],
+            plot = SpectrumPlot(self.data[0], [np.abs(self.data[1])], [''],
                                     'Time (ms)', 'Signal amplitude (mV)',
-                                    "%s" % (self.mapVals['seqName']))
+                                    '')
 
             # Update figures
             obj.parent.plotview_layout.addWidget(plot)

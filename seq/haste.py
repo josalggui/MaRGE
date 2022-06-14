@@ -250,9 +250,9 @@ class HASTE(blankSeq.MRIBLANKSEQ):
                 # Slice selection gradient rephasing
                 if (slThickness!=0 and repeIndex>=dummyPulses):
                     t0 = tEx+rfExTime/2+gradRiseTime-hw.gradDelay
-                    if rfEnvelope=='Rec':
+                    if rfEnvelope==0:
                         self.gradTrap(t0, gradRiseTime, 0., -ssGradAmplitude*ssPreemphasis, gSteps, axes[2], shimming)
-                    elif rfEnvelope=='Sinc':
+                    elif rfEnvelope==1:
                         self.gradTrap(t0, gradRiseTime, ssDephGradTime, -ssGradAmplitude*ssPreemphasis, gSteps, axes[2], shimming)
 
                 # Dephasing readout
@@ -457,11 +457,12 @@ class HASTE(blankSeq.MRIBLANKSEQ):
                     fVector = np.linspace(-bw / 2, bw / 2, nPoints[0])
                     iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
 
-                    f_plotview = SpectrumPlot(fVector, np.abs(iVector), [], [],
+                    f_plotview = SpectrumPlot(fVector, [np.abs(iVector)], ['Spectrum magnitude'],
                                               "Frequency (kHz)", "Amplitude (a.u.)",
                                               "%s Spectrum" % (obj.sequence.mapVals['seqName']), )
-                    t_plotview = SpectrumPlot(tVector, np.abs(sVector), np.real(sVector),
-                                              np.imag(sVector), 'Time (ms)', "Signal amplitude (mV)",
+                    t_plotview = SpectrumPlot(tVector, [np.abs(sVector), np.real(sVector), np.imag(sVector)],
+                                              ['Magnitude', 'Real', 'Imaginary'],
+                                              'Time (ms)', "Signal amplitude (mV)",
                                               "%s Signal" % (obj.sequence.mapVals['seqName']), )
                     obj.parent.plotview_layout.addWidget(t_plotview)
                     obj.parent.plotview_layout.addWidget(f_plotview)

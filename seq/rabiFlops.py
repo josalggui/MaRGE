@@ -14,6 +14,9 @@ import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new se
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
+from PyQt5.QtWidgets import QLabel  # To set the figure title
+from PyQt5 import QtCore            # To set the figure title
+import pyqtgraph as pg              # To plot nice 3d images
 
 class RabiFlops(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -142,12 +145,13 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         if obj != '':
-            # Signal vs rf time
-            plot = SpectrumPlot(self.data[0],
-                                    np.abs(self.data[1]),
-                                    [], [],
-                                    'Time (ms)', 'Signal amplitude (mV)',
-                                    "%s" % (self.mapVals['seqName']))
+            # Create label with rawdata name
+            obj.label = QLabel(self.mapVals['fileName'])
+            obj.label.setAlignment(QtCore.Qt.AlignCenter)
+            obj.label.setStyleSheet("background-color: black;color: white")
+            obj.parent.plotview_layout.addWidget(obj.label)
 
-            # Update figures
+            # Signal vs rf time
+            plot = SpectrumPlot(self.data[0], [np.abs(self.data[1])], [''],
+                                    'Time (ms)', 'Signal amplitude (mV)', '')
             obj.parent.plotview_layout.addWidget(plot)

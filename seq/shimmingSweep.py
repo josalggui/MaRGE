@@ -13,6 +13,7 @@ import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
 from PyQt5.QtWidgets import QLabel  # To set the figure title
 from PyQt5 import QtCore            # To set the figure title
+import pyqtgraph as pg              # To plot nice 3d images
 
 class ShimmingSweep(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -149,16 +150,16 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             obj.parent.plotview_layout.addWidget(obj.label)
 
             # Add shimming x to the layout
-            plotX = SpectrumPlot(sxVector*1e4, np.abs(data[0,:]), [], [], 'ShimmingX', 'Signal amplitude (mV)',
+            plotX = SpectrumPlot(sxVector*1e4, [np.abs(data[0, :])], [''], 'ShimmingX', 'Signal amplitude (mV)',
                                 "%s" % ('Shimming X'))
             obj.parent.plotview_layout.addWidget(plotX)
 
             # Add shimming y to the layout
-            plotY = SpectrumPlot(syVector*1e4, np.abs(data[1, :]), [], [], 'ShimmingX', 'Signal amplitude (mV)',
+            plotY = SpectrumPlot(syVector*1e4, [np.abs(data[1, :])], [''], 'ShimmingX', 'Signal amplitude (mV)',
                                  "%s" % ('Shimming Y'))
             obj.parent.plotview_layout.addWidget(plotY)
 
             # Add shimming z to the layout
-            plotZ = SpectrumPlot(szVector*1e4, np.abs(data[2, :]), [], [], 'ShimmingZ', 'Signal amplitude (mV)',
+            plotZ = SpectrumPlot(szVector*1e4, [np.abs(data[2, :])], [''], 'ShimmingZ', 'Signal amplitude (mV)',
                                  "%s" % ('Shimming Z'))
             obj.parent.plotview_layout.addWidget(plotZ)

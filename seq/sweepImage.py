@@ -62,7 +62,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                 seq.sequenceRun(0)
                 seq.sequenceAnalysis()
                 if 'sampledCartesian' in seq.mapVals:
-                    sampled.append(seq.mapVals['sampledCartesian'])
+                    sampled.append(seq.mapVals['sampledCartesian']) # sampledCartesian is four column kx, ky, kz and S(kx, ky, kz)
                     self.kind = 'Image'
                 elif 'sampledSignal' in seq.mapVals:
                     sampled.append(seq.mapVals['sampledSignal'])
@@ -112,7 +112,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
             n = 0
             for step0 in range(nSteps[0]):
                 for step1 in range(nSteps[1]):
-                    image[step0, step1] = self.sampled[n][0]
+                    image[step0, step1] = self.sampled[n]
                     n += 1
 
             # Create label with rawdata name
@@ -123,7 +123,6 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
 
             # Plot image
             obj.parent.plotview_layout.addWidget(pg.image(np.abs(image)))
-
 
 defaultSweep = {
     'SWEEP': SweepImage(),

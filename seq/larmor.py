@@ -13,6 +13,7 @@ import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
 from PyQt5.QtWidgets import QLabel  # To set the figure title
 from PyQt5 import QtCore            # To set the figure title
+import pyqtgraph as pg              # To plot nice 3d images
 
 
 class Larmor(blankSeq.MRIBLANKSEQ):
@@ -120,7 +121,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         # Process data to be plotted
         self.results = [data]
-        self.mapVals['sampledSignal'] = data[nPoints/2]
+        self.mapVals['sampledSignal'] = data[int(nPoints/2)]
 
         return 0
 
@@ -147,19 +148,18 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         if obj != '':
-
             # Add larmor frequency to the layout
-            obj.label = QLabel('Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
+            obj.label = QLabel(self.mapVals['fileName'])
             obj.label.setAlignment(QtCore.Qt.AlignCenter)
             obj.label.setStyleSheet("background-color: black;color: white")
             obj.parent.plotview_layout.addWidget(obj.label)
 
             # Add time signal to the layout
-            signalPlot = SpectrumPlot(tVector, np.abs(signal), [], [], 'Time (ms)', 'Signal amplitude (mV)',
-                                        "%s" % (self.mapVals['seqName']))
+            signalPlot = SpectrumPlot(tVector, [np.abs(signal)], [''], 'Time (ms)', 'Signal amplitude (mV)',
+                                        '')
             obj.parent.plotview_layout.addWidget(signalPlot)
 
             # Add frequency spectrum to the layout
-            spectrumPlot = SpectrumPlot(fVector, np.abs(spectrum), [], [], 'Frequency (kHz)', 'Spectrum amplitude (a.u.)',
-                                        '')
+            spectrumPlot = SpectrumPlot(fVector, [np.abs(spectrum)], [''], 'Frequency (kHz)', 'Spectrum amplitude (a.u.)',
+                                        'Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
             obj.parent.plotview_layout.addWidget(spectrumPlot)

@@ -11,7 +11,11 @@ import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new se
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
+from PyQt5.QtWidgets import QLabel  # To set the figure title
+from PyQt5 import QtCore  # To set the figure title
+import pyqtgraph as pg  # To plot nice 3d images
 from scipy.optimize import curve_fit
+
 
 
 class CPMG(blankSeq.MRIBLANKSEQ):
@@ -165,12 +169,17 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         if obj != '':
+            # Add larmor frequency to the layout
+            obj.label = QLabel(self.mapVals['fileName'])
+            obj.label.setAlignment(QtCore.Qt.AlignCenter)
+            obj.label.setStyleSheet("background-color: black;color: white")
+            obj.parent.plotview_layout.addWidget(obj.label)
+
             # Signal vs rf time
-            plot = SpectrumPlot(results[0]*1e-3,
-                                results[1],
-                                func1(results[0], *fitData1), func2(results[0], *fitData2),
+            plot = SpectrumPlot(results[0]*1e-3, [results[1], func1(results[0], *fitData1), func2(results[0], *fitData2)],
+                                ['Experimental', 'Fitting 1 component', 'Fitting 2 components'],
                                 'Echo time (ms)', 'Echo amplitude (mV)',
-                                "%s" % (self.mapVals['seqName']))
+                                '')
 
             # Update figures
             obj.parent.plotview_layout.addWidget(plot)

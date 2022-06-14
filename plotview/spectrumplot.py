@@ -21,41 +21,41 @@ import pyqtgraph as pg
 
 class SpectrumPlot (GraphicsLayoutWidget):
     def __init__(self,
-                 xData: list,
-                 yData: list,
-                 yData2:list, 
-                 yData3:list, 
-                 xlabel: str,
-                 ylabel: str, 
-                 title:str, 
+                 xData,
+                 yData,
+                 legend,
+                 xlabel,
+                 ylabel,
+                 title,
                  ):
         super(SpectrumPlot, self).__init__()
         self.yData = yData
-        self.yData2 = yData2
-        self.yData3 = yData3
         
-        if len(xData) != len(yData):
+        if len(xData) != len(yData[0]):
             warn("Length of x and y data does not match.")
             return
             
-        dt = datetime.now()
-        dt_string = dt.strftime("%d-%m-%Y_%H:%M:%S")
+        nLines = len(yData)
+        pen = [[255, 0, 0],
+               [0, 255, 0],
+               [0, 0, 255],
+               [255, 255, 0],
+               [255, 0, 255],
+               [0, 255, 255],
+               [255, 255, 255],
+               [128, 128, 128]]
 
         self.plotitem = self.addPlot(row=0, col=0)
         self.plotitem.addLegend()
-#        self.label = pg.TextItem(color=(200, 200, 200), anchor=(1, 1))
-#        self.plotitem.addItem(self.label)
-        self.plotitem.plot(xData, yData, pen=[255, 0, 0], name="Magnitude")
-        self.plotitem.setXRange(xData[0], xData[len(xData)-1],padding=0)        
+        for line in range(nLines):
+            self.plotitem.plot(xData, yData[line], pen=pen[line], name=legend[line])
+            self.plotitem.setXRange(xData[0], xData[len(xData)-1],padding=0)
+
         self.label = pg.TextItem(color=(200, 200, 200), anchor=(0, 0))
         self.plotitem.addItem(self.label)
-        if yData2 !=[]:
-            self.plotitem.plot(xData, yData2, pen=[0, 255, 0], name="Real part")
-            self.plotitem.plot(xData, yData3, pen=[0, 0, 255], name="Imaginary part")
-        self.plotitem.setTitle("%s %s" % (title, dt_string))
+        self.plotitem.setTitle("%s" % title)
         self.plotitem.setLabel('bottom', xlabel)
         self.plotitem.setLabel('left', ylabel)  
-#        self.plotitem.setXRange(xData[0], xData[len(xData)-1],padding=0)
         self.crosshair_v = pg.InfiniteLine(angle=90, movable=False)
         self.crosshair_h = pg.InfiniteLine(angle=0, movable=False)
         self.plotitem.addItem(self.crosshair_v, ignoreBounds=True)

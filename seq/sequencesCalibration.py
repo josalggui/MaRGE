@@ -4,6 +4,8 @@ import seq.inversionRecovery as inversionRecovery
 import seq.cpmg as cpmg
 import seq.larmor as larmor
 import seq.shimmingSweep as shimmingSweep
+import seq.fov as fov
+import seq.sliceSelection as sliceSelection
 
 
 class RabiFlops(rabiFlops.RabiFlops):
@@ -24,6 +26,12 @@ class Larmor(larmor.Larmor):
 class ShimmingSweep(shimmingSweep.ShimmingSweep):
     def __init__(self): super(ShimmingSweep, self).__init__()
 
+class FOV(fov.FOV):
+    def __init__(self): super(FOV, self).__init__()
+
+class SliceSelection(sliceSelection.SliceSelection):
+    def __init__(self): super(SliceSelection, self).__init__()
+
 
 """
 Definition of default sequences
@@ -35,4 +43,6 @@ defaultCalibFunctions = {
     'CPMG': CPMG(),
     'Larmor': Larmor(),
     'ShimmingSweep': ShimmingSweep(),
+    'fov': FOV(),
+    'SliceSelection': SliceSelection(),
 }
