@@ -98,31 +98,24 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         createSequence()
 
         dataFull = []
-        if demo:
-            data = 0
-        else:
-            if plotSeq == 1:
-                self.expt.plot_sequence()
-                plt.show()
-                self.expt.__del__()
-                return 0
-            elif plotSeq == 0:
-                # Run the experiment and get data
-                for ii in range(nScans):
-                    print('Runing...')
-                    rxd, msgs = self.expt.run()
-                    dataFull = np.concatenate((dataFull, rxd['rx0']*13.788), axis=0)
-                print(msgs)
-                dataFull = sig.decimate(dataFull, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-                self.mapVals['dataFull'] = dataFull
-                data = np.average(np.reshape(dataFull, (nScans, -1)), axis=0)
-                self.mapVals['data'] = data
-                self.expt.__del__()
+        if plotSeq == 1:
+            self.expt.__del__()
+        elif plotSeq == 0:
+            # Run the experiment and get data
+            for ii in range(nScans):
+                print('Runing...')
+                rxd, msgs = self.expt.run()
+                dataFull = np.concatenate((dataFull, rxd['rx0']*13.788), axis=0)
+            print(msgs)
+            dataFull = sig.decimate(dataFull, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            self.mapVals['dataFull'] = dataFull
+            data = np.average(np.reshape(dataFull, (nScans, -1)), axis=0)
+            self.mapVals['data'] = data
+            self.expt.__del__()
 
-        # Process data to be plotted
-        self.results = [data]
-        self.mapVals['sampledSignal'] = data[int(nPoints/2)]
-
+            # Process data to be plotted
+            self.results = [data]
+            self.mapVals['sampledSignal'] = data[int(nPoints/2)]
         return 0
 
     def sequenceAnalysis(self, obj=''):

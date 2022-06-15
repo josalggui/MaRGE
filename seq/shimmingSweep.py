@@ -102,7 +102,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                 self.rxGate(t0, acqTime)
 
             # End sequence
-            self.endSequence(repetitionTime)
+            self.endSequence(3 * nShimming * repetitionTime)
 
         # Create experiment
         bw = nPoints / acqTime * hw.oversamplingFactor  # MHz
@@ -117,10 +117,6 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         if plotSeq:
             print('Ploting sequence...')
-            self.expt.plot_sequence()
-            plt.show()
-            self.expt.__del__()
-            return 0
         else:
             print('Runing...')
             rxd, msgs = self.expt.run()
@@ -128,6 +124,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             data = sig.decimate(rxd['rx0'] * 13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = data
         self.expt.__del__()
+        return 0
 
 
     def sequenceAnalysis(self, obj=''):

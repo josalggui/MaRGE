@@ -11,7 +11,7 @@ Acquisition Manager
 
 """
 
-from PyQt5.QtWidgets import QLabel, QPushButton
+from PyQt5.QtWidgets import QLabel, QPushButton, QHBoxLayout
 from plotview.spectrumplot import SpectrumPlot
 from plotview.spectrumplot import Spectrum2DPlot
 from plotview.spectrumplot import Spectrum3DPlot
@@ -38,6 +38,7 @@ class AcquisitionController(QObject):
         self.sequencelist = sequencelist
         self.acquisitionData = None
         self.session = session
+        self.layout = QHBoxLayout()
         
         self.button = QPushButton("Change View")
         self.button.setChecked(False)
@@ -59,32 +60,17 @@ class AcquisitionController(QObject):
         defaultsequences[self.seqName].sequenceAnalysis(self)
         print('End sequence')
 
-        # [self.sequence.n_rd, self.sequence.n_ph, self.sequence.n_sl]= self.sequence.mapVals['nPoints']
-        # self.dataobject: DataManager = DataManager(self.data_avg, self.sequence.mapVals['larmorFreq'], len(self.data_avg), self.sequence.mapVals['nPoints'], self.sequence.BW)
-        # self.sequence.ns = self.sequence.mapVals['nPoints']
-        #
-        # if not hasattr(self.parent, 'batch'):
-        #     if (self.sequence.n_ph ==1 and self.sequence.n_sl == 1):
-        #         f_plotview = SpectrumPlot(self.dataobject.f_axis, self.dataobject.f_fftMagnitude,[],[],"Frequency (kHz)", "Amplitude", "%s Spectrum" %(self.sequence.mapVals['seqName']), )
-        #         t_plotview = SpectrumPlot(self.dataobject.t_axis, self.dataobject.t_magnitude, self.dataobject.t_real,self.dataobject.t_imag,'Time (ms)', "Amplitude (mV)", "%s Raw data" %(self.sequence.mapVals['seqName']), )
-        #         self.parent.plotview_layout.addWidget(t_plotview)
-        #         self.parent.plotview_layout.addWidget(f_plotview)
-        #         self.parent.f_plotview = f_plotview
-        #         self.parent.t_plotview = t_plotview
-        #         [f_signalValue, t_signalValue, f_signalIdx, f_signalFrequency]=self.dataobject.get_peakparameters()
-        #         print('Peak Value = %0.3f' %(f_signalValue))
-        #
-        #     else:
-        #
-        #         self.plot_3Dresult()
-        #
-        # self.parent.rxd = self.rxd
-        # self.parent.data_avg = self.data_avg
-        # self.parent.sequence = self.sequence
-        # print(self.msgs)
-        # #self.parent.save_data()
-        # self.save_data()
-        
+    def startSequencePlot(self):
+        self.layout.setParent(None)
+        self.parent.clearPlotviewLayout()
+
+        self.seqName = defaultsequences[self.sequencelist.getCurrentSequence()].mapVals['seqName']
+
+        # Execute selected sequence
+        print('Plot sequence')
+        defaultsequences[self.seqName].sequenceRun(1)  # Run sequence
+        defaultsequences[self.seqName].sequencePlot(self)  # Plot results
+
     def plot_3Dresult(self):
         
         dt = datetime.now()
@@ -187,15 +173,15 @@ class AcquisitionController(QObject):
         z = x.copy()   # start with keys and values of x
         z.update(y)    # modifies z with keys and values of y
         return z
-   
+
     def plot_cpmg(self):
-        
+
         data = self.data
         etl = self.etl
         echoSpacing = self.echoSpacing
-        
+
         t = (np.arange(etl)*echoSpacing+echoSpacing)*1e-3
-        
+
         # Fitting
         dataLog = np.log(data)
         fitting = np.polyfit(t, dataLog, 1)
@@ -203,7 +189,7 @@ class AcquisitionController(QObject):
         dataFitLog = dataFitting(t)
         dataFit = np.exp(dataFitLog)
         T2 = -1/fitting[0]
-        
+
         #    # Plot data
 #    plt.plot(t, data, 'o', t, dataFit, 'r')
 #    plt.ylabel('Echo amplitude (mV)')

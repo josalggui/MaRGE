@@ -60,7 +60,7 @@ class SliceSelection(blankSeq.MRIBLANKSEQ):
         gSteps = int(gradRiseTime * 1e6 / 5)
 
         # Slice selection dephasing gradient time
-        ssDephGradTime = (rfExTime - gradRiseTime) / 2
+        ssDephGradTime = rfExTime
         self.mapVals['ssDephGradTime'] = ssDephGradTime
 
         # Slice selection gradient
@@ -90,7 +90,7 @@ class SliceSelection(blankSeq.MRIBLANKSEQ):
 
             # Rephasing slice selection gradient
             t0 = tEx + rfExTime / 2 + gradRiseTime - hw.gradDelay
-            self.gradTrap(t0, gradRiseTime, ssDephGradTime, -ssGradAmplitude * slPreemphasis, gSteps, axis, shimming)
+            self.gradTrap(t0, gradRiseTime, ssDephGradTime, -ssGradAmplitude / 2 * slPreemphasis, gSteps, axis, shimming)
 
             # Refocusing pulse
             t0 = tEx + echoTime / 2 - rfReTime / 2 - hw.blkTime
@@ -126,9 +126,7 @@ class SliceSelection(blankSeq.MRIBLANKSEQ):
         self.mapVals['bw'] = bw * 1e6
         createSequence()
         if plotSeq:
-            self.expt.plot_sequence()
-            plt.show()
-            self.expt.__del__()
+            print('Ploting sequence...')
         else:
             rxd, msgs = self.expt.run()
             print(msgs)
@@ -136,7 +134,7 @@ class SliceSelection(blankSeq.MRIBLANKSEQ):
             self.mapVals['data'] = data
             self.mapVals['sampledSignal'] = data[int(nPoints/2)]
             self.kind = 'Point'
-            self.expt.__del__()
+        self.expt.__del__()
         return 0
 
     def sequenceAnalysis(self, obj=''):

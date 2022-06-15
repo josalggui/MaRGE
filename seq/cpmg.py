@@ -105,8 +105,6 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         createSequence()
 
         if plotSeq == 1:
-            self.expt.plot_sequence()
-            plt.show()
             self.expt.__del__()
         elif plotSeq == 0:
             # Run the experiment and get data
@@ -121,6 +119,7 @@ class CPMG(blankSeq.MRIBLANKSEQ):
             data = np.abs(data[:, int(nPoints/2)])
             echoTimeVector = np.linspace(echoSpacing, echoSpacing * etl, num=etl, endpoint=True)
             self.results = [echoTimeVector, data]
+        return 0
 
     def sequenceAnalysis(self, obj=''):
         results = self.results

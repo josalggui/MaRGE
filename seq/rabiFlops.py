@@ -112,33 +112,24 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         acqTime = nPoints / bw
 
         # Execute the experiment
-        if demo:
-            data = createSequenceDemo()
-            data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            self.mapVals['data'] = data
+        createSequence()
+        if plotSeq:
+            print('Ploting sequence...')
+            self.expt.__del__()
         else:
-            createSequence()
-            if plotSeq:
-                print('Ploting sequence...')
-                self.expt.plot_sequence()
-                plt.show()
-                self.expt.__del__()
-                return 0
-            else:
-                print('Runing...')
-                rxd, msgs = self.expt.run()
-                print(msgs)
-                rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
-                data = sig.decimate(rxd['rx0'], hw.oversamplingFactor, ftype='fir', zero_phase=True)
-                self.mapVals['data'] = data
-        self.expt.__del__()
+            print('Runing...')
+            rxd, msgs = self.expt.run()
+            print(msgs)
+            rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
+            data = sig.decimate(rxd['rx0'], hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            self.mapVals['data'] = data
+            self.expt.__del__()
 
-        # Process data to be plotted
-        data = np.reshape(data, (nSteps, -1))
-        data = data[:, int(nPoints/2)]
-        self.data = [rfTime, data]
-        self.mapVals['sampledSignal'] = data
-
+            # Process data to be plotted
+            data = np.reshape(data, (nSteps, -1))
+            data = data[:, int(nPoints/2)]
+            self.data = [rfTime, data]
+            self.mapVals['sampledSignal'] = data
         return 0
 
     def sequenceAnalysis(self, obj=''):

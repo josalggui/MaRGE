@@ -6,6 +6,7 @@ import seq.larmor as larmor
 import seq.shimmingSweep as shimmingSweep
 import seq.fov as fov
 import seq.sliceSelection as sliceSelection
+import seq.irtse as irtse
 
 
 class RabiFlops(rabiFlops.RabiFlops):
@@ -32,6 +33,9 @@ class FOV(fov.FOV):
 class SliceSelection(sliceSelection.SliceSelection):
     def __init__(self): super(SliceSelection, self).__init__()
 
+class IRTSE(irtse.IRTSE):
+    def __init__(self): super(IRTSE, self).__init__()
+
 
 """
 Definition of default sequences
@@ -45,4 +49,5 @@ defaultCalibFunctions = {
     'ShimmingSweep': ShimmingSweep(),
     'fov': FOV(),
     'SliceSelection': SliceSelection(),
+    'IRTSE': IRTSE(),
 }

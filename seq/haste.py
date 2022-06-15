@@ -340,8 +340,8 @@ class HASTE(blankSeq.MRIBLANKSEQ):
 
         for ii in range(nScans):
             if plotSeq:
-                self.expt.plot_sequence()
-                plt.show()
+                print('Ploting sequence...')
+                self.expt.__del__()
                 break
             else:
                 print("Scan %s ..." % (ii+1))

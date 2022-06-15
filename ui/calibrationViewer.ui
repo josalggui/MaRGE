@@ -216,51 +216,6 @@
             </layout>
            </widget>
           </item>
-          <item>
-           <widget class="QWidget" name="console" native="true">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>100</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>200</height>
-             </size>
-            </property>
-            <property name="autoFillBackground">
-             <bool>true</bool>
-            </property>
-            <layout class="QGridLayout" name="layout_output" rowstretch="0">
-             <property name="leftMargin">
-              <number>10</number>
-             </property>
-             <property name="topMargin">
-              <number>10</number>
-             </property>
-             <property name="rightMargin">
-              <number>10</number>
-             </property>
-             <property name="bottomMargin">
-              <number>10</number>
-             </property>
-             <property name="horizontalSpacing">
-              <number>40</number>
-             </property>
-             <property name="verticalSpacing">
-              <number>16</number>
-             </property>
-            </layout>
-           </widget>
-          </item>
          </layout>
         </widget>
        </item>
@@ -330,6 +285,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="action_acquire"/>
+   <addaction name="action_viewsequence"/>
    <addaction name="action_sweep"/>
   </widget>
   <widget class="QToolBar" name="AcquisitionControlToolbar">
@@ -464,6 +420,18 @@
    </property>
    <property name="toolTip">
     <string>Sweep calibration sequence</string>
+   </property>
+  </action>
+  <action name="action_viewsequence">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/chart-bar-outline.svg</normaloff>../resources/icons/chart-bar-outline.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Plot sequence</string>
+   </property>
+   <property name="toolTip">
+    <string>Plot sequence</string>
    </property>
   </action>
  </widget>

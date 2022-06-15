@@ -71,6 +71,53 @@ class SpectrumPlot (GraphicsLayoutWidget):
             self.crosshair_h.setPos(mousePoint.y())
 
 
+class SpectrumPlotSeq(GraphicsLayoutWidget):
+    def __init__(self,
+                 xData,
+                 yData,
+                 legend,
+                 xlabel,
+                 ylabel,
+                 title,
+                 ):
+        super(SpectrumPlotSeq, self).__init__()
+        self.yData = yData
+
+        nLines = len(yData)
+        pen = [[255, 0, 0],
+               [0, 255, 0],
+               [0, 0, 255],
+               [255, 255, 0],
+               [255, 0, 255],
+               [0, 255, 255],
+               [255, 255, 255],
+               [128, 128, 128]]
+
+        self.plotitem = self.addPlot(row=0, col=0)
+        self.plotitem.addLegend()
+        for line in range(nLines):
+            self.plotitem.plot(xData[line], yData[line], pen=pen[line], name=legend[line])
+            self.plotitem.setXRange(xData[line][0], xData[line][-1], padding=0)
+
+        self.label = pg.TextItem(color=(200, 200, 200), anchor=(0, 0))
+        self.plotitem.addItem(self.label)
+        self.plotitem.setTitle("%s" % title)
+        self.plotitem.setLabel('bottom', xlabel)
+        self.plotitem.setLabel('left', ylabel)
+        self.crosshair_v = pg.InfiniteLine(angle=90, movable=False)
+        self.crosshair_h = pg.InfiniteLine(angle=0, movable=False)
+        self.plotitem.addItem(self.crosshair_v, ignoreBounds=True)
+        self.plotitem.addItem(self.crosshair_h, ignoreBounds=True)
+        self.proxy = pg.SignalProxy(self.plotitem.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
+
+    def mouseMoved(self, e):
+        pos = e[0]  ## using signal proxy turns original arguments into a tuple
+        if self.plotitem.sceneBoundingRect().contains(pos):
+            mousePoint = self.plotitem.vb.mapSceneToView(pos)
+            self.label.setText("x = %0.4f, y = %0.4f" % (mousePoint.x(), mousePoint.y()))
+            self.crosshair_v.setPos(mousePoint.x())
+            self.crosshair_h.setPos(mousePoint.y())
+
 class Spectrum2DPlot(GraphicsLayoutWidget):
     def __init__(self,
                  Data:tuple, 

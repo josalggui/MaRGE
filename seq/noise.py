@@ -51,25 +51,20 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
         if plotSeq == 0:
             print('Running...')
-            if not demo:
-                rxd, msgs = self.expt.run()
-                print(msgs)
-                self.expt.__del__()
-                data = sig.decimate(rxd['rx0']*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            else:
-                data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            rxd, msgs = self.expt.run()
+            print(msgs)
+            self.expt.__del__()
+            data = sig.decimate(rxd['rx0']*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = data
             print('End')
+            tVector = np.linspace(0, acqTime, num=nPoints) * 1e-3  # ms
+            spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
+            fVector = np.linspace(-bw / 2, bw / 2, num=nPoints) * 1e3  # kHz
+            self.dataTime = [tVector, data]
+            self.dataSpec = [fVector, spectrum]
         elif plotSeq == 1:
-            self.expt.plot_sequence()
-            plt.show()
             self.expt.__del__()
 
-        tVector = np.linspace(0, acqTime, num=nPoints)*1e-3 # ms
-        spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
-        fVector = np.linspace(-bw/2, bw/2, num=nPoints)*1e3 # kHz
-        self.dataTime = [tVector, data]
-        self.dataSpec = [fVector, spectrum]
 
     def sequenceAnalysis(self, obj=''):
         noise = np.abs(self.dataTime[1])

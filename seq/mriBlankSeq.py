@@ -13,6 +13,10 @@ from datetime import date,  datetime
 from scipy.io import savemat
 import experiment as ex
 import scipy.signal as sig
+from plotview.spectrumplot import SpectrumPlotSeq
+from plotview.spectrumplot import SpectrumPlot
+from PyQt5.QtWidgets import QLabel  # To set the figure title
+from PyQt5 import QtCore            # To set the figure title
 
 
 class MRIBLANKSEQ:
@@ -30,15 +34,6 @@ class MRIBLANKSEQ:
         self.mapVals = {}
         self.mapFields = {}
         self.mapLen = {}
-
-        # Some common inputs goes here
-        # self.addParameter(key='seqName', string='mriBlankSequence', val='mriBlankSeq')
-        # self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
-        # self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
-        # self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
-        # self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
-        # self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
-        # self.addParameter(key='drfPhase', string='Phase of exciation pulse (º)', val=0.0, field='RF')
 
     # *********************************************************************************
     # *********************************************************************************
@@ -82,6 +77,107 @@ class MRIBLANKSEQ:
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
         return out
 
+    def sequencePlot(self, obj=''):
+        """ axes: 4-element tuple of axes upon which the TX, gradients, RX and digital I/O plots will be drawn.
+        If not provided, plot_sequence() will create its own. """
+        # if axes is None:
+        #     _, axes = plt.subplots(4, 1, figsize=(12,8), sharex='col')
+
+        # (txs, grads, rxs, ios) = axes
+
+        fd = self.expt.get_flodict()
+
+        def getStepData(data):
+            t = data[0]
+            s = data[1]
+            n = np.size(t)
+            tStep = np.zeros(2*n-1)
+            sStep = np.zeros(2*n-1)
+            tStep[0::2] = t
+            tStep[1::2] = t[1::]
+            sStep[0::2] = s
+            sStep[1::2] = s[0:-1]
+            return [tStep, sStep]
+
+        # fA, ax = plt.subplots()
+        # ax.plot(dataStep[0], dataStep[1])
+        # # ax.step(*fd['rx0_en'], where='post')
+        # plt.show()
+
+        # # Signal vs inverion time
+        # dataStep = getStepData(fd['rx0_en'])
+        # plot = SpectrumPlotSeq([dataStep[0]], [dataStep[1]], ['rx0_en'], 'Time (us)', 'Amplitude (a.u.)', 'Rx')
+        # obj.parent.plotview_layout.addWidget(plot)
+
+        # Plot TX channels
+        xData = []
+        yData = []
+        legend = []
+        for txl in ['tx0_i', 'tx0_q', 'tx1_i', 'tx1_q']:
+            try:
+                dataStep = getStepData(fd[txl])
+                xData.append(dataStep[0])
+                yData.append(dataStep[1])
+                legend.append(txl)
+            except KeyError:
+                continue
+        plotTx = SpectrumPlotSeq(xData, yData, legend, 'Time (us)', 'Amplitude (a.u.)', 'Rx')
+        obj.parent.plotview_layout.addWidget(plotTx)
+
+
+        # Plot gradient channels
+        xData = []
+        yData = []
+        legend = []
+        for gradl in self.expt.gradb.keys():
+            try:
+                dataStep = getStepData(fd[gradl])
+                xData.append(dataStep[0])
+                yData.append(dataStep[1])
+                legend.append(gradl)
+            except KeyError:
+                continue
+        plotGrad = SpectrumPlotSeq(xData, yData, legend, 'Time (us)', 'Amplitude (a.u.)', 'Gradients')
+        obj.parent.plotview_layout.addWidget(plotGrad)
+
+
+        # Plot RX enable channels
+        xData = []
+        yData = []
+        legend = []
+        for rxl in ['rx0_en', 'rx1_en']:
+            try:
+                dataStep = getStepData(fd[rxl])
+                xData.append(dataStep[0])
+                yData.append(dataStep[1])
+                legend.append(rxl)
+            except KeyError:
+                continue
+        plotRx = SpectrumPlotSeq(xData, yData, legend, 'Time (us)', 'Amplitude (a.u.)', 'Rx gate')
+        obj.parent.plotview_layout.addWidget(plotRx)
+
+
+        # Plot digital outputs
+        xData = []
+        yData = []
+        legend = []
+        for iol in ['tx_gate', 'rx_gate', 'trig_out', 'leds']:
+            try:
+                dataStep = getStepData(fd[iol])
+                xData.append(dataStep[0])
+                yData.append(dataStep[1])
+                legend.append(iol)
+            except KeyError:
+                continue
+        plotDigital = SpectrumPlotSeq(xData, yData, legend, 'Time (us)', 'Amplitude (a.u.)', 'Rx gate')
+        obj.parent.plotview_layout.addWidget(plotDigital)
+        #
+        # for ax in axes:
+        #     ax.legend()
+        #     ax.grid(True)
+        #
+        # ios.set_xlabel(r'time ($\mu$s)')
+        return fd
 
     def getIndex(self, etl=1, nPH=1, sweepMode=1):
         """"
@@ -135,7 +231,6 @@ class MRIBLANKSEQ:
 
         return np.int32(ind)
 
-
     def fixEchoPosition(self, echoes, data0):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -153,7 +248,6 @@ class MRIBLANKSEQ:
                 idx[ii] = 0
             data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n + idx[ii]]
         return (data1)
-
 
     def rfSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, rewrite=True):
         """"
@@ -173,7 +267,6 @@ class MRIBLANKSEQ:
             'tx_gate': (txGateTime, txGateAmp)
         }, rewrite)
 
-
     def rfRecPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -189,7 +282,6 @@ class MRIBLANKSEQ:
             'tx_gate': (txGateTime, txGateAmp)
         }, rewrite)
 
-
     def rxGate(self, tStart, gateTime, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -201,7 +293,6 @@ class MRIBLANKSEQ:
             'rx0_en': (rxGateTime, rxGateAmp),
             'rx_gate': (rxGateTime, rxGateAmp),
         })
-
 
     def gradTrap(self, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming, rewrite=True):
         """"
@@ -224,7 +315,6 @@ class MRIBLANKSEQ:
             self.expt.add_flodict({'grad_vy': (t, a + shimming[1])}, rewrite)
         elif gAxis == 2:
             self.expt.add_flodict({'grad_vz': (t, a + shimming[2])}, rewrite)
-
 
     def gradTrapMomentum(self, tStart, kMax, gTotalTime, gAxis, shimming, rewrite=True):
         """"
@@ -262,7 +352,6 @@ class MRIBLANKSEQ:
         elif gAxis == 2:
             self.expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
 
-
     def gradTrapAmplitude(self, tStart, gAmplitude, gTotalTime, gAxis, shimming, orders, rewrite=True):
         """"
         @author: T. Guallart-Naval, MRILab, Tesoro Imaging S.L., Valencia, Spain
@@ -295,7 +384,6 @@ class MRIBLANKSEQ:
         elif gAxis == 2:
             self.expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
 
-
     def endSequence(self, tEnd):
         self.expt.add_flodict({
             'grad_vx': (np.array([tEnd]), np.array([0])),
@@ -307,7 +395,6 @@ class MRIBLANKSEQ:
             'tx_gate': (np.array([tEnd]), np.array([0]))
         })
 
-
     def iniSequence(self, t0, shimming, rewrite=True):
         self.expt.add_flodict({
             'grad_vx': (np.array([t0]), np.array([shimming[0]])),
@@ -318,7 +405,6 @@ class MRIBLANKSEQ:
             'tx0': (np.array([t0]), np.array([0])),
             'tx_gate': (np.array([t0]), np.array([0]))
         }, rewrite)
-
 
     def setGradient(self, t0, gAmp, gAxis, rewrite=True):
         """"
@@ -334,7 +420,6 @@ class MRIBLANKSEQ:
             self.expt.add_flodict({'grad_vy': (np.array([t0]), np.array([gAmp]))}, rewrite)
         elif gAxis == 2:
             self.expt.add_flodict({'grad_vz': (np.array([t0]), np.array([gAmp]))}, rewrite)
-
 
     def saveRawData(self):
         """"
@@ -357,7 +442,6 @@ class MRIBLANKSEQ:
             dt_string), self.mapVals)
         savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, self.mapNmspc['seqName'],
             dt_string), self.mapVals)
-
 
     def freqCalibration(self, bw=0.05, dbw = 0.0001):
         """

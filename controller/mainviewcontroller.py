@@ -89,7 +89,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_saveparams.triggered.connect(self.save_parameters)
         self.action_close.triggered.connect(self.close)    
         self.action_exportfigure.triggered.connect(self.export_figure)
-        self.action_viewsequence.triggered.connect(self.plot_sequence)
+        self.action_viewsequence.triggered.connect(acqCtrl.startSequencePlot)
         self.action_batch.triggered.connect(self.batch_system)
         self.action_sweep.triggered.connect(self.sweep_system)
         self.action_XNATupload.triggered.connect(self.xnat)

@@ -39,7 +39,8 @@ class CalibrationController(CalibrationController_Base, CalibrationController_Fo
         calibAcqCtrl = CalibrationAcqController(self, self.calibfunctionslist)
         self.action_acquire.triggered.connect(calibAcqCtrl.startCalibAcq)
         self.action_sweep.triggered.connect(self.sweep_system)
-        self.action_close.triggered.connect(self.close) 
+        self.action_close.triggered.connect(self.close)
+        self.action_viewsequence.triggered.connect(calibAcqCtrl.startSequencePlot)
        
     
     @pyqtSlot(QListWidgetItem)

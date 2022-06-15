@@ -23,6 +23,7 @@ import cgitb
 cgitb.enable(format = 'text')
 
 
+
 VERSION = "0.2.0"
 AUTHORA = "Yolanda Vives"
 AUTHORB = "J.M. Algarín"
@@ -33,10 +34,6 @@ print("Dr. J.M. Algarín, mriLab @ i3M, CSIC, Spain                             
 print("https://www.i3m-stim.i3m.upv.es/research/magnetic-resonance-imaging-laboratory-mrilab/ *")
 print("https://github.com/yvives/PhysioMRI_GUI                                                *")
 print("****************************************************************************************")
-
-# import seq.sequencesCalibration as seqs
-# rabi = seqs.RabiFlops()
-# rabi.sequenceRun()
 
 app = QApplication(sys.argv)
 gui = SessionViewerController('')

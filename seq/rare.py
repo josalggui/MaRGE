@@ -400,8 +400,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 if not demo:
                     if plotSeq==1:                  # What is the meaning of plotSeq??
                         print('Ploting sequence...')
-                        self.expt.plot_sequence()
-                        plt.show()
                         self.expt.__del__()
                         break
                     elif plotSeq==0:

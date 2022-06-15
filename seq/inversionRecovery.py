@@ -30,13 +30,13 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='OTH')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='OTH')
         self.addParameter(key='echoTime', string='Echo time (ms)', val=10.0, field='OTH')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='OTH')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=2000., field='OTH')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='OTH')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='OTH')
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
-        self.addParameter(key='crusherAmp', string='Crusher grad amp (mT/m)', val=5, field='OTH')
-        self.addParameter(key='crusherTime', string='Crusher grad time (us)', val=100, field='OTH')
-        self.addParameter(key='crusherDelay', string='Crusher grad delay (us)', val=50, field='OTH')
+        self.addParameter(key='crusherAmp', string='Crusher grad amp (mT/m)', val=5.0, field='OTH')
+        self.addParameter(key='crusherTime', string='Crusher grad time (us)', val=100.0, field='OTH')
+        self.addParameter(key='crusherDelay', string='Crusher grad delay (us)', val=0.0, field='OTH')
         self.addParameter(key='tInv0', string='Inversion time, Start (ms)', val=50.0, field='OTH')
         self.addParameter(key='tInv1', string='Inversion time, End (ms)', val=1000.0, field='OTH')
         self.addParameter(key='nSteps', string='Number of steps', val=10, field='OTH')
@@ -68,7 +68,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         nSteps = self.mapVals['nSteps']  # number of samples
         nPoints = self.mapVals['nPoints'] # number of readout points
         shimming = self.mapVals['shimming']
-        crusherAmp = self.mapVals['crusherAmp']
+        crusherAmp = self.mapVals['crusherAmp'] * 1e-3
         crusherTime = self.mapVals['crusherTime']
         crusherDelay = self.mapVals['crusherDelay']
 
@@ -159,8 +159,6 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         self.mapVals['bw'] = bw * 1e6
         createSequence()
         if plotSeq:
-            self.expt.plot_sequence()
-            plt.show()
             self.expt.__del__()
         else:
             rxd, msgs = self.expt.run()
@@ -174,6 +172,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
             data = data[:, int(nPoints / 2)]
             self.data = [irTimeVector*1e-3, data]
             self.mapVals['sampledSignal'] = data
+        return 0
 
     def sequenceAnalysis(self, obj=''):
         self.saveRawData()

@@ -143,10 +143,7 @@ class FOV(blankSeq.MRIBLANKSEQ):
         # Run or plot sequence
         if plotSeq == 1:    # Plot sequence
             print('Ploting sequence...')
-            self.expt.plot_sequence()
-            plt.show()
             self.expt.__del__()
-            return 0
         else:   # Run sequence
             print('Runing...')
             rxd, msgs = self.expt.run()
@@ -158,6 +155,7 @@ class FOV(blankSeq.MRIBLANKSEQ):
             data = np.reshape(data, (3, -1))
             data = data[:, addRdPoints:addRdPoints+nPoints]
             self.mapVals['data'] = data
+        return 0
 
     def sequenceAnalysis(self, obj=''):
         # Get spectrum from data
