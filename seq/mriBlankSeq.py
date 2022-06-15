@@ -116,12 +116,12 @@ class MRIBLANKSEQ:
         for txl in ['tx0_i', 'tx0_q', 'tx1_i', 'tx1_q']:
             try:
                 dataStep = getStepData(fd[txl])
-                xData.append(dataStep[0])
+                xData.append(dataStep[0]*1e-3)
                 yData.append(dataStep[1])
                 legend.append(txl)
             except KeyError:
                 continue
-        plotTx = SpectrumPlotSeq(xData, yData, legend, 'Time (us)', 'Amplitude (a.u.)', 'Rx')
+        plotTx = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx')
         obj.parent.plotview_layout.addWidget(plotTx)
 
 
@@ -132,12 +132,13 @@ class MRIBLANKSEQ:
         for gradl in self.expt.gradb.keys():
             try:
                 dataStep = getStepData(fd[gradl])
-                xData.append(dataStep[0])
+                xData.append(dataStep[0]*1e-3)
                 yData.append(dataStep[1])
                 legend.append(gradl)
             except KeyError:
                 continue
-        plotGrad = SpectrumPlotSeq(xData, yData, legend, 'Time (us)', 'Amplitude (a.u.)', 'Gradients')
+        plotGrad = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Gradients')
+        plotGrad.plotitem.setXLink(plotTx.plotitem)
         obj.parent.plotview_layout.addWidget(plotGrad)
 
 
@@ -148,12 +149,13 @@ class MRIBLANKSEQ:
         for rxl in ['rx0_en', 'rx1_en']:
             try:
                 dataStep = getStepData(fd[rxl])
-                xData.append(dataStep[0])
+                xData.append(dataStep[0]*1e-3)
                 yData.append(dataStep[1])
                 legend.append(rxl)
             except KeyError:
                 continue
-        plotRx = SpectrumPlotSeq(xData, yData, legend, 'Time (us)', 'Amplitude (a.u.)', 'Rx gate')
+        plotRx = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx gate')
+        plotRx.plotitem.setXLink(plotTx.plotitem)
         obj.parent.plotview_layout.addWidget(plotRx)
 
 
@@ -164,12 +166,13 @@ class MRIBLANKSEQ:
         for iol in ['tx_gate', 'rx_gate', 'trig_out', 'leds']:
             try:
                 dataStep = getStepData(fd[iol])
-                xData.append(dataStep[0])
+                xData.append(dataStep[0]*1e-3)
                 yData.append(dataStep[1])
                 legend.append(iol)
             except KeyError:
                 continue
-        plotDigital = SpectrumPlotSeq(xData, yData, legend, 'Time (us)', 'Amplitude (a.u.)', 'Rx gate')
+        plotDigital = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx gate')
+        plotDigital.plotitem.setXLink(plotTx.plotitem)
         obj.parent.plotview_layout.addWidget(plotDigital)
         #
         # for ax in axes:

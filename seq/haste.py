@@ -459,16 +459,13 @@ class HASTE(blankSeq.MRIBLANKSEQ):
 
                     f_plotview = SpectrumPlot(fVector, [np.abs(iVector)], ['Spectrum magnitude'],
                                               "Frequency (kHz)", "Amplitude (a.u.)",
-                                              "%s Spectrum" % (obj.sequence.mapVals['seqName']), )
+                                              "%s Spectrum" % obj.seqName)
                     t_plotview = SpectrumPlot(tVector, [np.abs(sVector), np.real(sVector), np.imag(sVector)],
                                               ['Magnitude', 'Real', 'Imaginary'],
                                               'Time (ms)', "Signal amplitude (mV)",
-                                              "%s Signal" % (obj.sequence.mapVals['seqName']), )
+                                              "%s Signal" % obj.seqName)
                     obj.parent.plotview_layout.addWidget(t_plotview)
                     obj.parent.plotview_layout.addWidget(f_plotview)
-                    obj.parent.f_plotview = f_plotview
-                    obj.parent.t_plotview = t_plotview
-
                 else:
                     # Create label with rawdata name
                     obj.label = QLabel(self.mapVals['fileName'])

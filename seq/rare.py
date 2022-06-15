@@ -264,7 +264,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 # Inversion pulse
                 if repeIndex>=dummyPulses and inversionTime!=0:
                     t0 = tEx-inversionTime-rfReTime/2-hw.blkTime
-                    self.rfPulse(t0, rfReTime, rfReAmp/180*180, 0)
+                    self.rfRecPulse(t0, rfReTime, rfReAmp/180*180, 0)
                     self.gradTrap(t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[0], shimming)
                     self.gradTrap(t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[1], shimming)
                     self.gradTrap(t0+hw.blkTime+rfReTime, gradRiseTime, inversionTime*0.5, 0.005, gSteps, axes[2], shimming)
@@ -399,7 +399,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
             for ii in range(nScans):
                 if not demo:
                     if plotSeq==1:                  # What is the meaning of plotSeq??
-                        print('Ploting sequence...')
                         self.expt.__del__()
                         break
                     elif plotSeq==0:
@@ -550,16 +549,13 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
                     f_plotview = SpectrumPlot(fVector, [np.abs(iVector)], ['Spectrum magnitude'],
                                               "Frequency (kHz)", "Amplitude (a.u.)",
-                                              "%s Spectrum" % (obj.sequence.mapVals['seqName']), )
+                                              "%s Spectrum" % obj.seqName)
                     t_plotview = SpectrumPlot(tVector, [np.abs(sVector), np.real(sVector), np.imag(sVector)],
                                               ['Magnitude', 'Real', 'Imaginary'],
                                               'Time (ms)', "Signal amplitude (mV)",
-                                              "%s Signal" % (obj.sequence.mapVals['seqName']), )
+                                              "%s Signal" % obj.seqName)
                     obj.parent.plotview_layout.addWidget(t_plotview)
                     obj.parent.plotview_layout.addWidget(f_plotview)
-                    obj.parent.f_plotview = f_plotview
-                    obj.parent.t_plotview = t_plotview
-
                 else:
                     # Create label with rawdata name
                     obj.label = QLabel(self.mapVals['fileName'])
