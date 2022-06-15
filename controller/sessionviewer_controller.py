@@ -6,6 +6,7 @@ from sessionmodes import defaultsessions
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+import os
 
 MainWindow_Form, MainWindow_Base = loadUiType('ui/sessionViewer.ui')
 
@@ -48,8 +49,13 @@ class SessionViewerController(MainWindow_Form, MainWindow_Base):
         self.session = self.sessionlist.currentText()
         self.onSessionChanged.emit(self.session)    
         
-        
+    def closeEvent(self, *args, **kwargs):
+        os.system('ssh root@192.168.1.101 "killall marcos_server"')
+        print('GUI closed successfully!')
+
     def close(self):
+        os.system('ssh root@192.168.1.101 "killall marcos_server"')
+        print('GUI closed successfully!')
         sys.exit() 
         
     def mainGUI(self):

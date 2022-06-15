@@ -1,16 +1,9 @@
 """
-Operations Controller
+Calibration Function Controller
 
-@author:    David Schote
-@contact:   david.schote@ovgu.de
+@author:    Yolanda Vives
+@author:    J.M. Algarín, josalggui@i3m.upv.es
 @version:   2.0 (Beta)
-@change:    13/06/2020
-
-@summary:   TBD
-
-@status:    Under development
-@todo:      Extend construction of parameter section (headers, more categories, etc. )
-
 """
 from PyQt5.QtWidgets import QListWidget, QSizePolicy, QLabel
 from PyQt5.QtCore import Qt, QRegExp

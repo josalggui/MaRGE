@@ -1,9 +1,9 @@
 """
+Calibration Acquisition Controller
 
-@summary:   Class for controlling the acquisition of the calibration
-
-@status:    Under development
-
+@author:    Yolanda Vives
+@author:    J.M. Algarín, josalggui@i3m.upv.es
+@version:   2.0 (Beta)
 """
 
 from PyQt5.QtWidgets import QTextEdit, QCheckBox, QHBoxLayout
@@ -78,62 +78,3 @@ class CalibrationAcqController(QObject):
         print('Plot sequence')
         defaultCalibFunctions[self.funName].sequenceRun(1)  # Run sequence
         defaultCalibFunctions[self.funName].sequencePlot(self)  # Plot results
-
-    def plot_shim(self, axis):
-        
-        shim_values = np.linspace(self.calibfunction.shim_initial, self.calibfunction.shim_final, self.calibfunction.N)
-        
-        if axis == 'x':
-            plotview1 = SpectrumPlot(shim_values, self.peakValsf_x, [],[],"Shim value x", "Peak value", "%s x Peak value" %(self.calibfunction.cfn))
-            plotview2 = SpectrumPlot(shim_values, self.fwhmf_x, [],[],"Shim value x ", "FHWM", "%s x FHWM" %(self.calibfunction.cfn))
-
-        elif axis == 'y':
-            plotview1 = SpectrumPlot(shim_values,  self.peakValsf_y, [],[],"Shim value", "Peak value", "%s y Peak value" %(self.calibfunction.cfn))
-            plotview2 = SpectrumPlot(shim_values, self.fwhmf_y, [],[],"Shim value", "FHWM", "%s y FWHM" %(self.calibfunction.cfn))
-
-        elif axis == 'z':
-            plotview1 = SpectrumPlot(shim_values, self.peakValsf_z, [],[],"Shim value", "Peak value", "%s z Peak value" %(self.calibfunction.cfn))
-            plotview2 = SpectrumPlot(shim_values, self.fwhmf_z, [],[],"Shim value", "FHWM", "%s z FWHM" %(self.calibfunction.cfn))
-
-        self.layout.setParent(None)
-        self.parent.clearPlotviewLayout()  
-        self.parent.plotview_layout.addLayout(self.layout)
-        self.parent.plotview_layout.addWidget(plotview1)
-        self.parent.plotview_layout.addWidget(plotview2)
-            
-        max_x=self.peakValsf_x.index(round(np.max(self.peakValsf_x), 4))
-        max_y=self.peakValsf_y.index(round(np.max(self.peakValsf_y), 4))
-        max_z=self.peakValsf_z.index(round(np.max(self.peakValsf_z), 4))
-        
-        shim_x=shim_values[max_x]
-        shim_y=shim_values[max_y]
-        shim_z=shim_values[max_z]
-        
-        self.textEdit = QTextEdit()
-        self.textEdit.setPlainText('Shim_x=%0.5f,       Shim_y=%0.5f,       Shim_z=%0.5f'%(shim_x, shim_y, shim_z))
-        self.parent.plotview_layout.addWidget(self.textEdit)
-        
-
-    def btnstate(self,b):
-
-        if b.text() == 'Plot Shim x':
-            if b.isChecked() == True:
-                self.plot_shim(axis='x')
-                self.b2.setChecked(False)
-                self.b3.setChecked(False)  
-            
-        if b.text() == 'Plot Shim y':
-            if b.isChecked() == True:
-                self.plot_shim(axis='y')
-                self.b1.setChecked(False)
-                self.b3.setChecked(False)  
-
-        if b.text() == 'Plot Shim z':
-            if b.isChecked() == True:
-                self.plot_shim(axis='z')
-                self.b1.setChecked(False)
-                self.b2.setChecked(False)  
-
-    
-
-

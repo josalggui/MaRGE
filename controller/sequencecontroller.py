@@ -1,11 +1,9 @@
 """
-Operations Controller
+Sequence Controller
 
 @author:    Yolanda Vives
 @author:    J.M. Algarín, josalggui@i3m.upv.es
 @version:   2.0 (Beta)
-@change:    25/05/2022
-@change     06/06/2022 (J.M. Algarín): adapted to the new structure of the sequences
 
 @summary:   TBD
 

@@ -1,14 +1,9 @@
 """
-Acquisition Manager
-@author:    David Schote
-@contact:   david.schote@ovgu.de
+Acquisition Controller
+
+@author:    Yolanda Vives
+@author:    J.M. Algarín, josalggui@i3m.upv.es
 @version:   2.0 (Beta)
-@change:    19/06/2020
-
-@summary:   Class for controlling the acquisition
-
-@status:    Under development
-
 """
 
 from PyQt5.QtWidgets import QLabel, QPushButton, QHBoxLayout
@@ -47,7 +42,11 @@ class AcquisitionController(QObject):
         # self.parent.plotview_layout.addWidget(self.button)
     
     def startAcquisition(self):
-
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: rare sequence class
+        """
         # Delete previous plots
         if hasattr(self.parent, 'clearPlotviewLayout'):
             self.parent.clearPlotviewLayout()
@@ -62,6 +61,11 @@ class AcquisitionController(QObject):
         print('End sequence')
 
     def startSequencePlot(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: rare sequence class
+        """
         self.layout.setParent(None)
         self.parent.clearPlotviewLayout()
 

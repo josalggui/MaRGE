@@ -117,11 +117,13 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def __del__(self):
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-        
+
     def closeEvent(self, event):
         """Shuts down application on close."""
         # Return stdout to defaults.
         sys.stdout = sys.__stdout__
+        os.system('ssh root@192.168.1.101 "killall marcos_server"') # Kill marcos server
+        print('GUI closed successfully!')
         super().closeEvent(event)
     
     @pyqtSlot(bool)
@@ -134,9 +136,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.setupStylesheet(style.breezeLight)
         else:
             self.setupStylesheet(style.breezeDark)
-       
+
     def close(self):
-        sys.exit()   
+        os.system('ssh root@192.168.1.101 "killall marcos_server"')
+        print('GUI closed successfully!')
+        sys.exit()
+
 
     def setupStylesheet(self, style) -> None:
         """

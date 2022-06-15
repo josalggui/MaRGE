@@ -1,14 +1,9 @@
 """
-Acquisition Manager
-@author:    David Schote
-@contact:   david.schote@ovgu.de
+Calibration Controller
+
+@author:    Yolanda Vives
+@author:    J.M. Algarín, josalggui@i3m.upv.es
 @version:   2.0 (Beta)
-@change:    19/06/2020
-
-@summary:   Class for controlling the acquisition
-
-@status:    Under development
-
 """
 from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.uic import loadUiType,  loadUi
