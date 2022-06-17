@@ -161,12 +161,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
         # Readout gradient time
         if rdGradTime<acqTime:
             rdGradTime = acqTime
-        self.mapVals['rdGradTime'] = rdGradTime
+        self.mapVals['rdGradTime'] = rdGradTime * 1e3 # ms
 
         # Phase and slice de- and re-phasing time
         if phGradTime==0 or phGradTime>echoSpacing/2-rfExTime/2-rfReTime/2-2*gradRiseTime:
             phGradTime = echoSpacing/2-rfExTime/2-rfReTime/2-2*gradRiseTime
-        self.mapVals['phGradTime'] = phGradTime
+        self.mapVals['phGradTime'] = phGradTime*1e3 # ms
 
         # Max gradient amplitude
         rdGradAmplitude = nPoints[0]/(hw.gammaB*fov[0]*acqTime)*axesEnable[0]
@@ -546,6 +546,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     sVector = self.mapVals['sampled'][:, 3]
                     fVector = np.linspace(-bw/2, bw/2, nPoints[0])
                     iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
+
+                    # Create label with rawdata name
+                    obj.label = QLabel(self.mapVals['fileName'])
+                    obj.label.setAlignment(QtCore.Qt.AlignCenter)
+                    obj.label.setStyleSheet("background-color: black;color: white")
+                    obj.parent.plotview_layout.addWidget(obj.label)
 
                     f_plotview = SpectrumPlot(fVector, [np.abs(iVector)], ['Spectrum magnitude'],
                                               "Frequency (kHz)", "Amplitude (a.u.)",

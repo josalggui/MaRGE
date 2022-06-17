@@ -37,16 +37,17 @@ print("https://github.com/yvives/PhysioMRI_GUI                                  
 print("****************************************************************************************")
 
 # Start the red pitaya -> ./copy_bitstream and ssh root@192.168.1.101 "marcos_server"
-if platform.system()=='Windows'
+if platform.system()=='Windows':
+    os.system('ssh root@192.168.1.101 "killall marcos_server"')
     os.system('start startRP.sh')
-    time.sleep(4)  # Wait while seting up red pitaya
+    time.sleep(5)  # Wait while seting up red pitaya
     # Close shell
     pyautogui.hotkey('ctrl', 'c')
     time.sleep(0.1)
     pyautogui.hotkey('ctrl', 'c')
 elif platform.system()=='Linux':
     os.system('nohup ./startRP.sh')     # For linux
-    time.sleep(4)  # Wait while seting up red pitaya
+    time.sleep(5)  # Wait while seting up red pitaya
     # Close shell
     pyautogui.hotkey('ctrl', 'c')
     time.sleep(0.1)

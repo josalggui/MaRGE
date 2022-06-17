@@ -133,8 +133,8 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         idf = np.argmax(np.abs(spectrum))
         fCentral = fVector[idf]*1e-3
-        print('Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
-
+        print('Larmor frequency: %1.5f MHz' % (larmorFreq - fCentral))
+        self.mapVals['larmorFreqCal'] = larmor - fCentral
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
 
