@@ -151,16 +151,16 @@ class HASTE(blankSeq.MRIBLANKSEQ):
         # Readout gradient time
         if rdGradTime<acqTime:
             rdGradTime = acqTime
-        self.mapVals['rdGradTime'] = rdGradTime
+        self.mapVals['rdGradTime'] = rdGradTime * 1e3 # ms
 
         # Phase de- and re-phasing time
         if phGradTime==0 or phGradTime>echoSpacing/2-rfExTime/2-rfReTime/2-2*gradRiseTime:
             phGradTime = echoSpacing/2-rfExTime/2-rfReTime/2-2*gradRiseTime
-        self.mapVals['phGradTime'] = phGradTime
+        self.mapVals['phGradTime'] = phGradTime * 1e3 # ms
 
         # Slice selection dephasing gradient time
         ssDephGradTime = (rfExTime-gradRiseTime)/2
-        self.mapVals['ssDephGradTime'] = ssDephGradTime
+        self.mapVals['ssDephGradTime'] = ssDephGradTime * 1e3 # ms
 
         # Max redaout and phase gradient amplitude
         rdGradAmplitude = nPoints[0]/(hw.gammaB*fov[0]*acqTime)*axesEnable[0]
