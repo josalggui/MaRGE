@@ -77,7 +77,7 @@ class MRIBLANKSEQ:
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
         return out
 
-    def sequencePlot(self, obj=''):
+    def sequencePlot(self):
         """ axes: 4-element tuple of axes upon which the TX, gradients, RX and digital I/O plots will be drawn.
         If not provided, plot_sequence() will create its own. """
         # if axes is None:
@@ -111,8 +111,8 @@ class MRIBLANKSEQ:
                 legend.append(txl)
             except KeyError:
                 continue
-        plotTx = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx')
-        obj.parent.plotview_layout.addWidget(plotTx)
+        plotTx = [xData, yData, legend, 'Rx gate']
+        # plotTx = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx')
 
 
         # Plot gradient channels
@@ -127,9 +127,10 @@ class MRIBLANKSEQ:
                 legend.append(gradl)
             except KeyError:
                 continue
-        plotGrad = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Gradients')
-        plotGrad.plotitem.setXLink(plotGrad.plotitem)
-        obj.parent.plotview_layout.addWidget(plotGrad)
+        plotGrad = [xData, yData, legend, 'Gradients']
+        # plotGrad = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Gradients')
+        # plotGrad.plotitem.setXLink(plotTx.plotitem)
+        # obj.parent.plotview_layout.addWidget(plotGrad)
 
 
         # Plot RX enable channels
@@ -144,9 +145,10 @@ class MRIBLANKSEQ:
                 legend.append(rxl)
             except KeyError:
                 continue
-        plotRx = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx gate')
-        plotRx.plotitem.setXLink(plotRx.plotitem)
-        obj.parent.plotview_layout.addWidget(plotRx)
+        plotRx = [xData, yData, legend, 'Rx gate']
+        # plotRx = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx gate')
+        # plotRx.plotitem.setXLink(plotTx.plotitem)
+        # obj.parent.plotview_layout.addWidget(plotRx)
 
 
         # Plot digital outputs
@@ -161,12 +163,13 @@ class MRIBLANKSEQ:
                 legend.append(iol)
             except KeyError:
                 continue
-        plotDigital = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx gate')
-        plotDigital.plotitem.setXLink(plotDigital.plotitem)
-        obj.parent.plotview_layout.addWidget(plotDigital)
+        plotDigital = [xData, yData, legend, 'Digital']
+        # plotDigital = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx gate')
+        # plotDigital.plotitem.setXLink(plotTx.plotitem)
+        # obj.parent.plotview_layout.addWidget(plotDigital)
 
 
-        return fd
+        return([plotTx, plotGrad, plotRx, plotDigital])
 
     def getIndex(self, etl=1, nPH=1, sweepMode=1):
         """"

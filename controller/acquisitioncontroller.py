@@ -8,6 +8,7 @@ Acquisition Controller
 
 from PyQt5.QtWidgets import QLabel, QPushButton, QHBoxLayout
 from plotview.spectrumplot import SpectrumPlot
+from plotview.spectrumplot import SpectrumPlotSeq
 from plotview.spectrumplot import Spectrum2DPlot
 from plotview.spectrumplot import Spectrum3DPlot
 from seq.sequences import defaultsequences
@@ -24,6 +25,7 @@ import nibabel as nib
 import pyqtgraph.exporters
 from functools import partial
 from sessionmodes import defaultsessions
+import time
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, session=None, sequencelist=None):
@@ -34,6 +36,7 @@ class AcquisitionController(QObject):
         self.acquisitionData = None
         self.session = session
         self.layout = QHBoxLayout()
+        self.firstPlot()
 
         # Example of how to add a button
         # self.button = QPushButton("Change View")
@@ -47,16 +50,19 @@ class AcquisitionController(QObject):
         @email: josalggui@i3m.upv.es
         @Summary: rare sequence class
         """
+        print('Start sequence')
+
         # Delete previous plots
-        if hasattr(self.parent, 'clearPlotviewLayout'):
-            self.parent.clearPlotviewLayout()
+        # if hasattr(self.parent, 'clearPlotviewLayout'):
+        self.parent.clearPlotviewLayout()
 
         # Load sequence name
         self.seqName = defaultsequences[self.sequencelist.getCurrentSequence()].mapVals['seqName']
 
-        # Execute selected sequence
-        print('Start sequence')
+        # Create and execute selected sequence
         defaultsequences[self.seqName].sequenceRun(0)
+
+        # Do sequence analysis and acquire de plots
         out = defaultsequences[self.seqName].sequenceAnalysis()
 
         # Create label with rawdata name
@@ -66,8 +72,10 @@ class AcquisitionController(QObject):
         self.label.setStyleSheet("background-color: black;color: white")
         self.parent.plotview_layout.addWidget(self.label)
 
+        # Add plots to the plotview_layout
         for item in out:
             self.parent.plotview_layout.addWidget(item)
+
         print('End sequence')
 
     def startSequencePlot(self):
@@ -76,7 +84,10 @@ class AcquisitionController(QObject):
         @email: josalggui@i3m.upv.es
         @Summary: rare sequence class
         """
-        self.layout.setParent(None)
+        # Delete previous plots
+        # if hasattr(self.parent, 'clearPlotviewLayout'):
+        #     self.parent.clearPlotviewLayout()
+        # self.layout.setParent(None)
         self.parent.clearPlotviewLayout()
 
         self.seqName = defaultsequences[self.sequencelist.getCurrentSequence()].mapVals['seqName']
@@ -84,4 +95,20 @@ class AcquisitionController(QObject):
         # Execute selected sequence
         print('Plot sequence')
         defaultsequences[self.seqName].sequenceRun(1)  # Run sequence
-        defaultsequences[self.seqName].sequencePlot(self)  # Plot results
+        out = defaultsequences[self.seqName].sequencePlot()  # Plot results
+
+        n = 0
+        plot = []
+        for item in out:
+            plot.append(SpectrumPlotSeq(item[0], item[1], item[2], 'Time (ms)', 'Amplitude (a.u.)', item[3]))
+            if n > 0: plot[n].plotitem.setXLink(plot[0].plotitem)
+            n += 1
+        for n in range(4):
+            self.parent.plotview_layout.addWidget(plot[n])
+
+    def firstPlot(self):
+
+        self.parent.clearPlotviewLayout()
+        x = np.random.randn(50, 50)
+        welcome = pg.image(np.abs(x))
+        self.parent.plotview_layout.addWidget(welcome)

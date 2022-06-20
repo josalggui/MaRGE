@@ -167,18 +167,10 @@ class CPMG(blankSeq.MRIBLANKSEQ):
 
         self.saveRawData()
 
-        if obj != '':
-            # Add larmor frequency to the layout
-            obj.label = QLabel(self.mapVals['fileName'])
-            obj.label.setAlignment(QtCore.Qt.AlignCenter)
-            obj.label.setStyleSheet("background-color: black;color: white")
-            obj.parent.plotview_layout.addWidget(obj.label)
+        # Signal vs rf time
+        plot = SpectrumPlot(results[0]*1e-3, [results[1], func1(results[0], *fitData1), func2(results[0], *fitData2)],
+                            ['Experimental', 'Fitting 1 component', 'Fitting 2 components'],
+                            'Echo time (ms)', 'Echo amplitude (mV)',
+                            '')
 
-            # Signal vs rf time
-            plot = SpectrumPlot(results[0]*1e-3, [results[1], func1(results[0], *fitData1), func2(results[0], *fitData2)],
-                                ['Experimental', 'Fitting 1 component', 'Fitting 2 components'],
-                                'Echo time (ms)', 'Echo amplitude (mV)',
-                                '')
-
-            # Update figures
-            obj.parent.plotview_layout.addWidget(plot)
+        return([plot])

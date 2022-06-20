@@ -332,7 +332,6 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                                                                    rewrite=False)
                 repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
                 acqPointsPerBatch.append(aa)
-                self.expt.plot_sequence()
             else:
                 phIndex, slIndex, repeIndexGlobal, aa, dataA = createSequenceDemo(phIndex=phIndex,
                                                                    slIndex=slIndex,
