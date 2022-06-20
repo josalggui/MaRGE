@@ -57,7 +57,17 @@ class AcquisitionController(QObject):
         # Execute selected sequence
         print('Start sequence')
         defaultsequences[self.seqName].sequenceRun(0)
-        defaultsequences[self.seqName].sequenceAnalysis(self)
+        out = defaultsequences[self.seqName].sequenceAnalysis()
+
+        # Create label with rawdata name
+        fileName = defaultsequences[self.sequencelist.getCurrentSequence()].mapVals['fileName']
+        self.label = QLabel(fileName)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        self.parent.plotview_layout.addWidget(self.label)
+
+        for item in out:
+            self.parent.plotview_layout.addWidget(item)
         print('End sequence')
 
     def startSequencePlot(self):

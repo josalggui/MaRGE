@@ -99,16 +99,6 @@ class MRIBLANKSEQ:
             sStep[1::2] = s[0:-1]
             return [tStep, sStep]
 
-        # fA, ax = plt.subplots()
-        # ax.plot(dataStep[0], dataStep[1])
-        # # ax.step(*fd['rx0_en'], where='post')
-        # plt.show()
-
-        # # Signal vs inverion time
-        # dataStep = getStepData(fd['rx0_en'])
-        # plot = SpectrumPlotSeq([dataStep[0]], [dataStep[1]], ['rx0_en'], 'Time (us)', 'Amplitude (a.u.)', 'Rx')
-        # obj.parent.plotview_layout.addWidget(plot)
-
         # Plot TX channels
         xData = []
         yData = []
@@ -138,7 +128,7 @@ class MRIBLANKSEQ:
             except KeyError:
                 continue
         plotGrad = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Gradients')
-        plotGrad.plotitem.setXLink(plotTx.plotitem)
+        plotGrad.plotitem.setXLink(plotGrad.plotitem)
         obj.parent.plotview_layout.addWidget(plotGrad)
 
 
@@ -155,7 +145,7 @@ class MRIBLANKSEQ:
             except KeyError:
                 continue
         plotRx = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx gate')
-        plotRx.plotitem.setXLink(plotTx.plotitem)
+        plotRx.plotitem.setXLink(plotRx.plotitem)
         obj.parent.plotview_layout.addWidget(plotRx)
 
 
@@ -172,14 +162,10 @@ class MRIBLANKSEQ:
             except KeyError:
                 continue
         plotDigital = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx gate')
-        plotDigital.plotitem.setXLink(plotTx.plotitem)
+        plotDigital.plotitem.setXLink(plotDigital.plotitem)
         obj.parent.plotview_layout.addWidget(plotDigital)
-        #
-        # for ax in axes:
-        #     ax.legend()
-        #     ax.grid(True)
-        #
-        # ios.set_xlabel(r'time ($\mu$s)')
+
+
         return fd
 
     def getIndex(self, etl=1, nPH=1, sweepMode=1):
