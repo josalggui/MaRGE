@@ -6,8 +6,6 @@ Startup Code
 """
 import os
 import sys
-import time
-import pyautogui
 import platform
 from PyQt5.QtWidgets import QApplication
 import cgitb
@@ -40,19 +38,9 @@ print("*************************************************************************
 if platform.system()=='Windows':
     os.system('ssh root@192.168.1.101 "killall marcos_server"')
     os.system('start startRP.sh')
-    # time.sleep(5)  # Wait while seting up red pitaya
-    # # Close shell
-    # pyautogui.hotkey('ctrl', 'c')
-    # time.sleep(0.1)
-    # pyautogui.hotkey('ctrl', 'c')
 elif platform.system()=='Linux':
     os.system('ssh root@192.168.1.101 "killall marcos_server"')
-    os.system('nohup ./startRP.sh')     # For linux
-    # time.sleep(5)  # Wait while seting up red pitaya
-    # # Close shell
-    # pyautogui.hotkey('ctrl', 'c')
-    # time.sleep(0.1)
-    # pyautogui.hotkey('ctrl', 'c')
+    os.system('./startRP.sh &')
 
 # Run the gui
 app = QApplication(sys.argv)

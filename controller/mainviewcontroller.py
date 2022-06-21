@@ -73,7 +73,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
         # Initialisation of acquisition controller
         acqCtrl = AcquisitionController(self, self.session, self.sequencelist)
-        
+
         # Connection to the server
         self.ip = ip_address
         
@@ -97,6 +97,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         self.seqName = defaultsequences[self.sequencelist.getCurrentSequence()].mapVals['seqName']
         defaultsequences[self.seqName].sequenceInfo()
+
+        acqCtrl.startAcquisition()
 
     def lines_that_start_with(self, str, f):
         return [line for line in f if line.startswith(str)]
