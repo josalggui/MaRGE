@@ -134,25 +134,18 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         idf = np.argmax(np.abs(spectrum))
         fCentral = fVector[idf]*1e-3
         print('Larmor frequency: %1.5f MHz' % (larmorFreq - fCentral))
-        self.mapVals['larmorFreqCal'] = larmor - fCentral
+        self.mapVals['larmorFreqCal'] = larmorFreq - fCentral
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
 
         self.saveRawData()
 
-        if obj != '':
-            # Add larmor frequency to the layout
-            obj.label = QLabel(self.mapVals['fileName'])
-            obj.label.setAlignment(QtCore.Qt.AlignCenter)
-            obj.label.setStyleSheet("background-color: black;color: white")
-            obj.parent.plotview_layout.addWidget(obj.label)
+        # Add time signal to the layout
+        signalPlot = SpectrumPlot(tVector, [np.abs(signal)], [''], 'Time (ms)', 'Signal amplitude (mV)',
+                                    '')
 
-            # Add time signal to the layout
-            signalPlot = SpectrumPlot(tVector, [np.abs(signal)], [''], 'Time (ms)', 'Signal amplitude (mV)',
-                                        '')
-            obj.parent.plotview_layout.addWidget(signalPlot)
+        # Add frequency spectrum to the layout
+        spectrumPlot = SpectrumPlot(fVector, [np.abs(spectrum)], [''], 'Frequency (kHz)', 'Spectrum amplitude (a.u.)',
+                                    'Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
 
-            # Add frequency spectrum to the layout
-            spectrumPlot = SpectrumPlot(fVector, [np.abs(spectrum)], [''], 'Frequency (kHz)', 'Spectrum amplitude (a.u.)',
-                                        'Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
-            obj.parent.plotview_layout.addWidget(spectrumPlot)
+        return([signalPlot, spectrumPlot])

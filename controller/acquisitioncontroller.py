@@ -7,25 +7,12 @@ Acquisition Controller
 """
 
 from PyQt5.QtWidgets import QLabel, QPushButton, QHBoxLayout
-from plotview.spectrumplot import SpectrumPlot
 from plotview.spectrumplot import SpectrumPlotSeq
-from plotview.spectrumplot import Spectrum2DPlot
-from plotview.spectrumplot import Spectrum3DPlot
 from seq.sequences import defaultsequences
-#from seq.utilities import change_axes
 from PyQt5 import QtCore
-from PyQt5.QtCore import QObject,  pyqtSlot,  pyqtSignal, QThread
-from manager.datamanager import DataManager
-from datetime import date,  datetime 
-from scipy.io import savemat
-import os
+from PyQt5.QtCore import QObject
 import pyqtgraph as pg
 import numpy as np
-import nibabel as nib
-import pyqtgraph.exporters
-from functools import partial
-from sessionmodes import defaultsessions
-import time
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, session=None, sequencelist=None):

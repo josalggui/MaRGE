@@ -167,16 +167,9 @@ class IRTSE(blankSeq.MRIBLANKSEQ):
             tVector = np.concatenate((tVector, t + echoSpacing * (echo + 1)), axis=0)
 
 
-        if obj != '':
-            # Add file name to de layout
-            obj.label = QLabel(self.mapVals['fileName'])
-            obj.label.setAlignment(QtCore.Qt.AlignCenter)
-            obj.label.setStyleSheet("background-color: black;color: white")
-            obj.parent.plotview_layout.addWidget(obj.label)
+        # Signal vs inverion time
+        plot = SpectrumPlot(tVector, [np.abs(data)], [''], 'Time (ms)', 'Signal amplitude (mV)', '')
 
-            # Signal vs inverion time
-            plot = SpectrumPlot(tVector, [np.abs(data)], [''], 'Time (ms)', 'Signal amplitude (mV)', '')
-            obj.parent.plotview_layout.addWidget(plot)
-
+        return([plot])
 
 

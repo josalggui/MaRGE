@@ -169,22 +169,13 @@ class FOV(blankSeq.MRIBLANKSEQ):
         self.mapVals['spectrum'] = spectrum
         self.saveRawData()
 
-        if obj != '':
-            tVector = np.linspace(-acqTime/2, acqTime/2, nPoints)
-            fVector = np.linspace(-fov/2, fov/2, nPoints)
+        tVector = np.linspace(-acqTime/2, acqTime/2, nPoints)
+        fVector = np.linspace(-fov/2, fov/2, nPoints)
 
-            # Create label with rawdata name
-            obj.label = QLabel(self.mapVals['fileName'])
-            obj.label.setAlignment(QtCore.Qt.AlignCenter)
-            obj.label.setStyleSheet("background-color: black;color: white")
-            obj.parent.plotview_layout.addWidget(obj.label)
+        # Signal vs rf time
+        dataplot = SpectrumPlot(tVector, [np.abs(data[0, :]), np.abs(data[1, :]), np.abs(data[2, :])],
+                             ['X axis', 'Y axis', 'Z axis'], 'Time (ms)', 'Signal amplitude (mV)', 'Signal vs time')
 
-            # Signal vs rf time
-            tplot = SpectrumPlot(tVector, [np.abs(data[0, :]), np.abs(data[1, :]), np.abs(data[2, :])],
-                                 ['X axis', 'Y axis', 'Z axis'], 'Time (ms)', 'Signal amplitude (mV)', 'Signal vs time')
-            obj.parent.plotview_layout.addWidget(tplot)
-
-            tplot = SpectrumPlot(fVector, [np.abs(spectrum[0, :]), np.abs(spectrum[1, :]), np.abs(spectrum[2, :])],
-                                 ['X axis', 'Y axis', 'Z axis'], 'Position (cm)', 'Amplitude (a.u.)', 'Spectrum')
-            obj.parent.plotview_layout.addWidget(tplot)
-
+        spectrumplot = SpectrumPlot(fVector, [np.abs(spectrum[0, :]), np.abs(spectrum[1, :]), np.abs(spectrum[2, :])],
+                             ['X axis', 'Y axis', 'Z axis'], 'Position (cm)', 'Amplitude (a.u.)', 'Spectrum')
+        return([dataplot, spectrumplot])

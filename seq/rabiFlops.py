@@ -135,14 +135,8 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
     def sequenceAnalysis(self, obj=''):
         self.saveRawData()
 
-        if obj != '':
-            # Create label with rawdata name
-            obj.label = QLabel(self.mapVals['fileName'])
-            obj.label.setAlignment(QtCore.Qt.AlignCenter)
-            obj.label.setStyleSheet("background-color: black;color: white")
-            obj.parent.plotview_layout.addWidget(obj.label)
+        # Signal vs rf time
+        plot = SpectrumPlot(self.data[0], [np.abs(self.data[1])], [''],
+                                'Time (ms)', 'Signal amplitude (mV)', '')
 
-            # Signal vs rf time
-            plot = SpectrumPlot(self.data[0], [np.abs(self.data[1])], [''],
-                                    'Time (ms)', 'Signal amplitude (mV)', '')
-            obj.parent.plotview_layout.addWidget(plot)
+        return([plot])

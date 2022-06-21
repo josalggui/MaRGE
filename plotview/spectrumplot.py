@@ -17,6 +17,7 @@ from pyqtgraph import GraphicsLayoutWidget
 from warnings import warn
 from datetime import datetime 
 import pyqtgraph as pg
+import numpy as np
 
 
 class SpectrumPlot (GraphicsLayoutWidget):
@@ -96,8 +97,11 @@ class SpectrumPlotSeq(GraphicsLayoutWidget):
         self.plotitem = self.addPlot(row=0, col=0)
         self.plotitem.addLegend()
         for line in range(nLines):
+            y = yData[line]
             self.plotitem.plot(xData[line], yData[line], pen=pen[line], name=legend[line])
             self.plotitem.setXRange(xData[line][0], xData[line][-1], padding=0)
+            if np.min(y) == np.max(y):
+                self.plotitem.setYRange(-1, 1, padding=0)
 
         self.label = pg.TextItem(color=(200, 200, 200), anchor=(0, 0))
         self.plotitem.addItem(self.label)
@@ -144,7 +148,4 @@ class Spectrum3DPlot(GraphicsLayoutWidget):
         image = pg.ImageItem(Data) 
         plotitem = self.addPlot(row=0, col=0)
         plotitem.addItem(image)
-            
-#        self.addItem(image)
-#        vbox = image.getView()
-#        vbox.addItem(pg.TextItem("%s %s" % (title, dt_string)))
+

@@ -144,17 +144,9 @@ class SliceSelection(blankSeq.MRIBLANKSEQ):
 
         self.saveRawData()
 
-        if obj != '':
-            # Add larmor frequency to the layout
-            obj.label = QLabel(self.mapVals['fileName'])
-            obj.label.setAlignment(QtCore.Qt.AlignCenter)
-            obj.label.setStyleSheet("background-color: black;color: white")
-            obj.parent.plotview_layout.addWidget(obj.label)
+        # Signal vs time
+        plot = SpectrumPlot(tVector, [np.abs(data)], [''], 'Time (ms)', 'Signal amplitude (mV)', '')
 
-            # Signal vs time
-            plot = SpectrumPlot(tVector, [np.abs(data)], [''], 'Time (ms)', 'Signal amplitude (mV)', '')
-            obj.parent.plotview_layout.addWidget(plot)
-
-
+        return([plot])
 
 

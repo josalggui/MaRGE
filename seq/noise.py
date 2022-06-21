@@ -47,7 +47,9 @@ class Noise(blankSeq.MRIBLANKSEQ):
             # SEQUENCE
             # Rx gate
             t0 = 20
+            self.iniSequence(20, np.array((0, 0, 0)))
             self.rxGate(t0, acqTime)
+            self.endSequence(2*acqTime)
 
         if plotSeq == 0:
             print('Running...')
@@ -70,23 +72,17 @@ class Noise(blankSeq.MRIBLANKSEQ):
         noise = np.abs(self.dataTime[1])
         noiserms = np.mean(noise)
         self.mapVals['RMS noise'] = noiserms
+        self.mapVals['sampledSignal'] = noiserms # for sweep method
         self.saveRawData()
 
-        if obj!='':
-            # Create label with rawdata name
-            obj.label = QLabel(self.mapVals['fileName'])
-            obj.label.setAlignment(QtCore.Qt.AlignCenter)
-            obj.label.setStyleSheet("background-color: black;color: white")
-            obj.parent.plotview_layout.addWidget(obj.label)
+        # Plot signal versus time
+        timePlot = SpectrumPlot(self.dataTime[0], [np.abs(self.dataTime[1])], [''],
+                                'Time (ms)', 'Signal amplitude (mV)',
+                                'Signal vs time, rms noise: %1.3f mV' %noiserms)
 
-            # Plot signal versus time
-            timePlot = SpectrumPlot(self.dataTime[0], [np.abs(self.dataTime[1])], [''],
-                                    'Time (ms)', 'Signal amplitude (mV)',
-                                    'Signal vs time, rms noise: %1.3f mV' %noiserms)
-            obj.parent.plotview_layout.addWidget(timePlot)
+        # Plot spectrum
+        freqPlot = SpectrumPlot(self.dataSpec[0], [np.abs(self.dataSpec[1])], [''],
+                                'Frequency (kHz)', 'Mag FFT (a.u.)',
+                                'Signal spectrum')
 
-            # Plot spectrum
-            freqPlot = SpectrumPlot(self.dataSpec[0], [np.abs(self.dataSpec[1])], [''],
-                                    'Frequency (kHz)', 'Mag FFT (a.u.)',
-                                    'Signal spectrum')
-            obj.parent.plotview_layout.addWidget(freqPlot)
+        return([timePlot, freqPlot])

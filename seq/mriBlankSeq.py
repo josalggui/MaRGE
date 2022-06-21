@@ -7,17 +7,11 @@ Created on Thu June 2 2022
 
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 import configs.hw_config as hw
 from datetime import date,  datetime
 from scipy.io import savemat
 import experiment as ex
 import scipy.signal as sig
-from plotview.spectrumplot import SpectrumPlotSeq
-from plotview.spectrumplot import SpectrumPlot
-from PyQt5.QtWidgets import QLabel  # To set the figure title
-from PyQt5 import QtCore            # To set the figure title
-
 
 class MRIBLANKSEQ:
     # Properties
@@ -112,8 +106,6 @@ class MRIBLANKSEQ:
             except KeyError:
                 continue
         plotTx = [xData, yData, legend, 'Rx gate']
-        # plotTx = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx')
-
 
         # Plot gradient channels
         xData = []
@@ -128,10 +120,6 @@ class MRIBLANKSEQ:
             except KeyError:
                 continue
         plotGrad = [xData, yData, legend, 'Gradients']
-        # plotGrad = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Gradients')
-        # plotGrad.plotitem.setXLink(plotTx.plotitem)
-        # obj.parent.plotview_layout.addWidget(plotGrad)
-
 
         # Plot RX enable channels
         xData = []
@@ -146,10 +134,6 @@ class MRIBLANKSEQ:
             except KeyError:
                 continue
         plotRx = [xData, yData, legend, 'Rx gate']
-        # plotRx = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx gate')
-        # plotRx.plotitem.setXLink(plotTx.plotitem)
-        # obj.parent.plotview_layout.addWidget(plotRx)
-
 
         # Plot digital outputs
         xData = []
@@ -164,10 +148,6 @@ class MRIBLANKSEQ:
             except KeyError:
                 continue
         plotDigital = [xData, yData, legend, 'Digital']
-        # plotDigital = SpectrumPlotSeq(xData, yData, legend, 'Time (ms)', 'Amplitude (a.u.)', 'Rx gate')
-        # plotDigital.plotitem.setXLink(plotTx.plotitem)
-        # obj.parent.plotview_layout.addWidget(plotDigital)
-
 
         return([plotTx, plotGrad, plotRx, plotDigital])
 

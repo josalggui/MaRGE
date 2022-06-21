@@ -139,24 +139,16 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         self.saveRawData()
 
-        if obj != '':
-            # Add larmor frequency to the layout
-            obj.label = QLabel(self.mapVals['fileName'])
-            obj.label.setAlignment(QtCore.Qt.AlignCenter)
-            obj.label.setStyleSheet("background-color: black;color: white")
-            obj.parent.plotview_layout.addWidget(obj.label)
+        # Add shimming x to the layout
+        plotX = SpectrumPlot(sxVector*1e4, [np.abs(data[0, :])], [''], 'ShimmingX', 'Signal amplitude (mV)',
+                            "%s" % ('Shimming X'))
 
-            # Add shimming x to the layout
-            plotX = SpectrumPlot(sxVector*1e4, [np.abs(data[0, :])], [''], 'ShimmingX', 'Signal amplitude (mV)',
-                                "%s" % ('Shimming X'))
-            obj.parent.plotview_layout.addWidget(plotX)
+        # Add shimming y to the layout
+        plotY = SpectrumPlot(syVector*1e4, [np.abs(data[1, :])], [''], 'ShimmingX', 'Signal amplitude (mV)',
+                             "%s" % ('Shimming Y'))
 
-            # Add shimming y to the layout
-            plotY = SpectrumPlot(syVector*1e4, [np.abs(data[1, :])], [''], 'ShimmingX', 'Signal amplitude (mV)',
-                                 "%s" % ('Shimming Y'))
-            obj.parent.plotview_layout.addWidget(plotY)
+        # Add shimming z to the layout
+        plotZ = SpectrumPlot(szVector*1e4, [np.abs(data[2, :])], [''], 'ShimmingZ', 'Signal amplitude (mV)',
+                             "%s" % ('Shimming Z'))
 
-            # Add shimming z to the layout
-            plotZ = SpectrumPlot(szVector*1e4, [np.abs(data[2, :])], [''], 'ShimmingZ', 'Signal amplitude (mV)',
-                                 "%s" % ('Shimming Z'))
-            obj.parent.plotview_layout.addWidget(plotZ)
+        return([plotX, plotY, plotZ])

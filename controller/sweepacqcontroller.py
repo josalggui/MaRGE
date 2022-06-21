@@ -32,5 +32,5 @@ class AcqController(QObject):
         # Execute selected sequence
         print('Start sequence')
         defaultSweep[self.funName].sequenceRun(0, self.parent.defaultsequences)  # Run sequence
-        defaultSweep[self.funName].sequenceAnalysis(self)   # Plot results
+        defaultSweep[self.funName].sequenceAnalysis()   # Plot results
         print('End sequence')

@@ -2,7 +2,7 @@
 Created on Thu June 2 2022
 @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
 @email: josalggui@i3m.upv.es
-@Summary: mri blank sequence with common methods that will be inherited by any sequence
+@Summary: This class is able to sweep any parameter from any sequence
 """
 
 import numpy as np
@@ -76,7 +76,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         self.sampled = sampled
         return 0
 
-    def sequenceAnalysis(self, obj):
+    def sequenceAnalysis(self, obj=''):
         nPoints = np.array(self.seq.mapVals['nPoints'])
         nSteps = [self.mapVals['nSteps0'], self.mapVals['nSteps1']]
 
@@ -95,17 +95,13 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                 dataSteps[step, :, :] = data[int(nPoints[2]/2), :, :]
                 imageSteps[step, :, :] = image[int(nPoints[2]/2), :, :]
 
-            # Create label with rawdata name
-            obj.label = QLabel('Sweep ' + self.mapVals['fileName'])
-            obj.label.setAlignment(QtCore.Qt.AlignCenter)
-            obj.label.setStyleSheet("background-color: black;color: white")
-            obj.parent.plotview_layout.addWidget(obj.label)
-
             # Plot image
-            obj.parent.plotview_layout.addWidget(pg.image(np.abs(imageSteps)))
+            image = pg.image(np.abs(imageSteps))
 
             # Plot k-space
-            obj.parent.plotview_layout.addWidget(pg.image(np.log10(np.abs(dataSteps))))
+            kSpace = pg.image(np.log10(np.abs(dataSteps)))
+
+            return([image, kSpace])
 
         elif self.kind == 'Point':  # In case of points (calibration sequences)
             image = np.zeros((nSteps[0], nSteps[1]), dtype=complex)
@@ -115,14 +111,10 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                     image[step0, step1] = self.sampled[n]
                     n += 1
 
-            # Create label with rawdata name
-            obj.label = QLabel('Sweep ' + self.mapVals['fileName'])
-            obj.label.setAlignment(QtCore.Qt.AlignCenter)
-            obj.label.setStyleSheet("background-color: black;color: white")
-            obj.parent.plotview_layout.addWidget(obj.label)
-
             # Plot image
-            obj.parent.plotview_layout.addWidget(pg.image(np.abs(image)))
+            map = pg.image(np.abs(image))
+
+            return([map])
 
 defaultSweep = {
     'SWEEP': SweepImage(),
