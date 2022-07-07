@@ -7,9 +7,6 @@ Created on Thu June 2 2022
 
 import numpy as np
 import seq.mriBlankSeq as blankSeq
-from plotview.spectrumplot import SpectrumPlot # To plot nice 1d images
-from PyQt5.QtWidgets import QLabel  # To set the figure title
-from PyQt5 import QtCore            # To set the figure title
 import pyqtgraph as pg              # To plot nice 3d images
 
 class SweepImage(blankSeq.MRIBLANKSEQ):
@@ -17,7 +14,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         super(SweepImage, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='SWEEPinfo', val='SWEEP')
-        self.addParameter(key='seqNameSweep', string='Sequence', val='RARE', field='OTH')
+        self.addParameter(key='seqNameSweep', string='Sequence', val='FID', field='OTH')
         self.addParameter(key='parameter0', string='Parameter 0 X-axis', val='rfExTime', field='OTH')
         self.addParameter(key='start0', string='Start point 0', val=0.01, field='OTH')
         self.addParameter(key='end0', string='End point 0', val=50.0, field='OTH')
@@ -34,11 +31,10 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
 
-
     def sequenceTime(self):
         return(0)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0, defaultsequences=''):
+    def sequenceRun(self, plotSeq=0):
         # Inputs
         seqName = self.mapVals['seqNameSweep']
         parameters = [self.mapVals['parameter0'], self.mapVals['parameter1']]
@@ -50,7 +46,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         sampled = []
         parVector0 = np.linspace(start[0], end[0], nSteps[0]) # Create vector with parameters to sweep
         parVector1 = np.linspace(start[1], end[1], nSteps[1])
-        seq = defaultsequences[seqName] # Select the sequence that we want to sweep
+        seq = self.sequenceList[seqName] # Select the sequence that we want to sweep with modified parameters
         parMatrix = np.zeros((nSteps[0]*nSteps[1], 2))
         n = 0
         for step0 in range(nSteps[0]):
@@ -63,10 +59,8 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                 seq.sequenceAnalysis()
                 if 'sampledCartesian' in seq.mapVals:
                     sampled.append(seq.mapVals['sampledCartesian']) # sampledCartesian is four column kx, ky, kz and S(kx, ky, kz)
-                    self.kind = 'Image'
-                elif 'sampledSignal' in seq.mapVals:
-                    sampled.append(seq.mapVals['sampledSignal'])
-                    self.kind = 'Point'
+                elif 'sampledPoint' in seq.mapVals:
+                    sampled.append(seq.mapVals['sampledPoint'])
                 else:
                     print('No signal to plot')
                     return 0
@@ -82,7 +76,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
 
         self.saveRawData()
 
-        if self.kind == 'Image':    # In case of images
+        if 'sampledCartesian' in self.seq.mapVals:    # In case of images
             # Initialize data and image variables as zeros
             dataSteps = np.zeros((nSteps[0] * nSteps[1], nPoints[1], nPoints[0]), dtype=complex)
             imageSteps = dataSteps
@@ -103,7 +97,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
 
             return([image, kSpace])
 
-        elif self.kind == 'Point':  # In case of points (calibration sequences)
+        elif 'sampledPoint' in self.seq.mapVals:  # In case of points (calibration sequences)
             image = np.zeros((nSteps[0], nSteps[1]), dtype=complex)
             n = 0
             for step0 in range(nSteps[0]):
@@ -116,8 +110,8 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
 
             return([map])
 
-defaultSweep = {
-    'SWEEP': SweepImage(),
-}
+# defaultSweep = {
+#     'SWEEP': SweepImage(),
+# }
 
 

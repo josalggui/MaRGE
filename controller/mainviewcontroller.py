@@ -15,7 +15,6 @@ from PyQt5.QtGui import QIcon
 from controller.acquisitioncontroller import AcquisitionController
 from controller.calibrationcontroller import CalibrationController
 from controller.batchcontroller import BatchController
-from controller.sweepcontroller import SweepController
 import pyqtgraph.exporters
 from functools import partial
 import os
@@ -91,14 +90,13 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_exportfigure.triggered.connect(self.export_figure)
         self.action_viewsequence.triggered.connect(acqCtrl.startSequencePlot)
         self.action_batch.triggered.connect(self.batch_system)
-        self.action_sweep.triggered.connect(self.sweep_system)
         self.action_XNATupload.triggered.connect(self.xnat)
         self.action_session.triggered.connect(self.change_session)
 
-        self.seqName = defaultsequences[self.sequencelist.getCurrentSequence()].mapVals['seqName']
+        self.seqName = self.sequencelist.getCurrentSequence()
         defaultsequences[self.seqName].sequenceInfo()
 
-        acqCtrl.startAcquisition()
+        # acqCtrl.startAcquisition()
 
     def lines_that_start_with(self, str, f):
         return [line for line in f if line.startswith(str)]
@@ -324,10 +322,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def batch_system(self):
         batchW = BatchController(self, self.sequencelist)
         batchW.show()
-
-    def sweep_system(self):
-        sweep = SweepController(self, self.sequencelist, defaultsequences)
-        sweep.show()
 
     def xnat(self):
         

@@ -12,7 +12,7 @@ from controller.calibfunctionscontroller import CalibFunctionsList
 from controller.calibrationAcqcontroller import CalibrationAcqController
 from PyQt5 import QtGui
 from seq.sequencesCalibration import defaultCalibFunctions
-from controller.sweepcontroller import SweepController
+from plotview.spectrumplot import SpectrumPlotSeq
 
 CalibrationController_Form, CalibrationController_Base = loadUiType('ui/calibrationViewer.ui')
 
@@ -33,10 +33,37 @@ class CalibrationController(CalibrationController_Base, CalibrationController_Fo
         
         calibAcqCtrl = CalibrationAcqController(self, self.calibfunctionslist)
         self.action_acquire.triggered.connect(calibAcqCtrl.startAcquisition)
-        self.action_sweep.triggered.connect(self.sweep_system)
         self.action_close.triggered.connect(self.close)
-        self.action_viewsequence.triggered.connect(calibAcqCtrl.startSequencePlot)
-       
+        self.action_viewsequence.triggered.connect(self.startSequencePlot)
+
+    def startSequencePlot(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: rare sequence class
+        """
+        # Delete previous plots
+        self.clearPlotviewLayout()
+
+        self.calibfunction = defaultCalibFunctions[self.calibfunctionslist.getCurrentCalibfunction()]
+        self.funName = self.calibfunction.mapVals['seqName']
+
+        # Create selected sequence
+        print('Plot sequence')
+        defaultCalibFunctions[self.funName].sequenceRun(1)  # Run sequence
+
+        # Get sequence instructions plot
+        out = defaultCalibFunctions[self.funName].sequencePlot()  # Plot results
+
+        # Add plots to layout
+        n = 0
+        plot = []
+        for item in out:
+            plot.append(SpectrumPlotSeq(item[0], item[1], item[2], 'Time (ms)', 'Amplitude (a.u.)', item[3]))
+            if n > 0: plot[n].plotitem.setXLink(plot[0].plotitem)
+            n += 1
+        for n in range(4):
+            self.plotview_layout.addWidget(plot[n])
     
     @pyqtSlot(QListWidgetItem)
     def calibfunctionChangedSlot(self, item: QListWidgetItem = None) -> None:
@@ -49,7 +76,7 @@ class CalibrationController(CalibrationController_Base, CalibrationController_Fo
         self.onCalibFunctionChanged.emit(self.calibfunction)
         self.action_acquire.setEnabled(True)
 
-        self.clearPlotviewLayout()
+        # self.clearPlotviewLayout()
         
     def onUpdateText(self, text):
         cursor = self.cons.textCursor()
@@ -65,11 +92,8 @@ class CalibrationController(CalibrationController_Base, CalibrationController_Fo
         """
         
         for i in reversed(range(self.plotview_layout.count())):
-            if self.plotview_layout.itemAt(i).layout():
-                self.plotview_layout.itemAt(i).layout().setParent(None)
-            else:
-                self.plotview_layout.itemAt(i).widget().setParent(None)
-
-    def sweep_system(self):
-        sweep = SweepController(self, self.calibfunctionslist, defaultCalibFunctions)
-        sweep.show()
+            # if self.plotview_layout.itemAt(i).layout():
+            #     self.plotview_layout.itemAt(i).layout().setParent(None)
+            # else:
+            #     self.plotview_layout.itemAt(i).widget().setParent(None)
+            self.plotview_layout.itemAt(i).widget().setParent(None)

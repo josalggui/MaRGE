@@ -44,7 +44,10 @@ class AcquisitionController(QObject):
         self.parent.clearPlotviewLayout()
 
         # Load sequence name
-        self.seqName = defaultsequences[self.sequencelist.getCurrentSequence()].mapVals['seqName']
+        self.seqName = self.sequencelist.getCurrentSequence()
+
+        # Save sequence list into the current sequence, just in case you need to do sweep
+        defaultsequences[self.seqName].sequenceList = defaultsequences
 
         # Create and execute selected sequence
         defaultsequences[self.seqName].sequenceRun(0)
