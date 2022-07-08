@@ -20,23 +20,35 @@ class IRTSE(blankSeq.MRIBLANKSEQ):
         super(IRTSE, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='IRTSEinfo', val='IRTSE')
-        self.addParameter(key='nScans', string='Number of scans', val=1, field='OTH')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='OTH')
-        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='OTH')
-        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='OTH')
-        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='OTH')
-        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='OTH')
-        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, field='OTH')
-        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, field='OTH')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='OTH')
-        self.addParameter(key='nPoints', string='nPoints', val=60, field='OTH')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='OTH')
-        self.addParameter(key='etl', string='Echo train length', val=1, field='OTH')
+        self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
+        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
+        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='RF')
+        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, field='SEQ')
+        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, field='SEQ')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
+        self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
+        self.addParameter(key='etl', string='Echo train length', val=1, field='SEQ')
         self.addParameter(key='crusherAmp', string='Crusher grad amp (mT/m)', val=0.0, field='OTH')
         self.addParameter(key='crusherTime', string='Crusher grad time (us)', val=0.0, field='OTH')
         self.addParameter(key='crusherDelay', string='Crusher grad delay (us)', val=0.0, field='OTH')
         self.addParameter(key='gradRiseTime', string='Gradien rise time (us)', val=400.0, field='OTH')
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
+
+    def sequenceInfo(self):
+        print(" ")
+        print("Turbo Spin Echo with Inversion Recovery")
+        print("Author: Dr. J.M. Algarín")
+        print("Contact: josalggui@i3m.upv.es")
+        print("mriLab @ i3M, CSIC, Spain")
+
+    def sequenceTime(self):
+        nScans = self.mapVals['nScans']
+        repetitionTime = self.mapVals['repetitionTime']*1e-3
+        return(repetitionTime*nScans/60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq):
         init_gpa = False  # Starts the gpa

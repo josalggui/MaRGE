@@ -20,11 +20,11 @@ class FID(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
-        self.addParameter(key='deadTime', string='RF dead time (us)', val=400, field='RF')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='RF')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4, field='RF')
-        self.addParameter(key='nPoints', string='Number of points', val=100, field='RF')
-        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='RF')
+        self.addParameter(key='deadTime', string='RF dead time (us)', val=400.0, field='RF')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
+        self.addParameter(key='nPoints', string='Number of points', val=100, field='IM')
+        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
 
     def sequenceInfo(self):
         print(" ")

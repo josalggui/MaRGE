@@ -23,17 +23,30 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         super(RabiFlops, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='RabiFlopsInfo', val='RabiFlops')
-        self.addParameter(key='nScans', string='Number of scans', val=1, field='OTH')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='OTH')
-        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='OTH')
-        self.addParameter(key='echoTime', string='Echo time (ms)', val=10.0, field='OTH')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=100., field='OTH')
-        self.addParameter(key='nPoints', string='nPoints', val=60, field='OTH')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='OTH')
+        self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
+        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='echoTime', string='Echo time (ms)', val=10.0, field='SEQ')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
+        self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
-        self.addParameter(key='rfExTime0', string='Rf pulse time, Start (us)', val=5.0, field='OTH')
-        self.addParameter(key='rfExTime1', string='RF pulse time, End (us)', val=50.0, field='OTH')
-        self.addParameter(key='nSteps', string='Number of steps', val=10, field='OTH')
+        self.addParameter(key='rfExTime0', string='Rf pulse time, Start (us)', val=5.0, field='RF')
+        self.addParameter(key='rfExTime1', string='RF pulse time, End (us)', val=100.0, field='RF')
+        self.addParameter(key='nSteps', string='Number of steps', val=20, field='RF')
+
+    def sequenceInfo(self):
+        print(" ")
+        print("Rabi Flops")
+        print("Author: Dr. J.M. Algarín")
+        print("Contact: josalggui@i3m.upv.es")
+        print("mriLab @ i3M, CSIC, Spain")
+        print("This sequence runs spin echo and sweep the rf pulse time")
+
+    def sequenceTime(self):
+        nScans = self.mapVals['nScans']
+        repetitionTime = self.mapVals['repetitionTime']*1e-3
+        return(repetitionTime*nScans/60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq):
         init_gpa = False  # Starts the gpa

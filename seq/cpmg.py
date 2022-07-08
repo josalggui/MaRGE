@@ -23,18 +23,31 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         super(CPMG, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='CPMGInfo', val='CPMG')
-        self.addParameter(key='nScans', string='Number of scans', val=1, field='OTH')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='OTH')
-        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='OTH')
-        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='OTH')
-        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='OTH')
-        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='OTH')
-        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, field='OTH')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='OTH')
-        self.addParameter(key='nPoints', string='nPoints', val=60, field='OTH')
-        self.addParameter(key='etl', string='Echo train length', val=50, field='OTH')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='OTH')
+        self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
+        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
+        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='RF')
+        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, field='SEQ')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ')
+        self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
+        self.addParameter(key='etl', string='Echo train length', val=50, field='SEQ')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
+
+    def sequenceInfo(self):
+        print(" ")
+        print("CPMG")
+        print("Author: Dr. J.M. Algarín")
+        print("Contact: josalggui@i3m.upv.es")
+        print("mriLab @ i3M, CSIC, Spain")
+        print("This sequence runs an echo train with CPMG")
+
+    def sequenceTime(self):
+        nScans = self.mapVals['nScans']
+        repetitionTime = self.mapVals['repetitionTime']*1e-3
+        return(repetitionTime*nScans/60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq=0):
         init_gpa = False  # Starts the gpa

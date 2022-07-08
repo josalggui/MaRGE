@@ -20,18 +20,31 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         super(ShimmingSweep, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='ShimmingSweepInfo', val='ShimmingSweep')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='OTH')
-        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='OTH')
-        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='OTH')
-        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='OTH')
-        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='OTH')
-        self.addParameter(key='echoTime', string='Echo time (ms)', val=10., field='OTH')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='OTH')
-        self.addParameter(key='nPoints', string='nPoints', val=60, field='OTH')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='OTH')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
+        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
+        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='RF')
+        self.addParameter(key='echoTime', string='Echo time (ms)', val=10., field='SEQ')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ')
+        self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
         self.addParameter(key='shimming0', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
         self.addParameter(key='nShimming', string='n Shimming steps', val=10, field='OTH')
         self.addParameter(key='dShimming', string='Shiming step', val=[2.5, 2.5, 2.5], field='OTH')
+
+    def sequenceInfo(self):
+        print(" ")
+        print("Shimming")
+        print("Author: Dr. J.M. Algarín")
+        print("Contact: josalggui@i3m.upv.es")
+        print("mriLab @ i3M, CSIC, Spain")
+        print("This sequence sweep the shimming in the three axis")
+
+    def sequenceTime(self):
+        nScans = self.mapVals['nScans']
+        repetitionTime = self.mapVals['repetitionTime']*1e-3
+        return(repetitionTime*nScans/60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq):
         init_gpa = False  # Starts the gpa

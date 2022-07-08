@@ -19,9 +19,22 @@ class Noise(blankSeq.MRIBLANKSEQ):
         super(Noise, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='NoiseInfo', val='Noise')
-        self.addParameter(key='larmorFreq', string='Central frequency (MHz)', val=3.00, field='OTH')
-        self.addParameter(key='nPoints', string='Number of points', val=2500, field='OTH')
-        self.addParameter(key='bw', string='Acquision bandwidth (kHz)', val=50, field='OTH')
+        self.addParameter(key='larmorFreq', string='Central frequency (MHz)', val=3.00, field='RF')
+        self.addParameter(key='nPoints', string='Number of points', val=2500, field='RF')
+        self.addParameter(key='bw', string='Acquision bandwidth (kHz)', val=50, field='RF')
+
+    def sequenceInfo(self):
+        print(" ")
+        print("Noise")
+        print("Author: Dr. J.M. Algarín")
+        print("Contact: josalggui@i3m.upv.es")
+        print("mriLab @ i3M, CSIC, Spain")
+        print("Get a noise measurement")
+
+    def sequenceTime(self):
+        nScans = self.mapVals['nScans']
+        repetitionTime = self.mapVals['repetitionTime']*1e-3
+        return(repetitionTime*nScans/60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq):
         init_gpa = False

@@ -9,6 +9,14 @@ import seq.rare as rare
 import seq.haste as haste
 import seq.gre3d as gre
 import seq.fid as fid
+import seq.rabiFlops as rabiFlops
+import seq.cpmg as cpmg
+import seq.larmor as larmor
+import seq.inversionRecovery as inversionRecovery
+import seq.noise as noise
+import seq.shimmingSweep as shimming
+import seq.sliceSelection as sliceSelection
+import seq.fov as fov
 import seq.sweepImage as sweep
 
 class RARE(rare.RARE):
@@ -23,16 +31,48 @@ class HASTE(haste.HASTE):
 class FID(fid.FID):
     def __init__(self): super(FID, self).__init__()
 
+class RabiFlops(rabiFlops.RabiFlops):
+    def __init__(self): super(RabiFlops, self).__init__()
+
+class Larmor(larmor.Larmor):
+    def __init__(self): super(Larmor, self).__init__()
+
+class Noise(noise.Noise):
+    def __init__(self): super(Noise, self).__init__()
+
+class CPMG(cpmg.CPMG):
+    def __init__(self): super(CPMG, self).__init__()
+
+class IR(inversionRecovery.InversionRecovery):
+    def __init__(self): super(IR, self).__init__()
+
+class Shimming(shimming.ShimmingSweep):
+    def __init__(self): super(Shimming, self).__init__()
+
+class SliceSelection(sliceSelection.SliceSelection):
+    def __init__(self): super(SliceSelection, self).__init__()
+
+class FOV(fov.FOV):
+    def __init__(self): super(FOV, self).__init__()
+
 class SWEEP(sweep.SweepImage):
     def __init__(self): super(SWEEP, self).__init__()
 
 """
 Definition of default sequences
 """
-defaultsequences={
+defaultsequences = {
     'RARE': RARE(),
     'GRE3D': GRE3D(),
     'HASTE': HASTE(),
     'FID': FID(),
+    'RabiFlops': RabiFlops(),
+    'Larmor': Larmor(),
+    'Noise': Noise(),
+    'CPMG': CPMG(),
+    'Shimming': Shimming(),
+    'SliceSelection': SliceSelection(),
+    'InversionRecovery': IR(),
+    'FOV': FOV(),
     'SWEEP': SWEEP(),
 }
