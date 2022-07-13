@@ -71,6 +71,17 @@ class MRIBLANKSEQ:
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
         return out
 
+    def resetMapVals(self):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        Delete all new parameters in mapVals
+        """
+        mapVals2 = {}
+        for key in self.mapKeys:
+            mapVals2[key] = self.mapVals[key]
+        self.mapVals = mapVals2
+
     def sequencePlot(self):
         """ axes: 4-element tuple of axes upon which the TX, gradients, RX and digital I/O plots will be drawn.
         If not provided, plot_sequence() will create its own. """
@@ -402,18 +413,18 @@ class MRIBLANKSEQ:
         """
         # Save data
         dt = datetime.now()
-        dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S")
+        dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
         dt2 = date.today()
         dt2_string = dt2.strftime("%Y.%m.%d")
         if not os.path.exists('experiments/acquisitions/%s' % (dt2_string)):
             os.makedirs('experiments/acquisitions/%s' % (dt2_string))
-        if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
-            os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string))
+        # if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
+        #     os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string))
         self.mapVals['fileName'] = "%s.%s.mat" % (self.mapVals['seqName'], dt_string)
-        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, self.mapVals['seqName'],
+        savemat("experiments/acquisitions/%s/%s.%s.mat" % (dt2_string, self.mapVals['seqName'],
             dt_string), self.mapVals)
-        savemat("experiments/acquisitions/%s/%s/%s.%s.mat" % (dt2_string, dt_string, self.mapNmspc['seqName'],
-            dt_string), self.mapVals)
+        savemat("experiments/acquisitions/%s/%s.%s.mat" % (dt2_string, self.mapNmspc['seqName'],
+            dt_string), self.mapNmspc)
 
     def freqCalibration(self, bw=0.05, dbw = 0.0001):
         """

@@ -5,14 +5,10 @@ MRILAB @ I3M
 
 import experiment as ex
 import numpy as np
-import matplotlib.pyplot as plt
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
-from PyQt5.QtWidgets import QLabel  # To set the figure title
-from PyQt5 import QtCore            # To set the figure title
-import pyqtgraph as pg              # To plot nice 3d images
 
 class Noise(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -32,9 +28,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         print("Get a noise measurement")
 
     def sequenceTime(self):
-        nScans = self.mapVals['nScans']
-        repetitionTime = self.mapVals['repetitionTime']*1e-3
-        return(repetitionTime*nScans/60)  # minutes, scanTime
+        return(0)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq):
         init_gpa = False
@@ -89,7 +83,8 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Plot signal versus time
-        timePlot = SpectrumPlot(self.dataTime[0], [np.abs(self.dataTime[1])], [''],
+        timePlot = SpectrumPlot(self.dataTime[0], [np.abs(self.dataTime[1]), np.real(self.dataTime[1]), np.imag(self.dataTime[1])],
+                                ['abs', 'real', 'imag'],
                                 'Time (ms)', 'Signal amplitude (mV)',
                                 'Signal vs time, rms noise: %1.3f mV' %noiserms)
 
