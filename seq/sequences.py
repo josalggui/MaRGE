@@ -8,6 +8,7 @@ Created on Thu June 2 2022
 import seq.rare as rare
 import seq.haste as haste
 import seq.gre3d as gre
+import seq.petra as petra
 import seq.fid as fid
 import seq.rabiFlops as rabiFlops
 import seq.cpmg as cpmg
@@ -24,6 +25,9 @@ class RARE(rare.RARE):
 
 class GRE3D(gre.GRE3D):
     def __init__(self): super(GRE3D, self).__init__()
+
+class PETRA(petra.PETRA):
+    def __init__(self): super(PETRA, self).__init__()
 
 class HASTE(haste.HASTE):
     def __init__(self): super(HASTE, self).__init__()
@@ -64,6 +68,7 @@ Definition of default sequences
 defaultsequences = {
     'RARE': RARE(),
     'GRE3D': GRE3D(),
+    'PETRA': PETRA(),
     'HASTE': HASTE(),
     'FID': FID(),
     'RabiFlops': RabiFlops(),
