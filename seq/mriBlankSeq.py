@@ -79,9 +79,9 @@ class MRIBLANKSEQ:
         Save sequence input parameters into csv
         """
         self.resetMapVals()
-        if not os.path.exists('../experiments/parameterisations'):
-            os.makedirs('../experiments/parameterisations')
-        with open('../experiments/parameterisations/%s_last_parameters.csv' % self.mapVals['seqName'], 'w') as csvfile:
+        if not os.path.exists('experiments/parameterisations'):
+            os.makedirs('experiments/parameterisations')
+        with open('experiments/parameterisations/%s_last_parameters.csv' % self.mapVals['seqName'], 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys)
             writer.writeheader()
             writer.writerows([self.mapVals])
@@ -93,52 +93,56 @@ class MRIBLANKSEQ:
         Load sequence parameters from csv
         """
         mapValsOld = self.mapVals
-        with open('../experiments/parameterisations/%s_last_parameters.csv' % self.mapVals['seqName'],'r') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for l in reader:
-                mapValsNew = l
-        self.mapVals = {}
+        try:
+            with open('experiments/parameterisations/%s_last_parameters.csv' % self.mapVals['seqName'],'r') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for l in reader:
+                    mapValsNew = l
 
-        # Get key for corresponding modified parameter
-        for key in self.mapKeys:
-            dataLen = self.mapLen[key]
-            valOld = mapValsOld[key]
-            valNew = mapValsNew[key]
-            valNew = valNew.replace('[', '')
-            valNew = valNew.replace(']', '')
-            valNew = valNew.split(',')
-            if type(valOld) == str:
-                valOld = [valOld]
-            elif dataLen == 1:
-                valOld = [valOld]
-            dataType = type(valOld[0])
+            self.mapVals = {}
 
-            inputNum = []
-            for ii in range(dataLen):
-                if dataType == float or dataType == np.float64:
-                    try:
-                        inputNum.append(float(valNew[ii]))
-                    except:
-                        inputNum.append(float(valOld[ii]))
-                elif dataType == int:
-                    try:
-                        inputNum.append(int(valNew[ii]))
-                    except:
-                        inputNum.append(int(valOld[ii]))
-                else:
-                    try:
-                        inputNum.append(str(valNew[0]))
-                        break
-                    except:
-                        inputNum.append(str(valOld[0]))
-                        break
-            if dataType == str:
-                self.mapVals[key] = inputNum[0]
-            else:
-                if dataLen == 1:  # Save value into mapVals
+            # Get key for corresponding modified parameter
+            for key in self.mapKeys:
+                dataLen = self.mapLen[key]
+                valOld = mapValsOld[key]
+                valNew = mapValsNew[key]
+                valNew = valNew.replace('[', '')
+                valNew = valNew.replace(']', '')
+                valNew = valNew.split(',')
+                if type(valOld) == str:
+                    valOld = [valOld]
+                elif dataLen == 1:
+                    valOld = [valOld]
+                dataType = type(valOld[0])
+
+                inputNum = []
+                for ii in range(dataLen):
+                    if dataType == float or dataType == np.float64:
+                        try:
+                            inputNum.append(float(valNew[ii]))
+                        except:
+                            inputNum.append(float(valOld[ii]))
+                    elif dataType == int:
+                        try:
+                            inputNum.append(int(valNew[ii]))
+                        except:
+                            inputNum.append(int(valOld[ii]))
+                    else:
+                        try:
+                            inputNum.append(str(valNew[0]))
+                            break
+                        except:
+                            inputNum.append(str(valOld[0]))
+                            break
+                if dataType == str:
                     self.mapVals[key] = inputNum[0]
                 else:
-                    self.mapVals[key] = inputNum
+                    if dataLen == 1:  # Save value into mapVals
+                        self.mapVals[key] = inputNum[0]
+                    else:
+                        self.mapVals[key] = inputNum
+        except:
+            self.mapVals = self.mapVals
 
     def resetMapVals(self):
         """"
@@ -502,13 +506,20 @@ class MRIBLANKSEQ:
         dt2_string = dt2.strftime("%Y.%m.%d")
         if not os.path.exists('experiments/acquisitions/%s' % (dt2_string)):
             os.makedirs('experiments/acquisitions/%s' % (dt2_string))
-        # if not os.path.exists('experiments/acquisitions/%s/%s' % (dt2_string, dt_string)):
-        #     os.makedirs('experiments/acquisitions/%s/%s' % (dt2_string, dt_string))
         self.mapVals['fileName'] = "%s.%s.mat" % (self.mapVals['seqName'], dt_string)
+
+        # Save mat file with the outputs
         savemat("experiments/acquisitions/%s/%s.%s.mat" % (dt2_string, self.mapVals['seqName'],
             dt_string), self.mapVals)
-        savemat("experiments/acquisitions/%s/%s.%s.mat" % (dt2_string, self.mapNmspc['seqName'],
-            dt_string), self.mapNmspc)
+
+        # Save csv with input parameters
+        with open('experiments/acquisitions/%s/%s.%s.csv' % (dt2_string,self.mapNmspc['seqName'],dt_string), 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys)
+            writer.writeheader()
+            mapVals = {}
+            for key in self.mapKeys:    # take only the inputs from mapVals
+                mapVals[key] = self.mapVals[key]
+            writer.writerows([self.mapNmspc, mapVals])
 
     def freqCalibration(self, bw=0.05, dbw = 0.0001):
         """

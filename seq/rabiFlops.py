@@ -142,7 +142,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
             data = np.reshape(data, (nSteps, -1))
             data = data[:, int(nPoints/2)]
             self.data = [rfTime, data]
-            self.mapVals['sampledSignal'] = data
+            self.mapVals['sampledPoint'] = data
         return 0
 
     def sequenceAnalysis(self, obj=''):

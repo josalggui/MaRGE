@@ -183,7 +183,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
             data = np.reshape(data, (nSteps, -1))
             data = data[:, int(nPoints / 2)]
             self.data = [irTimeVector*1e-3, data]
-            self.mapVals['sampledSignal'] = data
+            self.mapVals['sampledPoint'] = data
         return 0
 
     def sequenceAnalysis(self, obj=''):

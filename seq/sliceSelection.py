@@ -145,7 +145,7 @@ class SliceSelection(blankSeq.MRIBLANKSEQ):
             print(msgs)
             data = sig.decimate(rxd['rx0'] * 13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = data
-            self.mapVals['sampledSignal'] = data[int(nPoints/2)]
+            self.mapVals['sampledPoint'] = data[int(nPoints/2)]
             self.kind = 'Point'
         self.expt.__del__()
         return 0

@@ -168,41 +168,55 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
         @email: josalggui@i3m.upv.es
         Here is where input values obtained from the gui are input into the sequence property mapVals
         """
-        temp = defaultsequences[self.sequence].mapVals
+        seq = defaultsequences[self.sequence]
 
         # Get key for corresponding modified parameter
-        names = defaultsequences[self.sequence].mapNmspc            # Map with GUI names
+        names = seq.mapNmspc            # Map with GUI names
         modName = self.label_name.text()                            # GUI name of the modified value
         key = [k for k, v in names.items() if v == modName][0]      # Get corresponding key of the modified value
-        valOld = defaultsequences[self.sequence].mapVals[key]       # Current value to be saved again in case of error
-        dataLen = defaultsequences[self.sequence].mapLen[key]
-        if dataLen == 1: valOld = [valOld]
+        valOld = seq.mapVals[key]       # Current value to be saved again in case of error
+        dataLen = seq.mapLen[key]
+        valNew = self.input_value.text()
+        valNew = valNew.replace('[', '')
+        valNew = valNew.replace(']', '')
+        valNew = valNew.split(',')
+        if type(valOld) == str:
+            valOld = [valOld]
+        elif dataLen == 1:
+            valOld = [valOld]
         dataType = type(valOld[0])
 
-        # Modify the corresponding value into the sequence
-        inputStr = self.input_value.text()                          # Input value (gui allways gives strings)
-        inputStr = inputStr.replace('[','')
-        inputStr = inputStr.replace(']','')
-        inputStr = inputStr.split(',')
         inputNum = []
         for ii in range(dataLen):
-            if dataType==float or dataType==numpy.float64:
-                try: inputNum.append(float(inputStr[ii]))
-                except: inputNum.append(float(valOld[ii]))
-            elif dataType==int:
-                try: inputNum.append(int(inputStr[ii]))
-                except: inputNum.append(int(valOld[ii]))
+            if dataType == float or dataType == numpy.float64:
+                try:
+                    inputNum.append(float(valNew[ii]))
+                except:
+                    inputNum.append(float(valOld[ii]))
+            elif dataType == int:
+                try:
+                    inputNum.append(int(valNew[ii]))
+                except:
+                    inputNum.append(int(valOld[ii]))
             else:
-                try: inputNum.append(str(inputStr[ii]))
-                except: inputNum.append(str(valOld[ii]))
-        if dataLen==1:                                                # Save value into mapVals
-            defaultsequences[self.sequence].mapVals[key] = inputNum[0]
+                try:
+                    inputNum.append(str(valNew[0]))
+                    break
+                except:
+                    inputNum.append(str(valOld[0]))
+                    break
+        if dataType == str:
+            seq.mapVals[key] = inputNum[0]
         else:
-            defaultsequences[self.sequence].mapVals[key] = inputNum
+            if dataLen == 1:  # Save value into mapVals
+                seq.mapVals[key] = inputNum[0]
+            else:
+                seq.mapVals[key] = inputNum
 
         # Print value into the console
-        seqTime = defaultsequences[self.sequence].sequenceTime()
+        seqTime = seq.sequenceTime()
         print('Sequence time %1.1d minutes' % seqTime)
+        defaultsequences[self.sequence] = seq
                 
     def validate_input(self):
         reg_ex = QRegExp('^(?:0*(?:\.\d+)?|1(\.0*)?)$')

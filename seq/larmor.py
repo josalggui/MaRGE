@@ -128,7 +128,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
             # Process data to be plotted
             self.results = [data]
-            self.mapVals['sampledSignal'] = data[int(nPoints/2)]
+            self.mapVals['sampledPoint'] = data[int(nPoints/2)]
         return 0
 
     def sequenceAnalysis(self, obj=''):

@@ -23,6 +23,7 @@ import sys
 import experiment as ex
 from scipy.io import savemat
 from controller.sequencecontroller import SequenceList
+import csv
 from sequencesnamespace import Namespace as nmspc
 from sessionmodes import defaultsessions
 from manager.datamanager import DataManager
@@ -255,41 +256,77 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
    
     def load_parameters(self):
     
-        self.clearPlotviewLayout()
         file_name, _ = QFileDialog.getOpenFileName(self, 'Open Parameters File', "experiments/parameterisations/")
-        
-        if file_name:
-            f = open(file_name,"r")
-            contents=f.read()
-            new_dict=ast. literal_eval(contents)
-            f.close()
 
-        lab = 'nmspc.%s' %(new_dict['seq'])
-        item=eval(lab)
+        seq = defaultsequences[self.sequence]
+        mapValsOld = seq.mapVals
+        with open(file_name, 'r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for l in reader:
+                mapValsNew = l
 
-        del new_dict['seq']     
-        for key in new_dict:       
-            setattr(defaultsequences[self.sequence], key, new_dict[key])
-        
-        self.sequence = item
-        self.onSequenceChanged.emit(self.sequence)
+        seq.mapVals = {}
+
+        # Get key for corresponding modified parameter
+        for key in seq.mapKeys:
+            dataLen = seq.mapLen[key]
+            valOld = mapValsOld[key]
+            valNew = mapValsNew[key]
+            valNew = valNew.replace('[', '')
+            valNew = valNew.replace(']', '')
+            valNew = valNew.split(',')
+            if type(valOld) == str:
+                valOld = [valOld]
+            elif dataLen == 1:
+                valOld = [valOld]
+            dataType = type(valOld[0])
+
+            inputNum = []
+            for ii in range(dataLen):
+                if dataType == float or dataType == np.float64:
+                    try:
+                        inputNum.append(float(valNew[ii]))
+                    except:
+                        inputNum.append(float(valOld[ii]))
+                elif dataType == int:
+                    try:
+                        inputNum.append(int(valNew[ii]))
+                    except:
+                        inputNum.append(int(valOld[ii]))
+                else:
+                    try:
+                        inputNum.append(str(valNew[0]))
+                        break
+                    except:
+                        inputNum.append(str(valOld[0]))
+                        break
+            if dataType == str:
+                seq.mapVals[key] = inputNum[0]
+            else:
+                if dataLen == 1:  # Save value into mapVals
+                    seq.mapVals[key] = inputNum[0]
+                else:
+                    seq.mapVals[key] = inputNum
 
         self.messages("Parameters of %s sequence loaded" %(self.sequence))
 
     def save_parameters(self):
         
         dt = datetime.now()
-        dt_string = dt.strftime("%d-%m-%Y_%H_%M_%S")
-        dict = vars(defaultsequences[self.sequence]) 
-        dict.pop('rawdata', None)
-        dict.pop('average', None)       
-        
-        sequ = '%s' %(self.sequence)
-        sequ = sequ.replace(" ", "")
-        f = open("experiments/parameterisations/%s_params_%s.txt" % (sequ, dt_string),"w")
-        f.write( str(dict) )
-        f.close()
-  
+        dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
+        seq = defaultsequences[self.sequence]
+
+        # Save csv with input parameters
+        if not os.path.exists('experiments/parameterisations'):
+            os.makedirs('experiments/parameterisations')
+        with open('experiments/parameterisations/%s.%s.csv' % (seq.mapNmspc['seqName'], dt_string), 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=seq.mapKeys)
+            writer.writeheader()
+            mapVals = {}
+            for key in seq.mapKeys:  # take only the inputs from mapVals
+                mapVals[key] = seq.mapVals[key]
+            writer.writerows([seq.mapNmspc, mapVals])
+
         self.messages("Parameters of %s sequence saved" %(self.sequence))
         
     def plot_sequence(self):

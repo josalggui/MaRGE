@@ -1,1 +1,0 @@
-{'seq': 'TSE', 'lo_freq': 3.0395, 'rf_amp': 0.4, 'rf_pi2_duration': 45, 'echo_duration': 10, 'tr_duration': 500, 'BW': 31, 'nScans': 1, 'shim': (0, 0, 0), 'trap_ramp_duration': 100, 'phase_grad_duration': 500, 'n': (40, 40, 1), 'fov': (20, 20, 20), 'preemph_factor': 1.0, 'echos_per_tr': 40, 'sweep_mode': 1, 'par_acq_factor': 0, 'axes': (1, 2, 3)}

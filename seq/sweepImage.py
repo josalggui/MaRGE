@@ -8,6 +8,7 @@ Created on Thu June 2 2022
 import numpy as np
 import seq.mriBlankSeq as blankSeq
 import pyqtgraph as pg              # To plot nice 3d images
+from plotview.spectrumplot import SpectrumPlot
 
 class SweepImage(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -73,6 +74,9 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
     def sequenceAnalysis(self, obj=''):
         nPoints = np.array(self.seq.mapVals['nPoints'])
         nSteps = [self.mapVals['nSteps0'], self.mapVals['nSteps1']]
+        start = [self.mapVals['start0'], self.mapVals['start1']]
+        end = [self.mapVals['end0'], self.mapVals['end1']]
+        parVector0 = np.linspace(start[0], end[0], nSteps[0])  # Create vector with parameters to sweep
 
         self.saveRawData()
 
@@ -106,8 +110,12 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                     n += 1
 
             # Plot image
-            map = pg.image(np.abs(image))
-
+            if nSteps[1]>1:
+                map = pg.image(np.abs(image))
+            else:
+                image = np.reshape(image, -1)
+                map = SpectrumPlot(parVector0, [np.abs(image)], [''],
+                                   self.seq.mapNmspc[self.mapVals['parameter0']], 'Output amplitude', '%s sweep' % self.mapVals['seqNameSweep'])
             return([map])
 
 # defaultSweep = {

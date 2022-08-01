@@ -17,7 +17,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='NoiseInfo', val='Noise')
         self.addParameter(key='larmorFreq', string='Central frequency (MHz)', val=3.00, field='RF')
         self.addParameter(key='nPoints', string='Number of points', val=2500, field='RF')
-        self.addParameter(key='bw', string='Acquision bandwidth (kHz)', val=50, field='RF')
+        self.addParameter(key='bw', string='Acquision bandwidth (kHz)', val=50.0, field='RF')
 
     def sequenceInfo(self):
         print(" ")
@@ -79,7 +79,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         noise = np.abs(self.dataTime[1])
         noiserms = np.mean(noise)
         self.mapVals['RMS noise'] = noiserms
-        self.mapVals['sampledSignal'] = noiserms # for sweep method
+        self.mapVals['sampledPoint'] = noiserms # for sweep method
         self.saveRawData()
 
         # Plot signal versus time

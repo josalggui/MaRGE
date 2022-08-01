@@ -163,7 +163,7 @@ class IRTSE(blankSeq.MRIBLANKSEQ):
             data = np.average(np.reshape(dataFull, (nScans, -1)), axis=0)
             self.mapVals['data'] = data
             data = np.reshape(data, (etl, -1))
-            self.mapVals['sampledSignal'] = data[0, int(nPoints / 2)]   # To be used by sweep class
+            self.mapVals['sampledPoint'] = data[0, int(nPoints / 2)]   # To be used by sweep class
         return 0
 
     def sequenceAnalysis(self, obj=''):

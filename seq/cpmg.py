@@ -139,7 +139,7 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         results = self.results
         nPoints = self.mapVals['nPoints']
         echo1Amp = self.mapVals['data'][int(nPoints/2)]
-        self.mapVals['sampledSignal'] = echo1Amp  # Save point here to sweep class
+        self.mapVals['sampledPoint'] = echo1Amp  # Save point here to sweep class
 
         # Functions for fitting
         def func1(x, m, t2):
