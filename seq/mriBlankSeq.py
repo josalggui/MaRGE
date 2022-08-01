@@ -12,6 +12,7 @@ from datetime import date,  datetime
 from scipy.io import savemat
 import experiment as ex
 import scipy.signal as sig
+import csv
 
 class MRIBLANKSEQ:
     # Properties
@@ -70,6 +71,74 @@ class MRIBLANKSEQ:
             if self.mapFields[key] == 'OTH':
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
         return out
+
+    def saveParams(self):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        Save sequence input parameters into csv
+        """
+        self.resetMapVals()
+        if not os.path.exists('../experiments/parameterisations'):
+            os.makedirs('../experiments/parameterisations')
+        with open('../experiments/parameterisations/%s_last_parameters.csv' % self.mapVals['seqName'], 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys)
+            writer.writeheader()
+            writer.writerows([self.mapVals])
+
+    def loadParams(self):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        Load sequence parameters from csv
+        """
+        mapValsOld = self.mapVals
+        with open('../experiments/parameterisations/%s_last_parameters.csv' % self.mapVals['seqName'],'r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for l in reader:
+                mapValsNew = l
+        self.mapVals = {}
+
+        # Get key for corresponding modified parameter
+        for key in self.mapKeys:
+            dataLen = self.mapLen[key]
+            valOld = mapValsOld[key]
+            valNew = mapValsNew[key]
+            valNew = valNew.replace('[', '')
+            valNew = valNew.replace(']', '')
+            valNew = valNew.split(',')
+            if type(valOld) == str:
+                valOld = [valOld]
+            elif dataLen == 1:
+                valOld = [valOld]
+            dataType = type(valOld[0])
+
+            inputNum = []
+            for ii in range(dataLen):
+                if dataType == float or dataType == np.float64:
+                    try:
+                        inputNum.append(float(valNew[ii]))
+                    except:
+                        inputNum.append(float(valOld[ii]))
+                elif dataType == int:
+                    try:
+                        inputNum.append(int(valNew[ii]))
+                    except:
+                        inputNum.append(int(valOld[ii]))
+                else:
+                    try:
+                        inputNum.append(str(valNew[0]))
+                        break
+                    except:
+                        inputNum.append(str(valOld[0]))
+                        break
+            if dataType == str:
+                self.mapVals[key] = inputNum[0]
+            else:
+                if dataLen == 1:  # Save value into mapVals
+                    self.mapVals[key] = inputNum[0]
+                else:
+                    self.mapVals[key] = inputNum
 
     def resetMapVals(self):
         """"

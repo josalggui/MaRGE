@@ -49,6 +49,9 @@ class AcquisitionController(QObject):
         # Save sequence list into the current sequence, just in case you need to do sweep
         defaultsequences[self.seqName].sequenceList = defaultsequences
 
+        # Save input parameters
+        defaultsequences[self.seqName].saveParams()
+
         # Create and execute selected sequence
         defaultsequences[self.seqName].sequenceRun(0)
 

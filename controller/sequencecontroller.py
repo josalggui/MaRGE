@@ -13,15 +13,9 @@ Sequence Controller
 """
 from PyQt5.QtWidgets import QSizePolicy, QLabel,  QComboBox, QTabWidget, QWidget, QVBoxLayout
 from PyQt5.QtCore import Qt, QRegExp
-# from sequencemodes import defaultsequences
-from sequencesnamespace import Namespace as nmspc
-from sequencesnamespace import Tooltip_label as tlt_l
-from sequencesnamespace import Tooltip_inValue as tlt_inV
 from PyQt5.uic import loadUiType
 from PyQt5.QtGui import QRegExpValidator
 import numpy
-
-# Test from J.M. Algarín
 from seq.sequences import defaultsequences
 
 Parameter_Form, Parameter_Base = loadUiType('ui/inputparameter.ui')
@@ -39,6 +33,10 @@ class SequenceList(QComboBox):
         @param parent:  Mainviewcontroller (access to parameter layout)
         """
         super(SequenceList, self).__init__(parent)
+
+        # Here the GUI updates the inputs to the last used inputs
+        for key in defaultsequences.keys():
+            defaultsequences[key].loadParams()
 
         # Add sequences to sequences list
         self.addItems(list(defaultsequences.keys()))
@@ -133,16 +131,6 @@ class SequenceList(QComboBox):
         tab.layout.addStretch()
         tab.setLayout(tab.layout)
         return tab
-
-
-#    def generateTickItem(text):
-#        Qx = QCheckBox("Qx")
-#        Qx.setChecked(True)
-        
-#        Qy = QRadioButton('Qy')
-#        Qy.setChecked(True)
-#        Qz = QRadioButton('Qz')
-#        return Qx
 
     def get_items(self, struct: dict = None, sequence:str = None) -> list:
         itemlist: list = []
