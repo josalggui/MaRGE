@@ -3,6 +3,19 @@
 MRILAB @ I3M
 """
 
+import os
+import sys
+#*****************************************************************************
+# Add path to the working directory
+path = os.path.realpath(__file__)
+ii = 0
+for char in path:
+    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
+        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
+        sys.path.append(path[0:ii+1]+'marcos_client')
+    ii += 1
+#******************************************************************************
+import time
 import experiment as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
@@ -18,6 +31,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='larmorFreq', string='Central frequency (MHz)', val=3.00, field='RF')
         self.addParameter(key='nPoints', string='Number of points', val=2500, field='RF')
         self.addParameter(key='bw', string='Acquision bandwidth (kHz)', val=50.0, field='RF')
+        self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
 
     def sequenceInfo(self):
         print(" ")
@@ -30,7 +44,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
     def sequenceTime(self):
         return(0)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq):
+    def sequenceRun(self, plotSeq=0):
         init_gpa = False
         demo = False
 
@@ -39,6 +53,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         larmorFreq = self.mapVals['larmorFreq'] # MHz
         nPoints = self.mapVals['nPoints']
         bw = self.mapVals['bw']*1e-3 # MHz
+        rxChannel = self.mapVals['rxChannel']
 
         if demo:
             data = np.random.randn(nPoints*hw.oversamplingFactor)
@@ -55,15 +70,18 @@ class Noise(blankSeq.MRIBLANKSEQ):
             # Rx gate
             t0 = 20
             self.iniSequence(20, np.array((0, 0, 0)))
-            self.rxGate(t0, acqTime)
+            self.rxGate(t0, acqTime, rxChannel=rxChannel)
             self.endSequence(2*acqTime)
 
         if plotSeq == 0:
             print('Running...')
+            t0 = time.time()
             rxd, msgs = self.expt.run()
-            print(msgs)
+            t1 = time.time()
+            print('Run time = %f s' %(t1-t0))
+            # print(msgs)
             self.expt.__del__()
-            data = sig.decimate(rxd['rx0']*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            data = sig.decimate(rxd['rx%i'%rxChannel]*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = data
             print('End')
             tVector = np.linspace(0, acqTime, num=nPoints) * 1e-3  # ms
@@ -94,3 +112,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
                                 'Signal spectrum')
 
         return([timePlot, freqPlot])
+
+if __name__=='__main__':
+    seq = Noise()
+    seq.sequenceRun()

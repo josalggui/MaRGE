@@ -84,7 +84,7 @@ class MRIBLANKSEQ:
         with open('experiments/parameterisations/%s_last_parameters.csv' % self.mapVals['seqName'], 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys)
             writer.writeheader()
-            writer.writerows([self.mapVals])
+            writer.writerows([self.mapNmspc, self.mapVals])
 
     def loadParams(self):
         """"
@@ -105,7 +105,10 @@ class MRIBLANKSEQ:
             for key in self.mapKeys:
                 dataLen = self.mapLen[key]
                 valOld = mapValsOld[key]
-                valNew = mapValsNew[key]
+                try:
+                    valNew = mapValsNew[key]
+                except:
+                    valNew = str(valOld)
                 valNew = valNew.replace('[', '')
                 valNew = valNew.replace(']', '')
                 valNew = valNew.split(',')
@@ -323,7 +326,7 @@ class MRIBLANKSEQ:
             'tx_gate': (txGateTime, txGateAmp)
         }, rewrite)
 
-    def rfRecPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, rewrite=True):
+    def rfRecPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, txChannel=0, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -334,11 +337,11 @@ class MRIBLANKSEQ:
         txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
         txGateAmp = np.array([1, 0])
         self.expt.add_flodict({
-            'tx0': (txTime, txAmp),
+            'tx%i'%txChannel: (txTime, txAmp),
             'tx_gate': (txGateTime, txGateAmp)
         }, rewrite)
 
-    def rxGate(self, tStart, gateTime, rewrite=True):
+    def rxGate(self, tStart, gateTime, rxChannel=0, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -346,9 +349,9 @@ class MRIBLANKSEQ:
         rxGateTime = np.array([tStart, tStart + gateTime])
         rxGateAmp = np.array([1, 0])
         self.expt.add_flodict({
-            'rx0_en': (rxGateTime, rxGateAmp),
+            'rx%i_en'%rxChannel: (rxGateTime, rxGateAmp),
             'rx_gate': (rxGateTime, rxGateAmp),
-        })
+        }, rewrite)
 
     def gradTrap(self, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming, rewrite=True):
         """"
@@ -421,7 +424,6 @@ class MRIBLANKSEQ:
                 self.expt.add_flodict({'grad_vy': (tRamp[kk], gAmp[kk] + shimming[1])}, rewrite)
             elif gAxes == 2:
                 self.expt.add_flodict({'grad_vz': (tRamp[kk], gAmp[kk] + shimming[2])}, rewrite)
-
 
     def gradTrapAmplitude(self, tStart, gAmplitude, gTotalTime, gAxis, shimming, orders, rewrite=True):
         """"

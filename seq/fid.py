@@ -25,6 +25,8 @@ class FID(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
         self.addParameter(key='nPoints', string='Number of points', val=100, field='IM')
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
+        self.addParameter(key='txChannel', string='Tx channel', val=0, field='RF')
+        self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
 
     def sequenceInfo(self):
         print(" ")
@@ -52,6 +54,8 @@ class FID(blankSeq.MRIBLANKSEQ):
         acqTime = self.mapVals['acqTime']*1e3 # us
         nPoints = self.mapVals['nPoints']
         shimming = np.array(self.mapVals['shimming'])*1e-4
+        txChannel = self.mapVals['txChannel']
+        rxChannel = self.mapVals['rxChannel']
 
         def createSequence():
             # Initialize time
@@ -63,11 +67,11 @@ class FID(blankSeq.MRIBLANKSEQ):
 
             # Excitation pulse
             t0 = tEx - hw.blkTime - rfExTime / 2
-            self.rfRecPulse(t0, rfExTime, rfExAmp, 0)
+            self.rfRecPulse(t0, rfExTime, rfExAmp, 0, txChannel=txChannel)
 
             # Rx gate
             t0 = tEx + rfExTime / 2 + deadTime
-            self.rxGate(t0, acqTime)
+            self.rxGate(t0, acqTime, rxChannel=rxChannel)
 
             self.endSequence(repetitionTime)
 
@@ -88,7 +92,7 @@ class FID(blankSeq.MRIBLANKSEQ):
             # Run the experiment and get data
             for ii in range(nScans):
                 rxd, msgs = self.expt.run()
-                overData = np.concatenate((overData, rxd['rx0']*13.788), axis=0)
+                overData = np.concatenate((overData, rxd['rx%i'%rxChannel]*13.788), axis=0)
             print(msgs)
             dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['overData'] = overData

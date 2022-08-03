@@ -13,7 +13,7 @@ from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
 from PyQt5.QtGui import QIcon
 from controller.acquisitioncontroller import AcquisitionController
-from controller.calibrationcontroller import CalibrationController
+# from controller.calibrationcontroller import CalibrationController
 from controller.batchcontroller import BatchController
 import pyqtgraph.exporters
 from functools import partial
@@ -70,7 +70,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.layout_output.addWidget(self.cons)
         sys.stdout = EmittingStream(textWritten=self.onUpdateText)
         sys.stderr = EmittingStream(textWritten=self.onUpdateText)        
-        
+
         # Initialisation of acquisition controller
         acqCtrl = AcquisitionController(self, self.session, self.sequencelist)
 
@@ -82,7 +82,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
         # Toolbar Actions
         self.action_gpaInit.triggered.connect(self.initgpa)
-        self.action_calibration.triggered.connect(self.calibrate)
+        # self.action_calibration.triggered.connect(self.calibrate)
         self.action_changeappearance.triggered.connect(self.changeAppearanceSlot)
         self.action_acquire.triggered.connect(acqCtrl.startAcquisition)
         self.action_loadparams.triggered.connect(self.load_parameters)
@@ -308,6 +308,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                 else:
                     seq.mapVals[key] = inputNum
 
+        self.onSequenceChanged.emit(self.sequence)
         self.messages("Parameters of %s sequence loaded" %(self.sequence))
 
     def save_parameters(self):
@@ -343,9 +344,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         msg.setText(text)
         msg.exec();
         
-    def calibrate(self):
-        seqCalib = CalibrationController(self, self.sequencelist)
-        seqCalib.show()
+    # def calibrate(self):
+    #     seqCalib = CalibrationController(self, self.sequencelist)
+    #     seqCalib.show()
         
     def initgpa(self):
         expt = ex.Experiment(init_gpa=True)

@@ -69,6 +69,7 @@ class AcquisitionController(QObject):
         for item in out:
             self.parent.plotview_layout.addWidget(item)
 
+        # self.parent.onSequenceChanged.emit(self.parent.sequence)
         print('End sequence')
 
     def startSequencePlot(self):
