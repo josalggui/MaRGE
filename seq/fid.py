@@ -59,13 +59,13 @@ class FID(blankSeq.MRIBLANKSEQ):
 
         def createSequence():
             # Initialize time
-            t0 = 20
+            tini = 20
 
             # Shimming
-            self.iniSequence(t0, shimming)
+            self.iniSequence(tini, shimming)
 
             for scan in range(nScans):
-                tEx = t0 + repetitionTime*scan + hw.blkTime + rfExTime / 2
+                tEx = tini + repetitionTime*scan + hw.blkTime + rfExTime / 2
 
                 # Excitation pulse
                 t0 = tEx - hw.blkTime - rfExTime / 2
@@ -75,7 +75,7 @@ class FID(blankSeq.MRIBLANKSEQ):
                 t0 = tEx + rfExTime / 2 + deadTime
                 self.rxGate(t0, acqTime, rxChannel=rxChannel)
 
-            self.endSequence(repetitionTime)
+            self.endSequence(repetitionTime*nScans)
 
 
         # Initialize the experiment
