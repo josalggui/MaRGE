@@ -6,13 +6,10 @@
 
 import experiment as ex
 import numpy as np
-import matplotlib.pyplot as plt
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
-from PyQt5.QtWidgets import QLabel  # To set the figure title
-from PyQt5 import QtCore  # To set the figure title
 
 
 class FOV(blankSeq.MRIBLANKSEQ):
@@ -173,9 +170,17 @@ class FOV(blankSeq.MRIBLANKSEQ):
         fVector = np.linspace(-fov/2, fov/2, nPoints)
 
         # Signal vs rf time
-        dataplot = SpectrumPlot(tVector, [np.abs(data[0, :]), np.abs(data[1, :]), np.abs(data[2, :])],
-                             ['X axis', 'Y axis', 'Z axis'], 'Time (ms)', 'Signal amplitude (mV)', 'Signal vs time')
+        dataPlotWidget = SpectrumPlot(xData=tVector,
+                                      yData=[np.abs(data[0, :]),np.abs(data[1, :]), np.abs(data[2, :])],
+                                      legend=['X axis', 'Y axis', 'Z axis'],
+                                      xLabel='Time (ms)',
+                                      yLabel='Signal amplitude (mV)',
+                                      title='Signal vs time')
 
-        spectrumplot = SpectrumPlot(fVector, [np.abs(spectrum[0, :]), np.abs(spectrum[1, :]), np.abs(spectrum[2, :])],
-                             ['X axis', 'Y axis', 'Z axis'], 'Position (cm)', 'Amplitude (a.u.)', 'Spectrum')
-        return([dataplot, spectrumplot])
+        spectrumPlotWidget = SpectrumPlot(xData=fVector,
+                                          yData=[np.abs(spectrum[0, :]), np.abs(spectrum[1, :]), np.abs(spectrum[2, :])],
+                                          legend=['X axis', 'Y axis', 'Z axis'],
+                                          xLabel='Position (cm)',
+                                          yLabel='Amplitude (a.u.)',
+                                          title='Spectrum')
+        return([dataPlotWidget, spectrumPlotWidget])

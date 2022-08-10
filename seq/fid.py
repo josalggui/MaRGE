@@ -122,11 +122,19 @@ class FID(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Add time signal to the layout
-        signalPlot = SpectrumPlot(tVector, [np.abs(signal), np.real(signal), np.imag(signal)], ['abs', 'real', 'imag'],
-                                  'Time (ms)', 'Signal amplitude (mV)', 'Signal vs time')
+        signalPlotWidget = SpectrumPlot(xData=tVector,
+                                        yData=[np.abs(signal), np.real(signal), np.imag(signal)],
+                                        legend=['abs', 'real', 'imag'],
+                                        xLabel='Time (ms)',
+                                        yLabel='Signal amplitude (mV)',
+                                        title='Signal vs time')
 
         # Add frequency spectrum to the layout
-        spectrumPlot = SpectrumPlot(fVector, [np.abs(spectrum)], [''], 'Frequency (kHz)', 'Spectrum amplitude (a.u.)',
-                                    'Spectrum')
+        spectrumPlotWidget = SpectrumPlot(xData=fVector,
+                                          yData=[np.abs(spectrum)],
+                                          legend=[''],
+                                          xLabel='Frequency (kHz)',
+                                          yLabel='Spectrum amplitude (a.u.)',
+                                          title='Spectrum')
 
-        return([signalPlot, spectrumPlot])
+        return([signalPlotWidget, spectrumPlotWidget])

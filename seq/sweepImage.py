@@ -5,25 +5,38 @@ Created on Thu June 2 2022
 @Summary: This class is able to sweep any parameter from any sequence
 """
 
+import os
+import sys
+#*****************************************************************************
+# Add path to the working directory
+path = os.path.realpath(__file__)
+ii = 0
+for char in path:
+    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
+        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
+        sys.path.append(path[0:ii+1]+'marcos_client')
+    ii += 1
+#******************************************************************************
 import numpy as np
 import seq.mriBlankSeq as blankSeq
 import pyqtgraph as pg              # To plot nice 3d images
 from plotview.spectrumplot import SpectrumPlot
+from plotview.spectrumplot import Spectrum3DPlot
 
 class SweepImage(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(SweepImage, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='SWEEPinfo', val='SWEEP')
-        self.addParameter(key='seqNameSweep', string='Sequence', val='FID', field='OTH')
-        self.addParameter(key='parameter0', string='Parameter 0 X-axis', val='rfExTime', field='OTH')
-        self.addParameter(key='start0', string='Start point 0', val=0.01, field='OTH')
+        self.addParameter(key='seqNameSweep', string='Sequence', val='Noise', field='OTH')
+        self.addParameter(key='parameter0', string='Parameter 0 X-axis', val='bw', field='OTH')
+        self.addParameter(key='start0', string='Start point 0', val=30.0, field='OTH')
         self.addParameter(key='end0', string='End point 0', val=50.0, field='OTH')
-        self.addParameter(key='nSteps0', string='Number of steps 0', val=2, field='OTH')
-        self.addParameter(key='parameter1', string='Parameter 1 Y-axis', val='rfExAmp', field='OTH')
-        self.addParameter(key='start1', string='Start point 1', val=0.0, field='OTH')
-        self.addParameter(key='end1', string='End point 1', val=0.3, field='OTH')
-        self.addParameter(key='nSteps1', string='Number of steps 1', val=2, field='OTH')
+        self.addParameter(key='nSteps0', string='Number of steps 0', val=5, field='OTH')
+        self.addParameter(key='parameter1', string='Parameter 1 Y-axis', val='larmorFreq', field='OTH')
+        self.addParameter(key='start1', string='Start point 1', val=3.0, field='OTH')
+        self.addParameter(key='end1', string='End point 1', val=4.0, field='OTH')
+        self.addParameter(key='nSteps1', string='Number of steps 1', val=5, field='OTH')
 
     def sequenceInfo(self):
         print(" ")
@@ -85,6 +98,18 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
             dataSteps = np.zeros((nSteps[0] * nSteps[1], nPoints[1], nPoints[0]), dtype=complex)
             imageSteps = dataSteps
 
+            # Get axes in strings
+            axes = self.seq.mapVals['axes']
+            axesDict = {'x': 0, 'y': 1, 'z': 2}
+            axesKeys = list(axesDict.keys())
+            axesVals = list(axesDict.values())
+            axesStr = ['', '', '']
+            n = 0
+            for val in axes:
+                index = axesVals.index(val)
+                axesStr[n] = axesKeys[index]
+                n += 1
+
             # Generate k-space maps and images
             for step in range(nSteps[0]*nSteps[1]):
                 data = self.sampled[step][:, 3]
@@ -94,12 +119,24 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                 imageSteps[step, :, :] = image[int(nPoints[2]/2), :, :]
 
             # Plot image
-            image = pg.image(np.abs(imageSteps))
+            image = np.abs(imageSteps)
+            image = image / np.max(np.reshape(image, -1)) * 100
+            image = Spectrum3DPlot(image,
+                                   title="%s sweep images" % self.mapVals['seqNameSweep'],
+                                   xLabel=axesStr[0],
+                                   yLabel=axesStr[1])
+            imageWidget = image.getImageWidget()
 
             # Plot k-space
-            kSpace = pg.image(np.log10(np.abs(dataSteps)))
+            kSpace = np.log10(np.abs(dataSteps))
+            kSpace = kSpace / np.max(np.reshape(kSpace, -1)) * 100
+            kSpace = Spectrum3DPlot(kSpace,
+                                   title="%s sweep k-spaces" % self.mapVals['seqNameSweep'],
+                                   xLabel=axesStr[0],
+                                   yLabel=axesStr[1])
+            kSpaceWidget = image.getImageWidget()
 
-            return([image, kSpace])
+            return([imageWidget, kSpaceWidget])
 
         elif 'sampledPoint' in self.seq.mapVals:  # In case of points (calibration sequences)
             image = np.zeros((nSteps[0], nSteps[1]), dtype=complex)
@@ -110,16 +147,26 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                     n += 1
 
             # Plot image
-            if nSteps[1]>1:
-                map = pg.image(np.abs(image))
-            else:
+            if nSteps[1]>1: # If we sweep two parameters, show a map
+                image = np.abs(image)
+                map = image = image / np.max(np.reshape(image, -1)) * 100
+                map = Spectrum3DPlot(np.abs(image),
+                                     xLabel=self.seq.mapNmspc[self.mapVals['parameter0']],
+                                     yLabel=self.seq.mapNmspc[self.mapVals['parameter1']],
+                                     title='%s sweep' % self.mapVals['seqNameSweep'])
+                mapWidget = map.getImageWidget()
+            else: # If we sweep only one parameter, show a line plot
                 image = np.reshape(image, -1)
-                map = SpectrumPlot(parVector0, [np.abs(image)], [''],
-                                   self.seq.mapNmspc[self.mapVals['parameter0']], 'Output amplitude', '%s sweep' % self.mapVals['seqNameSweep'])
-            return([map])
+                mapWidget = SpectrumPlot(xData=parVector0,
+                                         yData=[np.abs(image)],
+                                         legend=[''],
+                                         xLabel=self.seq.mapNmspc[self.mapVals['parameter0']],
+                                         yLabel='Output amplitude',
+                                         title='%s sweep' % self.mapVals['seqNameSweep'])
+            return([mapWidget])
 
-# defaultSweep = {
-#     'SWEEP': SweepImage(),
-# }
-
+if __name__=='__main__':
+    seq = SweepImage()
+    seq.sequenceRun()
+    seq.sequenceAnalysis()
 

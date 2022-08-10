@@ -1,5 +1,5 @@
 """
-@author: T. Guallart Naval, february 03th 2022
+@author: J.M. Algarín, february 03th 2022
 MRILAB @ I3M
 """
 
@@ -22,6 +22,7 @@ import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new se
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
+import pyqtgraph as pg
 
 class Noise(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -56,8 +57,16 @@ class Noise(blankSeq.MRIBLANKSEQ):
         rxChannel = self.mapVals['rxChannel']
 
         if demo:
-            data = np.random.randn(nPoints*hw.oversamplingFactor)
+            dataR = np.random.randn(nPoints*hw.oversamplingFactor)
+            dataC = np.random.randn(nPoints*hw.oversamplingFactor)
+            data = dataR+1j*dataC
+            data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             acqTime = nPoints/bw
+            tVector = np.linspace(0, acqTime, num=nPoints) * 1e-3  # ms
+            spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
+            fVector = np.linspace(-bw / 2, bw / 2, num=nPoints) * 1e3  # kHz
+            self.dataTime = [tVector, data]
+            self.dataSpec = [fVector, spectrum]
         else:
             bw = bw * hw.oversamplingFactor
             samplingPeriod = 1 / bw
@@ -67,30 +76,28 @@ class Noise(blankSeq.MRIBLANKSEQ):
             acqTime = nPoints/bw
 
             # SEQUENCE
-            # Rx gate
-            t0 = 20
             self.iniSequence(20, np.array((0, 0, 0)))
-            self.rxGate(t0, acqTime, rxChannel=rxChannel)
+            self.rxGate(20, acqTime, rxChannel=rxChannel)
             self.endSequence(2*acqTime)
 
-        if plotSeq == 0:
-            print('Running...')
-            t0 = time.time()
-            rxd, msgs = self.expt.run()
-            t1 = time.time()
-            print('Run time = %f s' %(t1-t0))
-            # print(msgs)
-            self.expt.__del__()
-            data = sig.decimate(rxd['rx%i'%rxChannel]*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            self.mapVals['data'] = data
-            print('End')
-            tVector = np.linspace(0, acqTime, num=nPoints) * 1e-3  # ms
-            spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
-            fVector = np.linspace(-bw / 2, bw / 2, num=nPoints) * 1e3  # kHz
-            self.dataTime = [tVector, data]
-            self.dataSpec = [fVector, spectrum]
-        elif plotSeq == 1:
-            self.expt.__del__()
+            if plotSeq == 0:
+                print('Running...')
+                t0 = time.time()
+                rxd, msgs = self.expt.run()
+                t1 = time.time()
+                print('Run time = %f s' %(t1-t0))
+                # print(msgs)
+                self.expt.__del__()
+                data = sig.decimate(rxd['rx%i'%rxChannel]*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+                self.mapVals['data'] = data
+                print('End')
+                tVector = np.linspace(0, acqTime, num=nPoints) * 1e-3  # ms
+                spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
+                fVector = np.linspace(-bw / 2, bw / 2, num=nPoints) * 1e3  # kHz
+                self.dataTime = [tVector, data]
+                self.dataSpec = [fVector, spectrum]
+            elif plotSeq == 1:
+                self.expt.__del__()
 
 
     def sequenceAnalysis(self, obj=''):
@@ -101,18 +108,45 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Plot signal versus time
-        timePlot = SpectrumPlot(self.dataTime[0], [np.abs(self.dataTime[1]), np.real(self.dataTime[1]), np.imag(self.dataTime[1])],
-                                ['abs', 'real', 'imag'],
-                                'Time (ms)', 'Signal amplitude (mV)',
-                                'Signal vs time, rms noise: %1.3f mV' %noiserms)
+        timePlotWidget = SpectrumPlot(xData=self.dataTime[0],
+                                yData=[np.abs(self.dataTime[1]), np.real(self.dataTime[1]), np.imag(self.dataTime[1])],
+                                legend=['abs', 'real', 'imag'],
+                                xLabel='Time (ms)',
+                                yLabel='Signal amplitude (mV)',
+                                title='Signal vs time, rms noise: %1.3f mV' %noiserms)
 
         # Plot spectrum
-        freqPlot = SpectrumPlot(self.dataSpec[0], [np.abs(self.dataSpec[1])], [''],
-                                'Frequency (kHz)', 'Mag FFT (a.u.)',
-                                'Signal spectrum')
+        freqPlotWidget = SpectrumPlot(xData=self.dataSpec[0],
+                                yData=[np.abs(self.dataSpec[1])],
+                                legend=[''],
+                                xLabel='Frequency (kHz)',
+                                yLabel='Mag FFT (a.u.)',
+                                title='Signal spectrum')
 
-        return([timePlot, freqPlot])
+        out = [timePlotWidget, freqPlotWidget]
+
+        if obj=='Standalone':
+            win = pg.GraphicsLayoutWidget(show=True)
+            win.setWindowTitle(self.mapVals['fileName'])
+            p1 = win.addPlot(title='Time domain, rms noise: %1.3f mV' %noiserms)
+            p1.addLegend()
+            p1.plot(self.dataTime[0], np.abs(self.dataTime[1]), pen=[255, 0, 0], name="Abs")
+            p1.plot(self.dataTime[0], np.real(self.dataTime[1]), pen=[0, 255, 0], name="Real")
+            p1.plot(self.dataTime[0], np.imag(self.dataTime[1]), pen=[0, 0, 255], name="Imag")
+            p1.setLabel('left', 'Signal amplitude (mV)')
+            p1.setLabel('bottom', 'Time (ms)')
+
+            p2 = win.addPlot(title='Frequency domain')
+            p2.plot(self.dataSpec[0], np.abs(self.dataSpec[1]))
+            p2.setLabel('left', 'Mag FFT (a.u.)')
+            p2.setLabel('bottom', 'Frequency (kHz)')
+
+            pg.exec()
+
+        return (out)
+
 
 if __name__=='__main__':
     seq = Noise()
     seq.sequenceRun()
+    seq.sequenceAnalysis(obj='Standalone')

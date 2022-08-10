@@ -6,13 +6,10 @@
 
 import experiment as ex
 import numpy as np
-import matplotlib.pyplot as plt
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
-from PyQt5.QtWidgets import QLabel  # To set the figure title
-from PyQt5 import QtCore  # To set the figure title
 
 class SliceSelection(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -158,8 +155,13 @@ class SliceSelection(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Signal vs time
-        plot = SpectrumPlot(tVector, [np.abs(data)], [''], 'Time (ms)', 'Signal amplitude (mV)', '')
+        plotWidget = SpectrumPlot(xData=tVector,
+                                  yData=[np.abs(data)],
+                                  legend=[''],
+                                  xLabel='Time (ms)',
+                                  yLabel='Signal amplitude (mV)',
+                                  title='')
 
-        return([plot])
+        return([plotWidget])
 
 

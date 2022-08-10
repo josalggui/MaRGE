@@ -5,18 +5,13 @@ Created on Thu June 2 2022
 @Summary: rare sequence class
 """
 
-import time
 import numpy as np
 import experiment as ex
-import matplotlib.pyplot as plt
 import scipy.signal as sig
-import pdb
 import configs.hw_config as hw # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 from plotview.spectrumplot import SpectrumPlot # To plot nice 1d images
-from PyQt5.QtWidgets import QLabel  # To set the figure title
-from PyQt5 import QtCore            # To set the figure title
-import pyqtgraph as pg              # To plot nice 3d images
+from plotview.spectrumplot import Spectrum3DPlot # To show nice 2d or 3d images
 
 #*********************************************************************************
 #*********************************************************************************
@@ -51,8 +46,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='drfPhase', string='Phase of exciation pulse (º)', val=0.0, field='RF')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ')
-        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
+        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0, 0, 0], field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH')
+        self.addParameter(key='freqCal', string='Calibrate frequency (0 or 1)', val=1, field='OTH')
 
 
     def sequenceInfo(self):
@@ -73,7 +69,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa=False # Starts the gpa
-        freqCal = True  # Swich off only if you want and you are on debug mode
         demo = False
 
         # Create the inputs automatically. For some reason it only works if there is a few code later...
@@ -111,6 +106,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         dummyPulses = self.mapVals['dummyPulses']
         shimming = np.array(self.mapVals['shimming']) # *1e4
         parFourierFraction = self.mapVals['parFourierFraction']
+        freqCal = self.mapVals['freqCal']
 
         # Conversion of variables to non-multiplied units
         larmorFreq = larmorFreq*1e6
@@ -395,6 +391,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                                                    rewrite=nBatches==1)
                 repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
                 acqPointsPerBatch.append(aa)
+                self.mapVals['bw'] = 1/samplingPeriod/hw.oversamplingFactor
 
             for ii in range(nScans):
                 if not demo:
@@ -537,6 +534,19 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
         nPoints = self.mapVals['nPoints']
         axesEnable = self.mapVals['axesEnable']
+
+        # Get axes in strings
+        axes = self.mapVals['axes']
+        axesDict = {'x':0, 'y':1, 'z':2}
+        axesKeys = list(axesDict.keys())
+        axesVals = list(axesDict.values())
+        axesStr = ['','','']
+        n = 0
+        for val in axes:
+            index = axesVals.index(val)
+            axesStr[n] = axesKeys[index]
+            n += 1
+
         if (axesEnable[1] == 0 and axesEnable[2] == 0):
             bw = self.mapVals['bw']*1e-3 # kHz
             acqTime = self.mapVals['acqTime'] # ms
@@ -556,6 +566,18 @@ class RARE(blankSeq.MRIBLANKSEQ):
             return([t_plotview, f_plotview])
         else:
             # Plot image
-            image = pg.image(np.abs(self.mapVals['image3D']))
-            kSpace = pg.image(np.log10(np.abs(self.mapVals['kSpace3D'])))
-            return([image, kSpace])
+            # image = pg.image(np.abs(self.mapVals['image3D']))
+            image = np.abs(self.mapVals['image3D'])
+            image = image/np.max(np.reshape(image,-1))*100
+            image = Spectrum3DPlot(image,
+                                   title='Image magnitude',
+                                   xLabel=axesStr[0]+" Axis",
+                                   yLabel=axesStr[1]+" Axis")
+            imageWidget = image.getImageWidget()
+
+            kSpace = Spectrum3DPlot(np.log10(np.abs(self.mapVals['kSpace3D'])),
+                                    title='k-Space',
+                                    xLabel="k%s"%axesStr[0],
+                                    ylabel="k%s"%axesStr[1])
+            kSpaceWidget = kSpace.getImageWidget()
+            return([imageWidget, kSpaceWidget])

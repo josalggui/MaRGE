@@ -6,14 +6,10 @@ MRILAB @ I3M
 
 import experiment as ex
 import numpy as np
-import matplotlib.pyplot as plt
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
-from PyQt5.QtWidgets import QLabel  # To set the figure title
-from PyQt5 import QtCore            # To set the figure title
-import pyqtgraph as pg              # To plot nice 3d images
 
 
 class Larmor(blankSeq.MRIBLANKSEQ):
@@ -154,11 +150,19 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Add time signal to the layout
-        signalPlot = SpectrumPlot(tVector, [np.abs(signal)], [''], 'Time (ms)', 'Signal amplitude (mV)',
-                                    '')
+        signalPlotWidget = SpectrumPlot(xData=tVector,
+                                        yData=[np.abs(signal)],
+                                        legend=[''],
+                                        xLabel='Time (ms)',
+                                        yLabel='Signal amplitude (mV)',
+                                        title='')
 
         # Add frequency spectrum to the layout
-        spectrumPlot = SpectrumPlot(fVector, [np.abs(spectrum)], [''], 'Frequency (kHz)', 'Spectrum amplitude (a.u.)',
-                                    'Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
+        spectrumPlotWidget = SpectrumPlot(xData=fVector,
+                                          yData=[np.abs(spectrum)],
+                                          legend=[''],
+                                          xLabel='Frequency (kHz)',
+                                          yLabel='Spectrum amplitude (a.u.)',
+                                          title='Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
 
-        return([signalPlot, spectrumPlot])
+        return([signalPlotWidget, spectrumPlotWidget])

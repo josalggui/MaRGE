@@ -6,14 +6,10 @@
 
 import experiment as ex
 import numpy as np
-import matplotlib.pyplot as plt
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
-from PyQt5.QtWidgets import QLabel  # To set the figure title
-from PyQt5 import QtCore            # To set the figure title
-import pyqtgraph as pg              # To plot nice 3d images
 
 class IRTSE(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -180,8 +176,13 @@ class IRTSE(blankSeq.MRIBLANKSEQ):
 
 
         # Signal vs inverion time
-        plot = SpectrumPlot(tVector, [np.abs(data)], [''], 'Time (ms)', 'Signal amplitude (mV)', '')
+        plotWidget = SpectrumPlot(xData=tVector,
+                            yData=[np.abs(data)],
+                            legend=[''],
+                            xLabel='Time (ms)',
+                            yLabel='Signal amplitude (mV)',
+                            title='')
 
-        return([plot])
+        return([plotWidget])
 
 

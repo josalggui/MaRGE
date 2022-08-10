@@ -9,14 +9,10 @@ MRILAB @ I3M
 
 import experiment as ex
 import numpy as np
-import matplotlib.pyplot as plt
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
-from PyQt5.QtWidgets import QLabel  # To set the figure title
-from PyQt5 import QtCore            # To set the figure title
-import pyqtgraph as pg              # To plot nice 3d images
 
 class InversionRecovery(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -190,8 +186,13 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Signal vs inverion time
-        plot = SpectrumPlot(self.data[0], [np.abs(self.data[1])], [''], 'Time (ms)', 'Signal amplitude (mV)', '')
+        plotWidget = SpectrumPlot(xData=self.data[0],
+                            yData=[np.abs(self.data[1])],
+                            legend=[''],
+                            xLabel='Time (ms)',
+                            yLabel='Signal amplitude (mV)',
+                            title='')
 
-        return([plot])
+        return([plotWidget])
 
 

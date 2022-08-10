@@ -161,7 +161,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.sequence = self.sequencelist.currentText()
         self.onSequenceChanged.emit(self.sequence)
         self.action_acquire.setEnabled(True)
-        self.clearPlotviewLayout()
+        # self.clearPlotviewLayout()
     
     def clearPlotviewLayout(self) -> None:
         """

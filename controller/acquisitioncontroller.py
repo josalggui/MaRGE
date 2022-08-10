@@ -8,11 +8,14 @@ Acquisition Controller
 
 from PyQt5.QtWidgets import QLabel, QPushButton, QHBoxLayout
 from plotview.spectrumplot import SpectrumPlotSeq
+from plotview.spectrumplot import Spectrum3DPlot
 from seq.sequences import defaultsequences
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject
 import pyqtgraph as pg
 import numpy as np
+import imageio
+
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, session=None, sequencelist=None):
@@ -68,6 +71,7 @@ class AcquisitionController(QObject):
         # Add plots to the plotview_layout
         for item in out:
             self.parent.plotview_layout.addWidget(item)
+            item.label = self.label
 
         # self.parent.onSequenceChanged.emit(self.parent.sequence)
         print('End sequence')
@@ -101,8 +105,12 @@ class AcquisitionController(QObject):
             self.parent.plotview_layout.addWidget(plot[n])
 
     def firstPlot(self):
-
+        logo = imageio.imread("resources/images/logo.png")
         self.parent.clearPlotviewLayout()
-        x = np.random.randn(50, 50)
-        welcome = pg.image(np.abs(x))
-        self.parent.plotview_layout.addWidget(welcome)
+        welcome = Spectrum3DPlot(logo.transpose([1, 0, 2]),
+                                 title='Institute for Instrimentation in Molecular Imaging (i3M)')
+        welcome.hideAxis('bottom')
+        welcome.hideAxis('left')
+        welcome.showHistogram(False)
+        welcomeWidget = welcome.getImageWidget()
+        self.parent.plotview_layout.addWidget(welcomeWidget)

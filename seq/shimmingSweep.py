@@ -6,14 +6,10 @@
 
 import experiment as ex
 import numpy as np
-import matplotlib.pyplot as plt
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
-from PyQt5.QtWidgets import QLabel  # To set the figure title
-from PyQt5 import QtCore            # To set the figure title
-import pyqtgraph as pg              # To plot nice 3d images
 
 class ShimmingSweep(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -153,15 +149,25 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Add shimming x to the layout
-        plotX = SpectrumPlot(sxVector*1e4, [np.abs(data[0, :])], [''], 'ShimmingX', 'Signal amplitude (mV)',
-                            "%s" % ('Shimming X'))
+        plotXWidget = SpectrumPlot(xData=sxVector * 1e4,
+                                   yData=[np.abs(data[0, :])],
+                                   legend=[''],
+                                   xLabel='Shimming X',
+                                   yLabel='Signal amplitude (mV)',
+                                   title='Shimming X')
 
-        # Add shimming y to the layout
-        plotY = SpectrumPlot(syVector*1e4, [np.abs(data[1, :])], [''], 'ShimmingX', 'Signal amplitude (mV)',
-                             "%s" % ('Shimming Y'))
+        plotYWidget = SpectrumPlot(xData=syVector * 1e4,
+                                   yData=[np.abs(data[1, :])],
+                                   legend=[''],
+                                   xLabel='Shimming Y',
+                                   yLabel='Signal amplitude (mV)',
+                                   title='Shimming Y')
 
-        # Add shimming z to the layout
-        plotZ = SpectrumPlot(szVector*1e4, [np.abs(data[2, :])], [''], 'ShimmingZ', 'Signal amplitude (mV)',
-                             "%s" % ('Shimming Z'))
+        plotZWidget = SpectrumPlot(xData=szVector * 1e4,
+                                   yData=[np.abs(data[2, :])],
+                                   legend=[''],
+                                   xLabel='Shimming Z',
+                                   yLabel='Signal amplitude (mV)',
+                                   title='Shimming Z')
 
-        return([plotX, plotY, plotZ])
+        return([plotXWidget, plotYWidget, plotZWidget])

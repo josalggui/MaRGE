@@ -9,14 +9,10 @@
 """
 import experiment as ex
 import numpy as np
-import matplotlib.pyplot as plt
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
-from PyQt5.QtWidgets import QLabel  # To set the figure title
-from PyQt5 import QtCore            # To set the figure title
-import pyqtgraph as pg              # To plot nice 3d images
 
 class RabiFlops(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -30,10 +26,13 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
-        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
+        self.addParameter(key='shimming', string='Shimming (*1e-4)', val=[-70, -90, 10], field='OTH')
         self.addParameter(key='rfExTime0', string='Rf pulse time, Start (us)', val=5.0, field='RF')
         self.addParameter(key='rfExTime1', string='RF pulse time, End (us)', val=100.0, field='RF')
         self.addParameter(key='nSteps', string='Number of steps', val=20, field='RF')
+        self.addParameter(key='sequence', string='FID:0, SE:1', val=0, field='OTH')
+        self.addParameter(key='deadTime', string='Dead time (us)', val=60, field='SEQ')
+        self.addParameter(key='rfRefPhase', string='Refocusing phase (degrees)', val=0.0, field='RF')
 
     def sequenceInfo(self):
         print(" ")
@@ -50,7 +49,6 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq):
         init_gpa = False  # Starts the gpa
-        demo = False
 
         # # Create the inputs automatically. For some reason it only works if there is a few code later...
         # for key in self.mapKeys:
@@ -72,6 +70,10 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         rfExTime0 = self.mapVals['rfExTime0']
         rfExTime1 = self.mapVals['rfExTime1']
         nSteps = self.mapVals['nSteps']
+        sequence = self.mapVals['sequence']
+        deadTime = self.mapVals['deadTime']
+        rfRefPhase = self.mapVals['rfRefPhase']
+
 
         # Time variables in us
         echoTime *= 1e3
@@ -83,12 +85,6 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         rfTime = np.linspace(rfExTime0, rfExTime1, num=nSteps, endpoint=True) # us
         self.mapVals['rfTime'] = rfTime*1e-6 # s
 
-        def createSequenceDemo():
-            data = []
-            for repeIndex in range(nSteps):
-                data = np.concatenate((data, np.random.randn(nPoints*hw.oversamplingFactor)), axis=0)
-            return(data)
-
         def createSequence():
 
             tIni = 1000
@@ -96,23 +92,28 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
             # Set shimming
             self.iniSequence(20, shimming)
 
-            for repeIndex in range(nSteps):
-                tEx = tIni+repetitionTime*repeIndex
+            for scan in range(nScans):
+                for step in range(nSteps):
+                    tEx = tIni+repetitionTime*scan*nSteps+step*repetitionTime
 
-                # Excitation pulse
-                t0 = tEx - hw.blkTime - rfTime[repeIndex]/2
-                self.rfRecPulse(t0, rfTime[repeIndex], rfExAmp, 0)
+                    # Excitation pulse
+                    t0 = tEx - hw.blkTime - rfTime[step]/2
+                    self.rfRecPulse(t0, rfTime[step], rfExAmp, 0)
 
-                # Refocusing pulse
-                t0 = tEx + echoTime/2 - hw.blkTime - rfTime[repeIndex]
-                self.rfRecPulse(t0, rfTime[repeIndex]*2, rfExAmp, 0+np.pi/2)
+                    if sequence: # SE
+                        # Refocusing pulse
+                        t0 = tEx + echoTime/2 - hw.blkTime - rfTime[step]
+                        self.rfRecPulse(t0, rfTime[step]*2, rfExAmp, rfRefPhase*np.pi/180.0)
 
-                # Rx gate
-                t0 = tEx + echoTime - acqTime/2
-                self.rxGate(t0, acqTime)
+                        # Rx gate
+                        t0 = tEx + echoTime - acqTime/2
+                        self.rxGate(t0, acqTime)
+                    else: # FID
+                        t0 = tEx + rfTime[step]/2 + deadTime
+                        self.rxGate(t0, acqTime)
 
             # Turn off the gradients after the end of the batch
-            self.endSequence(repetitionTime*nSteps)
+            self.endSequence(repetitionTime*nSteps*nScans)
 
         # Create experiment
         bw = nPoints/acqTime*hw.oversamplingFactor # MHz
@@ -134,13 +135,19 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
             rxd, msgs = self.expt.run()
             print(msgs)
             rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
-            data = sig.decimate(rxd['rx0'], hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            self.mapVals['dataOversampled'] = rxd['rx0']
+            dataFull = sig.decimate(rxd['rx0'], hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            self.mapVals['dataFull'] = dataFull
+            data = np.average(np.reshape(dataFull, (nScans, -1)), axis=0)
             self.mapVals['data'] = data
             self.expt.__del__()
 
             # Process data to be plotted
             data = np.reshape(data, (nSteps, -1))
-            data = data[:, int(nPoints/2)]
+            if sequence:
+                data = data[:, int(nPoints/2)]
+            else:
+                data = data[:, 5]
             self.data = [rfTime, data]
             self.mapVals['sampledPoint'] = data
         return 0
@@ -149,7 +156,11 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Signal vs rf time
-        plot = SpectrumPlot(self.data[0], [np.abs(self.data[1])], [''],
-                                'Time (ms)', 'Signal amplitude (mV)', '')
+        plotWidget = SpectrumPlot(xData=self.data[0],
+                                  yData=[np.abs(self.data[1]), np.real(self.data[1]),np.imag(self.data[1])],
+                                  legend=['abs', 'real', 'imag'],
+                                  xLabel='Time (ms)',
+                                  yLabel='Signal amplitude (mV)',
+                                  title='')
 
-        return([plot])
+        return([plotWidget])
