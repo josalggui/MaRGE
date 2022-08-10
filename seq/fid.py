@@ -116,8 +116,25 @@ class FID(blankSeq.MRIBLANKSEQ):
 
         tVector = np.linspace(rfExTime+deadTime, rfExTime+deadTime+acqTime, nPoints)
         fVector = np.linspace(-bw/2, bw/2, nPoints)
-        spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal)))
-        spectrum = np.reshape(spectrum, (-1))
+        spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal))))
+        spectrum = np.reshape(spectrum, -1)
+
+        # Get max and FHWM
+        spectrum = np.abs(spectrum)
+        maxValue = np.max(spectrum)
+        maxIndex = np.argmax(spectrum)
+        spectrumA = np.abs(spectrum[0:maxIndex]-maxValue)
+        spectrumB = np.abs(spectrum[maxIndex:nPoints]-maxValue)
+        indexA = np.argmin(spectrumA)
+        indexB = np.argmin(spectrumB)+maxIndex
+        freqA = fVector[indexA]
+        freqB = fVector[indexB]
+
+        # Get the T2*
+        maxSignal = np.max(np.abs(signal))
+        maxIndex = np.argmax(np.abs(signal))
+        t2Index = np.argmin(np.abs(np.abs(signal)-maxSignal/3.))
+        t2 = tVector[t2Index]-tVector[maxIndex]
 
         self.saveRawData()
 
@@ -127,14 +144,14 @@ class FID(blankSeq.MRIBLANKSEQ):
                                         legend=['abs', 'real', 'imag'],
                                         xLabel='Time (ms)',
                                         yLabel='Signal amplitude (mV)',
-                                        title='Signal vs time')
+                                        title='Signal vs time, T2* = %0.2f ms'%t2)
 
         # Add frequency spectrum to the layout
         spectrumPlotWidget = SpectrumPlot(xData=fVector,
-                                          yData=[np.abs(spectrum)],
+                                          yData=[spectrum],
                                           legend=[''],
                                           xLabel='Frequency (kHz)',
                                           yLabel='Spectrum amplitude (a.u.)',
-                                          title='Spectrum')
+                                          title='Spectrum, peak = %0.3e, FWHM = %0.1f kHz'%(maxValue, freqB-freqA))
 
         return([signalPlotWidget, spectrumPlotWidget])
