@@ -60,18 +60,20 @@ class FID(blankSeq.MRIBLANKSEQ):
         def createSequence():
             # Initialize time
             t0 = 20
-            tEx = t0 + hw.blkTime + rfExTime / 2
 
             # Shimming
             self.iniSequence(t0, shimming)
 
-            # Excitation pulse
-            t0 = tEx - hw.blkTime - rfExTime / 2
-            self.rfRecPulse(t0, rfExTime, rfExAmp, 0, txChannel=txChannel)
+            for scan in range(nScans):
+                tEx = t0 + repetitionTime*scan + hw.blkTime + rfExTime / 2
 
-            # Rx gate
-            t0 = tEx + rfExTime / 2 + deadTime
-            self.rxGate(t0, acqTime, rxChannel=rxChannel)
+                # Excitation pulse
+                t0 = tEx - hw.blkTime - rfExTime / 2
+                self.rfRecPulse(t0, rfExTime, rfExAmp, 0, txChannel=txChannel)
+
+                # Rx gate
+                t0 = tEx + rfExTime / 2 + deadTime
+                self.rxGate(t0, acqTime, rxChannel=rxChannel)
 
             self.endSequence(repetitionTime)
 
@@ -87,13 +89,10 @@ class FID(blankSeq.MRIBLANKSEQ):
         self.mapVals['bw'] = bw # MHz
         createSequence()
 
-        overData = []
         if plotSeq == 0:
             # Run the experiment and get data
-            for ii in range(nScans):
-                rxd, msgs = self.expt.run()
-                overData = np.concatenate((overData, rxd['rx%i'%rxChannel]*13.788), axis=0)
-            print(msgs)
+            rxd, msgs = self.expt.run()
+            overData = rxd['rx%i'%rxChannel]*13.788
             dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['overData'] = overData
             self.mapVals['dataFull'] = dataFull
