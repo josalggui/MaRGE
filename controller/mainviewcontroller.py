@@ -24,14 +24,12 @@ import experiment as ex
 from scipy.io import savemat
 from controller.sequencecontroller import SequenceList
 import csv
-from sequencesnamespace import Namespace as nmspc
 from sessionmodes import defaultsessions
 from manager.datamanager import DataManager
 from datetime import date,  datetime 
 from globalvars import StyleSheets as style
 from stream import EmittingStream
 from local_config import ip_address
-import mrilabMethods.mrilabMethods as mri
 from seq.sequences import defaultsequences
 import cgitb 
 cgitb.enable(format = 'text')
@@ -96,6 +94,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         self.seqName = self.sequencelist.getCurrentSequence()
         defaultsequences[self.seqName].sequenceInfo()
+
+        self.showMaximized()
 
         # acqCtrl.startAcquisition()
 

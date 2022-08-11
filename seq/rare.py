@@ -578,6 +578,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
             kSpace = Spectrum3DPlot(np.log10(np.abs(self.mapVals['kSpace3D'])),
                                     title='k-Space',
                                     xLabel="k%s"%axesStr[0],
-                                    ylabel="k%s"%axesStr[1])
+                                    yLabel="k%s"%axesStr[1])
             kSpaceWidget = kSpace.getImageWidget()
             return([imageWidget, kSpaceWidget])

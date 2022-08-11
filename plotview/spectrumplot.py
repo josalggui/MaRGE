@@ -254,8 +254,11 @@ class ImageViewer(pg.ImageView):
             self.dataAvg = dataSlice.mean()
             self.dataStd = dataSlice.std()
             self.dataSnr = self.dataAvg / self.dataStd
+
             # Average data within entire ROI for each frame
-            data = data.mean(axis=axes)
+            mean = data.mean(axis=axes)
+            std = data.std(axis=axes)
+            data = mean/std
             xvals = self.tVals
 
         # Handle multi-channel data
@@ -283,6 +286,7 @@ class ImageViewer(pg.ImageView):
 
         # Update textitem
         self.textitem.setText("Mean = %0.1f \nstd = %0.1f \nsnr = %0.1f"%(self.dataAvg, self.dataStd, self.dataSnr))
+        self.textitem.show()
 
     def roiClicked(self):
 
@@ -291,7 +295,7 @@ class ImageViewer(pg.ImageView):
             showRoiPlot = True
             self.roi.show()
             self.ui.roiPlot.setMouseEnabled(True, True)
-            self.ui.splitter.setSizes([int(self.height() * 0.6), int(self.height() * 0.4)])
+            # self.ui.splitter.setSizes([int(self.height() * 0.6), int(self.height() * 0.4)])
             self.ui.splitter.handle(1).setEnabled(True)
             self.roiChanged()
             for c in self.roiCurves:
@@ -303,6 +307,8 @@ class ImageViewer(pg.ImageView):
             for c in self.roiCurves:
                 c.hide()
             self.ui.roiPlot.hideAxis('left')
+            if hasattr(self, 'textitem'):
+                self.textitem.hide()
 
         if self.hasTimeAxis():
             showRoiPlot = True
@@ -312,9 +318,36 @@ class ImageViewer(pg.ImageView):
             self.timeLine.show()
             self.timeLine.setBounds([mn, mx])
             if not self.ui.roiBtn.isChecked():
-                self.ui.splitter.setSizes([self.height() - 35, 35])
+                # self.ui.splitter.setSizes([self.height() - 35, 35])
                 self.ui.splitter.handle(1).setEnabled(False)
         else:
             self.timeLine.hide()
 
-        self.ui.roiPlot.setVisible(False)
+        self.ui.roiPlot.setVisible(showRoiPlot)
+
+    def updateImage(self, autoHistogramRange=True):
+        ## Redraw image on screen
+        if self.image is None:
+            return
+
+        image = self.getProcessedImage()
+
+        if autoHistogramRange:
+            self.ui.histogram.setHistogramRange(self.levelMin, self.levelMax)
+
+        # Transpose image into order expected by ImageItem
+        if self.imageItem.axisOrder == 'col-major':
+            axorder = ['t', 'x', 'y', 'c']
+        else:
+            axorder = ['t', 'y', 'x', 'c']
+        axorder = [self.axes[ax] for ax in axorder if self.axes[ax] is not None]
+        image = image.transpose(axorder)
+
+        # Select time index
+        if self.axes['t'] is not None:
+            self.ui.roiPlot.show()
+            image = image[self.currentIndex]
+            if self.ui.roiBtn.isChecked():
+                self.roiChanged()
+
+        self.imageItem.updateImage(image)
