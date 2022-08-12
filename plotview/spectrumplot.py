@@ -296,7 +296,7 @@ class ImageViewer(pg.ImageView):
             self.roi.show()
             self.ui.roiPlot.setMouseEnabled(True, True)
             # self.ui.splitter.setSizes([int(self.height() * 0.6), int(self.height() * 0.4)])
-            self.ui.splitter.handle(1).setEnabled(True)
+            self.ui.splitter.handle(1).setEnabled(True) # Allow to change the window size
             self.roiChanged()
             for c in self.roiCurves:
                 c.show()

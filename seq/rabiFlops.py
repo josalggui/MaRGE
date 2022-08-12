@@ -22,6 +22,8 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=0.0, field='RF')
         self.addParameter(key='echoTime', string='Echo time (ms)', val=10.0, field='SEQ')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
@@ -30,9 +32,10 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfExTime0', string='Rf pulse time, Start (us)', val=5.0, field='RF')
         self.addParameter(key='rfExTime1', string='RF pulse time, End (us)', val=100.0, field='RF')
         self.addParameter(key='nSteps', string='Number of steps', val=20, field='RF')
-        self.addParameter(key='sequence', string='FID:0, SE:1', val=0, field='OTH')
         self.addParameter(key='deadTime', string='Dead time (us)', val=60, field='SEQ')
         self.addParameter(key='rfRefPhase', string='Refocusing phase (degrees)', val=0.0, field='RF')
+        self.addParameter(key='method', string='Rephasing method: 0->Amp, 1->Time', val=0, field='RF')
+        self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ')
 
     def sequenceInfo(self):
         print(" ")
@@ -40,12 +43,19 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("This sequence runs spin echo and sweep the rf pulse time")
+        print("Rabi Flops with different methods")
+        print("Notes:")
+        print("Set RF refocusing amplitude to 0.0 to get single excitation behavior")
+        print("Set RF refocusing time to 0.0 to auto set the RF refocusing time:")
+        print("-If Rephasing method = 0, refocusing amplitude is twice the excitation amplitude")
+        print("-If Rephasing method = 1, refocusing time is twice the excitation time")
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
+        nSteps = self.mapVals['nSteps']
+        dummyPulses = self.mapVals['dummyPulses']
         repetitionTime = self.mapVals['repetitionTime']*1e-3
-        return(repetitionTime*nScans/60)  # minutes, scanTime
+        return(repetitionTime*nScans*nSteps*(dummyPulses+1)/60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq):
         init_gpa = False  # Starts the gpa
@@ -62,6 +72,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         nScans = self.mapVals['nScans']
         larmorFreq = self.mapVals['larmorFreq']
         rfExAmp = self.mapVals['rfExAmp']
+        rfReAmp = self.mapVals['rfReAmp']
         echoTime = self.mapVals['echoTime']
         repetitionTime = self.mapVals['repetitionTime']
         nPoints = self.mapVals['nPoints']
@@ -70,10 +81,11 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         rfExTime0 = self.mapVals['rfExTime0']
         rfExTime1 = self.mapVals['rfExTime1']
         nSteps = self.mapVals['nSteps']
-        sequence = self.mapVals['sequence']
         deadTime = self.mapVals['deadTime']
         rfRefPhase = self.mapVals['rfRefPhase']
-
+        method = self.mapVals['method']
+        rfReTime = self.mapVals['rfReTime']
+        dummyPulses = self.mapVals['dummyPulses']
 
         # Time variables in us
         echoTime *= 1e3
@@ -86,34 +98,48 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.mapVals['rfTime'] = rfTime*1e-6 # s
 
         def createSequence():
-
-            tIni = 1000
-
             # Set shimming
             self.iniSequence(20, shimming)
 
+            tEx = 1000 # First excitation at 1 ms
             for scan in range(nScans):
                 for step in range(nSteps):
-                    tEx = tIni+repetitionTime*scan*nSteps+step*repetitionTime
+                    for pulse in range(dummyPulses+1):
+                        # Excitation pulse
+                        t0 = tEx - hw.blkTime - rfTime[step]/2
+                        self.rfRecPulse(t0, rfTime[step], rfExAmp, 0)
 
-                    # Excitation pulse
-                    t0 = tEx - hw.blkTime - rfTime[step]/2
-                    self.rfRecPulse(t0, rfTime[step], rfExAmp, 0)
+                        # Rx gate for FID
+                        if pulse==dummyPulses:
+                            t0 = tEx + rfTime[step] / 2 + deadTime
+                            self.rxGate(t0, acqTime)
 
-                    if sequence: # SE
                         # Refocusing pulse
-                        t0 = tEx + echoTime/2 - hw.blkTime - rfTime[step]
-                        self.rfRecPulse(t0, rfTime[step]*2, rfExAmp, rfRefPhase*np.pi/180.0)
+                        if method:  # time
+                            if rfReTime==0.0:
+                                t0 = tEx + echoTime/2 - hw.blkTime - rfTime[step]
+                                self.rfRecPulse(t0, rfTime[step]*2, rfReAmp, rfRefPhase*np.pi/180.0)
+                            else:
+                                t0 = tEx + echoTime/2 - hw.blkTime - rfReTime/2
+                                self.rfRecPulse(t0, rfReTime, rfReAmp, rfRefPhase * np.pi / 180.0)
+                        else:   # amplitude
+                            if rfReTime==0.0:
+                                t0 = tEx + echoTime / 2 - hw.blkTime - rfTime[step]/2
+                                self.rfRecPulse(t0, rfTime[step], rfExAmp * 2, rfRefPhase * np.pi / 180.0)
+                            else:
+                                t0 = tEx + echoTime / 2 - hw.blkTime - rfReTime
+                                self.rfRecPulse(t0, rfReTime, rfExAmp * 2, rfRefPhase * np.pi / 180.0)
 
-                        # Rx gate
-                        t0 = tEx + echoTime - acqTime/2
-                        self.rxGate(t0, acqTime)
-                    else: # FID
-                        t0 = tEx + rfTime[step]/2 + deadTime
-                        self.rxGate(t0, acqTime)
+                        # Rx gate for Echo
+                        if pulse==dummyPulses:
+                            t0 = tEx + echoTime - acqTime/2
+                            self.rxGate(t0, acqTime)
+
+                        # Update exitation time for next repetition
+                        tEx += repetitionTime
 
             # Turn off the gradients after the end of the batch
-            self.endSequence(repetitionTime*nSteps*nScans)
+            self.endSequence(repetitionTime*nSteps*nScans*(dummyPulses+1))
 
         # Create experiment
         bw = nPoints/acqTime*hw.oversamplingFactor # MHz
@@ -127,40 +153,54 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
         # Execute the experiment
         createSequence()
-        if plotSeq:
-            print('Ploting sequence...')
-            self.expt.__del__()
-        else:
+        if not plotSeq:
             print('Runing...')
             rxd, msgs = self.expt.run()
-            print(msgs)
+            self.expt.__del__()
             rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
             self.mapVals['dataOversampled'] = rxd['rx0']
-            dataFull = sig.decimate(rxd['rx0'], hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            self.mapVals['dataFull'] = dataFull
-            data = np.average(np.reshape(dataFull, (nScans, -1)), axis=0)
-            self.mapVals['data'] = data
-            self.expt.__del__()
-
-            # Process data to be plotted
-            data = np.reshape(data, (nSteps, -1))
-            if sequence:
-                data = data[:, int(nPoints/2)]
-            else:
-                data = data[:, 5]
-            self.data = [rfTime, data]
-            self.mapVals['sampledPoint'] = data
         return 0
 
     def sequenceAnalysis(self, obj=''):
+        nScans = self.mapVals['nScans']
+        nSteps = self.mapVals['nSteps']
+        nPoints = self.mapVals['nPoints']
+        dataOversampled = self.mapVals['dataOversampled']
+        timeVector = self.mapVals['rfTime']
+
+        # Get FID and Echo
+        dataFull = sig.decimate(dataOversampled, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+        self.mapVals['dataFull'] = dataFull
+        dataFull = np.reshape(dataFull, (nScans, nSteps, 2, -1))
+        dataFID = dataFull[:, :, 0, :]
+        self.mapVals['dataFID'] = dataFID
+        dataEcho = dataFull[:, :, 1, :]
+        self.mapVals['dataEcho'] = dataEcho
+        dataFIDAvg = np.mean(dataFID, axis=0)
+        self.mapVals['dataFIDAvg'] = dataFIDAvg
+        dataEchoAvg = np.mean(dataEcho, axis=0)
+        self.mapVals['dataEchoAvg'] = dataEchoAvg
+
+        rabiFID = dataFIDAvg[:, 5]
+        self.mapVals['rabiFID'] = rabiFID
+        rabiEcho = dataEchoAvg[:, np.int(nPoints/2)]
+        self.mapVals['rabiEcho'] = rabiEcho
+
         self.saveRawData()
 
         # Signal vs rf time
-        plotWidget = SpectrumPlot(xData=self.data[0],
-                                  yData=[np.abs(self.data[1]), np.real(self.data[1]),np.imag(self.data[1])],
+        rabiFIDWidget = SpectrumPlot(xData=timeVector*1e6,
+                                  yData=[np.abs(rabiFID), np.real(rabiFID),np.imag(rabiFID)],
                                   legend=['abs', 'real', 'imag'],
                                   xLabel='Time (ms)',
                                   yLabel='Signal amplitude (mV)',
-                                  title='')
+                                  title='Rabi Flops with FID')
 
-        return([plotWidget])
+        rabiEchoWidget = SpectrumPlot(xData=timeVector*1e6,
+                                  yData=[np.abs(rabiEcho), np.real(rabiEcho),np.imag(rabiEcho)],
+                                  legend=['abs', 'real', 'imag'],
+                                  xLabel='Time (ms)',
+                                  yLabel='Signal amplitude (mV)',
+                                  title='Rabi Flops with Spin Echo')
+
+        return([rabiFIDWidget, rabiEchoWidget])

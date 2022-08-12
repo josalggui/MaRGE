@@ -152,5 +152,7 @@ class FID(blankSeq.MRIBLANKSEQ):
                                           xLabel='Frequency (kHz)',
                                           yLabel='Spectrum amplitude (a.u.)',
                                           title='Spectrum, peak = %0.3e, FWHM = %0.1f kHz'%(maxValue, freqB-freqA))
+        # spectrumPlotWidget.plotitem.setLogMode(y=True)
+        spectrumPlotWidget.plotitem.curves[0].setSymbol('x')
 
         return([signalPlotWidget, spectrumPlotWidget])
