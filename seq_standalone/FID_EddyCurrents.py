@@ -12,27 +12,27 @@ import matplotlib.pyplot as plt
 
 def FID_EddyCurrents(
     init_gpa= False,                 
-    larmorFreq=3.075, 
-    rfExAmp=0.9, 
+    larmorFreq=3.060, 
+    rfExAmp=0.3, 
     rfReAmp=None, 
     rfExPhase = 0,
-    rfExTime=32, 
+    rfExTime=45, 
     rfReTime=None,
     nReadout = 500,
     tAdq =3*1e3,
     tEcho = 20*1e3,
     echo = 2, #0 FID, 1 Echo, 2 Both
-    tRepetition = 500*1e3,  
+    tRepetition = 1000*1e3,  
 #    shimming=[-100, -70, 80],
-    shimming=[0, 0, 0],
-#    shimming=[-70, -90, 10],
+#    shimming=[0, 0, 0],
+    shimming=[-30, -30, 15],
     gAxis =2,
     gNsteps =20, #50
     gRiseTime = 150,
-    gAmp = 0.4, # Max.1=50A 0.2=2V=10A; 0.2V=1A
-    gDuration = 400,
-    tDelay =1400, 
-    plotSeq =1):
+    gAmp = 0.0, # Max.1=50A 0.2=2V=10A; 0.2V=1A
+    gDuration = 0,
+    tDelay =0, 
+    plotSeq =0):
     
     #CONSTANTES
     tStart = 20
@@ -200,7 +200,7 @@ def FID_EddyCurrents(
             plt.plot(x1,  np.abs(dataIndiv[4]), 'g', label="+g")
             plt.xlabel('t(ms)')
             plt.ylabel('A(mV)')
-            plt.ylim(0, 20)
+#            plt.ylim(0, 20)
             plt.title('FID')
             plt.legend()
             fig = plt.subplot(122)
@@ -209,7 +209,7 @@ def FID_EddyCurrents(
             plt.plot(x2, np.abs(dataIndiv[5]), 'g', label="+g")
             plt.xlabel('t(ms)')
             plt.ylabel('A(mV)')
-            plt.ylim(0, 20)
+#            plt.ylim(0, 20)
             plt.title('Echo')
             plt.legend()
 #            fig = plt.subplot(133)

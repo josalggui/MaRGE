@@ -15,15 +15,15 @@ from scipy.io import savemat
 
 def inversionrecoveryStandalone(
     init_gpa= False,                 
-    lo_freq=3.074, 
+    lo_freq=3.0605, 
     rf_amp=0.3, 
     rf_pi_duration=None, 
-    rf_pi2_duration=33, 
-    tr = 5,                 # s
-    t_ini = 10e-4,      # s
-    t_fin = 3,             # s
+    rf_pi2_duration=35, 
+    tr = 10,                 # s
+    t_ini = 1 ,      #10e-4,      # s
+    t_fin = 8,             # s
     N = 20, 
-    shimming=[-80, -100, 10]):                
+    shimming=[-20, -30, 20]):                
     
     BW=60*1e-3                     # MHz
     n_rd=120
@@ -167,14 +167,14 @@ def inversionrecoveryStandalone(
         # Plots
         plt.figure(2, figsize=(5, 5))
         plt.plot(results[:, 0], results[:, 1], 'o')
-        plt.plot(tIR2, func1(tIR2, *fitData1))
+#        plt.plot(tIR2, func1(tIR2, *fitData1))
         plt.plot(tIR2, func2(tIR2, *fitData2))
-        plt.plot(tIR2, func3(tIR2, *fitData3))
+#        plt.plot(tIR2, func3(tIR2, *fitData3))
         plt.title(name)
         plt.xscale('log')
         plt.xlabel('t(ms)')
         plt.ylabel('Signal (mV)')
-        plt.legend(['Experimental', 'Fitting 1 component', 'Fitting 2 components','Fitting 3 components' ])
+#        plt.legend(['Experimental', 'Fitting 1 component', 'Fitting 2 components','Fitting 3 components' ])
         plt.title(name)
         plt.show()
         

@@ -28,17 +28,17 @@ from scipy.io import savemat
 
 def cpmgStandalone(
     init_gpa=False,               # Starts the gpa
-    larmorFreq = 3.074,      # Larmor frequency
+    larmorFreq = 3.0605,      # Larmor frequency
     rfExAmp = 0.3,             # rf excitation pulse amplitude
     rfReAmp = None,             # rf refocusing pulse amplitude
-    rfExTime =33,          # rf excitation pulse time
+    rfExTime =35,          # rf excitation pulse time
     rfReTime = None,          # rf refocusing pulse time
-    repetitionTime = 2000, 
+    repetitionTime = 10000, 
     echoSpacing = 10,        # time between echoes
-    nPoints = 500,                 # Number of points along readout, phase and slice
-    etl = 200,                   # Echo train length
-    acqTime =2,             # Acquisition time
-    shimming = [-80, -100, 10], 
+    nPoints = 200,                 # Number of points along readout, phase and slice
+    etl = 1000,                   # Echo train length
+    acqTime =4,             # Acquisition time
+    shimming = [-20, -30, 20], 
     inversionTime = 0
     ):
 
@@ -195,27 +195,27 @@ def cpmgStandalone(
         rawData['M1'] = fitData1[0]
         
         # For 2 components
-        fitData2, xxx = curve_fit(func2, results[:, 0],  results[:, 1])
-        print('For two components:')
-        print('Ma', round(fitData2[0], 1))
-        print('Mb', round(fitData2[2], 1))
-        print('T2a', round(fitData2[1]), ' ms')
-        print('T2b', round(fitData2[3]), ' ms')
-        rawData['T22'] = [fitData2[1], fitData2[3]]
-        rawData['M2'] = [fitData2[0], fitData2[2]]
+#        fitData2, xxx = curve_fit(func2, results[:, 0],  results[:, 1])
+#        print('For two components:')
+#        print('Ma', round(fitData2[0], 1))
+#        print('Mb', round(fitData2[2], 1))
+#        print('T2a', round(fitData2[1]), ' ms')
+#        print('T2b', round(fitData2[3]), ' ms')
+#        rawData['T22'] = [fitData2[1], fitData2[3]]
+#        rawData['M2'] = [fitData2[0], fitData2[2]]
         
-        # For 3 components
-        fitData3, xxx = curve_fit(func3, results[:, 0],  results[:, 1])
-        print('For three components:')
-        print('Ma', round(fitData3[0], 1), ' ms')
-        print('Mb', round(fitData3[2], 1), ' ms')
-        print('Mc', round(fitData3[4], 1), ' ms')
-        print('T2a', round(fitData3[1]), ' ms')
-        print('T2b', round(fitData3[3]), ' ms')
-        print('T2c', round(fitData3[5]), ' ms')
-        rawData['T23'] = [fitData3[1], fitData3[3], fitData3[5]]
-        rawData['M3'] = [fitData3[0], fitData3[2], fitData3[4]]
-        
+#        # For 3 components
+#        fitData3, xxx = curve_fit(func3, results[:, 0],  results[:, 1])
+#        print('For three components:')
+#        print('Ma', round(fitData3[0], 1), ' ms')
+#        print('Mb', round(fitData3[2], 1), ' ms')
+#        print('Mc', round(fitData3[4], 1), ' ms')
+#        print('T2a', round(fitData3[1]), ' ms')
+#        print('T2b', round(fitData3[3]), ' ms')
+#        print('T2c', round(fitData3[5]), ' ms')
+#        rawData['T23'] = [fitData3[1], fitData3[3], fitData3[5]]
+#        rawData['M3'] = [fitData3[0], fitData3[2], fitData3[4]]
+#        
         # Save data
         name = saveMyData(rawData)
         
@@ -223,12 +223,12 @@ def cpmgStandalone(
         plt.figure(2, figsize=(5, 5))
         plt.plot(results[:, 0], results[:, 1], 'o')
         plt.plot(t, func1(t, *fitData1))
-        plt.plot(t, func2(t, *fitData2))
-        plt.plot(t, func3(t, *fitData3))
+#        plt.plot(t, func2(t, *fitData2))
+#        plt.plot(t, func3(t, *fitData3))
         plt.title(name)
         plt.xlabel('t(ms)')
         plt.ylabel('Signal (mV)')
-        plt.legend(['Experimental', 'Fitting 1 component', 'Fitting 2 components','Fitting 3 components' ])
+#        plt.legend(['Experimental', 'Fitting 1 component', 'Fitting 2 components','Fitting 3 components' ])
         plt.title(name)
         plt.show()
     

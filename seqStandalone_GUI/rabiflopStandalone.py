@@ -17,19 +17,21 @@ from scipy.io import savemat
 
 def rabiflopStandalone(
     init_gpa= False,                 
-    larmorFreq=3.07862, 
+    larmorFreq=3.059, 
     rfExAmp=0.3, 
     rfReAmp=None, 
-    rfExPhase = 0,
+    rfExPhase =0,
     rfExTimeIni=10, 
-    rfExTimeEnd = 120, 
-    nExTime =30, 
+    rfExTimeEnd =120, 
+    nExTime =40, 
     nReadout =800,
     tAdq = 4*1e3,
     tEcho = 20*1e3,
-    tRepetition =1000*1e3, 
+    tRepetition =5000*1e3, 
     plotSeq = 0, 
-    shimming=[-80, -100, 10]):
+    shimming=[-50, -50, 0], 
+    dummyPulses = 0):
+#    shimming=[0, 0, 0]):
 
 #  INITALISATION OF VARIABLES  ################################################################################
     #CONTANTS
@@ -68,8 +70,10 @@ def rabiflopStandalone(
     
     rfExPhase = rfExPhase*np.pi/180
     rfExAmp = rfExAmp*np.exp(1j*rfExPhase)
-    rfRePhase = 0
+    print(rfExAmp)
+    rfRePhase = 0*np.pi/180
     rfReAmp = rfReAmp *np.exp(1j*rfRePhase)
+    print(rfReAmp)
     #Excitation times
     rfExTime= np.linspace(rfExTimeIni, rfExTimeEnd, nExTime,  endpoint=True)
     
@@ -142,64 +146,65 @@ def rabiflopStandalone(
 #  SEQUENCE  ############################################################################################
 
     for indexExTime in range(nExTime):
-        
-        rfReTime = 2*rfExTime[indexExTime]
-    
-        txTime=[]
-        txAmp=[]
-        txGateTime=[]
-        txGateAmp=[]
-        rxTime = []
-        rxAmp = []
-        
-        # INIT EXPERIMENT
-        BW = nReadout/tAdq
-        BWov = BW*oversamplingFactor
-        samplingPeriod = 1/BWov
-        expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = expt.get_rx_ts()[0]
-        BWReal = 1/samplingPeriod/oversamplingFactor
-        tAdqReal = nReadout/BWReal  
-        tIni=20  #us initial time
-    # Shimming
-        expt.add_flodict({
-            'grad_vx': (np.array([tIni]),np.array([shimming[0]])), 
-            'grad_vy': (np.array([tIni]),np.array([shimming[1]])),  
-            'grad_vz': (np.array([tIni]),np.array([shimming[2]])),
-        })
-        # TR    
-        tRef = tStart+rfExTime[indexExTime]/2+tIni+100
-        txTime, txAmp,txGateTime,txGateAmp = rfPulse(tRef,rfExAmp, rfExTime[indexExTime], txTime, txAmp, txGateTime, txGateAmp)
-        tRef = tRef+tEcho/2
-        txTime, txAmp, txGateTime, txGateAmp = rfPulse(tRef,rfReAmp, rfReTime, txTime, txAmp, txGateTime, txGateAmp)
-        tRef = tRef+tEcho/2
-        rxTime, rxAmp = readoutGate(tRef, tAdqReal, rxTime, rxAmp)
-        
-        expt.add_flodict({
-                            'tx0': (txTime, txAmp),
-                            'tx_gate': (txGateTime, txGateAmp), 
-                            'rx0_en': (rxTime, rxAmp),
-                            'rx_gate': (rxTime, rxAmp),
-                            })
-        tEnd = tRepetition
-        expt.add_flodict({
-            'grad_vx': (np.array([tEnd]),np.array([0])), 
-            'grad_vy': (np.array([tEnd]),np.array([0])), 
-            'grad_vz': (np.array([tEnd]),np.array([0])),
-        })
+        for dummy in range(dummyPulses+1):
+#            rfReTime = 2*rfExTime[indexExTime]
+            rfReTime = 75
+            txTime=[]
+            txAmp=[]
+            txGateTime=[]
+            txGateAmp=[]
+            rxTime = []
+            rxAmp = []
+            
+            # INIT EXPERIMENT
+            BW = nReadout/tAdq
+            BWov = BW*oversamplingFactor
+            samplingPeriod = 1/BWov
+            expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+            samplingPeriod = expt.get_rx_ts()[0]
+            BWReal = 1/samplingPeriod/oversamplingFactor
+            tAdqReal = nReadout/BWReal  
+            tIni=20  #us initial time
+        # Shimming
+            expt.add_flodict({
+                'grad_vx': (np.array([tIni]),np.array([shimming[0]])), 
+                'grad_vy': (np.array([tIni]),np.array([shimming[1]])),  
+                'grad_vz': (np.array([tIni]),np.array([shimming[2]])),
+            })
+            # TR    
+            tRef = tStart+rfExTime[indexExTime]/2+tIni+100
+            txTime, txAmp,txGateTime,txGateAmp = rfPulse(tRef,rfExAmp, rfExTime[indexExTime], txTime, txAmp, txGateTime, txGateAmp)
+            tRef = tRef+tEcho/2
+            txTime, txAmp, txGateTime, txGateAmp = rfPulse(tRef,rfReAmp, rfReTime, txTime, txAmp, txGateTime, txGateAmp)
+            tRef = tRef+tEcho/2
+            rxTime, rxAmp = readoutGate(tRef, tAdqReal, rxTime, rxAmp)
+            
+            expt.add_flodict({
+                                'tx0': (txTime, txAmp),
+                                'tx_gate': (txGateTime, txGateAmp), 
+                                'rx0_en': (rxTime, rxAmp),
+                                'rx_gate': (rxTime, rxAmp),
+                                })
+            tEnd = tRepetition
+            expt.add_flodict({
+                'grad_vx': (np.array([tEnd]),np.array([0])), 
+                'grad_vy': (np.array([tEnd]),np.array([0])), 
+                'grad_vz': (np.array([tEnd]),np.array([0])),
+            })
 
-        if plotSeq == 0:
-            print(indexExTime,  '.- Running...')
-            rxd, msgs = expt.run()
-            expt.__del__()
-            print('   End')
-            data = sig.decimate(rxd['rx0']*13.788, oversamplingFactor, ftype='fir', zero_phase=True)
-            dataAll = np.concatenate((dataAll, data), axis=0)
-            rawData['dataFull'] = dataAll
-        elif plotSeq == 1:
-            expt.plot_sequence()
-            plt.show()
-            expt.__del__()
+            if plotSeq == 0:
+                print(indexExTime,  '.- Running...')
+                rxd, msgs = expt.run()
+                expt.__del__()
+                print('   End')
+                if dummy >= dummyPulses:
+                    data = sig.decimate(rxd['rx0']*13.788, oversamplingFactor, ftype='fir', zero_phase=True)
+                    dataAll = np.concatenate((dataAll, data), axis=0)
+                    rawData['dataFull'] = dataAll
+            elif plotSeq == 1:
+                expt.plot_sequence()
+                plt.show()
+                expt.__del__()
    
     if plotSeq == 1:
         expt.plot_sequence()
@@ -211,6 +216,7 @@ def rabiflopStandalone(
         rabiFlopData = getRabiFlopData(data, rfExTime, tAdqReal)
         rawData['rabiFlopData'] = rabiFlopData
         name = saveMyData(rawData)
+        print(txAmp)
         plotRabiFlop(rabiFlopData,  name)
         plt.show()
 
