@@ -91,6 +91,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_batch.triggered.connect(self.batch_system)
         self.action_XNATupload.triggered.connect(self.xnat)
         self.action_session.triggered.connect(self.change_session)
+        self.action_run_localizer.triggered.connect(acqCtrl.localizer)
 
         self.seqName = self.sequencelist.getCurrentSequence()
         defaultsequences[self.seqName].sequenceInfo()
@@ -170,7 +171,14 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         """
         for i in reversed(range(self.plotview_layout.count())):
             self.plotview_layout.itemAt(i).widget().setParent(None)
-          
+
+    def clearLocalizerLayout(self) -> None:
+        """
+        Clear the localizer layout
+        @return:    None
+        """
+        for i in reversed(range(self.localizer_layout.count())):
+            self.localizer_layout.itemAt(i).widget().setParent(None)
     
     def save_data(self):
         

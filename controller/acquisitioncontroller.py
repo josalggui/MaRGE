@@ -6,15 +6,15 @@ Acquisition Controller
 @version:   2.0 (Beta)
 """
 
-from PyQt5.QtWidgets import QLabel, QPushButton, QHBoxLayout
+from PyQt5.QtWidgets import QLabel, QHBoxLayout
 from plotview.spectrumplot import SpectrumPlotSeq
 from plotview.spectrumplot import Spectrum3DPlot
 from seq.sequences import defaultsequences
 from PyQt5 import QtCore
 from PyQt5.QtCore import QObject
-import pyqtgraph as pg
-import numpy as np
+from seq.localizer import Localizer
 import imageio
+import numpy as np
 
 
 class AcquisitionController(QObject):
@@ -25,7 +25,7 @@ class AcquisitionController(QObject):
         self.sequencelist = sequencelist
         self.acquisitionData = None
         self.session = session
-        self.layout = QHBoxLayout()
+        # self.layout = QHBoxLayout()
         self.firstPlot()
 
         # Example of how to add a button
@@ -33,12 +33,12 @@ class AcquisitionController(QObject):
         # self.button.setChecked(False)
         # self.button.clicked.connect(self.button_clicked)
         # self.parent.plotview_layout.addWidget(self.button)
-    
+
     def startAcquisition(self):
         """
         @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
         @email: josalggui@i3m.upv.es
-        @Summary: rare sequence class
+        @Summary: run selected sequence
         """
         print('Start sequence')
 
@@ -67,6 +67,7 @@ class AcquisitionController(QObject):
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setStyleSheet("background-color: black;color: white")
         self.parent.plotview_layout.addWidget(self.label)
+        # self.parent.localizer_layout.addWidget(self.label)
 
         # Add plots to the plotview_layout
         for item in out:
@@ -106,6 +107,7 @@ class AcquisitionController(QObject):
 
     def firstPlot(self):
         logo = imageio.imread("resources/images/logo.png")
+        logo = np.flipud(logo)
         self.parent.clearPlotviewLayout()
         welcome = Spectrum3DPlot(logo.transpose([1, 0, 2]),
                                  title='Institute for Instrimentation in Molecular Imaging (i3M)')
@@ -114,3 +116,48 @@ class AcquisitionController(QObject):
         welcome.showHistogram(False)
         welcomeWidget = welcome.getImageWidget()
         self.parent.plotview_layout.addWidget(welcomeWidget)
+
+    def localizer(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: run localizer
+        """
+
+        print('Start localizer')
+
+        # Delete previous localizer
+        self.parent.clearLocalizerLayout()
+
+        # Set localizer sequence to RARE
+        localizer = Localizer()
+
+        # Load default parameters
+        localizer.loadParams()
+        localizer.mapVals['seqName'] = 'Localizer'
+        localizer.mapNmspc['seqName'] = 'LocalizerInfo'
+        localizer.saveParams()
+
+        # Add parent to localizer so it can update sequences parameters
+        localizer.parent = self.parent
+
+        # Save all sequences into the localizer to set the fov
+        localizer.sequenceList = defaultsequences
+
+        # Create and execute selected sequence
+        localizer.sequenceRunProjections(0)
+
+        # Do sequence analysis and acquire de plots
+        out = localizer.sequenceAnalysis()
+
+        # Create label with rawdata name
+        fileName = localizer.mapVals['fileName']
+        self.label = QLabel(fileName)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        self.parent.localizer_layout.addWidget(self.label)
+
+        # Add plots to the localizer_layout
+        self.parent.localizer_layout.addWidget(out[0])
+
+

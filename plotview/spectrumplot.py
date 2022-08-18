@@ -189,7 +189,6 @@ class Spectrum3DPlot():
         hist = self.imv.getHistogramWidget()
         hist.setVisible(show)
 
-
 class ImageViewer(pg.ImageView):
     """
     @author: J.M. Algarín, february 03th 2022
@@ -206,6 +205,7 @@ class ImageViewer(pg.ImageView):
         super(ImageViewer, self).__init__(parent=parent, name=name, view=view, imageItem=imageItem,
                  levelMode=levelMode, *args)
         self.textitem = textitem
+        self.view.invertY(False)
 
     def roiChanged(self):
         # Extract image data from ROI

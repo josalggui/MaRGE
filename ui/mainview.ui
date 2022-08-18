@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1126</width>
-    <height>800</height>
+    <width>1249</width>
+    <height>862</height>
    </rect>
   </property>
   <property name="font">
@@ -211,8 +211,50 @@
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="verticalWidget_2" native="true">
-         <layout class="QVBoxLayout" name="verticalLayout_3">
+        <widget class="QWidget" name="localizer" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>300</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <layout class="QVBoxLayout" name="localizer_layout">
+          <property name="spacing">
+           <number>5</number>
+          </property>
+          <property name="sizeConstraint">
+           <enum>QLayout::SetDefaultConstraint</enum>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="plotview" native="true">
+         <layout class="QVBoxLayout" name="plotview_layout">
           <property name="spacing">
            <number>5</number>
           </property>
@@ -228,39 +270,6 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <item>
-           <widget class="QWidget" name="plotview" native="true">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>400</height>
-             </size>
-            </property>
-            <layout class="QVBoxLayout" name="plotview_layout">
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-            </layout>
-           </widget>
-          </item>
          </layout>
         </widget>
        </item>
@@ -334,8 +343,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1126</width>
-     <height>21</height>
+     <width>1249</width>
+     <height>26</height>
     </rect>
    </property>
   </widget>
@@ -351,6 +360,7 @@
    </attribute>
    <addaction name="action_gpaInit"/>
    <addaction name="action_calibration"/>
+   <addaction name="action_run_localizer"/>
    <addaction name="action_XNATupload"/>
    <addaction name="action_acquire"/>
   </widget>
@@ -556,6 +566,18 @@
    </property>
    <property name="toolTip">
     <string>Sweep Sequence</string>
+   </property>
+  </action>
+  <action name="action_run_localizer">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/location-outline.svg</normaloff>../resources/icons/location-outline.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Localizer</string>
+   </property>
+   <property name="toolTip">
+    <string>Localizer</string>
    </property>
   </action>
  </widget>

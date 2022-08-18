@@ -114,6 +114,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
             for ii in range(nScans):
                 print('Runing...')
                 rxd, msgs = self.expt.run()
+                rxd['rx0'] = np.real(rxd['rx0'])-1j*np.imag(rxd['rx0'])
                 dataFull = np.concatenate((dataFull, rxd['rx0']*13.788), axis=0)
             print(msgs)
             dataFull = sig.decimate(dataFull, hw.oversamplingFactor, ftype='fir', zero_phase=True)
@@ -142,7 +143,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         idf = np.argmax(np.abs(spectrum))
         fCentral = fVector[idf]*1e-3
-        print('Larmor frequency: %1.5f MHz' % (larmorFreq - fCentral))
+        print('Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
         self.mapVals['larmorFreqCal'] = larmorFreq - fCentral
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
@@ -151,8 +152,8 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         # Add time signal to the layout
         signalPlotWidget = SpectrumPlot(xData=tVector,
-                                        yData=[np.abs(signal)],
-                                        legend=[''],
+                                        yData=[np.abs(signal), np.real(signal), np.imag(signal)],
+                                        legend=['abs', 'real', 'imag'],
                                         xLabel='Time (ms)',
                                         yLabel='Signal amplitude (mV)',
                                         title='')

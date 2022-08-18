@@ -554,14 +554,14 @@ class MRIBLANKSEQ:
         angle = np.unwrap(np.angle(dataFreqCal))
         idx = np.argmax(np.abs(dataFreqCal))
         dPhase = angle[idx]
-        self.mapVals['drfPhase'] = dPhase
+        self.mapVals['drfPhase'] = np.round(dPhase, decimals=6)
         # Get larmor frequency through fft
         spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFreqCal))))
         fVector = np.linspace(-bw / 2, bw / 2, num=nPoints, endpoint=False)
         idx = np.argmax(spectrum)
         dfFFT = -fVector[idx]
         larmorFreq += dfFFT
-        self.mapVals['larmorFreq'] = larmorFreq # MHz
+        self.mapVals['larmorFreq'] = np.round(larmorFreq, decimals=6) # MHz
         print("f0 = %s MHz" % (round(larmorFreq, 5)))
         self.expt.__del__()
 

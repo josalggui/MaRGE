@@ -23,30 +23,30 @@ class RARE(blankSeq.MRIBLANKSEQ):
         # Input the parameters
         self.addParameter(key='seqName', string='RAREInfo', val='RARE')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
-        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.0, field='RF')
-        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.0, field='RF')
-        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
-        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='RF')
-        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, field='SEQ')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.066, field='RF')
+        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=35.0, field='RF')
+        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=70.0, field='RF')
+        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=20.0, field='SEQ')
         self.addParameter(key='preExTime', string='Preexitation time (ms)', val=0.0, field='SEQ')
         self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, field='SEQ')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
-        self.addParameter(key='fov', string='FOV (cm)', val=[12.0, 12.0, 12.0], field='IM')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., field='SEQ')
+        self.addParameter(key='fov', string='FOV (cm)', val=[15.0, 15.0, 15.0], field='IM')
         self.addParameter(key='dfov', string='dFOV (mm)', val=[0.0, 0.0, 0.0], field='IM')
-        self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[60, 1, 1], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=30, field='SEQ')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
+        self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[30, 30, 30], field='IM')
+        self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
         self.addParameter(key='axes', string='Axes', val=[0, 1, 2], field='IM')
-        self.addParameter(key='axesEnable', string='Axes enable', val=[0, 0, 0], field='IM')
+        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 1], field='IM')
         self.addParameter(key='sweepMode', string='Sweep mode, 0->k20, 1->02k, 2->k2k', val=1, field='SEQ')
-        self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=5.0, field='OTH')
+        self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, field='OTH')
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, field='OTH')
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='drfPhase', string='Phase of exciation pulse (º)', val=0.0, field='RF')
-        self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ')
-        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0, 0, 0], field='OTH')
+        self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ')
+        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-40, -20, 10], field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH')
         self.addParameter(key='freqCal', string='Calibrate frequency (0 or 1)', val=1, field='OTH')
 
@@ -353,7 +353,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['scanTime'] = scanTime*nSL*1e-6
 
         # Calibrate frequency
-        if freqCal and (not plotSeq):
+        if freqCal and (not plotSeq) and (not demo):
             larmorFreq = self.freqCalibration(bw=0.05)
             larmorFreq = self.freqCalibration(bw=0.005)
             drfPhase = self.mapVals['drfPhase']
@@ -571,13 +571,14 @@ class RARE(blankSeq.MRIBLANKSEQ):
             image = image/np.max(np.reshape(image,-1))*100
             image = Spectrum3DPlot(image,
                                    title='Image magnitude',
-                                   xLabel=axesStr[0]+" Axis",
-                                   yLabel=axesStr[1]+" Axis")
+                                   xLabel=axesStr[1]+" Axis",
+                                   yLabel=axesStr[0]+" Axis")
             imageWidget = image.getImageWidget()
 
             kSpace = Spectrum3DPlot(np.log10(np.abs(self.mapVals['kSpace3D'])),
                                     title='k-Space',
-                                    xLabel="k%s"%axesStr[0],
-                                    yLabel="k%s"%axesStr[1])
+                                    xLabel="k%s"%axesStr[1],
+                                    yLabel="k%s"%axesStr[0])
             kSpaceWidget = kSpace.getImageWidget()
+            
             return([imageWidget, kSpaceWidget])

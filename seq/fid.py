@@ -57,12 +57,16 @@ class FID(blankSeq.MRIBLANKSEQ):
         txChannel = self.mapVals['txChannel']
         rxChannel = self.mapVals['rxChannel']
 
+        # Miscellaneus
+        addRdPoints = 10
+        self.mapVals['addRdPoints'] = addRdPoints
+
         def createSequence():
             # Initialize time
-            tini = 20
+            tini = 1000     # Excitation and others start 1 ms after experiment beginning
 
             # Shimming
-            self.iniSequence(tini, shimming)
+            self.iniSequence(20, shimming)  # shimming is turned on 20 us after experiment beginning
 
             for scan in range(nScans):
                 tEx = tini + repetitionTime*scan + hw.blkTime + rfExTime / 2
@@ -72,8 +76,8 @@ class FID(blankSeq.MRIBLANKSEQ):
                 self.rfRecPulse(t0, rfExTime, rfExAmp, 0, txChannel=txChannel)
 
                 # Rx gate
-                t0 = tEx + rfExTime / 2 + deadTime
-                self.rxGate(t0, acqTime, rxChannel=rxChannel)
+                t0 = tEx + rfExTime / 2 + deadTime - addRdPoints / bw
+                self.rxGate(t0, acqTime + addRdPoints / bw, rxChannel=rxChannel)
 
             self.endSequence(repetitionTime*nScans)
 
@@ -92,6 +96,7 @@ class FID(blankSeq.MRIBLANKSEQ):
         if plotSeq == 0:
             # Run the experiment and get data
             rxd, msgs = self.expt.run()
+            rxd['rx%i' % rxChannel] = np.real(rxd['rx%i'%rxChannel])-1j*np.imag(rxd['rx%i'%rxChannel])
             overData = rxd['rx%i'%rxChannel]*13.788
             dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['overData'] = overData
@@ -104,7 +109,8 @@ class FID(blankSeq.MRIBLANKSEQ):
             self.mapVals['sampledPoint'] = data[0]
 
     def sequenceAnalysis(self, obj=''):
-        signal = self.mapVals['data']
+        addRdPoints = self.mapVals['addRdPoints']
+        signal = self.mapVals['data'][addRdPoints::]
         signal = np.reshape(signal, (-1))
         acqTime = self.mapVals['acqTime'] # ms
         bw = self.mapVals['bw']*1e3 # kHz
