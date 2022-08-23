@@ -41,6 +41,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
         print("Get a noise measurement")
+        print(" ")
 
     def sequenceTime(self):
         return(0)  # minutes, scanTime
@@ -70,7 +71,11 @@ class Noise(blankSeq.MRIBLANKSEQ):
         else:
             bw = bw * hw.oversamplingFactor
             samplingPeriod = 1 / bw
-            self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+            self.expt = ex.Experiment(lo_freq=larmorFreq,
+                                      rx_t=samplingPeriod,
+                                      init_gpa=init_gpa,
+                                      gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                                      print_infos=False)
             samplingPeriod = self.expt.get_rx_ts()[0]
             bw = 1/samplingPeriod/hw.oversamplingFactor
             acqTime = nPoints/bw
@@ -78,27 +83,21 @@ class Noise(blankSeq.MRIBLANKSEQ):
             # SEQUENCE
             self.iniSequence(20, np.array((0, 0, 0)))
             self.rxGate(20, acqTime, rxChannel=rxChannel)
-            self.endSequence(2*acqTime)
+            self.endSequence(acqTime+40)
 
             if plotSeq == 0:
-                print('Running...')
                 t0 = time.time()
                 rxd, msgs = self.expt.run()
                 t1 = time.time()
-                print('Run time = %f s' %(t1-t0))
-                # print(msgs)
-                self.expt.__del__()
+                print('Noise run time = %f s' %(t1-t0))
                 data = sig.decimate(rxd['rx%i'%rxChannel]*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
                 self.mapVals['data'] = data
-                print('End')
                 tVector = np.linspace(0, acqTime, num=nPoints) * 1e-3  # ms
                 spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
                 fVector = np.linspace(-bw / 2, bw / 2, num=nPoints) * 1e3  # kHz
                 self.dataTime = [tVector, data]
                 self.dataSpec = [fVector, spectrum]
-            elif plotSeq == 1:
-                self.expt.__del__()
-
+            self.expt.__del__()
 
     def sequenceAnalysis(self, obj=''):
         noise = np.abs(self.dataTime[1])
@@ -106,6 +105,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.mapVals['RMS noise'] = noiserms
         self.mapVals['sampledPoint'] = noiserms # for sweep method
         self.saveRawData()
+        print('rms noise: %0.5f mV' % noiserms)
 
         # Plot signal versus time
         timePlotWidget = SpectrumPlot(xData=self.dataTime[0],
@@ -113,7 +113,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
                                 legend=['abs', 'real', 'imag'],
                                 xLabel='Time (ms)',
                                 yLabel='Signal amplitude (mV)',
-                                title='Signal vs time, rms noise: %1.3f mV' %noiserms)
+                                title='Noise vs time, rms noise: %1.3f mV' %noiserms)
 
         # Plot spectrum
         freqPlotWidget = SpectrumPlot(xData=self.dataSpec[0],
@@ -121,7 +121,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
                                 legend=[''],
                                 xLabel='Frequency (kHz)',
                                 yLabel='Mag FFT (a.u.)',
-                                title='Signal spectrum')
+                                title='Noise spectrum')
 
         out = [timePlotWidget, freqPlotWidget]
 
@@ -150,3 +150,7 @@ if __name__=='__main__':
     seq = Noise()
     seq.sequenceRun()
     seq.sequenceAnalysis(obj='Standalone')
+
+    # import pyqtgraph.examples
+    # pyqtgraph.examples.run()
+

@@ -12,17 +12,12 @@ from PyQt5.QtCore import QFile, QTextStream,  pyqtSignal, pyqtSlot, QThread
 from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
 from PyQt5.QtGui import QIcon
-from controller.acquisitioncontroller import AcquisitionController
-# from controller.calibrationcontroller import CalibrationController
-from controller.batchcontroller import BatchController
 import pyqtgraph.exporters
 from functools import partial
 import os
-import ast
 import sys
 import experiment as ex
 from scipy.io import savemat
-from controller.sequencecontroller import SequenceList
 import csv
 from sessionmodes import defaultsessions
 from manager.datamanager import DataManager
@@ -30,15 +25,21 @@ from datetime import date,  datetime
 from globalvars import StyleSheets as style
 from stream import EmittingStream
 from local_config import ip_address
-from seq.sequences import defaultsequences
-import cgitb 
+import cgitb
 cgitb.enable(format = 'text')
 import pdb
 import numpy as np
 st = pdb.set_trace
 
-MainWindow_Form, MainWindow_Base = loadUiType('ui/mainview.ui')
+# Import sequences
+from seq.sequences import defaultsequences
 
+# Import controllers
+from controller.acquisitioncontroller import AcquisitionController                                  # Acquisition
+from controller.batchcontroller import BatchController                                              # Batches
+from controller.sequencecontroller import SequenceList                                              # Sequence list
+
+MainWindow_Form, MainWindow_Base = loadUiType('ui/mainview.ui')
 
 class MainViewController(MainWindow_Form, MainWindow_Base):
     """
@@ -70,7 +71,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         sys.stderr = EmittingStream(textWritten=self.onUpdateText)        
 
         # Initialisation of acquisition controller
-        acqCtrl = AcquisitionController(self, self.session, self.sequencelist)
+        self.acqCtrl = AcquisitionController(self, self.session, self.sequencelist)
 
         # Connection to the server
         self.ip = ip_address
@@ -80,18 +81,27 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
         # Toolbar Actions
         self.action_gpaInit.triggered.connect(self.initgpa)
-        # self.action_calibration.triggered.connect(self.calibrate)
+        # self.actionCustomCalibration.triggered.connect(self.calibrate)
+        self.action_autocalibration.triggered.connect(self.acqCtrl.autocalibration)
         self.action_changeappearance.triggered.connect(self.changeAppearanceSlot)
-        self.action_acquire.triggered.connect(acqCtrl.startAcquisition)
+        self.action_acquire.triggered.connect(self.acqCtrl.startAcquisition)
         self.action_loadparams.triggered.connect(self.load_parameters)
         self.action_saveparams.triggered.connect(self.save_parameters)
         self.action_close.triggered.connect(self.close)    
         self.action_exportfigure.triggered.connect(self.export_figure)
-        self.action_viewsequence.triggered.connect(acqCtrl.startSequencePlot)
+        self.action_viewsequence.triggered.connect(self.acqCtrl.startSequencePlot)
         self.action_batch.triggered.connect(self.batch_system)
         self.action_XNATupload.triggered.connect(self.xnat)
         self.action_session.triggered.connect(self.change_session)
-        self.action_run_localizer.triggered.connect(acqCtrl.localizer)
+        self.action_run_localizer.triggered.connect(self.acqCtrl.localizer)
+
+        # Connect action buttoms from calibration menu with methods
+        self.actionLarmor.triggered.connect(self.runLarmor)
+        self.actionNoise.triggered.connect(self.runNoise)
+        self.actionRabi_Flop.triggered.connect(self.runRabiFlop)
+        self.actionCPMG.triggered.connect(self.runCPMG)
+        self.actionInversion_Recovery.triggered.connect(self.runInversionRecovery)
+        self.actionAutocalibration.triggered.connect(self.acqCtrl.autocalibration)
 
         self.seqName = self.sequencelist.getCurrentSequence()
         defaultsequences[self.seqName].sequenceInfo()
@@ -99,6 +109,21 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.showMaximized()
 
         # acqCtrl.startAcquisition()
+
+    def runLarmor(self):
+        self.acqCtrl.startAcquisition(seqName="Larmor")
+
+    def runNoise(self):
+        self.acqCtrl.startAcquisition(seqName="Noise")
+
+    def runRabiFlop(self):
+        self.acqCtrl.startAcquisition(seqName="RabiFlops")
+
+    def runCPMG(self):
+        self.acqCtrl.startAcquisition(seqName="CPMG")
+
+    def runInversionRecovery(self):
+        self.acqCtrl.startAcquisition(seqName="InversionRecovery")
 
     def lines_that_start_with(self, str, f):
         return [line for line in f if line.startswith(str)]
@@ -352,9 +377,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         msg.setText(text)
         msg.exec();
         
-    # def calibrate(self):
-    #     seqCalib = CalibrationController(self, self.sequencelist)
-    #     seqCalib.show()
+    def calibrate(self):
+        calibrationApp = CalibrationController(parent=self)
+        calibrationApp.show()
         
     def initgpa(self):
         expt = ex.Experiment(init_gpa=True)

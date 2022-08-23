@@ -580,5 +580,5 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                     xLabel="k%s"%axesStr[1],
                                     yLabel="k%s"%axesStr[0])
             kSpaceWidget = kSpace.getImageWidget()
-            
+
             return([imageWidget, kSpaceWidget])

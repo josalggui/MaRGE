@@ -15,6 +15,7 @@ from PyQt5.QtCore import QObject
 from seq.localizer import Localizer
 import imageio
 import numpy as np
+import pyqtgraph as pg
 
 
 class AcquisitionController(QObject):
@@ -25,16 +26,9 @@ class AcquisitionController(QObject):
         self.sequencelist = sequencelist
         self.acquisitionData = None
         self.session = session
-        # self.layout = QHBoxLayout()
         self.firstPlot()
 
-        # Example of how to add a button
-        # self.button = QPushButton("Change View")
-        # self.button.setChecked(False)
-        # self.button.clicked.connect(self.button_clicked)
-        # self.parent.plotview_layout.addWidget(self.button)
-
-    def startAcquisition(self):
+    def startAcquisition(self, seqName=None):
         """
         @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
         @email: josalggui@i3m.upv.es
@@ -47,7 +41,10 @@ class AcquisitionController(QObject):
         self.parent.clearPlotviewLayout()
 
         # Load sequence name
-        self.seqName = self.sequencelist.getCurrentSequence()
+        if seqName==None or seqName==False:
+            self.seqName = self.sequencelist.getCurrentSequence()
+        else:
+            self.seqName = seqName
 
         # Save sequence list into the current sequence, just in case you need to do sweep
         defaultsequences[self.seqName].sequenceList = defaultsequences
@@ -62,12 +59,11 @@ class AcquisitionController(QObject):
         out = defaultsequences[self.seqName].sequenceAnalysis()
 
         # Create label with rawdata name
-        fileName = defaultsequences[self.sequencelist.getCurrentSequence()].mapVals['fileName']
+        fileName = defaultsequences[self.seqName].mapVals['fileName']
         self.label = QLabel(fileName)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setStyleSheet("background-color: black;color: white")
         self.parent.plotview_layout.addWidget(self.label)
-        # self.parent.localizer_layout.addWidget(self.label)
 
         # Add plots to the plotview_layout
         for item in out:
@@ -81,7 +77,7 @@ class AcquisitionController(QObject):
         """
         @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
         @email: josalggui@i3m.upv.es
-        @Summary: rare sequence class
+        @Summary: plot sequence instructions
         """
         # Delete previous plots
         # if hasattr(self.parent, 'clearPlotviewLayout'):
@@ -106,6 +102,11 @@ class AcquisitionController(QObject):
             self.parent.plotview_layout.addWidget(plot[n])
 
     def firstPlot(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: show the initial figure
+        """
         logo = imageio.imread("resources/images/logo.png")
         logo = np.flipud(logo)
         self.parent.clearPlotviewLayout()
@@ -159,5 +160,69 @@ class AcquisitionController(QObject):
 
         # Add plots to the localizer_layout
         self.parent.localizer_layout.addWidget(out[0])
+
+    def autocalibration(self):
+        self.parent.clearPlotviewLayout()
+
+
+        # Get Larmor frequency
+        print("Larmor frequency...")
+        larmorSeq = defaultsequences['Larmor']
+        larmorSeq.sequenceRun()
+        outLarmor = larmorSeq.sequenceAnalysis()
+        for seq in defaultsequences:
+            defaultsequences[seq].mapVals['larmorFreq'] = larmorSeq.mapVals['larmorFreqCal']
+
+        # Get noise
+        noiseSeq = defaultsequences['Noise']
+        noiseSeq.sequenceRun()
+        outNoise = noiseSeq.sequenceAnalysis()
+
+        # Get Rabi flops
+        rabiSeq = defaultsequences['RabiFlops']
+        rabiSeq.sequenceRun()
+        outRabi = rabiSeq.sequenceAnalysis()
+
+        # Spectrum
+        # Create label with rawdata name
+        fileName = larmorSeq.mapVals['fileName']
+        self.label = QLabel(fileName)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        self.parent.plotview_layout.addWidget(self.label)
+
+        # Add plots to the plotview_layout
+        item = outLarmor[1]
+        self.parent.plotview_layout.addWidget(item)
+        item.label = self.label
+
+        # Noise
+        # Create label with rawdata name
+        fileName = noiseSeq.mapVals['fileName']
+        self.label = QLabel(fileName)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        self.parent.plotview_layout.addWidget(self.label)
+
+        # Add plots to the plotview_layout
+        for item in outNoise:
+            self.parent.plotview_layout.addWidget(item)
+            item.label = self.label
+
+        # Rabi
+        # Create label with rawdata name
+        fileName = rabiSeq.mapVals['fileName']
+        self.label = QLabel(fileName)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        self.parent.plotview_layout.addWidget(self.label)
+
+        # Add plots to the plotview_layout
+        item = outRabi[0]
+        self.parent.plotview_layout.addWidget(item)
+        item.label = self.label
+
+        self.parent.onSequenceChanged.emit(self.parent.sequence)
+
 
 

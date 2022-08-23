@@ -20,6 +20,7 @@ for char in path:
 import seq.rare as rare
 import numpy as np
 import pyqtgraph as pg
+import copy
 
 
 class Localizer(rare.RARE):
@@ -73,12 +74,6 @@ class Localizer(rare.RARE):
             index = axesVals.index(val)
             axesStr[n] = axesKeys[index]
             n += 1
-
-        # # Get projections
-        # image = np.abs(self.mapVals['image3D'])
-        # self.proj1 = np.max(image, axis=0)
-        # self.proj2 = np.max(image, axis=1)
-        # self.proj3 = np.max(image, axis=2)
 
         # Create graphics layout
         win = pg.GraphicsLayoutWidget(show=(obj == 'Standalone'))
@@ -142,8 +137,8 @@ class Localizer(rare.RARE):
                 roi2.setPos(pos=(self.pos[2], self.pos[0]), update=False)
                 roi3.setSize(size=(self.fov[2], self.fov[1]), update=False)
                 roi3.setPos(pos=(self.pos[2], self.pos[1]), update=False)
-                roi2.stateChanged()
-                roi3.stateChanged()
+                roi2.stateChanged(finish=False)
+                roi3.stateChanged(finish=False)
 
             elif pos2[1] != self.pos[0] or pos2[0] != self.pos[2]:  # If we change roi 2, link roi 1 and 3
                 self.pos[0] = pos2[1]
@@ -155,8 +150,8 @@ class Localizer(rare.RARE):
                 roi1.setSize(size=(self.fov[1], self.fov[0]), update=False)
                 roi3.setPos(pos=(self.pos[2], self.pos[1]), update=False)
                 roi3.setSize(size=(self.fov[2], self.fov[1]), update=False)
-                roi1.stateChanged()
-                roi3.stateChanged()
+                roi1.stateChanged(finish=False)
+                roi3.stateChanged(finish=False)
 
             elif pos3[1] != self.pos[1] or pos3[0] != self.pos[2]:  # If we change roi 3, link roi 2 and 1
 
@@ -169,8 +164,8 @@ class Localizer(rare.RARE):
                 roi1.setSize(size=(self.fov[1], self.fov[0]), update=False)
                 roi2.setPos(pos=(self.pos[2], self.pos[0]), update=False)
                 roi2.setSize(size=(self.fov[2], self.fov[0]), update=False)
-                roi1.stateChanged()
-                roi2.stateChanged()
+                roi1.stateChanged(finish=False)
+                roi2.stateChanged(finish=False)
 
             # Update fov of dafaultsequences
             realFov = self.fov*resolution
@@ -188,8 +183,8 @@ class Localizer(rare.RARE):
                         localdFov[n] = dFov[axis]
                         n += 1
                     localdFov[0] = -localdFov[0]
-                    self.sequenceList[key].mapVals['fov'] = localFov
-                    self.sequenceList[key].mapVals['dfov'] = localdFov*10
+                    self.sequenceList[key].mapVals['fov'] = copy.copy(localFov)
+                    self.sequenceList[key].mapVals['dfov'] = copy.copy(localdFov)*10
             self.parent.onSequenceChanged.emit(self.parent.sequence)
 
         roi1.sigRegionChangeFinished.connect(update_plot)

@@ -347,6 +347,20 @@
      <height>26</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuCalibration">
+    <property name="title">
+     <string>Calibration</string>
+    </property>
+    <addaction name="actionLarmor"/>
+    <addaction name="actionNoise"/>
+    <addaction name="actionRabi_Flop"/>
+    <addaction name="actionCPMG"/>
+    <addaction name="actionInversion_Recovery"/>
+    <addaction name="actionShimming"/>
+    <addaction name="separator"/>
+    <addaction name="actionAutocalibration"/>
+   </widget>
+   <addaction name="menuCalibration"/>
   </widget>
   <widget class="QToolBar" name="ComunicationToolbar">
    <property name="windowTitle">
@@ -359,6 +373,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="action_gpaInit"/>
+   <addaction name="action_autocalibration"/>
    <addaction name="action_calibration"/>
    <addaction name="action_run_localizer"/>
    <addaction name="action_XNATupload"/>
@@ -490,7 +505,7 @@
   <action name="action_calibration">
    <property name="icon">
     <iconset>
-     <normaloff>../resources/icons/compass.svg</normaloff>../resources/icons/compass.svg</iconset>
+     <normaloff>../resources/icons/info-large.svg</normaloff>../resources/icons/info-large.svg</iconset>
    </property>
    <property name="text">
     <string>Calibration of the system</string>
@@ -578,6 +593,50 @@
    </property>
    <property name="toolTip">
     <string>Localizer</string>
+   </property>
+  </action>
+  <action name="action_autocalibration">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/compass.svg</normaloff>../resources/icons/compass.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Autocalibration</string>
+   </property>
+  </action>
+  <action name="actionLarmor">
+   <property name="text">
+    <string>Larmor</string>
+   </property>
+  </action>
+  <action name="actionNoise">
+   <property name="text">
+    <string>Noise</string>
+   </property>
+  </action>
+  <action name="actionRabi_Flop">
+   <property name="text">
+    <string>Rabi Flop</string>
+   </property>
+  </action>
+  <action name="actionCPMG">
+   <property name="text">
+    <string>CPMG</string>
+   </property>
+  </action>
+  <action name="actionInversion_Recovery">
+   <property name="text">
+    <string>Inversion Recovery</string>
+   </property>
+  </action>
+  <action name="actionAutocalibration">
+   <property name="text">
+    <string>Autocalibration</string>
+   </property>
+  </action>
+  <action name="actionShimming">
+   <property name="text">
+    <string>Shimming</string>
    </property>
   </action>
  </widget>

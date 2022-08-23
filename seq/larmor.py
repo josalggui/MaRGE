@@ -35,6 +35,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
         print("This sequence runs a single spin echo to find larmor")
+        print(" ")
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
@@ -99,7 +100,11 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         # Initialize the experiment
         bw = nPoints / acqTime * hw.oversamplingFactor  # MHz
         samplingPeriod = 1 / bw  # us
-        self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+        self.expt = ex.Experiment(lo_freq=larmorFreq,
+                                  rx_t=samplingPeriod,
+                                  init_gpa=init_gpa,
+                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                                  print_infos=False)
         samplingPeriod = self.expt.get_rx_ts()[0]
         bw = 1 / samplingPeriod / hw.oversamplingFactor  # MHz
         acqTime = nPoints / bw  # us
@@ -112,11 +117,9 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         elif plotSeq == 0:
             # Run the experiment and get data
             for ii in range(nScans):
-                print('Runing...')
                 rxd, msgs = self.expt.run()
                 rxd['rx0'] = np.real(rxd['rx0'])-1j*np.imag(rxd['rx0'])
                 dataFull = np.concatenate((dataFull, rxd['rx0']*13.788), axis=0)
-            print(msgs)
             dataFull = sig.decimate(dataFull, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['dataFull'] = dataFull
             data = np.average(np.reshape(dataFull, (nScans, -1)), axis=0)
@@ -144,7 +147,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         idf = np.argmax(np.abs(spectrum))
         fCentral = fVector[idf]*1e-3
         print('Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
-        self.mapVals['larmorFreqCal'] = larmorFreq - fCentral
+        self.mapVals['larmorFreqCal'] = larmorFreq + fCentral
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
 

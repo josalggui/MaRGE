@@ -49,6 +49,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         print("Set RF refocusing time to 0.0 to auto set the RF refocusing time:")
         print("-If Rephasing method = 0, refocusing amplitude is twice the excitation amplitude")
         print("-If Rephasing method = 1, refocusing time is twice the excitation time")
+        print(" ")
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
@@ -57,7 +58,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']*1e-3
         return(repetitionTime*nScans*nSteps*(dummyPulses+1)/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq):
+    def sequenceRun(self, plotSeq=0):
         init_gpa = False  # Starts the gpa
 
         # # Create the inputs automatically. For some reason it only works if there is a few code later...
@@ -145,7 +146,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         bw = nPoints/acqTime*hw.oversamplingFactor # MHz
         samplingPeriod = 1/bw
         self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa,
-                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1), print_infos=False)
         samplingPeriod = self.expt.get_rx_ts()[0]
         bw = 1 / samplingPeriod / hw.oversamplingFactor
         self.mapVals['bw'] = bw * 1e6
@@ -154,11 +155,10 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # Execute the experiment
         createSequence()
         if not plotSeq:
-            print('Runing...')
             rxd, msgs = self.expt.run()
-            self.expt.__del__()
             rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
             self.mapVals['dataOversampled'] = rxd['rx0']
+        self.expt.__del__()
         return 0
 
     def sequenceAnalysis(self, obj=''):
@@ -185,6 +185,17 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.mapVals['rabiFID'] = rabiFID
         rabiEcho = dataEchoAvg[:, np.int(nPoints/2)]
         self.mapVals['rabiEcho'] = rabiEcho
+
+        # Get values for pi/2 and pi pulses
+        test = True
+        n = 1
+        while test:
+            d = np.abs(rabiFID[n])-np.abs(rabiFID[n-1])
+            n += 1
+            if d<0: test = False
+        piHalfTime = timeVector[n-1]*1e6
+        self.mapVals['piHalfTime'] = piHalfTime
+        print("pi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us"%(self.mapVals['rfExAmp'], self.mapVals['piHalfTime']))
 
         self.saveRawData()
 
