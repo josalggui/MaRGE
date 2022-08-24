@@ -360,7 +360,33 @@
     <addaction name="separator"/>
     <addaction name="actionAutocalibration"/>
    </widget>
+   <widget class="QMenu" name="menuParameters">
+    <property name="title">
+     <string>Sequence</string>
+    </property>
+    <addaction name="actionLoad_parameters"/>
+    <addaction name="actionSave_parameters"/>
+    <addaction name="actionRun_sequence"/>
+    <addaction name="actionPlot_sequence"/>
+    <addaction name="separator"/>
+    <addaction name="actionLocalizer"/>
+   </widget>
+   <widget class="QMenu" name="menuSesion">
+    <property name="title">
+     <string>Sesion</string>
+    </property>
+    <addaction name="actionNew_sesion"/>
+   </widget>
+   <widget class="QMenu" name="menuScanner">
+    <property name="title">
+     <string>Scanner</string>
+    </property>
+    <addaction name="actionInit_GPA"/>
+   </widget>
    <addaction name="menuCalibration"/>
+   <addaction name="menuParameters"/>
+   <addaction name="menuSesion"/>
+   <addaction name="menuScanner"/>
   </widget>
   <widget class="QToolBar" name="ComunicationToolbar">
    <property name="windowTitle">
@@ -374,7 +400,6 @@
    </attribute>
    <addaction name="action_gpaInit"/>
    <addaction name="action_autocalibration"/>
-   <addaction name="action_calibration"/>
    <addaction name="action_run_localizer"/>
    <addaction name="action_XNATupload"/>
    <addaction name="action_acquire"/>
@@ -389,12 +414,9 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="action_loadparams"/>
-   <addaction name="action_saveparams"/>
    <addaction name="action_viewsequence"/>
-   <addaction name="action_session"/>
    <addaction name="action_batch"/>
-   <addaction name="action_sweep"/>
+   <addaction name="action_iterate"/>
    <addaction name="action_ProcessingToolbox"/>
    <addaction name="separator"/>
    <addaction name="action_changeappearance"/>
@@ -454,30 +476,6 @@
     <string>Change Window Appearance</string>
    </property>
   </action>
-  <action name="action_loadparams">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/waves.svg</normaloff>../resources/icons/waves.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Load sequence parameterisation</string>
-   </property>
-   <property name="toolTip">
-    <string>Load parameters of a sequence from files </string>
-   </property>
-  </action>
-  <action name="action_saveparams">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/arrow-minimise.svg</normaloff>../resources/icons/arrow-minimise.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Save Parameters</string>
-   </property>
-   <property name="toolTip">
-    <string>Save the parameters of a sequence in a file</string>
-   </property>
-  </action>
   <action name="action_exportfigure">
    <property name="icon">
     <iconset>
@@ -500,15 +498,6 @@
    </property>
    <property name="toolTip">
     <string>View the defined sequence</string>
-   </property>
-  </action>
-  <action name="action_calibration">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/info-large.svg</normaloff>../resources/icons/info-large.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Calibration of the system</string>
    </property>
   </action>
   <action name="action_gpaInit">
@@ -547,18 +536,6 @@
     <string>Activate upload to XNAT</string>
    </property>
   </action>
-  <action name="action_session">
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/icons/business-card.svg</normaloff>../resources/icons/business-card.svg</iconset>
-   </property>
-   <property name="text">
-    <string>New Session</string>
-   </property>
-   <property name="toolTip">
-    <string>Change Session</string>
-   </property>
-  </action>
   <action name="action_ProcessingToolbox">
    <property name="icon">
     <iconset>
@@ -571,16 +548,16 @@
     <string>Open Processing Toolbox</string>
    </property>
   </action>
-  <action name="action_sweep">
+  <action name="action_iterate">
    <property name="icon">
     <iconset>
      <normaloff>../resources/icons/refresh.svg</normaloff>../resources/icons/refresh.svg</iconset>
    </property>
    <property name="text">
-    <string>Sweep Sequence</string>
+    <string>Iterative run</string>
    </property>
    <property name="toolTip">
-    <string>Sweep Sequence</string>
+    <string>Iterative run</string>
    </property>
   </action>
   <action name="action_run_localizer">
@@ -637,6 +614,41 @@
   <action name="actionShimming">
    <property name="text">
     <string>Shimming</string>
+   </property>
+  </action>
+  <action name="actionSave_parameters">
+   <property name="text">
+    <string>Save parameters</string>
+   </property>
+  </action>
+  <action name="actionLoad_parameters">
+   <property name="text">
+    <string>Load parameters</string>
+   </property>
+  </action>
+  <action name="actionRun_sequence">
+   <property name="text">
+    <string>Run sequence</string>
+   </property>
+  </action>
+  <action name="actionPlot_sequence">
+   <property name="text">
+    <string>Plot sequence</string>
+   </property>
+  </action>
+  <action name="actionLocalizer">
+   <property name="text">
+    <string>Localizer</string>
+   </property>
+  </action>
+  <action name="actionNew_sesion">
+   <property name="text">
+    <string>New sesion</string>
+   </property>
+  </action>
+  <action name="actionInit_GPA">
+   <property name="text">
+    <string>Init GPA</string>
    </property>
   </action>
  </widget>

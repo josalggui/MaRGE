@@ -8,7 +8,7 @@ Main View Controller
 
 """
 from PyQt5.QtWidgets import  QMessageBox,  QFileDialog,  QTextEdit
-from PyQt5.QtCore import QFile, QTextStream,  pyqtSignal, pyqtSlot, QThread
+from PyQt5.QtCore import *
 from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
 from PyQt5.QtGui import QIcon
@@ -46,7 +46,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     MainViewController Class
     """
     onSequenceChanged = pyqtSignal(str)
-    
+    iterativeRun = False
+
     def __init__(self, session, parent=None):
         super(MainViewController, self).__init__(parent)
         self.ui = loadUi('ui/mainview.ui')
@@ -68,7 +69,11 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.cons = self.generateConsole('')
         self.layout_output.addWidget(self.cons)
         sys.stdout = EmittingStream(textWritten=self.onUpdateText)
-        sys.stderr = EmittingStream(textWritten=self.onUpdateText)        
+        sys.stderr = EmittingStream(textWritten=self.onUpdateText)
+
+        # Initialize multithreading
+        self.threadpool = QThreadPool()
+        print("Multithreading with maximum %d threads \n" % self.threadpool.maxThreadCount())
 
         # Initialisation of acquisition controller
         self.acqCtrl = AcquisitionController(self, self.session, self.sequencelist)
@@ -81,34 +86,48 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
         # Toolbar Actions
         self.action_gpaInit.triggered.connect(self.initgpa)
-        # self.actionCustomCalibration.triggered.connect(self.calibrate)
         self.action_autocalibration.triggered.connect(self.acqCtrl.autocalibration)
         self.action_changeappearance.triggered.connect(self.changeAppearanceSlot)
         self.action_acquire.triggered.connect(self.acqCtrl.startAcquisition)
-        self.action_loadparams.triggered.connect(self.load_parameters)
-        self.action_saveparams.triggered.connect(self.save_parameters)
-        self.action_close.triggered.connect(self.close)    
+        self.action_close.triggered.connect(self.close)
         self.action_exportfigure.triggered.connect(self.export_figure)
         self.action_viewsequence.triggered.connect(self.acqCtrl.startSequencePlot)
         self.action_batch.triggered.connect(self.batch_system)
         self.action_XNATupload.triggered.connect(self.xnat)
-        self.action_session.triggered.connect(self.change_session)
         self.action_run_localizer.triggered.connect(self.acqCtrl.localizer)
+        self.action_iterate.triggered.connect(self.iterate)
 
-        # Connect action buttoms from calibration menu with methods
+        # Menu Actions
         self.actionLarmor.triggered.connect(self.runLarmor)
         self.actionNoise.triggered.connect(self.runNoise)
         self.actionRabi_Flop.triggered.connect(self.runRabiFlop)
         self.actionCPMG.triggered.connect(self.runCPMG)
         self.actionInversion_Recovery.triggered.connect(self.runInversionRecovery)
         self.actionAutocalibration.triggered.connect(self.acqCtrl.autocalibration)
+        self.actionLoad_parameters.triggered.connect(self.load_parameters)
+        self.actionSave_parameters.triggered.connect(self.save_parameters)
+        self.actionRun_sequence.triggered.connect(self.acqCtrl.startAcquisition)
+        self.actionPlot_sequence.triggered.connect(self.acqCtrl.startSequencePlot)
+        self.actionInit_GPA.triggered.connect(self.initgpa)
+        self.actionLocalizer.triggered.connect(self.acqCtrl.localizer)
+        self.actionNew_sesion.triggered.connect(self.change_session)
 
         self.seqName = self.sequencelist.getCurrentSequence()
         defaultsequences[self.seqName].sequenceInfo()
 
         self.showMaximized()
 
-        # acqCtrl.startAcquisition()
+    def iterate(self):
+        if self.iterativeRun == False:
+            self.iterativeRun = True
+            self.action_iterate.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/refresh-outline.svg') )
+            self.action_iterate.setToolTip('Switch to single run')
+            self.action_iterate.setText('Iterative run')
+        else:
+            self.iterativeRun = False
+            self.action_iterate.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/refresh.svg') )
+            self.action_iterate.setToolTip('Switch to iterative run')
+            self.action_iterate.setText('Single run')
 
     def runLarmor(self):
         self.acqCtrl.startAcquisition(seqName="Larmor")

@@ -27,6 +27,7 @@ class FID(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
         self.addParameter(key='txChannel', string='Tx channel', val=0, field='RF')
         self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
+        self.addParameter(key='shimmingTime', string='Shimming time (ms)', val=1, field='OTH')
 
     def sequenceInfo(self):
         print(" ")
@@ -56,20 +57,18 @@ class FID(blankSeq.MRIBLANKSEQ):
         shimming = np.array(self.mapVals['shimming'])*1e-4
         txChannel = self.mapVals['txChannel']
         rxChannel = self.mapVals['rxChannel']
+        shimmingTime = self.mapVals['shimmingTime']*1e3 # us
 
         # Miscellaneus
         addRdPoints = 10
         self.mapVals['addRdPoints'] = addRdPoints
 
         def createSequence():
-            # Initialize time
-            tini = 1000     # Excitation and others start 1 ms after experiment beginning
-
             # Shimming
             self.iniSequence(20, shimming)  # shimming is turned on 20 us after experiment beginning
 
             for scan in range(nScans):
-                tEx = tini + repetitionTime*scan + hw.blkTime + rfExTime / 2
+                tEx = shimmingTime + repetitionTime*scan + hw.blkTime + rfExTime / 2
 
                 # Excitation pulse
                 t0 = tEx - hw.blkTime - rfExTime / 2
@@ -77,7 +76,7 @@ class FID(blankSeq.MRIBLANKSEQ):
 
                 # Rx gate
                 t0 = tEx + rfExTime / 2 + deadTime - addRdPoints / bw
-                self.rxGate(t0, acqTime + addRdPoints / bw, rxChannel=rxChannel)
+                self.rxGate(t0, acqTime + 2 * addRdPoints / bw, rxChannel=rxChannel)
 
             self.endSequence(repetitionTime*nScans)
 
@@ -110,16 +109,16 @@ class FID(blankSeq.MRIBLANKSEQ):
 
     def sequenceAnalysis(self, obj=''):
         addRdPoints = self.mapVals['addRdPoints']
-        signal = self.mapVals['data'][addRdPoints::]
+        nPoints = self.mapVals['nPoints']
+        signal = self.mapVals['data'][addRdPoints:nPoints+addRdPoints]
         signal = np.reshape(signal, (-1))
         acqTime = self.mapVals['acqTime'] # ms
         bw = self.mapVals['bw']*1e3 # kHz
         nPoints = self.mapVals['nPoints']
-        larmorFreq = self.mapVals['larmorFreq']
         deadTime = self.mapVals['deadTime']*1e-3 # ms
         rfExTime = self.mapVals['rfExTime']*1e-3 # ms
 
-        tVector = np.linspace(rfExTime+deadTime, rfExTime+deadTime+acqTime, nPoints)
+        tVector = np.linspace(rfExTime/2+deadTime+0.5/bw, rfExTime/2+deadTime+acqTime-0.5/bw, nPoints)
         fVector = np.linspace(-bw/2, bw/2, nPoints)
         spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal))))
         spectrum = np.reshape(spectrum, -1)
