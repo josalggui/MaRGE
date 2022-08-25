@@ -5,6 +5,18 @@ Created on Thu June 2 2022
 @Summary: rare sequence class
 """
 
+import os
+import sys
+#*****************************************************************************
+# Add path to the working directory
+path = os.path.realpath(__file__)
+ii = 0
+for char in path:
+    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
+        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
+        sys.path.append(path[0:ii+1]+'marcos_client')
+    ii += 1
+#******************************************************************************
 import time
 import numpy as np
 import experiment as ex
@@ -17,6 +29,7 @@ from scipy.interpolate import griddata
 import configs.hw_config as hw # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import pyqtgraph as pg              # To plot nice 3d images
+import copy
 
 
 #*********************************************************************************
@@ -34,12 +47,12 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
         self.addParameter(key='deadTime', string='TxRx dead time (us)', val=100.0, field='RF')
         self.addParameter(key='gapGtoRF', string='Gap G to RF (us)', val=100.0, field='RF')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=50., field='SEQ')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=10., field='SEQ')
         self.addParameter(key='fov', string='FOV (cm)', val=[12.0, 12.0, 12.0], field='IM')
         self.addParameter(key='dfov', string='dFOV (mm)', val=[0.0, 0.0, 0.0], field='IM')
-        self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[30, 30, 30], field='IM')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=1.0, field='SEQ')
-        self.addParameter(key='undersampling', string='Radial undersampling', val=4, field='SEQ')
+        self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[60, 60, 60], field='IM')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=5.0, field='SEQ')
+        self.addParameter(key='undersampling', string='Radial undersampling', val=30, field='SEQ')
         self.addParameter(key='axes', string='Axes', val=[0, 1, 2], field='IM')
         self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 1], field='IM')
         self.addParameter(key='drfPhase', string='Phase of exciation pulse (º)', val=0.0, field='RF')
@@ -60,13 +73,14 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
 
     def sequenceTime(self):
-        self.sequenceRun(2)
-        nScans = self.mapVals['nScans']
-        TR = self.mapVals['repetitionTime']
-        nRep = self.mapVals['nRepetitions']
-        scantime = nScans * nRep * TR * 1e-3 / 60  # minutes
-        return scantime
+        # self.sequenceRun(2)
+        # nScans = self.mapVals['nScans']
+        # TR = self.mapVals['repetitionTime']
+        # nRep = self.mapVals['nRepetitions']
+        # scantime = nScans * nRep * TR * 1e-3 / 60  # minutes
+        # return scantime
 
+        return(0)
 
     def sequenceRun(self, plotSeq=0):
         init_gpa = False  # Starts the gpa
@@ -108,11 +122,10 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
         # Miscellaneous
         larmorFreq = larmorFreq*1e-6    # MHz
-        addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
+        addRdPoints = 0             # Initial rd points to avoid artifact at the begining of rd
         randFactor = 0e-3                        # Random amplitude to add to the phase gradients
         resolution = fov/nPoints
         self.mapVals['resolution'] = resolution
-        self.mapVals['gradRiseTime'] = gradRiseTime
         self.mapVals['randFactor'] = randFactor
         self.mapVals['addRdPoints'] = addRdPoints
 
@@ -137,7 +150,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         if axesEnable[2] == 0:
             gradientAmplitudes[2] = 0
 
-        nPPL = np.int(np.ceil((np.sqrt(3) * acqTime - deadTime - 0.5 * rfExTime) * BW * 1e6) + 1)
+        nPPL = np.int(np.ceil((1.73205 * acqTime - deadTime - 0.5 * rfExTime) * BW * 1e6 + 1))
         nLPC = np.int(np.ceil(max(nPoints[0], nPoints[1]) * np.pi / undersampling))
         nLPC = max(nLPC - (nLPC % 2), 1)
         nCir = max(np.int(np.ceil(nPoints[2] * np.pi / 2 / undersampling) + 1), 1)
@@ -257,8 +270,8 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         gradientVectors2 = kSinglePoint / (hw.gammaB * tMin)
 
         # Normalize gradients to arbitray units.
-        gradientVectors1au = gradientVectors1 / (1.0)
-        gradientVectors2au = gradientVectors2 / (1.0)
+        gradientVectors1au = gradientVectors1
+        gradientVectors2au = gradientVectors2
 
         gSeq = np.concatenate((gradientVectors1au, gradientVectors2au))
         self.mapVals['SequenceGradients'] = gSeq
@@ -266,22 +279,22 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
         def createSequence():
             nRep = gSeq.shape[0]
-            repeIndex = 0
             Grisetime = gradRiseTime * 1e6
             tr = repetitionTime * 1e6
             delayGtoRF = gapGtoRF * 1e6
             RFpulsetime = rfExTime * 1e6
             TxRxtime = deadTime * 1e6
             Tacquisition = acqTime
-
+            repeIndex = 0
+            ii = 1
             tInit = 20
-
+            print(nRep)
             # Set shimming
             self.iniSequence(tInit, shimming)
 
-            for repeIndex in range(nRep):
+            while repeIndex < nRep:
                 # Initialize time
-                t0 = tInit + tr * repeIndex
+                t0 = tInit + tr * (repeIndex + 1)
 
                 # Set gradients
                 if repeIndex == 0:
@@ -290,21 +303,34 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                     self.setGradientRamp(t0, Grisetime, nStepsGradRise, ginit[1], gSeq[0, 1], axes[1], shimming)
                     self.setGradientRamp(t0, Grisetime, nStepsGradRise, ginit[2], gSeq[0, 2], axes[2], shimming)
                 elif repeIndex > 0:
-                    self.setGradientRamp(t0, Grisetime, nStepsGradRise, gSeq[repeIndex-1, 0], gSeq[repeIndex, 0], axes[0], shimming)
-                    self.setGradientRamp(t0, Grisetime, nStepsGradRise, gSeq[repeIndex-1, 0], gSeq[repeIndex, 1], axes[1], shimming)
-                    self.setGradientRamp(t0, Grisetime, nStepsGradRise, gSeq[repeIndex-1, 0], gSeq[repeIndex, 2], axes[2], shimming)
+                    if gSeq[repeIndex-1, 0] != gSeq[repeIndex, 0]:
+                        self.setGradientRamp(t0, Grisetime, nStepsGradRise, gSeq[repeIndex-1, 0], gSeq[repeIndex, 0], axes[0], shimming)
+                    if gSeq[repeIndex-1, 1] != gSeq[repeIndex, 1]:
+                        self.setGradientRamp(t0, Grisetime, nStepsGradRise, gSeq[repeIndex-1, 1], gSeq[repeIndex, 1], axes[1], shimming)
+                    if gSeq[repeIndex-1, 2] != gSeq[repeIndex, 2]:
+                        self.setGradientRamp(t0, Grisetime, nStepsGradRise, gSeq[repeIndex-1, 2], gSeq[repeIndex, 2], axes[2], shimming)
 
                 # Excitation pulse
-                trf0 = tInit + Grisetime + delayGtoRF + tr * repeIndex
+                trf0 = t0 + Grisetime + delayGtoRF
                 self.rfRecPulse(trf0, RFpulsetime, rfExAmp, drfPhase * np.pi / 180)
 
+                if repeIndex < gradientVectors1au.shape[0]:
+                    tACQ = Tacquisition + addRdPoints * samplingPeriod
+                    print("radial ", repeIndex+1)
+                if repeIndex >= gradientVectors1au.shape[0]:
+                    tACQ = addRdPoints * samplingPeriod + 1 * samplingPeriod
+                    print("sp ", repeIndex + 1)
+
                 # Rx gate
-                t0rx = tInit + (Grisetime + delayGtoRF + hw.blkTime + RFpulsetime + TxRxtime + 1 / BW) + tr * repeIndex
-                self.rxGate(t0rx, Tacquisition)
+                t0rx = trf0 + hw.blkTime + RFpulsetime + TxRxtime - addRdPoints * samplingPeriod
+                self.rxGate(t0rx, 400)
 
-                if repeIndex == nRep:
-                    self.endSequence(tInit+repeIndex*tr)
+                if repeIndex == nRep-1:
+                    print("ha finalizado en last iteration ", ii)
+                    self.endSequence(tInit + (nRep+25) * tr)
 
+                repeIndex = repeIndex + 1
+                ii = ii + 1
 
         # Calibrate frequency
         if freqCal and (not plotSeq):
@@ -318,65 +344,71 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         repeIndexArray = np.array([0])
         repeIndexGlobal = repeIndexArray[0]
         if plotSeq == 0 or plotSeq == 1:
-            while repeIndexGlobal < self.mapVals['nRepetitions']:
-                self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-                samplingPeriod = self.expt.get_rx_ts()[0]
-                BW = 1/samplingPeriod/hw.oversamplingFactor
-                acqTime = nPoints[0]/BW        # us
-                self.mapVals['bw'] = BW
-                createSequence()
+            self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+            samplingPeriod = self.expt.get_rx_ts()[0]
+            BW = 1 / samplingPeriod / hw.oversamplingFactor
+            acqTime = nPoints[0] / BW  # us
+            self.mapVals['bw'] = BW
+            createSequence()
 
-                if plotSeq == 1:
-                    break
-                elif plotSeq == 0:
-                    for ii in range(nScans):
-                        print('Running...')
-                        rxd, msgs = self.expt.run()
-                        rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
-                        # Get data
-                        overData = np.concatenate((overData, rxd['rx0']), axis=0)
-                    self.mapVals['sampled'] = np.concatenate((self.mapVals['kSpaceValues'], overData), axis=1)
-                self.expt.__del__()
-                repeIndexGlobal += 1
+
+            if plotSeq == 0:
+                for ii in range(nScans):
+                    print('Running...')
+                    rxd, msgs = self.expt.run()
+                    rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
+                    print('PETRA sequence finished!')
+                    # Get data
+                    # overData = np.concatenate((overData, rxd['rx0']), axis=0)
+                # self.mapVals['sampled'] = np.concatenate((self.mapVals['kSpaceValues'], overData), axis=1)
+            self.expt.__del__()
 
 
     def sequenceAnalysis(self, obj=''):
-
         self.saveRawData()
-        nPoints = self.mapVals['nPoints']
-        acqTime = self.mapVals['acqTime']  # ms
-        BW = self.mapVals['BW']
+    # def sequenceAnalysis(self, obj=''):
+    #
+    #     self.saveRawData()
+    #     nPoints = self.mapVals['nPoints']
+    #     acqTime = self.mapVals['acqTime']  # ms
+    #     BW = self.mapVals['BW']
+    #
+    #     if (self.axesEnable[1] == 0 and self.axesEnable[2] == 0):
+    #
+    #         # Plots to show into the GUI
+    #         tVector = np.linspace(-acqTime / 2, acqTime / 2, nPoints[0])
+    #         fVector = np.linspace(-BW / 2, BW / 2, nPoints[0])
+    #         sVector = self.mapVals['sampled'][:, 3]
+    #         iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
+    #
+    #         f_plotview = SpectrumPlot(fVector, [np.abs(iVector)], ['Spectrum magnitude'],
+    #                                   "Frequency (kHz)", "Amplitude (a.u.)",
+    #                                   "%s Spectrum" % self.mapVals['fileName'])
+    #         t_plotview = SpectrumPlot(tVector, [np.abs(sVector), np.real(sVector), np.imag(sVector)],
+    #                                   ['Magnitude', 'Real', 'Imaginary'],
+    #                                   'Time (ms)', "Signal amplitude (mV)",
+    #                                   "%s Signal" % self.mapVals['fileName'])
+    #         return([t_plotview, f_plotview])
+    #
+    #     if (self.axesEnable[0] == 1 and self.axesEnable[1] == 1 and self.axesEnable[2] == 1):
+    #         # Plot image
+    #         kSpace = np.random.randn(nPoints, dtype=complex)
+    #         imagen = np.random.randn(nPoints, dtype=complex)
+    #         kSpaceValues = self.mapVals['kSpaceValues'][:, 0:2]
+    #         signals = self.mapVals['sampled'][:, 3]
+    #         kCartesian = self.mapVals['kCartesian']
+    #         kSpaceIntList = griddata(kSpaceValues, signals, kCartesian, method='cubic')
+    #         kSpace = np.reshape(kSpaceIntList, nPoints)
+    #         imagenFFT = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(kSpace)))
+    #         self.mapVals['image3DFFT']=imagenFFT
+    #         self.mapVals['kSpace3D']=kSpace
+    #
+    #         image = pg.image(np.abs(imagenFFT))
+    #         kspace = pg.image(np.log10(np.abs(kSpace)))
+    #         return ([image, kspace])
 
-        if (self.axesEnable[1] == 0 and self.axesEnable[2] == 0):
-
-            # Plots to show into the GUI
-            tVector = np.linspace(-acqTime / 2, acqTime / 2, nPoints[0])
-            fVector = np.linspace(-BW / 2, BW / 2, nPoints[0])
-            sVector = self.mapVals['sampled'][:, 3]
-            iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
-
-            f_plotview = SpectrumPlot(fVector, [np.abs(iVector)], ['Spectrum magnitude'],
-                                      "Frequency (kHz)", "Amplitude (a.u.)",
-                                      "%s Spectrum" % self.mapVals['fileName'])
-            t_plotview = SpectrumPlot(tVector, [np.abs(sVector), np.real(sVector), np.imag(sVector)],
-                                      ['Magnitude', 'Real', 'Imaginary'],
-                                      'Time (ms)', "Signal amplitude (mV)",
-                                      "%s Signal" % self.mapVals['fileName'])
-            return([t_plotview, f_plotview])
-
-        if (self.axesEnable[0] == 1 and self.axesEnable[1] == 1 and self.axesEnable[2] == 1):
-            # Plot image
-            kSpace = np.random.randn(nPoints, dtype=complex)
-            imagen = np.random.randn(nPoints, dtype=complex)
-            kSpaceValues = self.mapVals['kSpaceValues'][:, 0:2]
-            signals = self.mapVals['sampled'][:, 3]
-            kCartesian = self.mapVals['kCartesian']
-            kSpaceIntList = griddata(kSpaceValues, signals, kCartesian, method='cubic')
-            kSpace = np.reshape(kSpaceIntList, nPoints)
-            imagenFFT = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(kSpace)))
-            self.mapVals['image3DFFT']=imagenFFT
-            self.mapVals['kSpace3D']=kSpace
-
-            image = pg.image(np.abs(imagenFFT))
-            kspace = pg.image(np.log10(np.abs(kSpace)))
-            return ([image, kspace])
+if __name__=='__main__':
+    seq = PETRA()
+    seq.sequenceRun()
+    # seq.sequencePlot()
+    # seq.sequenceAnalysis(obj='Standalone')
