@@ -73,13 +73,6 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
 
     def sequenceTime(self):
-        # self.sequenceRun(2)
-        # nScans = self.mapVals['nScans']
-        # TR = self.mapVals['repetitionTime']
-        # nRep = self.mapVals['nRepetitions']
-        # scantime = nScans * nRep * TR * 1e-3 / 60  # minutes
-        # return scantime
-
         return(0)
 
     def sequenceRun(self, plotSeq=0):
