@@ -154,7 +154,6 @@ class Localizer(rare.RARE):
                 roi3.stateChanged(finish=False)
 
             elif pos3[1] != self.pos[1] or pos3[0] != self.pos[2]:  # If we change roi 3, link roi 2 and 1
-
                 self.pos[1] = pos3[1]
                 self.fov[1] = fov3[1]
                 self.pos[2] = pos3[0]
@@ -175,16 +174,16 @@ class Localizer(rare.RARE):
             dFov = np.round(dFov, decimals=1)
             localFov = np.array([0., 0., 0.])
             localdFov = np.array([0., 0., 0.])
-            for key in self.sequenceList:
-                if ('fov' and 'dfov' and 'axes') in self.sequenceList[key].mapKeys:
+            for key in self.sequencelist:
+                if ('fov' and 'dfov' and 'axes') in self.sequencelist[key].mapKeys:
                     n = 0
-                    for axis in self.sequenceList[key].mapVals['axes']:
+                    for axis in self.sequencelist[key].mapVals['axes']:
                         localFov[n] = realFov[axis]
                         localdFov[n] = dFov[axis]
                         n += 1
                     localdFov[0] = -localdFov[0]
-                    self.sequenceList[key].mapVals['fov'] = copy.copy(localFov)
-                    self.sequenceList[key].mapVals['dfov'] = copy.copy(localdFov)*10
+                    self.sequencelist[key].mapVals['fov'] = copy.copy(localFov)
+                    self.sequencelist[key].mapVals['dfov'] = copy.copy(localdFov)*10
             self.parent.onSequenceChanged.emit(self.parent.sequence)
 
         roi1.sigRegionChangeFinished.connect(update_plot)
@@ -199,12 +198,6 @@ class Localizer(rare.RARE):
             pg.exec()
         else:
             return ([win])
-
-        # return([proj1Widget, kSpaceWidget])
-
-
-
-
 
 if __name__ == '__main__':
     seq = Localizer()

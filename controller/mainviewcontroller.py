@@ -7,7 +7,8 @@ Main View Controller
 @todo:
 
 """
-from PyQt5.QtWidgets import  QMessageBox,  QFileDialog,  QTextEdit
+from PyQt5.QtWidgets import  QMessageBox,  QFileDialog,  QTextEdit, QLabel, QWidget
+from PyQt5 import QtCore
 from PyQt5.QtCore import *
 from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
@@ -29,13 +30,17 @@ import cgitb
 cgitb.enable(format = 'text')
 import pdb
 import numpy as np
+import imageio
+from plotview.spectrumplot import Spectrum3DPlot
+
 st = pdb.set_trace
 
 # Import sequences
 from seq.sequences import defaultsequences
+from seq.localizer import Localizer
 
 # Import controllers
-from controller.acquisitioncontroller import AcquisitionController                                  # Acquisition
+# from controller.acquisitioncontroller import AcquisitionController                                  # Acquisition
 from controller.batchcontroller import BatchController                                              # Batches
 from controller.sequencecontroller import SequenceList                                              # Sequence list
 
@@ -75,8 +80,11 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.threadpool = QThreadPool()
         print("Multithreading with maximum %d threads \n" % self.threadpool.maxThreadCount())
 
+        # First plot
+        self.firstPlot()
+
         # Initialisation of acquisition controller
-        self.acqCtrl = AcquisitionController(self, self.session, self.sequencelist)
+        # self.acqCtrl = AcquisitionController(self, self.session, self.sequencelist)
 
         # Connection to the server
         self.ip = ip_address
@@ -86,15 +94,15 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
         # Toolbar Actions
         self.action_gpaInit.triggered.connect(self.initgpa)
-        self.action_autocalibration.triggered.connect(self.acqCtrl.autocalibration)
+        self.action_autocalibration.triggered.connect(self.autocalibration)
         self.action_changeappearance.triggered.connect(self.changeAppearanceSlot)
-        self.action_acquire.triggered.connect(self.acqCtrl.startAcquisition)
+        self.action_acquire.triggered.connect(self.startAcquisition)
         self.action_close.triggered.connect(self.close)
         self.action_exportfigure.triggered.connect(self.export_figure)
-        self.action_viewsequence.triggered.connect(self.acqCtrl.startSequencePlot)
+        self.action_viewsequence.triggered.connect(self.startSequencePlot)
         self.action_batch.triggered.connect(self.batch_system)
         self.action_XNATupload.triggered.connect(self.xnat)
-        self.action_run_localizer.triggered.connect(self.acqCtrl.localizer)
+        self.action_run_localizer.triggered.connect(self.startLocalizer)
         self.action_iterate.triggered.connect(self.iterate)
 
         # Menu Actions
@@ -103,13 +111,13 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.actionRabi_Flop.triggered.connect(self.runRabiFlop)
         self.actionCPMG.triggered.connect(self.runCPMG)
         self.actionInversion_Recovery.triggered.connect(self.runInversionRecovery)
-        self.actionAutocalibration.triggered.connect(self.acqCtrl.autocalibration)
+        self.actionAutocalibration.triggered.connect(self.autocalibration)
         self.actionLoad_parameters.triggered.connect(self.load_parameters)
         self.actionSave_parameters.triggered.connect(self.save_parameters)
-        self.actionRun_sequence.triggered.connect(self.acqCtrl.startAcquisition)
-        self.actionPlot_sequence.triggered.connect(self.acqCtrl.startSequencePlot)
+        self.actionRun_sequence.triggered.connect(self.startAcquisition)
+        self.actionPlot_sequence.triggered.connect(self.startSequencePlot)
         self.actionInit_GPA.triggered.connect(self.initgpa)
-        self.actionLocalizer.triggered.connect(self.acqCtrl.localizer)
+        self.actionLocalizer.triggered.connect(self.startLocalizer)
         self.actionNew_sesion.triggered.connect(self.change_session)
 
         self.seqName = self.sequencelist.getCurrentSequence()
@@ -129,20 +137,194 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.action_iterate.setToolTip('Switch to iterative run')
             self.action_iterate.setText('Single run')
 
+    def startAcquisition(self, seqName=None):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: run selected sequence
+        """
+        print('Start sequence')
+
+        # Delete previous plots
+        self.clearPlotviewLayout()
+
+        # Load sequence name
+        if seqName==None or seqName==False:
+            self.seqName = self.sequencelist.getCurrentSequence()
+        else:
+            self.seqName = seqName
+
+        # Save sequence list into the current sequence, just in case you need to do sweep
+        defaultsequences[self.seqName].sequenceList = defaultsequences
+
+        # Save input parameters
+        defaultsequences[self.seqName].saveParams()
+
+        # Create and execute selected sequence
+        defaultsequences[self.seqName].sequenceRun(0)
+
+        # Do sequence analysis and acquire de plots
+        out = defaultsequences[self.seqName].sequenceAnalysis()
+
+        # Create label with rawdata name
+        fileName = defaultsequences[self.seqName].mapVals['fileName']
+        self.label = QLabel(fileName)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        self.plotview_layout.addWidget(self.label)
+
+        # Add plots to the plotview_layout
+        for item in out:
+            self.plotview_layout.addWidget(item)
+
+        # self.parent.onSequenceChanged.emit(self.parent.sequence)
+        print('End sequence')
+
+    def startSequencePlot(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: plot sequence instructions
+        """
+        # Delete previous plots
+        self.clearPlotviewLayout()
+
+        # Load sequence name
+        self.seqName = self.sequencelist.getCurrentSequence()
+
+        # Create sequence to plot
+        print('Plot sequence')
+        defaultsequences[self.seqName].sequenceRun(1)  # Run sequence only for plot
+
+        # Get sequence to plot
+        out = defaultsequences[self.seqName].sequencePlot()  # Plot results
+
+        # Create plots
+        n = 0
+        plot = []
+        for item in out:
+            plot.append(SpectrumPlotSeq(item[0], item[1], item[2], 'Time (ms)', 'Amplitude (a.u.)', item[3]))
+            if n > 0: plot[n].plotitem.setXLink(plot[0].plotitem)
+            n += 1
+        for n in range(4):
+            self.plotview_layout.addWidget(plot[n])
+
+    def startLocalizer(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: run localizer
+        """
+
+        print('Start localizer')
+
+        # Delete previous localizer
+        self.clearLocalizerLayout()
+
+        # Set localizer sequence to RARE
+        localizer = Localizer()
+
+        # Load default parameters
+        localizer.loadParams()
+        localizer.mapVals['seqName'] = 'Localizer'
+        localizer.mapNmspc['seqName'] = 'LocalizerInfo'
+        localizer.saveParams()
+
+        # Add parent to localizer so it can update sequences parameters
+        localizer.parent = self
+
+        # Add sequences to localizer
+        localizer.sequencelist = defaultsequences
+
+        # Create and execute selected sequence
+        localizer.sequenceRunProjections(0)
+
+        # Do sequence analysis and acquire de plots
+        out = localizer.sequenceAnalysis()
+
+        # Create label with rawdata name
+        fileName = localizer.mapVals['fileName']
+        self.label = QLabel(fileName)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        self.localizer_layout.addWidget(self.label)
+
+        # Add plots to the localizer_layout
+        self.localizer_layout.addWidget(out[0])
+
+    def autocalibration(self):
+        self.clearPlotviewLayout()
+
+        # Get Larmor frequency
+        print("Larmor frequency...")
+        larmorSeq = defaultsequences['Larmor']
+        larmorSeq.sequenceRun()
+        outLarmor = larmorSeq.sequenceAnalysis()
+        for seq in defaultsequences:
+            defaultsequences[seq].mapVals['larmorFreq'] = larmorSeq.mapVals['larmorFreqCal']
+
+        # Get noise
+        noiseSeq = defaultsequences['Noise']
+        noiseSeq.sequenceRun()
+        outNoise = noiseSeq.sequenceAnalysis()
+
+        # Get Rabi flops
+        rabiSeq = defaultsequences['RabiFlops']
+        rabiSeq.sequenceRun()
+        outRabi = rabiSeq.sequenceAnalysis()
+
+        # Spectrum
+        # Create label with rawdata name
+        fileName = larmorSeq.mapVals['fileName']
+        self.label = QLabel(fileName)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        self.plotview_layout.addWidget(self.label)
+
+        # Add plots to the plotview_layout
+        item = outLarmor[1]
+        selfplotview_layout.addWidget(item)
+
+        # Noise
+        # Create label with rawdata name
+        fileName = noiseSeq.mapVals['fileName']
+        self.label = QLabel(fileName)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        self.plotview_layout.addWidget(self.label)
+
+        # Add plots to the plotview_layout
+        for item in outNoise:
+            self.plotview_layout.addWidget(item)
+
+        # Rabi
+        # Create label with rawdata name
+        fileName = rabiSeq.mapVals['fileName']
+        self.label = QLabel(fileName)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        self.plotview_layout.addWidget(self.label)
+
+        # Add plots to the plotview_layout
+        item = outRabi[0]
+        self.plotview_layout.addWidget(item)
+
+        self.onSequenceChanged.emit(self.sequence)
+
     def runLarmor(self):
-        self.acqCtrl.startAcquisition(seqName="Larmor")
+        self.startAcquisition(seqName="Larmor")
 
     def runNoise(self):
-        self.acqCtrl.startAcquisition(seqName="Noise")
+        self.startAcquisition(seqName="Noise")
 
     def runRabiFlop(self):
-        self.acqCtrl.startAcquisition(seqName="RabiFlops")
+        self.startAcquisition(seqName="RabiFlops")
 
     def runCPMG(self):
-        self.acqCtrl.startAcquisition(seqName="CPMG")
+        self.startAcquisition(seqName="CPMG")
 
     def runInversionRecovery(self):
-        self.acqCtrl.startAcquisition(seqName="InversionRecovery")
+        self.startAcquisition(seqName="InversionRecovery")
 
     def lines_that_start_with(self, str, f):
         return [line for line in f if line.startswith(str)]
@@ -252,10 +434,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         savemat("/media/physiomri/TOSHIBA\ EXT/%s/%s/%s.mat" % (dt2_string, dt_string, self.sequence), dict)
         
         self.messages("Data saved")
-        
-#        if hasattr(self.dataobject, 'f_fft2Magnitude'):
-#            nifti_file=nib.Nifti1Image(self.dataobject.f_fft2Magnitude, affine=np.eye(4))
-#            nib.save(nifti_file, 'experiments/acquisitions/%s/%s/%s.%s.nii'% (dt2_string, dt_string, dict["seq"],dt_string))
 
         if hasattr(self.parent, 'f_plotview'):
             exporter1 = pyqtgraph.exporters.ImageExporter(self.f_plotview.scene())
@@ -428,4 +606,21 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         from controller.sessionviewer_controller import SessionViewerController
         sessionW = SessionViewerController(self.session)
         sessionW.show()
-        self.hide()    
+        self.hide()
+
+    def firstPlot(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: show the initial figure
+        """
+        logo = imageio.imread("resources/images/logo.png")
+        logo = np.flipud(logo)
+        self.clearPlotviewLayout()
+        welcome = Spectrum3DPlot(logo.transpose([1, 0, 2]),
+                                 title='Institute for Instrimentation in Molecular Imaging (i3M)')
+        welcome.hideAxis('bottom')
+        welcome.hideAxis('left')
+        welcome.showHistogram(False)
+        welcomeWidget = welcome.getImageWidget()
+        self.plotview_layout.addWidget(welcomeWidget)
