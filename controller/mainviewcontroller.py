@@ -32,15 +32,16 @@ import pdb
 import numpy as np
 import imageio
 from plotview.spectrumplot import Spectrum3DPlot
-
+import time
+from worker import Worker
 st = pdb.set_trace
+import copy
 
 # Import sequences
 from seq.sequences import defaultsequences
 from seq.localizer import Localizer
 
 # Import controllers
-# from controller.acquisitioncontroller import AcquisitionController                                  # Acquisition
 from controller.batchcontroller import BatchController                                              # Batches
 from controller.sequencecontroller import SequenceList                                              # Sequence list
 
@@ -83,9 +84,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # First plot
         self.firstPlot()
 
-        # Initialisation of acquisition controller
-        # self.acqCtrl = AcquisitionController(self, self.session, self.sequencelist)
-
         # Connection to the server
         self.ip = ip_address
         
@@ -120,10 +118,114 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.actionLocalizer.triggered.connect(self.startLocalizer)
         self.actionNew_sesion.triggered.connect(self.change_session)
 
+        # Initialize the multithread pool
+        self.threadpool = QThreadPool()
+        print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+
+        # Update the sequence parameters shown in the gui
         self.seqName = self.sequencelist.getCurrentSequence()
         defaultsequences[self.seqName].sequenceInfo()
 
-        self.showMaximized()
+        # Show the gui maximized
+        # self.showMaximized()
+
+    def startAcquisition(self, seqName=None):
+        #     """
+        #     @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        #     @email: josalggui@i3m.upv.es
+        #     @Summary: run selected sequence
+        #     """
+
+        # Load sequence name
+        if seqName == None or seqName == False:
+            self.seqName = self.sequencelist.getCurrentSequence()
+        else:
+            self.seqName = seqName
+
+        # Save sequence list into the current sequence, just in case you need to do sweep
+        defaultsequences[self.seqName].sequenceList = defaultsequences
+        #
+        # Save input parameters
+        defaultsequences[self.seqName].saveParams()
+
+        if not hasattr(defaultsequences[self.seqName], 'out'):  # If it is the first execution
+            # Delete previous plots
+            self.clearPlotviewLayout()
+
+            # Create label with rawdata name
+            self.label = QLabel()
+            self.label.setAlignment(QtCore.Qt.AlignCenter)
+            self.label.setStyleSheet("background-color: black;color: white")
+            self.plotview_layout.addWidget(self.label)
+
+            # Create and execute selected sequence
+            defaultsequences[self.seqName].sequenceRun(0)
+
+            # Do sequence analysis and acquire de plots
+            self.oldOut = defaultsequences[self.seqName].sequenceAnalysis()
+
+            # Set name to the label
+            fileName = defaultsequences[self.seqName].mapVals['fileName']
+            self.label.setText(fileName)
+
+            # Add plots to the plotview_layout
+            for item in self.oldOut:
+                self.plotview_layout.addWidget(item)
+                if item.__class__.__name__!="SpectrumPlot": defaultsequences[self.seqName].deleteOutput()
+
+            # Iterate in parallel thread (only for 1d plots)
+            if self.iterativeRun and hasattr(defaultsequences[self.seqName], 'out'):
+                # Pass the function to execute into the thread
+                worker = Worker(self.repeatAcquisition)  # Any other args, kwargs are passed to the run function
+                # Execute in a parallel thread
+                self.threadpool.start(worker)
+
+            # Deactivate the iterative buttom if sequence is not iterable (2d and 3d plots)
+            if not hasattr(defaultsequences[self.seqName], 'out'):
+                self.iterativeRun = False
+                self.action_iterate.setIcon(
+                    QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/refresh.svg'))
+                self.action_iterate.setToolTip('Switch to iterative run')
+                self.action_iterate.setText('Single run')
+
+        else:
+            # Pass the function to execute into the thread
+            worker = Worker(self.repeatAcquisition)  # Any other args, kwargs are passed to the run function
+            # Execute in a parallel thread
+            self.threadpool.start(worker)
+
+    def repeatAcquisition(self):
+        # If single repetition, set iterativeRun True for one step
+        singleRepetition = not copy.copy(self.iterativeRun)
+        if singleRepetition: self.iterativeRun = True
+
+        # Acquire while iterativeRun is True
+        while self.iterativeRun:
+            # Create and execute selected sequence
+            defaultsequences[self.seqName].sequenceRun(0)
+
+            # Do sequence analysis and acquire de plots
+            self.newOut = defaultsequences[self.seqName].sequenceAnalysis()
+
+            # Set name to the label
+            fileName = defaultsequences[self.seqName].mapVals['fileName']
+            self.label.setText(fileName)
+
+            # Update lines in plots of the plotview_layout
+            for plotIndex in range(len(self.newOut)):
+                # update curves
+                oldCurves = self.oldOut[plotIndex].plotitem.listDataItems()
+                newCurves = self.newOut[plotIndex].plotitem.listDataItems()
+                # set new data to plot
+                for curveIndex in range(len(newCurves)):
+                    x, y = newCurves[curveIndex].getData()
+                    oldCurves[curveIndex].setData(x, y)
+                # set new title to plot
+                # newText = self.newOut[plotIndex].plotitem.titleLabel.text
+                # newText = self.newOut[plotIndex].plotitem.getTitle()
+
+            # Stop repetitions if single acquision
+            if singleRepetition: self.iterativeRun = False
 
     def iterate(self):
         if self.iterativeRun == False:
@@ -136,49 +238,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.action_iterate.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/refresh.svg') )
             self.action_iterate.setToolTip('Switch to iterative run')
             self.action_iterate.setText('Single run')
-
-    def startAcquisition(self, seqName=None):
-        """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: run selected sequence
-        """
-        print('Start sequence')
-
-        # Delete previous plots
-        self.clearPlotviewLayout()
-
-        # Load sequence name
-        if seqName==None or seqName==False:
-            self.seqName = self.sequencelist.getCurrentSequence()
-        else:
-            self.seqName = seqName
-
-        # Save sequence list into the current sequence, just in case you need to do sweep
-        defaultsequences[self.seqName].sequenceList = defaultsequences
-
-        # Save input parameters
-        defaultsequences[self.seqName].saveParams()
-
-        # Create and execute selected sequence
-        defaultsequences[self.seqName].sequenceRun(0)
-
-        # Do sequence analysis and acquire de plots
-        out = defaultsequences[self.seqName].sequenceAnalysis()
-
-        # Create label with rawdata name
-        fileName = defaultsequences[self.seqName].mapVals['fileName']
-        self.label = QLabel(fileName)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("background-color: black;color: white")
-        self.plotview_layout.addWidget(self.label)
-
-        # Add plots to the plotview_layout
-        for item in out:
-            self.plotview_layout.addWidget(item)
-
-        # self.parent.onSequenceChanged.emit(self.parent.sequence)
-        print('End sequence')
 
     def startSequencePlot(self):
         """
@@ -385,6 +444,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.setStyleSheet(stylesheet)  
 
     def selectionChanged(self,item):
+        # Load sequence name
+        seqName = self.sequencelist.getCurrentSequence()
+
+        # Delete output of the sequence
+        defaultsequences[self.seqName].deleteOutput()
+
         self.sequence = self.sequencelist.currentText()
         self.onSequenceChanged.emit(self.sequence)
         self.action_acquire.setEnabled(True)

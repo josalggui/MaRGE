@@ -72,15 +72,29 @@ class MRIBLANKSEQ:
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
         return out
 
+    def deleteOutput(self):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        Delete the output if it exist in the sequence
+        """
+        # Delete the out attribute if exist
+        if hasattr(self, 'out'): delattr(self, 'out')
+
     def saveParams(self):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
         Save sequence input parameters into csv
         """
+        # Reset the mapVals variable
         self.resetMapVals()
+
+        # Create directory if it does not exist
         if not os.path.exists('experiments/parameterisations'):
             os.makedirs('experiments/parameterisations')
+
+        # Save csv file with mapVals
         with open('experiments/parameterisations/%s_last_parameters.csv' % self.mapVals['seqName'], 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys)
             writer.writeheader()

@@ -27,6 +27,7 @@ class SpectrumPlot(GraphicsLayoutWidget):
                  xLabel, # string
                  yLabel, # string
                  title, # string
+                 replot=False,
                  ):
         super(SpectrumPlot, self).__init__()
         self.yData = yData
@@ -59,9 +60,11 @@ class SpectrumPlot(GraphicsLayoutWidget):
 
         self.plotitem = self.addPlot(row=1, col=0)
         self.plotitem.addLegend()
+        self.lines = []
         for line in range(nLines):
-            self.plotitem.plot(xData, yData[line], pen=pen[line], name=legend[line])
+            self.lines.append(self.plotitem.plot(xData, yData[line], pen=pen[line], name=legend[line]))
             self.plotitem.setXRange(xData[0], xData[len(xData)-1], padding=0)
+
 
         self.plotitem.setTitle("%s" % title)
         self.plotitem.setLabel('bottom', xLabel)
@@ -75,14 +78,16 @@ class SpectrumPlot(GraphicsLayoutWidget):
     def mouseMoved(self, evt):
         pos = evt[0]
         if self.plotitem.sceneBoundingRect().contains(pos):
+            curves = self.plotitem.listDataItems()
+            x, y = curves[0].getData()
             mousePoint = self.plotitem.vb.mapSceneToView(pos)
             index = np.argmin(np.abs(self.xData-mousePoint.x()))
             self.label2.setText("<span style='font-size: 8pt'>%s=%0.2f, %s=%0.2f</span>" % (self.xLabel,
-                                                                                           self.xData[index],
-                                                                                           self.yLabel,
-                                                                                           self.yData[0][index]))
-            self.crosshair_v.setPos(self.xData[index])
-            self.crosshair_h.setPos(self.yData[0][index])
+                                                                                            x[index],
+                                                                                            self.yLabel,
+                                                                                            y[index]))
+            self.crosshair_v.setPos(x[index])
+            self.crosshair_h.setPos(y[index])
 
 class SpectrumPlotSeq(GraphicsLayoutWidget):
     def __init__(self,

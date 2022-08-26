@@ -169,4 +169,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                                           yLabel='Spectrum amplitude (a.u.)',
                                           title='Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
 
-        return([signalPlotWidget, spectrumPlotWidget])
+        # create self.out to run in iterative mode
+        self.out = [[signalPlotWidget, spectrumPlotWidget]]
+
+        return (self.out)

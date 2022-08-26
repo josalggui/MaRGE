@@ -193,6 +193,9 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
                             yLabel='Signal amplitude (mV)',
                             title='')
 
-        return([plotWidget])
+        # create self.out to run in iterative mode
+        self.out = [plotWidget]
+
+        return (self.out)
 
 

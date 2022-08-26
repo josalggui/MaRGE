@@ -160,4 +160,7 @@ class FID(blankSeq.MRIBLANKSEQ):
         # spectrumPlotWidget.plotitem.setLogMode(y=True)
         spectrumPlotWidget.plotitem.curves[0].setSymbol('x')
 
-        return([signalPlotWidget, spectrumPlotWidget])
+        # create self.out to run in iterative mode
+        self.out = [signalPlotWidget, spectrumPlotWidget]
+
+        return(self.out)

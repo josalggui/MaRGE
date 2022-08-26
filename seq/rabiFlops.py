@@ -214,4 +214,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                                   yLabel='Signal amplitude (mV)',
                                   title='Rabi Flops with Spin Echo')
 
-        return([rabiFIDWidget, rabiEchoWidget])
+        # create self.out to run in iterative mode
+        self.out = [[rabiFIDWidget, rabiEchoWidget]]
+        
+        return (self.out)

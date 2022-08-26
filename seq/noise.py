@@ -123,7 +123,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
                                 yLabel='Mag FFT (a.u.)',
                                 title='Noise spectrum')
 
-        out = [timePlotWidget, freqPlotWidget]
+        self.out = [timePlotWidget, freqPlotWidget]
 
         if obj=='Standalone':
             win = pg.GraphicsLayoutWidget(show=True)
@@ -143,14 +143,14 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
             pg.exec()
 
-        return (out)
+        return (self.out)
 
 
 if __name__=='__main__':
-    seq = Noise()
-    seq.sequenceRun()
-    seq.sequenceAnalysis(obj='Standalone')
+    # seq = Noise()
+    # seq.sequenceRun()
+    # seq.sequenceAnalysis(obj='Standalone')
 
-    # import pyqtgraph.examples
-    # pyqtgraph.examples.run()
+    import pyqtgraph.examples
+    pyqtgraph.examples.run()
 

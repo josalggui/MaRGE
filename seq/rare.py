@@ -563,7 +563,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                       ['Magnitude', 'Real', 'Imaginary'],
                                       'Time (ms)', "Signal amplitude (mV)",
                                       "%s Signal" % self.mapVals['fileName'])
-            return([t_plotview, f_plotview])
+            self.out = [t_plotview, f_plotview]
+            return(self.out)
         else:
             # Plot image
             # image = pg.image(np.abs(self.mapVals['image3D']))
@@ -575,10 +576,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                    yLabel=axesStr[0]+" Axis")
             imageWidget = image.getImageWidget()
 
-            kSpace = Spectrum3DPlot(np.log10(np.abs(self.mapVals['kSpace3D'])),
+            kSpace = Spectrum3DPlot(np.abs(self.mapVals['kSpace3D']),
                                     title='k-Space',
                                     xLabel="k%s"%axesStr[1],
                                     yLabel="k%s"%axesStr[0])
             kSpaceWidget = kSpace.getImageWidget()
 
-            return([imageWidget, kSpaceWidget])
+            self.out = [imageWidget, kSpaceWidget]
+            return(self.out)
