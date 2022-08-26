@@ -147,7 +147,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             if self.seqName!=self.oldSeqName:
                 defaultsequences[self.seqName].deleteOutput()
         self.oldSeqName = copy.copy(self.seqName)
-        
+
         # Save sequence list into the current sequence, just in case you need to do sweep
         defaultsequences[self.seqName].sequenceList = defaultsequences
         #

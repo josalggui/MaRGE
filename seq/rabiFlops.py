@@ -215,6 +215,6 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                                   title='Rabi Flops with Spin Echo')
 
         # create self.out to run in iterative mode
-        self.out = [[rabiFIDWidget, rabiEchoWidget]]
+        self.out = [rabiFIDWidget, rabiEchoWidget]
         
         return (self.out)

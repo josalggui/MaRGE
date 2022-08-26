@@ -170,6 +170,6 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                                           title='Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
 
         # create self.out to run in iterative mode
-        self.out = [[signalPlotWidget, spectrumPlotWidget]]
+        self.out = [signalPlotWidget, spectrumPlotWidget]
 
         return (self.out)
