@@ -8,20 +8,21 @@ Created on Thu June 2 2022
 import os
 import numpy as np
 import configs.hw_config as hw
-from datetime import date,  datetime
+from datetime import date, datetime
 from scipy.io import savemat
 import experiment as ex
 import scipy.signal as sig
 import csv
 
+
 class MRIBLANKSEQ:
     # Properties
-    mapKeys = []         # keys for the maps
-    mapNmspc = {}        # name to show in the gui
-    mapVals = {}         # values to show in the gui
-    mapFields = {}       # fields to classify the input parameter
+    mapKeys = []  # keys for the maps
+    mapNmspc = {}  # name to show in the gui
+    mapVals = {}  # values to show in the gui
+    mapFields = {}  # fields to classify the input parameter
     mapLen = {}
-    plotSeq = 1          # it plots the sequence
+    plotSeq = 1  # it plots the sequence
 
     def __init__(self):
         self.mapKeys = []
@@ -100,7 +101,7 @@ class MRIBLANKSEQ:
             writer.writeheader()
             writer.writerows([self.mapNmspc, self.mapVals])
 
-    def loadParams(self):
+    def loadParams(self, directory='experiments/parameterisations', file=None):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -108,10 +109,19 @@ class MRIBLANKSEQ:
         """
         mapValsOld = self.mapVals
         try:
-            with open('experiments/parameterisations/%s_last_parameters.csv' % self.mapVals['seqName'],'r') as csvfile:
-                reader = csv.DictReader(csvfile)
-                for l in reader:
-                    mapValsNew = l
+            if file is None:
+                with open('%s/%s_last_parameters.csv' % (directory, self.mapVals['seqName']), 'r') as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    for l in reader:
+                        mapValsNew = l
+            else:
+                try:
+                    with open('%s/%s' % (directory, file), 'r') as csvfile:
+                        reader = csv.DictReader(csvfile)
+                        for l in reader:
+                            mapValsNew = l
+                except:
+                    print("File %s does not exist. Please create it with save parameters.")
 
             self.mapVals = {}
 
@@ -186,8 +196,8 @@ class MRIBLANKSEQ:
             t = data[0]
             s = data[1]
             n = np.size(t)
-            tStep = np.zeros(2*n-1)
-            sStep = np.zeros(2*n-1)
+            tStep = np.zeros(2 * n - 1)
+            sStep = np.zeros(2 * n - 1)
             tStep[0::2] = t
             tStep[1::2] = t[1::]
             sStep[0::2] = s
@@ -201,7 +211,7 @@ class MRIBLANKSEQ:
         for txl in ['tx0_i', 'tx0_q', 'tx1_i', 'tx1_q']:
             try:
                 dataStep = getStepData(fd[txl])
-                xData.append(dataStep[0]*1e-3)
+                xData.append(dataStep[0] * 1e-3)
                 yData.append(dataStep[1])
                 legend.append(txl)
             except KeyError:
@@ -215,7 +225,7 @@ class MRIBLANKSEQ:
         for gradl in self.expt.gradb.keys():
             try:
                 dataStep = getStepData(fd[gradl])
-                xData.append(dataStep[0]*1e-3)
+                xData.append(dataStep[0] * 1e-3)
                 yData.append(dataStep[1])
                 legend.append(gradl)
             except KeyError:
@@ -229,7 +239,7 @@ class MRIBLANKSEQ:
         for rxl in ['rx0_en', 'rx1_en']:
             try:
                 dataStep = getStepData(fd[rxl])
-                xData.append(dataStep[0]*1e-3)
+                xData.append(dataStep[0] * 1e-3)
                 yData.append(dataStep[1])
                 legend.append(rxl)
             except KeyError:
@@ -243,14 +253,14 @@ class MRIBLANKSEQ:
         for iol in ['tx_gate', 'rx_gate', 'trig_out', 'leds']:
             try:
                 dataStep = getStepData(fd[iol])
-                xData.append(dataStep[0]*1e-3)
+                xData.append(dataStep[0] * 1e-3)
                 yData.append(dataStep[1])
                 legend.append(iol)
             except KeyError:
                 continue
         plotDigital = [xData, yData, legend, 'Digital']
 
-        return([plotTx, plotGrad, plotRx, plotDigital])
+        return ([plotTx, plotGrad, plotRx, plotDigital])
 
     def getIndex(self, etl=1, nPH=1, sweepMode=1):
         """"
@@ -351,7 +361,7 @@ class MRIBLANKSEQ:
         txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
         txGateAmp = np.array([1, 0])
         self.expt.add_flodict({
-            'tx%i'%txChannel: (txTime, txAmp),
+            'tx%i' % txChannel: (txTime, txAmp),
             'tx_gate': (txGateTime, txGateAmp)
         }, rewrite)
 
@@ -363,7 +373,7 @@ class MRIBLANKSEQ:
         rxGateTime = np.array([tStart, tStart + gateTime])
         rxGateAmp = np.array([1, 0])
         self.expt.add_flodict({
-            'rx%i_en'%rxChannel: (rxGateTime, rxGateAmp),
+            'rx%i_en' % rxChannel: (rxGateTime, rxGateAmp),
             'rx_gate': (rxGateTime, rxGateAmp),
         }, rewrite)
 
@@ -478,7 +488,7 @@ class MRIBLANKSEQ:
             'grad_vz': (np.array([tEnd]), np.array([0])),
             'rx0_en': (np.array([tEnd]), np.array([0])),
             'rx_gate': (np.array([tEnd]), np.array([0])),
-            'tx0': (np.array([tEnd]), np.array([0*np.exp(0)])),
+            'tx0': (np.array([tEnd]), np.array([0 * np.exp(0)])),
             'tx_gate': (np.array([tEnd]), np.array([0]))
         })
 
@@ -526,18 +536,19 @@ class MRIBLANKSEQ:
 
         # Save mat file with the outputs
         savemat("experiments/acquisitions/%s/%s.%s.mat" % (dt2_string, self.mapVals['seqName'],
-            dt_string), self.mapVals)
+                                                           dt_string), self.mapVals)
 
         # Save csv with input parameters
-        with open('experiments/acquisitions/%s/%s.%s.csv' % (dt2_string,self.mapNmspc['seqName'],dt_string), 'w') as csvfile:
+        with open('experiments/acquisitions/%s/%s.%s.csv' % (dt2_string, self.mapNmspc['seqName'], dt_string),
+                  'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys)
             writer.writeheader()
             mapVals = {}
-            for key in self.mapKeys:    # take only the inputs from mapVals
+            for key in self.mapKeys:  # take only the inputs from mapVals
                 mapVals[key] = self.mapVals[key]
             writer.writerows([self.mapNmspc, mapVals])
 
-    def freqCalibration(self, bw=0.05, dbw = 0.0001):
+    def freqCalibration(self, bw=0.05, dbw=0.0001):
         """
         @author: J.M. ALgarín
         @contact: josalggui@i3m.upv.es
@@ -550,20 +561,20 @@ class MRIBLANKSEQ:
         nPoints = int(bw / dbw)
         larmorFreq = self.mapVals['larmorFreq']
         ov = 10
-        bw = bw*ov
-        samplingPeriod = 1/bw
-        acqTime = 1/dbw
+        bw = bw * ov
+        samplingPeriod = 1 / bw
+        acqTime = 1 / dbw
         addRdPoints = 5
 
         self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=False,
-                             gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
         samplingPeriod = self.expt.get_rx_ts()[0]
-        bw = 1/samplingPeriod/ov
-        acqTime = nPoints/bw  # us
+        bw = 1 / samplingPeriod / ov
+        acqTime = nPoints / bw  # us
         self.createFreqCalSequence(bw, acqTime)
         rxd, msgs = self.expt.run()
         dataFreqCal = sig.decimate(rxd['rx0'] * 13.788, ov, ftype='fir', zero_phase=True)
-        dataFreqCal = dataFreqCal[addRdPoints:nPoints+addRdPoints]
+        dataFreqCal = dataFreqCal[addRdPoints:nPoints + addRdPoints]
         # Get phase
         angle = np.unwrap(np.angle(dataFreqCal))
         idx = np.argmax(np.abs(dataFreqCal))
@@ -575,18 +586,18 @@ class MRIBLANKSEQ:
         idx = np.argmax(spectrum)
         dfFFT = -fVector[idx]
         larmorFreq += dfFFT
-        self.mapVals['larmorFreq'] = np.round(larmorFreq, decimals=6) # MHz
+        self.mapVals['larmorFreq'] = np.round(larmorFreq, decimals=6)  # MHz
         print("f0 = %s MHz" % (round(larmorFreq, 5)))
         self.expt.__del__()
 
-        return(larmorFreq)
+        return (larmorFreq)
 
     def createFreqCalSequence(self, bw, acqTime):
         # Def variables
-        shimming = np.array(self.mapVals['shimming'])*1e-4
-        rfExTime = self.mapVals['rfExTime'] # us
+        shimming = np.array(self.mapVals['shimming']) * 1e-4
+        rfExTime = self.mapVals['rfExTime']  # us
         rfExAmp = self.mapVals['rfExAmp']
-        repetitionTime = self.mapVals['repetitionTime']*1e3 # us
+        repetitionTime = self.mapVals['repetitionTime'] * 1e3  # us
         addRdPoints = 5
 
         t0 = 20
@@ -596,12 +607,12 @@ class MRIBLANKSEQ:
         self.iniSequence(t0, shimming)
 
         # Excitation pulse
-        t0 = tEx-hw.blkTime-rfExTime/2
-        self.rfRecPulse(t0, rfExTime, rfExAmp*np.exp(0.))
+        t0 = tEx - hw.blkTime - rfExTime / 2
+        self.rfRecPulse(t0, rfExTime, rfExAmp * np.exp(0.))
 
         # Rx
-        t0 = tEx+rfExTime/2+hw.deadTime
-        self.rxGate(t0, acqTime+2*addRdPoints/bw)
+        t0 = tEx + rfExTime / 2 + hw.deadTime
+        self.rxGate(t0, acqTime + 2 * addRdPoints / bw)
 
         # Finalize sequence
         self.endSequence(repetitionTime)
@@ -611,11 +622,13 @@ class MRIBLANKSEQ:
         self.mapNmspc[key] = string
         self.mapVals[key] = val
         self.mapFields[key] = field
-        try: self.mapLen[key] = len(val)
-        except: self.mapLen[key] = 1
+        try:
+            self.mapLen[key] = len(val)
+        except:
+            self.mapLen[key] = 1
 
     def getParameter(self, key):
-        return(self.mapVals[key])
+        return (self.mapVals[key])
 
     def setParameter(self, key, val, unit):
         self.mapVals[key] = val

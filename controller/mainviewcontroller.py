@@ -32,10 +32,12 @@ import pdb
 import numpy as np
 import imageio
 from plotview.spectrumplot import Spectrum3DPlot
+from plotview.spectrumplot import SpectrumPlotSeq
 import time
 from worker import Worker
 st = pdb.set_trace
 import copy
+import configs.hw_config as hw
 
 # Import sequences
 from seq.sequences import defaultsequences
@@ -117,10 +119,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.actionInit_GPA.triggered.connect(self.initgpa)
         self.actionLocalizer.triggered.connect(self.startLocalizer)
         self.actionNew_sesion.triggered.connect(self.change_session)
-
-        # Initialize the multithread pool
-        self.threadpool = QThreadPool()
-        print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+        self.actionRARE_3D_T1.triggered.connect(self.protocoleRARE3DT1)
 
         # Update the sequence parameters shown in the gui
         self.seqName = self.sequencelist.getCurrentSequence()
@@ -150,7 +149,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         # Save sequence list into the current sequence, just in case you need to do sweep
         defaultsequences[self.seqName].sequenceList = defaultsequences
-        #
+
         # Save input parameters
         defaultsequences[self.seqName].saveParams()
 
@@ -190,7 +189,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             if not hasattr(defaultsequences[self.seqName], 'out'):
                 self.iterativeRun = False
                 self.action_iterate.setIcon(
-                    QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/refresh.svg'))
+                    QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/media-fast-forward.svg'))
                 self.action_iterate.setToolTip('Switch to iterative run')
                 self.action_iterate.setText('Single run')
 
@@ -236,12 +235,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def iterate(self):
         if self.iterativeRun == False:
             self.iterativeRun = True
-            self.action_iterate.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/refresh-outline.svg') )
+            self.action_iterate.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/media-fast-forward-outline.svg') )
             self.action_iterate.setToolTip('Switch to single run')
             self.action_iterate.setText('Iterative run')
         else:
             self.iterativeRun = False
-            self.action_iterate.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/refresh.svg') )
+            self.action_iterate.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/media-fast-forward.svg') )
             self.action_iterate.setToolTip('Switch to iterative run')
             self.action_iterate.setText('Single run')
 
@@ -325,8 +324,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         larmorSeq = defaultsequences['Larmor']
         larmorSeq.sequenceRun()
         outLarmor = larmorSeq.sequenceAnalysis()
+        hw.larmorFreq = larmorSeq.mapVals['larmorFreqCal']
         for seq in defaultsequences:
-            defaultsequences[seq].mapVals['larmorFreq'] = larmorSeq.mapVals['larmorFreqCal']
+            defaultsequences[seq].mapVals['larmorFreq'] = hw.larmorFreq
 
         # Get noise
         noiseSeq = defaultsequences['Noise']
@@ -375,6 +375,15 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.plotview_layout.addWidget(item)
 
         self.onSequenceChanged.emit(self.sequence)
+
+    def protocoleRARE3DT1(self):
+        # Load parameters
+        defaultsequences['RARE'].loadParams(directory='experiments/protocoles', file='RARE_3D_T1_csv')
+
+        # Set larmor frequency to the value into the hw_config file
+        defaultsequences['RARE'].mapVals['larmorFreq'] = hw.larmorFreq
+
+        self.startAcquisition(seqName='RARE')
 
     def runLarmor(self):
         self.startAcquisition(seqName="Larmor")

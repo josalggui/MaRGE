@@ -15,8 +15,6 @@ from PyQt5.QtCore import QObject
 from seq.localizer import Localizer
 import imageio
 import numpy as np
-import pyqtgraph as pg
-
 
 class AcquisitionController(QObject):
     def __init__(self, parent=None, session=None, sequencelist=None):
@@ -26,7 +24,6 @@ class AcquisitionController(QObject):
         self.sequencelist = sequencelist
         self.acquisitionData = None
         self.session = session
-        self.firstPlot()
 
     def startAcquisition(self, seqName=None):
         """

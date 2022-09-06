@@ -369,7 +369,6 @@
     <addaction name="actionRun_sequence"/>
     <addaction name="actionPlot_sequence"/>
     <addaction name="separator"/>
-    <addaction name="actionLocalizer"/>
    </widget>
    <widget class="QMenu" name="menuSesion">
     <property name="title">
@@ -383,7 +382,17 @@
     </property>
     <addaction name="actionInit_GPA"/>
    </widget>
+   <widget class="QMenu" name="menuProtocoles">
+    <property name="title">
+     <string>Protocoles</string>
+    </property>
+    <addaction name="actionLocalizer"/>
+    <addaction name="actionRARE_3D_T1"/>
+    <addaction name="actionRARE_3D_T2"/>
+    <addaction name="actionRARE_3D_Rho"/>
+   </widget>
    <addaction name="menuCalibration"/>
+   <addaction name="menuProtocoles"/>
    <addaction name="menuParameters"/>
    <addaction name="menuSesion"/>
    <addaction name="menuScanner"/>
@@ -403,6 +412,7 @@
    <addaction name="action_run_localizer"/>
    <addaction name="action_XNATupload"/>
    <addaction name="action_acquire"/>
+   <addaction name="action_iterate"/>
   </widget>
   <widget class="QToolBar" name="AcquisitionControlToolbar">
    <property name="windowTitle">
@@ -416,7 +426,6 @@
    </attribute>
    <addaction name="action_viewsequence"/>
    <addaction name="action_batch"/>
-   <addaction name="action_iterate"/>
    <addaction name="action_ProcessingToolbox"/>
    <addaction name="separator"/>
    <addaction name="action_changeappearance"/>
@@ -551,7 +560,7 @@
   <action name="action_iterate">
    <property name="icon">
     <iconset>
-     <normaloff>../resources/icons/refresh.svg</normaloff>../resources/icons/refresh.svg</iconset>
+     <normaloff>../resources/icons/media-fast-forward.svg</normaloff>../resources/icons/media-fast-forward.svg</iconset>
    </property>
    <property name="text">
     <string>Iterative run</string>
@@ -649,6 +658,21 @@
   <action name="actionInit_GPA">
    <property name="text">
     <string>Init GPA</string>
+   </property>
+  </action>
+  <action name="actionRARE_3D_T1">
+   <property name="text">
+    <string>RARE 3D T1</string>
+   </property>
+  </action>
+  <action name="actionRARE_3D_T2">
+   <property name="text">
+    <string>RARE 3D T2</string>
+   </property>
+  </action>
+  <action name="actionRARE_3D_Rho">
+   <property name="text">
+    <string>RARE 3D Rho</string>
    </property>
   </action>
  </widget>

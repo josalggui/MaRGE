@@ -24,8 +24,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='RAREInfo', val='RARE')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.066, field='RF')
-        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
-        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfExFA', string='Exitation flip angle (º)', val=90, field='RF')
+        self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=35.0, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=70.0, field='RF')
         self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=20.0, field='SEQ')
@@ -64,12 +64,27 @@ class RARE(blankSeq.MRIBLANKSEQ):
         nPoints = np.array(self.mapVals['nPoints'])
         etl = self.mapVals['etl']
         repetitionTime = self.mapVals['repetitionTime']
-        return(nPoints[1]/etl*nPoints[2]*repetitionTime*1e-3*nScans/60)  # minutes, scanTime
+        parFourierFraction = self.mapVals['parFourierFraction']
+
+        # check if rf amplitude is too high
+        rfExFA = self.mapVals['rfExFA'] / 180 * np.pi  # rads
+        rfReFA = self.mapVals['rfReFA'] / 180 * np.pi  # rads
+        rfExTime = self.mapVals['rfExTime']  # us
+        rfReTime = self.mapVals['rfReTime']  # us
+        rfExAmp = rfExFA / (rfExTime * hw.b1Efficiency)
+        rfReAmp = rfReFA / (rfReTime * hw.b1Efficiency)
+        if rfExAmp>1 or rfReAmp>1:
+            print("RF amplitude is too high, try with longer RF pulse time.")
+            return(0)
+
+        seqTime = nPoints[1]/etl*nPoints[2]*repetitionTime*1e-3*nScans*parFourierFraction/60
+        seqTime = np.round(seqTime, decimals=1)
+        return(seqTime)  # minutes, scanTime
 
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa=False # Starts the gpa
-        demo = False
+        demo = True
 
         # Create the inputs automatically. For some reason it only works if there is a few code later...
         # for key in self.mapKeys:
@@ -82,8 +97,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
         seqName = self.mapVals['seqName']
         nScans = self.mapVals['nScans']
         larmorFreq = self.mapVals['larmorFreq']# MHz
-        rfExAmp = self.mapVals['rfExAmp'] # a.u.
-        rfReAmp = self.mapVals['rfReAmp'] # a.u.
+        rfExFA = self.mapVals['rfExFA']/180*np.pi # rads
+        rfReFA = self.mapVals['rfReFA']/180*np.pi # rads
         rfExTime = self.mapVals['rfExTime'] # us
         rfReTime = self.mapVals['rfReTime'] # us
         echoSpacing = self.mapVals['echoSpacing'] # ms
@@ -131,10 +146,18 @@ class RARE(blankSeq.MRIBLANKSEQ):
         addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
         randFactor = 0e-3                        # Random amplitude to add to the phase gradients
         resolution = fov/nPoints
+        rfExAmp = rfExFA/(rfExTime*1e6*hw.b1Efficiency)
+        rfReAmp = rfReFA/(rfReTime*1e6*hw.b1Efficiency)
+        self.mapVals['rfExAmp'] = rfExAmp
+        self.mapVals['rfReAmp'] = rfReAmp
         self.mapVals['resolution'] = resolution
         self.mapVals['gradRiseTime'] = gradRiseTime
         self.mapVals['randFactor'] = randFactor
         self.mapVals['addRdPoints'] = addRdPoints
+
+        if rfExAmp>1 or rfReAmp>1:
+            print("RF amplitude is too high, try with longer RF pulse time.")
+            return(0)
 
         # Matrix size
         nRD = nPoints[0]+2*addRdPoints

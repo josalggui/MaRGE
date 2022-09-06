@@ -215,7 +215,14 @@ class SequenceParameter(Parameter_Base, Parameter_Form):
 
         # Print value into the console
         seqTime = seq.sequenceTime()
-        print('Sequence time %1.1d minutes' % seqTime)
+        if hasattr(self, 'oldSeqTime'):
+            if seqTime!=self.oldSeqTime:
+                print('Sequence time %0.1f minutes' % seqTime)
+                self.oldSeqTime = seqTime
+        else:
+            print('Sequence time %0.1f minutes' % seqTime)
+            self.oldSeqTime = seqTime
+
         defaultsequences[self.sequence] = seq
                 
     def validate_input(self):
