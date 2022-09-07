@@ -76,30 +76,38 @@ This allows to interactively modify sequence parameters while the sequence is ru
 
 The last version of the GUI also includes a menubar with different options.
 
-1) Calibration: directly run calibration sequences with previously saved parameters.
-   1) Larmor: it runs a quick spin echo and shows the time-domain and frequency-domain signal providing information about the Larmor frequency.
-   2) Noise: it runs a single acquisition of noise and shows the time-domain noise and frequency-domain spectrum providing information about the rms noise.
-   3) Rabi flops: it runs spin echoes while sweeping flip angles. It shows the amplitude evolution of the FID after the excitation pulse and the echo.
-   4) CPMG: it runs CPMG to estimate T2 values. It fit the curve to different exponential evolutions.
-   5) Inversion Recovery: it runs spin echo with inversion recovery to estimate T1 values.
-   6) Shimming: it sweeps the shimming in the three axis to estimate the best value
-   7) Autocalibration: it runs Larmor, Noise and Rabi flops sequentially.
-2) Protocoles: directly run pre-defined image protocoles, e.g., RARE with specific contrasts. Right now, the options are:
-   1) Localizer: it runs 3 RARE projections, one per main axis and show the resulting images into the localizer region.
-   2) RARE 3D T1.
-   3) RARE 3D T2 (under development).
-   4) RARE 3D Rho (under development).
-3) Sequence: show different options related to sequences.
-   1) Load parameters: it allows the user to load previously saved parameters.
-   2) Save parameters: it saves the parameters to ***experiments/parameterisations/SequenceNameInfo.year.month.day.hour.minutes.seconds.milliseconds.csv"
-   3) Run sequence: it runs the selected sequence.
-   4) Plot sequence: it plot the selected sequence.
-4) Sesion:
-   1) New session: it closes the main GUI and open the session windows again.
-5) Scanner:
-   1) Init GPA: it initializes the GPA.
-When doing this, GPA generates a high peak voltage, so it is recommended to turn off the gradient amplifier before clicking this button.
+1) `Calibration`: directly run calibration sequences with previously saved parameters.
+   1) `Larmor`: it runs a quick spin echo and shows the time-domain and frequency-domain signal providing information about the Larmor frequency.
+   2) `Noise`: it runs a single acquisition of noise and shows the time-domain noise and frequency-domain spectrum providing information about the rms noise.
+   3) `Rabi flops`: it runs spin echoes while sweeping flip angles. It shows the amplitude evolution of the FID after the excitation pulse and the echo.
+   4) `CPMG`: it runs CPMG to estimate T2 values. It fit the curve to different exponential evolutions.
+   5) `Inversion Recovery`: it runs spin echo with inversion recovery to estimate T1 values.
+   6) `Shimming`: it sweeps the shimming in the three axis to estimate the best value
+   7) `Autocalibration`: it runs Larmor, Noise and Rabi flops sequentially.
+2) `Protocoles`: directly run pre-defined image protocoles, e.g., RARE with specific contrasts. Right now, the options are:
+   1) `Localizer`: it runs 3 RARE projections, one per main axis and show the resulting images into the localizer region.
+   2) `RARE 3D T1`.
+   3) `RARE 3D T2` (under development).
+   4) `RARE 3D Rho` (under development).
+3) `Sequence`: show different options related to sequences.
+   1) `Load parameters`: it allows the user to load previously saved parameters.
+   2) `Save parameters`: it saves the parameters to ***experiments/parameterisations/SequenceNameInfo.year.month.day.hour.minutes.seconds.milliseconds.csv"
+   3) `Run sequence`: it runs the selected sequence.
+   4) `Plot sequence`: it plot the selected sequence.
+4) `Session`:
+   1) `New session`: it closes the main GUI and open the session windows again.
+5) `Scanner`:
+   1) `Init GPA`: initialize the GPA.
+   When doing this, GPA generates a high peak voltage, so it is recommended to turn off the gradient amplifier before clicking this button.
+   2) `Init Red Pitaya`: install the last version of MaRCoS and connect to the server.
+   This is equivalent to Copybitstream + Init marcos server buttons.
+   3) `Copybitstream`: install the last version of MaRCoS into the Red Pitaya
+   4) `Init marcos server`: connect to the server
+   5) `Close marcos server`: close the server
 
+I noted that in some cases under Ubuntu OS, the Init Red Pitaya does not work properly.
+In that case, try with Copybitstream and Init marcos server individually.
+Note that the Init Red Pitaya or Copybitstream is required only the first time that you run the GUI after plugging the Red Pitaya to the power.
 ### Running Localizer
 (Under development)
 
@@ -121,7 +129,9 @@ When the parameters are properly modified, you can run the sequence by clicking 
 Each time you run a sequence:
 1) It automatically save a file in ***experiments/parameterisation/SequenceName_last_parameters.csv***.
 When the user initialize the GUI, it automatically loads the parameters from the files with ***last_parameters*** in the name to continue the session from the last point.
-3) It creates two files in ***experiments/acquisitions*** inside a folder with the date of the experiment:
+This file is also used by the sequences in `Calibration` option.
+So if you want to modify the quick calibration sequences, just run a custom calibration sequence first to save the parameters.
+2) It creates two files in ***experiments/acquisitions*** inside a folder with the date of the experiment:
    1) a .mat raw data with name ***SequenceName.year.month.day.hour.minutes.secons.milliseconds.mat***.
    This file contains the inputs and outputs as well as any other useful variable.
    The values saved in the raw data are those contained inside the `mapVals` dictionary.
@@ -161,10 +171,9 @@ Session and batch uis are similar with each other (Figure 6).
 **Figure 6.- Session and batch uis**
 
 There are also ui files that represent single elements that will be introduced programally to the general structure of the windows (to one of the four previous windows).
-These elements are:
+Right now the gui uses only one sigle element:
 
-- inputshimming.ui (Figure 7 top)	
-- inputparameters.ui (Figure 7 bottom)
+- inputparameters.ui (Figure 7)
 
 <img src="images/ui_elements.png" width=300>
 

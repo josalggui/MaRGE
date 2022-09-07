@@ -150,6 +150,27 @@
            </widget>
           </item>
           <item>
+           <widget class="QWidget" name="shimming" native="true">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="cursor">
+             <cursorShape>ArrowCursor</cursorShape>
+            </property>
+            <layout class="QVBoxLayout" name="layout_shimming">
+             <property name="sizeConstraint">
+              <enum>QLayout::SetNoConstraint</enum>
+             </property>
+            </layout>
+           </widget>
+          </item>
+          <item>
            <spacer name="verticalSpacer">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -381,6 +402,10 @@
      <string>Scanner</string>
     </property>
     <addaction name="actionInit_GPA"/>
+    <addaction name="actionInit_Red_Pitaya"/>
+    <addaction name="actionCopybitstream"/>
+    <addaction name="actionInit_marcos_server"/>
+    <addaction name="actionClose_marcos_server"/>
    </widget>
    <widget class="QMenu" name="menuProtocoles">
     <property name="title">
@@ -391,11 +416,11 @@
     <addaction name="actionRARE_3D_T2"/>
     <addaction name="actionRARE_3D_Rho"/>
    </widget>
+   <addaction name="menuScanner"/>
    <addaction name="menuCalibration"/>
    <addaction name="menuProtocoles"/>
    <addaction name="menuParameters"/>
    <addaction name="menuSesion"/>
-   <addaction name="menuScanner"/>
   </widget>
   <widget class="QToolBar" name="ComunicationToolbar">
    <property name="windowTitle">
@@ -673,6 +698,31 @@
   <action name="actionRARE_3D_Rho">
    <property name="text">
     <string>RARE 3D Rho</string>
+   </property>
+  </action>
+  <action name="actionCopybitstream">
+   <property name="text">
+    <string>Copybitstream</string>
+   </property>
+  </action>
+  <action name="actionInit_marcos_server">
+   <property name="text">
+    <string>Init marcos server</string>
+   </property>
+  </action>
+  <action name="actionClose_marcos_server">
+   <property name="text">
+    <string>Close marcos server</string>
+   </property>
+  </action>
+  <action name="actionCopybitstream_and_init_marcos_server">
+   <property name="text">
+    <string>Init Red Pitaya</string>
+   </property>
+  </action>
+  <action name="actionInit_Red_Pitaya">
+   <property name="text">
+    <string>Init Red Pitaya</string>
    </property>
   </action>
  </widget>
