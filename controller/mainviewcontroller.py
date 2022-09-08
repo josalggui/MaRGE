@@ -16,6 +16,7 @@ from PyQt5.QtGui import QIcon
 import pyqtgraph.exporters
 from functools import partial
 import os
+import platform
 import sys
 import experiment as ex
 from scipy.io import savemat
@@ -55,11 +56,16 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     """
     onSequenceChanged = pyqtSignal(str)
     iterativeRun = False
+    plot1d = False
 
     def __init__(self, session, parent=None):
         super(MainViewController, self).__init__(parent)
+
+        # Load the mainview.up
         self.ui = loadUi('ui/mainview.ui')
         self.setupUi(self)
+
+        # Set the style
         self.styleSheet = style.breezeLight
         self.setupStylesheet(self.styleSheet)
         
@@ -120,6 +126,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.actionLocalizer.triggered.connect(self.startLocalizer)
         self.actionNew_sesion.triggered.connect(self.change_session)
         self.actionRARE_3D_T1.triggered.connect(self.protocoleRARE3DT1)
+        self.actionInit_Red_Pitaya.triggered.connect(self.initRedPitaya)
+        self.actionCopybitstream.triggered.connect(self.copyBitStream)
+        self.actionInit_marcos_server.triggered.connect(self.initMarcosServer)
+        self.actionClose_marcos_server.triggered.connect(self.closeMarcosServer)
 
         # Update the sequence parameters shown in the gui
         self.seqName = self.sequencelist.getCurrentSequence()
@@ -127,6 +137,29 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         # Show the gui maximized
         # self.showMaximized()
+
+    def closeMarcosServer(self):
+        os.system('ssh root@192.168.1.101 "killall marcos_server"')
+
+    def initMarcosServer(self):
+        if platform.system() == 'Windows':
+            os.system('ssh root@192.168.1.101 "killall marcos_server"')
+            os.system('start ssh root@192.168.1.101 "~/marcos_server"')
+        elif platform.system() == 'Linux':
+            os.system('ssh root@192.168.1.101 "killall marcos_server"')
+            os.system('ssh root@192.168.1.101 "~/marcos_server" &')
+
+    def copyBitStream(self):
+        os.system('ssh root@192.168.1.101 "killall marcos_server"')
+        os.system('..\PhysioMRI_GUI\copy_bitstream.sh 192.168.1.101 rp-122')
+
+    def initRedPitaya(self):
+        if platform.system() == 'Windows':
+            os.system('ssh root@192.168.1.101 "killall marcos_server"')
+            os.system('start startRP.sh')
+        elif platform.system() == 'Linux':
+            os.system('ssh root@192.168.1.101 "killall marcos_server"')
+            os.system('./startRP.sh &')
 
     def startAcquisition(self, seqName=None):
         #     """
@@ -198,6 +231,23 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             worker = Worker(self.repeatAcquisition)  # Any other args, kwargs are passed to the run function
             # Execute in a parallel thread
             self.threadpool.start(worker)
+            if not self.plot1d:
+                # Delete previous plots
+                self.clearPlotviewLayout()
+
+                # Create label with rawdata name
+                self.label = QLabel()
+                self.label.setAlignment(QtCore.Qt.AlignCenter)
+                self.label.setStyleSheet("background-color: black;color: white")
+                self.plotview_layout.addWidget(self.label)
+
+                # Set name to the label
+                fileName = defaultsequences[self.seqName].mapVals['fileName']
+                self.label.setText(fileName)
+
+                # Add plots to the plotview_layout
+                for item in self.newOut:
+                    self.plotview_layout.addWidget(item)
 
     def repeatAcquisition(self):
         # If single repetition, set iterativeRun True for one step
@@ -217,17 +267,21 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.label.setText(fileName)
 
             # Update lines in plots of the plotview_layout
-            for plotIndex in range(len(self.newOut)):
-                # update curves
-                oldCurves = self.oldOut[plotIndex].plotitem.listDataItems()
-                newCurves = self.newOut[plotIndex].plotitem.listDataItems()
-                # set new data to plot
-                for curveIndex in range(len(newCurves)):
-                    x, y = newCurves[curveIndex].getData()
-                    oldCurves[curveIndex].setData(x, y)
-                # set new title to plot
-                # newText = self.newOut[plotIndex].plotitem.titleLabel.text
-                # newText = self.newOut[plotIndex].plotitem.getTitle()
+            if hasattr(defaultsequences[self.seqName], 'out'):
+                self.plot1d = True
+                for plotIndex in range(len(self.newOut)):
+                    # update curves
+                    oldCurves = self.oldOut[plotIndex].plotitem.listDataItems()
+                    newCurves = self.newOut[plotIndex].plotitem.listDataItems()
+                    # set new data to plot
+                    for curveIndex in range(len(newCurves)):
+                        x, y = newCurves[curveIndex].getData()
+                        oldCurves[curveIndex].setData(x, y)
+                    # set new title to plot
+                    # newText = self.newOut[plotIndex].plotitem.titleLabel.text
+                    # newText = self.newOut[plotIndex].plotitem.getTitle()
+            else:
+                self.plot1d = False
 
             # Stop repetitions if single acquision
             if singleRepetition: self.iterativeRun = False
