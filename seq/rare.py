@@ -35,7 +35,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         # Input the parameters
         self.addParameter(key='seqName', string='RAREInfo', val='RARE')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.066, field='RF')
+        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
         self.addParameter(key='rfExFA', string='Exitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=35.0, field='RF')
@@ -98,16 +98,16 @@ class RARE(blankSeq.MRIBLANKSEQ):
         init_gpa=False # Starts the gpa
         demo = False
 
+        # Create the inputs automatically as a property of the class
+        for key in self.mapKeys:
+            setattr(self, key, self.mapVals[key])
+
         # Create the inputs automatically. For some reason it only works if there is a few code later...
         # for key in self.mapKeys:
         #     locals()[key] = self.mapVals[key]
         #     if not key in locals():
         #         print('Error')
         #         locals()[key] = self.mapVals[key]
-
-        # Create the inputs automatically as class properties
-        for key in self.mapKeys:
-            setattr(self, key, self.mapVals[key])
 
         # Create the inputs manually, pufff
         # seqName = self.mapVals['seqName']
@@ -140,7 +140,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         # freqCal = self.mapVals['freqCal']
 
         # Conversion of variables to non-multiplied units
-        self.larmorFreq = self.larmorFreq*1e6
+        self.freqOffset = self.freqOffset*1e3
         self.rfExTime = self.rfExTime*1e-6
         self.rfReTime = self.rfReTime*1e-6
         self.fov = np.array(self.fov)*1e-2
@@ -156,7 +156,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.phGradTime = self.phGradTime*1e-3
 
         # Miscellaneous
-        self.larmorFreq = self.larmorFreq*1e-6    # MHz
+        self.freqOffset = self.freqOffset*1e6 # MHz
         gradRiseTime = 400e-6       # s
         gSteps = int(gradRiseTime*1e6/5)*0+1
         addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
@@ -392,8 +392,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         # Calibrate frequency
         if self.freqCal and (not plotSeq) and (not demo):
-            self.larmorFreq = self.freqCalibration(bw=0.05)
-            self.larmorFreq = self.freqCalibration(bw=0.005)
+            hw.larmorFreq = self.freqCalibration(bw=0.05)
+            hw.larmorFreq = self.freqCalibration(bw=0.005)
             self.drfPhase = self.mapVals['drfPhase']
 
         # Create full sequence
@@ -411,7 +411,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         while repeIndexGlobal<nRepetitions:
             nBatches += 1
             if not demo:
-                self.expt = ex.Experiment(lo_freq=self.larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+                self.expt = ex.Experiment(lo_freq=hw.larmorFreq+self.freqOffset, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
                 samplingPeriod = self.expt.get_rx_ts()[0]
                 BW = 1/samplingPeriod/hw.oversamplingFactor
                 self.acqTime = self.nPoints[0]/BW        # us

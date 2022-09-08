@@ -151,7 +151,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
     def copyBitStream(self):
         os.system('ssh root@192.168.1.101 "killall marcos_server"')
-        os.system('../marcos_extras/copy_bitstream.sh 192.168.1.101 rp-122')
+        if platform.system() == 'Windows':
+            os.system('..\marcos_extras\copy_bitstream.sh 192.168.1.101 rp-122')
+        elif platform.system() == 'Linux':
+            os.system('../marcos_extras/copy_bitstream.sh 192.168.1.101 rp-122')
 
     def initRedPitaya(self):
         if platform.system() == 'Windows':

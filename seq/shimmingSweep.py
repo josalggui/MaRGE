@@ -16,9 +16,9 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         super(ShimmingSweep, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='ShimmingSweepInfo', val='ShimmingSweep')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
-        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
-        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
+        self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90.0, field='RF')
+        self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180.0, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='RF')
         self.addParameter(key='echoTime', string='Echo time (ms)', val=10., field='SEQ')
@@ -38,9 +38,9 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         print("This sequence sweep the shimming in the three axis")
 
     def sequenceTime(self):
-        nScans = self.mapVals['nScans']
         repetitionTime = self.mapVals['repetitionTime']*1e-3
-        return(repetitionTime*nScans/60)  # minutes, scanTime
+        nShimming = self.mapVals['nShimming']
+        return(repetitionTime*nShimming*3/60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq):
         init_gpa = False  # Starts the gpa
@@ -55,10 +55,10 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         # I do not understand why I cannot create the input parameters automatically
         seqName = self.mapVals['seqName']
-        larmorFreq = self.mapVals['larmorFreq']
-        rfExAmp = self.mapVals['rfExAmp']
+        freqOffset = self.mapVals['freqOffset']*1e-3 # MHz
+        rfExFA = self.mapVals['rfExFA']/180*np.pi # rads
         rfExTime = self.mapVals['rfExTime'] # us
-        rfReAmp = self.mapVals['rfReAmp']
+        rfReFA = self.mapVals['rfReFA']/180*np.pi # rads
         rfReTime = self.mapVals['rfReTime'] # us
         echoTime = self.mapVals['echoTime']*1e3 # us
         repetitionTime = self.mapVals['repetitionTime']*1e3 # us
@@ -67,6 +67,10 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         shimming0 = np.array(self.mapVals['shimming0'])*1e-4
         nShimming = self.mapVals['nShimming']
         dShimming = np.array(self.mapVals['dShimming'])*1e-4
+
+        # Calculate the rf amplitudes
+        rfExAmp = rfExFA/(rfExTime*hw.b1Efficiency)
+        rfReAmp = rfReFA/(rfReTime*hw.b1Efficiency)
 
         # Shimming vectors
         dsx = nShimming * dShimming[0]
@@ -116,58 +120,77 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         # Create experiment
         bw = nPoints / acqTime * hw.oversamplingFactor  # MHz
         samplingPeriod = 1 / bw
-        self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa,
-                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+        self.expt = ex.Experiment(lo_freq=hw.larmorFreq + freqOffset,
+                                  rx_t=samplingPeriod,
+                                  init_gpa=init_gpa,
+                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                                  )
         samplingPeriod = self.expt.get_rx_ts()[0]
         bw = 1 / samplingPeriod / hw.oversamplingFactor # MHz
         self.mapVals['bw'] = bw * 1e6 # Hz
         acqTime = nPoints / bw # us
         createSequence()
 
-        if plotSeq:
-            print('Ploting sequence...')
-        else:
-            print('Runing...')
+        if not plotSeq:
             rxd, msgs = self.expt.run()
             print(msgs)
             data = sig.decimate(rxd['rx0'] * 13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = data
         self.expt.__del__()
-        return 0
-
 
     def sequenceAnalysis(self, obj=''):
+        # Get data
         nShimming = self.mapVals['nShimming']
         nPoints = self.mapVals['nPoints']
         data = np.reshape(self.mapVals['data'], (3, nShimming, -1))
-        data = data[:, :, int(nPoints/2)]
+
+        # Get FFT
+        dataFFT = np.zeros((3, nShimming), dtype=complex)
+        for ii in range(3):
+            for jj in range(nShimming):
+                dataFFT[ii, jj] = np.max(np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data[ii, jj, :])))))
+        self.mapVals['amplitudeVSshimming'] = dataFFT
+
+        # Get max signal for each excitation
         sxVector = np.squeeze(self.mapVals['sxVector'])
         syVector = np.squeeze(self.mapVals['syVector'])
         szVector = np.squeeze(self.mapVals['szVector'])
-        self.mapVals['amplitudeVSshimming'] = data
+
+        # Get the shimming values
+        sx = sxVector[np.argmax(dataFFT[0, :])]
+        sy = syVector[np.argmax(dataFFT[1, :])]
+        sz = szVector[np.argmax(dataFFT[2, :])]
+        print("Shimming X = %0.1f" % (sx*1e4))
+        print("Shimming Y = %0.1f" % (sy*1e4))
+        print("Shimming Z = %0.1f" % (sz*1e4))
+
+        # Update the shimming in hw_config
+        if obj is not "standalone":
+            for seqName in self.sequenceList:
+                self.sequenceList[seqName].mapVals['shimming'] = [sx*1e4, sy*1e4, sz*1e4]
 
         self.saveRawData()
 
         # Add shimming x to the layout
         plotXWidget = SpectrumPlot(xData=sxVector * 1e4,
-                                   yData=[np.abs(data[0, :])],
+                                   yData=[np.abs(dataFFT[0, :])],
                                    legend=[''],
                                    xLabel='Shimming X',
-                                   yLabel='Signal amplitude (mV)',
+                                   yLabel='Spectrum amplitude (mV)',
                                    title='Shimming X')
 
         plotYWidget = SpectrumPlot(xData=syVector * 1e4,
-                                   yData=[np.abs(data[1, :])],
+                                   yData=[np.abs(dataFFT[1, :])],
                                    legend=[''],
                                    xLabel='Shimming Y',
-                                   yLabel='Signal amplitude (mV)',
+                                   yLabel='Spectrum amplitude (mV)',
                                    title='Shimming Y')
 
         plotZWidget = SpectrumPlot(xData=szVector * 1e4,
-                                   yData=[np.abs(data[2, :])],
+                                   yData=[np.abs(dataFFT[2, :])],
                                    legend=[''],
                                    xLabel='Shimming Z',
-                                   yLabel='Signal amplitude (mV)',
+                                   yLabel='Spectrum amplitude',
                                    title='Shimming Z')
 
         return([plotXWidget, plotYWidget, plotZWidget])

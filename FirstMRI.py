@@ -35,11 +35,10 @@ print("https://github.com/yvives/PhysioMRI_GUI                                  
 print("****************************************************************************************")
 
 # Start the red pitaya -> ./copy_bitstream and ssh root@192.168.1.101 "marcos_server"
+os.system('ssh root@192.168.1.101 "killall marcos_server"')
 # if platform.system()=='Windows':
-#     os.system('ssh root@192.168.1.101 "killall marcos_server"')
 #     os.system('start startRP.sh')
 # elif platform.system()=='Linux':
-#     os.system('ssh root@192.168.1.101 "killall marcos_server"')
 #     os.system('./startRP.sh &')
 
 # Run the gui
