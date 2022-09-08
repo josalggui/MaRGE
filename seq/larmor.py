@@ -18,9 +18,9 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         # Input the parameters
         self.addParameter(key='seqName', string='LarmorInfo', val='Larmor')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
-        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
-        self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
+        self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90.0, field='RF')
+        self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180.0, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='RF')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ')
@@ -44,7 +44,6 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq=0):
         init_gpa = False  # Starts the gpa
-        demo = False
 
         # Create the inputs automatically. For some reason it only works if there is a few code later...
         # for key in self.mapKeys:
@@ -54,17 +53,20 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         #         locals()[key] = self.mapVals[key]
 
         # I do not understand why I cannot create the input parameters automatically
-        seqName = self.mapVals['seqName']
+        freqOffset = self.mapVals['freqOffset']*1e-3 # MHz
         nScans = self.mapVals['nScans']
-        larmorFreq = self.mapVals['larmorFreq'] # MHz
-        rfExAmp = self.mapVals['rfExAmp']
+        rfExFA = self.mapVals['rfExFA']/180*np.pi # rads
         rfExTime = self.mapVals['rfExTime'] # us
-        rfReAmp = self.mapVals['rfReAmp']
+        rfReFA = self.mapVals['rfReFA']/180*np.pi # rads
         rfReTime = self.mapVals['rfReTime'] # us
         repetitionTime = self.mapVals['repetitionTime']*1e3 # us
         bw = self.mapVals['bw']*1e-3 # MHz
         dF = self.mapVals['dF']*1e-6 # MHz
         shimming = np.array(self.mapVals['shimming'])*1e-4
+
+        # Calculate the excitation amplitude
+        rfExAmp = rfExFA/(rfExTime*hw.b1Efficiency)
+        rfReAmp = rfReFA/(rfReTime*hw.b1Efficiency)
 
         # Calculate acqTime and echoTime
         nPoints = int(bw/dF)
@@ -100,7 +102,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         # Initialize the experiment
         bw = nPoints / acqTime * hw.oversamplingFactor  # MHz
         samplingPeriod = 1 / bw  # us
-        self.expt = ex.Experiment(lo_freq=larmorFreq,
+        self.expt = ex.Experiment(lo_freq=hw.larmorFreq + freqOffset,
                                   rx_t=samplingPeriod,
                                   init_gpa=init_gpa,
                                   gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
@@ -132,22 +134,26 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         return 0
 
     def sequenceAnalysis(self, obj=''):
+        # Load data
         signal = self.results
         signal = np.reshape(signal, (-1))
         acqTime = self.mapVals['acqTime']*1e3 # ms
         bw = self.mapVals['bw'] # kHz
         nPoints = self.mapVals['nPoints']
-        larmorFreq = self.mapVals['larmorFreq']
+        freqOffset = self.mapVals['freqOffset']*1e-3 # MHz
 
+        # Generate time and frequency vectors and calcualte the signal spectrum
         tVector = np.linspace(-acqTime/2, acqTime/2, nPoints)
         fVector = np.linspace(-bw/2, bw/2, nPoints)
         spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal)))
         spectrum = np.reshape(spectrum, (-1))
 
+        # Get the central frequency
         idf = np.argmax(np.abs(spectrum))
         fCentral = fVector[idf]*1e-3
-        print('Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
-        self.mapVals['larmorFreqCal'] = larmorFreq + fCentral
+        hw.larmorFreq += fCentral+freqOffset
+        print('Larmor frequency: %1.5f MHz' %hw.larmorFreq)
+        self.mapVals['larmorFreq'] = hw.larmorFreq
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
 
@@ -167,7 +173,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                                           legend=[''],
                                           xLabel='Frequency (kHz)',
                                           yLabel='Spectrum amplitude (a.u.)',
-                                          title='Larmor frequency: %1.5f MHz' % (larmorFreq + fCentral))
+                                          title='Larmor frequency: %1.5f MHz' %hw.larmorFreq)
 
         # create self.out to run in iterative mode
         self.out = [signalPlotWidget, spectrumPlotWidget]

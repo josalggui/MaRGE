@@ -28,10 +28,14 @@ class Noise(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(Noise, self).__init__()
         # Input the parameters
+        self.rxChannel = None
+        self.nPoints = None
+        self.bw = None
+        self.freqOffset = None
         self.addParameter(key='seqName', string='NoiseInfo', val='Noise')
-        self.addParameter(key='larmorFreq', string='Central frequency (MHz)', val=3.00, field='RF')
+        self.addParameter(key='freqOffset', string='RF frequency offset (kHz)', val=0.0, field='RF')
         self.addParameter(key='nPoints', string='Number of points', val=2500, field='RF')
-        self.addParameter(key='bw', string='Acquision bandwidth (kHz)', val=50.0, field='RF')
+        self.addParameter(key='bw', string='Acquisition bandwidth (kHz)', val=50.0, field='RF')
         self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
 
     def sequenceInfo(self):
@@ -50,39 +54,40 @@ class Noise(blankSeq.MRIBLANKSEQ):
         init_gpa = False
         demo = False
 
-        # Create inputs parameters
-        seqName = self.mapVals['seqName']
-        larmorFreq = self.mapVals['larmorFreq'] # MHz
-        nPoints = self.mapVals['nPoints']
-        bw = self.mapVals['bw']*1e-3 # MHz
-        rxChannel = self.mapVals['rxChannel']
+        # Create the inputs automatically as class properties
+        for key in self.mapKeys:
+            setattr(self, key, self.mapVals[key])
 
+        # Fix units to MHz and us
+        self.freqOffset *= 1e-3 # MHz
+        self.bw *= 1e-3 # MHz
+        
         if demo:
-            dataR = np.random.randn(nPoints*hw.oversamplingFactor)
-            dataC = np.random.randn(nPoints*hw.oversamplingFactor)
+            dataR = np.random.randn(self.nPoints*hw.oversamplingFactor)
+            dataC = np.random.randn(self.nPoints*hw.oversamplingFactor)
             data = dataR+1j*dataC
             data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            acqTime = nPoints/bw
-            tVector = np.linspace(0, acqTime, num=nPoints) * 1e-3  # ms
+            acqTime = self.nPoints/self.bw
+            tVector = np.linspace(0, acqTime, num=self.nPoints) * 1e-3  # ms
             spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
-            fVector = np.linspace(-bw / 2, bw / 2, num=nPoints) * 1e3  # kHz
+            fVector = np.linspace(-self.bw / 2, self.bw / 2, num=self.nPoints) * 1e3  # kHz
             self.dataTime = [tVector, data]
             self.dataSpec = [fVector, spectrum]
         else:
-            bw = bw * hw.oversamplingFactor
-            samplingPeriod = 1 / bw
-            self.expt = ex.Experiment(lo_freq=larmorFreq,
+            self.bw = self.bw * hw.oversamplingFactor
+            samplingPeriod = 1 / self.bw
+            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset*1e-3,
                                       rx_t=samplingPeriod,
                                       init_gpa=init_gpa,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
                                       print_infos=False)
             samplingPeriod = self.expt.get_rx_ts()[0]
-            bw = 1/samplingPeriod/hw.oversamplingFactor
-            acqTime = nPoints/bw
+            self.bw = 1/samplingPeriod/hw.oversamplingFactor
+            acqTime = self.nPoints/self.bw
 
             # SEQUENCE
             self.iniSequence(20, np.array((0, 0, 0)))
-            self.rxGate(20, acqTime, rxChannel=rxChannel)
+            self.rxGate(20, acqTime, rxChannel=self.rxChannel)
             self.endSequence(acqTime+40)
 
             if plotSeq == 0:
@@ -90,11 +95,11 @@ class Noise(blankSeq.MRIBLANKSEQ):
                 rxd, msgs = self.expt.run()
                 t1 = time.time()
                 print('Noise run time = %f s' %(t1-t0))
-                data = sig.decimate(rxd['rx%i'%rxChannel]*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+                data = sig.decimate(rxd['rx%i'%self.rxChannel]*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
                 self.mapVals['data'] = data
-                tVector = np.linspace(0, acqTime, num=nPoints) * 1e-3  # ms
+                tVector = np.linspace(0, acqTime, num=self.nPoints) * 1e-3  # ms
                 spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
-                fVector = np.linspace(-bw / 2, bw / 2, num=nPoints) * 1e3  # kHz
+                fVector = np.linspace(-self.bw / 2, self.bw / 2, num=self.nPoints) * 1e3  # kHz
                 self.dataTime = [tVector, data]
                 self.dataSpec = [fVector, spectrum]
             self.expt.__del__()

@@ -151,7 +151,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
     def copyBitStream(self):
         os.system('ssh root@192.168.1.101 "killall marcos_server"')
-        os.system('..\PhysioMRI_GUI\copy_bitstream.sh 192.168.1.101 rp-122')
+        os.system('../marcos_extras/copy_bitstream.sh 192.168.1.101 rp-122')
 
     def initRedPitaya(self):
         if platform.system() == 'Windows':
@@ -231,23 +231,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             worker = Worker(self.repeatAcquisition)  # Any other args, kwargs are passed to the run function
             # Execute in a parallel thread
             self.threadpool.start(worker)
-            if not self.plot1d:
-                # Delete previous plots
-                self.clearPlotviewLayout()
-
-                # Create label with rawdata name
-                self.label = QLabel()
-                self.label.setAlignment(QtCore.Qt.AlignCenter)
-                self.label.setStyleSheet("background-color: black;color: white")
-                self.plotview_layout.addWidget(self.label)
-
-                # Set name to the label
-                fileName = defaultsequences[self.seqName].mapVals['fileName']
-                self.label.setText(fileName)
-
-                # Add plots to the plotview_layout
-                for item in self.newOut:
-                    self.plotview_layout.addWidget(item)
 
     def repeatAcquisition(self):
         # If single repetition, set iterativeRun True for one step
@@ -268,7 +251,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
             # Update lines in plots of the plotview_layout
             if hasattr(defaultsequences[self.seqName], 'out'):
-                self.plot1d = True
                 for plotIndex in range(len(self.newOut)):
                     # update curves
                     oldCurves = self.oldOut[plotIndex].plotitem.listDataItems()
@@ -280,8 +262,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                     # set new title to plot
                     # newText = self.newOut[plotIndex].plotitem.titleLabel.text
                     # newText = self.newOut[plotIndex].plotitem.getTitle()
-            else:
-                self.plot1d = False
 
             # Stop repetitions if single acquision
             if singleRepetition: self.iterativeRun = False
@@ -378,7 +358,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         larmorSeq = defaultsequences['Larmor']
         larmorSeq.sequenceRun()
         outLarmor = larmorSeq.sequenceAnalysis()
-        hw.larmorFreq = larmorSeq.mapVals['larmorFreqCal']
         for seq in defaultsequences:
             defaultsequences[seq].mapVals['larmorFreq'] = hw.larmorFreq
 
@@ -402,7 +381,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         # Add plots to the plotview_layout
         item = outLarmor[1]
-        selfplotview_layout.addWidget(item)
+        self.plotview_layout.addWidget(item)
 
         # Noise
         # Create label with rawdata name

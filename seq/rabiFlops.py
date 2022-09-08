@@ -20,7 +20,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # Input the parameters
         self.addParameter(key='seqName', string='RabiFlopsInfo', val='RabiFlops')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
+        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
         self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=0.0, field='RF')
@@ -71,7 +71,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # I do not understand why I cannot create the input parameters automatically
         seqName = self.mapVals['seqName']
         nScans = self.mapVals['nScans']
-        larmorFreq = self.mapVals['larmorFreq']
+        freqOffset = self.mapVals['freqOffset']
         rfExAmp = self.mapVals['rfExAmp']
         rfReAmp = self.mapVals['rfReAmp']
         echoTime = self.mapVals['echoTime']
@@ -88,7 +88,8 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         rfReTime = self.mapVals['rfReTime']
         dummyPulses = self.mapVals['dummyPulses']
 
-        # Time variables in us
+        # Time variables in us and MHz
+        freqOffset *= 1e-3
         echoTime *= 1e3
         repetitionTime *= 1e3
         acqTime *= 1e3
@@ -145,8 +146,12 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # Create experiment
         bw = nPoints/acqTime*hw.oversamplingFactor # MHz
         samplingPeriod = 1/bw
-        self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa,
-                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1), print_infos=False)
+        self.expt = ex.Experiment(lo_freq=hw.larmorFreq + freqOffset,
+                                  rx_t=samplingPeriod,
+                                  init_gpa=init_gpa,
+                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                                  print_infos=False,
+                                  )
         samplingPeriod = self.expt.get_rx_ts()[0]
         bw = 1 / samplingPeriod / hw.oversamplingFactor
         self.mapVals['bw'] = bw * 1e6
@@ -193,9 +198,10 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
             d = np.abs(rabiFID[n])-np.abs(rabiFID[n-1])
             n += 1
             if d<0: test = False
-        piHalfTime = timeVector[n-1]*1e6
+        piHalfTime = timeVector[n-1]*1e6 # us
         self.mapVals['piHalfTime'] = piHalfTime
         print("pi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us"%(self.mapVals['rfExAmp'], self.mapVals['piHalfTime']))
+        hw.b1Efficiency = np.pi/2/(self.mapVals['rfExAmp']*piHalfTime)
 
         self.saveRawData()
 
