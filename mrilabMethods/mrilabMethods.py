@@ -272,6 +272,25 @@ def gradTrapMomentum(expt, tStart, kMax, gTotalTime, gAxis, shimming, rewrite=Tr
 ##############################################################
 ##############################################################
 ##############################################################
+
+    def setGradientRamp(self, tStart, gradRiseTime, nStepsGradRise, g0, gf, gAxes, shimming, rewrite=True):
+        tRamp = np.zeros(nStepsGradRise)
+        gAmp = np.zeros(nStepsGradRise)
+        for kk in range(nStepsGradRise):
+            tRamp[kk] = tStart + gradRiseTime * kk / nStepsGradRise
+            gAmp[kk] = (g0 + ((gf - g0) * (kk + 1) / nStepsGradRise)) / hw.gFactor[gAxes]
+
+            if gAxes == 0:
+                self.expt.add_flodict({'grad_vx': (tRamp[kk], gAmp[kk] + shimming[0])}, rewrite)
+            elif gAxes == 1:
+                self.expt.add_flodict({'grad_vy': (tRamp[kk], gAmp[kk] + shimming[1])}, rewrite)
+            elif gAxes == 2:
+                self.expt.add_flodict({'grad_vz': (tRamp[kk], gAmp[kk] + shimming[2])}, rewrite)
+
+##############################################################
+##############################################################
+##############################################################
+
 def gradTrapAmplitude(expt, tStart, gAmplitude, gTotalTime, gAxis, shimming, orders,  rewrite=True):
     """"
     @author: T. Guallart-Naval, MRILab, Tesoro Imaging S.L., Valencia, Spain
