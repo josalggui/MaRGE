@@ -379,13 +379,13 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                 overData = np.average(overData, axis=1)
                 dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
                 RadialSampledPointsRaw = dataFull[0:(nPPL + addRdPoints) * gradientVectors1.shape[0]]
-                RadialSampledPointsReshaped = np.reshape(RadialSampledPointsRaw, (nPPL+addRdPoints, gradientVectors1.shape[0]))
-                RadialSampledPointsFilt = np.delete(RadialSampledPointsReshaped, np.s_[0:addRdPoints], axis=0)
+                RadialSampledPointsReshaped = np.reshape(RadialSampledPointsRaw, (gradientVectors1.shape[0], nPPL+addRdPoints))
+                RadialSampledPointsFilt = np.delete(RadialSampledPointsReshaped, np.s_[0:addRdPoints], axis=1)
                 RadialSampledList = np.reshape(RadialSampledPointsFilt, (nPPL*gradientVectors1.shape[0], 1))
 
                 CartesianSampledPointsRaw = dataFull[(nPPL + addRdPoints) * gradientVectors1.shape[0]:dataFull.shape[0]]
-                CartesianSampledPointsReshaped = np.reshape(CartesianSampledPointsRaw, (1 + addRdPoints, gradientVectors2.shape[0]))
-                CartesianSampledPointsFilt = np.delete(CartesianSampledPointsReshaped, np.s_[0:addRdPoints], axis=0)
+                CartesianSampledPointsReshaped = np.reshape(CartesianSampledPointsRaw, (gradientVectors2.shape[0], 1 + addRdPoints))
+                CartesianSampledPointsFilt = np.delete(CartesianSampledPointsReshaped, np.s_[0:addRdPoints], axis=1)
                 CartesianSampledList = np.reshape(CartesianSampledPointsFilt, (1*gradientVectors2.shape[0], 1))
 
                 signalPoints = np.concatenate((RadialSampledList, CartesianSampledList), axis=0)
