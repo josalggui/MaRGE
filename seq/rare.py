@@ -24,6 +24,7 @@ import configs.hw_config as hw # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 from plotview.spectrumplot import SpectrumPlot # To plot nice 1d images
 from plotview.spectrumplot import Spectrum3DPlot # To show nice 2d or 3d images
+import pyqtgraph as pg
 
 #*********************************************************************************
 #*********************************************************************************
@@ -46,11 +47,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., field='SEQ')
         self.addParameter(key='fov', string='FOV (cm)', val=[15.0, 15.0, 15.0], field='IM')
         self.addParameter(key='dfov', string='dFOV (mm)', val=[0.0, 0.0, 0.0], field='IM')
-        self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[30, 30, 30], field='IM')
+        self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[30, 1, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
         self.addParameter(key='axes', string='Axes', val=[0, 1, 2], field='IM')
-        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 1], field='IM')
+        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 0, 0], field='IM')
         self.addParameter(key='sweepMode', string='Sweep mode, 0->k20, 1->02k, 2->k2k', val=1, field='SEQ')
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, field='OTH')
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, field='OTH')
@@ -62,14 +63,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH')
         self.addParameter(key='freqCal', string='Calibrate frequency (0 or 1)', val=1, field='OTH')
 
-
     def sequenceInfo(self):
         print(" ")
         print("3D RARE sequence")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
@@ -92,7 +91,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
         seqTime = nPoints[1]/etl*nPoints[2]*repetitionTime*1e-3*nScans*parFourierFraction/60
         seqTime = np.round(seqTime, decimals=1)
         return(seqTime)  # minutes, scanTime
-
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa=False # Starts the gpa
@@ -596,6 +594,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                       ['Magnitude', 'Real', 'Imaginary'],
                                       'Time (ms)', "Signal amplitude (mV)",
                                       "%s Signal" % self.mapVals['fileName'])
+            if obj=="Standalone":
+                f_plotview.show()
+                t_plotview.show()
+                pg.exec()
             return([t_plotview, f_plotview])
         else:
             # Plot image
@@ -619,9 +621,13 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                         xLabel="k%s" % axesStr[1],
                                         yLabel="k%s" % axesStr[0])
             kSpaceWidget = kSpace.getImageWidget()
-
+            if obj=="Standalone":
+                imageWidget.show()
+                kSpaceWidget.show()
+                pg.exec()
             return([imageWidget, kSpaceWidget])
 
 if __name__=="__main__":
     seq = RARE()
     seq.sequenceRun()
+    seq.sequenceAnalysis(obj='Standalone')

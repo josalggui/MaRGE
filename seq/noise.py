@@ -131,31 +131,18 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.out = [timePlotWidget, freqPlotWidget]
 
         if obj=='Standalone':
-            win = pg.GraphicsLayoutWidget(show=True)
-            win.setWindowTitle(self.mapVals['fileName'])
-            p1 = win.addPlot(title='Time domain, rms noise: %1.3f mV' %noiserms)
-            p1.addLegend()
-            p1.plot(self.dataTime[0], np.abs(self.dataTime[1]), pen=[255, 0, 0], name="Abs")
-            p1.plot(self.dataTime[0], np.real(self.dataTime[1]), pen=[0, 255, 0], name="Real")
-            p1.plot(self.dataTime[0], np.imag(self.dataTime[1]), pen=[0, 0, 255], name="Imag")
-            p1.setLabel('left', 'Signal amplitude (mV)')
-            p1.setLabel('bottom', 'Time (ms)')
-
-            p2 = win.addPlot(title='Frequency domain')
-            p2.plot(self.dataSpec[0], np.abs(self.dataSpec[1]))
-            p2.setLabel('left', 'Mag FFT (a.u.)')
-            p2.setLabel('bottom', 'Frequency (kHz)')
-
+            timePlotWidget.show()
+            freqPlotWidget.show()
             pg.exec()
 
         return (self.out)
 
 
 if __name__=='__main__':
-    # seq = Noise()
-    # seq.sequenceRun()
-    # seq.sequenceAnalysis(obj='Standalone')
+    seq = Noise()
+    seq.sequenceRun()
+    seq.sequenceAnalysis(obj='Standalone')
 
-    import pyqtgraph.examples
-    pyqtgraph.examples.run()
+    # import pyqtgraph.examples
+    # pyqtgraph.examples.run()
 

@@ -4,12 +4,25 @@
 @email: josalggui@i3m.upv.es
 """
 
+import os
+import sys
+#*****************************************************************************
+# Add path to the working directory
+path = os.path.realpath(__file__)
+ii = 0
+for char in path:
+    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
+        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
+        sys.path.append(path[0:ii+1]+'marcos_client')
+    ii += 1
+#******************************************************************************
 import experiment as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
+import pyqtgraph as pg
 
 class ShimmingSweep(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -165,9 +178,11 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         print("Shimming Z = %0.1f" % (sz*1e4))
 
         # Update the shimming in hw_config
-        if obj is not "standalone":
+        if obj != "standalone":
             for seqName in self.sequenceList:
-                self.sequenceList[seqName].mapVals['shimming'] = [sx*1e4, sy*1e4, sz*1e4]
+                self.sequenceList[seqName].mapVals['shimming'] = [np.round(sx*1e4, decimals=1),
+                                                                  np.round(sy*1e4, decimals=1),
+                                                                  np.round(sz*1e4, decimals=1)]
 
         self.saveRawData()
 
@@ -193,4 +208,15 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                                    yLabel='Spectrum amplitude',
                                    title='Shimming Z')
 
+        if obj=="Standalone":
+            plotXWidget.show()
+            plotYWidget.show()
+            plotZWidget.show()
+            pg.show()
+
         return([plotXWidget, plotYWidget, plotZWidget])
+
+if __name__ == '__main__':
+    seq = ShimmingSweep()
+    seq.sequenceRun()
+    seq.sequenceAnalysis(obj='Standalone')

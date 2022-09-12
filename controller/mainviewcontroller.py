@@ -48,6 +48,9 @@ from seq.localizer import Localizer
 from controller.batchcontroller import BatchController                                              # Batches
 from controller.sequencecontroller import SequenceList                                              # Sequence list
 
+# Stylesheets
+import qdarkstyle
+
 MainWindow_Form, MainWindow_Base = loadUiType('ui/mainview.ui')
 
 class MainViewController(MainWindow_Form, MainWindow_Base):
@@ -56,7 +59,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     """
     onSequenceChanged = pyqtSignal(str)
     iterativeRun = False
-    plot1d = False
+    marcosServer = False
 
     def __init__(self, session, parent=None):
         super(MainViewController, self).__init__(parent)
@@ -66,8 +69,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.setupUi(self)
 
         # Set the style
-        self.styleSheet = style.breezeLight
-        self.setupStylesheet(self.styleSheet)
+        # self.styleSheet = style.breezeLight
+        # self.setupStylesheet(self.styleSheet)
+        self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
+        self.setStyleSheet(self.styleSheet)
         
         # Initialisation of sequence list
         self.session = session
@@ -110,6 +115,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_XNATupload.triggered.connect(self.xnat)
         self.action_run_localizer.triggered.connect(self.startLocalizer)
         self.action_iterate.triggered.connect(self.iterate)
+        self.action_server.triggered.connect(self.controlMarcosServer)
+        self.action_copybitstream.triggered.connect(self.copyBitStream)
 
         # Menu Actions
         self.actionLarmor.triggered.connect(self.runLarmor)
@@ -128,8 +135,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.actionRARE_3D_T1.triggered.connect(self.protocoleRARE3DT1)
         self.actionInit_Red_Pitaya.triggered.connect(self.initRedPitaya)
         self.actionCopybitstream.triggered.connect(self.copyBitStream)
-        self.actionInit_marcos_server.triggered.connect(self.initMarcosServer)
-        self.actionClose_marcos_server.triggered.connect(self.closeMarcosServer)
+        self.actionInit_marcos_server.triggered.connect(self.controlMarcosServer)
+        self.actionClose_marcos_server.triggered.connect(self.controlMarcosServer)
 
         # Update the sequence parameters shown in the gui
         self.seqName = self.sequencelist.getCurrentSequence()
@@ -138,39 +145,70 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Show the gui maximized
         # self.showMaximized()
 
-    def closeMarcosServer(self):
-        os.system('ssh root@192.168.1.101 "killall marcos_server"')
+    def controlMarcosServer(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: connect to marcos_server
+        """
+        if self.marcosServer:
+            self.marcosServer = False
+            self.action_server.setIcon(
+                QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/server-light.png'))
+            self.action_server.setToolTip('Close marcos server')
+            self.action_server.setText('Close marcos server')
+            os.system('ssh root@192.168.1.101 "killall marcos_server"')
+            print("\n Server disconnected.")
+        else:
+            self.marcosServer = True
+            self.action_server.setIcon(
+                QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/server-dark.png'))
+            self.action_server.setToolTip('Connect to marcos server')
+            self.action_server.setText('Connect to marcos server')
+            if platform.system() == 'Windows':
+                os.system('ssh root@192.168.1.101 "killall marcos_server"')
+                os.system('start ssh root@192.168.1.101 "~/marcos_server"')
+            elif platform.system() == 'Linux':
+                os.system('ssh root@192.168.1.101 "killall marcos_server"')
+                os.system('ssh root@192.168.1.101 "~/marcos_server" &')
+            print("\n Server connected.")
 
-    def initMarcosServer(self):
-        if platform.system() == 'Windows':
-            os.system('ssh root@192.168.1.101 "killall marcos_server"')
-            os.system('start ssh root@192.168.1.101 "~/marcos_server"')
-        elif platform.system() == 'Linux':
-            os.system('ssh root@192.168.1.101 "killall marcos_server"')
-            os.system('ssh root@192.168.1.101 "~/marcos_server" &')
 
     def copyBitStream(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: execute copy_bitstream.sh
+        """
         os.system('ssh root@192.168.1.101 "killall marcos_server"')
         if platform.system() == 'Windows':
             os.system('..\marcos_extras\copy_bitstream.sh 192.168.1.101 rp-122')
         elif platform.system() == 'Linux':
             os.system('../marcos_extras/copy_bitstream.sh 192.168.1.101 rp-122')
+        print("\n MaRCoS updated")
 
     def initRedPitaya(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: execute startRP.sh: copy_bitstream.sh & marcos_server
+        """
         if platform.system() == 'Windows':
             os.system('ssh root@192.168.1.101 "killall marcos_server"')
             os.system('start startRP.sh')
         elif platform.system() == 'Linux':
             os.system('ssh root@192.168.1.101 "killall marcos_server"')
             os.system('./startRP.sh &')
+        print("\n MaRCoS updated and server connected.")
+        print("Check the terminal for errors")
+        print("If there are: 1) do 'Copybitstream', 2) do 'Init marcos server'")
 
     def startAcquisition(self, seqName=None):
-        #     """
-        #     @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        #     @email: josalggui@i3m.upv.es
-        #     @Summary: run selected sequence
-        #     """
-
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: run selected sequence
+        """
         # Load sequence name
         if seqName == None or seqName == False:
             self.seqName = self.sequencelist.getCurrentSequence()
@@ -236,6 +274,11 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.threadpool.start(worker)
 
     def repeatAcquisition(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: executed when you repeat some of the calibration sequences
+        """
         # If single repetition, set iterativeRun True for one step
         singleRepetition = not copy.copy(self.iterativeRun)
         if singleRepetition: self.iterativeRun = True
@@ -270,6 +313,11 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             if singleRepetition: self.iterativeRun = False
 
     def iterate(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: swtich the iterative mode
+        """
         if self.iterativeRun == False:
             self.iterativeRun = True
             self.action_iterate.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/media-fast-forward-outline.svg') )
@@ -471,7 +519,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         @return:
         """
         if self.styleSheet is style.breezeDark:
-            self.setupStylesheet(style.breezeLight)
+            self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
         else:
             self.setupStylesheet(style.breezeDark)
 

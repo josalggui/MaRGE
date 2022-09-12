@@ -36,6 +36,7 @@ class Localizer(rare.RARE):
         self.mapVals['axesEnable'] = [1, 1, 0]
         nSL = self.mapVals['nPoints'][2]
         self.mapVals['nPoints'][2] = 1
+        self.mapVals['freqCal'] = 0
 
         # Run first projection localizer
         self.mapVals['axes'] = [0, 1, 2]

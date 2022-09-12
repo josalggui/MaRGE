@@ -433,6 +433,8 @@
     <bool>false</bool>
    </attribute>
    <addaction name="action_gpaInit"/>
+   <addaction name="action_copybitstream"/>
+   <addaction name="action_server"/>
    <addaction name="action_autocalibration"/>
    <addaction name="action_run_localizer"/>
    <addaction name="action_XNATupload"/>
@@ -525,7 +527,7 @@
   <action name="action_viewsequence">
    <property name="icon">
     <iconset>
-     <normaloff>../resources/icons/chart-bar-outline.svg</normaloff>../resources/icons/chart-bar-outline.svg</iconset>
+     <normaloff>../resources/icons/plotSequence.png</normaloff>../resources/icons/plotSequence.png</iconset>
    </property>
    <property name="text">
     <string>action_viewsequence</string>
@@ -537,7 +539,7 @@
   <action name="action_gpaInit">
    <property name="icon">
     <iconset>
-     <normaloff>../resources/icons/key.svg</normaloff>../resources/icons/key.svg</iconset>
+     <normaloff>../resources/icons/initGPA.png</normaloff>../resources/icons/initGPA.png</iconset>
    </property>
    <property name="text">
     <string>GPA Initialization</string>
@@ -561,7 +563,7 @@
   <action name="action_XNATupload">
    <property name="icon">
     <iconset>
-     <normaloff>../resources/icons/upload-outline.svg</normaloff>../resources/icons/upload-outline.svg</iconset>
+     <normaloff>../resources/icons/upload.png</normaloff>../resources/icons/upload.png</iconset>
    </property>
    <property name="text">
     <string>XNAT_upload</string>
@@ -597,7 +599,7 @@
   <action name="action_run_localizer">
    <property name="icon">
     <iconset>
-     <normaloff>../resources/icons/location-outline.svg</normaloff>../resources/icons/location-outline.svg</iconset>
+     <normaloff>../resources/icons/localizer-light.png</normaloff>../resources/icons/localizer-light.png</iconset>
    </property>
    <property name="text">
     <string>Localizer</string>
@@ -609,7 +611,7 @@
   <action name="action_autocalibration">
    <property name="icon">
     <iconset>
-     <normaloff>../resources/icons/compass.svg</normaloff>../resources/icons/compass.svg</iconset>
+     <normaloff>../resources/icons/calibration-light.png</normaloff>../resources/icons/calibration-light.png</iconset>
    </property>
    <property name="text">
     <string>Autocalibration</string>
@@ -715,14 +717,39 @@
     <string>Close marcos server</string>
    </property>
   </action>
-  <action name="actionCopybitstream_and_init_marcos_server">
+  <action name="actionInit_Red_Pitaya">
    <property name="text">
     <string>Init Red Pitaya</string>
    </property>
   </action>
-  <action name="actionInit_Red_Pitaya">
+  <action name="action_server">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/server-light.png</normaloff>../resources/icons/server-light.png</iconset>
+   </property>
    <property name="text">
-    <string>Init Red Pitaya</string>
+    <string>Server</string>
+   </property>
+   <property name="toolTip">
+    <string>Connect to marcos sever</string>
+   </property>
+   <property name="font">
+    <font/>
+   </property>
+  </action>
+  <action name="action_copybitstream">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/M.png</normaloff>../resources/icons/M.png</iconset>
+   </property>
+   <property name="text">
+    <string>copybitstream</string>
+   </property>
+   <property name="toolTip">
+    <string>Install last version of MaRCoS</string>
    </property>
   </action>
  </widget>
