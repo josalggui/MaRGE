@@ -1,0 +1,3 @@
+seqName,nScans,larmorFreq,rfExAmp,rfReAmp,rfExTime,rfReTime,echoTime,repetitionTime,nPoints,acqTime,shimming,crusherAmp,crusherTime,crusherDelay,tInv0,tInv1,nSteps
+InverionRecoveryInfo,Number of scans,Larmor frequency (MHz),RF excitation amplitude (a.u.),RF refocusing amplitude (a.u.),RF excitation time (us),RF refocusing time (us),Echo time (ms),Repetition time (ms),nPoints,Acquisition time (ms),Shimming (*1e4),Crusher grad amp (mT/m),Crusher grad time (us),Crusher grad delay (us),"Inversion time, Start (ms)","Inversion time, End (ms)",Number of steps
+InversionRecovery,1,3.08,0.3,0.3,30.0,60.0,10.0,2000.0,60,4.0,"[-70, -90, 10]",5.0,100.0,0.0,50.0,1000.0,10

@@ -1,0 +1,3 @@
+seqName,freqOffset,nPoints,bw,rxChannel
+NoiseInfo,RF frequency offset (kHz),Number of points,Acquisition bandwidth (kHz),Rx channel
+Noise,0.0,2500,40.0,1

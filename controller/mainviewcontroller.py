@@ -39,6 +39,7 @@ from worker import Worker
 st = pdb.set_trace
 import copy
 import configs.hw_config as hw
+import bm4d
 
 # Import sequences
 from seq.sequences import defaultsequences
@@ -119,24 +120,27 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.action_copybitstream.triggered.connect(self.copyBitStream)
 
         # Menu Actions
+        self.actionLoad_parameters.triggered.connect(self.load_parameters)
+        self.actionSave_parameters.triggered.connect(self.save_parameters)
+        self.actionSave_as_quick_calibration.triggered.connect(self.save_parameters_calibration)
+        self.actionRun_sequence.triggered.connect(self.startAcquisition)
+        self.actionPlot_sequence.triggered.connect(self.startSequencePlot)
+        self.actionInit_GPA.triggered.connect(self.initgpa)
+        self.actionNew_sesion.triggered.connect(self.change_session)
+        self.actionInit_Red_Pitaya.triggered.connect(self.initRedPitaya)
+        self.actionCopybitstream.triggered.connect(self.copyBitStream)
+        self.actionInit_marcos_server.triggered.connect(self.controlMarcosServer)
+        self.actionClose_marcos_server.triggered.connect(self.controlMarcosServer)
+        # Calibration
+        self.actionLocalizer.triggered.connect(self.startLocalizer)
         self.actionLarmor.triggered.connect(self.runLarmor)
         self.actionNoise.triggered.connect(self.runNoise)
         self.actionRabi_Flop.triggered.connect(self.runRabiFlop)
         self.actionCPMG.triggered.connect(self.runCPMG)
         self.actionInversion_Recovery.triggered.connect(self.runInversionRecovery)
         self.actionAutocalibration.triggered.connect(self.autocalibration)
-        self.actionLoad_parameters.triggered.connect(self.load_parameters)
-        self.actionSave_parameters.triggered.connect(self.save_parameters)
-        self.actionRun_sequence.triggered.connect(self.startAcquisition)
-        self.actionPlot_sequence.triggered.connect(self.startSequencePlot)
-        self.actionInit_GPA.triggered.connect(self.initgpa)
-        self.actionLocalizer.triggered.connect(self.startLocalizer)
-        self.actionNew_sesion.triggered.connect(self.change_session)
+        # Protocoles
         self.actionRARE_3D_T1.triggered.connect(self.protocoleRARE3DT1)
-        self.actionInit_Red_Pitaya.triggered.connect(self.initRedPitaya)
-        self.actionCopybitstream.triggered.connect(self.copyBitStream)
-        self.actionInit_marcos_server.triggered.connect(self.controlMarcosServer)
-        self.actionClose_marcos_server.triggered.connect(self.controlMarcosServer)
 
         # Update the sequence parameters shown in the gui
         self.seqName = self.sequencelist.getCurrentSequence()
@@ -374,7 +378,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         localizer = Localizer()
 
         # Load default parameters
-        localizer.loadParams()
+        localizer.loadParams(directory="calibration")
         localizer.mapVals['seqName'] = 'Localizer'
         localizer.mapNmspc['seqName'] = 'LocalizerInfo'
         localizer.saveParams()
@@ -409,6 +413,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         larmorSeq = defaultsequences['Larmor']
         larmorSeq.sequenceRun()
         outLarmor = larmorSeq.sequenceAnalysis()
+        delattr(larmorSeq, 'out')
         for seq in defaultsequences:
             defaultsequences[seq].mapVals['larmorFreq'] = hw.larmorFreq
 
@@ -416,11 +421,13 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         noiseSeq = defaultsequences['Noise']
         noiseSeq.sequenceRun()
         outNoise = noiseSeq.sequenceAnalysis()
+        delattr(noiseSeq, 'out')
 
         # Get Rabi flops
         rabiSeq = defaultsequences['RabiFlops']
         rabiSeq.sequenceRun()
         outRabi = rabiSeq.sequenceAnalysis()
+        delattr(rabiSeq, 'out')
 
         # Spectrum
         # Create label with rawdata name
@@ -462,7 +469,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
     def protocoleRARE3DT1(self):
         # Load parameters
-        defaultsequences['RARE'].loadParams(directory='experiments/protocoles', file='RARE_3D_T1_csv')
+        defaultsequences['RARE'].loadParams(directory='protocoles', file='RARE_3D_T1_csv')
 
         # Set larmor frequency to the value into the hw_config file
         defaultsequences['RARE'].mapVals['larmorFreq'] = hw.larmorFreq
@@ -470,18 +477,23 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.startAcquisition(seqName='RARE')
 
     def runLarmor(self):
+        defaultsequences['Larmor'].loadParams(directory="calibration")
         self.startAcquisition(seqName="Larmor")
 
     def runNoise(self):
+        defaultsequences['Noise'].loadParams(directory="calibration")
         self.startAcquisition(seqName="Noise")
 
     def runRabiFlop(self):
+        defaultsequences['RabiFlops'].loadParams(directory="calibration")
         self.startAcquisition(seqName="RabiFlops")
 
     def runCPMG(self):
+        defaultsequences['CPMG'].loadParams(directory="calibration")
         self.startAcquisition(seqName="CPMG")
 
     def runInversionRecovery(self):
+        defaultsequences['InversionRecovery'].loadParams(directory="calibration")
         self.startAcquisition(seqName="InversionRecovery")
 
     def lines_that_start_with(self, str, f):
@@ -705,8 +717,22 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.onSequenceChanged.emit(self.sequence)
         self.messages("Parameters of %s sequence loaded" %(self.sequence))
 
+    def save_parameters_calibration(self):
+        seq = defaultsequences[self.sequence]
+
+        # Save csv with input parameters
+        with open('calibration/%s_last_parameters.csv' % seq.mapVals['seqName'], 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=seq.mapKeys)
+            writer.writeheader()
+            mapVals = {}
+            for key in seq.mapKeys:  # take only the inputs from mapVals
+                mapVals[key] = seq.mapVals[key]
+            writer.writerows([seq.mapNmspc, mapVals])
+
+        # self.messages("Parameters of %s sequence saved" % (self.sequence))
+        print("\n Parameters of %s sequence saved" %(self.sequence))
+
     def save_parameters(self):
-        
         dt = datetime.now()
         dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
         seq = defaultsequences[self.sequence]
@@ -722,7 +748,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                 mapVals[key] = seq.mapVals[key]
             writer.writerows([seq.mapNmspc, mapVals])
 
-        self.messages("Parameters of %s sequence saved" %(self.sequence))
+        # self.messages("Parameters of %s sequence saved" %(self.sequence))
+        print("\n Parameters of %s sequence saved" %(self.sequence))
         
     def plot_sequence(self):
         
@@ -732,8 +759,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         defaultsequences[self.seqName].sequenceRun(plotSeq=plotSeq)
         
     def messages(self, text):
-        
-        msg = QMessageBox()
+        msg = QtWarningMsg()
+        # msg = QMessageBox()
         msg.setIcon(QMessageBox.Information)
         msg.setText(text)
         msg.exec();
@@ -779,10 +806,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         @Summary: show the initial figure
         """
         logo = imageio.imread("resources/images/logo.png")
-        logo = np.flipud(logo)
+        # logo = np.flipud(logo)
         self.clearPlotviewLayout()
         welcome = Spectrum3DPlot(logo.transpose([1, 0, 2]),
-                                 title='Institute for Instrimentation in Molecular Imaging (i3M)')
+                                 title='Institute for Instrumentation in Molecular Imaging (i3M)')
         welcome.hideAxis('bottom')
         welcome.hideAxis('left')
         welcome.showHistogram(False)

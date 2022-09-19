@@ -170,6 +170,7 @@ class MRIBLANKSEQ:
                         self.mapVals[key] = inputNum
         except:
             self.mapVals = self.mapVals
+            print("\n Warning: no loaded parameters")
 
     def resetMapVals(self):
         """"

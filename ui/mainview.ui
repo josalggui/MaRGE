@@ -387,9 +387,9 @@
     </property>
     <addaction name="actionLoad_parameters"/>
     <addaction name="actionSave_parameters"/>
+    <addaction name="actionSave_as_quick_calibration"/>
     <addaction name="actionRun_sequence"/>
     <addaction name="actionPlot_sequence"/>
-    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuSesion">
     <property name="title">
@@ -750,6 +750,16 @@
    </property>
    <property name="toolTip">
     <string>Install last version of MaRCoS</string>
+   </property>
+  </action>
+  <action name="actionSave_parameters_to_calibration">
+   <property name="text">
+    <string>Save parameters to calibration</string>
+   </property>
+  </action>
+  <action name="actionSave_as_quick_calibration">
+   <property name="text">
+    <string>Save as quick calibration</string>
    </property>
   </action>
  </widget>

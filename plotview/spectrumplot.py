@@ -210,7 +210,7 @@ class ImageViewer(pg.ImageView):
         super(ImageViewer, self).__init__(parent=parent, name=name, view=view, imageItem=imageItem,
                  levelMode=levelMode, *args)
         self.textitem = textitem
-        self.view.invertY(False)
+        # self.view.invertY(False)
 
     def roiChanged(self):
         # Extract image data from ROI

@@ -77,7 +77,5 @@ defaultsequences = {
     'CPMG': CPMG(),
     'InversionRecovery': IR(),
     'Shimming': Shimming(),
-    'SliceSelection': SliceSelection(),
-    'FOV': FOV(),
     'SWEEP': SWEEP(),
 }

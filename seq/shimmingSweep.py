@@ -191,14 +191,14 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                                    yData=[np.abs(dataFFT[0, :])],
                                    legend=[''],
                                    xLabel='Shimming X',
-                                   yLabel='Spectrum amplitude (mV)',
+                                   yLabel='Spectrum amplitude',
                                    title='Shimming X')
 
         plotYWidget = SpectrumPlot(xData=syVector * 1e4,
                                    yData=[np.abs(dataFFT[1, :])],
                                    legend=[''],
                                    xLabel='Shimming Y',
-                                   yLabel='Spectrum amplitude (mV)',
+                                   yLabel='Spectrum amplitude',
                                    title='Shimming Y')
 
         plotZWidget = SpectrumPlot(xData=szVector * 1e4,

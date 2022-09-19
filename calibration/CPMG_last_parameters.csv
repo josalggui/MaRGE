@@ -1,0 +1,3 @@
+seqName,nScans,larmorFreq,rfExAmp,rfReAmp,rfExTime,rfReTime,echoSpacing,repetitionTime,nPoints,etl,acqTime,shimming
+CPMGInfo,Number of scans,Larmor frequency (MHz),RF excitation amplitude (a.u.),RF refocusing amplitude (a.u.),RF excitation time (us),RF refocusing time (us),Echo spacing (ms),Repetition time (ms),nPoints,Echo train length,Acquisition time (ms),Shimming (*1e4)
+CPMG,1,3.08,0.3,0.3,30.0,60.0,10.0,1000.0,60,50,2.0,"[-70, -90, 10]"

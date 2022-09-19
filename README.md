@@ -213,6 +213,10 @@ When downloading the GUI by the first time, the file name is *hw_config.py.copy*
 The filename needs to be properly modified according to your hardware and renamed before to run the GUI.
 - *globalFunctions.py*: script with multiple functions that can be used globally.
 
+### `protocols` folder
+
+This folder contains the parameter files (in csv format) to be used as protocols.
+
 ### `experiments` folder
 
 The results of the experiments are stored in this file. There are three folders inside:
@@ -226,7 +230,6 @@ The output of the scanner is stored inside, which is:
 - *parameterization*: folder that contains:
   - the sequence last parameters in csv format
   - csv file generated when you click the *Save the parameters of a sequence to a file* icon in the GUI main window.
-- *protocols*: folder that contains the parameter files (in csv format) to be used as protocols.
 
 ### `resources` folder
 
