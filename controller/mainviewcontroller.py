@@ -62,7 +62,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     iterativeRun = False
     marcosServer = False
 
-    def __init__(self, session, parent=None):
+    def __init__(self, session, parent=None, pyfirmata=None):
         super(MainViewController, self).__init__(parent)
 
         # Load the mainview.up
@@ -77,6 +77,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
         # Initialisation of sequence list
         self.session = session
+        self.pyfirmata = pyfirmata
         dict = vars(defaultsessions[self.session])
         self.sequencelist = SequenceList(self)
         self.sequencelist.setCurrentIndex(0)
@@ -141,10 +142,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.actionAutocalibration.triggered.connect(self.autocalibration)
         # Protocoles
         self.actionRARE_3D_T1.triggered.connect(self.protocoleRARE3DT1)
-
+        self.actionRARE_3D_KNEE_T1.triggered.connect(self.protocoleRARE3DKNEET1)
+        self.actionRARE_3D_HAND_RHO.triggered.connect(self.protocoleRARE3DHANDRHO)
         # Update the sequence parameters shown in the gui
         self.seqName = self.sequencelist.getCurrentSequence()
         defaultsequences[self.seqName].sequenceInfo()
+        defaultsequences['AutoTuning'].pyfirmata = self.pyfirmata
 
         # Show the gui maximized
         # self.showMaximized()
@@ -469,11 +472,44 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
     def protocoleRARE3DT1(self):
         # Load parameters
-        defaultsequences['RARE'].loadParams(directory='protocoles', file='RARE_3D_T1_csv')
+        defaultsequences['RARE'].loadParams(directory='protocoles', file='RARE_3D_T1.csv')
+
+        # Load fov and dfov from hw_config
+        defaultsequences['RARE'].mapVals['fov'] = hw.fov
+        defaultsequences['RARE'].mapVals['dfov'] = hw.dfov
 
         # Set larmor frequency to the value into the hw_config file
         defaultsequences['RARE'].mapVals['larmorFreq'] = hw.larmorFreq
 
+        # Run the sequence
+        self.startAcquisition(seqName='RARE')
+
+    def protocoleRARE3DKNEET1(self):
+        # Load parameters
+        defaultsequences['RARE'].loadParams(directory='protocoles', file='RARE_3D_KNEE_T1.csv')
+
+        # Load fov and dfov from hw_config
+        defaultsequences['RARE'].mapVals['fov'] = hw.fov
+        defaultsequences['RARE'].mapVals['dfov'] = hw.dfov
+
+        # Set larmor frequency to the value into the hw_config file
+        defaultsequences['RARE'].mapVals['larmorFreq'] = hw.larmorFreq
+
+        # Run the sequence
+        self.startAcquisition(seqName='RARE')
+
+    def protocoleRARE3DHANDRHO(self):
+        # Load parameters
+        defaultsequences['RARE'].loadParams(directory='protocoles', file='RARE_3D_HAND_RHO.csv')
+
+        # Load fov and dfov from hw_config
+        defaultsequences['RARE'].mapVals['fov'] = hw.fov
+        defaultsequences['RARE'].mapVals['dfov'] = hw.dfov
+
+        # Set larmor frequency to the value into the hw_config file
+        defaultsequences['RARE'].mapVals['larmorFreq'] = hw.larmorFreq
+
+        # Run the sequence
         self.startAcquisition(seqName='RARE')
 
     def runLarmor(self):

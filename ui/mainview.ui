@@ -365,7 +365,7 @@
      <x>0</x>
      <y>0</y>
      <width>1249</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuCalibration">
@@ -415,6 +415,8 @@
     <addaction name="actionRARE_3D_T1"/>
     <addaction name="actionRARE_3D_T2"/>
     <addaction name="actionRARE_3D_Rho"/>
+    <addaction name="actionRARE_3D_KNEE_T1"/>
+    <addaction name="actionRARE_3D_HAND_RHO"/>
    </widget>
    <addaction name="menuScanner"/>
    <addaction name="menuCalibration"/>
@@ -760,6 +762,16 @@
   <action name="actionSave_as_quick_calibration">
    <property name="text">
     <string>Save as quick calibration</string>
+   </property>
+  </action>
+  <action name="actionRARE_3D_KNEE_T1">
+   <property name="text">
+    <string>RARE 3D KNEE T1</string>
+   </property>
+  </action>
+  <action name="actionRARE_3D_HAND_RHO">
+   <property name="text">
+    <string>RARE 3D HAND RHO</string>
    </property>
   </action>
  </widget>

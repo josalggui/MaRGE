@@ -19,6 +19,7 @@ import seq.shimmingSweep as shimming
 import seq.sliceSelection as sliceSelection
 import seq.fov as fov
 import seq.sweepImage as sweep
+import seq.autoTuning as autoTuning
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
@@ -61,6 +62,9 @@ class FOV(fov.FOV):
 
 class SWEEP(sweep.SweepImage):
     def __init__(self): super(SWEEP, self).__init__()
+#
+class AutoTuning(autoTuning.AutoTuning):
+    def __init(self): super(AutoTuning, self).__init__()
 
 """
 Definition of default sequences
@@ -70,6 +74,7 @@ defaultsequences = {
     'GRE3D': GRE3D(),
     'PETRA': PETRA(),
     'HASTE': HASTE(),
+    'AutoTuning': AutoTuning(),
     'FID': FID(),
     'Larmor': Larmor(),
     'Noise': Noise(),

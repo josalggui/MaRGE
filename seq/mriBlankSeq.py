@@ -488,8 +488,10 @@ class MRIBLANKSEQ:
             'grad_vy': (np.array([tEnd]), np.array([0])),
             'grad_vz': (np.array([tEnd]), np.array([0])),
             'rx0_en': (np.array([tEnd]), np.array([0])),
+            'rx1_en': (np.array([tEnd]), np.array([0])),
             'rx_gate': (np.array([tEnd]), np.array([0])),
             'tx0': (np.array([tEnd]), np.array([0 * np.exp(0)])),
+            'tx1': (np.array([tEnd]), np.array([0 * np.exp(0)])),
             'tx_gate': (np.array([tEnd]), np.array([0]))
         })
 
@@ -499,8 +501,10 @@ class MRIBLANKSEQ:
             'grad_vy': (np.array([t0]), np.array([shimming[1]])),
             'grad_vz': (np.array([t0]), np.array([shimming[2]])),
             'rx0_en': (np.array([t0]), np.array([0])),
+            'rx1_en': (np.array([t0]), np.array([0])),
             'rx_gate': (np.array([t0]), np.array([0])),
-            'tx0': (np.array([t0]), np.array([0])),
+            'tx0': (np.array([t0]), np.array([0 * np.exp(0)])),
+            'tx1': (np.array([t0]), np.array([0 * np.exp(0)])),
             'tx_gate': (np.array([t0]), np.array([0]))
         }, rewrite)
 

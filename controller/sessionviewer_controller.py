@@ -15,12 +15,13 @@ class SessionViewerController(MainWindow_Form, MainWindow_Base):
     
     onSessionChanged = pyqtSignal(str)
     
-    def __init__(self, session, parent=None):
+    def __init__(self, session, parent=None, pyfirmata=None):
         super(SessionViewerController, self).__init__(parent)
         self.ui = loadUi('ui/sessionViewer.ui')
         self.setupUi(self)
         
         self.session = session
+        self.pyfirmata = pyfirmata
         self.lab = QLabel()
         self.lab.setText("New Session")
         self.lab.setAlignment(Qt.AlignCenter)
@@ -60,7 +61,7 @@ class SessionViewerController(MainWindow_Form, MainWindow_Base):
         
     def mainGUI(self):
         self.session = self.sessionlist.currentText()
-        mGUI = MainViewController(self.session)
+        mGUI = MainViewController(self.session, pyfirmata=self.pyfirmata)
         mGUI.show()
         self.hide()
 

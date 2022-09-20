@@ -20,6 +20,7 @@ for char in path:
     ii += 1
 #******************************************************************************
 from controller.sessionviewer_controller import SessionViewerController
+import pyfirmata
 
 cgitb.enable(format = 'text')
 
@@ -43,7 +44,7 @@ os.system('ssh root@192.168.1.101 "killall marcos_server"')
 
 # Run the gui
 app = QApplication(sys.argv)
-gui = SessionViewerController('')
+gui = SessionViewerController('', pyfirmata=pyfirmata)
 gui.show()
 sys.exit(app.exec_())
 
