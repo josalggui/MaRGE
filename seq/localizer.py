@@ -87,6 +87,7 @@ class Localizer(rare.RARE):
         img1.setImage(self.proj1)  # Set the image to show into image item
         plot1.setLabel("bottom", 'y')
         plot1.setLabel("left", 'x')
+        plot1.getViewBox().invertY(True)
 
         plot2 = win.addPlot(row=1, col=0)
         img2 = pg.ImageItem()
@@ -94,6 +95,7 @@ class Localizer(rare.RARE):
         img2.setImage(self.proj2)
         plot2.setLabel("bottom", 'z')
         plot2.setLabel("left", 'x')
+        plot2.getViewBox().invertY(True)
 
         plot3 = win.addPlot(row=2, col=0)
         img3 = pg.ImageItem()
@@ -101,6 +103,7 @@ class Localizer(rare.RARE):
         img3.setImage(self.proj3)
         plot3.setLabel("bottom", 'z')
         plot3.setLabel("left", 'y')
+        plot3.getViewBox().invertY(True)
 
         # Custom ROI for selecting an image region
         roi1 = pg.ROI([0, 0], [nPoints[0], nPoints[1]])
@@ -173,16 +176,10 @@ class Localizer(rare.RARE):
             dFov = realPos + realFov/2 - np.array(self.mapVals['fov'])/2
             realFov = np.round(realFov, decimals=1)
             dFov = np.round(dFov, decimals=1)
-            localFov = np.array([0., 0., 0.])
-            localdFov = np.array([0., 0., 0.])
+            localFov = copy.copy(realFov)
+            localdFov = -copy.copy(dFov)
             for key in self.sequencelist:
-                if ('fov' and 'dfov' and 'axes') in self.sequencelist[key].mapKeys:
-                    n = 0
-                    for axis in self.sequencelist[key].mapVals['axes']:
-                        localFov[n] = realFov[axis]
-                        localdFov[n] = dFov[axis]
-                        n += 1
-                    localdFov[0] = -localdFov[0]
+                if ('fov' and 'dfov') in self.sequencelist[key].mapKeys:
                     self.sequencelist[key].mapVals['fov'] = copy.copy(localFov)
                     self.sequencelist[key].mapVals['dfov'] = copy.copy(localdFov)*10
             self.parent.onSequenceChanged.emit(self.parent.sequence)
