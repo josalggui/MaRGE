@@ -77,7 +77,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         t0 = 5
         self.iniSequence(t0, np.array([0, 0, 0]))
         t0 = 10
-        self.rfRecPulse(t0, self.rfExTime, self.rfExAmp, txChannel=1)
+        self.ttl(t0, self.rfExTime + hw.blkTime, channel=1)
+        self.rfRawPulse(t0 + hw.blkTime, self.rfExTime, self.rfExAmp, txChannel=1)
         t0 += hw.blkTime + self.rfExTime + 10
         self.endSequence(t0)
 

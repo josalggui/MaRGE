@@ -45,12 +45,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='preExTime', string='Preexitation time (ms)', val=0.0, field='SEQ')
         self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, field='SEQ')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., field='SEQ')
-        self.addParameter(key='fov', string='FOV (cm)', val=[15.0, 15.0, 15.0], field='IM')
-        self.addParameter(key='dfov', string='dFOV (mm)', val=[0.0, 0.0, 0.0], field='IM')
-        self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[30, 1, 1], field='IM')
+        self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], field='IM')
+        self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 1, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
-        self.addParameter(key='axes', string='Axes', val=[0, 1, 2], field='IM')
+        self.addParameter(key='axes', string='Axes[rd,ph,sl] (0:x, 1:y, 2:z)', val=[0, 1, 2], field='IM')
         self.addParameter(key='axesEnable', string='Axes enable', val=[1, 0, 0], field='IM')
         self.addParameter(key='sweepMode', string='Sweep mode, 0->k20, 1->02k, 2->k2k', val=1, field='SEQ')
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, field='OTH')
@@ -154,6 +154,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.phGradTime = self.phGradTime*1e-3
 
         # Miscellaneous
+        self.fov = self.fov[self.axes]
+        self.dfov = self.dfov[self.axes]
         self.freqOffset = self.freqOffset*1e6 # MHz
         gradRiseTime = 400e-6       # s
         gSteps = int(gradRiseTime*1e6/5)*0+1
@@ -393,6 +395,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             hw.larmorFreq = self.freqCalibration(bw=0.05)
             hw.larmorFreq = self.freqCalibration(bw=0.005)
             self.drfPhase = self.mapVals['drfPhase']
+        self.mapVals['larmorFreq'] = hw.larmorFreq
 
         # Create full sequence
         # Run the experiment
@@ -543,7 +546,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             kRD = np.reshape(kRD, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
             kPH = np.reshape(kPH, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
             kSL = np.reshape(kSL, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
-            dPhase = np.exp(-2*np.pi*1j*(self.dfov[0]*kRD+self.dfov[1]*kPH+self.dfov[2]*kSL))
+            dPhase = np.exp(-2*np.pi*1j*(self.dfov[0]*kRD-self.dfov[1]*kPH-self.dfov[2]*kSL))
             data = np.reshape(data*dPhase, (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
             self.mapVals['kSpace3D'] = data
             img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
@@ -601,7 +604,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
             return([t_plotview, f_plotview])
         else:
             # Plot image
-            # image = pg.image(np.abs(self.mapVals['image3D']))
             image = np.abs(self.mapVals['image3D'])
             image = image/np.max(np.reshape(image,-1))*100
             image = Spectrum3DPlot(image,

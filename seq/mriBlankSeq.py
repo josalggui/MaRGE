@@ -366,6 +366,17 @@ class MRIBLANKSEQ:
             'tx_gate': (txGateTime, txGateAmp)
         }, rewrite)
 
+    def rfRawPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, txChannel=0, rewrite=True):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        """
+        txTime = np.array([tStart + hw.blkTime, tStart + hw.blkTime + rfTime])
+        txAmp = np.array([rfAmplitude * np.exp(1j * rfPhase), 0.])
+        self.expt.add_flodict({
+            'tx%i' % txChannel: (txTime, txAmp),
+        }, rewrite)
+
     def rxGate(self, tStart, gateTime, rxChannel=0, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -375,8 +386,23 @@ class MRIBLANKSEQ:
         rxGateAmp = np.array([1, 0])
         self.expt.add_flodict({
             'rx%i_en' % rxChannel: (rxGateTime, rxGateAmp),
-            'rx_gate': (rxGateTime, rxGateAmp),
         }, rewrite)
+
+    def ttl(self, tStart, ttlTime, channel=0, rewrite=True):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        """
+        ttlGateTime = np.array([tStart, tStart + ttlTime])
+        ttlAmp = np.array([1, 0])
+        if channel==0:
+            self.expt.add_flodict({
+                'tx_gate': (ttlGateTime, ttlAmp),
+            }, rewrite)
+        else:
+            self.expt.add_flodict({
+                'rx_gate': (ttlGateTime, ttlAmp),
+            }, rewrite)
 
     def gradTrap(self, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming, rewrite=True):
         """"
