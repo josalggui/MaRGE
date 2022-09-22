@@ -15,14 +15,19 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.1, field='RF')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ')
         self.addParameter(key='nPoints', string='Number of points', val=1000, field='IM')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=1.0, field='IM')
-        self.addParameter(key='addRdPoints', string='Add Rd Points', val=0, field='OTH')
+        self.addParameter(key='bw', string='Acq BW (kHz)', val=100.0, field='IM')
         self.addParameter(key='txChannel', string='Tx channel', val=0, field='RF')
         self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
 
     def sequenceInfo(self):
         print(" ")
         print("ADCdelayTest")
+        print("Connect Tx to Rx.")
+
+    def sequenceTime(self):
+        nScans = self.mapVals['nScans']
+        repetitionTime = self.mapVals['repetitionTime']*1e-3
+        return(repetitionTime*nScans/60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq=0):
         init_gpa = False  # Starts the gpa
@@ -32,29 +37,28 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
         larmorFreq = self.mapVals['larmorFreq'] # MHz
         rfExAmp = self.mapVals['rfExAmp']
         repetitionTime = self.mapVals['repetitionTime']*1e3 # us
-        acqTime = self.mapVals['acqTime']*1e3 # us
+        bw = self.mapVals['bw']*1e-3 # MHz
         nPoints = self.mapVals['nPoints']
         txChannel = self.mapVals['txChannel']
         rxChannel = self.mapVals['rxChannel']
-        addRdPoints = self.mapVals['addRdPoints']
 
         # Miscellaneus
 
         def createSequence():
             tRx = 20
             self.rxGate(tRx, acqTimeReal, rxChannel=rxChannel)
-            self.rfRecPulse(tRx+0/bwReal, 300, rfExAmp, 0, txChannel=txChannel)
+            self.rfRecPulse(tRx, 100 / bwReal, rfExAmp, 0, txChannel=txChannel)
             self.endSequence(repetitionTime*nScans)
 
 
         # Initialize the experiment
-        bw = nPoints / acqTime  # MHz
         samplingPeriod = 1 / bw  # us
         self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
         samplingPeriodReal = self.expt.get_rx_ts()[0]
         bwReal = 1 / samplingPeriodReal  # MHz
         acqTimeReal = nPoints / bwReal  # us
-        self.mapVals['bw'] = bwReal
+        self.mapVals['acqTime'] = acqTimeReal
+        self.mapVals['bw'] = bwReal*1e3 # kHz
         createSequence()
 
         if plotSeq == 0:
@@ -69,53 +73,43 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
             self.mapVals['data'] = data
             self.expt.__del__()
 
-            # Save data to sweep plot (single point)
-            self.mapVals['sampledPoint'] = data[0]
+            signal = self.mapVals['data']
+            signal = np.reshape(signal, (-1))
+            # Look for that first index with signal larger than 210 uV (criterion of be close to flat top of the RF pulse
+            found = 0
+            ii = 0
+            while found == 0 and ii<nPoints:
+                if abs(signal[ii]) > 210:
+                    found = 1
+                    self.mapVals['sampledPoint'] = ii
+                ii += 1
 
     def sequenceAnalysis(self, obj=''):
-        addRdPoints = self.mapVals['addRdPoints']
-        signal = self.mapVals['data'][addRdPoints::]
+        signal = self.mapVals['data']
         signal = np.reshape(signal, (-1))
-        acqTime = self.mapVals['acqTime'] # ms
+        acqTime = self.mapVals['acqTime']*1e-3 # ms
         bw = self.mapVals['bw']*1e3 # kHz
         nPoints = self.mapVals['nPoints']
-
-
         tVector = np.linspace(0, acqTime, nPoints)*1e3 #us
         nVector = np.linspace(1, nPoints, nPoints)
-        fVector = np.linspace(-bw/2, bw/2, nPoints)
-        spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal))))
-        spectrum = np.reshape(spectrum, -1)
-
-        # Get max and FHWM
-        spectrum = np.abs(spectrum)
-        maxValue = np.max(spectrum)
-        maxIndex = np.argmax(spectrum)
-        spectrumA = np.abs(spectrum[0:maxIndex]-maxValue)
-        spectrumB = np.abs(spectrum[maxIndex:nPoints]-maxValue)
-        indexA = np.argmin(spectrumA)
-        indexB = np.argmin(spectrumB)+maxIndex
-        freqA = fVector[indexA]
-        freqB = fVector[indexB]
 
         self.saveRawData()
 
         # Add time signal to the layout
-        signalPlotWidget = SpectrumPlot(xData=nVector,
+        signalVsPointWidget = SpectrumPlot(xData=nVector,
                                         yData=[np.abs(signal)],
                                         legend=['abs'],
                                         xLabel='Points',
                                         yLabel='Signal amplitude (mV)',
                                         title='Signal vs Npoints, BWacq=%0.1f kHz' % bw)
-        signalPlotWidget.plotitem.curves[0].setSymbol('x')
+        signalVsPointWidget.plotitem.curves[0].setSymbol('x')
         # Add frequency spectrum to the layout
-        spectrumPlotWidget = SpectrumPlot(xData=tVector,
+        signalVsTimeWidget = SpectrumPlot(xData=tVector,
                                         yData=[np.abs(signal)],
                                         legend=['abs'],
                                         xLabel='Time (us)',
                                         yLabel='Signal amplitude (mV)',
                                         title='Signal vs time, BWacq=%0.1f kHz' % bw)
-        # spectrumPlotWidget.plotitem.setLogMode(y=True)
 
 
-        return([signalPlotWidget, spectrumPlotWidget])
+        return([signalVsPointWidget, signalVsTimeWidget])
