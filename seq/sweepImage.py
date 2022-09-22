@@ -91,7 +91,6 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         end = [self.mapVals['end0'], self.mapVals['end1']]
         parVector0 = np.linspace(start[0], end[0], nSteps[0])  # Create vector with parameters to sweep
 
-        self.saveRawData()
 
         if 'sampledCartesian' in self.seq.mapVals:    # In case of images
             # Initialize data and image variables as zeros
@@ -136,6 +135,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                                    yLabel=axesStr[1])
             kSpaceWidget = image.getImageWidget()
 
+            self.saveRawData()
             return([imageWidget, kSpaceWidget])
 
         elif 'sampledPoint' in self.seq.mapVals:  # In case of points (calibration sequences)
@@ -163,6 +163,8 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                                          xLabel=self.seq.mapNmspc[self.mapVals['parameter0']],
                                          yLabel='Output amplitude',
                                          title='%s sweep' % self.mapVals['seqNameSweep'])
+                self.mapVals['sweepResult'] = [parVector0, np.abs(image)]
+            self.saveRawData()
             return([mapWidget])
 
 if __name__=='__main__':

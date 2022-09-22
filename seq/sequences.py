@@ -12,8 +12,10 @@ import seq.petra as petra
 import seq.fid as fid
 import seq.rabiFlops as rabiFlops
 import seq.cpmg as cpmg
+import seq.eddycurrents as eddycurrents
 import seq.larmor as larmor
 import seq.inversionRecovery as inversionRecovery
+import seq.ADCdelayTest as ADCdelayTest
 import seq.noise as noise
 import seq.shimmingSweep as shimming
 import seq.sliceSelection as sliceSelection
@@ -48,8 +50,14 @@ class Noise(noise.Noise):
 class CPMG(cpmg.CPMG):
     def __init__(self): super(CPMG, self).__init__()
 
+class EDDYCURRENTS(eddycurrents.EDDYCURRENTS):
+    def __init__(self): super(EDDYCURRENTS, self).__init__()
+
 class IR(inversionRecovery.InversionRecovery):
     def __init__(self): super(IR, self).__init__()
+
+class ADCtest(ADCdelayTest.ADCdelayTest):
+    def __init__(self): super(ADCtest, self).__init__()
 
 class Shimming(shimming.ShimmingSweep):
     def __init__(self): super(Shimming, self).__init__()
@@ -80,7 +88,9 @@ defaultsequences = {
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),
     'CPMG': CPMG(),
+    'EDDYCURRENTS': EDDYCURRENTS(),
     'InversionRecovery': IR(),
+    'ADCtest': ADCtest(),
     'Shimming': Shimming(),
     'SWEEP': SWEEP(),
 }
