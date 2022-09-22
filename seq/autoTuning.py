@@ -43,7 +43,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.rfExTime = None
         self.txChannel = None
         self.freqOffset = None
-        self.addParameter(key='seqName', string='NoiseInfo', val='Noise')
+        self.addParameter(key='seqName', string='AutoTuningInfo', val='AutoTuning')
         self.addParameter(key='freqOffset', string='RF frequency offset (kHz)', val=0.0, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (s)', val=10, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.1, field='RF')
@@ -88,7 +88,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             # Sweep the tuning matching states in parallel thread
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads \n" % self.threadpool.maxThreadCount())
-            worker = Worker(self.run)  # Any other args, kwargs are passed to the run function
+            worker = Worker(self.run())  # Any other args, kwargs are passed to the run function
             self.threadpool.start(worker)
             # Excite
             while self.repeat:
@@ -99,8 +99,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
     def sequenceAnalysis(self, obj=''):
         self.saveRawData()
-        x = np.linspace(0, 2**10)
-        y = self.voltage
+        x = np.linspace(0, 2**10, 2**10)
+        y = np.reshape(self.voltage, -1)
 
         # Plot signal versus time
         voltageWidget = SpectrumPlot(xData=x,
@@ -120,11 +120,11 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
     # def runTest2(self):
     #
-    # def runTest(self):
-    #     time.sleep(2)
-    #     print("Soy A")
-    #     time.sleep(2)
-    #     self.repeat = False
+    def runTest(self):
+        time.sleep(2)
+        print("Soy A")
+        time.sleep(2)
+        self.repeat = False
 
     def run(self):
         arduino = self.pyfirmata.Arduino('/dev/ttyACM0')
@@ -153,11 +153,12 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         # Serie
         csA = arduino.digital[3]
         csB = arduino.digital[2]
-        csC = arduino.digital[44]
-        csD = arduino.digital[46]
-        csE = arduino.digital[45]
+        csC = arduino.digital[15]
+        # csD = arduino.digital[46]
+        # csE = arduino.digital[45]
         capacitors = [ctA, ctB, ctC, ctD, ctE, cmA, cmB, cmC, cmD, cmE]
-        capacitorsS = [csA, csB, csC, csD, csE]
+        # capacitorsS = [csA, csB, csC, csD, csE]
+        capacitorsS = [csA, csB]
 
         # Creates all possible states
         nCapacitors = 10
@@ -175,7 +176,15 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         cm3 = np.reshape(cm3, (nStates, 1))
         cm4 = np.reshape(cm4, (nStates, 1))
         cm5 = np.reshape(cm5, (nStates, 1))
-        states = np.concatenate((ct1, ct2, ct3, ct4, ct5, cm1, cm2, cm3, cm4, cm5), axis=1)
+        states01 = np.concatenate((ct1, ct2, ct3, ct4, ct5, cm1, cm2, cm3, cm4, cm5), axis=1)
+        states = np.full((np.size(states01, 0), np.size(states01, 1)), True)
+        for ii in range(np.size(states01, 0)):
+            for jj in range(np.size(states01, 1)):
+                if states01[ii, jj]:
+                    states[ii, jj] = True
+                else:
+                    states[ii, jj] = False
+
 
         # Sweep states
         t0 = time.time()
@@ -184,8 +193,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         lastVoltage = 1
         csA.write(1)
         time.sleep(0.001)
-        # while lastVoltage > 0.65 and state < nStates:
-        while state < 100:
+        # while state < nStates:
+        while state < 50:
             ii = 0
             for capacitor in capacitors:
                 capacitor.write(states[state, ii])
@@ -213,7 +222,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         arduino.exit()
 
 
-# if __name__ == '__main__':
-#     seq = AutoTuning()
-#     seq.sequenceRun()
-#     seq.sequenceAnalysis(obj='Standalone')
+if __name__ == '__main__':
+    seq = AutoTuning()
+    seq.sequenceRun()
+    seq.sequenceAnalysis(obj='Standalone')

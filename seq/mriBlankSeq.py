@@ -371,7 +371,7 @@ class MRIBLANKSEQ:
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
         """
-        txTime = np.array([tStart + hw.blkTime, tStart + hw.blkTime + rfTime])
+        txTime = np.array([tStart, tStart + rfTime])
         txAmp = np.array([rfAmplitude * np.exp(1j * rfPhase), 0.])
         self.expt.add_flodict({
             'tx%i' % txChannel: (txTime, txAmp),
