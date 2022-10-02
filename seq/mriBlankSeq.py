@@ -9,7 +9,7 @@ import os
 import numpy as np
 import configs.hw_config as hw
 from datetime import date, datetime
-from scipy.io import savemat
+from scipy.io import savemat, loadmat
 import experiment as ex
 import scipy.signal as sig
 import csv
@@ -333,6 +333,27 @@ class MRIBLANKSEQ:
             data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n + idx[ii]]
         return (data1)
 
+    def syncSignal(self, overData):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        This code deletes the added points that account by the time shift and ramp of the CIC filter
+        It must be used if the sequence uses "rxGateSync" to acquire data
+        """
+        # Get point delay
+        syncArray = hw.pointDelayVsBw
+        samplingRate = self.expt.getSamplingRate() / hw.oversamplingFactor
+        bw = 1 / samplingRate
+        bwArray = hw.pointDelayVsBw[0, :]
+        bwArray = np.abs(bwArray - bw)
+        pointDelay = hw.pointDelayVsBw[1, np.argmin(bwArray)]
+        cicRamp = hw.cicRamp
+        cicDelay = pointDelay - cicRamp
+
+        # Return the input wihtout the first cicDelay + cicRamp points
+        return(overData[cicDelay + cicRamp::])
+
+
     def rfSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -383,6 +404,32 @@ class MRIBLANKSEQ:
         @email: josalggui@i3m.upv.es
         """
         rxGateTime = np.array([tStart, tStart + gateTime])
+        rxGateAmp = np.array([1, 0])
+        self.expt.add_flodict({
+            'rx%i_en' % rxChannel: (rxGateTime, rxGateAmp),
+        }, rewrite)
+
+    def rxGateSync(self, tStart, gateTime, rxChannel=0, rewrite=True):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        This code open the rx channel with additional points to take into account the time shift and ramp of the CIC filter
+        It only works with the Experiment class in controller, that inherits from Experiment in marcos_client
+        """
+        # Get point delay
+        syncArray = hw.pointDelayVsBw
+        samplingRate = self.expt.getSamplingRate() / hw.oversamplingFactor
+        bw = 1/samplingRate
+        bwArray = hw.pointDelayVsBw[0, :]
+        bwArray = np.abs(bwArray-bw)
+        pointDelay = hw.pointDelayVsBw[1, np.argmin(bwArray)]
+        cicRamp = hw.cicRamp
+        cicDelay = pointDelay-cicRamp
+
+        # Generate instructions taking into account the cic filter delay and ramp time
+        timeAdvance = cicRamp * samplingRate
+        timeAddPoints = (cicRamp + cicDelay) * samplingRate
+        rxGateTime = np.array([tStart - timeAdvance, tStart - timeAdvance + gateTime + timeAddPoints])
         rxGateAmp = np.array([1, 0])
         self.expt.add_flodict({
             'rx%i_en' % rxChannel: (rxGateTime, rxGateAmp),

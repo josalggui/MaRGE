@@ -1,14 +1,26 @@
 """
 @author: José Miguel Algarín Guisado
-@modifield: T. Guallart Naval, february 28th 2022
 MRILAB @ I3M
 """
 
-import experiment as ex
+import os
+import sys
+#*****************************************************************************
+# Add path to the working directory
+path = os.path.realpath(__file__)
+ii = 0
+for char in path:
+    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
+        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
+        sys.path.append(path[0:ii+1]+'marcos_client')
+    ii += 1
+#******************************************************************************
+import controller.experiment_gui as ex
 import numpy as np
-import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+import seq.mriBlankSeq as blankSeq
 import scipy.signal as sig
 import configs.hw_config as hw
+import pyqtgraph as pg
 from plotview.spectrumplot import SpectrumPlot
 
 class FID(blankSeq.MRIBLANKSEQ):
@@ -60,8 +72,9 @@ class FID(blankSeq.MRIBLANKSEQ):
         shimmingTime = self.mapVals['shimmingTime']*1e3 # us
 
         # Miscellaneus
-        addRdPoints = 10
+        addRdPoints = 0
         self.mapVals['addRdPoints'] = addRdPoints
+        bw = nPoints/acqTime # MHz
 
         def createSequence():
             # Shimming
@@ -76,63 +89,59 @@ class FID(blankSeq.MRIBLANKSEQ):
 
                 # Rx gate
                 t0 = tEx + rfExTime / 2 + deadTime - addRdPoints / bw
-                self.rxGate(t0, acqTime + 2 * addRdPoints / bw, rxChannel=rxChannel)
+                self.rxGateSync(t0, acqTime + 2 * addRdPoints / bw, rxChannel=rxChannel)
 
             self.endSequence(repetitionTime*nScans)
 
 
         # Initialize the experiment
-        bw = nPoints / acqTime * hw.oversamplingFactor  # MHz
         samplingPeriod = 1 / bw  # us
         self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = self.expt.get_rx_ts()[0]
-        bw = 1 / samplingPeriod / hw.oversamplingFactor  # MHz
+        samplingPeriod = self.expt.getSamplingRate()
+        bw = 1 / samplingPeriod
         acqTime = nPoints / bw  # us
         self.mapVals['acqTime'] = acqTime*1e-3 # ms
         self.mapVals['bw'] = bw # MHz
         createSequence()
 
-        if plotSeq == 0:
+        if not plotSeq:
             # Run the experiment and get data
             rxd, msgs = self.expt.run()
-            rxd['rx%i' % rxChannel] = np.real(rxd['rx%i'%rxChannel])-1j*np.imag(rxd['rx%i'%rxChannel])
-            overData = rxd['rx%i'%rxChannel]*13.788
+            overData = self.syncSignal(rxd['rx%i'%rxChannel])
             dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['overData'] = overData
             self.mapVals['dataFull'] = dataFull
             data = np.average(np.reshape(dataFull, (nScans, -1)), axis=0)
             self.mapVals['data'] = data
-            self.expt.__del__()
 
             # Save data to sweep plot (single point)
             self.mapVals['sampledPoint'] = data[0]
+
+        self.expt.__del__()
 
     def sequenceAnalysis(self, obj=''):
         addRdPoints = self.mapVals['addRdPoints']
         nPoints = self.mapVals['nPoints']
         signal = self.mapVals['data'][addRdPoints:nPoints+addRdPoints]
-        signal = np.reshape(signal, (-1))
         acqTime = self.mapVals['acqTime'] # ms
         bw = self.mapVals['bw']*1e3 # kHz
-        nPoints = self.mapVals['nPoints']
         deadTime = self.mapVals['deadTime']*1e-3 # ms
         rfExTime = self.mapVals['rfExTime']*1e-3 # ms
 
         tVector = np.linspace(rfExTime/2+deadTime+0.5/bw, rfExTime/2+deadTime+acqTime-0.5/bw, nPoints)
         fVector = np.linspace(-bw/2, bw/2, nPoints)
         spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal))))
-        spectrum = np.reshape(spectrum, -1)
 
         # Get max and FHWM
         spectrum = np.abs(spectrum)
         maxValue = np.max(spectrum)
         maxIndex = np.argmax(spectrum)
-        spectrumA = np.abs(spectrum[0:maxIndex]-maxValue)
-        spectrumB = np.abs(spectrum[maxIndex:nPoints]-maxValue)
-        indexA = np.argmin(spectrumA)
-        indexB = np.argmin(spectrumB)+maxIndex
-        freqA = fVector[indexA]
-        freqB = fVector[indexB]
+        # spectrumA = np.abs(spectrum[0:maxIndex]-maxValue)
+        # spectrumB = np.abs(spectrum[maxIndex:nPoints]-maxValue)
+        # indexA = np.argmin(spectrumA)
+        # indexB = np.argmin(spectrumB)+maxIndex
+        # freqA = fVector[indexA]
+        # freqB = fVector[indexB]
 
         # Get the T2*
         maxSignal = np.max(np.abs(signal))
@@ -156,11 +165,21 @@ class FID(blankSeq.MRIBLANKSEQ):
                                           legend=[''],
                                           xLabel='Frequency (kHz)',
                                           yLabel='Spectrum amplitude (a.u.)',
-                                          title='Spectrum, peak = %0.3e, FWHM = %0.1f kHz'%(maxValue, freqB-freqA))
+                                          # title='Spectrum, peak = %0.3e, FWHM = %0.1f kHz'%(maxValue, freqB-freqA))
+                                          title="Spectrum")
         # spectrumPlotWidget.plotitem.setLogMode(y=True)
-        spectrumPlotWidget.plotitem.curves[0].setSymbol('x')
 
         # create self.out to run in iterative mode
         self.out = [signalPlotWidget, spectrumPlotWidget]
 
+        if obj=='Standalone':
+            signalPlotWidget.show()
+            spectrumPlotWidget.show()
+            pg.exec()
+
         return(self.out)
+
+if __name__=='__main__':
+    seq = FID()
+    seq.sequenceRun()
+    seq.sequenceAnalysis(obj='Standalone')
