@@ -94,13 +94,19 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         # List of results
         self.history_list = QListWidget()
-        self.history_list.itemDoubleClicked.connect(self.update_historic_figure)
+        self.history_list.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
+        self.history_list.setMinimumWidth(400)
+        self.history_list.itemDoubleClicked.connect(self.update_history_figure)
         self.history_list.itemClicked.connect(self.update_history_table)
         self.layout_history.addWidget(self.history_list)
 
         # Table with input parameters from historic images
         self.history_table = QTableWidget()
         self.layout_history.addWidget(self.history_table)
+
+        # Create dictionaries to save historic widgets and inputs.
+        self.history_list_widgets = {}
+        self.history_list_inputs = {}
 
         # Initialize multithreading
         self.threadpool = QThreadPool()
@@ -163,10 +169,28 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # self.showMaximized()
 
     def update_history_table(self, item):
-        print(item.text())
+        fileName = item.text()[15::]
 
-    def update_historic_figure(self):
-        return 0
+    def update_history_figure(self, item):
+        # Get file name
+        fileName = item.text()[15::]
+
+        # Get the widget from history
+        widgets = self.history_list_widgets[fileName]
+
+        # Clear the plotview
+        self.clearPlotviewLayout()
+
+        # Add label to show rawData name
+        self.label = QLabel()
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        self.plotview_layout.addWidget(self.label)
+        self.label.setText(fileName)
+
+        # Add plots to the plotview_layout
+        for item in widgets:
+            self.plotview_layout.addWidget(item)
 
     def controlMarcosServer(self):
         """
@@ -271,7 +295,15 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.label.setText(fileName)
 
             # Add item to the history list
-            self.history_list.addItem(str(datetime.now())+" | "+fileName)
+            self.history_list.addItem(str(datetime.now())[11:23]+" | "+fileName)
+
+            # Clear inputs
+            defaultsequences[self.seqName].resetMapVals()
+
+            # Save results into the history
+            self.history_list_widgets[fileName] = self.oldOut
+            self.history_list_inputs[fileName] = [list(defaultsequences[self.seqName].mapNmspc),
+                                                  list(defaultsequences[self.seqName].mapVals)]
 
             # Add plots to the plotview_layout
             for item in self.oldOut:
@@ -322,7 +354,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.label.setText(fileName)
 
             # Add item to the history list
-            self.history_list.addItem(str(datetime.now())+" | "+fileName)
+            self.history_list.addItem(str(datetime.now())[11:23]+" | "+fileName)
 
             # Update lines in plots of the plotview_layout
             if hasattr(defaultsequences[self.seqName], 'out'):
@@ -430,7 +462,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.plotview_layout.addWidget(self.label)
 
         # Add item to the history list
-        self.history_list.addItem(str(datetime.now())+" | "+fileName)
+        self.history_list.addItem(str(datetime.now())[11:23]+" | "+fileName)
 
         # Add plots to the localizer_layout
         # self.localizer_layout.addWidget(out[0])

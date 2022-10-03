@@ -50,14 +50,13 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 1, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
-        self.addParameter(key='axes', string='Axes[rd,ph,sl] (0:x, 1:y, 2:z)', val=[0, 1, 2], field='IM')
+        self.addParameter(key='axes', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM')
         self.addParameter(key='axesEnable', string='Axes enable', val=[1, 0, 0], field='IM')
-        self.addParameter(key='sweepMode', string='Sweep mode, 0->k20, 1->02k, 2->k2k', val=1, field='SEQ')
+        self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ')
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, field='OTH')
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, field='OTH')
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
-        self.addParameter(key='drfPhase', string='Phase of exciation pulse (º)', val=0.0, field='RF')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ')
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-40, -20, 10], field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH')
@@ -68,7 +67,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
         print("3D RARE sequence")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
-        print("mriLab @ i3M, CSIC, Spain")
+        print("mriLab @ i3M, CSIC, Spain \n")
+        print("Sweep modes: 0:k20, 1:02k, 2:k2k")
+        print("Axes: 0:x, 1:y, 2:z")
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
@@ -94,7 +95,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa=False # Starts the gpa
-        demo = False
+        demo = True
 
         # Create the inputs automatically as a property of the class
         for key in self.mapKeys:
@@ -313,7 +314,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
                 # Excitation pulse
                 t0 = tEx-hw.blkTime-self.rfExTime/2
-                self.rfRecPulse(t0,self.rfExTime,rfExAmp,self.drfPhase)
+                self.rfRecPulse(t0,self.rfExTime,rfExAmp,0)
 
                 # Dephasing readout
                 if (repeIndex==0 or repeIndex>=self.dummyPulses) and dc==False:
@@ -327,7 +328,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
                     # Refocusing pulse
                     t0 = tEcho-self.echoSpacing/2-self.rfReTime/2-hw.blkTime
-                    self.rfRecPulse(t0, self.rfReTime, rfReAmp, self.drfPhase+np.pi/2)
+                    self.rfRecPulse(t0, self.rfReTime, rfReAmp, np.pi/2)
 
                     # Dephasing phase and slice gradients
                     if repeIndex>=self.dummyPulses:         # This is to account for dummy pulses
@@ -394,7 +395,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
         if self.freqCal and (not plotSeq) and (not demo):
             hw.larmorFreq = self.freqCalibration(bw=0.05)
             hw.larmorFreq = self.freqCalibration(bw=0.005)
-            self.drfPhase = self.mapVals['drfPhase']
         self.mapVals['larmorFreq'] = hw.larmorFreq
 
         # Create full sequence
@@ -581,6 +581,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
             axesStr[n] = axesKeys[index]
             n += 1
 
+        # Create widget to introduce the figures
+        win = pg.LayoutWidget()
+        win.resize(300, 1000)
+
         if (axesEnable[1] == 0 and axesEnable[2] == 0):
             bw = self.mapVals['bw']*1e-3 # kHz
             acqTime = self.mapVals['acqTime'] # ms
@@ -592,16 +596,19 @@ class RARE(blankSeq.MRIBLANKSEQ):
             # Plots to show into the GUI
             f_plotview = SpectrumPlot(fVector, [np.abs(iVector)], ['Spectrum magnitude'],
                                       "Frequency (kHz)", "Amplitude (a.u.)",
-                                      "%s Spectrum" % self.mapVals['fileName'])
+                                      "Spectrum")
             t_plotview = SpectrumPlot(tVector, [np.abs(sVector), np.real(sVector), np.imag(sVector)],
                                       ['Magnitude', 'Real', 'Imaginary'],
                                       'Time (ms)', "Signal amplitude (mV)",
-                                      "%s Signal" % self.mapVals['fileName'])
+                                      "Signal")
+
+            # Introduce the images into the layout
+            win.addWidget(t_plotview, row=0, col=0)
+            win.addWidget(f_plotview, row=0, col=1)
+
             if obj=="Standalone":
-                f_plotview.show()
-                t_plotview.show()
                 pg.exec()
-            return([t_plotview, f_plotview])
+            return([win])
         else:
             # Plot image
             image = np.abs(self.mapVals['image3D'])
@@ -623,11 +630,13 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                         xLabel="k%s" % axesStr[1],
                                         yLabel="k%s" % axesStr[0])
             kSpaceWidget = kSpace.getImageWidget()
+
+            win.addWidget(imageWidget, row=0, col=0)
+            win.addWidget(kSpaceWidget, row=0, col=1)
+
             if obj=="Standalone":
-                imageWidget.show()
-                kSpaceWidget.show()
                 pg.exec()
-            return([imageWidget, kSpaceWidget])
+            return([win])
 
 if __name__=="__main__":
     seq = RARE()
