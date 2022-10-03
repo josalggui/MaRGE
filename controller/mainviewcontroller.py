@@ -7,7 +7,7 @@ Main View Controller
 @todo:
 
 """
-from PyQt5.QtWidgets import  QMessageBox,  QFileDialog,  QTextEdit, QLabel, QWidget
+from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
 from PyQt5.QtCore import *
 from PyQt5.uic import loadUiType, loadUi
@@ -82,15 +82,25 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.sequencelist = SequenceList(self)
         self.sequencelist.setCurrentIndex(0)
         self.sequencelist.currentIndexChanged.connect(self.selectionChanged)
-        self.layout_operations.addWidget(self.sequencelist)
+        self.layout_sequenceList.addWidget(self.sequencelist)
         self.sequence = self.sequencelist.currentText()
         self.session_label.setText(dict["name_code"])
                 
         # Console
         self.cons = self.generateConsole('')
-        self.layout_output.addWidget(self.cons)
+        self.layout_console.addWidget(self.cons)
         sys.stdout = EmittingStream(textWritten=self.onUpdateText)
         sys.stderr = EmittingStream(textWritten=self.onUpdateText)
+
+        # List of results
+        self.history_list = QListWidget()
+        self.history_list.itemDoubleClicked.connect(self.update_historic_figure)
+        self.history_list.itemClicked.connect(self.update_history_table)
+        self.layout_history.addWidget(self.history_list)
+
+        # Table with input parameters from historic images
+        self.history_table = QTableWidget()
+        self.layout_history.addWidget(self.history_table)
 
         # Initialize multithreading
         self.threadpool = QThreadPool()
@@ -151,6 +161,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         # Show the gui maximized
         # self.showMaximized()
+
+    def update_history_table(self, item):
+        print(item.text())
+
+    def update_historic_figure(self):
+        return 0
 
     def controlMarcosServer(self):
         """
@@ -254,6 +270,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             fileName = defaultsequences[self.seqName].mapVals['fileName']
             self.label.setText(fileName)
 
+            # Add item to the history list
+            self.history_list.addItem(str(datetime.now())+" | "+fileName)
+
             # Add plots to the plotview_layout
             for item in self.oldOut:
                 self.plotview_layout.addWidget(item)
@@ -301,6 +320,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             # Set name to the label
             fileName = defaultsequences[self.seqName].mapVals['fileName']
             self.label.setText(fileName)
+
+            # Add item to the history list
+            self.history_list.addItem(str(datetime.now())+" | "+fileName)
 
             # Update lines in plots of the plotview_layout
             if hasattr(defaultsequences[self.seqName], 'out'):
@@ -374,9 +396,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         print('Start localizer')
 
-        # Delete previous localizer
-        self.clearLocalizerLayout()
-
         # Set localizer sequence to RARE
         localizer = Localizer()
 
@@ -398,15 +417,24 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Do sequence analysis and acquire de plots
         out = localizer.sequenceAnalysis()
 
+        # Delete previous localizer
+        # self.clearLocalizerLayout()
+        self.clearPlotviewLayout()
+
         # Create label with rawdata name
         fileName = localizer.mapVals['fileName']
         self.label = QLabel(fileName)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setStyleSheet("background-color: black;color: white")
-        self.localizer_layout.addWidget(self.label)
+        # self.localizer_layout.addWidget(self.label)
+        self.plotview_layout.addWidget(self.label)
+
+        # Add item to the history list
+        self.history_list.addItem(str(datetime.now())+" | "+fileName)
 
         # Add plots to the localizer_layout
-        self.localizer_layout.addWidget(out[0])
+        # self.localizer_layout.addWidget(out[0])
+        self.plotview_layout.addWidget(out[0])
 
     def autocalibration(self):
         self.clearPlotviewLayout()

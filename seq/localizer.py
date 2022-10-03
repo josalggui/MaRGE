@@ -89,7 +89,7 @@ class Localizer(rare.RARE):
         plot1.setLabel("left", 'x')
         plot1.getViewBox().invertY(True)
 
-        plot2 = win.addPlot(row=1, col=0)
+        plot2 = win.addPlot(row=0, col=1)
         img2 = pg.ImageItem()
         plot2.addItem(img2)
         img2.setImage(self.proj2)
@@ -97,7 +97,7 @@ class Localizer(rare.RARE):
         plot2.setLabel("left", 'x')
         plot2.getViewBox().invertY(True)
 
-        plot3 = win.addPlot(row=2, col=0)
+        plot3 = win.addPlot(row=0, col=2)
         img3 = pg.ImageItem()
         plot3.addItem(img3)
         img3.setImage(self.proj3)
