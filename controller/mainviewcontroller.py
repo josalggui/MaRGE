@@ -101,8 +101,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.layout_history.addWidget(self.history_list)
 
         # Table with input parameters from historic images
-        self.history_table = QTableWidget()
-        self.layout_history.addWidget(self.history_table)
+        self.input_table = QTableWidget()
+        self.layout_history.addWidget(self.input_table)
 
         # Create dictionaries to save historic widgets and inputs.
         self.history_list_widgets = {}
@@ -169,9 +169,45 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # self.showMaximized()
 
     def update_history_table(self, item):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: update the table when new element is clicked in the history list
+        """
+        # Get file name
         fileName = item.text()[15::]
 
+        # Get the input data from history
+        input_data = self.history_list_inputs[fileName]
+
+        # Clear the table
+
+        # Extract items from the input_data
+        input_info = list(input_data[0])
+        input_vals = list(input_data[1])
+
+        # Set number of rows
+        self.input_table.setColumnCount(1)
+        self.input_table.setRowCount(len(input_info))
+
+        # Input items into the table
+        ver_header = input_info
+        self.input_table.setVerticalHeaderLabels(input_info)
+        self.input_table.setHorizontalHeaderLabels(['Values'])
+        for m, item in enumerate(input_vals):
+            newitem = QTableWidgetItem(str(item))
+            self.input_table.setItem(m, 0, newitem)
+
+        # Add table to the layout
+        x = 1
+
+
     def update_history_figure(self, item):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: update the shown figure when new element is double clicked in the history list
+        """
         # Get file name
         fileName = item.text()[15::]
 
@@ -302,8 +338,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
             # Save results into the history
             self.history_list_widgets[fileName] = self.oldOut
-            self.history_list_inputs[fileName] = [list(defaultsequences[self.seqName].mapNmspc),
-                                                  list(defaultsequences[self.seqName].mapVals)]
+            self.history_list_inputs[fileName] = [defaultsequences[self.seqName].mapNmspc.values(),
+                                                  defaultsequences[self.seqName].mapVals.values()]
 
             # Add plots to the plotview_layout
             for item in self.oldOut:
@@ -354,7 +390,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.label.setText(fileName)
 
             # Add item to the history list
-            self.history_list.addItem(str(datetime.now())[11:23]+" | "+fileName)
+            self.history_list.addItem(str(datetime.now())[11:23] + " | " + fileName)
 
             # Update lines in plots of the plotview_layout
             if hasattr(defaultsequences[self.seqName], 'out'):
@@ -463,6 +499,14 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         # Add item to the history list
         self.history_list.addItem(str(datetime.now())[11:23]+" | "+fileName)
+
+        # Clear inputs
+        defaultsequences[self.seqName].resetMapVals()
+
+        # Save results into the history
+        self.history_list_widgets[fileName] = out
+        self.history_list_inputs[fileName] = [defaultsequences[self.seqName].mapNmspc.values(),
+                                              defaultsequences[self.seqName].mapVals.values()]
 
         # Add plots to the localizer_layout
         # self.localizer_layout.addWidget(out[0])
