@@ -95,7 +95,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa=False # Starts the gpa
-        demo = True
+        demo = False
 
         # Create the inputs automatically as a property of the class
         for key in self.mapKeys:
