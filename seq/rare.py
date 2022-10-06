@@ -492,9 +492,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 dataFullB = np.reshape(dataFullB, (1, self.nScans, -1, nRD))
             for scan in range(self.nScans):
                 if nBatches>1:
-                    dataProv[ii, :] = np.concatenate((np.reshape(dataFullA[:,ii,:,:],-1), np.reshape(dataFullB[:,ii,:,:],-1)), axis=0)
+                    dataProv[scan, :] = np.concatenate((np.reshape(dataFullA[:,scan,:,:],-1), np.reshape(dataFullB[:,scan,:,:],-1)), axis=0)
                 else:
-                    dataProv[ii, :] = np.reshape(dataFull[:,ii,:,:],-1)
+                    dataProv[scan, :] = np.reshape(dataFull[:,scan,:,:],-1)
             dataFull = np.reshape(dataProv,-1)
 
             # Get index for krd = 0
