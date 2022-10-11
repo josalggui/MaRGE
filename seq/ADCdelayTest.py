@@ -1,9 +1,29 @@
+"""
+@author: P. Borreguero
+@author: J.M. Algarín
+September 2022
+MRILAB @ I3M
+"""
+
+import os
+import sys
+#*****************************************************************************
+# Add path to the working directory
+path = os.path.realpath(__file__)
+ii = 0
+for char in path:
+    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
+        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
+        sys.path.append(path[0:ii+1]+'marcos_client')
+    ii += 1
+#******************************************************************************
 import experiment as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
 from plotview.spectrumplot import SpectrumPlot
+import pyqtgraph as pg
 
 class ADCdelayTest(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -12,9 +32,10 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='ADCdelayTest', val='ADCdelayTest')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='RF')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=8.31, field='RF')
-        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.1, field='RF')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ')
+        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=1.0, field='RF')
         self.addParameter(key='nPoints', string='Number of points', val=1000, field='IM')
+        self.addParameter(key='addRdPoints', string='Add rd points', val=0, field='IM')
+        self.addParameter(key='delayPoints', string='Delay points', val=2, field='IM')
         self.addParameter(key='bw', string='Acq BW (kHz)', val=100.0, field='IM')
         self.addParameter(key='txChannel', string='Tx channel', val=0, field='RF')
         self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
@@ -25,9 +46,7 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
         print("Connect Tx to Rx.")
 
     def sequenceTime(self):
-        nScans = self.mapVals['nScans']
-        repetitionTime = self.mapVals['repetitionTime']*1e-3
-        return(repetitionTime*nScans/60)  # minutes, scanTime
+        return(0)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq=0):
         init_gpa = False  # Starts the gpa
@@ -36,19 +55,19 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
         nScans = self.mapVals['nScans']
         larmorFreq = self.mapVals['larmorFreq'] # MHz
         rfExAmp = self.mapVals['rfExAmp']
-        repetitionTime = self.mapVals['repetitionTime']*1e3 # us
         bw = self.mapVals['bw']*1e-3 # MHz
         nPoints = self.mapVals['nPoints']
+        addRdPoints = self.mapVals['addRdPoints']
         txChannel = self.mapVals['txChannel']
         rxChannel = self.mapVals['rxChannel']
 
         # Miscellaneus
 
         def createSequence():
-            tRx = 20
-            self.rxGate(tRx, acqTimeReal, rxChannel=rxChannel)
-            self.rfRecPulse(tRx, 100 / bwReal, rfExAmp, 0, txChannel=txChannel)
-            self.endSequence(repetitionTime*nScans)
+            tRx = 10000
+            self.rxGate(tRx + addRdPoints / bwReal, acqTimeReal, rxChannel=rxChannel)
+            self.rfRecPulse(tRx - hw.blkTime, 200 / bwReal, rfExAmp, 0, txChannel=txChannel)
+            self.endSequence((tRx + addRdPoints / bwReal + 2 * acqTimeReal)*nScans)
 
 
         # Initialize the experiment
@@ -71,7 +90,6 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
             self.mapVals['overData'] = overData
             data = np.average(np.reshape(dataFull, (nScans, -1)), axis=0)
             self.mapVals['data'] = data
-            self.expt.__del__()
 
             signal = self.mapVals['data']
             signal = np.reshape(signal, (-1))
@@ -83,33 +101,40 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
                     found = 1
                     self.mapVals['sampledPoint'] = ii
                 ii += 1
+            # print('\n First working point: %i' % (self.mapVals['sampledPoint'] + 1))
+        self.expt.__del__()
 
     def sequenceAnalysis(self, obj=''):
+        delayPoints = self.mapVals['delayPoints']
         signal = self.mapVals['data']
         signal = np.reshape(signal, (-1))
-        acqTime = self.mapVals['acqTime']*1e-3 # ms
         bw = self.mapVals['bw']*1e3 # kHz
         nPoints = self.mapVals['nPoints']
-        tVector = np.linspace(0, acqTime, nPoints)*1e3 #us
         nVector = np.linspace(1, nPoints, nPoints)
+
+        # Correct the signal position
+        signal2 = signal*0
+        signal2[0:nPoints-delayPoints] = signal[delayPoints::]
 
         self.saveRawData()
 
         # Add time signal to the layout
         signalVsPointWidget = SpectrumPlot(xData=nVector,
-                                        yData=[np.abs(signal)],
-                                        legend=['abs'],
+                                        yData=[np.abs(signal), np.abs(signal2)],
+                                        legend=['Acquired', 'Corrected'],
                                         xLabel='Points',
                                         yLabel='Signal amplitude (mV)',
-                                        title='Signal vs Npoints, BWacq=%0.1f kHz' % bw)
+                                        title='Signal vs acquired point')
         signalVsPointWidget.plotitem.curves[0].setSymbol('x')
-        # Add frequency spectrum to the layout
-        signalVsTimeWidget = SpectrumPlot(xData=tVector,
-                                        yData=[np.abs(signal)],
-                                        legend=['abs'],
-                                        xLabel='Time (us)',
-                                        yLabel='Signal amplitude (mV)',
-                                        title='Signal vs time, BWacq=%0.1f kHz' % bw)
+        signalVsPointWidget.plotitem.curves[1].setSymbol('o')
 
+        if obj == 'Standalone':
+            signalVsPointWidget.show()
+            pg.exec()
 
-        return([signalVsPointWidget, signalVsTimeWidget])
+        return([signalVsPointWidget])
+
+if __name__=='__main__':
+    seq = ADCdelayTest()
+    seq.sequenceRun()
+    seq.sequenceAnalysis(obj='Standalone')
