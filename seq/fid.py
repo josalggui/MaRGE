@@ -140,6 +140,9 @@ class FID(blankSeq.MRIBLANKSEQ):
         t2Index = np.argmin(np.abs(np.abs(signal)-maxSignal/3.))
         t2 = tVector[t2Index]-tVector[maxIndex]
 
+        print("\nT2* = %0.2f ms" % t2)
+        print("Peak amplitude = %0.3f, FWHM = %0.1f kHz" % (maxValue, freqB - freqA))
+
         self.saveRawData()
 
         # Add time signal to the layout
@@ -148,7 +151,7 @@ class FID(blankSeq.MRIBLANKSEQ):
                                         legend=['abs', 'real', 'imag'],
                                         xLabel='Time (ms)',
                                         yLabel='Signal amplitude (mV)',
-                                        title='Signal vs time, T2* = %0.2f ms'%t2)
+                                        title='Signal vs time')
 
         # Add frequency spectrum to the layout
         spectrumPlotWidget = SpectrumPlot(xData=fVector,
@@ -156,9 +159,10 @@ class FID(blankSeq.MRIBLANKSEQ):
                                           legend=[''],
                                           xLabel='Frequency (kHz)',
                                           yLabel='Spectrum amplitude (a.u.)',
-                                          title='Spectrum, peak = %0.3e, FWHM = %0.1f kHz'%(maxValue, freqB-freqA))
+                                          title='Spectrum')
+
         # spectrumPlotWidget.plotitem.setLogMode(y=True)
-        spectrumPlotWidget.plotitem.curves[0].setSymbol('x')
+        # spectrumPlotWidget.plotitem.curves[0].setSymbol('x')
 
         # create self.out to run in iterative mode
         self.out = [signalPlotWidget, spectrumPlotWidget]

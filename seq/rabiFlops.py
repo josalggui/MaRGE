@@ -12,7 +12,8 @@ import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
-from plotview.spectrumplot import SpectrumPlot
+from plotview.spectrumplot import SpectrumPlot, Spectrum3DPlot
+import pyqtgraph as pg
 
 class RabiFlops(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -186,7 +187,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         dataEchoAvg = np.mean(dataEcho, axis=0)
         self.mapVals['dataEchoAvg'] = dataEchoAvg
 
-        rabiFID = dataFIDAvg[:, 5]
+        rabiFID = dataFIDAvg[:, 50]
         self.mapVals['rabiFID'] = rabiFID
         rabiEcho = dataEchoAvg[:, np.int(nPoints/2)]
         self.mapVals['rabiEcho'] = rabiEcho
@@ -200,10 +201,23 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
             if d<0: test = False
         piHalfTime = timeVector[n-1]*1e6 # us
         self.mapVals['piHalfTime'] = piHalfTime
-        print("pi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us"%(self.mapVals['rfExAmp'], self.mapVals['piHalfTime']))
+        print("\npi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us"%(self.mapVals['rfExAmp'], self.mapVals['piHalfTime']))
         hw.b1Efficiency = np.pi/2/(self.mapVals['rfExAmp']*piHalfTime)
 
         self.saveRawData()
+
+        # Main layout widget
+        win = pg.LayoutWidget()
+        width = win.frameGeometry().width()
+        height = win.frameGeometry().height()
+
+        # Acquired FIDs
+        rabiFID3D = Spectrum3DPlot(data=np.abs(dataFIDAvg),
+                                   xLabel="Repetition index",
+                                   yLabel="Acquired point",
+                                   title="FIDs")
+        rabiFID3DWidget = rabiFID3D.getImageWidget()
+        rabiFID3DWidget.setMinimumWidth(int(win.frameGeometry().width()))
 
         # Signal vs rf time
         rabiFIDWidget = SpectrumPlot(xData=timeVector*1e6,
@@ -220,7 +234,9 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                                   yLabel='Signal amplitude (mV)',
                                   title='Rabi Flops with Spin Echo')
 
-        # create self.out to run in iterative mode
-        self.out = [rabiFIDWidget, rabiEchoWidget]
-        
-        return (self.out)
+        win.addWidget(item=rabiFID3DWidget, rowspan=2, colspan=1)
+        win.addWidget(item=rabiFIDWidget, row=0, col=1)
+        win.addWidget(item=rabiEchoWidget, row=1, col=1)
+
+        return ([win])
+

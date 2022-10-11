@@ -163,7 +163,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         idf = np.argmax(np.abs(spectrum))
         fCentral = fVector[idf] * 1e-3
         hw.larmorFreq = self.mapVals['larmorFreq']+fCentral
-        print('Larmor frequency: %1.5f MHz' % hw.larmorFreq)
+        print('\nLarmor frequency: %1.5f MHz' % hw.larmorFreq)
         self.mapVals['larmorFreq'] = hw.larmorFreq
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
@@ -184,7 +184,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                                           legend=[''],
                                           xLabel='Frequency (kHz)',
                                           yLabel='Spectrum amplitude (a.u.)',
-                                          title='Larmor frequency: %1.5f MHz' % hw.larmorFreq)
+                                          title='Spectrum')
 
         if obj == "Standalone":
             signalPlotWidget.show()

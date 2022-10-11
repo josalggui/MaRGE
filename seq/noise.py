@@ -110,7 +110,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.mapVals['RMS noise'] = noiserms
         self.mapVals['sampledPoint'] = noiserms # for sweep method
         self.saveRawData()
-        print('rms noise: %0.5f mV' % noiserms)
+        print('\nrms noise: %0.5f mV' % noiserms)
 
         # Plot signal versus time
         timePlotWidget = SpectrumPlot(xData=self.dataTime[0],
@@ -118,7 +118,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
                                 legend=['abs', 'real', 'imag'],
                                 xLabel='Time (ms)',
                                 yLabel='Signal amplitude (mV)',
-                                title='Noise vs time, rms noise: %1.3f mV' %noiserms)
+                                title='Noise vs time')
 
         # Plot spectrum
         freqPlotWidget = SpectrumPlot(xData=self.dataSpec[0],
