@@ -590,14 +590,13 @@ class MRIBLANKSEQ:
 
         # Create custom inputs
         nPoints = int(bw / dbw)
-        larmorFreq = self.mapVals['larmorFreq']
         ov = 10
         bw = bw * ov
         samplingPeriod = 1 / bw
         acqTime = 1 / dbw
         addRdPoints = 5
 
-        self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=False,
+        self.expt = ex.Experiment(lo_freq=hw.larmorFreq, rx_t=samplingPeriod, init_gpa=False,
                                   gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
         samplingPeriod = self.expt.get_rx_ts()[0]
         bw = 1 / samplingPeriod / ov
@@ -606,22 +605,17 @@ class MRIBLANKSEQ:
         rxd, msgs = self.expt.run()
         dataFreqCal = sig.decimate(rxd['rx0'] * 13.788, ov, ftype='fir', zero_phase=True)
         dataFreqCal = dataFreqCal[addRdPoints:nPoints + addRdPoints]
-        # Get phase
-        angle = np.unwrap(np.angle(dataFreqCal))
-        idx = np.argmax(np.abs(dataFreqCal))
-        dPhase = angle[idx]
-        self.mapVals['drfPhase'] = np.round(dPhase, decimals=6)
         # Get larmor frequency through fft
         spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFreqCal))))
         fVector = np.linspace(-bw / 2, bw / 2, num=nPoints, endpoint=False)
         idx = np.argmax(spectrum)
         dfFFT = -fVector[idx]
-        larmorFreq += dfFFT
-        self.mapVals['larmorFreq'] = np.round(larmorFreq, decimals=6)  # MHz
-        print("f0 = %s MHz" % (round(larmorFreq, 5)))
+        hw.larmorFreq += dfFFT
+        self.mapVals['larmorFreq'] = np.round(hw.larmorFreq, decimals=6)  # MHz
+        print("f0 = %s MHz" % (round(hw.larmorFreq, 5)))
         self.expt.__del__()
 
-        return (larmorFreq)
+        return (hw.larmorFreq)
 
     def createFreqCalSequence(self, bw, acqTime):
         # Def variables
