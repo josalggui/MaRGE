@@ -217,7 +217,7 @@ class MRIBLANKSEQ:
                 legend.append(txl)
             except KeyError:
                 continue
-        plotTx = [xData, yData, legend, 'Rx gate']
+        plotTx = [xData, yData, legend, 'Tx gate']
 
         # Plot gradient channels
         xData = []
