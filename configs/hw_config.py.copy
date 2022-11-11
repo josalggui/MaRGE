@@ -21,4 +21,6 @@ maxOrders = 2**14 # Maximun number of orders to be processed by the red pitaya
 deadTime = 400 # us, RF coil dead time
 b1Efficiency = np.pi/(0.3*70) # rads / (a.u. * us)
 larmorFreq = 3.066 # MHz
+cicDelayPoints = 3 # to account for signal delay from red pitaya due to cic filter
+addRdPoints = 10 # to account for wrong first points after decimation
 adcFactor = 13.788 # mV/adcUnit
