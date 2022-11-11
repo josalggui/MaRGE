@@ -84,13 +84,13 @@ class Experiment(ex.Experiment):
         rx1_norm_factor = self._rx0_cic_factor / (1 << 24)
 
         try: # Signal in millivolts with phase as it should be
-            rxd_iq['rx0'] = 13.788 * rx0_norm_factor * (np.array(rxd['rx0_i']).astype(np.int32).astype(float) -
+            rxd_iq['rx0'] = hw.adcFactor * rx0_norm_factor * (np.array(rxd['rx0_i']).astype(np.int32).astype(float) -
                                                1j * np.array(rxd['rx0_q']).astype(np.int32).astype(float))
         except (KeyError, TypeError):
             pass
 
         try: # Signal in millivolts with phase as it should be
-            rxd_iq['rx1'] = 13.788 * rx1_norm_factor * (np.array(rxd['rx1_i']).astype(np.int32).astype(float) -
+            rxd_iq['rx1'] = hw.adcFactor * rx1_norm_factor * (np.array(rxd['rx1_i']).astype(np.int32).astype(float) -
                                                1j * np.array(rxd['rx1_q']).astype(np.int32).astype(float))
         except (KeyError, TypeError):
             pass

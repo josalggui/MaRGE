@@ -107,7 +107,7 @@ class FID(blankSeq.MRIBLANKSEQ):
         if not plotSeq:
             # Run the experiment and get data
             rxd, msgs = self.expt.run()
-            dataOver = rxd['rx%i'%rxChannel]*13.788 # mV
+            dataOver = rxd['rx%i'%rxChannel]*hw.adcFactor # mV
             dataFull = sig.decimate(self.syncSignal(dataOver), hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['dataOver'] = dataOver
             self.mapVals['dataFull'] = dataFull
