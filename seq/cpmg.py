@@ -9,8 +9,9 @@ import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
-from plotview.spectrumplot import SpectrumPlot
+from plotview.spectrumplot import SpectrumPlot, Spectrum3DPlot
 from scipy.optimize import curve_fit
+import pyqtgraph as pg
 
 
 
@@ -30,7 +31,8 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='etl', string='Echo train length', val=50, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
-        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
+        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-12.5,-12.5,7.5], field='OTH')
+        self.addParameter(key='echoObservation', string='Echo Observation', val=1, field='OTH')
 
     def sequenceInfo(self):
         print(" ")
@@ -70,6 +72,7 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         etl = self.mapVals['etl']
         acqTime = self.mapVals['acqTime']
         shimming = np.array(self.mapVals['shimming'])
+        echoObservation = self.mapVals['echoObservation']
 
         def createSequence():
             # Initialize time
@@ -90,6 +93,8 @@ class CPMG(blankSeq.MRIBLANKSEQ):
                 # Refocusing pulse
                 t0 = tEcho - echoSpacing / 2 - hw.blkTime - rfReTime / 2
                 self.rfRecPulse(t0, rfReTime, rfReAmp, np.pi / 2)
+                if echoIndex == echoObservation:
+                    self.ttl(t0, rfReTime, channel=1)
 
                 # Rx gate
                 t0 = tEcho - acqTime / 2
@@ -132,6 +137,9 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         return 0
 
     def sequenceAnalysis(self, obj=''):
+        data = np.abs(self.mapVals['data'])
+        etl = self.mapVals['etl']
+        data = np.reshape(data, (etl, -1))
         results = self.results
         nPoints = self.mapVals['nPoints']
         echo1Amp = self.mapVals['data'][int(nPoints/2)]
@@ -180,6 +188,8 @@ class CPMG(blankSeq.MRIBLANKSEQ):
 
         self.saveRawData()
 
+        win = pg.LayoutWidget()
+
         # Signal vs rf time
         plotWidget = SpectrumPlot(xData=results[0]*1e-3,
                                   yData=[results[1], func1(results[0], *fitData1), func2(results[0], *fitData2)],
@@ -187,8 +197,19 @@ class CPMG(blankSeq.MRIBLANKSEQ):
                                   xLabel='Echo time (ms)',
                                   yLabel='Echo amplitude (mV)',
                                   title='')
+        plotWidget.plotitem.curves[0].setSymbol('x')
+        echoes = Spectrum3DPlot(data=data,
+                                yLabel="Acquired point",
+                                xLabel="Echo index",
+                                title="Acquired echoes")
+        echoesWidget = echoes.getImageWidget()
+        echoesWidget.setMinimumWidth(int(win.frameGeometry().width()))
+
+        # win.addWidget(echoesWidget)
+        # win.addWidget(plotWidget)
 
         # create self.out to run in iterative mode
         self.out = [plotWidget]
-
         return(self.out)
+
+        # return([win])

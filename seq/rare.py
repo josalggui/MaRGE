@@ -50,7 +50,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 1, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
-        self.addParameter(key='axes', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM')
+        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM')
         self.addParameter(key='axesEnable', string='Axes enable', val=[1, 0, 0], field='IM')
         self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ')
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, field='OTH')
@@ -58,7 +58,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ')
-        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-40, -20, 10], field='OTH')
+        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-12.5, -12.5, 7.5], field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH')
         self.addParameter(key='freqCal', string='Calibrate frequency (0 or 1)', val=1, field='OTH')
 
@@ -155,8 +155,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.phGradTime = self.phGradTime*1e-3
 
         # Miscellaneous
-        self.fov = self.fov[self.axes]
-        self.dfov = self.dfov[self.axes]
+        self.fov = self.fov[self.axesOrientation]
+        self.dfov = self.dfov[self.axesOrientation]
         self.freqOffset = self.freqOffset*1e6 # MHz
         gradRiseTime = 400e-6       # s
         gSteps = int(gradRiseTime*1e6/5)*0+1
@@ -292,24 +292,24 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 if repeIndex>=self.dummyPulses and self.preExTime!=0:
                     t0 = tEx-self.preExTime-self.inversionTime-self.rfExTime/2-hw.blkTime
                     self.rfRecPulse(t0, self.rfExTime, rfExAmp, 0)
-                    self.gradTrap(t0+hw.blkTime+self.rfReTime, gradRiseTime, self.preExTime*0.5, -0.005, gSteps, self.axes[0], self.shimming)
-                    self.gradTrap(t0+hw.blkTime+self.rfReTime, gradRiseTime, self.preExTime*0.5, -0.005, gSteps, self.axes[1], self.shimming)
-                    self.gradTrap(t0+hw.blkTime+self.rfReTime, gradRiseTime, self.preExTime*0.5, -0.005, gSteps, self.axes[2], self.shimming)
+                    self.gradTrap(t0+hw.blkTime+self.rfReTime, gradRiseTime, self.preExTime*0.5, -0.005, gSteps, self.axesOrientation[0], self.shimming)
+                    self.gradTrap(t0+hw.blkTime+self.rfReTime, gradRiseTime, self.preExTime*0.5, -0.005, gSteps, self.axesOrientation[1], self.shimming)
+                    self.gradTrap(t0+hw.blkTime+self.rfReTime, gradRiseTime, self.preExTime*0.5, -0.005, gSteps, self.axesOrientation[2], self.shimming)
                     orders = orders+gSteps*6
 
                 # Inversion pulse
                 if repeIndex>=self.dummyPulses and self.inversionTime!=0:
                     t0 = tEx-self.inversionTime-self.rfReTime/2-hw.blkTime
                     self.rfRecPulse(t0, self.rfReTime, rfReAmp, 0)
-                    self.gradTrap(t0+hw.blkTime+self.rfReTime, gradRiseTime, self.inversionTime*0.5, 0.005, gSteps, self.axes[0], self.shimming)
-                    self.gradTrap(t0+hw.blkTime+self.rfReTime, gradRiseTime, self.inversionTime*0.5, 0.005, gSteps, self.axes[1], self.shimming)
-                    self.gradTrap(t0+hw.blkTime+self.rfReTime, gradRiseTime, self.inversionTime*0.5, 0.005, gSteps, self.axes[2], self.shimming)
+                    self.gradTrap(t0+hw.blkTime+self.rfReTime, gradRiseTime, self.inversionTime*0.5, 0.005, gSteps, self.axesOrientation[0], self.shimming)
+                    self.gradTrap(t0+hw.blkTime+self.rfReTime, gradRiseTime, self.inversionTime*0.5, 0.005, gSteps, self.axesOrientation[1], self.shimming)
+                    self.gradTrap(t0+hw.blkTime+self.rfReTime, gradRiseTime, self.inversionTime*0.5, 0.005, gSteps, self.axesOrientation[2], self.shimming)
                     orders = orders+gSteps*6
 
                 # DC gradient if desired
                 if (repeIndex==0 or repeIndex>=self.dummyPulses) and dc==True:
                     t0 = tEx-10e3
-                    self.gradTrap(t0, gradRiseTime, 10e3+self.echoSpacing*(self.etl+1), rdGradAmplitude, gSteps, self.axes[0], self.shimming)
+                    self.gradTrap(t0, gradRiseTime, 10e3+self.echoSpacing*(self.etl+1), rdGradAmplitude, gSteps, self.axesOrientation[0], self.shimming)
                     orders = orders+gSteps*2
 
                 # Excitation pulse
@@ -319,7 +319,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 # Dephasing readout
                 if (repeIndex==0 or repeIndex>=self.dummyPulses) and dc==False:
                     t0 = tEx+self.rfExTime/2-hw.gradDelay
-                    self.gradTrap(t0, gradRiseTime, self.rdDephTime, rdDephAmplitude*self.rdPreemphasis, gSteps, self.axes[0], self.shimming)
+                    self.gradTrap(t0, gradRiseTime, self.rdDephTime, rdDephAmplitude*self.rdPreemphasis, gSteps, self.axesOrientation[0], self.shimming)
                     orders = orders+gSteps*2
 
                 # Echo train
@@ -333,14 +333,14 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     # Dephasing phase and slice gradients
                     if repeIndex>=self.dummyPulses:         # This is to account for dummy pulses
                         t0 = tEcho-self.echoSpacing/2+self.rfReTime/2-hw.gradDelay
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, phGradients[phIndex], gSteps, self.axes[1], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, slGradients[slIndex], gSteps, self.axes[2], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, phGradients[phIndex], gSteps, self.axesOrientation[1], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, slGradients[slIndex], gSteps, self.axesOrientation[2], self.shimming)
                         orders = orders+gSteps*4
 
                     # Readout gradient
                     if (repeIndex==0 or repeIndex>=self.dummyPulses) and dc==False:         # This is to account for dummy pulses
                         t0 = tEcho-self.rdGradTime/2-gradRiseTime-hw.gradDelay
-                        self.gradTrap(t0, gradRiseTime, self.rdGradTime, rdGradAmplitude, gSteps, self.axes[0], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.rdGradTime, rdGradAmplitude, gSteps, self.axesOrientation[0], self.shimming)
                         orders = orders+gSteps*2
 
                     # Rx gate
@@ -352,12 +352,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     # Rephasing phase and slice gradients
                     t0 = tEcho+self.acqTime/2+addRdPoints/BW-hw.gradDelay
                     if (echoIndex<self.etl-1 and repeIndex>=self.dummyPulses):
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -phGradients[phIndex], gSteps, self.axes[1], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -slGradients[slIndex], gSteps, self.axes[2], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -phGradients[phIndex], gSteps, self.axesOrientation[1], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -slGradients[slIndex], gSteps, self.axesOrientation[2], self.shimming)
                         orders = orders+gSteps*4
                     elif(echoIndex==self.etl-1 and repeIndex>=self.dummyPulses):
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, +phGradients[phIndex], gSteps, self.axes[1], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, +slGradients[slIndex], gSteps, self.axes[2], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, +phGradients[phIndex], gSteps, self.axesOrientation[1], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, +slGradients[slIndex], gSteps, self.axesOrientation[2], self.shimming)
                         orders = orders+gSteps*4
 
                     # Update the phase and slice gradient
@@ -570,7 +570,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         axesEnable = self.mapVals['axesEnable']
 
         # Get axes in strings
-        axes = self.mapVals['axes']
+        axes = self.mapVals['axesOrientation']
         axesDict = {'x':0, 'y':1, 'z':2}
         axesKeys = list(axesDict.keys())
         axesVals = list(axesDict.values())
@@ -613,10 +613,48 @@ class RARE(blankSeq.MRIBLANKSEQ):
             # Plot image
             image = np.abs(self.mapVals['image3D'])
             image = image/np.max(np.reshape(image,-1))*100
+
+            # Image orientation
+            if self.axesOrientation[2] == 2:  # Sagital
+                title = "Sagital"
+                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    xLabel = "A | PHASE | P"
+                    yLabel = "I | READOUT | S"
+                else:
+                    image = np.transpose(image, (0, 2, 1))
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    xLabel = "A | READOUT | P"
+                    yLabel = "I | PHASE | S"
+            if self.axesOrientation[2] == 1: # Coronal
+                title = "Coronal"
+                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2:
+                    image = np.flip(image, axis=2)
+                    xLabel = "L | PHASE | R"
+                    yLabel = "I | READOUT | S"
+                else:
+                    image = np.transpose(image, (0, 2, 1))
+                    image = np.flip(image, axis=2)
+                    xLabel = "L | READOUT | R"
+                    yLabel = "I | PHASE | S"
+            if self.axesOrientation[2] == 0:  # Transversal
+                title = "Transversal"
+                if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
+                    image = np.flip(image, axis=2)
+                    xLabel = "L | PHASE | R"
+                    yLabel = "P | READOUT | A"
+                else:
+                    image = np.transpose(image, (0, 2, 1))
+                    image = np.flip(image, axis=2)
+                    xLabel = "L | READOUT | R"
+                    yLabel = "P | PHASE | A"
+
             image = Spectrum3DPlot(image,
-                                   title='Image magnitude',
-                                   xLabel=axesStr[1]+" Axis",
-                                   yLabel=axesStr[0]+" Axis")
+                                   title=title,
+                                   xLabel=xLabel,
+                                   yLabel=yLabel)
             imageWidget = image.getImageWidget()
 
             try:

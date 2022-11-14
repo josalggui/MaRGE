@@ -39,7 +39,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ')
         self.addParameter(key='bw', string='Bandwidth (kHz)', val=50, field='RF')
         self.addParameter(key='dF', string='Frequency resolution (Hz)', val=100, field='RF')
-        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
+        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-12.5,-12.5,7.5], field='OTH')
 
     def sequenceInfo(self):
         print(" ")

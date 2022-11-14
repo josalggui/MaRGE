@@ -39,23 +39,23 @@ class Localizer(rare.RARE):
         self.mapVals['freqCal'] = 0
 
         # Run first projection localizer
-        self.mapVals['axes'] = [0, 1, 2]
+        self.mapVals['axesOrientation'] = [0, 1, 2]
         self.sequenceRun()
         self.proj1 = np.squeeze(np.abs(self.mapVals['image3D']))
 
         # Run second projection localizer
-        self.mapVals['axes'] = [0, 2, 1]
+        self.mapVals['axesOrientation'] = [0, 2, 1]
         self.sequenceRun()
         self.proj2 = np.squeeze(np.abs(self.mapVals['image3D']))
 
         # Run third projection localizer
-        self.mapVals['axes'] = [1, 2, 0]
+        self.mapVals['axesOrientation'] = [1, 2, 0]
         self.sequenceRun()
         self.proj3 = np.squeeze(np.abs(self.mapVals['image3D']))
 
         # Set the nPoints and axes to the original values:
         self.mapVals['nPoints'][2] = nSL
-        self.mapVals['axes'] = [0, 1, 2]
+        self.mapVals['axesOrientation'] = [0, 1, 2]
         self.mapVals['axesEnable'] = [1, 1, 1]
 
     def sequenceAnalysis(self, obj=''):
@@ -65,7 +65,7 @@ class Localizer(rare.RARE):
         self.fov = self.mapVals['nPoints']
 
         # Get axes in strings
-        axes = self.mapVals['axes']
+        axes = self.mapVals['axesOrientation']
         axesDict = {'x': 0, 'y': 1, 'z': 2}
         axesKeys = list(axesDict.keys())
         axesVals = list(axesDict.values())
