@@ -72,8 +72,6 @@ class FID(blankSeq.MRIBLANKSEQ):
         shimmingTime = self.mapVals['shimmingTime']*1e3 # us
 
         # Miscellaneus
-        addRdPoints = 10*hw.oversamplingFactor
-        self.mapVals['addRdPoints'] = addRdPoints
         bw = nPoints/acqTime # MHz
 
         def createSequence():
@@ -107,12 +105,13 @@ class FID(blankSeq.MRIBLANKSEQ):
         if not plotSeq:
             # Run the experiment and get data
             rxd, msgs = self.expt.run()
-            dataOver = rxd['rx%i'%rxChannel]*hw.adcFactor # mV
-            dataFull = sig.decimate(self.syncSignal(dataOver), hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            self.mapVals['dataOver'] = dataOver
-            self.mapVals['dataFull'] = dataFull
+
+            # Decimate the signal
+            dataFull = self.decimate(rxd['rx%i' % rxChannel], nScans)
+
+            # Average data
             data = np.average(np.reshape(dataFull, (nScans, -1)), axis=0)
-            self.mapVals['data'] = data[hw.addRdPoints::]
+            self.mapVals['data'] = data
 
             # Save data to sweep plot (single point)
             self.mapVals['sampledPoint'] = data[0]
@@ -120,19 +119,20 @@ class FID(blankSeq.MRIBLANKSEQ):
         self.expt.__del__()
 
     def sequenceAnalysis(self, obj=''):
+        # Signal and spectrum from 'fir' and decimation
         signal = self.mapVals['data']
         bw = self.mapVals['bw']*1e3 # kHz
         nPoints = self.mapVals['nPoints']
         deadTime = self.mapVals['deadTime']*1e-3 # ms
         rfExTime = self.mapVals['rfExTime']*1e-3 # ms
-
         tVector = np.linspace(rfExTime/2 + deadTime + 0.5/bw, rfExTime/2 + deadTime + (nPoints-0.5)/bw, nPoints)
         fVector = np.linspace(-bw/2, bw/2, nPoints)
         spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal))))
 
+        # Saver raw data after processing
         self.saveRawData()
 
-        # Add time signal to the layout
+        # Add time signal to the layout (Signal acquired with 'fir' fiter and decimation)
         signalPlotWidget = SpectrumPlot(xData=tVector,
                                         yData=[np.abs(signal), np.real(signal), np.imag(signal)],
                                         legend=['abs', 'real', 'imag'],

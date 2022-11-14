@@ -9,7 +9,7 @@ import os
 import sys
 import time
 import numpy as np
-import experiment as ex
+import controller.experiment_gui as ex
 import matplotlib.pyplot as plt
 import scipy
 import scipy.signal as sig
@@ -118,22 +118,17 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
         # Miscellaneous
         larmorFreq = larmorFreq*1e-6    # MHz
-        addRdPoints = 3             # Initial rd points to avoid artifact at the begining of rd
         resolution = fov/nPoints
         self.mapVals['resolution'] = resolution
-        self.mapVals['addRdPoints'] = addRdPoints
 
         # Get cartesian parameters
         dK = 1 / fov
         kMax = nPoints / (2 * fov)  # m-1
 
         # SetSamplingParameters
-        BWoriginal = (np.max(nPoints))*NyquistOS / (2 * acqTime) * 1e-6 # MHz
-        samplingPeriodOriginal = 1/BWoriginal
-        BWov = BWoriginal * hw.oversamplingFactor  # MHz
-        samplingPeriod = 1 / BWov  # us
-        self.mapVals['BWinitial'] = BWoriginal
-        self.mapVals['BWov'] = BWov
+        BW = (np.max(nPoints))*NyquistOS / (2 * acqTime) * 1e-6 # MHz
+        samplingPeriod = 1 / BW
+        self.mapVals['BW'] = BW
         self.mapVals['kMax'] = kMax
         self.mapVals['dK'] = dK
 
@@ -146,7 +141,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             gradientAmplitudes[2] = 0
         print("Gradient strengths are  ", gradientAmplitudes * 1e3, " mT/m")
 
-        nPPL = np.int(np.ceil((1.73205 * acqTime - deadTime - 0.5 * rfExTime) * BWoriginal * 1e6 + 1))
+        nPPL = np.int(np.ceil((1.73205 * acqTime - deadTime - 0.5 * rfExTime) * BW * 1e6 + 1))
         nLPC = np.int(np.ceil(max(nPoints[0], nPoints[1]) * np.pi / undersampling))
         nLPC = max(nLPC - (nLPC % 2), 1)
         nCir = max(np.int(np.ceil(nPoints[2] * np.pi / 2 / undersampling) + 1), 1)
@@ -160,7 +155,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         if axesEnable[2] == 0 and axesEnable[1] == 0:
             nLPC = 2
 
-        acqTime = nPPL / BWoriginal # us
+        acqTime = nPPL / BW # us
         self.mapVals['acqTimeReal'] = acqTime * 1e-3  # ms
         self.mapVals['nPPL'] = nPPL
         self.mapVals['nLPC'] = nLPC
@@ -206,10 +201,10 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         # Calculate radial k-points at t = 0.5*rfExTime+td
         kRadial = []
         normalizedKRadial = np.zeros((nRepetitions, 3, nPPL))
-        normalizedKRadial[:, :, 0] = (0.5 * rfExTime + deadTime + (0.5 / (BWoriginal*1e6))) * normalizedGradientsRadial
+        normalizedKRadial[:, :, 0] = (0.5 * rfExTime + deadTime + (0.5 / (BW*1e6))) * normalizedGradientsRadial
         # Calculate all k-points
         for jj in range(1, nPPL):
-            normalizedKRadial[:, :, jj] = normalizedKRadial[:, :, 0] + jj* normalizedGradientsRadial / (BWoriginal*1e6)
+            normalizedKRadial[:, :, jj] = normalizedKRadial[:, :, 0] + jj* normalizedGradientsRadial / (BW*1e6)
 
         a = np.zeros(shape=(normalizedKRadial.shape[2], normalizedKRadial.shape[0], normalizedKRadial.shape[1]))
         a[:, :, 0] = np.transpose(np.transpose(np.transpose(normalizedKRadial[:, 0, :])))
@@ -225,7 +220,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
         # Get cartesian kPoints
         # Get minimun time
-        tMin = 0.5 * rfExTime + deadTime + 0.5 / (BWoriginal * 1e6)
+        tMin = 0.5 * rfExTime + deadTime + 0.5 / (BW * 1e6)
 
         # Get the full cartesian points
         kx = np.linspace(-kMax[0] * (nPoints[0] != 1), kMax[0] * (nPoints[0] != 1), nPoints[0])
@@ -323,13 +318,13 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                 self.rfRecPulse(trf0, RFpulsetime, rfExAmp, drfPhase * np.pi / 180, txChannel=txChannel)
 
                 if repeIndex < gradientVectors1.shape[0]:
-                    tACQ = acqTimeSeq + addRdPoints / BWreal
+                    tACQ = acqTimeSeq
                 if repeIndex >= gradientVectors1.shape[0]:
-                    tACQ = addRdPoints / BWreal + 1 / BWreal
+                    tACQ = 1 / BWreal
 
                 # Rx gate
-                t0rx = trf0 + hw.blkTime + RFpulsetime + TxRxtime - addRdPoints / BWreal
-                self.rxGate(t0rx, tACQ, rxChannel=rxChannel)
+                t0rx = trf0 + hw.blkTime + RFpulsetime + TxRxtime
+                self.rxGateSync(t0rx, tACQ, rxChannel=rxChannel)
 
                 if repeIndex == nRep-1:
                     self.endSequence(tInit + (nRep+1) * tr)
@@ -348,8 +343,8 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         overData = []
         if plotSeq == 0 or plotSeq == 1:
             self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-            samplingPeriod = self.expt.get_rx_ts()[0]
-            BWreal = 1 / samplingPeriod / hw.oversamplingFactor
+            samplingPeriod = self.expt.getSamplingRate()
+            BWreal = 1 / samplingPeriod
             acqTimeSeq = nPPL / BWreal  # us
             self.mapVals['BW-real'] = BWreal
             self.mapVals['acqTimeSeq'] = acqTimeSeq
@@ -366,27 +361,33 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                     print("So short TR")
                     messagebox.showinfo(message="So short TR. Enlarge it!", title="Warning TR short")
 
-
+                # Run all scans
                 for ii in range(nScans):
                     print('Running...')
                     rxd, msgs = self.expt.run()
-                    rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
+                    rxd['rx0'] = rxd['rx0']  # mV
                     print('PETRA sequence finished!')
                     # Get data
                     overData = np.concatenate((overData, rxd['rx0']), axis=0)
 
-                overData = np.reshape(overData, (rxd['rx0'].shape[0], nScans))
-                overData = np.average(overData, axis=1)
-                dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-                RadialSampledPointsRaw = dataFull[0:(nPPL + addRdPoints) * gradientVectors1.shape[0]]
-                RadialSampledPointsReshaped = np.reshape(RadialSampledPointsRaw, (gradientVectors1.shape[0], nPPL+addRdPoints))
-                RadialSampledPointsFilt = np.delete(RadialSampledPointsReshaped, np.s_[0:addRdPoints], axis=1)
-                RadialSampledList = np.reshape(RadialSampledPointsFilt, (nPPL*gradientVectors1.shape[0], 1))
+                # Decimate the result
+                overData = np.reshape(overData, (nScans, -1))
+                radPoints = gradientVectors1.shape[0]*(nPPL+2*hw.addRdPoints)*hw.oversamplingFactor
+                carPoints = gradientVectors2.shape[0]*(1+2*hw.addRdPoints)*hw.oversamplingFactor
+                overDataRad = np.reshape(overData[:, 0:radPoints], -1)
+                overDataCar = np.reshape(overData[:, radPoints: radPoints+carPoints], -1)
+                fullDataRad = self.decimate(overDataRad, nScans*gradientVectors1.shape[0])
+                fullDataCar = self.decimate(overDataCar, nScans*gradientVectors2.shape[0])
 
-                CartesianSampledPointsRaw = dataFull[(nPPL + addRdPoints) * gradientVectors1.shape[0]:dataFull.shape[0]]
-                CartesianSampledPointsReshaped = np.reshape(CartesianSampledPointsRaw, (gradientVectors2.shape[0], 1 + addRdPoints))
-                CartesianSampledPointsFilt = np.delete(CartesianSampledPointsReshaped, np.s_[0:addRdPoints], axis=1)
-                CartesianSampledList = np.reshape(CartesianSampledPointsFilt, (1*gradientVectors2.shape[0], 1))
+                # Average results
+                RadialSampledPointsRaw = np.average(np.reshape(fullDataRad, (nScans, -1)), axis=0)
+                CartesianSampledPointsRaw = np.average(np.reshape(fullDataCar, (nScans, -1)), axis=0)
+
+                RadialSampledPointsReshaped = np.reshape(RadialSampledPointsRaw, (gradientVectors1.shape[0], nPPL))
+                RadialSampledList = np.reshape(RadialSampledPointsReshaped, (nPPL*gradientVectors1.shape[0], 1))
+
+                CartesianSampledPointsReshaped = np.reshape(CartesianSampledPointsRaw, (gradientVectors2.shape[0], 1))
+                CartesianSampledList = np.reshape(CartesianSampledPointsReshaped, (1*gradientVectors2.shape[0], 1))
 
                 signalPoints = np.concatenate((RadialSampledList, CartesianSampledList), axis=0)
                 kSpace = np.concatenate((kSpaceValues, signalPoints, signalPoints.real, signalPoints.imag), axis=1)

@@ -333,16 +333,32 @@ class MRIBLANKSEQ:
             data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n + idx[ii]]
         return (data1)
 
-    def syncSignal(self, overData):
+    def decimate(self, dataOver, nRdLines):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
-        This code deletes the added points that account by the time shift and ramp of the CIC filter
+        This code:
+            - deletes the added points that account by the time shift and ramp of the CIC filter
+            - preprocess data to avoid oscillations due to 'fir' filter in the decimation
         It must be used if the sequence uses "rxGateSync" to acquire data
         """
-        # Return the input wihtout the first cicDelay + cicRamp points
-        return (overData[int((hw.cicDelayPoints-1)/2)::])
+        # Preprocess the signal to avoid oscillations due to decimation
+        dataOver = np.reshape(dataOver, (nRdLines, -1))
+        for line in range(nRdLines):
+            dataOver[line, 0:hw.addRdPoints * hw.oversamplingFactor] = dataOver[line, hw.addRdPoints * hw.oversamplingFactor]
+        dataOver = np.reshape(dataOver, -1)
+        self.mapVals['dataOver'] = dataOver
 
+        # Decimate the signal after 'fir' filter
+        dataFull = sig.decimate(dataOver[int((hw.cicDelayPoints-1)/2)::], hw.oversamplingFactor, ftype='fir', zero_phase=True)
+
+        # Remove addRdPoints
+        nPoints = int(dataFull.shape[0]/nRdLines)-2*hw.addRdPoints
+        dataFull = np.reshape(dataFull, (nRdLines, -1))
+        dataFull = dataFull[:, hw.addRdPoints:hw.addRdPoints+nPoints]
+        dataFull = np.reshape(dataFull, -1)
+
+        return dataFull
 
     def rfSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, rewrite=True):
         """"
@@ -410,7 +426,7 @@ class MRIBLANKSEQ:
         cicDelayPoints = 3
         samplingRate = self.expt.getSamplingRate() / hw.oversamplingFactor # us
         t0 = tStart - (hw.addRdPoints*hw.oversamplingFactor-cicDelayPoints) * samplingRate # us
-        t1 = tStart + gateTime + cicDelayPoints * samplingRate
+        t1 = tStart + gateTime + (hw.addRdPoints*hw.oversamplingFactor + cicDelayPoints) * samplingRate
         rxGateTime = np.array([t0, t1])
         rxGateAmp = np.array([1, 0])
         self.expt.add_flodict({

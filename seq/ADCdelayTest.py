@@ -77,7 +77,7 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
                 self.rfRecPulse(tRx - hw.blkTime, rfExTime, rfExAmp, 0, txChannel=txChannel)
 
                 # Rx gate
-                t0 = tRx+rfExTime/2+hw.deadTime-(addRdPoints-3)/bw
+                t0 = tRx+rfExTime/2+hw.deadTime-addRdPoints/bw
                 self.rxGate(t0, acqTime+addRdPoints/bw, rxChannel=rxChannel)
 
             self.endSequence(tRx + addRdPoints / bw + 2 * acqTime)
@@ -124,8 +124,8 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
                     m = (y2-y1)/(x2-x1)
                     t0 = -y1/m+x1
                     self.mapVals['sampledPoint'] = t0
+                    print('\n0 mV crossing time: %0.0f ms' % (self.mapVals['sampledPoint']))
                 ii += 1
-            print('\n0 mV crossing time: %0.0f ms' % (self.mapVals['sampledPoint']))
         self.expt.__del__()
 
     def sequenceAnalysis(self, obj=''):
