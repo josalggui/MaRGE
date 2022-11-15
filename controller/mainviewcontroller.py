@@ -39,7 +39,6 @@ from worker import Worker
 st = pdb.set_trace
 import copy
 import configs.hw_config as hw
-import bm4d
 
 # Import sequences
 from seq.sequences import defaultsequences
@@ -536,6 +535,13 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         outRabi = rabiSeq.sequenceAnalysis()
         delattr(rabiSeq, 'out')
 
+        # Get Shimming
+        shimSeq = defaultsequences['Shimming']
+        shimSeq.sequenceRun()
+        outShim = shimSeq.sequenceAnalysis()
+        delattr(shimSeq, 'out')
+
+
         # Spectrum
         # Create label with rawdata name
         fileName = larmorSeq.mapVals['fileName']
@@ -545,8 +551,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.plotview_layout.addWidget(self.label)
 
         # Add plots to the plotview_layout
-        item = outLarmor[1]
-        self.plotview_layout.addWidget(item)
+        # item = outLarmor[1]
+        # self.plotview_layout.addWidget(item)
 
         # Noise
         # Create label with rawdata name
@@ -557,8 +563,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.plotview_layout.addWidget(self.label)
 
         # Add plots to the plotview_layout
-        for item in outNoise:
-            self.plotview_layout.addWidget(item)
+        #for item in outNoise:
+        #    self.plotview_layout.addWidget(item)
+        item = outNoise[1]
+        self.plotview_layout.addWidget(item)
 
         # Rabi
         # Create label with rawdata name
@@ -572,7 +580,20 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         item = outRabi[0]
         self.plotview_layout.addWidget(item)
 
+        # Shimming
+        # Create label with rawdata name
+        fileName = shimSeq.mapVals['fileName']
+        self.label = QLabel(fileName)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setStyleSheet("background-color: black;color: white")
+        self.plotview_layout.addWidget(self.label)
+
+        # Add plots to the plotview_layout
+        item = outShim[0]
+        self.plotview_layout.addWidget(item)
+
         self.onSequenceChanged.emit(self.sequence)
+
 
     def protocoleRARE3DT1(self):
         # Load parameters
@@ -855,7 +876,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                     seq.mapVals[key] = inputNum
 
         self.onSequenceChanged.emit(self.sequence)
-        self.messages("Parameters of %s sequence loaded" %(self.sequence))
+        self.print("Parameters of %s sequence loaded" %(self.sequence))
 
     def save_parameters_calibration(self):
         seq = defaultsequences[self.sequence]
@@ -870,7 +891,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             writer.writerows([seq.mapNmspc, mapVals])
 
         # self.messages("Parameters of %s sequence saved" % (self.sequence))
-        print("\n Parameters of %s sequence saved" %(self.sequence))
+        print("\nParameters of %s sequence saved" %(self.sequence))
 
     def save_parameters(self):
         dt = datetime.now()

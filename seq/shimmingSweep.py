@@ -38,7 +38,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
-        self.addParameter(key='shimming0', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
+        self.addParameter(key='shimming0', string='Shimming (*1e4)', val=[-12.5,-12.5,7.5], field='OTH')
         self.addParameter(key='nShimming', string='n Shimming steps', val=10, field='OTH')
         self.addParameter(key='dShimming', string='Shiming step', val=[2.5, 2.5, 2.5], field='OTH')
 
@@ -55,7 +55,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         nShimming = self.mapVals['nShimming']
         return(repetitionTime*nShimming*3/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq):
+    def sequenceRun(self, plotSeq=0):
         init_gpa = False  # Starts the gpa
         demo = False
 
@@ -188,33 +188,35 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         # Add shimming x to the layout
         plotXWidget = SpectrumPlot(xData=sxVector * 1e4,
-                                   yData=[np.abs(dataFFT[0, :])],
-                                   legend=[''],
-                                   xLabel='Shimming X',
+                                   yData=[np.abs(dataFFT[0, :]), np.abs(dataFFT[1, :]), np.abs(dataFFT[2, :])],
+                                   legend=['X', 'Y', 'Z'],
+                                   xLabel='Shimming ',
                                    yLabel='Spectrum amplitude',
-                                   title='Shimming X')
+                                   title='Shimming ')
 
-        plotYWidget = SpectrumPlot(xData=syVector * 1e4,
-                                   yData=[np.abs(dataFFT[1, :])],
-                                   legend=[''],
-                                   xLabel='Shimming Y',
-                                   yLabel='Spectrum amplitude',
-                                   title='Shimming Y')
+        # plotYWidget = SpectrumPlot(xData=syVector * 1e4,
+        #                            yData=[np.abs(dataFFT[1, :])],
+        #                            legend=[''],
+        #                            xLabel='Shimming Y',
+        #                            yLabel='Spectrum amplitude',
+        #                            title='Shimming Y')
+        #
+        # plotZWidget = SpectrumPlot(xData=szVector * 1e4,
+        #                            yData=[np.abs(dataFFT[2, :])],
+        #                            legend=[''],
+        #                            xLabel='Shimming Z',
+        #                            yLabel='Spectrum amplitude',
+        #                            title='Shimming Z')
 
-        plotZWidget = SpectrumPlot(xData=szVector * 1e4,
-                                   yData=[np.abs(dataFFT[2, :])],
-                                   legend=[''],
-                                   xLabel='Shimming Z',
-                                   yLabel='Spectrum amplitude',
-                                   title='Shimming Z')
 
         if obj=="Standalone":
             plotXWidget.show()
-            plotYWidget.show()
-            plotZWidget.show()
+            # plotYWidget.show()
+            # plotZWidget.show()
             pg.show()
 
-        return([plotXWidget, plotYWidget, plotZWidget])
+        self.out = [plotXWidget]
+        return(self.out)
 
 if __name__ == '__main__':
     seq = ShimmingSweep()
