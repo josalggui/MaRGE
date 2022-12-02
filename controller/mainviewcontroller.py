@@ -337,8 +337,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
             # Save results into the history
             self.history_list_widgets[fileName] = self.oldOut
-            self.history_list_inputs[fileName] = [defaultsequences[self.seqName].mapNmspc.values(),
-                                                  defaultsequences[self.seqName].mapVals.values()]
+            self.history_list_inputs[fileName] = [list(defaultsequences[self.seqName].mapNmspc.values()),
+                                                  list(defaultsequences[self.seqName].mapVals.values())]
 
             # Add plots to the plotview_layout
             for item in self.oldOut:
@@ -404,6 +404,14 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                     # set new title to plot
                     # newText = self.newOut[plotIndex].plotitem.titleLabel.text
                     # newText = self.newOut[plotIndex].plotitem.getTitle()
+
+            # Clear inputs
+            defaultsequences[self.seqName].resetMapVals()
+
+            # Save results into the history
+            self.history_list_widgets[fileName] = self.oldOut
+            self.history_list_inputs[fileName] = [list(defaultsequences[self.seqName].mapNmspc.values()),
+                                                  list(defaultsequences[self.seqName].mapVals.values())]
 
             # Stop repetitions if single acquision
             if singleRepetition: self.iterativeRun = False
