@@ -29,7 +29,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
-        self.addParameter(key='shimming', string='Shimming (*1e-4)', val=[-70, -90, 10], field='OTH')
+        self.addParameter(key='shimming', string='Shimming (*1e-4)', val=[-12.5,-12.5,7.5], field='OTH')
         self.addParameter(key='rfExTime0', string='Rf pulse time, Start (us)', val=5.0, field='RF')
         self.addParameter(key='rfExTime1', string='RF pulse time, End (us)', val=100.0, field='RF')
         self.addParameter(key='nSteps', string='Number of steps', val=20, field='RF')
@@ -187,7 +187,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         dataEchoAvg = np.mean(dataEcho, axis=0)
         self.mapVals['dataEchoAvg'] = dataEchoAvg
 
-        rabiFID = dataFIDAvg[:, 50]
+        rabiFID = dataFIDAvg[:, 10]
         self.mapVals['rabiFID'] = rabiFID
         rabiEcho = dataEchoAvg[:, np.int(nPoints/2)]
         self.mapVals['rabiEcho'] = rabiEcho
@@ -212,12 +212,12 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         height = win.frameGeometry().height()
 
         # Acquired FIDs
-        rabiFID3D = Spectrum3DPlot(data=np.abs(dataFIDAvg),
-                                   xLabel="Repetition index",
-                                   yLabel="Acquired point",
-                                   title="FIDs")
-        rabiFID3DWidget = rabiFID3D.getImageWidget()
-        rabiFID3DWidget.setMinimumWidth(int(win.frameGeometry().width()))
+        #rabiFID3D = Spectrum3DPlot(data=np.abs(dataFIDAvg),
+        #                           xLabel="Repetition index",
+        #                           yLabel="Acquired point",
+        #                           title="FIDs")
+        #rabiFID3DWidget = rabiFID3D.getImageWidget()
+        #rabiFID3DWidget.setMinimumWidth(int(win.frameGeometry().width()))
 
         # Signal vs rf time
         rabiFIDWidget = SpectrumPlot(xData=timeVector*1e6,
@@ -234,9 +234,11 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                                   yLabel='Signal amplitude (mV)',
                                   title='Rabi Flops with Spin Echo')
 
-        win.addWidget(item=rabiFID3DWidget, rowspan=2, colspan=1)
-        win.addWidget(item=rabiFIDWidget, row=0, col=1)
-        win.addWidget(item=rabiEchoWidget, row=1, col=1)
+        #win.addWidget(item=rabiFID3DWidget, rowspan=2, colspan=1)
+        #win.addWidget(item=rabiFIDWidget, row=0, col=1)
+        #win.addWidget(item=rabiEchoWidget, row=1, col=1)
 
-        return ([win])
+        self.out = [rabiFIDWidget, rabiEchoWidget]
+
+        return (self.out)
 
