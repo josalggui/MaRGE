@@ -18,6 +18,7 @@ import seq.inversionRecovery as inversionRecovery
 import seq.ADCdelayTest as ADCdelayTest
 import seq.noise as noise
 import seq.shimmingSweep as shimming
+import seq.testSE as testSE
 import seq.sliceSelection as sliceSelection
 import seq.fov as fov
 import seq.sweepImage as sweep
@@ -25,7 +26,8 @@ import seq.autoTuning as autoTuning
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
-
+class testSE(testSE.testSE):
+    def __init__(self): super(testSE, self).__init__()
 class GRE3D(gre.GRE3D):
     def __init__(self): super(GRE3D, self).__init__()
 
@@ -93,4 +95,5 @@ defaultsequences = {
     'ADCtest': ADCtest(),
     'Shimming': Shimming(),
     'SWEEP': SWEEP(),
+    'testSE': testSE(),
 }

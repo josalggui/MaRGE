@@ -546,9 +546,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Get Shimming
         shimSeq = defaultsequences['Shimming']
         shimSeq.sequenceRun()
-        outShim = shimSeq.sequenceAnalysis()
+        outShim = shimSeq.sequenceAnalysis(obj='autocalibration')
+        for seq in defaultsequences:
+            defaultsequences[seq].mapVals['shimming'] = outShim[1]
         delattr(shimSeq, 'out')
-
 
         # Spectrum
         # Create label with rawdata name

@@ -161,6 +161,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # Execute the experiment
         createSequence()
         if not plotSeq:
+            print('Runing...')
             rxd, msgs = self.expt.run()
             rxd['rx0'] = rxd['rx0'] * 13.788  # Here I normalize to get the result in mV
             self.mapVals['dataOversampled'] = rxd['rx0']
@@ -199,7 +200,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
             d = np.abs(rabiFID[n])-np.abs(rabiFID[n-1])
             n += 1
             if d<0: test = False
-        piHalfTime = timeVector[n-1]*1e6 # us
+        piHalfTime = timeVector[n-2]*1e6 # us
         self.mapVals['piHalfTime'] = piHalfTime
         print("\npi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us"%(self.mapVals['rfExAmp'], self.mapVals['piHalfTime']))
         hw.b1Efficiency = np.pi/2/(self.mapVals['rfExAmp']*piHalfTime)

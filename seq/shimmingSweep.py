@@ -145,6 +145,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         createSequence()
 
         if not plotSeq:
+            print('Runing...')
             rxd, msgs = self.expt.run()
             print(msgs)
             data = sig.decimate(rxd['rx0'] * 13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
@@ -177,14 +178,14 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         print("Shimming Y = %0.1f" % (sy*1e4))
         print("Shimming Z = %0.1f" % (sz*1e4))
 
-        # Update the shimming in hw_config
-        if obj != "standalone":
-            for seqName in self.sequenceList:
-                self.sequenceList[seqName].mapVals['shimming'] = [np.round(sx*1e4, decimals=1),
-                                                                  np.round(sy*1e4, decimals=1),
-                                                                  np.round(sz*1e4, decimals=1)]
-
-        self.saveRawData()
+        # # Update the shimming in hw_config
+        # if obj != "standalone":
+        #     for seqName in self.sequenceList:
+        #         self.sequenceList[seqName].mapVals['shimming'] = [np.round(sx*1e4, decimals=1),
+        #                                                           np.round(sy*1e4, decimals=1),
+        #                                                           np.round(sz*1e4, decimals=1)]
+        #
+        # self.saveRawData()
 
         # Add shimming x to the layout
         plotXWidget = SpectrumPlot(xData=sxVector * 1e4,
@@ -208,6 +209,17 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         #                            yLabel='Spectrum amplitude',
         #                            title='Shimming Z')
 
+        # Update the shimming in hw_config
+        if obj != "standalone":
+            if obj != 'autocalibration':
+                for seqName in self.sequenceList:
+                    self.sequenceList[seqName].mapVals['shimming'] = [np.round(sx*1e4, decimals=1),
+                                                                      np.round(sy*1e4, decimals=1),
+                                                                      np.round(sz*1e4, decimals=1)]
+
+        self.saveRawData()
+        shimming = [np.round(sx*1e4, decimals=1), np.round(sy*1e4, decimals=1), np.round(sz*1e4, decimals=1)]
+        self.mapVals['shimming0'] = shimming
 
         if obj=="Standalone":
             plotXWidget.show()
@@ -215,7 +227,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             # plotZWidget.show()
             pg.show()
 
-        self.out = [plotXWidget]
+        self.out = [plotXWidget,shimming]
         return(self.out)
 
 if __name__ == '__main__':

@@ -657,11 +657,19 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                    yLabel=yLabel)
             imageWidget = image.getImageWidget()
 
+            # image = Spectrum3DPlot(np.angle(self.mapVals['kSpace3D']), title="k-Space - Phase ")
+            # image = Spectrum3DPlot(np.unwrap(np.angle(self.mapVals['kSpace3D'])),title="k-Space - Phase ")
+            # imageWidget = image.getImageWidget()
+
+
+
             try:
                 kSpace = Spectrum3DPlot(np.log10(np.abs(self.mapVals['kSpace3D'])),
-                                        title='k-Space',
-                                        xLabel="k%s"%axesStr[1],
-                                        yLabel="k%s"%axesStr[0])
+                                        title='k-Space')
+                # kSpace = Spectrum3DPlot(log10(np.abs(self.mapVals['kSpace3D'])),
+                #                         title='k-Space',
+                #                         xLabel="k%s"%axesStr[1],
+                #                         yLabel="k%s"%axesStr[0])
             except:
                 kSpace = Spectrum3DPlot(np.abs(self.mapVals['kSpace3D']),
                                         title='k-Space',
@@ -671,6 +679,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
             win.addWidget(imageWidget, row=0, col=0)
             win.addWidget(kSpaceWidget, row=0, col=1)
+            # win.addWidget(image2Widget, row=0, col=1)
 
             if obj=="Standalone":
                 pg.exec()
