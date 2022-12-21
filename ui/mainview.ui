@@ -432,6 +432,7 @@
    <addaction name="action_autocalibration"/>
    <addaction name="action_run_localizer"/>
    <addaction name="action_XNATupload"/>
+   <addaction name="action_add_to_list"/>
    <addaction name="action_acquire"/>
    <addaction name="action_iterate"/>
   </widget>
@@ -764,6 +765,18 @@
   <action name="actionRARE_3D_HAND_RHO">
    <property name="text">
     <string>RARE 3D HAND RHO</string>
+   </property>
+  </action>
+  <action name="action_add_to_list">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/icons/clipboard-list-check.png</normaloff>../resources/icons/clipboard-list-check.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add to task list</string>
+   </property>
+   <property name="toolTip">
+    <string>Add to task list</string>
    </property>
   </action>
  </widget>

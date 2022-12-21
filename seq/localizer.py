@@ -107,18 +107,18 @@ class Localizer(rare.RARE):
 
         # Custom ROI for selecting an image region
         roi1 = pg.ROI([0, 0], [nPoints[0], nPoints[1]])
-        roi1.addScaleHandle([0.5, 1], [0.5, 0.5])
-        roi1.addScaleHandle([0, 0.5], [0.5, 0.5])
+        roi1.addScaleHandle([1, 1], [0.5, 0.5])
+        roi1.addRotateHandle([0, 0], [0.5, 0.5])
         plot1.addItem(roi1)
 
         roi2 = pg.ROI([0, 0], [nPoints[1], nPoints[2]])
-        roi2.addScaleHandle([0.5, 1], [0.5, 0.5])
-        roi2.addScaleHandle([0, 0.5], [0.5, 0.5])
+        roi2.addScaleHandle([1, 1], [0.5, 0.5])
+        roi2.addRotateHandle([0, 0], [0.5, 0.5])
         plot2.addItem(roi2)
 
         roi3 = pg.ROI([0, 0], [nPoints[2], nPoints[0]])
-        roi3.addScaleHandle([0.5, 1], [0.5, 0.5])
-        roi3.addScaleHandle([0, 0.5], [0.5, 0.5])
+        roi3.addScaleHandle([1, 1], [0.5, 0.5])
+        roi3.addRotateHandle([0, 0], [0.5, 0.5])
         plot3.addItem(roi3)
 
         def update_plot():

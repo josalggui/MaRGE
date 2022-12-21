@@ -12,8 +12,6 @@ Plotview Spectrum (1D Plot)
 @todo:      Implement more feature from pyqtgraph
 
 """
-from PyQt5.QtWidgets import QLabel
-from PyQt5 import QtCore
 from pyqtgraph import GraphicsLayoutWidget
 from warnings import warn
 import pyqtgraph as pg
@@ -27,7 +25,6 @@ class SpectrumPlot(GraphicsLayoutWidget):
                  xLabel, # string
                  yLabel, # string
                  title, # string
-                 replot=False,
                  ):
         super(SpectrumPlot, self).__init__()
         self.yData = yData
@@ -41,8 +38,6 @@ class SpectrumPlot(GraphicsLayoutWidget):
             return
 
         # Add label to show data from the cross hair
-        # self.label = pg.LabelItem(justify='right')
-        # self.addItem(self.label)
         self.label2 = pg.LabelItem(justify='left')
         self.addItem(self.label2)
         self.label2.setText("<span style='font-size: 8pt'>%s=%0.2f, %s=%0.2f</span>" % (xLabel, 0, yLabel, 0))
@@ -166,8 +161,9 @@ class Spectrum3DPlot():
         self.textitem.setText('', color='red')
 
         # Create imageView and fit into the plotArea
-        self.imv = ImageViewer(view=self.plotitem, textitem=self.textitem)
-        self.imv.setImage(data)
+        self.imv = ImageViewer(view=self.plotitem, textitem=self.textitem, data=self.data)
+        # self.imv = pg.ImageView(view=self.plotitem)
+        # self.imv.setImage(data)
 
         # Insert textitem into the ImageViewer widget
         self.vbox = self.imv.getView()
@@ -203,14 +199,42 @@ class ImageViewer(pg.ImageView):
     """
 
     def __init__(self, parent=None, name="ImageView", view=None, imageItem=None,
-                 levelMode='mono', textitem=None, *args):
+                 levelMode='mono', textitem=None, data=None, *args):
         # pg.ImageView.__init__(self, parent=None, name="ImageView", view=None, imageItem=None,
         #          levelMode='mono', *args)
 
         super(ImageViewer, self).__init__(parent=parent, name=name, view=view, imageItem=imageItem,
                  levelMode=levelMode, *args)
         self.textitem = textitem
-        # self.view.invertY(False)
+
+        # Change the Norm button to FOV button
+        self.ui.menuBtn.setText("FOV")
+        self.ui.menuBtn.setCheckable(True)
+
+        # Create ROI to get FOV
+        self.roiFOV = pg.ROI([0, 0], [np.size(data, 1), np.size(data, 2)])
+        self.roiFOV.addScaleHandle([1, 1], [0.5, 0.5])
+        self.roiFOV.addRotateHandle([0, 0], [0.5, 0.5])
+        self.roiFOV.setZValue(20)
+        self.roiFOV.setPen('y')
+        self.view.addItem(self.roiFOV)
+        self.roiFOV.hide()
+
+        # Modify ROI to get SNR
+        self.roi.setPen('g')
+
+        # Add image
+        self.setImage(data)
+
+    def menuClicked(self):
+        # img = self.getProcessedImage()
+        # self.roiFOV.setPos([0, 0])
+        # self.roiFOV.setSize(np.size(img, 1) / 2, np.size(img, 2) / 2)
+        # self.roiFOV.setZValue(20)
+        if self.ui.menuBtn.isChecked():
+            self.roiFOV.show()
+        else:
+            self.roiFOV.hide()
 
     def roiChanged(self):
         # Extract image data from ROI
@@ -304,8 +328,8 @@ class ImageViewer(pg.ImageView):
             self.ui.splitter.handle(1).setEnabled(True) # Allow to change the window size
             self.roiChanged()
             for c in self.roiCurves:
-                c.show()
-            self.ui.roiPlot.showAxis('left')
+                c.hide()
+            # self.ui.roiPlot.showAxis('left')
         else:
             self.roi.hide()
             self.ui.roiPlot.setMouseEnabled(False, False)

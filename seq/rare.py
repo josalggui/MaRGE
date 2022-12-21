@@ -25,6 +25,7 @@ import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new se
 from plotview.spectrumplot import SpectrumPlot # To plot nice 1d images
 from plotview.spectrumplot import Spectrum3DPlot # To show nice 2d or 3d images
 import pyqtgraph as pg
+import time
 
 #*********************************************************************************
 #*********************************************************************************
@@ -37,7 +38,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='RAREInfo', val='RARE')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
-        self.addParameter(key='rfExFA', string='Exitation flip angle (º)', val=90, field='RF')
+        self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=35.0, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=70.0, field='RF')
@@ -460,6 +461,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                         overData = np.concatenate((overData, data), axis = 0)
 
             if not demo: self.expt.__del__()
+            else: time.sleep(0.5)
         del aa
 
         if not plotSeq:
@@ -581,10 +583,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
             axesStr[n] = axesKeys[index]
             n += 1
 
-        # Create widget to introduce the figures
-        win = pg.LayoutWidget()
-        win.resize(300, 1000)
-
         if (axesEnable[1] == 0 and axesEnable[2] == 0):
             bw = self.mapVals['bw']*1e-3 # kHz
             acqTime = self.mapVals['acqTime'] # ms
@@ -594,21 +592,29 @@ class RARE(blankSeq.MRIBLANKSEQ):
             iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
 
             # Plots to show into the GUI
-            f_plotview = SpectrumPlot(fVector, [np.abs(iVector)], ['Spectrum magnitude'],
-                                      "Frequency (kHz)", "Amplitude (a.u.)",
-                                      "Spectrum")
-            t_plotview = SpectrumPlot(tVector, [np.abs(sVector), np.real(sVector), np.imag(sVector)],
-                                      ['Magnitude', 'Real', 'Imaginary'],
-                                      'Time (ms)', "Signal amplitude (mV)",
-                                      "Signal")
+            result1 = {}
+            result1['widget'] = 'curve'
+            result1['xData'] = tVector
+            result1['yData'] = [np.abs(sVector), np.real(sVector), np.imag(sVector)]
+            result1['xLabel'] = 'Time (ms)'
+            result1['yLabel'] = 'Signal amplitude (mV)'
+            result1['title'] = "Signal"
+            result1['legend'] = ['Magnitude', 'Real', 'Imaginary']
+            result1['row'] = 0
+            result1['col'] = 0
 
-            # Introduce the images into the layout
-            win.addWidget(t_plotview, row=0, col=0)
-            win.addWidget(f_plotview, row=0, col=1)
+            result2 = {}
+            result2['widget'] = 'curve'
+            result2['xData'] = fVector
+            result2['yData'] = [np.abs(iVector)]
+            result2['xLabel'] = 'Frequency (kHz)'
+            result2['yLabel'] = "Amplitude (a.u.)"
+            result2['title'] = "Spectrum"
+            result2['legend'] = ['Spectrum magnitude']
+            result2['row'] = 1
+            result2['col'] = 0
 
-            if obj=="Standalone":
-                pg.exec()
-            return([win])
+            return([result1, result2])
         else:
             # Plot image
             image = np.abs(self.mapVals['image3D'])
@@ -651,39 +657,30 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     xLabel = "L | READOUT | R"
                     yLabel = "P | PHASE | A"
 
-            image = Spectrum3DPlot(image,
-                                   title=title,
-                                   xLabel=xLabel,
-                                   yLabel=yLabel)
-            imageWidget = image.getImageWidget()
+            result1 = {}
+            result1['widget'] = 'image'
+            result1['data'] = image
+            result1['xLabel'] = xLabel
+            result1['yLabel'] = yLabel
+            result1['title'] = title
+            result1['row'] = 0
+            result1['col'] = 0
 
-            # image = Spectrum3DPlot(np.angle(self.mapVals['kSpace3D']), title="k-Space - Phase ")
-            # image = Spectrum3DPlot(np.unwrap(np.angle(self.mapVals['kSpace3D'])),title="k-Space - Phase ")
-            # imageWidget = image.getImageWidget()
-
-
-
+            result2 = {}
+            result2['widget'] = 'image'
             try:
-                kSpace = Spectrum3DPlot(np.log10(np.abs(self.mapVals['kSpace3D'])),
-                                        title='k-Space')
-                # kSpace = Spectrum3DPlot(log10(np.abs(self.mapVals['kSpace3D'])),
-                #                         title='k-Space',
-                #                         xLabel="k%s"%axesStr[1],
-                #                         yLabel="k%s"%axesStr[0])
+                result2['data'] = np.log10(np.abs(self.mapVals['kSpace3D']))
             except:
-                kSpace = Spectrum3DPlot(np.abs(self.mapVals['kSpace3D']),
-                                        title='k-Space',
-                                        xLabel="k%s" % axesStr[1],
-                                        yLabel="k%s" % axesStr[0])
-            kSpaceWidget = kSpace.getImageWidget()
+                result2['data'] = np.abs(self.mapVals['kSpace3D'])
+            result2['xLabel'] = "k%s"%axesStr[1]
+            result2['yLabel'] = "k%s"%axesStr[0]
+            result2['title'] = "k-Space"
+            result2['row'] = 0
+            result2['col'] = 1
 
-            win.addWidget(imageWidget, row=0, col=0)
-            win.addWidget(kSpaceWidget, row=0, col=1)
-            # win.addWidget(image2Widget, row=0, col=1)
+            output = [result1, result2]
 
-            if obj=="Standalone":
-                pg.exec()
-            return([win])
+            return(output)
 
 if __name__=="__main__":
     seq = RARE()
