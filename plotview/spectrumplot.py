@@ -16,6 +16,8 @@ from pyqtgraph import GraphicsLayoutWidget
 from warnings import warn
 import pyqtgraph as pg
 import numpy as np
+import fov
+from seq.sequences import defaultsequences
 
 class SpectrumPlot(GraphicsLayoutWidget):
     def __init__(self,
@@ -147,8 +149,11 @@ class Spectrum3DPlot():
         MRILAB @ I3M
         """
 
-        # Save data into the self
+        # Save inputs into the self
         self.data = data
+        self.xLabel = xLabel
+        self.yLabel = yLabel
+        self.title = title
 
         # Create plot area
         self.plotitem = pg.PlotItem()
@@ -161,9 +166,8 @@ class Spectrum3DPlot():
         self.textitem.setText('', color='red')
 
         # Create imageView and fit into the plotArea
-        self.imv = ImageViewer(view=self.plotitem, textitem=self.textitem, data=self.data)
-        # self.imv = pg.ImageView(view=self.plotitem)
-        # self.imv.setImage(data)
+        self.imv = ImageViewer(view=self.plotitem, textitem=self.textitem, data=self.data, title=self.title)
+        self.imv.parent = self
 
         # Insert textitem into the ImageViewer widget
         self.vbox = self.imv.getView()
@@ -199,13 +203,18 @@ class ImageViewer(pg.ImageView):
     """
 
     def __init__(self, parent=None, name="ImageView", view=None, imageItem=None,
-                 levelMode='mono', textitem=None, data=None, *args):
-        # pg.ImageView.__init__(self, parent=None, name="ImageView", view=None, imageItem=None,
-        #          levelMode='mono', *args)
+                 levelMode='mono', textitem=None, data=None, title=None, *args):
 
         super(ImageViewer, self).__init__(parent=parent, name=name, view=view, imageItem=imageItem,
                  levelMode=levelMode, *args)
+        self.img_resolution = None
         self.textitem = textitem
+        self.title = title
+
+        # hide FOV button if not image
+        self.ui.menuBtn.hide()
+        if (title == "Sagittal" or title == "Coronal" or title == "Transversal"):
+            self.ui.menuBtn.show()
 
         # Change the Norm button to FOV button
         self.ui.menuBtn.setText("FOV")
@@ -219,6 +228,7 @@ class ImageViewer(pg.ImageView):
         self.roiFOV.setPen('y')
         self.view.addItem(self.roiFOV)
         self.roiFOV.hide()
+        self.roiFOV.sigRegionChangeFinished.connect(self.roiFOVChanged)
 
         # Modify ROI to get SNR
         self.roi.setPen('g')
@@ -227,14 +237,84 @@ class ImageViewer(pg.ImageView):
         self.setImage(data)
 
     def menuClicked(self):
-        # img = self.getProcessedImage()
-        # self.roiFOV.setPos([0, 0])
-        # self.roiFOV.setSize(np.size(img, 1) / 2, np.size(img, 2) / 2)
-        # self.roiFOV.setZValue(20)
         if self.ui.menuBtn.isChecked():
+            # Get the corresponding axes from the image
+            x_axis = 0
+            y_axis = 1
+            if self.title == "Sagittal":
+                x_axis = 1
+                y_axis = 0
+            elif self.title == "Coronal":
+                x_axis = 2
+                y_axis = 0
+            elif self.title == "Transversal":
+                x_axis = 2
+                y_axis = 1
+
+            # Get image fov and resolution
+            n_points = np.array(np.shape(self.getProcessedImage()))[1::]
+            img_fov_ru = np.array([fov.fov_ima[x_axis], fov.fov_ima[y_axis]])
+            # img_dfov_ru = np.array([fov.dfov_ima[x_axis], fov.dfov_ima[y_axis]])
+            self.img_resolution = img_fov_ru / n_points
+
+            # # Get roi fov in pixel units
+            # roi_fov_ru = np.array([fov.fov_roi[x_axis], fov.fov_roi[y_axis]])
+            # roi_dfov_ru = np.array([fov.dfov_roi[x_axis], fov.dfov_roi[y_axis]])
+            # roi_fov_px = roi_fov_ru / self.img_resolution
+            # roi_dfov_px = roi_dfov_ru / self.img_resolution - roi_fov_px / 2 + img_fov_ru / self.img_resolution / 2
+
+            # Set roi size and angle
+            self.roiFOV.setPos([0.0, 0.0])
+            self.roiFOV.setSize(n_points)
+            self.roiFOV.setAngle(0.0)
+
+            # Show the roi
             self.roiFOV.show()
         else:
             self.roiFOV.hide()
+
+    def roiFOVChanged(self):
+        # Get the corresponding axes from the image
+        x_axis = 0
+        y_axis = 1
+        if self.title == "Sagittal":
+            x_axis = 1
+            y_axis = 0
+        elif self.title == "Coronal":
+            x_axis = 2
+            y_axis = 0
+        elif self.title == "Transversal":
+            x_axis = 2
+            y_axis = 1
+
+        # Get roi properties in pixel units
+        ima_fov_px = np.array(np.shape(self.getProcessedImage()))[1::]
+        roi_fov_px = self.roiFOV.size()
+        roi_pos_px = self.roiFOV.pos()
+        roi_angle = self.roiFOV.angle()
+
+        x0_px = (+ (ima_fov_px[0] / 2 - roi_pos_px[0]) * np.cos(roi_angle * np.pi / 180)
+                 + (ima_fov_px[1] / 2 - roi_pos_px[1]) * np.sin(roi_angle * np.pi / 180))
+        y0_px = (- (ima_fov_px[0] / 2 - roi_pos_px[0]) * np.sin(roi_angle * np.pi / 180)
+                 + (ima_fov_px[1] / 2 - roi_pos_px[1]) * np.cos(roi_angle * np.pi / 180))
+        x0_ru = (x0_px - roi_fov_px[0]/2) * self.img_resolution[0]
+        y0_ru = (y0_px - roi_fov_px[1]/2) * self.img_resolution[1]
+
+        # Set fov properties in true units
+        fov.fov_roi[x_axis] = roi_fov_px[0]*self.img_resolution[0]
+        fov.fov_roi[y_axis] = roi_fov_px[1]*self.img_resolution[1]
+        fov.dfov_roi[x_axis] = x0_ru
+        fov.dfov_roi[y_axis] = y0_ru
+        fov.angle_roi = roi_angle
+
+        for seqName in defaultsequences:
+            if ('fov' and 'dfov' and 'angle') in defaultsequences[seqName].mapKeys:
+                defaultsequences[seqName].mapVals['fov'][x_axis] = np.round(fov.fov_roi[x_axis], decimals=1)            # cm
+                defaultsequences[seqName].mapVals['fov'][y_axis] = np.round(fov.fov_roi[y_axis], decimals=1)            # cm
+                defaultsequences[seqName].mapVals['dfov'][x_axis] = np.round(fov.dfov_roi[x_axis], decimals=1) * 10     # mm
+                defaultsequences[seqName].mapVals['dfov'][y_axis] = np.round(fov.dfov_roi[y_axis], decimals=1) * 10     # mm
+                defaultsequences[seqName].mapVals['angle'] = np.round(fov.angle_roi, decimals=1)                        # degrees
+        self.parent.parent.onSequenceChanged.emit(self.parent.parent.sequence)
 
     def roiChanged(self):
         # Extract image data from ROI

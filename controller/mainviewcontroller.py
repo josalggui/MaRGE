@@ -44,7 +44,10 @@ import configs.hw_config as hw
 
 # Import sequences
 from seq.sequences import defaultsequences
-from seq.localizer import Localizer
+# from seq.localizer import Localizer
+
+# import fov properties
+import fov
 
 # Import controllers
 from controller.batchcontroller import BatchController                                              # Batches
@@ -168,7 +171,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Update the sequence parameters shown in the gui
         self.seqName = self.sequencelist.getCurrentSequence()
         defaultsequences[self.seqName].sequenceInfo()
-        defaultsequences['AutoTuning'].pyfirmata = self.pyfirmata
 
         # Show the gui maximized
         # self.showMaximized()
@@ -246,6 +248,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                                        xLabel = item['xLabel'],
                                        yLabel = item['yLabel'],
                                        title = item['title'])
+                image.parent = self
                 win.addWidget(image.getImageWidget(), row = item['row']+1, col = item['col'])
             elif item['widget'] == 'curve':
                 plot = SpectrumPlot(xData = item['xData'],
@@ -315,14 +318,15 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         print("Check the terminal for errors")
         print("If there are: 1) do 'Copybitstream', 2) do 'Init marcos server'")
 
-    def runToList(self):
+    def runToList(self, seqName=None):
         """
         @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
         @email: josalggui@i3m.upv.es
         @Summary: add new run to the waiting list
         """
         # Load sequence name
-        seqName = self.sequencelist.getCurrentSequence()
+        if seqName==None or seqName==False:
+            seqName = self.sequencelist.getCurrentSequence()
 
         # Add item to the history list
         name = str(datetime.now())[11:23] + " | " + seqName
@@ -358,7 +362,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                         n += 1
                     # Run the sequence
                     output = self.runSequenceInlist(sequence=sequence)
-                    time.sleep(5)
+                    time.sleep(1)
                     # Add item to the history list
                     fileName = sequence.mapVals['fileName']
                     self.history_list.item(element).setText(key + " | " + fileName)
@@ -386,6 +390,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         # Create and execute selected sequence
         sequence.sequenceRun(0)
+        time.sleep(1)
 
         # Do sequence analysis and get results
         return(sequence.sequenceAnalysis())
@@ -465,6 +470,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                                            xLabel=item['xLabel'],
                                            yLabel=item['yLabel'],
                                            title=item['title'])
+                    image.parent = self
                     self.win.addWidget(image.getImageWidget(), row=item['row'] + 1, col=item['col'])
                     defaultsequences[self.seqName].deleteOutput()
                 elif item['widget'] == 'curve':
@@ -560,17 +566,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.action_iterate.setToolTip('Switch to iterative run')
             self.iterativeRun = False
 
-        # if self.iterativeRun == False:
-        #     self.iterativeRun = True
-        #     # self.action_iterate.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/media-fast-forward-outline.svg') )
-        #     self.action_iterate.setToolTip('Switch to single run')
-        #     # self.action_iterate.setText('Iterative run')
-        # else:
-        #     self.iterativeRun = False
-        #     # self.action_iterate.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/media-fast-forward.svg') )
-        #     self.action_iterate.setToolTip('Switch to iterative run')
-        #     # self.action_iterate.setText('Single run')
-
     def startSequencePlot(self):
         """
         @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
@@ -609,55 +604,27 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         print('Start localizer')
 
-        # Set localizer sequence to RARE
-        localizer = Localizer()
+        # Load sequence name
+        seqName = 'Localizer'
 
-        # Load default parameters
-        localizer.loadParams(directory="calibration")
-        localizer.mapVals['seqName'] = 'Localizer'
-        localizer.mapNmspc['seqName'] = 'LocalizerInfo'
-        localizer.saveParams()
+        defaultsequences[seqName].loadParams(directory="calibration")
 
-        # Add parent to localizer so it can update sequences parameters
-        localizer.parent = self
+        # Sagittal localizer
+        if defaultsequences[seqName].mapVals['planes'][0]:
+            defaultsequences[seqName].mapVals['axesOrientation'] = [0, 1, 2]
+            self.runToList(seqName=seqName)
+            time.sleep(1)
 
-        # Add sequences to localizer
-        localizer.sequencelist = defaultsequences
+        # Transversal localizer
+        if defaultsequences[seqName].mapVals['planes'][1]:
+            defaultsequences[seqName].mapVals['axesOrientation'] = [1, 2, 0]
+            self.runToList(seqName=seqName)
+            time.sleep(1)
 
-        # Create and execute selected sequence
-        localizer.sequenceRunProjections(0)
-
-        # Do sequence analysis and acquire de plots
-        out = localizer.sequenceAnalysis()
-
-        # Delete previous localizer
-        # self.clearLocalizerLayout()
-        self.clearPlotviewLayout()
-
-        # Create label with rawdata name
-        fileName = localizer.mapVals['fileName']
-        self.label = QLabel(fileName)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("background-color: black;color: white")
-        # self.localizer_layout.addWidget(self.label)
-        self.plotview_layout.addWidget(self.label)
-
-        # Add item to the history list
-        name = str(datetime.now())[11:23]+" | "+fileName
-        self.history_list.addItem(name)
-
-        # Clear inputs
-        defaultsequences[self.seqName].resetMapVals()
-
-        # Save results into the history
-        self.history_list_outputs[name[0:12]] = out
-        self.history_list_inputs[name[0:12]] = [defaultsequences[self.seqName].mapNmspc.values(),
-                                                defaultsequences[self.seqName].mapVals.values(),
-                                                False]
-
-        # Add plots to the localizer_layout
-        # self.localizer_layout.addWidget(out[0])
-        self.plotview_layout.addWidget(out[0])
+        # Coronal localizer
+        if defaultsequences[seqName].mapVals['planes'][2]:
+            defaultsequences[seqName].mapVals['axesOrientation'] = [2, 0, 1]
+            self.runToList(seqName=seqName)
 
     def autocalibration(self):
         self.clearPlotviewLayout()
@@ -1039,7 +1006,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                 mapVals[key] = seq.mapVals[key]
             writer.writerows([seq.mapNmspc, mapVals])
 
-        # self.messages("Parameters of %s sequence saved" % (self.sequence))
         print("\nParameters of %s sequence saved" %(self.sequence))
 
     def save_parameters(self):

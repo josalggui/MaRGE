@@ -22,10 +22,11 @@ import experiment as ex
 import scipy.signal as sig
 import configs.hw_config as hw # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-from plotview.spectrumplot import SpectrumPlot # To plot nice 1d images
-from plotview.spectrumplot import Spectrum3DPlot # To show nice 2d or 3d images
+# from plotview.spectrumplot import SpectrumPlot # To plot nice 1d images
+# from plotview.spectrumplot import Spectrum3DPlot # To show nice 2d or 3d images
 import pyqtgraph as pg
 import time
+from phantominator import shepp_logan
 
 #*********************************************************************************
 #*********************************************************************************
@@ -49,6 +50,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], field='IM')
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 1, 1], field='IM')
+        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM')
@@ -96,48 +98,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa=False # Starts the gpa
-        demo = False
+        self.demo = True
 
         # Create the inputs automatically as a property of the class
         for key in self.mapKeys:
             setattr(self, key, self.mapVals[key])
-
-        # Create the inputs automatically. For some reason it only works if there is a few code later...
-        # for key in self.mapKeys:
-        #     locals()[key] = self.mapVals[key]
-        #     if not key in locals():
-        #         print('Error')
-        #         locals()[key] = self.mapVals[key]
-
-        # Create the inputs manually, pufff
-        # seqName = self.mapVals['seqName']
-        # nScans = self.mapVals['nScans']
-        # larmorFreq = self.mapVals['larmorFreq']# MHz
-        # rfExFA = self.mapVals['rfExFA']/180*np.pi # rads
-        # rfReFA = self.mapVals['rfReFA']/180*np.pi # rads
-        # rfExTime = self.mapVals['rfExTime'] # us
-        # rfReTime = self.mapVals['rfReTime'] # us
-        # echoSpacing = self.mapVals['echoSpacing'] # ms
-        # preExTime = self.mapVals['preExTime'] # ms
-        # inversionTime = self.mapVals['inversionTime'] # ms
-        # repetitionTime = self.mapVals['repetitionTime'] # ms
-        # fov = np.array(self.mapVals['fov']) # cm
-        # dfov = np.array(self.mapVals['dfov']) # mm
-        # nPoints = np.array(self.mapVals['nPoints'])
-        # etl = self.mapVals['etl']
-        # acqTime = self.mapVals['acqTime'] # ms
-        # axes = self.mapVals['axes']
-        # axesEnable = self.mapVals['axesEnable']
-        # sweepMode = self.mapVals['sweepMode']
-        # rdGradTime = self.mapVals['rdGradTime'] # ms
-        # rdDephTime = self.mapVals['rdDephTime'] # ms
-        # phGradTime = self.mapVals['phGradTime'] # ms
-        # rdPreemphasis = self.mapVals['rdPreemphasis']
-        # drfPhase = self.mapVals['drfPhase'] # degrees
-        # dummyPulses = self.mapVals['dummyPulses']
-        # shimming = np.array(self.mapVals['shimming']) # *1e4
-        # parFourierFraction = self.mapVals['parFourierFraction']
-        # freqCal = self.mapVals['freqCal']
 
         # Conversion of variables to non-multiplied units
         self.freqOffset = self.freqOffset*1e3
@@ -393,7 +358,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['scanTime'] = scanTime*nSL*1e-6
 
         # Calibrate frequency
-        if self.freqCal and (not plotSeq) and (not demo):
+        if self.freqCal and (not plotSeq) and (not self.demo):
             hw.larmorFreq = self.freqCalibration(bw=0.05)
             hw.larmorFreq = self.freqCalibration(bw=0.005)
         self.mapVals['larmorFreq'] = hw.larmorFreq
@@ -412,7 +377,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         acqPointsPerBatch = []
         while repeIndexGlobal<nRepetitions:
             nBatches += 1
-            if not demo:
+            if not self.demo:
                 self.expt = ex.Experiment(lo_freq=hw.larmorFreq+self.freqOffset, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
                 samplingPeriod = self.expt.get_rx_ts()[0]
                 BW = 1/samplingPeriod/hw.oversamplingFactor
@@ -434,9 +399,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 self.mapVals['bw'] = 1/samplingPeriod/hw.oversamplingFactor
 
             for ii in range(self.nScans):
-                if not demo:
+                if not self.demo:
                     if not plotSeq:
-                        print('Batch ', nBatches, ', Scan ', ii+1, ' runing...')
+                        print('Batch ', nBatches, ', Scan ', ii+1, ' running...')
                         rxd, msgs = self.expt.run()
                         rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
                         # Get noise data
@@ -460,8 +425,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     else:
                         overData = np.concatenate((overData, data), axis = 0)
 
-            if not demo: self.expt.__del__()
-            else: time.sleep(0.5)
+            if not self.demo: self.expt.__del__()
         del aa
 
         if not plotSeq:
@@ -618,11 +582,15 @@ class RARE(blankSeq.MRIBLANKSEQ):
         else:
             # Plot image
             image = np.abs(self.mapVals['image3D'])
+            if self.demo:
+                image = shepp_logan((nPoints[2], nPoints[1], nPoints[0]))
+            else:
+                image = np.abs(self.mapVals['image3D'])
             image = image/np.max(np.reshape(image,-1))*100
 
             # Image orientation
             if self.axesOrientation[2] == 2:  # Sagital
-                title = "Sagital"
+                title = "Sagittal"
                 if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
