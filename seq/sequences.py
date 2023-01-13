@@ -23,11 +23,14 @@ import seq.sliceSelection as sliceSelection
 import seq.fov as fov
 import seq.sweepImage as sweep
 import seq.autoTuning as autoTuning
+import seq.localizer as localizer
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
+
 class testSE(testSE.testSE):
     def __init__(self): super(testSE, self).__init__()
+
 class GRE3D(gre.GRE3D):
     def __init__(self): super(GRE3D, self).__init__()
 
@@ -74,7 +77,10 @@ class SWEEP(sweep.SweepImage):
     def __init__(self): super(SWEEP, self).__init__()
 #
 class AutoTuning(autoTuning.AutoTuning):
-    def __init(self): super(AutoTuning, self).__init__()
+    def __init__(self): super(AutoTuning, self).__init__()
+
+class Localizer(localizer.Localizer):
+    def __init__(self): super(Localizer, self).__init__()
 
 """
 Definition of default sequences
@@ -96,4 +102,5 @@ defaultsequences = {
     'Shimming': Shimming(),
     'SWEEP': SWEEP(),
     'testSE': testSE(),
+    'Localizer': Localizer(),
 }
