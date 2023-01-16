@@ -112,28 +112,26 @@ class Noise(blankSeq.MRIBLANKSEQ):
         print('\nrms noise: %0.5f mV' % noiserms)
 
         # Plot signal versus time
-        result1 = {}
-        result1['widget'] = 'curve'
-        result1['xData'] = self.dataTime[0]
-        result1['yData'] = [np.abs(self.dataTime[1]), np.real(self.dataTime[1]), np.imag(self.dataTime[1])]
-        result1['xLabel'] = 'Time (ms)'
-        result1['yLabel'] = 'Signal amplitude (mV)'
-        result1['title'] = 'Noise vs time'
-        result1['legend'] = ['abs', 'real', 'imag']
-        result1['row'] = 0
-        result1['col'] = 0
+        result1 = {'widget': 'curve',
+                   'xData': self.dataTime[0],
+                   'yData': [np.abs(self.dataTime[1]), np.real(self.dataTime[1]), np.imag(self.dataTime[1])],
+                   'xLabel': 'Time (ms)',
+                   'yLabel': 'Signal amplitude (mV)',
+                   'title': 'Noise vs time',
+                   'legend': ['abs', 'real', 'imag'],
+                   'row': 0,
+                   'col': 0}
 
         # Plot spectrum
-        result2 = {}
-        result2['widget'] = 'curve'
-        result2['xData'] = self.dataSpec[0]
-        result2['yData'] = [np.abs(self.dataSpec[1])]
-        result2['xLabel'] = 'Frequency (kHz)'
-        result2['yLabel'] = 'Mag FFT (a.u.)'
-        result2['title'] = 'Noise spectrum'
-        result2['legend'] = ['']
-        result2['row'] = 1
-        result2['col'] = 0
+        result2 = {'widget': 'curve',
+                   'xData': self.dataSpec[0],
+                   'yData': [np.abs(self.dataSpec[1])],
+                   'xLabel': 'Frequency (kHz)',
+                   'yLabel': 'Mag FFT (a.u.)',
+                   'title': 'Noise spectrum',
+                   'legend': [''],
+                   'row': 1,
+                   'col': 0}
 
         self.out = [result1, result2]
 

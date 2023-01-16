@@ -178,36 +178,16 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         print("Shimming Y = %0.1f" % (sy*1e4))
         print("Shimming Z = %0.1f" % (sz*1e4))
 
-        # # Update the shimming in hw_config
-        # if obj != "standalone":
-        #     for seqName in self.sequenceList:
-        #         self.sequenceList[seqName].mapVals['shimming'] = [np.round(sx*1e4, decimals=1),
-        #                                                           np.round(sy*1e4, decimals=1),
-        #                                                           np.round(sz*1e4, decimals=1)]
-        #
-        # self.saveRawData()
-
-        # Add shimming x to the layout
-        plotXWidget = SpectrumPlot(xData=sxVector * 1e4,
-                                   yData=[np.abs(dataFFT[0, :]), np.abs(dataFFT[1, :]), np.abs(dataFFT[2, :])],
-                                   legend=['X', 'Y', 'Z'],
-                                   xLabel='Shimming ',
-                                   yLabel='Spectrum amplitude',
-                                   title='Shimming ')
-
-        # plotYWidget = SpectrumPlot(xData=syVector * 1e4,
-        #                            yData=[np.abs(dataFFT[1, :])],
-        #                            legend=[''],
-        #                            xLabel='Shimming Y',
-        #                            yLabel='Spectrum amplitude',
-        #                            title='Shimming Y')
-        #
-        # plotZWidget = SpectrumPlot(xData=szVector * 1e4,
-        #                            yData=[np.abs(dataFFT[2, :])],
-        #                            legend=[''],
-        #                            xLabel='Shimming Z',
-        #                            yLabel='Spectrum amplitude',
-        #                            title='Shimming Z')
+        # Shimming plot
+        result1 = {'widget': 'curve',
+                   'xData': sxVector * 1e4,
+                   'yData': [np.abs(dataFFT[0, :]), np.abs(dataFFT[1, :]), np.abs(dataFFT[2, :])],
+                   'xLabel': 'Shimming',
+                   'yLabel': 'Spectrum amplitude',
+                   'title': 'Shimming',
+                   'legend': ['X', 'Y', 'Z'],
+                   'row': 0,
+                   'col': 0}
 
         # Update the shimming in hw_config
         if obj != "standalone":
@@ -221,14 +201,8 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         shimming = [np.round(sx*1e4, decimals=1), np.round(sy*1e4, decimals=1), np.round(sz*1e4, decimals=1)]
         self.mapVals['shimming0'] = shimming
 
-        if obj=="Standalone":
-            plotXWidget.show()
-            # plotYWidget.show()
-            # plotZWidget.show()
-            pg.show()
-
-        self.out = [plotXWidget,shimming]
-        return(self.out)
+        self.out = [result1]
+        return self.out
 
 if __name__ == '__main__':
     seq = ShimmingSweep()

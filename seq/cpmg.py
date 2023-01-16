@@ -188,28 +188,27 @@ class CPMG(blankSeq.MRIBLANKSEQ):
 
         self.saveRawData()
 
-        win = pg.LayoutWidget()
-
         # Signal vs rf time
-        plotWidget = SpectrumPlot(xData=results[0]*1e-3,
-                                  yData=[results[1], func1(results[0], *fitData1), func2(results[0], *fitData2)],
-                                  legend=['Experimental', 'Fitting 1 component', 'Fitting 2 components'],
-                                  xLabel='Echo time (ms)',
-                                  yLabel='Echo amplitude (mV)',
-                                  title='')
-        plotWidget.plotitem.curves[0].setSymbol('x')
-        echoes = Spectrum3DPlot(data=data,
-                                yLabel="Acquired point",
-                                xLabel="Echo index",
-                                title="Acquired echoes")
-        echoesWidget = echoes.getImageWidget()
-        echoesWidget.setMinimumWidth(int(win.frameGeometry().width()))
+        result1 = {'widget': 'curve',
+                   'xData': results[0]*1e-3,
+                   'yData': [results[1], func1(results[0], *fitData1), func2(results[0], *fitData2)],
+                   'xLabel': 'Echo time (ms)',
+                   'yLabel': 'Echo amplitude (mV)',
+                   'title': '',
+                   'legend': ['Experimental', 'Fitting 1 component', 'Fitting 2 components'],
+                   'row': 0,
+                   'col': 0}
 
-        # win.addWidget(echoesWidget)
-        # win.addWidget(plotWidget)
+        # 2D image
+        result2 = {'widget': 'image',
+                   'data': data,
+                   'xLabel': "Echo index",
+                   'yLabel': "Acquired point",
+                   'title': "Acquired echoes",
+                   'row': 1,
+                   'col': 0}
+
 
         # create self.out to run in iterative mode
-        self.out = [plotWidget]
-        return(self.out)
-
-        # return([win])
+        self.out = [result1, result2]
+        return self.out

@@ -20,7 +20,6 @@ import seq.noise as noise
 import seq.shimmingSweep as shimming
 import seq.testSE as testSE
 import seq.sliceSelection as sliceSelection
-import seq.fov as fov
 import seq.sweepImage as sweep
 import seq.autoTuning as autoTuning
 import seq.localizer as localizer
@@ -69,9 +68,6 @@ class Shimming(shimming.ShimmingSweep):
 
 class SliceSelection(sliceSelection.SliceSelection):
     def __init__(self): super(SliceSelection, self).__init__()
-
-class FOV(fov.FOV):
-    def __init__(self): super(FOV, self).__init__()
 
 class SWEEP(sweep.SweepImage):
     def __init__(self): super(SWEEP, self).__init__()

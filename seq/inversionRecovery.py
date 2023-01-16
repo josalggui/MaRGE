@@ -186,16 +186,19 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Signal vs inverion time
-        plotWidget = SpectrumPlot(xData=self.data[0],
-                            yData=[np.abs(self.data[1])],
-                            legend=[''],
-                            xLabel='Time (ms)',
-                            yLabel='Signal amplitude (mV)',
-                            title='')
+        result1 = {'widget': 'curve',
+                   'xData': self.data[0],
+                   'yData': [np.abs(self.data[1])],
+                   'xLabel': 'Time (ms)',
+                   'yLabel': 'Signal amplitude (mV)',
+                   'title': '',
+                   'legend': [''],
+                   'row': 0,
+                   'col': 0}
 
         # create self.out to run in iterative mode
-        self.out = [plotWidget]
+        self.out = [result1]
 
-        return (self.out)
+        return self.out
 
 

@@ -120,23 +120,27 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
             # Plot image
             image = np.abs(imageSteps)
             image = image / np.max(np.reshape(image, -1)) * 100
-            image = Spectrum3DPlot(image,
-                                   title="%s sweep images" % self.mapVals['seqNameSweep'],
-                                   xLabel=axesStr[0],
-                                   yLabel=axesStr[1])
-            imageWidget = image.getImageWidget()
+            result1 = {'widget': 'image',
+                       'data': image,
+                       'xLabel': axesStr[0],
+                       'yLabel': axesStr[1],
+                       'title': "%s sweep images" % self.mapVals['seqNameSweep'],
+                       'row': 0,
+                       'col': 0}
 
             # Plot k-space
             kSpace = np.log10(np.abs(dataSteps))
             kSpace = kSpace / np.max(np.reshape(kSpace, -1)) * 100
-            kSpace = Spectrum3DPlot(kSpace,
-                                   title="%s sweep k-spaces" % self.mapVals['seqNameSweep'],
-                                   xLabel=axesStr[0],
-                                   yLabel=axesStr[1])
-            kSpaceWidget = image.getImageWidget()
+            result2 = {'widget': 'image',
+                       'data': kSpace,
+                       'xLabel': axesStr[0],
+                       'yLabel': axesStr[1],
+                       'title': "%s sweep k-spaces" % self.mapVals['seqNameSweep'],
+                       'row': 1,
+                       'col': 0}
 
             self.saveRawData()
-            return([imageWidget, kSpaceWidget])
+            return [result1, result2]
 
         elif 'sampledPoint' in self.seq.mapVals:  # In case of points (calibration sequences)
             image = np.zeros((nSteps[0], nSteps[1]), dtype=complex)
@@ -150,22 +154,27 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
             if nSteps[1]>1: # If we sweep two parameters, show a map
                 image = np.abs(image)
                 map = image = image / np.max(np.reshape(image, -1)) * 100
-                map = Spectrum3DPlot(np.abs(image),
-                                     xLabel=self.seq.mapNmspc[self.mapVals['parameter0']],
-                                     yLabel=self.seq.mapNmspc[self.mapVals['parameter1']],
-                                     title='%s sweep' % self.mapVals['seqNameSweep'])
-                mapWidget = map.getImageWidget()
+                result1 = {'widget': 'image',
+                           'data': np.abs(image),
+                           'xLabel': self.seq.mapNmspc[self.mapVals['parameter0']],
+                           'yLabel': self.seq.mapNmspc[self.mapVals['parameter1']],
+                           'title': '%s sweep' % self.mapVals['seqNameSweep'],
+                           'row': 0,
+                           'col': 0}
             else: # If we sweep only one parameter, show a line plot
                 image = np.reshape(image, -1)
-                mapWidget = SpectrumPlot(xData=parVector0,
-                                         yData=[np.abs(image)],
-                                         legend=[''],
-                                         xLabel=self.seq.mapNmspc[self.mapVals['parameter0']],
-                                         yLabel='Output amplitude',
-                                         title='%s sweep' % self.mapVals['seqNameSweep'])
+                result1 = {'widget': 'curve',
+                           'xData': parVector0,
+                           'yData': [np.abs(image)],
+                           'xLabel': self.seq.mapNmspc[self.mapVals['parameter0']],
+                           'yLabel': 'Output amplitude',
+                           'title': '%s sweep' % self.mapVals['seqNameSweep'],
+                           'legend': [''],
+                           'row': 0,
+                           'col': 0}
                 self.mapVals['sweepResult'] = [parVector0, np.abs(image)]
             self.saveRawData()
-            return([mapWidget])
+            return[result1]
 
 if __name__=='__main__':
     seq = SweepImage()
