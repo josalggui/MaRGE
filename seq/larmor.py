@@ -171,30 +171,31 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Add time signal to the layout
-        signalPlotWidget = SpectrumPlot(xData=tVector,
-                                        yData=[np.abs(signal), np.real(signal), np.imag(signal)],
-                                        legend=['abs', 'real', 'imag'],
-                                        xLabel='Time (ms)',
-                                        yLabel='Signal amplitude (mV)',
-                                        title='')
+        result1 = {'widget': 'curve',
+                   'xData': tVector,
+                   'yData': [np.abs(signal), np.real(signal), np.imag(signal)],
+                   'xLabel': 'Time (ms)',
+                   'yLabel': 'Signal amplitude (mV)',
+                   'title': '',
+                   'legend': ['abs', 'real', 'imag'],
+                   'row': 0,
+                   'col': 0}
 
         # Add frequency spectrum to the layout
-        spectrumPlotWidget = SpectrumPlot(xData=fVector,
-                                          yData=[np.abs(spectrum)],
-                                          legend=[''],
-                                          xLabel='Frequency (kHz)',
-                                          yLabel='Spectrum amplitude (a.u.)',
-                                          title='Spectrum')
-
-        if obj == "Standalone":
-            signalPlotWidget.show()
-            spectrumPlotWidget.show()
-            pg.exec()
+        result2 = {'widget': 'curve',
+                   'xData': fVector,
+                   'yData': [np.abs(spectrum)],
+                   'xLabel': 'Frequency (kHz)',
+                   'yLabel': 'Spectrum amplitude (a.u.)',
+                   'title': 'Spectrum',
+                   'legend': [''],
+                   'row': 1,
+                   'col': 0}
 
         # create self.out to run in iterative mode
-        self.out = [signalPlotWidget, spectrumPlotWidget]
+        self.out = [result1, result2]
 
-        return (self.out)
+        return self.out
 
 
 if __name__ == '__main__':

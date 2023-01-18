@@ -14,6 +14,7 @@ from PyQt5.uic import loadUiType, loadUi
 from PyQt5 import QtGui
 from PyQt5.QtGui import QIcon
 import pyqtgraph.exporters
+import pyqtgraph as pg
 from functools import partial
 import os
 import platform
@@ -34,6 +35,7 @@ import numpy as np
 import imageio
 from plotview.spectrumplot import Spectrum3DPlot
 from plotview.spectrumplot import SpectrumPlotSeq
+from plotview.spectrumplot import SpectrumPlot
 import time
 from worker import Worker
 st = pdb.set_trace
@@ -42,7 +44,10 @@ import configs.hw_config as hw
 
 # Import sequences
 from seq.sequences import defaultsequences
-from seq.localizer import Localizer
+# from seq.localizer import Localizer
+
+# import fov properties
+import fov
 
 # Import controllers
 from controller.batchcontroller import BatchController                                              # Batches
@@ -59,6 +64,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     """
     onSequenceChanged = pyqtSignal(str)
     iterativeRun = False
+    newRun = True
     marcosServer = False
 
     def __init__(self, session, parent=None, pyfirmata=None):
@@ -104,7 +110,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.layout_history.addWidget(self.input_table)
 
         # Create dictionaries to save historic widgets and inputs.
-        self.history_list_widgets = {}
+        self.history_list_outputs = {}
         self.history_list_inputs = {}
 
         # Initialize multithreading
@@ -119,12 +125,15 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
         # XNAT upload
         self.xnat_active = 'FALSE'
-        
+
         # Toolbar Actions
+        self.action_iterate.setCheckable(True)
+        self.action_server.setCheckable(True)
         self.action_gpaInit.triggered.connect(self.initgpa)
         self.action_autocalibration.triggered.connect(self.autocalibration)
         self.action_changeappearance.triggered.connect(self.changeAppearanceSlot)
         self.action_acquire.triggered.connect(self.startAcquisition)
+        self.action_add_to_list.triggered.connect(self.runToList)
         self.action_close.triggered.connect(self.close)
         self.action_exportfigure.triggered.connect(self.export_figure)
         self.action_viewsequence.triggered.connect(self.startSequencePlot)
@@ -162,10 +171,16 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Update the sequence parameters shown in the gui
         self.seqName = self.sequencelist.getCurrentSequence()
         defaultsequences[self.seqName].sequenceInfo()
-        defaultsequences['AutoTuning'].pyfirmata = self.pyfirmata
 
         # Show the gui maximized
         # self.showMaximized()
+
+        # Start sequence listening
+        # Pass the function to execute into the thread
+        worker = Worker(self.waitingForRun)
+        # Execute in a parallel thread
+        self.threadpool.start(worker)
+
 
     def update_history_table(self, item):
         """
@@ -174,10 +189,11 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         @Summary: update the table when new element is clicked in the history list
         """
         # Get file name
-        fileName = item.text()[15::]
+        # fileName = item.text()[15::]
+        name = item.text()[0:12]
 
         # Get the input data from history
-        input_data = self.history_list_inputs[fileName]
+        input_data = self.history_list_inputs[name]
 
         # Clear the table
 
@@ -200,7 +216,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Add table to the layout
         x = 1
 
-
     def update_history_figure(self, item):
         """
         @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
@@ -209,23 +224,42 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         """
         # Get file name
         fileName = item.text()[15::]
+        name = item.text()[0:12]
 
         # Get the widget from history
-        widgets = self.history_list_widgets[fileName]
+        output = self.history_list_outputs[name]
 
         # Clear the plotview
         self.clearPlotviewLayout()
 
-        # Add label to show rawData name
-        self.label = QLabel()
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("background-color: black;color: white")
-        self.plotview_layout.addWidget(self.label)
-        self.label.setText(fileName)
-
         # Add plots to the plotview_layout
-        for item in widgets:
-            self.plotview_layout.addWidget(item)
+        win = pg.LayoutWidget()
+
+        # Add label to show rawData name
+        label = QLabel()
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        label.setStyleSheet("background-color: black;color: white")
+        win.addWidget(label, row = 0, col = 0, colspan = 2)
+        label.setText(fileName)
+
+        for item in output:
+            if item['widget'] == 'image':
+                image = Spectrum3DPlot(data = item['data'],
+                                       xLabel = item['xLabel'],
+                                       yLabel = item['yLabel'],
+                                       title = item['title'])
+                image.parent = self
+                win.addWidget(image.getImageWidget(), row = item['row']+1, col = item['col'])
+            elif item['widget'] == 'curve':
+                plot = SpectrumPlot(xData = item['xData'],
+                                    yData = item['yData'],
+                                    legend = item['legend'],
+                                    xLabel = item['xLabel'],
+                                    yLabel = item['yLabel'],
+                                    title = item['title'])
+                win.addWidget(plot, row = item['row']+1, col = item['col'])
+        self.plotview_layout.addWidget(win)
+        self.newRun = True
 
     def controlMarcosServer(self):
         """
@@ -235,18 +269,18 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         """
         if self.marcosServer:
             self.marcosServer = False
-            self.action_server.setIcon(
-                QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/server-light.png'))
+            # self.action_server.setIcon(
+            #     QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/server-light.png'))
             self.action_server.setToolTip('Close marcos server')
-            self.action_server.setText('Close marcos server')
+            # self.action_server.setText('Close marcos server')
             os.system('ssh root@192.168.1.101 "killall marcos_server"')
             print("\n Server disconnected.")
         else:
             self.marcosServer = True
-            self.action_server.setIcon(
-                QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/server-dark.png'))
+            # self.action_server.setIcon(
+            #     QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/server-dark.png'))
             self.action_server.setToolTip('Connect to marcos server')
-            self.action_server.setText('Connect to marcos server')
+            # self.action_server.setText('Connect to marcos server')
             if platform.system() == 'Windows':
                 os.system('ssh root@192.168.1.101 "killall marcos_server"')
                 os.system('start ssh root@192.168.1.101 "~/marcos_server"')
@@ -254,7 +288,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                 os.system('ssh root@192.168.1.101 "killall marcos_server"')
                 os.system('ssh root@192.168.1.101 "~/marcos_server" &')
             print("\n Server connected.")
-
 
     def copyBitStream(self):
         """
@@ -285,6 +318,83 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         print("Check the terminal for errors")
         print("If there are: 1) do 'Copybitstream', 2) do 'Init marcos server'")
 
+    def runToList(self, seqName=None):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: add new run to the waiting list
+        """
+        # Load sequence name
+        if seqName==None or seqName==False:
+            seqName = self.sequencelist.getCurrentSequence()
+
+        # Add item to the history list
+        name = str(datetime.now())[11:23] + " | " + seqName
+        self.history_list.addItem(name)
+
+        # Save results into the history
+        self.history_list_inputs[name[0:12]] = [list(defaultsequences[seqName].mapNmspc.values()),
+                                          list(defaultsequences[seqName].mapVals.values()),
+                                          True]
+
+    def waitingForRun(self):
+        """
+        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+        @email: josalggui@i3m.upv.es
+        @Summary: this method is continuously waiting for running new sequences in the history_list
+        """
+        while True:
+            keys = list(self.history_list_inputs.keys()) # List of elements in the sequence history list
+            element = 0
+            for key in keys:
+                if self.history_list_inputs[key][2]:
+                    # Disable acquire button
+                    self.action_acquire.setEnabled(False)
+
+                    # Get the sequence to run
+                    seqName = self.history_list_inputs[key][1][0]
+                    sequence = copy.copy(defaultsequences[seqName])
+                    # Modify input parameters of the sequence
+                    n = 0
+                    inputList = list(sequence.mapVals.keys())
+                    for keyParam in inputList:
+                        sequence.mapVals[keyParam] = self.history_list_inputs[key][1][n]
+                        n += 1
+                    # Run the sequence
+                    output = self.runSequenceInlist(sequence=sequence)
+                    time.sleep(1)
+                    # Add item to the history list
+                    fileName = sequence.mapVals['fileName']
+                    self.history_list.item(element).setText(key + " | " + fileName)
+                    # self.history_list.addItem()
+                    # Save results into the history
+                    self.history_list_outputs[key] = output
+                    self.history_list_inputs[key] = [list(defaultsequences[seqName].mapNmspc.values()),
+                                                     list(defaultsequences[seqName].mapVals.values()),
+                                                     False]
+                    # Delete outputs from the sequence
+                    sequence.resetMapVals()
+                    print(key+" Done!")
+                else:
+                    # Enable acquire button
+                    self.action_acquire.setEnabled(True)
+                element += 1
+            time.sleep(0.1)
+
+    def runSequenceInlist(self, sequence=None):
+        # Save sequence list into the current sequence, just in case you need to do sweep
+        sequence.sequenceList = defaultsequences
+
+        # Save input parameters
+        sequence.saveParams()
+
+        # Create and execute selected sequence
+        sequence.sequenceRun(0)
+        time.sleep(1)
+
+        # Do sequence analysis and get results
+        return(sequence.sequenceAnalysis())
+
     def startAcquisition(self, seqName=None):
         """
         @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
@@ -300,8 +410,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Delete ouput if sequence is different from previous one
         if hasattr(self, "oldSeqName"):
             if self.seqName!=self.oldSeqName:
+                self.newRun = True
                 defaultsequences[self.seqName].deleteOutput()
         self.oldSeqName = copy.copy(self.seqName)
+
+        if not hasattr(defaultsequences[self.seqName], 'out'):
+            self.newRun = True
 
         # Save sequence list into the current sequence, just in case you need to do sweep
         defaultsequences[self.seqName].sequenceList = defaultsequences
@@ -309,15 +423,21 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Save input parameters
         defaultsequences[self.seqName].saveParams()
 
-        if not hasattr(defaultsequences[self.seqName], 'out'):  # If it is the first execution
+        # if not hasattr(defaultsequences[self.seqName], 'out'):  # If it is the first execution
+        if self.newRun:
+            self.newRun = False
+
             # Delete previous plots
             self.clearPlotviewLayout()
+
+            # Add plots to the plotview_layout
+            self.win = pg.LayoutWidget()
 
             # Create label with rawdata name
             self.label = QLabel()
             self.label.setAlignment(QtCore.Qt.AlignCenter)
             self.label.setStyleSheet("background-color: black;color: white")
-            self.plotview_layout.addWidget(self.label)
+            self.win.addWidget(self.label, row = 0, col = 0, colspan = 2)
 
             # Create and execute selected sequence
             defaultsequences[self.seqName].sequenceRun(0)
@@ -330,22 +450,42 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.label.setText(fileName)
 
             # Add item to the history list
-            self.history_list.addItem(str(datetime.now())[11:23]+" | "+fileName)
+            name = str(datetime.now())[11:23]+" | "+fileName
+            self.history_list.addItem(name)
 
             # Clear inputs
             defaultsequences[self.seqName].resetMapVals()
 
             # Save results into the history
-            self.history_list_widgets[fileName] = self.oldOut
-            self.history_list_inputs[fileName] = [list(defaultsequences[self.seqName].mapNmspc.values()),
-                                                  list(defaultsequences[self.seqName].mapVals.values())]
+            self.history_list_outputs[name[0:12]] = self.oldOut
+            self.history_list_inputs[name[0:12]] = [list(defaultsequences[self.seqName].mapNmspc.values()),
+                                                    list(defaultsequences[self.seqName].mapVals.values()),
+                                                    False]
 
             # Add plots to the plotview_layout
+            self.plots = []
             for item in self.oldOut:
-                self.plotview_layout.addWidget(item)
-                if item.__class__.__name__!="SpectrumPlot": defaultsequences[self.seqName].deleteOutput()
+                if item['widget'] == 'image':
+                    image = Spectrum3DPlot(data=item['data'],
+                                           xLabel=item['xLabel'],
+                                           yLabel=item['yLabel'],
+                                           title=item['title'])
+                    image.parent = self
+                    self.win.addWidget(image.getImageWidget(), row=item['row'] + 1, col=item['col'])
+                    defaultsequences[self.seqName].deleteOutput()
+                elif item['widget'] == 'curve':
+                    self.plots.append(SpectrumPlot(xData=item['xData'],
+                                                yData=item['yData'],
+                                                legend=item['legend'],
+                                                xLabel=item['xLabel'],
+                                                yLabel=item['yLabel'],
+                                                title=item['title']))
+                    self.win.addWidget(self.plots[-1], row=item['row'] + 1, col=item['col'])
+
+            self.plotview_layout.addWidget(self.win)
 
             # Iterate in parallel thread (only for 1d plots)
+            x = defaultsequences[self.seqName]
             if self.iterativeRun and hasattr(defaultsequences[self.seqName], 'out'):
                 # Pass the function to execute into the thread
                 worker = Worker(self.repeatAcquisition)  # Any other args, kwargs are passed to the run function
@@ -353,12 +493,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                 self.threadpool.start(worker)
 
             # Deactivate the iterative buttom if sequence is not iterable (2d and 3d plots)
-            if not hasattr(defaultsequences[self.seqName], 'out'):
-                self.iterativeRun = False
-                self.action_iterate.setIcon(
-                    QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/media-fast-forward.svg'))
-                self.action_iterate.setToolTip('Switch to iterative run')
-                self.action_iterate.setText('Single run')
+            if not hasattr(defaultsequences[self.seqName], 'out') and self.action_iterate.isChecked():
+                self.action_iterate.toggle()
+                # self.action_iterate.setIcon(
+                #     QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/media-fast-forward.svg'))
+                # self.action_iterate.setToolTip('Switch to iterative run')
+                # self.action_iterate.setText('Single run')
 
         else:
             # Pass the function to execute into the thread
@@ -373,7 +513,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         @Summary: executed when you repeat some of the calibration sequences
         """
         # If single repetition, set iterativeRun True for one step
-        singleRepetition = not copy.copy(self.iterativeRun)
+        singleRepetition = not self.action_iterate.isChecked()
         if singleRepetition: self.iterativeRun = True
 
         # Acquire while iterativeRun is True
@@ -389,32 +529,29 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.label.setText(fileName)
 
             # Add item to the history list
-            self.history_list.addItem(str(datetime.now())[11:23] + " | " + fileName)
+            name = str(datetime.now())[11:23] + " | " + fileName
+            self.history_list.addItem(name)
 
-            # Update lines in plots of the plotview_layout
-            if hasattr(defaultsequences[self.seqName], 'out'):
-                for plotIndex in range(len(self.newOut)):
-                    # update curves
-                    oldCurves = self.oldOut[plotIndex].plotitem.listDataItems()
-                    newCurves = self.newOut[plotIndex].plotitem.listDataItems()
-                    # set new data to plot
-                    for curveIndex in range(len(newCurves)):
-                        x, y = newCurves[curveIndex].getData()
-                        oldCurves[curveIndex].setData(x, y)
-                    # set new title to plot
-                    # newText = self.newOut[plotIndex].plotitem.titleLabel.text
-                    # newText = self.newOut[plotIndex].plotitem.getTitle()
+            for plotIndex in range(len(self.newOut)):
+                oldCurves = self.plots[plotIndex].plotitem.listDataItems()
+                for curveIndex in range(len(self.newOut[plotIndex]['yData'])):
+                    x = self.newOut[plotIndex]['xData']
+                    y = self.newOut[plotIndex]['yData'][curveIndex]
+                    oldCurves[curveIndex].setData(x, y)
 
             # Clear inputs
             defaultsequences[self.seqName].resetMapVals()
 
             # Save results into the history
-            self.history_list_widgets[fileName] = self.oldOut
-            self.history_list_inputs[fileName] = [list(defaultsequences[self.seqName].mapNmspc.values()),
-                                                  list(defaultsequences[self.seqName].mapVals.values())]
+            self.history_list_outputs[name[0:12]] = self.newOut
+            self.history_list_inputs[name[0:12]] = [list(defaultsequences[self.seqName].mapNmspc.values()),
+                                                    list(defaultsequences[self.seqName].mapVals.values()),
+                                                    False]
 
             # Stop repetitions if single acquision
-            if singleRepetition: self.iterativeRun = False
+            if singleRepetition:
+                self.iterativeRun = False
+                # self.action_iterate.toggle()
 
     def iterate(self):
         """
@@ -422,16 +559,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         @email: josalggui@i3m.upv.es
         @Summary: swtich the iterative mode
         """
-        if self.iterativeRun == False:
-            self.iterativeRun = True
-            self.action_iterate.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/media-fast-forward-outline.svg') )
+        if self.action_iterate.isChecked():
             self.action_iterate.setToolTip('Switch to single run')
-            self.action_iterate.setText('Iterative run')
+            self.iterativeRun = True
         else:
-            self.iterativeRun = False
-            self.action_iterate.setIcon(QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/media-fast-forward.svg') )
             self.action_iterate.setToolTip('Switch to iterative run')
-            self.action_iterate.setText('Single run')
+            self.iterativeRun = False
 
     def startSequencePlot(self):
         """
@@ -471,53 +604,27 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         print('Start localizer')
 
-        # Set localizer sequence to RARE
-        localizer = Localizer()
+        # Load sequence name
+        seqName = 'Localizer'
 
-        # Load default parameters
-        localizer.loadParams(directory="calibration")
-        localizer.mapVals['seqName'] = 'Localizer'
-        localizer.mapNmspc['seqName'] = 'LocalizerInfo'
-        localizer.saveParams()
+        defaultsequences[seqName].loadParams(directory="calibration")
 
-        # Add parent to localizer so it can update sequences parameters
-        localizer.parent = self
+        # Sagittal localizer
+        if defaultsequences[seqName].mapVals['planes'][0]:
+            defaultsequences[seqName].mapVals['axesOrientation'] = [0, 1, 2]
+            self.runToList(seqName=seqName)
+            time.sleep(1)
 
-        # Add sequences to localizer
-        localizer.sequencelist = defaultsequences
+        # Transversal localizer
+        if defaultsequences[seqName].mapVals['planes'][1]:
+            defaultsequences[seqName].mapVals['axesOrientation'] = [1, 2, 0]
+            self.runToList(seqName=seqName)
+            time.sleep(1)
 
-        # Create and execute selected sequence
-        localizer.sequenceRunProjections(0)
-
-        # Do sequence analysis and acquire de plots
-        out = localizer.sequenceAnalysis()
-
-        # Delete previous localizer
-        # self.clearLocalizerLayout()
-        self.clearPlotviewLayout()
-
-        # Create label with rawdata name
-        fileName = localizer.mapVals['fileName']
-        self.label = QLabel(fileName)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("background-color: black;color: white")
-        # self.localizer_layout.addWidget(self.label)
-        self.plotview_layout.addWidget(self.label)
-
-        # Add item to the history list
-        self.history_list.addItem(str(datetime.now())[11:23]+" | "+fileName)
-
-        # Clear inputs
-        defaultsequences[self.seqName].resetMapVals()
-
-        # Save results into the history
-        self.history_list_widgets[fileName] = out
-        self.history_list_inputs[fileName] = [defaultsequences[self.seqName].mapNmspc.values(),
-                                              defaultsequences[self.seqName].mapVals.values()]
-
-        # Add plots to the localizer_layout
-        # self.localizer_layout.addWidget(out[0])
-        self.plotview_layout.addWidget(out[0])
+        # Coronal localizer
+        if defaultsequences[seqName].mapVals['planes'][2]:
+            defaultsequences[seqName].mapVals['axesOrientation'] = [2, 0, 1]
+            self.runToList(seqName=seqName)
 
     def autocalibration(self):
         self.clearPlotviewLayout()
@@ -899,7 +1006,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                 mapVals[key] = seq.mapVals[key]
             writer.writerows([seq.mapNmspc, mapVals])
 
-        # self.messages("Parameters of %s sequence saved" % (self.sequence))
         print("\nParameters of %s sequence saved" %(self.sequence))
 
     def save_parameters(self):
@@ -983,5 +1089,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         welcome.hideAxis('bottom')
         welcome.hideAxis('left')
         welcome.showHistogram(False)
+        welcome.imv.ui.menuBtn.hide()
+        welcome.imv.ui.roiBtn.hide()
         welcomeWidget = welcome.getImageWidget()
         self.plotview_layout.addWidget(welcomeWidget)

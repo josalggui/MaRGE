@@ -81,16 +81,16 @@ class SequenceList(QComboBox):
         self.tabwidget = QTabWidget()
 
         if hasattr(defaultsequences[sequence], 'RFproperties'):
-            rf_prop = defaultsequences[sequence].RFproperties
-            inputwidgets1 += self.generateWidgetsFromDict(rf_prop, sequence)
+            im_prop = defaultsequences[sequence].IMproperties
+            inputwidgets1 += self.generateWidgetsFromDict(im_prop, sequence)
             self.tab = self.generateTab(inputwidgets1)
-            self.tabwidget.addTab(self.tab, "RF")
+            self.tabwidget.addTab(self.tab, "Image")
 
         if hasattr(defaultsequences[sequence], 'IMproperties'):
-            im_prop = defaultsequences[sequence].IMproperties
-            inputwidgets2 += self.generateWidgetsFromDict(im_prop, sequence)
+            rf_prop = defaultsequences[sequence].RFproperties
+            inputwidgets2 += self.generateWidgetsFromDict(rf_prop, sequence)
             self.tab = self.generateTab(inputwidgets2)
-            self.tabwidget.addTab(self.tab, "Image")
+            self.tabwidget.addTab(self.tab, "RF")
 
         if hasattr(defaultsequences[sequence], 'SEQproperties'):
             seq_prop = defaultsequences[sequence].SEQproperties

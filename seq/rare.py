@@ -22,9 +22,11 @@ import experiment as ex
 import scipy.signal as sig
 import configs.hw_config as hw # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-from plotview.spectrumplot import SpectrumPlot # To plot nice 1d images
-from plotview.spectrumplot import Spectrum3DPlot # To show nice 2d or 3d images
+# from plotview.spectrumplot import SpectrumPlot # To plot nice 1d images
+# from plotview.spectrumplot import Spectrum3DPlot # To show nice 2d or 3d images
 import pyqtgraph as pg
+import time
+from phantominator import shepp_logan
 
 #*********************************************************************************
 #*********************************************************************************
@@ -37,7 +39,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='RAREInfo', val='RARE')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
-        self.addParameter(key='rfExFA', string='Exitation flip angle (º)', val=90, field='RF')
+        self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=35.0, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=70.0, field='RF')
@@ -48,6 +50,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], field='IM')
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 1, 1], field='IM')
+        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM')
@@ -95,48 +98,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa=False # Starts the gpa
-        demo = False
+        self.demo = True
 
         # Create the inputs automatically as a property of the class
         for key in self.mapKeys:
             setattr(self, key, self.mapVals[key])
-
-        # Create the inputs automatically. For some reason it only works if there is a few code later...
-        # for key in self.mapKeys:
-        #     locals()[key] = self.mapVals[key]
-        #     if not key in locals():
-        #         print('Error')
-        #         locals()[key] = self.mapVals[key]
-
-        # Create the inputs manually, pufff
-        # seqName = self.mapVals['seqName']
-        # nScans = self.mapVals['nScans']
-        # larmorFreq = self.mapVals['larmorFreq']# MHz
-        # rfExFA = self.mapVals['rfExFA']/180*np.pi # rads
-        # rfReFA = self.mapVals['rfReFA']/180*np.pi # rads
-        # rfExTime = self.mapVals['rfExTime'] # us
-        # rfReTime = self.mapVals['rfReTime'] # us
-        # echoSpacing = self.mapVals['echoSpacing'] # ms
-        # preExTime = self.mapVals['preExTime'] # ms
-        # inversionTime = self.mapVals['inversionTime'] # ms
-        # repetitionTime = self.mapVals['repetitionTime'] # ms
-        # fov = np.array(self.mapVals['fov']) # cm
-        # dfov = np.array(self.mapVals['dfov']) # mm
-        # nPoints = np.array(self.mapVals['nPoints'])
-        # etl = self.mapVals['etl']
-        # acqTime = self.mapVals['acqTime'] # ms
-        # axes = self.mapVals['axes']
-        # axesEnable = self.mapVals['axesEnable']
-        # sweepMode = self.mapVals['sweepMode']
-        # rdGradTime = self.mapVals['rdGradTime'] # ms
-        # rdDephTime = self.mapVals['rdDephTime'] # ms
-        # phGradTime = self.mapVals['phGradTime'] # ms
-        # rdPreemphasis = self.mapVals['rdPreemphasis']
-        # drfPhase = self.mapVals['drfPhase'] # degrees
-        # dummyPulses = self.mapVals['dummyPulses']
-        # shimming = np.array(self.mapVals['shimming']) # *1e4
-        # parFourierFraction = self.mapVals['parFourierFraction']
-        # freqCal = self.mapVals['freqCal']
 
         # Conversion of variables to non-multiplied units
         self.freqOffset = self.freqOffset*1e3
@@ -153,6 +119,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.rdGradTime = self.rdGradTime*1e-3
         self.rdDephTime = self.rdDephTime*1e-3
         self.phGradTime = self.phGradTime*1e-3
+        self.angle = self.angle*np.pi/180
 
         # Miscellaneous
         self.fov = self.fov[self.axesOrientation]
@@ -319,8 +286,13 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 # Dephasing readout
                 if (repeIndex==0 or repeIndex>=self.dummyPulses) and dc==False:
                     t0 = tEx+self.rfExTime/2-hw.gradDelay
-                    self.gradTrap(t0, gradRiseTime, self.rdDephTime, rdDephAmplitude*self.rdPreemphasis, gSteps, self.axesOrientation[0], self.shimming)
-                    orders = orders+gSteps*2
+                    self.gradTrap(t0, gradRiseTime, self.rdDephTime,
+                                  rdDephAmplitude * self.rdPreemphasis * np.cos(self.angle), gSteps,
+                                  self.axesOrientation[0], self.shimming)
+                    self.gradTrap(t0, gradRiseTime, self.rdDephTime,
+                                  rdDephAmplitude * self.rdPreemphasis * np.sin(self.angle), gSteps,
+                                  self.axesOrientation[1], self.shimming)
+                    orders = orders+gSteps*4
 
                 # Echo train
                 for echoIndex in range(self.etl):
@@ -333,15 +305,22 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     # Dephasing phase and slice gradients
                     if repeIndex>=self.dummyPulses:         # This is to account for dummy pulses
                         t0 = tEcho-self.echoSpacing/2+self.rfReTime/2-hw.gradDelay
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, phGradients[phIndex], gSteps, self.axesOrientation[1], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, slGradients[slIndex], gSteps, self.axesOrientation[2], self.shimming)
-                        orders = orders+gSteps*4
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, phGradients[phIndex] * np.cos(self.angle),
+                                      gSteps, self.axesOrientation[1], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, phGradients[phIndex] * np.sin(self.angle),
+                                      gSteps, self.axesOrientation[0], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, slGradients[slIndex], gSteps,
+                                      self.axesOrientation[2], self.shimming)
+                        orders = orders+gSteps*6
 
                     # Readout gradient
                     if (repeIndex==0 or repeIndex>=self.dummyPulses) and dc==False:         # This is to account for dummy pulses
                         t0 = tEcho-self.rdGradTime/2-gradRiseTime-hw.gradDelay
-                        self.gradTrap(t0, gradRiseTime, self.rdGradTime, rdGradAmplitude, gSteps, self.axesOrientation[0], self.shimming)
-                        orders = orders+gSteps*2
+                        self.gradTrap(t0, gradRiseTime, self.rdGradTime, rdGradAmplitude * np.cos(self.angle), gSteps,
+                                      self.axesOrientation[0], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.rdGradTime, rdGradAmplitude * np.sin(self.angle), gSteps,
+                                      self.axesOrientation[1], self.shimming)
+                        orders = orders+gSteps*4
 
                     # Rx gate
                     if (repeIndex==0 or repeIndex>=self.dummyPulses):
@@ -352,13 +331,21 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     # Rephasing phase and slice gradients
                     t0 = tEcho+self.acqTime/2+addRdPoints/BW-hw.gradDelay
                     if (echoIndex<self.etl-1 and repeIndex>=self.dummyPulses):
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -phGradients[phIndex], gSteps, self.axesOrientation[1], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -slGradients[slIndex], gSteps, self.axesOrientation[2], self.shimming)
-                        orders = orders+gSteps*4
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -phGradients[phIndex] * np.cos(self.angle),
+                                      gSteps, self.axesOrientation[1], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -phGradients[phIndex] * np.sin(self.angle),
+                                      gSteps, self.axesOrientation[0], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -slGradients[slIndex], gSteps,
+                                      self.axesOrientation[2], self.shimming)
+                        orders = orders+gSteps*6
                     elif(echoIndex==self.etl-1 and repeIndex>=self.dummyPulses):
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, +phGradients[phIndex], gSteps, self.axesOrientation[1], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, +slGradients[slIndex], gSteps, self.axesOrientation[2], self.shimming)
-                        orders = orders+gSteps*4
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, +phGradients[phIndex] * np.cos(self.angle),
+                                      gSteps, self.axesOrientation[1], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, +phGradients[phIndex] * np.sin(self.angle),
+                                      gSteps, self.axesOrientation[0], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, +slGradients[slIndex], gSteps,
+                                      self.axesOrientation[2], self.shimming)
+                        orders = orders+gSteps*6
 
                     # Update the phase and slice gradient
                     if repeIndex>=self.dummyPulses:
@@ -392,7 +379,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['scanTime'] = scanTime*nSL*1e-6
 
         # Calibrate frequency
-        if self.freqCal and (not plotSeq) and (not demo):
+        if self.freqCal and (not plotSeq) and (not self.demo):
             hw.larmorFreq = self.freqCalibration(bw=0.05)
             hw.larmorFreq = self.freqCalibration(bw=0.005)
         self.mapVals['larmorFreq'] = hw.larmorFreq
@@ -411,7 +398,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         acqPointsPerBatch = []
         while repeIndexGlobal<nRepetitions:
             nBatches += 1
-            if not demo:
+            if not self.demo:
                 self.expt = ex.Experiment(lo_freq=hw.larmorFreq+self.freqOffset, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
                 samplingPeriod = self.expt.get_rx_ts()[0]
                 BW = 1/samplingPeriod/hw.oversamplingFactor
@@ -433,9 +420,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 self.mapVals['bw'] = 1/samplingPeriod/hw.oversamplingFactor
 
             for ii in range(self.nScans):
-                if not demo:
+                if not self.demo:
                     if not plotSeq:
-                        print('Batch ', nBatches, ', Scan ', ii+1, ' runing...')
+                        print('Batch ', nBatches, ', Scan ', ii+1, ' running...')
                         rxd, msgs = self.expt.run()
                         rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
                         # Get noise data
@@ -459,7 +446,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     else:
                         overData = np.concatenate((overData, data), axis = 0)
 
-            if not demo: self.expt.__del__()
+            if not self.demo: self.expt.__del__()
         del aa
 
         if not plotSeq:
@@ -581,10 +568,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
             axesStr[n] = axesKeys[index]
             n += 1
 
-        # Create widget to introduce the figures
-        win = pg.LayoutWidget()
-        win.resize(300, 1000)
-
         if (axesEnable[1] == 0 and axesEnable[2] == 0):
             bw = self.mapVals['bw']*1e-3 # kHz
             acqTime = self.mapVals['acqTime'] # ms
@@ -594,29 +577,41 @@ class RARE(blankSeq.MRIBLANKSEQ):
             iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
 
             # Plots to show into the GUI
-            f_plotview = SpectrumPlot(fVector, [np.abs(iVector)], ['Spectrum magnitude'],
-                                      "Frequency (kHz)", "Amplitude (a.u.)",
-                                      "Spectrum")
-            t_plotview = SpectrumPlot(tVector, [np.abs(sVector), np.real(sVector), np.imag(sVector)],
-                                      ['Magnitude', 'Real', 'Imaginary'],
-                                      'Time (ms)', "Signal amplitude (mV)",
-                                      "Signal")
+            result1 = {}
+            result1['widget'] = 'curve'
+            result1['xData'] = tVector
+            result1['yData'] = [np.abs(sVector), np.real(sVector), np.imag(sVector)]
+            result1['xLabel'] = 'Time (ms)'
+            result1['yLabel'] = 'Signal amplitude (mV)'
+            result1['title'] = "Signal"
+            result1['legend'] = ['Magnitude', 'Real', 'Imaginary']
+            result1['row'] = 0
+            result1['col'] = 0
 
-            # Introduce the images into the layout
-            win.addWidget(t_plotview, row=0, col=0)
-            win.addWidget(f_plotview, row=0, col=1)
+            result2 = {}
+            result2['widget'] = 'curve'
+            result2['xData'] = fVector
+            result2['yData'] = [np.abs(iVector)]
+            result2['xLabel'] = 'Frequency (kHz)'
+            result2['yLabel'] = "Amplitude (a.u.)"
+            result2['title'] = "Spectrum"
+            result2['legend'] = ['Spectrum magnitude']
+            result2['row'] = 1
+            result2['col'] = 0
 
-            if obj=="Standalone":
-                pg.exec()
-            return([win])
+            return([result1, result2])
         else:
             # Plot image
             image = np.abs(self.mapVals['image3D'])
+            if self.demo:
+                image = shepp_logan((nPoints[2], nPoints[1], nPoints[0]))
+            else:
+                image = np.abs(self.mapVals['image3D'])
             image = image/np.max(np.reshape(image,-1))*100
 
             # Image orientation
             if self.axesOrientation[2] == 2:  # Sagital
-                title = "Sagital"
+                title = "Sagittal"
                 if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
@@ -651,39 +646,30 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     xLabel = "L | READOUT | R"
                     yLabel = "P | PHASE | A"
 
-            image = Spectrum3DPlot(image,
-                                   title=title,
-                                   xLabel=xLabel,
-                                   yLabel=yLabel)
-            imageWidget = image.getImageWidget()
+            result1 = {}
+            result1['widget'] = 'image'
+            result1['data'] = image
+            result1['xLabel'] = xLabel
+            result1['yLabel'] = yLabel
+            result1['title'] = title
+            result1['row'] = 0
+            result1['col'] = 0
 
-            # image = Spectrum3DPlot(np.angle(self.mapVals['kSpace3D']), title="k-Space - Phase ")
-            # image = Spectrum3DPlot(np.unwrap(np.angle(self.mapVals['kSpace3D'])),title="k-Space - Phase ")
-            # imageWidget = image.getImageWidget()
-
-
-
+            result2 = {}
+            result2['widget'] = 'image'
             try:
-                kSpace = Spectrum3DPlot(np.log10(np.abs(self.mapVals['kSpace3D'])),
-                                        title='k-Space')
-                # kSpace = Spectrum3DPlot(log10(np.abs(self.mapVals['kSpace3D'])),
-                #                         title='k-Space',
-                #                         xLabel="k%s"%axesStr[1],
-                #                         yLabel="k%s"%axesStr[0])
+                result2['data'] = np.log10(np.abs(self.mapVals['kSpace3D']))
             except:
-                kSpace = Spectrum3DPlot(np.abs(self.mapVals['kSpace3D']),
-                                        title='k-Space',
-                                        xLabel="k%s" % axesStr[1],
-                                        yLabel="k%s" % axesStr[0])
-            kSpaceWidget = kSpace.getImageWidget()
+                result2['data'] = np.abs(self.mapVals['kSpace3D'])
+            result2['xLabel'] = "k%s"%axesStr[1]
+            result2['yLabel'] = "k%s"%axesStr[0]
+            result2['title'] = "k-Space"
+            result2['row'] = 0
+            result2['col'] = 1
 
-            win.addWidget(imageWidget, row=0, col=0)
-            win.addWidget(kSpaceWidget, row=0, col=1)
-            # win.addWidget(image2Widget, row=0, col=1)
+            output = [result1, result2]
 
-            if obj=="Standalone":
-                pg.exec()
-            return([win])
+            return(output)
 
 if __name__=="__main__":
     seq = RARE()

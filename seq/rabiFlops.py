@@ -207,39 +207,28 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
         self.saveRawData()
 
-        # Main layout widget
-        win = pg.LayoutWidget()
-        width = win.frameGeometry().width()
-        height = win.frameGeometry().height()
-
-        # Acquired FIDs
-        #rabiFID3D = Spectrum3DPlot(data=np.abs(dataFIDAvg),
-        #                           xLabel="Repetition index",
-        #                           yLabel="Acquired point",
-        #                           title="FIDs")
-        #rabiFID3DWidget = rabiFID3D.getImageWidget()
-        #rabiFID3DWidget.setMinimumWidth(int(win.frameGeometry().width()))
-
         # Signal vs rf time
-        rabiFIDWidget = SpectrumPlot(xData=timeVector*1e6,
-                                  yData=[np.abs(rabiFID), np.real(rabiFID),np.imag(rabiFID)],
-                                  legend=['abs', 'real', 'imag'],
-                                  xLabel='Time (ms)',
-                                  yLabel='Signal amplitude (mV)',
-                                  title='Rabi Flops with FID')
+        result1 = {'widget': 'curve',
+                   'xData': timeVector * 1e6,
+                   'yData': [np.abs(rabiFID), np.real(rabiFID), np.imag(rabiFID)],
+                   'xLabel': 'Time (ms)',
+                   'yLabel': 'Signal amplitude (mV)',
+                   'title': 'Rabi Flops with FID',
+                   'legend': ['abs', 'real', 'imag'],
+                   'row': 0,
+                   'col': 0}
 
-        rabiEchoWidget = SpectrumPlot(xData=timeVector*1e6,
-                                  yData=[np.abs(rabiEcho), np.real(rabiEcho),np.imag(rabiEcho)],
-                                  legend=['abs', 'real', 'imag'],
-                                  xLabel='Time (ms)',
-                                  yLabel='Signal amplitude (mV)',
-                                  title='Rabi Flops with Spin Echo')
+        result2 = {'widget': 'curve',
+                   'xData': timeVector * 1e6,
+                   'yData': [np.abs(rabiEcho), np.real(rabiEcho), np.imag(rabiEcho)],
+                   'xLabel': 'Time (ms)',
+                   'yLabel': 'Signal amplitude (mV)',
+                   'title': 'Rabi Flops with Spin Echo',
+                   'legend': ['abs', 'real', 'imag'],
+                   'row': 1,
+                   'col': 0}
 
-        #win.addWidget(item=rabiFID3DWidget, rowspan=2, colspan=1)
-        #win.addWidget(item=rabiFIDWidget, row=0, col=1)
-        #win.addWidget(item=rabiEchoWidget, row=1, col=1)
+        self.out = [result1, result2]
 
-        self.out = [rabiFIDWidget, rabiEchoWidget]
-
-        return (self.out)
+        return self.out
 

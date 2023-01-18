@@ -21,8 +21,6 @@ import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
-from plotview.spectrumplot import SpectrumPlot
-import pyqtgraph as pg
 
 class Noise(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -61,7 +59,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         # Fix units to MHz and us
         self.freqOffset *= 1e-3 # MHz
         self.bw *= 1e-3 # MHz
-        
+
         if demo:
             dataR = np.random.randn(self.nPoints*hw.oversamplingFactor)
             dataC = np.random.randn(self.nPoints*hw.oversamplingFactor)
@@ -73,6 +71,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
             fVector = np.linspace(-self.bw / 2, self.bw / 2, num=self.nPoints) * 1e3  # kHz
             self.dataTime = [tVector, data]
             self.dataSpec = [fVector, spectrum]
+            time.sleep(0.5)
         else:
             self.bw = self.bw * hw.oversamplingFactor
             samplingPeriod = 1 / self.bw
@@ -113,36 +112,37 @@ class Noise(blankSeq.MRIBLANKSEQ):
         print('\nrms noise: %0.5f mV' % noiserms)
 
         # Plot signal versus time
-        timePlotWidget = SpectrumPlot(xData=self.dataTime[0],
-                                yData=[np.abs(self.dataTime[1]), np.real(self.dataTime[1]), np.imag(self.dataTime[1])],
-                                legend=['abs', 'real', 'imag'],
-                                xLabel='Time (ms)',
-                                yLabel='Signal amplitude (mV)',
-                                title='Noise vs time')
+        result1 = {'widget': 'curve',
+                   'xData': self.dataTime[0],
+                   'yData': [np.abs(self.dataTime[1]), np.real(self.dataTime[1]), np.imag(self.dataTime[1])],
+                   'xLabel': 'Time (ms)',
+                   'yLabel': 'Signal amplitude (mV)',
+                   'title': 'Noise vs time',
+                   'legend': ['abs', 'real', 'imag'],
+                   'row': 0,
+                   'col': 0}
 
         # Plot spectrum
-        freqPlotWidget = SpectrumPlot(xData=self.dataSpec[0],
-                                yData=[np.abs(self.dataSpec[1])],
-                                legend=[''],
-                                xLabel='Frequency (kHz)',
-                                yLabel='Mag FFT (a.u.)',
-                                title='Noise spectrum')
+        result2 = {'widget': 'curve',
+                   'xData': self.dataSpec[0],
+                   'yData': [np.abs(self.dataSpec[1])],
+                   'xLabel': 'Frequency (kHz)',
+                   'yLabel': 'Mag FFT (a.u.)',
+                   'title': 'Noise spectrum',
+                   'legend': [''],
+                   'row': 1,
+                   'col': 0}
 
-        self.out = [timePlotWidget, freqPlotWidget]
+        self.out = [result1, result2]
 
-        if obj=='Standalone':
-            timePlotWidget.show()
-            freqPlotWidget.show()
-            pg.exec()
-
-        return (self.out)
+        return self.out
 
 
 if __name__=='__main__':
-    seq = Noise()
-    seq.sequenceRun()
-    seq.sequenceAnalysis(obj='Standalone')
+    # seq = Noise()
+    # seq.sequenceRun()
+    # seq.sequenceAnalysis(obj='Standalone')
 
-    # import pyqtgraph.examples
-    # pyqtgraph.examples.run()
+    import pyqtgraph.examples
+    pyqtgraph.examples.run()
 
