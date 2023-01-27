@@ -1,9 +1,6 @@
 import experiment as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import scipy.signal as sig
-import configs.hw_config as hw
-from plotview.spectrumplot import SpectrumPlot
 
 class ADCdelayTest(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -96,20 +93,25 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Add time signal to the layout
-        signalVsPointWidget = SpectrumPlot(xData=nVector,
-                                        yData=[np.abs(signal)],
-                                        legend=['abs'],
-                                        xLabel='Points',
-                                        yLabel='Signal amplitude (mV)',
-                                        title='Signal vs Npoints, BWacq=%0.1f kHz' % bw)
-        signalVsPointWidget.plotitem.curves[0].setSymbol('x')
+        result1 = {'widget': 'curve',
+                   'xData': nVector,
+                   'yData': [np.abs(signal)],
+                   'xLabel': 'Points',
+                   'yLabel': 'Signal amplitude (mV)',
+                   'title': 'Signal vs Npoints, BWacq=%0.1f kHz' % bw,
+                   'legend': ['abs'],
+                   'row': 0,
+                   'col': 0}
+
         # Add frequency spectrum to the layout
-        signalVsTimeWidget = SpectrumPlot(xData=tVector,
-                                        yData=[np.abs(signal)],
-                                        legend=['abs'],
-                                        xLabel='Time (us)',
-                                        yLabel='Signal amplitude (mV)',
-                                        title='Signal vs time, BWacq=%0.1f kHz' % bw)
+        result2 = {'widget': 'curve',
+                   'xData': tVector,
+                   'yData': [np.abs(signal)],
+                   'xLabel': 'Time (us)',
+                   'yLabel': 'Signal amplitude (mV)',
+                   'title': 'Signal vs time, BWacq=%0.1f kHz' % bw,
+                   'legend': ['abs'],
+                   'row': 1,
+                   'col': 0}
 
-
-        return([signalVsPointWidget, signalVsTimeWidget])
+        return [result1, result2]

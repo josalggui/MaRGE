@@ -9,13 +9,8 @@ MRILAB @ I3M
 import numpy as np
 import experiment as ex
 import scipy.signal as sig
-import matplotlib.pyplot as plt
-import pdb
 import configs.hw_config as hw # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-from plotview.spectrumplot import SpectrumPlot # To plot nice 1d images
-from PyQt5.QtWidgets import QLabel  # To set the figure title
-from PyQt5 import QtCore            # To set the figure title
 import pyqtgraph as pg              # To plot nice 3d images
 
 class GRE3D(blankSeq.MRIBLANKSEQ):
@@ -477,20 +472,43 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             fVector = np.linspace(-bw/2, bw/2, nPoints[0])
             iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
 
-            f_plotview = SpectrumPlot(fVector, [np.abs(iVector)], ['Spectrum magnitude'],
-                                      "Frequency (kHz)", "Amplitude (a.u.)",
-                                      "%s Spectrum" % self.mapVals['fileName'])
-            t_plotview = SpectrumPlot(tVector, [np.abs(sVector), np.real(sVector), np.imag(sVector)],
-                                      ['Magnitude', 'Real', 'Imaginary'],
-                                      'Time (ms)', "Signal amplitude (mV)",
-                                      "%s Signal" % self.mapVals['fileName'])
-            return([t_plotview, f_plotview])
+            result1 = {'widget': 'curve',
+                       'xData': tVector,
+                       'yData': [np.abs(sVector), np.real(sVector), np.imag(sVector)],
+                       'xLabel': 'Time (ms)',
+                       'yLabel': "Signal amplitude (mV)",
+                       'title': "Signal",
+                       'legend': ['Magnitude', 'Real', 'Imaginary'],
+                       'row': 0,
+                       'col': 0}
+
+            result2 = {'widget': 'curve',
+                       'xData': fVector,
+                       'yData': [np.abs(iVector)],
+                       'xLabel': "Frequency (kHz)",
+                       'yLabel': "Amplitude (a.u.)",
+                       'title': "Spectrum",
+                       'legend': ['Spectrum magnitude'],
+                       'row': 1,
+                       'col': 0}
 
         else:
             # Plot image
-            image = pg.image(np.abs(self.mapVals['image3D']))
+            result1 = {'widget': 'image',
+                       'data': np.abs(self.mapVals['image3D']),
+                       'xLabel': 'xLabel',
+                       'yLabel': 'yLabel',
+                       'title': 'Image',
+                       'row': 0,
+                       'col': 0}
 
             # Plot k-space
-            kSpace = pg.image(np.log10(np.abs(self.mapVals['kSpace3D'])))
+            result2 = {'widget': 'image',
+                       'data': np.log10(np.abs(self.mapVals['kSpace3D'])),
+                       'xLabel': 'xLabel',
+                       'yLabel': 'yLabel',
+                       'title': 'k-Space',
+                       'row': 0,
+                       'col': 1}
 
-            return([image, kSpace])
+        return [result1, result2]

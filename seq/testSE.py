@@ -6,12 +6,7 @@ MRILAB @ I3M
 import experiment as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import scipy.signal as sig
 import configs.hw_config as hw
-from plotview.spectrumplot import SpectrumPlot, Spectrum3DPlot
-from scipy.optimize import curve_fit
-import pyqtgraph as pg
-import csv
 
 
 
@@ -182,35 +177,47 @@ class testSE(blankSeq.MRIBLANKSEQ):
         spectrum = np.reshape(spectrum, -1)
 
         # Plot signal versus time
-        magPlotWidget = SpectrumPlot(xData=timeVector,
-                                yData=[np.abs(data), np.real(data), np.imag(data)],
-                                legend=['abs', 'real', 'imag'],
-                                xLabel='Time (ms)',
-                                yLabel='Signal amplitude (mV)',
-                                title='Magnitude')
+        result1 = {'widget': 'curve',
+                   'xData': timeVector,
+                   'yData': [np.abs(data), np.real(data), np.imag(data)],
+                   'xLabel': 'Time (ms)',
+                   'yLabel': 'Signal amplitude (mV)',
+                   'title': 'Magnitude',
+                   'legend': ['abs', 'real', 'imag'],
+                   'row': 0,
+                   'col': 0}
 
-        specPlotWidget = SpectrumPlot(xData=fVector,
-                                     yData=[spectrum],
-                                     legend=['abs'],
-                                     xLabel='f (kHz)',
-                                     yLabel='spectrum amplitude (a. u)',
-                                     title='FFT')
-        anglePlotWidget = SpectrumPlot(xData=timeVector,
-                                      yData=[np.angle(data)],
-                                      legend=['abs', 'real', 'imag'],
-                                      xLabel='Time (ms)',
-                                      yLabel='Phase (rad)',
-                                      title='Phase')
+        result2 = {'widget': 'curve',
+                   'xData': fVector,
+                   'yData': [spectrum],
+                   'xLabel': 'Frequency (kHz)',
+                   'yLabel': 'Spectrum amplitude (a.u.)',
+                   'title': 'Spectrum magnitude',
+                   'legend': ['abs'],
+                   'row': 1,
+                   'col': 0}
+
+        result3 = {'widget': 'curve',
+                   'xData': timeVector,
+                   'yData': [np.angle(data)],
+                   'xLabel': 'Time (ms)',
+                   'yLabel': 'Phase (rad)',
+                   'title': 'Signal phase',
+                   'legend': ['abs', 'real', 'imag'],
+                   'row': 0,
+                   'col': 1}
 
         repetitions = np.linspace(1, nRepetitions*nScans, nRepetitions*nScans)
         data = np.reshape(data, (nRepetitions*nScans, -1))
         phase = np.angle(data[:, int(nPoints/2)])
-        phasePlotWidget = SpectrumPlot(xData=repetitions,
-                                       yData=[np.unwrap(phase)],
-                                       legend=[''],
-                                       xLabel='Repetition',
-                                       yLabel='Phase (rad)',
-                                       title='Phase')
+        result4 = {'widget': 'curve',
+                   'xData': repetitions,
+                   'yData': [np.unwrap(phase)],
+                   'xLabel': 'Repetition',
+                   'yLabel': 'Phase (rad)',
+                   'title': 'Signal phase',
+                   'legend': [''],
+                   'row': 1,
+                   'col': 1}
 
-        self.out = [magPlotWidget, phasePlotWidget]
-        return(self.out)
+        return [result1, result2, result3, result4]

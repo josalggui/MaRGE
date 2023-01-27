@@ -3,7 +3,6 @@ import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
-from plotview.spectrumplot import SpectrumPlot
 
 class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -159,18 +158,25 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Add time signal to the layout
-        signalPlotWidget = SpectrumPlot(xData=ReadoutVector,
-                                        yData=[np.abs(signal0), np.abs(signalup), np.abs(signaldown)],
-                                        legend=['G=0', 'G-', 'G+'],
-                                        xLabel='Time (ms)',
-                                        yLabel='Signal amplitude (mV)',
-                                        title='Signal vs time')
+        result1 = {'widget': 'curve',
+                   'xData': ReadoutVector,
+                   'yData': [np.abs(signal0), np.abs(signalup), np.abs(signaldown)],
+                   'xLabel': 'Time (ms)',
+                   'yLabel': 'Signal amplitude (mV)',
+                   'title': 'Signal vs time',
+                   'legend': ['G=0', 'G-', 'G+'],
+                   'row': 0,
+                   'col': 0}
 
         # Add frequency spectrum to the layout
-        spectrumPlotWidget = SpectrumPlot(xData=FreqVector,
-                                        yData=[np.abs(spectrum0), np.abs(spectrumup), np.abs(spectrumdown)],
-                                        legend=['G=0', 'G-', 'G+'],
-                                        xLabel='Frequency (kHz)',
-                                        yLabel='Signal amplitude (mV)',
-                                        title='Signal vs freq')
-        return([signalPlotWidget, spectrumPlotWidget])
+        result2 = {'widget': 'curve',
+                   'xData': FreqVector,
+                   'yData': [np.abs(spectrum0), np.abs(spectrumup), np.abs(spectrumdown)],
+                   'xLabel': 'Frequency (kHz)',
+                   'yLabel': 'Signal amplitude (a.u.)',
+                   'title': 'Signal vs freq',
+                   'legend': ['G=0', 'G-', 'G+'],
+                   'row': 1,
+                   'col': 0}
+
+        return [result1, result2]

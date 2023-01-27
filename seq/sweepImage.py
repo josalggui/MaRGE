@@ -19,9 +19,6 @@ for char in path:
 #******************************************************************************
 import numpy as np
 import seq.mriBlankSeq as blankSeq
-import pyqtgraph as pg              # To plot nice 3d images
-from plotview.spectrumplot import SpectrumPlot
-from plotview.spectrumplot import Spectrum3DPlot
 
 class SweepImage(blankSeq.MRIBLANKSEQ):
     def __init__(self):

@@ -21,8 +21,6 @@ import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
-from plotview.spectrumplot import SpectrumPlot
-import pyqtgraph as pg
 
 class ShimmingSweep(blankSeq.MRIBLANKSEQ):
     def __init__(self):

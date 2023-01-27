@@ -18,11 +18,9 @@ for char in path:
 #******************************************************************************
 import experiment as ex
 import numpy as np
-import pyqtgraph as pg
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
-from plotview.spectrumplot import SpectrumPlot
 
 
 class Larmor(blankSeq.MRIBLANKSEQ):
