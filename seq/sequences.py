@@ -6,9 +6,9 @@ Created on Thu June 2 2022
 """
 
 import seq.rare as rare
-import seq.haste as haste
+# import seq.haste as haste
 import seq.gre3d as gre
-import seq.petra as petra
+# import seq.petra as petra
 import seq.fid as fid
 import seq.rabiFlops as rabiFlops
 import seq.cpmg as cpmg
@@ -19,9 +19,9 @@ import seq.ADCdelayTest as ADCdelayTest
 import seq.noise as noise
 import seq.shimmingSweep as shimming
 import seq.testSE as testSE
-import seq.sliceSelection as sliceSelection
+# import seq.sliceSelection as sliceSelection
 import seq.sweepImage as sweep
-import seq.autoTuning as autoTuning
+# import seq.autoTuning as autoTuning
 import seq.localizer as localizer
 
 class RARE(rare.RARE):
@@ -33,11 +33,11 @@ class testSE(testSE.testSE):
 class GRE3D(gre.GRE3D):
     def __init__(self): super(GRE3D, self).__init__()
 
-class PETRA(petra.PETRA):
-    def __init__(self): super(PETRA, self).__init__()
+# class PETRA(petra.PETRA):
+#     def __init__(self): super(PETRA, self).__init__()
 
-class HASTE(haste.HASTE):
-    def __init__(self): super(HASTE, self).__init__()
+# class HASTE(haste.HASTE):
+#     def __init__(self): super(HASTE, self).__init__()
 
 class FID(fid.FID):
     def __init__(self): super(FID, self).__init__()
@@ -66,14 +66,14 @@ class ADCtest(ADCdelayTest.ADCdelayTest):
 class Shimming(shimming.ShimmingSweep):
     def __init__(self): super(Shimming, self).__init__()
 
-class SliceSelection(sliceSelection.SliceSelection):
-    def __init__(self): super(SliceSelection, self).__init__()
+# class SliceSelection(sliceSelection.SliceSelection):
+#     def __init__(self): super(SliceSelection, self).__init__()
 
 class SWEEP(sweep.SweepImage):
     def __init__(self): super(SWEEP, self).__init__()
 #
-class AutoTuning(autoTuning.AutoTuning):
-    def __init__(self): super(AutoTuning, self).__init__()
+# class AutoTuning(autoTuning.AutoTuning):
+#     def __init__(self): super(AutoTuning, self).__init__()
 
 class Localizer(localizer.Localizer):
     def __init__(self): super(Localizer, self).__init__()
@@ -84,9 +84,9 @@ Definition of default sequences
 defaultsequences = {
     'RARE': RARE(),
     'GRE3D': GRE3D(),
-    'PETRA': PETRA(),
-    'HASTE': HASTE(),
-    'AutoTuning': AutoTuning(),
+    # 'PETRA': PETRA(),
+    # 'HASTE': HASTE(),
+    # 'AutoTuning': AutoTuning(),
     'FID': FID(),
     'Larmor': Larmor(),
     'Noise': Noise(),
