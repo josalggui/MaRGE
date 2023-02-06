@@ -2,21 +2,18 @@ import numpy as np
 from pydicom import dcmread
 from pydicom.data import get_testdata_file
 import datetime
-import pytz
-from scipy import ndimage
-
 
 class DICOMImage:
     def __init__(self):
         # Cargar el archivo de prueba de DICOM
+        self.meta_data = {}
         filename = get_testdata_file("MR_small.dcm")
         self.ds = dcmread(filename)
 
-    def image2Dicom(self, x):
-        for key in x.keys():
-            setattr(self.ds, key, x[key])
-        current_time = datetime.datetime.now().astimezone(datetime.timezone.utc).astimezone(pytz.timezone("Europe/Madrid"))
-        self.ds.AcquisitionTime = current_time.strftime("%H%M%S.%f")
+    def image2Dicom(self):
+        for key in self.meta_data.keys():
+            setattr(self.ds, key, self.meta_data[key])
+
 
     def save(self, filename):
         self.ds.save_as(filename)
@@ -26,31 +23,51 @@ class DICOMImage:
 
 
 if __name__ == '__main__':
-    # Crear una lista para almacenar las imágenes 2D
-    images_2d = []
-
-    # Crear una nueva imagen DICOM
-    x = {}
-    x["PatientName"] = "Pedro el Cruel"
-    x["PatientID"] = "123456"
-
-    # Configurar los detalles de la imagen
-    rows = 100
-    columns = 100
-    frames = 10
-
-    # Crear una matriz 2D con valores de ejemplo
-    arr = np.zeros((frames, columns, rows), dtype=np.int16)
+#### Random image
+    name = 'Random'
+    nRd = 90
+    nPh = 90
+    allSlices = 5
+    arr = np.zeros((allSlices, nPh, nRd), dtype=np.int16)
     arr[0, 0:20, 0:20] = 50
     arr[4, 0:40, 0:40] = 100
-    x["Columns"] = columns
-    x["Rows"] = rows
-    x["NumberOfFrames"] = frames
-    x["PixelData"] = arr.tobytes()
+    repetitionTime = 200
+    echoTime= 20
+    ETL = 5
 
-    # Crear una nueva imagen DICOM y configurar los detalles de la imagen
+#### Crear una nueva imagen DICOM
+    # Image data
     dicom_image = DICOMImage()
-    dicom_image.image2Dicom(x)
+    dicom_image.meta_data["PixelData"] = arr.tobytes()
 
-    dicom_image.save("C:\Users\TuNombre\Escritorio\Ejemplo 7 3D.dcm")
+    # Date and time
+    current_time = datetime.datetime.now()
+    dicom_image.meta_data["StudyDate"] = current_time.strftime("%Y%m%d")
+    dicom_image.meta_data["StudyTime"] = current_time.strftime("%H%M%S")
 
+    # Sequence parameters
+    dicom_image.meta_data["Columns"] = nRd
+    dicom_image.meta_data["Rows"] = nPh
+    dicom_image.meta_data["NumberOfSlices"] = allSlices
+    dicom_image.meta_data["RepetitionTime"] = repetitionTime
+    dicom_image.meta_data["EchoTime"] = echoTime
+    dicom_image.meta_data["EchoTrainLength"] = ETL
+
+    # More DICOM tags
+    # dicom_image.meta_data["SeriesNumber"] = 1
+    dicom_image.meta_data["PatientName"] = " "
+    dicom_image.meta_data["PatientID"] = name
+    dicom_image.meta_data["PatientSex"] = " "
+    dicom_image.meta_data["StudyID"] = "KneeProtocols"
+    dicom_image.meta_data["InstitutionName"] = "PhysioMRI"
+    dicom_image.meta_data["ImageComments"] = " "
+    SOPInstanceUID = name
+    dicom_image.meta_data["SOPInstanceUID"] = SOPInstanceUID
+
+
+#### Create DICOM file
+#### DICOM 3.0 ####
+    dicom_image.meta_data["NumberOfFrames"] = allSlices
+    dicom_image.image2Dicom()
+    nameDcmFile = name + ".dcm"
+    dicom_image.save("C:/Users/Physio MRI/Desktop/Dicom prueva/Ejemplo_1.dcm")

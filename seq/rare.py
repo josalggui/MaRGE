@@ -98,7 +98,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa=False # Starts the gpa
-        self.demo = True
+        self.demo = False
 
         # Create the inputs automatically as a property of the class
         for key in self.mapKeys:
@@ -552,7 +552,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
 
     def sequenceAnalysis(self, obj=''):
-        self.saveRawData()
         nPoints = self.mapVals['nPoints']
         axesEnable = self.mapVals['axesEnable']
 
@@ -667,9 +666,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
             result2['row'] = 0
             result2['col'] = 1
 
-            output = [result1, result2]
+            self.output = [result1, result2]
 
-            return(output)
+
+            self.saveRawData()
+
+            return(self.output)
 
 if __name__=="__main__":
     seq = RARE()

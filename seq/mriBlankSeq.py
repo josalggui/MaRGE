@@ -14,6 +14,8 @@ import experiment as ex
 import scipy.signal as sig
 import csv
 
+# Import dicom saver
+from manager.dicommanager import DICOMImage
 
 class MRIBLANKSEQ:
     # Properties
@@ -23,6 +25,7 @@ class MRIBLANKSEQ:
     mapFields = {}  # fields to classify the input parameter
     mapLen = {}
     plotSeq = 1  # it plots the sequence
+    meta_data = {} # Dictionary to save meta data for dicom file
 
     def __init__(self):
         self.mapKeys = []
@@ -30,6 +33,7 @@ class MRIBLANKSEQ:
         self.mapVals = {}
         self.mapFields = {}
         self.mapLen = {}
+        self.meta_data = {}
 
     # *********************************************************************************
     # *********************************************************************************
@@ -578,6 +582,46 @@ class MRIBLANKSEQ:
             for key in self.mapKeys:  # take only the inputs from mapVals
                 mapVals[key] = self.mapVals[key]
             writer.writerows([self.mapNmspc, mapVals])
+
+        # Save dcm with the final image
+        if (len(self.output) > 0) and (self.output[0]['widget'] == 'image'):
+            self.image2Dicom(fileName = "experiments/acquisitions/%s/%s.%s.dcm" % (dt2_string, self.mapVals['seqName'], dt_string))
+
+    def image2Dicom(self, fileName):
+        # Create dicom object
+        dicom_image = DICOMImage()
+
+        # Save image into dicom object
+        image = self.output[0]['data']
+        dicom_image.meta_data["PixelData"] = image.astype(np.int16).tobytes()
+
+        # If it is a 3d image
+        if len(image.shape) > 2:
+            # Obtener dimensiones
+            slices, rows, columns = image.shape
+            dicom_image.meta_data["Columns"] = columns
+            dicom_image.meta_data["Rows"] = rows
+            dicom_image.meta_data["NumberOfSlices"] = slices
+            dicom_image.meta_data["NumberOfFrames"] = slices
+        # if it is a 2d image
+        else:
+            # Obtener dimensiones
+            rows, columns = image.shape
+            dicom_image.meta_data["Columns"] = columns
+            dicom_image.meta_data["Rows"] = rows
+            dicom_image.meta_data["NumberOfSlices"] = 1
+            dicom_image.meta_data["NumberOfFrames"] = 1
+
+        # Add sequence meta_data (dictionary) to dicom object meta_data (dictionary)
+        dicom_image.meta_data = dicom_image.meta_data | self.meta_data
+
+        # Save meta_data dictionary into dicom object metadata (Standard DICOM 3.0)
+        dicom_image.image2Dicom()
+
+        # Save dicom file
+        dicom_image.save(fileName)
+        print("Dicom guardado")
+
 
     def freqCalibration(self, bw=0.05, dbw=0.0001):
         """

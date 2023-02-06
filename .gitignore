@@ -3,3 +3,4 @@ __pycache__/
 experiments
 .idea/
 configs/hw_config.py
+*.dcm
