@@ -128,6 +128,12 @@ class FID(blankSeq.MRIBLANKSEQ):
         tVector = np.linspace(rfExTime/2 + deadTime + 0.5/bw, rfExTime/2 + deadTime + (nPoints-0.5)/bw, nPoints)
         fVector = np.linspace(-bw/2, bw/2, nPoints)
         spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal))))
+        fitedLarmor=self.mapVals['larmorFreq'] + fVector[np.argmax(np.abs(spectrum))] * 1e-3
+
+        # Get the central frequency
+        print('Larmor frequency: %1.5f MHz' % fitedLarmor)
+        self.mapVals['signalVStime'] = [tVector, signal]
+        self.mapVals['spectrum'] = [fVector, spectrum]
 
         # Saver raw data after processing
         self.saveRawData()
@@ -146,8 +152,7 @@ class FID(blankSeq.MRIBLANKSEQ):
                                           legend=[''],
                                           xLabel='Frequency (kHz)',
                                           yLabel='Spectrum amplitude (a.u.)',
-                                          title="Spectrum")
-        # spectrumPlotWidget.plotitem.setLogMode(y=True)
+                                          title='Spectrum')        # spectrumPlotWidget.plotitem.setLogMode(y=True)
 
         # create self.out to run in iterative mode
         self.out = [signalPlotWidget, spectrumPlotWidget]

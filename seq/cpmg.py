@@ -79,23 +79,25 @@ class CPMG(blankSeq.MRIBLANKSEQ):
             # Shimming
             self.iniSequence(t0, shimming)
 
-            # Excitation pulse
-            t0 = tEx - hw.blkTime - rfExTime / 2
-            self.rfRecPulse(t0, rfExTime, rfExAmp, 0)
+            for scan in range(nScans):
 
-            # Echo train
-            for echoIndex in range(etl):
-                tEcho = tEx + (echoIndex + 1) * echoSpacing
+                # Excitation pulse
+                t0 = tEx - hw.blkTime - rfExTime / 2 + repetitionTime*scan
+                self.rfRecPulse(t0, rfExTime, rfExAmp, 0)
 
-                # Refocusing pulse
-                t0 = tEcho - echoSpacing / 2 - hw.blkTime - rfReTime / 2
-                self.rfRecPulse(t0, rfReTime, rfReAmp, np.pi / 2)
+                # Echo train
+                for echoIndex in range(etl):
+                    tEcho = tEx + (echoIndex + 1) * echoSpacing + repetitionTime*scan
 
-                # Rx gate
-                t0 = tEcho - acqTime / 2
-                self.rxGate(t0, acqTime)
+                    # Refocusing pulse
+                    t0 = tEcho - echoSpacing / 2 - hw.blkTime - rfReTime / 2
+                    self.rfRecPulse(t0, rfReTime, rfReAmp, np.pi / 2)
 
-            self.endSequence(repetitionTime)
+                    # Rx gate
+                    t0 = tEcho - acqTime / 2
+                    self.rxGate(t0, acqTime)
+
+            self.endSequence(repetitionTime*nScans)
 
         # Time variables in us
         echoSpacing = echoSpacing * 1e3
@@ -122,6 +124,7 @@ class CPMG(blankSeq.MRIBLANKSEQ):
             print(msgs)
             self.mapVals['dataFull'] = rxd['rx0'] * 13.788
             data = sig.decimate(rxd['rx0'] * 13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            data = np.average(np.reshape(data, (nScans, -1)), axis=0)
             self.mapVals['data'] = data
             self.expt.__del__()
 

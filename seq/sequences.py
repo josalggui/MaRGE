@@ -11,6 +11,7 @@ import seq.gre3d as gre
 import seq.petra as petra
 import seq.fid as fid
 import seq.rabiFlops as rabiFlops
+import seq.B1calibration as B1calibration
 import seq.cpmg as cpmg
 import seq.eddycurrents as eddycurrents
 import seq.larmor as larmor
@@ -40,6 +41,9 @@ class FID(fid.FID):
 
 class RabiFlops(rabiFlops.RabiFlops):
     def __init__(self): super(RabiFlops, self).__init__()
+
+class B1calibration(B1calibration.B1calibration):
+    def __init__(self): super(B1calibration, self).__init__()
 
 class Larmor(larmor.Larmor):
     def __init__(self): super(Larmor, self).__init__()
@@ -87,6 +91,7 @@ defaultsequences = {
     'Larmor': Larmor(),
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),
+    'B1calibration': B1calibration(),
     'CPMG': CPMG(),
     'EDDYCURRENTS': EDDYCURRENTS(),
     'InversionRecovery': IR(),
