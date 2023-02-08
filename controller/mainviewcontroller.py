@@ -629,84 +629,112 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def autocalibration(self):
         self.clearPlotviewLayout()
 
-        # Get Larmor frequency
-        print("Larmor frequency...")
-        larmorSeq = defaultsequences['Larmor']
-        larmorSeq.sequenceRun()
-        outLarmor = larmorSeq.sequenceAnalysis()
-        delattr(larmorSeq, 'out')
-        for seq in defaultsequences:
-            defaultsequences[seq].mapVals['larmorFreq'] = hw.larmorFreq
-
-        # Get noise
-        noiseSeq = defaultsequences['Noise']
-        noiseSeq.sequenceRun()
-        outNoise = noiseSeq.sequenceAnalysis()
-        delattr(noiseSeq, 'out')
-
-        # Get Rabi flops
-        rabiSeq = defaultsequences['RabiFlops']
-        rabiSeq.sequenceRun()
-        outRabi = rabiSeq.sequenceAnalysis()
-        delattr(rabiSeq, 'out')
-
-        # Get Shimming
-        shimSeq = defaultsequences['Shimming']
-        shimSeq.sequenceRun()
-        outShim = shimSeq.sequenceAnalysis(obj='autocalibration')
-        for seq in defaultsequences:
-            defaultsequences[seq].mapVals['shimming'] = outShim[1]
-        delattr(shimSeq, 'out')
-
-        # Spectrum
-        # Create label with rawdata name
-        fileName = larmorSeq.mapVals['fileName']
-        self.label = QLabel(fileName)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("background-color: black;color: white")
-        self.plotview_layout.addWidget(self.label)
+        # Include here the sequences to run on autocalibration
+        seqNames = [
+                    # 'Larmor',
+                    'Noise',
+                    # 'RabiFlops',
+                    # 'Shimming'
+                    ]
 
         # Add plots to the plotview_layout
-        # item = outLarmor[1]
-        # self.plotview_layout.addWidget(item)
+        self.win = pg.LayoutWidget()
+        self.plots = []
 
-        # Noise
-        # Create label with rawdata name
-        fileName = noiseSeq.mapVals['fileName']
-        self.label = QLabel(fileName)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("background-color: black;color: white")
-        self.plotview_layout.addWidget(self.label)
+        for seqName in seqNames:
+            # Execute the sequence
+            sequence = defaultsequences[seqName]
+            sequence.sequenceRun()
+            output = sequence.sequenceAnalysis()
+            delattr(sequence, 'out')
 
-        # Add plots to the plotview_layout
-        #for item in outNoise:
-        #    self.plotview_layout.addWidget(item)
-        item = outNoise[1]
-        self.plotview_layout.addWidget(item)
+            # Add item to the history list
+            fileName = sequence.mapVals['fileName']
+            name = str(datetime.now())[11:23] + " | " + fileName
+            self.history_list.addItem(name)
+
+            # Save results into the history
+            self.history_list_outputs[name[0:12]] = output
+            self.history_list_inputs[name[0:12]] = [list(sequence.mapNmspc.values()),
+                                                    list(sequence.mapVals.values()),
+                                                    False]
+
+            # Specific for larmor
+            if seqName == 'Larmor':
+                for seq in defaultsequences:
+                    seq.mapVals['larmorFreq'] = hw.larmorFreq
+
+            # Specific for noise
+            if seqName == 'Noise':
+                # Create label with rawdata name
+                self.label = QLabel()
+                self.label.setAlignment(QtCore.Qt.AlignCenter)
+                self.label.setStyleSheet("background-color: black;color: white")
+                self.win.addWidget(self.label, row=0, col=0, colspan=2)
+                fileName = sequence.mapVals['fileName']
+                self.label.setText(fileName)
+
+                # Noise spectrum
+                item = output[1]
+                self.plots.append(SpectrumPlot(xData=item['xData'],
+                                               yData=item['yData'],
+                                               legend=item['legend'],
+                                               xLabel=item['xLabel'],
+                                               yLabel=item['yLabel'],
+                                               title=item['title']))
+                self.win.addWidget(self.plots[-1], row=1, col=0)
+
+            # Specifi for rabi
+            if seqName == 'Rabi':
+                item = output[0]
+                self.plots.append(SpectrumPlot(xData=item['xData'],
+                                               yData=item['yData'],
+                                               legend=item['legend'],
+                                               xLabel=item['xLabel'],
+                                               yLabel=item['yLabel'],
+                                               title=item['title']))
+                self.win.addWidget(self.plots[-1], row=2, col=0)
+
+            # Specific for shimming
+            if seqName == 'Shimming':
+                for seq in defaultsequences:
+                    seq.mapVals['shimming'] = outShim[1]
+                item = outShim[0]
+                self.plots.append(SpectrumPlot(xData=item['xData'],
+                                               yData=item['yData'],
+                                               legend=item['legend'],
+                                               xLabel=item['xLabel'],
+                                               yLabel=item['yLabel'],
+                                               title=item['title']))
+                self.win.addWidget(self.plots[-1], row=3, col=0)
+
+
+
+        self.plotview_layout.addWidget(self.win)
 
         # Rabi
-        # Create label with rawdata name
-        fileName = rabiSeq.mapVals['fileName']
-        self.label = QLabel(fileName)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("background-color: black;color: white")
-        self.plotview_layout.addWidget(self.label)
-
-        # Add plots to the plotview_layout
-        item = outRabi[0]
-        self.plotview_layout.addWidget(item)
+        # # Create label with rawdata name
+        # fileName = rabiSeq.mapVals['fileName']
+        # self.label = QLabel(fileName)
+        # self.label.setAlignment(QtCore.Qt.AlignCenter)
+        # self.label.setStyleSheet("background-color: black;color: white")
+        # self.plotview_layout.addWidget(self.label)
+        #
+        # # Add plots to the plotview_layout
+        # item = outRabi[0]
+        # self.plotview_layout.addWidget(item)
 
         # Shimming
-        # Create label with rawdata name
-        fileName = shimSeq.mapVals['fileName']
-        self.label = QLabel(fileName)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("background-color: black;color: white")
-        self.plotview_layout.addWidget(self.label)
-
-        # Add plots to the plotview_layout
-        item = outShim[0]
-        self.plotview_layout.addWidget(item)
+        # # Create label with rawdata name
+        # fileName = shimSeq.mapVals['fileName']
+        # self.label = QLabel(fileName)
+        # self.label.setAlignment(QtCore.Qt.AlignCenter)
+        # self.label.setStyleSheet("background-color: black;color: white")
+        # self.plotview_layout.addWidget(self.label)
+        #
+        # # Add plots to the plotview_layout
+        # item = outShim[0]
+        # self.plotview_layout.addWidget(item)
 
         self.onSequenceChanged.emit(self.sequence)
 
