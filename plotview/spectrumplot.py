@@ -241,15 +241,19 @@ class ImageViewer(pg.ImageView):
             # Get the corresponding axes from the image
             x_axis = 0
             y_axis = 1
+            z_axis = 2
             if self.title == "Sagittal":
                 x_axis = 1
                 y_axis = 0
+                z_axis = 2
             elif self.title == "Coronal":
                 x_axis = 2
                 y_axis = 0
+                z_axis = 1
             elif self.title == "Transversal":
                 x_axis = 2
                 y_axis = 1
+                z_axis = 0
 
             # Get image fov and resolution
             n_points = np.array(np.shape(self.getProcessedImage()))[1::]
@@ -268,6 +272,13 @@ class ImageViewer(pg.ImageView):
             self.roiFOV.setSize(n_points)
             self.roiFOV.setAngle(0.0)
 
+            # Save 0 rotation to the sequences
+            rotation = [0, 0, 0, 0]
+            rotation[z_axis] = 1
+            rotation[3] = 0.0
+            for sequence in defaultsequences.values():
+                sequence.rotation = rotation
+
             # Show the roi
             self.roiFOV.show()
         else:
@@ -277,15 +288,19 @@ class ImageViewer(pg.ImageView):
         # Get the corresponding axes from the image
         x_axis = 0
         y_axis = 1
+        z_axis = 2
         if self.title == "Sagittal":
             x_axis = 1
             y_axis = 0
+            z_axis = 2
         elif self.title == "Coronal":
             x_axis = 2
             y_axis = 0
+            z_axis = 1
         elif self.title == "Transversal":
             x_axis = 2
             y_axis = 1
+            z_axis = 0
 
         # Get roi properties in pixel units
         ima_fov_px = np.array(np.shape(self.getProcessedImage()))[1::]
@@ -306,6 +321,13 @@ class ImageViewer(pg.ImageView):
         fov.dfov_roi[x_axis] = x0_ru
         fov.dfov_roi[y_axis] = y0_ru
         fov.angle_roi = roi_angle
+
+        # Define rotation
+        rotation = [0, 0, 0, 0]
+        rotation[z_axis] = 1
+        rotation[3] = roi_angle
+        for sequence in defaultsequences.values():
+            sequence.rotation = rotation
 
         for seqName in defaultsequences:
             if ('fov' and 'dfov' and 'angle') in defaultsequences[seqName].mapKeys:

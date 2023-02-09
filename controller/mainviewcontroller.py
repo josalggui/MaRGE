@@ -112,6 +112,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Create dictionaries to save historic widgets and inputs.
         self.history_list_outputs = {}
         self.history_list_inputs = {}
+        self.history_list_rotations = {}
 
         # Initialize multithreading
         self.threadpool = QThreadPool()
@@ -206,15 +207,11 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.input_table.setRowCount(len(input_info))
 
         # Input items into the table
-        ver_header = input_info
         self.input_table.setVerticalHeaderLabels(input_info)
         self.input_table.setHorizontalHeaderLabels(['Values'])
         for m, item in enumerate(input_vals):
             newitem = QTableWidgetItem(str(item))
             self.input_table.setItem(m, 0, newitem)
-
-        # Add table to the layout
-        x = 1
 
     def update_history_figure(self, item):
         """
@@ -228,6 +225,11 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         # Get the widget from history
         output = self.history_list_outputs[name]
+
+        # Get rotations from history
+        rotations = self.history_list_rotations[name]
+        for sequence in defaultsequences.values():
+            sequence.rotations = rotations.copy()
 
         # Clear the plotview
         self.clearPlotviewLayout()
@@ -336,6 +338,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.history_list_inputs[name[0:12]] = [list(defaultsequences[seqName].mapNmspc.values()),
                                           list(defaultsequences[seqName].mapVals.values()),
                                           True]
+
+        # Save the rotation to the history list
+        self.history_list_rotations[name[0:12]] = defaultsequences[seqName].rotations.copy()
 
     def waitingForRun(self):
         """
@@ -461,6 +466,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.history_list_inputs[name[0:12]] = [list(defaultsequences[self.seqName].mapNmspc.values()),
                                                     list(defaultsequences[self.seqName].mapVals.values()),
                                                     False]
+
+            # Save the rotation to the history list
+            self.history_list_rotations[name[0:12]] = defaultsequences[self.seqName].rotations.copy()
 
             # Add plots to the plotview_layout
             self.plots = []
@@ -708,34 +716,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                                                title=item['title']))
                 self.win.addWidget(self.plots[-1], row=3, col=0)
 
-
-
+        # Add windows to the layout
         self.plotview_layout.addWidget(self.win)
 
-        # Rabi
-        # # Create label with rawdata name
-        # fileName = rabiSeq.mapVals['fileName']
-        # self.label = QLabel(fileName)
-        # self.label.setAlignment(QtCore.Qt.AlignCenter)
-        # self.label.setStyleSheet("background-color: black;color: white")
-        # self.plotview_layout.addWidget(self.label)
-        #
-        # # Add plots to the plotview_layout
-        # item = outRabi[0]
-        # self.plotview_layout.addWidget(item)
-
-        # Shimming
-        # # Create label with rawdata name
-        # fileName = shimSeq.mapVals['fileName']
-        # self.label = QLabel(fileName)
-        # self.label.setAlignment(QtCore.Qt.AlignCenter)
-        # self.label.setStyleSheet("background-color: black;color: white")
-        # self.plotview_layout.addWidget(self.label)
-        #
-        # # Add plots to the plotview_layout
-        # item = outShim[0]
-        # self.plotview_layout.addWidget(item)
-
+        # Update the inputs of the sequences
         self.onSequenceChanged.emit(self.sequence)
 
 
