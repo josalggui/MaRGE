@@ -49,6 +49,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], field='IM')
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 1, 1], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
+        self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM')
@@ -120,6 +121,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.angle = self.angle*np.pi/180
 
         # Miscellaneous
+        self.rotation = self.rotationAxis.copy()
+        self.rotation.append(self.angle)
         self.rotations.append(self.rotation)
         self.fov = self.fov[self.axesOrientation]
         self.dfov = self.dfov[self.axesOrientation]
@@ -202,6 +205,14 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['sweepOrder'] = ind
         phGradients = phGradients[ind]
 
+        # Get the rotation matrix
+        rot = self.getRotationMatrix()
+        gradAmp = np.array([0.0, 0.0, 0.0])
+        gradAmp[self.axesOrientation[0]] = 1
+        gradAmp = np.reshape(gradAmp, (3, 1))
+        result = np.dot(rot, gradAmp)
+        print(result)
+
         def createSequenceDemo(phIndex=0, slIndex=0, repeIndexGlobal=0, rewrite=True):
             repeIndex = 0
             acqPoints = 0
@@ -238,10 +249,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 dc = False
             acqPoints = 0
             orders = 0
+
             # Check in case of dummy pulse fill the cache
             if (self.dummyPulses>0 and self.etl*nRD*2>hw.maxRdPoints) or (self.dummyPulses==0 and self.etl*nRD>hw.maxRdPoints):
                 print('ERROR: Too many acquired points.')
                 return()
+
             # Set shimming
             self.iniSequence(20, self.shimming, rewrite=rewrite)
             while acqPoints+self.etl*nRD<=hw.maxRdPoints and orders<=hw.maxOrders and repeIndexGlobal<nRepetitions:
@@ -283,15 +296,18 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 self.rfRecPulse(t0,self.rfExTime,rfExAmp,0)
 
                 # Dephasing readout
+                gradAmp = np.array([0.0, 0.0, 0.0])
+                gradAmp[self.axesOrientation[0]] = rdDephAmplitude
+                gradAmp = np.dot(rot, np.reshape(gradAmp, (3, 1)))
                 if (repeIndex==0 or repeIndex>=self.dummyPulses) and dc==False:
                     t0 = tEx+self.rfExTime/2-hw.gradDelay
-                    self.gradTrap(t0, gradRiseTime, self.rdDephTime,
-                                  rdDephAmplitude * self.rdPreemphasis * np.cos(self.angle), gSteps,
+                    self.gradTrap(t0, gradRiseTime, self.rdDephTime, gradAmp[0] * self.rdPreemphasis, gSteps,
                                   self.axesOrientation[0], self.shimming)
-                    self.gradTrap(t0, gradRiseTime, self.rdDephTime,
-                                  rdDephAmplitude * self.rdPreemphasis * np.sin(self.angle), gSteps,
+                    self.gradTrap(t0, gradRiseTime, self.rdDephTime, gradAmp[1] * self.rdPreemphasis, gSteps,
                                   self.axesOrientation[1], self.shimming)
-                    orders = orders+gSteps*4
+                    self.gradTrap(t0, gradRiseTime, self.rdDephTime, gradAmp[2] * self.rdPreemphasis, gSteps,
+                                  self.axesOrientation[0], self.shimming)
+                    orders = orders+gSteps*6
 
                 # Echo train
                 for echoIndex in range(self.etl):
@@ -302,24 +318,33 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     self.rfRecPulse(t0, self.rfReTime, rfReAmp, np.pi/2)
 
                     # Dephasing phase and slice gradients
+                    gradAmp = np.array([0.0, 0.0, 0.0])
+                    gradAmp[self.axesOrientation[1]] = phGradients[phIndex]
+                    gradAmp[self.axesOrientation[2]] = slGradients[slIndex]
+                    gradAmp = np.dot(rot, np.reshape(gradAmp, (3, 1)))
                     if repeIndex>=self.dummyPulses:         # This is to account for dummy pulses
                         t0 = tEcho-self.echoSpacing/2+self.rfReTime/2-hw.gradDelay
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, phGradients[phIndex] * np.cos(self.angle),
-                                      gSteps, self.axesOrientation[1], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, phGradients[phIndex] * np.sin(self.angle),
-                                      gSteps, self.axesOrientation[0], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, slGradients[slIndex], gSteps,
-                                      self.axesOrientation[2], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[0], gSteps, self.axesOrientation[0],
+                                      self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[1], gSteps, self.axesOrientation[1],
+                                      self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[2], gSteps, self.axesOrientation[2],
+                                      self.shimming)
                         orders = orders+gSteps*6
 
                     # Readout gradient
+                    gradAmp = np.array([0.0, 0.0, 0.0])
+                    gradAmp[self.axesOrientation[0]] = rdGradAmplitude
+                    gradAmp = np.dot(rot, np.reshape(gradAmp, (3, 1)))
                     if (repeIndex==0 or repeIndex>=self.dummyPulses) and dc==False:         # This is to account for dummy pulses
                         t0 = tEcho-self.rdGradTime/2-gradRiseTime-hw.gradDelay
-                        self.gradTrap(t0, gradRiseTime, self.rdGradTime, rdGradAmplitude * np.cos(self.angle), gSteps,
-                                      self.axesOrientation[0], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.rdGradTime, rdGradAmplitude * np.sin(self.angle), gSteps,
-                                      self.axesOrientation[1], self.shimming)
-                        orders = orders+gSteps*4
+                        self.gradTrap(t0, gradRiseTime, self.rdGradTime, gradAmp[0], gSteps, self.axesOrientation[0],
+                                      self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.rdGradTime, gradAmp[1], gSteps, self.axesOrientation[1],
+                                      self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.rdGradTime, gradAmp[2], gSteps, self.axesOrientation[1],
+                                      self.shimming)
+                        orders = orders+gSteps*6
 
                     # Rx gate
                     if (repeIndex==0 or repeIndex>=self.dummyPulses):
@@ -328,22 +353,26 @@ class RARE(blankSeq.MRIBLANKSEQ):
                         acqPoints += nRD
 
                     # Rephasing phase and slice gradients
+                    gradAmp = np.array([0.0, 0.0, 0.0])
+                    gradAmp[self.axesOrientation[1]] = phGradients[phIndex]
+                    gradAmp[self.axesOrientation[2]] = slGradients[slIndex]
+                    gradAmp = np.dot(rot, np.reshape(gradAmp, (3, 1)))
                     t0 = tEcho+self.acqTime/2+addRdPoints/BW-hw.gradDelay
                     if (echoIndex<self.etl-1 and repeIndex>=self.dummyPulses):
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -phGradients[phIndex] * np.cos(self.angle),
-                                      gSteps, self.axesOrientation[1], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -phGradients[phIndex] * np.sin(self.angle),
-                                      gSteps, self.axesOrientation[0], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -slGradients[slIndex], gSteps,
-                                      self.axesOrientation[2], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -gradAmp[0], gSteps, self.axesOrientation[0],
+                                      self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -gradAmp[1], gSteps, self.axesOrientation[1],
+                                      self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, -gradAmp[2], gSteps, self.axesOrientation[2],
+                                      self.shimming)
                         orders = orders+gSteps*6
                     elif(echoIndex==self.etl-1 and repeIndex>=self.dummyPulses):
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, +phGradients[phIndex] * np.cos(self.angle),
-                                      gSteps, self.axesOrientation[1], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, +phGradients[phIndex] * np.sin(self.angle),
-                                      gSteps, self.axesOrientation[0], self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.phGradTime, +slGradients[slIndex], gSteps,
-                                      self.axesOrientation[2], self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[0], gSteps, self.axesOrientation[0],
+                                      self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[1], gSteps, self.axesOrientation[1],
+                                      self.shimming)
+                        self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[2], gSteps, self.axesOrientation[2],
+                                      self.shimming)
                         orders = orders+gSteps*6
 
                     # Update the phase and slice gradient
@@ -668,7 +697,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
             output = [result1, result2]
 
-            return(output)
+            # Reset rotation angle to zero
+            self.mapVals['angle'] = 0.0
+
+            return output
 
 if __name__=="__main__":
     seq = RARE()

@@ -327,15 +327,15 @@ class ImageViewer(pg.ImageView):
         rotation[z_axis] = 1
         rotation[3] = roi_angle
         for sequence in defaultsequences.values():
-            sequence.rotation = rotation
+            sequence.mapVals['rotationAxis'] = rotation[0:3]
 
-        for seqName in defaultsequences:
-            if ('fov' and 'dfov' and 'angle') in defaultsequences[seqName].mapKeys:
-                defaultsequences[seqName].mapVals['fov'][x_axis] = np.round(fov.fov_roi[x_axis], decimals=1)            # cm
-                defaultsequences[seqName].mapVals['fov'][y_axis] = np.round(fov.fov_roi[y_axis], decimals=1)            # cm
-                defaultsequences[seqName].mapVals['dfov'][x_axis] = np.round(fov.dfov_roi[x_axis], decimals=1) * 10     # mm
-                defaultsequences[seqName].mapVals['dfov'][y_axis] = np.round(fov.dfov_roi[y_axis], decimals=1) * 10     # mm
-                defaultsequences[seqName].mapVals['angle'] = np.round(fov.angle_roi, decimals=1)                        # degrees
+        for sequence in defaultsequences.values():
+            if ('fov' and 'dfov' and 'angle') in sequence.mapKeys:
+                sequence.mapVals['fov'][x_axis] = np.round(fov.fov_roi[x_axis], decimals=1)            # cm
+                sequence.mapVals['fov'][y_axis] = np.round(fov.fov_roi[y_axis], decimals=1)            # cm
+                sequence.mapVals['dfov'][x_axis] = np.round(fov.dfov_roi[x_axis], decimals=1) * 10     # mm
+                sequence.mapVals['dfov'][y_axis] = np.round(fov.dfov_roi[y_axis], decimals=1) * 10     # mm
+                sequence.mapVals['angle'] = np.round(fov.angle_roi, decimals=2)                        # degrees
         self.parent.parent.onSequenceChanged.emit(self.parent.parent.sequence)
 
     def roiChanged(self):

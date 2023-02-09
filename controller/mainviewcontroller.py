@@ -62,6 +62,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     """
     MainViewController Class
     """
+    onSequenceUpdate = pyqtSignal(str)
     onSequenceChanged = pyqtSignal(str)
     iterativeRun = False
     newRun = True
@@ -395,6 +396,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         # Create and execute selected sequence
         sequence.sequenceRun(0)
+
+        # Update parameters, just in case something changed
+        self.onSequenceUpdate.emit(self.sequence)
+
         time.sleep(1)
 
         # Do sequence analysis and get results
@@ -449,6 +454,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
             # Do sequence analysis and acquire de plots
             self.oldOut = defaultsequences[self.seqName].sequenceAnalysis()
+
+            # Update parameters, just in case something changed
+            self.onSequenceUpdate.emit(self.sequence)
 
             # Set name to the label
             fileName = defaultsequences[self.seqName].mapVals['fileName']
@@ -720,8 +728,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.plotview_layout.addWidget(self.win)
 
         # Update the inputs of the sequences
-        self.onSequenceChanged.emit(self.sequence)
-
+        self.onSequenceUpdate.emit(self.sequence)
 
     def protocoleRARE3DT1(self):
         # Load parameters
@@ -829,7 +836,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         print('GUI closed successfully!')
         sys.exit()
 
-
     def setupStylesheet(self, style) -> None:
         """
         Setup application stylesheet
@@ -851,7 +857,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         defaultsequences[self.seqName].deleteOutput()
 
         self.sequence = self.sequencelist.currentText()
-        self.onSequenceChanged.emit(self.sequence)
+        self.onSequenceUpdate.emit(self.sequence)
         self.action_acquire.setEnabled(True)
         # self.clearPlotviewLayout()
     
@@ -1003,7 +1009,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                 else:
                     seq.mapVals[key] = inputNum
 
-        self.onSequenceChanged.emit(self.sequence)
+        self.onSequenceUpdate.emit(self.sequence)
         self.print("Parameters of %s sequence loaded" %(self.sequence))
 
     def save_parameters_calibration(self):
