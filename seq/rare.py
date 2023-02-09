@@ -22,8 +22,6 @@ import experiment as ex
 import scipy.signal as sig
 import configs.hw_config as hw # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-# from plotview.spectrumplot import SpectrumPlot # To plot nice 1d images
-# from plotview.spectrumplot import Spectrum3DPlot # To show nice 2d or 3d images
 import pyqtgraph as pg
 import time
 from phantominator import shepp_logan
@@ -122,6 +120,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.angle = self.angle*np.pi/180
 
         # Miscellaneous
+        self.rotations.append(self.rotation)
         self.fov = self.fov[self.axesOrientation]
         self.dfov = self.dfov[self.axesOrientation]
         self.freqOffset = self.freqOffset*1e6 # MHz
