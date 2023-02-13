@@ -113,7 +113,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Create dictionaries to save historic widgets and inputs.
         self.history_list_outputs = {}
         self.history_list_inputs = {}
-        self.history_list_rotations = {}
+        self.history_list_rotations = {}    # Sequence fov rotations
+        self.history_list_fovs = {}         # Sequence fov sizes
+        self.history_list_shifts = {}       # Sequence fov displacements
 
         # Initialize multithreading
         self.threadpool = QThreadPool()
@@ -220,17 +222,21 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         @email: josalggui@i3m.upv.es
         @Summary: update the shown figure when new element is double clicked in the history list
         """
-        # Get file name
+        # Get file self.currentFigure
         fileName = item.text()[15::]
-        name = item.text()[0:12]
+        self.currentFigure = item.text()[0:12]
 
         # Get the widget from history
-        output = self.history_list_outputs[name]
+        output = self.history_list_outputs[self.currentFigure]
 
-        # Get rotations from history
-        rotations = self.history_list_rotations[name]
+        # Get rotations and shifts from history
+        rotations = self.history_list_rotations[self.currentFigure]
+        shifts = self.history_list_shifts[self.currentFigure]
+        fovs = self.history_list_fovs[self.currentFigure]
         for sequence in defaultsequences.values():
             sequence.rotations = rotations.copy()
+            sequence.dfovs = shifts.copy()
+            sequence.fovs = fovs.copy()
 
         # Clear the plotview
         self.clearPlotviewLayout()
@@ -238,7 +244,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Add plots to the plotview_layout
         win = pg.LayoutWidget()
 
-        # Add label to show rawData name
+        # Add label to show rawData self.currentFigure
         label = QLabel()
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet("background-color: black;color: white")
@@ -340,8 +346,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                                           list(defaultsequences[seqName].mapVals.values()),
                                           True]
 
-        # Save the rotation to the history list
+        # Save the rotation and shift to the history list
         self.history_list_rotations[name[0:12]] = defaultsequences[seqName].rotations.copy()
+        self.history_list_shifts[name[0:12]] = defaultsequences[seqName].dfovs.copy()
+        self.history_list_fovs[name[0:12]] = defaultsequences[seqName].fovs.copy()
 
     def waitingForRun(self):
         """
@@ -463,20 +471,23 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.label.setText(fileName)
 
             # Add item to the history list
-            name = str(datetime.now())[11:23]+" | "+fileName
+            self.currentFigure = str(datetime.now())[11:23]
+            name = self.currentFigure + " | " + fileName
             self.history_list.addItem(name)
 
             # Clear inputs
             defaultsequences[self.seqName].resetMapVals()
 
             # Save results into the history
-            self.history_list_outputs[name[0:12]] = self.oldOut
-            self.history_list_inputs[name[0:12]] = [list(defaultsequences[self.seqName].mapNmspc.values()),
+            self.history_list_outputs[self.currentFigure] = self.oldOut
+            self.history_list_inputs[self.currentFigure] = [list(defaultsequences[self.seqName].mapNmspc.values()),
                                                     list(defaultsequences[self.seqName].mapVals.values()),
                                                     False]
 
-            # Save the rotation to the history list
-            self.history_list_rotations[name[0:12]] = defaultsequences[self.seqName].rotations.copy()
+            # Save the rotation and shifts to the history list
+            self.history_list_rotations[self.currentFigure] = defaultsequences[self.seqName].rotations.copy()
+            self.history_list_shifts[self.currentFigure] = defaultsequences[self.seqName].dfovs.copy()
+            self.history_list_fovs[self.currentFigure] = defaultsequences[self.seqName].fovs.copy()
 
             # Add plots to the plotview_layout
             self.plots = []
@@ -1010,7 +1021,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                     seq.mapVals[key] = inputNum
 
         self.onSequenceUpdate.emit(self.sequence)
-        self.print("Parameters of %s sequence loaded" %(self.sequence))
+        print("\nParameters of %s sequence loaded" %(self.sequence))
 
     def save_parameters_calibration(self):
         seq = defaultsequences[self.sequence]

@@ -120,12 +120,17 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.phGradTime = self.phGradTime*1e-3
         self.angle = self.angle*np.pi/180
 
-        # Miscellaneous
+        # Set the fov
         self.rotation = self.rotationAxis.copy()
         self.rotation.append(self.angle)
         self.rotations.append(self.rotation)
-        self.fov = self.fov[self.axesOrientation]
+        self.dfovs.append(self.dfov)
+        self.fovs.append(self.fov)
+        self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
+        self.fov = self.fov[self.axesOrientation]
+
+        # Miscellaneous
         self.freqOffset = self.freqOffset*1e6 # MHz
         gradRiseTime = 400e-6       # s
         gSteps = int(gradRiseTime*1e6/5)*0+1
@@ -697,8 +702,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
             output = [result1, result2]
 
-            # Reset rotation angle to zero
+            # Reset rotation angle and dfov to zero
             self.mapVals['angle'] = 0.0
+            self.mapVals['dfov'] = [0.0, 0.0, 0.0]
 
             return output
 

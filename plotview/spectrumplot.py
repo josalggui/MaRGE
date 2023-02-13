@@ -16,7 +16,6 @@ from pyqtgraph import GraphicsLayoutWidget
 from warnings import warn
 import pyqtgraph as pg
 import numpy as np
-import fov
 from seq.sequences import defaultsequences
 
 class SpectrumPlot(GraphicsLayoutWidget):
@@ -256,28 +255,17 @@ class ImageViewer(pg.ImageView):
                 z_axis = 0
 
             # Get image fov and resolution
+            current_figure = self.parent.parent.currentFigure
             n_points = np.array(np.shape(self.getProcessedImage()))[1::]
-            img_fov_ru = np.array([fov.fov_ima[x_axis], fov.fov_ima[y_axis]])
-            # img_dfov_ru = np.array([fov.dfov_ima[x_axis], fov.dfov_ima[y_axis]])
-            self.img_resolution = img_fov_ru / n_points
-
-            # # Get roi fov in pixel units
-            # roi_fov_ru = np.array([fov.fov_roi[x_axis], fov.fov_roi[y_axis]])
-            # roi_dfov_ru = np.array([fov.dfov_roi[x_axis], fov.dfov_roi[y_axis]])
-            # roi_fov_px = roi_fov_ru / self.img_resolution
-            # roi_dfov_px = roi_dfov_ru / self.img_resolution - roi_fov_px / 2 + img_fov_ru / self.img_resolution / 2
+            fov = self.parent.parent.history_list_fovs[current_figure][-1]
+            img_fov_ru = [fov[x_axis], fov[y_axis]]
+            self.img_resolution = np.array(img_fov_ru) / n_points
 
             # Set roi size and angle
-            self.roiFOV.setPos([0.0, 0.0])
-            self.roiFOV.setSize(n_points)
-            self.roiFOV.setAngle(0.0)
-
-            # Save 0 rotation to the sequences
-            rotation = [0, 0, 0, 0]
-            rotation[z_axis] = 1
-            rotation[3] = 0.0
-            for sequence in defaultsequences.values():
-                sequence.rotation = rotation
+            self.roiFOV.setPos([0.0, 0.0], update = False)
+            self.roiFOV.setSize(n_points, update = False)
+            self.roiFOV.setAngle(0.0, update = False)
+            self.roiFOV.stateChanged()
 
             # Show the roi
             self.roiFOV.show()
@@ -308,35 +296,43 @@ class ImageViewer(pg.ImageView):
         roi_pos_px = self.roiFOV.pos()
         roi_angle = self.roiFOV.angle()
 
+        # ROI center in pixel units
         x0_px = (+ (ima_fov_px[0] / 2 - roi_pos_px[0]) * np.cos(roi_angle * np.pi / 180)
                  + (ima_fov_px[1] / 2 - roi_pos_px[1]) * np.sin(roi_angle * np.pi / 180))
         y0_px = (- (ima_fov_px[0] / 2 - roi_pos_px[0]) * np.sin(roi_angle * np.pi / 180)
                  + (ima_fov_px[1] / 2 - roi_pos_px[1]) * np.cos(roi_angle * np.pi / 180))
+
+        # ROI center in real units
         x0_ru = (x0_px - roi_fov_px[0]/2) * self.img_resolution[0]
         y0_ru = (y0_px - roi_fov_px[1]/2) * self.img_resolution[1]
 
         # Set fov properties in true units
-        fov.fov_roi[x_axis] = roi_fov_px[0]*self.img_resolution[0]
-        fov.fov_roi[y_axis] = roi_fov_px[1]*self.img_resolution[1]
-        fov.dfov_roi[x_axis] = x0_ru
-        fov.dfov_roi[y_axis] = y0_ru
-        fov.angle_roi = roi_angle
+        fov_roi = [0, 0, 0]
+        fov_roi[x_axis] = roi_fov_px[0]*self.img_resolution[0]
+        fov_roi[y_axis] = roi_fov_px[1]*self.img_resolution[1]
+        dfov_roi = [0, 0, 0]
+        dfov_roi[x_axis] = x0_ru
+        dfov_roi[y_axis] = y0_ru
 
         # Define rotation
         rotation = [0, 0, 0, 0]
         rotation[z_axis] = 1
         rotation[3] = roi_angle
-        for sequence in defaultsequences.values():
-            sequence.mapVals['rotationAxis'] = rotation[0:3]
 
+        # Update sequence parameters
         for sequence in defaultsequences.values():
-            if ('fov' and 'dfov' and 'angle') in sequence.mapKeys:
-                sequence.mapVals['fov'][x_axis] = np.round(fov.fov_roi[x_axis], decimals=1)            # cm
-                sequence.mapVals['fov'][y_axis] = np.round(fov.fov_roi[y_axis], decimals=1)            # cm
-                sequence.mapVals['dfov'][x_axis] = np.round(fov.dfov_roi[x_axis], decimals=1) * 10     # mm
-                sequence.mapVals['dfov'][y_axis] = np.round(fov.dfov_roi[y_axis], decimals=1) * 10     # mm
-                sequence.mapVals['angle'] = np.round(fov.angle_roi, decimals=2)                        # degrees
-        self.parent.parent.onSequenceChanged.emit(self.parent.parent.sequence)
+            if 'fov' in sequence.mapKeys:
+                sequence.mapVals['fov'][x_axis] = np.round(fov_roi[x_axis] * 1e2, decimals=1)       # cm
+                sequence.mapVals['fov'][y_axis] = np.round(fov_roi[y_axis] * 1e2, decimals=1)       # cm
+            if 'dfov' in sequence.mapKeys:
+                sequence.mapVals['dfov'][x_axis] = np.round(dfov_roi[x_axis] * 1e3, decimals=1)     # mm
+                sequence.mapVals['dfov'][y_axis] = np.round(dfov_roi[y_axis] * 1e3, decimals=1)     # mm
+            if 'angle' in sequence.mapKeys:
+                sequence.mapVals['angle'] = np.round(rotation[3], decimals=2)                        # degrees
+            if 'rotationAxis' in sequence.mapKeys:
+                sequence.mapVals['rotationAxis'] = rotation[0:3]
+
+        self.parent.parent.onSequenceUpdate.emit(self.parent.parent.sequence)
 
     def roiChanged(self):
         # Extract image data from ROI
