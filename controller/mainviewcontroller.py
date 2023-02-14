@@ -62,6 +62,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     """
     MainViewController Class
     """
+    onSequenceUpdate = pyqtSignal(str)
     onSequenceChanged = pyqtSignal(str)
     iterativeRun = False
     newRun = True
@@ -112,6 +113,9 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Create dictionaries to save historic widgets and inputs.
         self.history_list_outputs = {}
         self.history_list_inputs = {}
+        self.history_list_rotations = {}    # Sequence fov rotations
+        self.history_list_fovs = {}         # Sequence fov sizes
+        self.history_list_shifts = {}       # Sequence fov displacements
 
         # Initialize multithreading
         self.threadpool = QThreadPool()
@@ -206,15 +210,11 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         self.input_table.setRowCount(len(input_info))
 
         # Input items into the table
-        ver_header = input_info
         self.input_table.setVerticalHeaderLabels(input_info)
         self.input_table.setHorizontalHeaderLabels(['Values'])
         for m, item in enumerate(input_vals):
             newitem = QTableWidgetItem(str(item))
             self.input_table.setItem(m, 0, newitem)
-
-        # Add table to the layout
-        x = 1
 
     def update_history_figure(self, item):
         """
@@ -222,12 +222,21 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         @email: josalggui@i3m.upv.es
         @Summary: update the shown figure when new element is double clicked in the history list
         """
-        # Get file name
+        # Get file self.currentFigure
         fileName = item.text()[15::]
-        name = item.text()[0:12]
+        self.currentFigure = item.text()[0:12]
 
         # Get the widget from history
-        output = self.history_list_outputs[name]
+        output = self.history_list_outputs[self.currentFigure]
+
+        # Get rotations and shifts from history
+        rotations = self.history_list_rotations[self.currentFigure]
+        shifts = self.history_list_shifts[self.currentFigure]
+        fovs = self.history_list_fovs[self.currentFigure]
+        for sequence in defaultsequences.values():
+            sequence.rotations = rotations.copy()
+            sequence.dfovs = shifts.copy()
+            sequence.fovs = fovs.copy()
 
         # Clear the plotview
         self.clearPlotviewLayout()
@@ -235,7 +244,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Add plots to the plotview_layout
         win = pg.LayoutWidget()
 
-        # Add label to show rawData name
+        # Add label to show rawData self.currentFigure
         label = QLabel()
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet("background-color: black;color: white")
@@ -337,6 +346,11 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                                           list(defaultsequences[seqName].mapVals.values()),
                                           True]
 
+        # Save the rotation and shift to the history list
+        self.history_list_rotations[name[0:12]] = defaultsequences[seqName].rotations.copy()
+        self.history_list_shifts[name[0:12]] = defaultsequences[seqName].dfovs.copy()
+        self.history_list_fovs[name[0:12]] = defaultsequences[seqName].fovs.copy()
+
     def waitingForRun(self):
         """
         @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
@@ -390,6 +404,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
 
         # Create and execute selected sequence
         sequence.sequenceRun(0)
+
+        # Update parameters, just in case something changed
+        self.onSequenceUpdate.emit(self.sequence)
+
         time.sleep(1)
 
         # Do sequence analysis and get results
@@ -445,22 +463,31 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             # Do sequence analysis and acquire de plots
             self.oldOut = defaultsequences[self.seqName].sequenceAnalysis()
 
+            # Update parameters, just in case something changed
+            self.onSequenceUpdate.emit(self.sequence)
+
             # Set name to the label
             fileName = defaultsequences[self.seqName].mapVals['fileName']
             self.label.setText(fileName)
 
             # Add item to the history list
-            name = str(datetime.now())[11:23]+" | "+fileName
+            self.currentFigure = str(datetime.now())[11:23]
+            name = self.currentFigure + " | " + fileName
             self.history_list.addItem(name)
 
             # Clear inputs
             defaultsequences[self.seqName].resetMapVals()
 
             # Save results into the history
-            self.history_list_outputs[name[0:12]] = self.oldOut
-            self.history_list_inputs[name[0:12]] = [list(defaultsequences[self.seqName].mapNmspc.values()),
+            self.history_list_outputs[self.currentFigure] = self.oldOut
+            self.history_list_inputs[self.currentFigure] = [list(defaultsequences[self.seqName].mapNmspc.values()),
                                                     list(defaultsequences[self.seqName].mapVals.values()),
                                                     False]
+
+            # Save the rotation and shifts to the history list
+            self.history_list_rotations[self.currentFigure] = defaultsequences[self.seqName].rotations.copy()
+            self.history_list_shifts[self.currentFigure] = defaultsequences[self.seqName].dfovs.copy()
+            self.history_list_fovs[self.currentFigure] = defaultsequences[self.seqName].fovs.copy()
 
             # Add plots to the plotview_layout
             self.plots = []
@@ -629,87 +656,90 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     def autocalibration(self):
         self.clearPlotviewLayout()
 
-        # Get Larmor frequency
-        print("Larmor frequency...")
-        larmorSeq = defaultsequences['Larmor']
-        larmorSeq.sequenceRun()
-        outLarmor = larmorSeq.sequenceAnalysis()
-        delattr(larmorSeq, 'out')
-        for seq in defaultsequences:
-            defaultsequences[seq].mapVals['larmorFreq'] = hw.larmorFreq
-
-        # Get noise
-        noiseSeq = defaultsequences['Noise']
-        noiseSeq.sequenceRun()
-        outNoise = noiseSeq.sequenceAnalysis()
-        delattr(noiseSeq, 'out')
-
-        # Get Rabi flops
-        rabiSeq = defaultsequences['RabiFlops']
-        rabiSeq.sequenceRun()
-        outRabi = rabiSeq.sequenceAnalysis()
-        delattr(rabiSeq, 'out')
-
-        # Get Shimming
-        shimSeq = defaultsequences['Shimming']
-        shimSeq.sequenceRun()
-        outShim = shimSeq.sequenceAnalysis(obj='autocalibration')
-        for seq in defaultsequences:
-            defaultsequences[seq].mapVals['shimming'] = outShim[1]
-        delattr(shimSeq, 'out')
-
-        # Spectrum
-        # Create label with rawdata name
-        fileName = larmorSeq.mapVals['fileName']
-        self.label = QLabel(fileName)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("background-color: black;color: white")
-        self.plotview_layout.addWidget(self.label)
+        # Include here the sequences to run on autocalibration
+        seqNames = [
+                    # 'Larmor',
+                    'Noise',
+                    # 'RabiFlops',
+                    # 'Shimming'
+                    ]
 
         # Add plots to the plotview_layout
-        # item = outLarmor[1]
-        # self.plotview_layout.addWidget(item)
+        self.win = pg.LayoutWidget()
+        self.plots = []
 
-        # Noise
-        # Create label with rawdata name
-        fileName = noiseSeq.mapVals['fileName']
-        self.label = QLabel(fileName)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("background-color: black;color: white")
-        self.plotview_layout.addWidget(self.label)
+        for seqName in seqNames:
+            # Execute the sequence
+            sequence = defaultsequences[seqName]
+            sequence.sequenceRun()
+            output = sequence.sequenceAnalysis()
+            delattr(sequence, 'out')
 
-        # Add plots to the plotview_layout
-        #for item in outNoise:
-        #    self.plotview_layout.addWidget(item)
-        item = outNoise[1]
-        self.plotview_layout.addWidget(item)
+            # Add item to the history list
+            fileName = sequence.mapVals['fileName']
+            name = str(datetime.now())[11:23] + " | " + fileName
+            self.history_list.addItem(name)
 
-        # Rabi
-        # Create label with rawdata name
-        fileName = rabiSeq.mapVals['fileName']
-        self.label = QLabel(fileName)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("background-color: black;color: white")
-        self.plotview_layout.addWidget(self.label)
+            # Save results into the history
+            self.history_list_outputs[name[0:12]] = output
+            self.history_list_inputs[name[0:12]] = [list(sequence.mapNmspc.values()),
+                                                    list(sequence.mapVals.values()),
+                                                    False]
 
-        # Add plots to the plotview_layout
-        item = outRabi[0]
-        self.plotview_layout.addWidget(item)
+            # Specific for larmor
+            if seqName == 'Larmor':
+                for seq in defaultsequences:
+                    seq.mapVals['larmorFreq'] = hw.larmorFreq
 
-        # Shimming
-        # Create label with rawdata name
-        fileName = shimSeq.mapVals['fileName']
-        self.label = QLabel(fileName)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setStyleSheet("background-color: black;color: white")
-        self.plotview_layout.addWidget(self.label)
+            # Specific for noise
+            if seqName == 'Noise':
+                # Create label with rawdata name
+                self.label = QLabel()
+                self.label.setAlignment(QtCore.Qt.AlignCenter)
+                self.label.setStyleSheet("background-color: black;color: white")
+                self.win.addWidget(self.label, row=0, col=0, colspan=2)
+                fileName = sequence.mapVals['fileName']
+                self.label.setText(fileName)
 
-        # Add plots to the plotview_layout
-        item = outShim[0]
-        self.plotview_layout.addWidget(item)
+                # Noise spectrum
+                item = output[1]
+                self.plots.append(SpectrumPlot(xData=item['xData'],
+                                               yData=item['yData'],
+                                               legend=item['legend'],
+                                               xLabel=item['xLabel'],
+                                               yLabel=item['yLabel'],
+                                               title=item['title']))
+                self.win.addWidget(self.plots[-1], row=1, col=0)
 
-        self.onSequenceChanged.emit(self.sequence)
+            # Specifi for rabi
+            if seqName == 'Rabi':
+                item = output[0]
+                self.plots.append(SpectrumPlot(xData=item['xData'],
+                                               yData=item['yData'],
+                                               legend=item['legend'],
+                                               xLabel=item['xLabel'],
+                                               yLabel=item['yLabel'],
+                                               title=item['title']))
+                self.win.addWidget(self.plots[-1], row=2, col=0)
 
+            # Specific for shimming
+            if seqName == 'Shimming':
+                for seq in defaultsequences:
+                    seq.mapVals['shimming'] = outShim[1]
+                item = outShim[0]
+                self.plots.append(SpectrumPlot(xData=item['xData'],
+                                               yData=item['yData'],
+                                               legend=item['legend'],
+                                               xLabel=item['xLabel'],
+                                               yLabel=item['yLabel'],
+                                               title=item['title']))
+                self.win.addWidget(self.plots[-1], row=3, col=0)
+
+        # Add windows to the layout
+        self.plotview_layout.addWidget(self.win)
+
+        # Update the inputs of the sequences
+        self.onSequenceUpdate.emit(self.sequence)
 
     def protocoleRARE3DT1(self):
         # Load parameters
@@ -817,7 +847,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         print('GUI closed successfully!')
         sys.exit()
 
-
     def setupStylesheet(self, style) -> None:
         """
         Setup application stylesheet
@@ -839,7 +868,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         defaultsequences[self.seqName].deleteOutput()
 
         self.sequence = self.sequencelist.currentText()
-        self.onSequenceChanged.emit(self.sequence)
+        self.onSequenceUpdate.emit(self.sequence)
         self.action_acquire.setEnabled(True)
         # self.clearPlotviewLayout()
     
@@ -991,8 +1020,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
                 else:
                     seq.mapVals[key] = inputNum
 
-        self.onSequenceChanged.emit(self.sequence)
-        self.print("Parameters of %s sequence loaded" %(self.sequence))
+        self.onSequenceUpdate.emit(self.sequence)
+        print("\nParameters of %s sequence loaded" %(self.sequence))
 
     def save_parameters_calibration(self):
         seq = defaultsequences[self.sequence]

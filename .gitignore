@@ -4,3 +4,4 @@ experiments
 .idea/
 configs/hw_config.py
 *.dcm
+*.pptx

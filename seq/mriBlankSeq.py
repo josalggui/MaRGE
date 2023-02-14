@@ -35,6 +35,9 @@ class MRIBLANKSEQ:
         self.mapFields = {}
         self.mapLen = {}
         self.meta_data = {}
+        self.rotations = []
+        self.dfovs = []
+        self.fovs = []
 
     # *********************************************************************************
     # *********************************************************************************
@@ -77,6 +80,75 @@ class MRIBLANKSEQ:
             if self.mapFields[key] == 'OTH':
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
         return out
+
+    def getFovDisplacement(self):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        Get the displacement to apply in the fft reconstruction
+        """
+        def rotationMatrix(rotation):
+            theta = rotation[3]*np.pi/180
+            ux = rotation[0]
+            uy = rotation[1]
+            uz = rotation[2]
+            out = np.zeros((3, 3))
+            out[0, 0] = np.cos(theta) + ux ** 2 * (1 - np.cos(theta));
+            out[0, 1] = ux * uy * (1 - np.cos(theta)) - uz * np.sin(theta);
+            out[0, 2] = ux * uz * (1 - np.cos(theta)) + uy * np.sin(theta);
+            out[1, 0] = uy * ux * (1 - np.cos(theta)) + uz * np.sin(theta);
+            out[1, 1] = np.cos(theta) + uy ** 2 * (1 - np.cos(theta));
+            out[1, 2] = uy * uz * (1 - np.cos(theta)) - ux * np.sin(theta);
+            out[2, 0] = uz * ux * (1 - np.cos(theta)) - uy * np.sin(theta);
+            out[2, 1] = uz * uy * (1 - np.cos(theta)) + ux * np.sin(theta);
+            out[2, 2] = np.cos(theta) + uz ** 2 * (1 - np.cos(theta));
+
+            return out
+        
+        dr = np.reshape(np.array([0, 0, 0]), (3, 1))
+        for ii in range(1, len(self.dfovs)):
+            Mii = rotationMatrix(self.rotations[ii])
+            rii = np.reshape(np.array(self.dfovs[ii]), (3,1))
+            dr = np.dot(Mii, (dr + rii))
+
+        return dr
+        
+        
+    def getRotationMatrix(self):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        Matrix to rotate through an arbitrary axis
+        """
+        def rotationMatrix(rotation):
+            theta = rotation[3]*np.pi/180
+            ux = rotation[0]
+            uy = rotation[1]
+            uz = rotation[2]
+            out = np.zeros((3, 3))
+            out[0, 0] = np.cos(theta) + ux ** 2 * (1 - np.cos(theta));
+            out[0, 1] = ux * uy * (1 - np.cos(theta)) - uz * np.sin(theta);
+            out[0, 2] = ux * uz * (1 - np.cos(theta)) + uy * np.sin(theta);
+            out[1, 0] = uy * ux * (1 - np.cos(theta)) + uz * np.sin(theta);
+            out[1, 1] = np.cos(theta) + uy ** 2 * (1 - np.cos(theta));
+            out[1, 2] = uy * uz * (1 - np.cos(theta)) - ux * np.sin(theta);
+            out[2, 0] = uz * ux * (1 - np.cos(theta)) - uy * np.sin(theta);
+            out[2, 1] = uz * uy * (1 - np.cos(theta)) + ux * np.sin(theta);
+            out[2, 2] = np.cos(theta) + uz ** 2 * (1 - np.cos(theta));
+
+            return out
+
+        rotations = []
+        for rotation in self.rotations:
+            rotations.append(rotationMatrix(rotation))
+
+        l = len(self.rotations)
+        rotation = rotations[-1]
+        if l>1:
+            for ii in range(l-1):
+                rotation = np.dot(rotations[-2-ii], rotation)
+
+        return rotation
 
     def deleteOutput(self):
         """"

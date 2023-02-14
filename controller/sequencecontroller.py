@@ -40,7 +40,10 @@ class SequenceList(QComboBox):
 
         # Add sequences to sequences list
         self.addItems(list(defaultsequences.keys()))
-        
+
+        if hasattr(parent, 'onSequenceUpdate'):
+            parent.onSequenceUpdate.connect(self.sequenceUpdate)
+
         if hasattr(parent, 'onSequenceChanged'):
             parent.onSequenceChanged.connect(self.triggeredSequenceChanged)
             # Make parent reachable from outside __init__
@@ -50,7 +53,11 @@ class SequenceList(QComboBox):
         else:
             self._currentSequence=parent.sequence
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
-    
+
+    def sequenceUpdate(self, sequence: str = None):
+        self._currentSequence = sequence
+        self.setParametersUI(sequence)
+
     def triggeredSequenceChanged(self, sequence: str = None) -> None:
         # TODO: set sequence only once right here or on changed signal
         # packet = Com.constructSequencePacket(operation)
