@@ -511,4 +511,10 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                        'row': 0,
                        'col': 1}
 
-        return [result1, result2]
+            # Add results into the output attribute
+            self.output = [result1, result2]
+
+            # Save results
+            self.saveRawData()
+
+            return self.output

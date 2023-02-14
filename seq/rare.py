@@ -666,12 +666,16 @@ class RARE(blankSeq.MRIBLANKSEQ):
             result2['row'] = 0
             result2['col'] = 1
 
+            # Add parameters to meta_data dictionary
+            self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
+
+            # Add results into the output attribute (result1 must be the image to save in dicom)
             self.output = [result1, result2]
 
-
+            # Save results
             self.saveRawData()
 
-            return(self.output)
+            return self.output
 
 if __name__=="__main__":
     seq = RARE()

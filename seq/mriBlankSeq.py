@@ -26,6 +26,7 @@ class MRIBLANKSEQ:
     mapLen = {}
     plotSeq = 1  # it plots the sequence
     meta_data = {} # Dictionary to save meta data for dicom file
+    output = None
 
     def __init__(self):
         self.mapKeys = []
@@ -555,7 +556,7 @@ class MRIBLANKSEQ:
 
     def saveRawData(self):
         """"
-        @author: T. Guallart-Naval, MRILab, i3M, CSIC, Valencia, Spain
+        @author: T. Guallart-Naval, Tesoro Imaging S.L., Valencia, Spain
         @email: teresa.guallart@tesoroimaging.com
         @modified: J.M. Algarín, MRILab, i3M, CSIC, Spain
         Save the rawData
@@ -588,6 +589,13 @@ class MRIBLANKSEQ:
             self.image2Dicom(fileName = "experiments/acquisitions/%s/%s.%s.dcm" % (dt2_string, self.mapVals['seqName'], dt_string))
 
     def image2Dicom(self, fileName):
+        """"
+        @author: F. Juan-Llorís, PhysioMRI S.L., Valencia, Spain
+        @email: franc.juan@physiomri.com
+        @modified: J.M. Algarín, MRILab, i3M, CSIC, Spain
+        Save the dicom
+        """
+
         # Create dicom object
         dicom_image = DICOMImage()
 
