@@ -46,9 +46,6 @@ import configs.hw_config as hw
 from seq.sequences import defaultsequences
 # from seq.localizer import Localizer
 
-# import fov properties
-import fov
-
 # Import controllers
 from controller.batchcontroller import BatchController                                              # Batches
 from controller.sequencecontroller import SequenceList                                              # Sequence list
@@ -522,10 +519,6 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             # Deactivate the iterative buttom if sequence is not iterable (2d and 3d plots)
             if not hasattr(defaultsequences[self.seqName], 'out') and self.action_iterate.isChecked():
                 self.action_iterate.toggle()
-                # self.action_iterate.setIcon(
-                #     QIcon('/home/physioMRI/git_repos/PhysioMRI_GUI/resources/icons/media-fast-forward.svg'))
-                # self.action_iterate.setToolTip('Switch to iterative run')
-                # self.action_iterate.setText('Single run')
 
         else:
             # Pass the function to execute into the thread
@@ -556,7 +549,8 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             self.label.setText(fileName)
 
             # Add item to the history list
-            name = str(datetime.now())[11:23] + " | " + fileName
+            self.currentFigure = str(datetime.now())[11:23]
+            name = self.currentFigure + " | " + fileName
             self.history_list.addItem(name)
 
             for plotIndex in range(len(self.newOut)):
@@ -570,10 +564,15 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
             defaultsequences[self.seqName].resetMapVals()
 
             # Save results into the history
-            self.history_list_outputs[name[0:12]] = self.newOut
-            self.history_list_inputs[name[0:12]] = [list(defaultsequences[self.seqName].mapNmspc.values()),
-                                                    list(defaultsequences[self.seqName].mapVals.values()),
-                                                    False]
+            self.history_list_outputs[self.currentFigure] = self.newOut
+            self.history_list_inputs[self.currentFigure] = [list(defaultsequences[self.seqName].mapNmspc.values()),
+                                                            list(defaultsequences[self.seqName].mapVals.values()),
+                                                            False]
+
+            # Save the rotation and shifts to the history list
+            self.history_list_rotations[self.currentFigure] = defaultsequences[self.seqName].rotations.copy()
+            self.history_list_shifts[self.currentFigure] = defaultsequences[self.seqName].dfovs.copy()
+            self.history_list_fovs[self.currentFigure] = defaultsequences[self.seqName].fovs.copy()
 
             # Stop repetitions if single acquision
             if singleRepetition:

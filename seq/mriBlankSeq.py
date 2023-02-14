@@ -26,7 +26,7 @@ class MRIBLANKSEQ:
     mapLen = {}
     plotSeq = 1  # it plots the sequence
     meta_data = {} # Dictionary to save meta data for dicom file
-    output = None
+    output = []
 
     def __init__(self):
         self.mapKeys = []
