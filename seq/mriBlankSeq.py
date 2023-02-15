@@ -38,6 +38,7 @@ class MRIBLANKSEQ:
         self.rotations = []
         self.dfovs = []
         self.fovs = []
+        self.session = None
 
     # *********************************************************************************
     # *********************************************************************************
@@ -633,22 +634,27 @@ class MRIBLANKSEQ:
         @modified: J.M. Algarín, MRILab, i3M, CSIC, Spain
         Save the rawData
         """
-        # Save data
-        dt = datetime.now()
-        dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
-        dt2 = date.today()
-        dt2_string = dt2.strftime("%Y.%m.%d")
-        if not os.path.exists('experiments/acquisitions/%s' % (dt2_string)):
-            os.makedirs('experiments/acquisitions/%s' % (dt2_string))
-        self.mapVals['fileName'] = "%s.%s.mat" % (self.mapVals['seqName'], dt_string)
+        # Get directory
+        if 'directory' in self.session.keys():
+            directory = self.session['directory']
+        else:
+            date = date.today()
+            date_string = dt2.strftime("%Y.%m.%d")
+            directory = 'experiments/acquisitions/%s' % (date_string)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        # Generate filename
+        name = datetime.now()
+        name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
+        file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
+        self.mapVals['fileName'] = "%s.mat" % file_name
 
         # Save mat file with the outputs
-        savemat("experiments/acquisitions/%s/%s.%s.mat" % (dt2_string, self.mapVals['seqName'],
-                                                           dt_string), self.mapVals)
+        savemat("%s/%s.mat" % (directory, file_name), self.mapVals)
 
         # Save csv with input parameters
-        with open('experiments/acquisitions/%s/%s.%s.csv' % (dt2_string, self.mapNmspc['seqName'], dt_string),
-                  'w') as csvfile:
+        with open('%s/%s.csv' % (directory, file_name), 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys)
             writer.writeheader()
             mapVals = {}
@@ -658,7 +664,7 @@ class MRIBLANKSEQ:
 
         # Save dcm with the final image
         if (len(self.output) > 0) and (self.output[0]['widget'] == 'image'):
-            self.image2Dicom(fileName = "experiments/acquisitions/%s/%s.%s.dcm" % (dt2_string, self.mapVals['seqName'], dt_string))
+            self.image2Dicom(fileName = "%s/%s.dcm" % (directory, file_name))
 
     def image2Dicom(self, fileName):
         """"

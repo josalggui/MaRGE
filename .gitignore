@@ -5,3 +5,4 @@ experiments
 configs/hw_config.py
 *.dcm
 *.pptx
+configs/sys_config.py

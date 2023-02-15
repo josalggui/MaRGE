@@ -1,11 +1,8 @@
 """
-Main View Controller
-
-@author:    Yolanda Vives
-
-@status:    Sets up the main view, its views and controllers
-@todo:
-
+session_controller.py
+@author:    José Miguel Algarín
+@email:     josalggui@i3m.upv.es
+@affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
@@ -65,7 +62,7 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
     newRun = True
     marcosServer = False
 
-    def __init__(self, session, parent=None, pyfirmata=None):
+    def __init__(self, session, parent=None):
         super(MainViewController, self).__init__(parent)
 
         # Load the mainview.up
@@ -80,14 +77,12 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         
         # Initialisation of sequence list
         self.session = session
-        self.pyfirmata = pyfirmata
-        dict = vars(defaultsessions[self.session])
         self.sequencelist = SequenceList(self)
         self.sequencelist.setCurrentIndex(0)
         self.sequencelist.currentIndexChanged.connect(self.selectionChanged)
         self.layout_sequenceList.addWidget(self.sequencelist)
         self.sequence = self.sequencelist.currentText()
-        self.session_label.setText(dict["name_code"])
+        self.session_label.setText(session["directory"])
                 
         # Console
         self.cons = self.generateConsole('')
@@ -172,6 +167,10 @@ class MainViewController(MainWindow_Form, MainWindow_Base):
         # Update the sequence parameters shown in the gui
         self.seqName = self.sequencelist.getCurrentSequence()
         defaultsequences[self.seqName].sequenceInfo()
+
+        # Add the session to all sequences
+        for sequence in defaultsequences.values():
+            sequence.session = self.session
 
         # Show the gui maximized
         # self.showMaximized()

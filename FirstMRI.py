@@ -19,10 +19,6 @@ for char in path:
         sys.path.append(path[0:ii+1]+'marcos_client')
     ii += 1
 #******************************************************************************
-from controller.sessionviewer_controller import SessionViewerController
-import pyfirmata
-
-cgitb.enable(format = 'text')
 
 VERSION = "0.2.0"
 AUTHORA = "Yolanda Vives"
@@ -35,17 +31,14 @@ print("https://www.i3m-stim.i3m.upv.es/research/magnetic-resonance-imaging-labor
 print("https://github.com/yvives/PhysioMRI_GUI                                                *")
 print("****************************************************************************************")
 
-# Start the red pitaya -> ./copy_bitstream and ssh root@192.168.1.101 "marcos_server"
-os.system('ssh root@192.168.1.101 "killall marcos_server"')
-# if platform.system()=='Windows':
-#     os.system('start startRP.sh')
-# elif platform.system()=='Linux':
-#     os.system('./startRP.sh &')
+from controller.session_controller import SessionController
+
+cgitb.enable(format = 'text')
+
 
 # Run the gui
 app = QApplication(sys.argv)
-gui = SessionViewerController('', pyfirmata=pyfirmata)
-gui.show()
+gui = SessionController()
 sys.exit(app.exec_())
 
     
