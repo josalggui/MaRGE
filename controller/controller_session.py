@@ -4,15 +4,19 @@ session_controller.py
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
-from ui.session_window import SessionWindow
-from controller.mainviewcontroller import MainViewController
+from ui.window_session import SessionWindow
+from controller.controller_main import MainController
 import os
 import sys
 
 
 class SessionController(SessionWindow):
-    def __init__(self):
+    def __init__(self, demo):
         super(SessionController, self).__init__()
+        self.main_gui = None
+        self.demo = demo
+
+        # Set slots for toolbar actions
         self.launch_gui_action.triggered.connect(self.runMainGui)
         self.close_action.triggered.connect(self.close)
 
@@ -26,9 +30,10 @@ class SessionController(SessionWindow):
             os.makedirs(self.session['directory'])
 
         # Open the main gui
-        main_gui = MainViewController(self.session)
+        # self.main_gui = MainViewController(self.session)
+        self.main_gui = MainController(self.session, self.demo)
         self.hide()
-        main_gui.show()
+        self.main_gui.show()
 
     def closeEvent(self, *args, **kwargs):
         os.system('ssh root@192.168.1.101 "killall marcos_server"')

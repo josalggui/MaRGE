@@ -29,7 +29,7 @@ class SessionWindow(QMainWindow):
         self.setStyleSheet(self.styleSheet)
 
         # Add toolbar
-        self.toolbar = QToolBar("My main toolbar")
+        self.toolbar = QToolBar("Session toolbar")
         self.addToolBar(self.toolbar)
 
         # launch gui action
