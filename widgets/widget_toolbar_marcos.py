@@ -1,5 +1,4 @@
 """
-session_controller.py
 @author:    José Miguel Algarín
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain

@@ -20,7 +20,7 @@ for char in path:
     ii += 1
 #******************************************************************************
 
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 AUTHORA = "Yolanda Vives"
 AUTHORB = "J.M. Algarín"
 print("****************************************************************************************")
@@ -31,14 +31,16 @@ print("https://www.i3m-stim.i3m.upv.es/research/magnetic-resonance-imaging-labor
 print("https://github.com/yvives/PhysioMRI_GUI                                                *")
 print("****************************************************************************************")
 
-from controller.session_controller import SessionController
+from controller.controller_session import SessionController
 
 cgitb.enable(format = 'text')
 
+# os.system('ssh root@192.168.1.101 "killall marcos_server"')
 
 # Run the gui
+demo = True
 app = QApplication(sys.argv)
-gui = SessionController()
+gui = SessionController(demo)
 sys.exit(app.exec_())
 
     

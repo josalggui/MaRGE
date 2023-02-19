@@ -1,5 +1,4 @@
 """
-session_controller.py
 @author:    José Miguel Algarín
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
@@ -8,9 +7,10 @@ from PyQt5.QtWidgets import QToolBar, QAction
 from PyQt5.QtGui import QIcon
 
 class SequenceToolBar(QToolBar):
-    def __init__(self, demo, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         super(SequenceToolBar, self).__init__(*args, **kwargs)
-        self.demo = demo
+        self.main = parent
+        self.demo = self.main.demo
 
         # Autocalibration
         self.action_autocalibration = QAction(QIcon("resources/icons/calibration-light.png"), "Autocalibration", self)

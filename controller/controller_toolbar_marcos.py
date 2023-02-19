@@ -4,7 +4,7 @@ session_controller.py
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
-from toolbars.toolbar_marcos import MarcosToolBar
+from widgets.widget_toolbar_marcos import MarcosToolBar
 import os
 import platform
 import experiment as ex

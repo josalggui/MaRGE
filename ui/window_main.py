@@ -1,100 +1,98 @@
 """
-session_controller.py
 @author:    José Miguel Algarín
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
-from PyQt5.QtWidgets import QMainWindow, QToolBar, QAction, QStatusBar, QGridLayout
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QSize
+from PyQt5.QtWidgets import QMainWindow, QStatusBar, QWidget, QHBoxLayout, QVBoxLayout, QTableWidget
+from PyQt5.QtCore import QSize, QThreadPool
 import qdarkstyle
-from controller.controller_marcos import MarcosController
+
+from controller.controller_console import ConsoleController
+from controller.controller_figures import FiguresLayoutController
+from controller.controller_history_list import HistoryListController
+from controller.controller_toolbar_marcos import MarcosController
+from controller.controller_toolbar_sequences import SequenceController
+from controller.controller_sequence_list import SequenceListController
+from controller.controller_sequence_inputs import SequenceInputsController
 
 
 class MainWindow(QMainWindow):
     def __init__(self, session, demo = False, parent=None):
         super(MainWindow, self).__init__(parent)
-        self.toolbarMarcos = None
-        self.action_view_sequence = None
-        self.action_iterate = None
-        self.action_acquire = None
-        self.action_add_to_list = None
-        self.action_localizer = None
-        self.action_autocalibration = None
-        self.action_copybitstream = None
-        self.marcos_action = None
-        self.action_gpa_init = None
-        self.action_server = None
-        self.toolbar = None
+        self.app_open = True
+        self.toolbar_sequences = None
+        self.toolbar_marcos = None
         self.session = session
         self.demo = demo
         self.setWindowTitle(session['directory'])
         self.resize(QSize(800, 600))
 
+        # Threadpool for parallel running
+        self.threadpool = QThreadPool()
+
         # Set stylesheet
         self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
         self.setStyleSheet(self.styleSheet)
 
-        # Set up the toolbar
-        self.setupToolBar()
+        # Add marcos toolbar
+        self.toolbar_marcos = MarcosController(self.demo, "MaRCoS toolbar")
+        self.addToolBar(self.toolbar_marcos)
 
-        # Add vertical layout
-        self.main_layout = QGridLayout()
+        # Add sequence toolbar
+        self.toolbar_sequences = SequenceController(self, "Sequence toolbar")
+        self.addToolBar(self.toolbar_sequences)
 
         # Status bar
         self.setStatusBar(QStatusBar(self))
-        
-    def setupToolBar(self):
 
-        self.toolbarMarcos = MarcosController(self.demo, "MaRCoS toolbar")
-        self.addToolBar(self.toolbarMarcos)
+        # Create central widget that will contain the layout
+        self.main_widget = QWidget()
+        self.setCentralWidget(self.main_widget)
 
-        # Add toolbar
-        self.toolbar = QToolBar("Sequence toolbar")
-        self.addToolBar(self.toolbar)
+        # Add layout to input parameters
+        self.main_layout = QHBoxLayout()
+        self.main_widget.setLayout(self.main_layout)
 
-        # # Setup GPA board
-        # self.action_gpa_init = QAction(QIcon("resources/icons/initGPA.png"), "Init GPA board", self)
-        # self.action_gpa_init.setStatusTip("Init GPA board")
-        # self.toolbar.addAction(self.action_gpa_init)
-        #
-        # # Setup MaRCoS
-        # self.action_copybitstream = QAction(QIcon("resources/icons/M.png"), "MaRCoS init", self)
-        # self.action_copybitstream.setStatusTip("Install MaRCoS into Red Pitaya")
-        # self.toolbar.addAction(self.action_copybitstream)
-        #
-        # # Connect to the server
-        # self.action_server = QAction(QIcon("resources/icons/server-light.png"), "MaRCoS server", self)
-        # self.action_server.setStatusTip("Connect to server")
-        # self.toolbar.addAction(self.action_server)
+        # Layout for inputs
+        self.input_layout = QVBoxLayout()
+        self.main_layout.addLayout(self.input_layout)
 
-        # Autocalibration
-        self.action_autocalibration = QAction(QIcon("resources/icons/calibration-light.png"), "Autocalibration", self)
-        self.action_autocalibration.setStatusTip("Run autocalibration")
-        self.toolbar.addAction(self.action_autocalibration)
-        
-        # Localizer
-        self.action_localizer = QAction(QIcon("resources/icons/localizer-light.png"), "Localizer", self)
-        self.action_localizer.setStatusTip("Run Localizer")
-        self.toolbar.addAction(self.action_localizer)
+        # Layout for outputs
+        self.output_layout = QVBoxLayout()
+        self.main_layout.addLayout(self.output_layout)
 
-        # Add sequence to waiting list
-        self.action_add_to_list = QAction(QIcon("resources/icons/clipboard-list-check"), "Sequence to list", self)
-        self.action_add_to_list.setStatusTip("Add current sequence to waiting list")
-        self.toolbar.addAction(self.action_add_to_list)
+        # Add sequence list
+        self.sequence_list = SequenceListController(parent=self)
+        self.input_layout.addWidget(self.sequence_list)
 
-        # Add run action
-        self.action_acquire = QAction(QIcon("resources/icons/acquire.png"), "Acquire", self)
-        self.action_acquire.setStatusTip("Run current sequence")
-        self.toolbar.addAction(self.action_acquire)
+        # Add sequence inputs
+        self.sequence_inputs = SequenceInputsController(parent=self)
+        self.input_layout.addWidget(self.sequence_inputs)
 
-        # Iterative run
-        self.action_iterate = QAction(QIcon("resources/icons/iterate.png"), "Iterative run", self)
-        self.action_iterate.setStatusTip("Set iterative mode on")
-        self.toolbar.addAction(self.action_iterate)
+        # Add console
+        self.console = ConsoleController()
+        self.input_layout.addWidget(self.console)
 
-        # Plot sequence
-        self.action_view_sequence = QAction(QIcon("resources/icons/plotSequence.png"), "Plot sequence", self)
-        self.action_view_sequence.setStatusTip("Plot current sequence")
-        self.toolbar.addAction(self.action_view_sequence)
+        # Add layout to show the figures
+        self.figures_layout = FiguresLayoutController()
+        self.output_layout.addWidget(self.figures_layout)
+
+        # Layout for output history
+        self.output_layout_h = QHBoxLayout()
+        self.output_layout.addLayout(self.output_layout_h)
+
+        # Add list to show the history
+        self.history_list = HistoryListController(parent=self)
+        self.output_layout_h.addWidget(self.history_list)
+        self.history_list.setMaximumHeight(200)
+        self.history_list.setMinimumHeight(200)
+
+        # Table with input parameters from historic images
+        self.input_table = QTableWidget()
+        self.input_table.setMaximumHeight(200)
+        self.input_table.setMinimumHeight(200)
+        self.output_layout_h.addWidget(self.input_table)
+
+
+
 
