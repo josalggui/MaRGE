@@ -12,10 +12,6 @@ class SequenceListWidget(QComboBox):
         super(SequenceListWidget, self).__init__(*args, **kwargs)
         self.main = parent
 
-        # Here the GUI updates the inputs to the last used inputs
-        for key in defaultsequences.keys():
-            defaultsequences[key].loadParams()
-
         # Add sequences to sequences list
         self.addItems(list(defaultsequences.keys()))
 

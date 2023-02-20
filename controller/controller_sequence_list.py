@@ -14,6 +14,10 @@ class SequenceListController(SequenceListWidget):
         self.currentTextChanged.connect(self.updateSequence)
         self.currentTextChanged.connect(self.showSequenceInfo)
 
+        # Here the GUI updates the inputs to the last used inputs
+        for key in defaultsequences.keys():
+            defaultsequences[key].loadParams()
+
     def getCurrentSequence(self):
         return self.currentText()
 

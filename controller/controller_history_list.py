@@ -9,7 +9,8 @@ import time
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QTableWidgetItem, QLabel
 
-from plotview.spectrumplot import Spectrum3DPlot, SpectrumPlot
+from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
+from controller.controller_plot1d import Plot1DController as SpectrumPlot
 from seq.sequences import defaultsequences
 from widgets.widget_history_list import HistoryListWidget
 

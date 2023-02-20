@@ -5,7 +5,7 @@
 """
 import imageio.v2 as imageio
 
-from plotview.spectrumplot import Spectrum3DPlot
+from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from widgets.widget_figures import FiguresLayoutWidget
 
 
@@ -35,15 +35,14 @@ class FiguresLayoutController(FiguresLayoutWidget):
         """
         logo = imageio.imread("resources/images/logo.png")
         self.clearFiguresLayout()
-        welcome = Spectrum3DPlot(logo.transpose([1, 0, 2]),
+        welcome = Spectrum3DPlot(main=self, data=logo.transpose([1, 0, 2]),
                                  title='Institute for Instrumentation in Molecular Imaging (i3M)')
         welcome.hideAxis('bottom')
         welcome.hideAxis('left')
         welcome.showHistogram(False)
-        welcome.imv.ui.menuBtn.hide()
-        welcome.imv.ui.roiBtn.hide()
-        welcome_widget = welcome.getImageWidget()
-        self.addWidget(welcome_widget)
+        welcome.ui.menuBtn.hide()
+        welcome.ui.roiBtn.hide()
+        self.addWidget(welcome)
 
     def clearFiguresLayout(self) -> None:
         for ii in range(self.layout.count()):

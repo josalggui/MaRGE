@@ -10,6 +10,43 @@ from widgets.widget_plot3d import Plot3DWidget
 
 
 class Plot3DController(Plot3DWidget):
+    def __init__(self, data=np.random.randn(10, 50, 50), x_label='', y_label='', title='', *args, **kwargs):
+        super(Plot3DController, self).__init__(*args, **kwargs)
+        self.data = data
+        self.x_label = x_label
+        self.y_label = y_label
+        self.title = title
+        self.img_resolution = None
+
+        # Set plot_item properties
+        self.plot_item.setLabel(axis='left', text=y_label)
+        self.plot_item.setLabel(axis='bottom', text=x_label)
+        self.plot_item.setTitle(title=title)
+
+        # hide FOV button if not image
+        self.ui.menuBtn.hide()
+        if title == "Sagittal" or title == "Coronal" or title == "Transversal":
+            self.ui.menuBtn.show()
+
+        # Change the Norm button to FOV button
+        self.ui.menuBtn.setText("FOV")
+        self.ui.menuBtn.setCheckable(True)
+
+        # Create ROI to get FOV
+        self.roiFOV.setSize(np.size(data, 1), np.size(data, 2), update=False)
+        self.roiFOV.addScaleHandle([1, 1], [0.5, 0.5])
+        self.roiFOV.addRotateHandle([0, 0], [0.5, 0.5])
+        self.roiFOV.setZValue(20)
+        self.roiFOV.setPen('y')
+        self.roiFOV.hide()
+        self.roiFOV.sigRegionChangeFinished.connect(self.roiFOVChanged)
+
+        # Modify ROI to get SNR
+        self.roi.setPen('g')
+
+        # Add image
+        self.setImage(data)
+
     def menuClicked(self):
         # Now the menu button is the FOV button
         if self.ui.menuBtn.isChecked():
@@ -187,9 +224,9 @@ class Plot3DController(Plot3DWidget):
             x, y, p = plots[i]
             self.roiCurves[i].setData(x, y, pen=p)
 
-        # Update textitem
-        self.textitem.setText("Mean = %0.1f \nstd = %0.1f \nsnr = %0.1f"%(self.dataAvg, self.dataStd, self.dataSnr))
-        self.textitem.show()
+        # Update text_item
+        self.text_item.setText("Mean = %0.1f \nstd = %0.1f \nsnr = %0.1f"%(self.dataAvg, self.dataStd, self.dataSnr))
+        self.text_item.show()
 
     def roiClicked(self):
 
@@ -210,8 +247,8 @@ class Plot3DController(Plot3DWidget):
             for c in self.roiCurves:
                 c.hide()
             self.ui.roiPlot.hideAxis('left')
-            if hasattr(self, 'textitem'):
-                self.textitem.hide()
+            if hasattr(self, 'text_item'):
+                self.text_item.hide()
 
         if self.hasTimeAxis():
             show_roi_plot = True
@@ -254,3 +291,21 @@ class Plot3DController(Plot3DWidget):
                 self.roiChanged()
 
         self.imageItem.updateImage(image)
+
+    def hideAxis(self, axis):
+        self.plot_item.hideAxis(axis)
+
+    def updateText(self, info):
+        self.vbox.removeItem()
+        self.text_item.setText(info)
+        self.vbox.addItem(self.textitem)
+
+    def setLabel(self, axis, text):
+        self.plot_item.setLabel(axis=axis, text=text)
+
+    def setTitle(self, title):
+        self.plot_item.setTitle(title=title)
+
+    def showHistogram(self, show=True):
+        hist = self.getHistogramWidget()
+        hist.setVisible(show)

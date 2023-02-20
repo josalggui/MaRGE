@@ -644,6 +644,17 @@ class MRIBLANKSEQ:
         if not os.path.exists(directory):
             os.makedirs(directory)
 
+        # generate directories for mat, csv and dcm files
+        directory_mat = directory + '/mat'
+        directory_csv = directory + '/csv'
+        directory_dcm = directory + '/dcm'
+        if not os.path.exists(directory+'/mat'):
+            os.makedirs(directory_mat)
+        if not os.path.exists(directory+'/csv'):
+            os.makedirs(directory_csv)
+        if not os.path.exists(directory+'/dcm'):
+            os.makedirs(directory_dcm)
+
         # Generate filename
         name = datetime.now()
         name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
@@ -651,10 +662,10 @@ class MRIBLANKSEQ:
         self.mapVals['fileName'] = "%s.mat" % file_name
 
         # Save mat file with the outputs
-        savemat("%s/%s.mat" % (directory, file_name), self.mapVals)
+        savemat("%s/%s.mat" % (directory_mat, file_name), self.mapVals)
 
         # Save csv with input parameters
-        with open('%s/%s.csv' % (directory, file_name), 'w') as csvfile:
+        with open('%s/%s.csv' % (directory_csv, file_name), 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys)
             writer.writeheader()
             mapVals = {}
@@ -664,7 +675,7 @@ class MRIBLANKSEQ:
 
         # Save dcm with the final image
         if (len(self.output) > 0) and (self.output[0]['widget'] == 'image'):
-            self.image2Dicom(fileName = "%s/%s.dcm" % (directory, file_name))
+            self.image2Dicom(fileName = "%s/%s.dcm" % (directory_dcm, file_name))
 
     def image2Dicom(self, fileName):
         """"
@@ -706,8 +717,6 @@ class MRIBLANKSEQ:
 
         # Save dicom file
         dicom_image.save(fileName)
-        print("Dicom guardado")
-
 
     def freqCalibration(self, bw=0.05, dbw=0.0001):
         """

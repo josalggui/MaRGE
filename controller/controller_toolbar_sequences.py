@@ -12,12 +12,10 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QLabel
 
 from configs import hw_config
-from plotview.spectrumplot import SpectrumPlotSeq
 from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from controller.controller_plot1d import Plot1DController as SpectrumPlot
 from seq.sequences import defaultsequences
 from widgets.widget_toolbar_sequences import SequenceToolBar
-from worker import Worker as Worker
 
 
 class SequenceController(SequenceToolBar):
@@ -92,22 +90,22 @@ class SequenceController(SequenceToolBar):
 
                 # Noise spectrum
                 item = output[1]
-                self.plots.append(SpectrumPlot(xData=item['xData'],
-                                               yData=item['yData'],
+                self.plots.append(SpectrumPlot(x_data=item['xData'],
+                                               y_data=item['yData'],
                                                legend=item['legend'],
-                                               xLabel=item['xLabel'],
-                                               yLabel=item['yLabel'],
+                                               x_label=item['xLabel'],
+                                               y_label=item['yLabel'],
                                                title=item['title']))
                 self.main.figures_layout.addWidget(self.plots[-1], row=1, col=0)
 
             # Specific for rabi
             if seq_name == 'Rabi':
                 item = output[0]
-                self.plots.append(SpectrumPlot(xData=item['xData'],
-                                               yData=item['yData'],
+                self.plots.append(SpectrumPlot(x_data=item['xData'],
+                                               y_data=item['yData'],
                                                legend=item['legend'],
-                                               xLabel=item['xLabel'],
-                                               yLabel=item['yLabel'],
+                                               x_label=item['xLabel'],
+                                               y_label=item['yLabel'],
                                                title=item['title']))
                 self.main.figures_layout.addWidget(self.plots[-1], row=2, col=0)
 
@@ -116,11 +114,11 @@ class SequenceController(SequenceToolBar):
                 for seq in defaultsequences:
                     seq.mapVals['shimming'] = output[1]
                 item = output[0]
-                self.plots.append(SpectrumPlot(xData=item['xData'],
-                                               yData=item['yData'],
+                self.plots.append(SpectrumPlot(x_data=item['xData'],
+                                               y_data=item['yData'],
                                                legend=item['legend'],
-                                               xLabel=item['xLabel'],
-                                               yLabel=item['yLabel'],
+                                               x_label=item['xLabel'],
+                                               y_label=item['yLabel'],
                                                title=item['title']))
                 self.main.figures_layout.addWidget(self.plots[-1], row=3, col=0)
 
@@ -213,15 +211,14 @@ class SequenceController(SequenceToolBar):
                                            x_label=item['xLabel'],
                                            y_label=item['yLabel'],
                                            title=item['title'])
-                    image.parent = self
                     self.main.figures_layout.addWidget(image, row=item['row'] + 1, col=item['col'])
                     defaultsequences[self.seq_name].deleteOutput()
                 elif item['widget'] == 'curve':
-                    self.plots.append(SpectrumPlot(xData=item['xData'],
-                                                   yData=item['yData'],
+                    self.plots.append(SpectrumPlot(x_data=item['xData'],
+                                                   y_data=item['yData'],
                                                    legend=item['legend'],
-                                                   xLabel=item['xLabel'],
-                                                   yLabel=item['yLabel'],
+                                                   x_label=item['xLabel'],
+                                                   y_label=item['yLabel'],
                                                    title=item['title']))
                     self.main.figures_layout.addWidget(self.plots[-1], row=item['row'] + 1, col=item['col'])
 
@@ -272,6 +269,10 @@ class SequenceController(SequenceToolBar):
         @email: josalggui@i3m.upv.es
         @Summary: plot sequence instructions
         """
+        if self.main.demo:
+            print("\nIt is not possible to plot a sequence in demo mode.")
+            return
+
         # Delete previous plots
         self.main.figures_layout.clearFiguresLayout()
 
@@ -289,7 +290,7 @@ class SequenceController(SequenceToolBar):
         n = 0
         plot = []
         for item in out:
-            plot.append(SpectrumPlotSeq(item[0], item[1], item[2], 'Time (ms)', 'Amplitude (a.u.)', item[3]))
+            plot.append(SpectrumPlot(item[0], item[1], item[2], 'Time (ms)', 'Amplitude (a.u.)', item[3]))
             if n > 0: plot[n].plotitem.setXLink(plot[0].plotitem)
             n += 1
         for n in range(4):
