@@ -286,11 +286,11 @@ class SequenceController(SequenceToolBar):
         # Create plots
         n = 0
         plot = []
-        for item in out:
+        for item in out[0:3]:
             plot.append(SpectrumPlot(item[0], item[1], item[2], 'Time (ms)', 'Amplitude (a.u.)', item[3]))
             if n > 0: plot[n].plot_item.setXLink(plot[0].plot_item)
             n += 1
-        for n in range(4):
+        for n in range(3):
             self.main.figures_layout.addWidget(plot[n], n, 0)
 
     def startLocalizer(self):

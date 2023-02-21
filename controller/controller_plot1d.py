@@ -24,11 +24,6 @@ class Plot1DController(Plot1DWidget):
         self.y_label = y_label
         self.title = title
 
-        # Check data consistency
-        if len(x_data) != len(y_data[0]):
-            print("Length of x and y data does not match.")
-            return
-
         # Set text
         self.label2.setText("<span style='font-size: 8pt'>%s=%0.2f, %s=%0.2f</span>" % (x_label, 0, y_label, 0))
 
@@ -44,7 +39,7 @@ class Plot1DController(Plot1DWidget):
             self.lines.append(self.plot_item.plot(x, y, pen=self.pen[line], name=legend[line]))
             self.plot_item.setXRange(x[0], x[-1], padding=0)
             if np.min(y) == np.max(y):
-                self.plotitem.setYRange(-1, 1, padding=0)
+                self.plot_item.setYRange(-1, 1, padding=0)
 
         # Set the plot properties
         self.plot_item.setTitle("%s" % title)
@@ -54,13 +49,19 @@ class Plot1DController(Plot1DWidget):
     def mouseMoved(self, evt):
         pos = evt[0]
         if self.plot_item.sceneBoundingRect().contains(pos):
-            curves = self.plot_item.listDataItems()
-            x, y = curves[0].getData()
-            mouse_point = self.plot_item.vb.mapSceneToView(pos)
-            index = np.argmin(np.abs(self.x_data - mouse_point.x()))
-            self.label2.setText("<span style='font-size: 8pt'>%s=%0.2f, %s=%0.2f</span>" % (self.x_label,
-                                                                                            x[index],
-                                                                                            self.y_label,
-                                                                                            y[index]))
-            self.crosshair_v.setPos(x[index])
-            self.crosshair_h.setPos(y[index])
+            if type(self.x_data) is not list:
+                curves = self.plot_item.listDataItems()
+                x, y = curves[0].getData()
+                mouse_point = self.plot_item.vb.mapSceneToView(pos)
+                index = np.argmin(np.abs(self.x_data - mouse_point.x()))
+                self.label2.setText("<span style='font-size: 8pt'>%s=%0.2f, %s=%0.2f</span>" % (self.x_label,
+                                                                                                x[index],
+                                                                                                self.y_label,
+                                                                                                y[index]))
+                self.crosshair_v.setPos(x[index])
+                self.crosshair_h.setPos(y[index])
+            else:
+                mouse_point = self.plot_item.vb.mapSceneToView(pos)
+                self.label2.setText("x = %0.4f, y = %0.4f" % (mouse_point.x(), mouse_point.y()))
+                self.crosshair_v.setPos(mouse_point.x())
+                self.crosshair_h.setPos(mouse_point.y())
