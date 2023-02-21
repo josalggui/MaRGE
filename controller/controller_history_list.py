@@ -7,7 +7,7 @@ import copy
 import time
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt, QSize, QSizeF
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QMenu, QAction
 
 from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
@@ -58,6 +58,7 @@ class HistoryListController(HistoryListWidget):
         @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
         @email: josalggui@i3m.upv.es
         @Summary: add another figure from the history list
+        TODO: link the slice of different figures
         """
         self.main.figures_layout.clearFiguresLayout()
         if len(self.figures) > 3:

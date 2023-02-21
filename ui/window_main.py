@@ -3,13 +3,14 @@
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
-from PyQt5.QtWidgets import QMainWindow, QStatusBar, QWidget, QHBoxLayout, QVBoxLayout, QTableWidget
+from PyQt5.QtWidgets import QMainWindow, QStatusBar, QWidget, QHBoxLayout, QVBoxLayout, QTableWidget, QSizePolicy
 from PyQt5.QtCore import QSize, QThreadPool
 import qdarkstyle
 
 from controller.controller_console import ConsoleController
 from controller.controller_figures import FiguresLayoutController
 from controller.controller_history_list import HistoryListController
+from controller.controller_toolbar_figures import FiguresController
 from controller.controller_toolbar_marcos import MarcosController
 from controller.controller_toolbar_sequences import SequenceController
 from controller.controller_sequence_list import SequenceListController
@@ -25,7 +26,7 @@ class MainWindow(QMainWindow):
         self.session = session
         self.demo = demo
         self.setWindowTitle(session['directory'])
-        self.resize(QSize(800, 600))
+        self.resize(QSize(1600, 800))
 
         # Threadpool for parallel running
         self.threadpool = QThreadPool()
@@ -41,6 +42,10 @@ class MainWindow(QMainWindow):
         # Add sequence toolbar
         self.toolbar_sequences = SequenceController(self, "Sequence toolbar")
         self.addToolBar(self.toolbar_sequences)
+
+        # Add image toolbar
+        self.toolbar_figures = FiguresController(self, "Figures toolbar")
+        self.addToolBar(self.toolbar_figures)
 
         # Status bar
         self.setStatusBar(QStatusBar(self))
@@ -75,6 +80,7 @@ class MainWindow(QMainWindow):
 
         # Add layout to show the figures
         self.figures_layout = FiguresLayoutController()
+        self.figures_layout.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.output_layout.addWidget(self.figures_layout)
 
         # Layout for output history
