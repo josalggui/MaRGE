@@ -3,7 +3,7 @@
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
-from widgets.widget_combobox_sequence_list import SequenceListWidget
+from widgets.widget_sequence_list import SequenceListWidget
 from seq.sequences import defaultsequences
 
 

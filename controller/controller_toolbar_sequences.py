@@ -5,6 +5,7 @@ session_controller.py
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
 import copy
+import threading
 import time
 from datetime import datetime
 
@@ -224,20 +225,16 @@ class SequenceController(SequenceToolBar):
 
             # Iterate in parallel thread (only for 1d plots)
             if self.action_iterate.isChecked() and hasattr(defaultsequences[self.seq_name], 'out'):
-                # Pass the function to execute into the thread
-                worker = Worker(self.repeatAcquisition)  # Any other args, kwargs are passed to the run function
-                # Execute in a parallel thread
-                self.main.threadpool.start(worker)
+                thread = threading.Thread(target=self.repeatAcquisition)
+                thread.start()
 
             # Deactivate the iterative buttom if sequence is not iterable (2d and 3d plots)
             if not hasattr(defaultsequences[self.seq_name], 'out') and self.action_iterate.isChecked():
                 self.action_iterate.toggle()
 
         else:
-            # Pass the function to execute into the thread
-            worker = Worker(self.repeatAcquisition)  # Any other args, kwargs are passed to the run function
-            # Execute in a parallel thread
-            self.main.threadpool.start(worker)
+            thread = threading.Thread(target=self.repeatAcquisition)
+            thread.start()
 
     def runToList(self, seq_name=None):
         """
@@ -291,7 +288,7 @@ class SequenceController(SequenceToolBar):
         plot = []
         for item in out:
             plot.append(SpectrumPlot(item[0], item[1], item[2], 'Time (ms)', 'Amplitude (a.u.)', item[3]))
-            if n > 0: plot[n].plotitem.setXLink(plot[0].plotitem)
+            if n > 0: plot[n].plot_item.setXLink(plot[0].plot_item)
             n += 1
         for n in range(4):
             self.main.figures_layout.addWidget(plot[n], n, 0)
@@ -364,7 +361,7 @@ class SequenceController(SequenceToolBar):
             self.main.history_list.addItem(name)
 
             for plot_index in range(len(self.new_out)):
-                old_curves = self.plots[plot_index].plotitem.listDataItems()
+                old_curves = self.plots[plot_index].plot_item.listDataItems()
                 for curveIndex in range(len(self.new_out[plot_index]['yData'])):
                     x = self.new_out[plot_index]['xData']
                     y = self.new_out[plot_index]['yData'][curveIndex]

@@ -4,7 +4,7 @@
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit
-from widgets.widget_tab_sequence_inputs import SequenceInputsWidget
+from widgets.widget_sequence_inputs import SequenceInputsWidget
 from seq.sequences import defaultsequences
 import numpy as np
 
