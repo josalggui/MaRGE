@@ -11,8 +11,13 @@ class MarcosToolBar(QToolBar):
         super(MarcosToolBar, self).__init__(*args, **kwargs)
         self.demo = demo
 
+        # Setup all
+        self.action_start = QAction(QIcon("resources/icons/initGPA.png"), "Setup MaRCoS", self)
+        self.action_start.setStatusTip("Setup MaRCoS")
+        self.addAction(self.action_start)
+
         # Setup GPA board
-        self.action_gpa_init = QAction(QIcon("resources/icons/initGPA.png"), "Init GPA board", self)
+        self.action_gpa_init = QAction(QIcon("resources/icons/gpa.png"), "Init GPA board", self)
         self.action_gpa_init.setStatusTip("Init GPA board")
         self.addAction(self.action_gpa_init)
 

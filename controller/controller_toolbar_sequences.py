@@ -343,8 +343,10 @@ class SequenceController(SequenceToolBar):
         @email: josalggui@i3m.upv.es
         @Summary: executed when you repeat some calibration sequences
         """
+        single_repetition = not self.action_iterate.isChecked()
+
         # Acquire while iterativeRun is True
-        while self.action_iterate.isChecked():
+        if not self.action_iterate.isChecked():
             # Create and execute selected sequence
             defaultsequences[self.seq_name].sequenceRun(0)
 
@@ -384,3 +386,44 @@ class SequenceController(SequenceToolBar):
                 defaultsequences[self.seq_name].dfovs.copy()
             self.main.history_list.fovs[self.main.history_list.current_output] = \
                 defaultsequences[self.seq_name].fovs.copy()
+        else:
+            while self.action_iterate.isChecked():
+                # Create and execute selected sequence
+                defaultsequences[self.seq_name].sequenceRun(0)
+
+                # Do sequence analysis and acquire de plots
+                self.new_out = defaultsequences[self.seq_name].sequenceAnalysis()
+
+                # Set name to the label
+                file_name = defaultsequences[self.seq_name].mapVals['fileName']
+                self.label.setText(file_name)
+
+                # Add item to the history list
+                self.main.history_list.current_output = str(datetime.now())[11:23]
+                name = self.main.history_list.current_output + " | " + file_name
+                self.main.history_list.addItem(name)
+
+                for plot_index in range(len(self.new_out)):
+                    old_curves = self.plots[plot_index].plot_item.listDataItems()
+                    for curveIndex in range(len(self.new_out[plot_index]['yData'])):
+                        x = self.new_out[plot_index]['xData']
+                        y = self.new_out[plot_index]['yData'][curveIndex]
+                        old_curves[curveIndex].setData(x, y)
+
+                # Clear inputs
+                defaultsequences[self.seq_name].resetMapVals()
+
+                # Save results into the history
+                self.main.history_list.outputs[self.main.history_list.current_output] = self.new_out
+                self.main.history_list.inputs[self.main.history_list.current_output] = \
+                    [list(defaultsequences[self.seq_name].mapNmspc.values()),
+                     list(defaultsequences[self.seq_name].mapVals.values()),
+                     False]
+
+                # Save the rotation and shifts to the history list
+                self.main.history_list.rotations[self.main.history_list.current_output] = \
+                    defaultsequences[self.seq_name].rotations.copy()
+                self.main.history_list.shifts[self.main.history_list.current_output] = \
+                    defaultsequences[self.seq_name].dfovs.copy()
+                self.main.history_list.fovs[self.main.history_list.current_output] = \
+                    defaultsequences[self.seq_name].fovs.copy()

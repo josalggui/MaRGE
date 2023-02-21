@@ -35,10 +35,11 @@ from controller.controller_session import SessionController
 
 cgitb.enable(format = 'text')
 
-# os.system('ssh root@192.168.1.101 "killall marcos_server"')
-
 # Run the gui
-demo = True
+demo = False
+if not demo:
+    os.system('ssh root@192.168.1.101 "killall marcos_server"')
+
 app = QApplication(sys.argv)
 gui = SessionController(demo)
 sys.exit(app.exec_())
