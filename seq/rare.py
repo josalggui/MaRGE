@@ -133,7 +133,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         # Miscellaneous
         self.freqOffset = self.freqOffset*1e6 # MHz
         gradRiseTime = 400e-6       # s
-        gSteps = int(gradRiseTime*1e6/5)*0+1
+        gSteps = int(gradRiseTime*1e6/5)*0+10
         addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
         randFactor = 0e-3                        # Random amplitude to add to the phase gradients
         resolution = self.fov/self.nPoints
@@ -311,7 +311,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     self.gradTrap(t0, gradRiseTime, self.rdDephTime, gradAmp[1] * self.rdPreemphasis, gSteps,
                                   self.axesOrientation[1], self.shimming)
                     self.gradTrap(t0, gradRiseTime, self.rdDephTime, gradAmp[2] * self.rdPreemphasis, gSteps,
-                                  self.axesOrientation[0], self.shimming)
+                                  self.axesOrientation[2], self.shimming)
                     orders = orders+gSteps*6
 
                 # Echo train
@@ -347,7 +347,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                       self.shimming)
                         self.gradTrap(t0, gradRiseTime, self.rdGradTime, gradAmp[1], gSteps, self.axesOrientation[1],
                                       self.shimming)
-                        self.gradTrap(t0, gradRiseTime, self.rdGradTime, gradAmp[2], gSteps, self.axesOrientation[1],
+                        self.gradTrap(t0, gradRiseTime, self.rdGradTime, gradAmp[2], gSteps, self.axesOrientation[2],
                                       self.shimming)
                         orders = orders+gSteps*6
 

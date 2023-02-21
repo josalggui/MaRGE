@@ -12,7 +12,6 @@ import configs.hw_config as hw
 from scipy.optimize import curve_fit
 
 
-
 class CPMG(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(CPMG, self).__init__()

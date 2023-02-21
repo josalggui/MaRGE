@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
         self.session = session
         self.demo = demo
         self.setWindowTitle(session['directory'])
-        self.resize(QSize(1600, 800))
+        self.resize(QSize(1680, 720))
 
         # Threadpool for parallel running
         self.threadpool = QThreadPool()

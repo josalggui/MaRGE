@@ -165,17 +165,8 @@ class FID(blankSeq.MRIBLANKSEQ):
                    'legend': [''],
                    'row': 1,
                    'col': 0}
-        spectrumPlotWidget = SpectrumPlot(xData=fVector,
-                                          yData=[spectrum],
-                                          legend=[''],
-                                          xLabel='Frequency (kHz)',
-                                          yLabel='Spectrum amplitude (a.u.)',
-                                          title='Spectrum')
-
-        # spectrumPlotWidget.plotitem.setLogMode(y=True)
-        # spectrumPlotWidget.plotitem.curves[0].setSymbol('x')
 
         # create self.out to run in iterative mode
-        self.out = [signalPlotWidget, spectrumPlotWidget]
+        self.out = [result1, result2]
 
-        return(self.out)
+        return self.out
