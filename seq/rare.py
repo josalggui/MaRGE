@@ -506,10 +506,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
             # Reorganize dataFull
             dataProv = np.zeros([self.nScans,nSL*nPH*nRD])
             dataProv = dataProv+1j*dataProv
-            dataFull = np.reshape(dataFull, (nBatches, self.nScans, -1, nRD))
             if nBatches>1:
                 dataFullA = np.reshape(dataFullA, (nBatches-1, self.nScans, -1, nRD))
                 dataFullB = np.reshape(dataFullB, (1, self.nScans, -1, nRD))
+            else:
+                dataFull = np.reshape(dataFull, (nBatches, self.nScans, -1, nRD))
             for scan in range(self.nScans):
                 if nBatches>1:
                     dataProv[scan, :] = np.concatenate((np.reshape(dataFullA[:,scan,:,:],-1), np.reshape(dataFullB[:,scan,:,:],-1)), axis=0)
