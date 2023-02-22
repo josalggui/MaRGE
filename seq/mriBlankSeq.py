@@ -122,7 +122,7 @@ class MRIBLANKSEQ:
         Matrix to rotate through an arbitrary axis
         """
         def rotationMatrix(rotation):
-            theta = rotation[3]*np.pi/180
+            theta = rotation[3]
             ux = rotation[0]
             uy = rotation[1]
             uz = rotation[2]

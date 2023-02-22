@@ -35,6 +35,13 @@ class MainWindow(QMainWindow):
         self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
         self.setStyleSheet(self.styleSheet)
 
+        # Add Scanner menu
+        self.menu = self.menuBar()
+        self.menu_scanner = self.menu.addMenu("Scanner")
+        self.menu_protocols = self.menu.addMenu("Protocols")
+        self.menu_sequences = self.menu.addMenu("Sequences")
+        self.menu_session = self.menu.addMenu("Session")
+
         # Add marcos toolbar
         self.toolbar_marcos = MarcosController(self.demo, "MaRCoS toolbar")
         self.addToolBar(self.toolbar_marcos)

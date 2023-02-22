@@ -362,7 +362,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     gradAmp[self.axesOrientation[1]] = phGradients[phIndex]
                     gradAmp[self.axesOrientation[2]] = slGradients[slIndex]
                     gradAmp = np.dot(rot, np.reshape(gradAmp, (3, 1)))
-                    t0 = tEcho+self.acqTime/2+addRdPoints/BW-hw.gradDelay
+                    # t0 = tEcho+self.acqTime/2+addRdPoints/BW-hw.gradDelay
+                    t0 = tEcho+self.rdGradTime/2+gradRiseTime-hw.gradDelay
                     if (echoIndex<self.etl-1 and repeIndex>=self.dummyPulses):
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, -gradAmp[0], gSteps, self.axesOrientation[0],
                                       self.shimming)

@@ -3,7 +3,12 @@
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
+from datetime import datetime
+
+from PyQt5.QtGui import QPixmap
+
 from widgets.widget_toolbar_figures import FiguresToolBar
+from configs.sys_config import screenshot_folder
 
 
 class FiguresController(FiguresToolBar):
@@ -12,6 +17,7 @@ class FiguresController(FiguresToolBar):
 
         self.action_full_screen.setCheckable(True)
         self.action_full_screen.triggered.connect(self.doFullScreen)
+        self.action_screenshot.triggered.connect(self.doScreenshot)
 
     def doFullScreen(self):
         if self.action_full_screen.isChecked():
@@ -27,4 +33,10 @@ class FiguresController(FiguresToolBar):
             self.main.console.show()
             self.main.input_table.show()
 
-
+    def doScreenshot(self):
+        name = datetime.now()
+        name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
+        file_name = name_string+".png"
+        screenshot = QPixmap(self.main.size())
+        self.main.render(screenshot)
+        screenshot.save(screenshot_folder+"/"+file_name)
