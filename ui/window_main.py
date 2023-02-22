@@ -18,7 +18,7 @@ from controller.controller_sequence_inputs import SequenceInputsController
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, session, demo = False, parent=None):
+    def __init__(self, session, demo=False, parent=None):
         super(MainWindow, self).__init__(parent)
         self.app_open = True
         self.toolbar_sequences = None
@@ -105,7 +105,3 @@ class MainWindow(QMainWindow):
         self.input_table.setMaximumHeight(200)
         self.input_table.setMinimumHeight(200)
         self.output_layout_h.addWidget(self.input_table)
-
-
-
-

@@ -1,5 +1,4 @@
 """
-session_controller.py
 @author:    José Miguel Algarín
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
@@ -42,16 +41,54 @@ class SequenceController(SequenceToolBar):
         self.action_view_sequence.triggered.connect(self.startSequencePlot)
         self.action_localizer.triggered.connect(self.startLocalizer)
         self.action_iterate.triggered.connect(self.iterate)
+        self.action_bender.triggered.connect(self.bender)
 
+    def bender(self):
+        """
+        @author:    José Miguel Algarín
+        @email:     josalggui@i3m.upv.es
+        @affiliation:MRILab, i3M, CSIC, Valencia, Spain
+        # Summary: it runs a full protocol with a single click
+        """
+
+        # Larmor calibration
+        defaultsequences['Larmor'].loadParams(directory="calibration", file="Larmor_last_parameters.csv")
+        self.runToList('Larmor')
+        time.sleep(0.1)
+
+        # Noise measurement
+        defaultsequences['Noise'].loadParams(directory="calibration", file="Noise_last_parameters.csv")
+        self.runToList('Noise')
+        time.sleep(0.1)
+
+        # Rabi flops
+        defaultsequences['RabiFlops'].loadParams(directory="calibration", file="RabiFlops_last_parameters.csv")
+        self.runToList('RabiFlops')
+        time.sleep(0.1)
+
+        # Shimming
+        defaultsequences['Shimming'].loadParams(directory="calibration", file="ShimmingSweep_last_parameters.csv")
+        self.runToList('Shimming')
+        time.sleep(0.1)
+
+        # Larmor calibration
+        defaultsequences['Larmor'].loadParams(directory="calibration", file="Larmor_last_parameters.csv")
+        self.runToList('Larmor')
+        time.sleep(0.1)
+
+        # First image sequence
+        defaultsequences['RARE'].loadParams(directory="automatic/bender", file="RARE01.csv")
+        self.runToList('RARE')
+        time.sleep(0.1)
     def autocalibration(self):
         self.main.figures_layout.clearFiguresLayout()
 
         # Include here the sequences to run on autocalibration
         seq_names = [
-            # 'Larmor',
+            'Larmor',
             'Noise',
-            # 'RabiFlops',
-            # 'Shimming'
+            'RabiFlops',
+            'Shimming'
         ]
 
         # Add plots to the plotview_layout

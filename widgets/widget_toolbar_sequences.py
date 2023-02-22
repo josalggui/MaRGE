@@ -37,6 +37,11 @@ class SequenceToolBar(QToolBar):
         self.action_iterate.setStatusTip("Set iterative mode on")
         self.addAction(self.action_iterate)
 
+        # Bender button
+        self.action_bender = QAction(QIcon("resources/icons/bender.png"), "Bender button", self)
+        self.action_bender.setStatusTip("Bender will do a full protocol with a single click")
+        self.addAction(self.action_bender)
+
         # Plot sequence
         self.action_view_sequence = QAction(QIcon("resources/icons/plotSequence.png"), "Plot sequence", self)
         self.action_view_sequence.setStatusTip("Plot current sequence")
