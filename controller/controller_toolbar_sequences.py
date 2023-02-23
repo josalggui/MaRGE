@@ -98,7 +98,7 @@ class SequenceController(SequenceToolBar):
             # Execute the sequence
             sequence = defaultsequences[seq_name]
             sequence.sequenceRun()
-            output = sequence.sequenceAnalysis()
+            output = sequence.sequenceAnalysis(obj='autocalibration')
             delattr(sequence, 'out')
 
             # Add item to the history list
@@ -114,7 +114,7 @@ class SequenceController(SequenceToolBar):
 
             # Specific for larmor
             if seq_name == 'Larmor':
-                for seq in defaultsequences:
+                for seq in defaultsequences.values():
                     seq.mapVals['larmorFreq'] = hw_config.larmorFreq
 
             # Specific for noise
@@ -123,8 +123,8 @@ class SequenceController(SequenceToolBar):
                 self.label = QLabel()
                 self.label.setAlignment(QtCore.Qt.AlignCenter)
                 self.label.setStyleSheet("background-color: black;color: white")
-                self.main.figures_layout.addWidget(self.label, row=0, col=0, colspan=2)
                 self.label.setText(sequence.mapVals['fileName'])
+                self.main.figures_layout.addWidget(self.label, row=0, col=0, colspan=2)
 
                 # Noise spectrum
                 item = output[1]
@@ -137,7 +137,7 @@ class SequenceController(SequenceToolBar):
                 self.main.figures_layout.addWidget(self.plots[-1], row=1, col=0)
 
             # Specific for rabi
-            if seq_name == 'Rabi':
+            if seq_name == 'RabiFlops':
                 item = output[0]
                 self.plots.append(SpectrumPlot(x_data=item['xData'],
                                                y_data=item['yData'],
@@ -149,7 +149,7 @@ class SequenceController(SequenceToolBar):
 
             # Specific for shimming
             if seq_name == 'Shimming':
-                for seq in defaultsequences:
+                for seq in defaultsequences.values():
                     seq.mapVals['shimming'] = output[1]
                 item = output[0]
                 self.plots.append(SpectrumPlot(x_data=item['xData'],
