@@ -7,6 +7,7 @@ import numpy as np
 
 from seq.sequences import defaultsequences
 from widgets.widget_plot3d import Plot3DWidget
+import configs.hw_config as hw
 
 
 class Plot3DController(Plot3DWidget):
@@ -121,11 +122,13 @@ class Plot3DController(Plot3DWidget):
 
         # Set fov properties in true units
         fov_roi = [0, 0, 0]
-        fov_roi[x_axis] = roi_fov_px[0]*self.img_resolution[0]
-        fov_roi[y_axis] = roi_fov_px[1]*self.img_resolution[1]
+        fov_roi[x_axis] = np.round(roi_fov_px[0]*self.img_resolution[0] * 1e2, decimals=1) # cm
+        fov_roi[y_axis] = np.round(roi_fov_px[1]*self.img_resolution[1] * 1e2, decimals=1) # cm
         dfov_roi = [0, 0, 0]
-        dfov_roi[x_axis] = x0_ru
-        dfov_roi[y_axis] = y0_ru
+        dfov_roi[x_axis] = np.round(x0_ru * 1e3, decimals=1) # mm
+        dfov_roi[y_axis] = np.round(y0_ru * 1e3, decimals=1) # mm
+        hw.fov = fov_roi.copy()
+        hw.dfov = dfov_roi.copy()
 
         # Define rotation
         rotation = [0, 0, 0, 0]
@@ -135,11 +138,11 @@ class Plot3DController(Plot3DWidget):
         # Update sequence parameters
         for sequence in defaultsequences.values():
             if 'fov' in sequence.mapKeys:
-                sequence.mapVals['fov'][x_axis] = np.round(fov_roi[x_axis] * 1e2, decimals=1)       # cm
-                sequence.mapVals['fov'][y_axis] = np.round(fov_roi[y_axis] * 1e2, decimals=1)       # cm
+                sequence.mapVals['fov'][x_axis] = np.round(fov_roi[x_axis])       # cm
+                sequence.mapVals['fov'][y_axis] = np.round(fov_roi[y_axis])       # cm
             if 'dfov' in sequence.mapKeys:
-                sequence.mapVals['dfov'][x_axis] = np.round(dfov_roi[x_axis] * 1e3, decimals=1)     # mm
-                sequence.mapVals['dfov'][y_axis] = np.round(dfov_roi[y_axis] * 1e3, decimals=1)     # mm
+                sequence.mapVals['dfov'][x_axis] = np.round(dfov_roi[x_axis])     # mm
+                sequence.mapVals['dfov'][y_axis] = np.round(dfov_roi[y_axis])     # mm
             if 'angle' in sequence.mapKeys:
                 sequence.mapVals['angle'] = np.round(rotation[3], decimals=2)                        # degrees
             if 'rotationAxis' in sequence.mapKeys:

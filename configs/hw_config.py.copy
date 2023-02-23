@@ -22,4 +22,6 @@ b1Efficiency = np.pi/(0.3*70) # rads / (a.u. * us)
 larmorFreq = 3.066 # MHz
 scannerName = "Physio V1.01"
 antennaList = ["RF01", "RF02"]
+fov = [20.0, 20.0, 20.0]
+dfov = [0.0, 0.0, 0.0]
 

@@ -88,6 +88,8 @@ class MainController(MainWindow):
 
         # Set larmor frequency to the value into the hw_config file
         defaultsequences['RARE'].mapVals['larmorFreq'] = hw.larmorFreq
+        defaultsequences['RARE'].mapVals['fov'] = hw.fov
+        defaultsequences['RARE'].mapVals['dfov'] = hw.dfov
 
         # Run the sequence
         self.toolbar_sequences.runToList(seq_name='RARE')
@@ -98,6 +100,8 @@ class MainController(MainWindow):
 
         # Set larmor frequency to the value into the hw_config file
         defaultsequences['RARE'].mapVals['larmorFreq'] = hw.larmorFreq
+        defaultsequences['RARE'].mapVals['fov'] = hw.fov
+        defaultsequences['RARE'].mapVals['dfov'] = hw.dfov
 
         # Run the sequence
         self.toolbar_sequences.runToList(seq_name='RARE')

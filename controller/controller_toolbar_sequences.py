@@ -80,6 +80,7 @@ class SequenceController(SequenceToolBar):
         defaultsequences['RARE'].loadParams(directory="automatic/bender", file="RARE01.csv")
         self.runToList('RARE')
         time.sleep(0.1)
+
     def autocalibration(self):
         self.main.figures_layout.clearFiguresLayout()
 
