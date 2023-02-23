@@ -129,7 +129,7 @@ class SessionWindow(QMainWindow):
         # Create QLineEdit for subject scanner
         row += 1
         self.main_layout.addWidget(QLabel("Scanner"), row, 0)
-        self.scanner_line_edit = ClickableLineEdit(hw.scannerName)
+        self.scanner_line_edit = ClickableLineEdit(hw.scanner_name)
         self.scanner_line_edit.setDisabled(True)
         self.scanner_line_edit.setStatusTip("Scanner version")
         self.main_layout.addWidget(self.scanner_line_edit, row, 1)
@@ -138,7 +138,7 @@ class SessionWindow(QMainWindow):
         row += 1
         self.main_layout.addWidget(QLabel("RF coil"), row, 0)
         self.rf_coil_combo_box = QComboBox()
-        self.rf_coil_combo_box.addItems(hw.antennaList)
+        self.rf_coil_combo_box.addItems(hw.antenna_dict.keys())
         self.rf_coil_combo_box.setStatusTip("Select the rf coil")
         self.main_layout.addWidget(self.rf_coil_combo_box, row, 1)
 

@@ -8,6 +8,7 @@ from ui.window_session import SessionWindow
 from controller.controller_main import MainController
 import os
 import sys
+import configs.hw_config as hw
 
 
 class SessionController(SessionWindow):
@@ -60,3 +61,4 @@ class SessionController(SessionWindow):
             'scanner': self.scanner_line_edit.text(),
             'rf_coil': self.rf_coil_combo_box.currentText(),
         }
+        hw.b1Efficiency = hw.antenna_dict[self.session['rf_coil']]
