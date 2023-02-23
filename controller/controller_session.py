@@ -24,13 +24,12 @@ class SessionController(SessionWindow):
         self.updateSessionDict()
 
         # Create folder
-        self.session['directory'] = 'experiments/acquisitions/%s/%s' % (
-            self.session['project'], self.session['subject_id'])
-        if not os.path.exists('experiments/acquisitions/%s/%s' % (self.session['project'], self.session['subject_id'])):
+        self.session['directory'] = 'experiments/acquisitions/%s/%s/%s/%s' % (
+            self.session['project'], self.session['subject_id'], self.session['study'], self.session['side'])
+        if not os.path.exists(self.session['directory']):
             os.makedirs(self.session['directory'])
 
         # Open the main gui
-        # self.main_gui = MainViewController(self.session)
         self.main_gui = MainController(self.session, self.demo)
         self.hide()
         self.main_gui.show()

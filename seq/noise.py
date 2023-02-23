@@ -104,8 +104,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
             self.expt.__del__()
 
     def sequenceAnalysis(self, obj=''):
-        noise = np.abs(self.dataTime[1])
-        noiserms = np.mean(noise)
+        noiserms = np.std(self.dataTime[1])
         self.mapVals['RMS noise'] = noiserms
         self.mapVals['sampledPoint'] = noiserms # for sweep method
         self.saveRawData()
