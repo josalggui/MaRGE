@@ -24,4 +24,5 @@ scanner_name = "Physio V1.01"
 antenna_dict = {"RF01": 0.3, "RF02": 0.8}
 fov = [20.0, 20.0, 20.0]
 dfov = [0.0, 0.0, 0.0]
+bash_path = "D:\Archivos de Programa\Git\git-bash.exe"
 

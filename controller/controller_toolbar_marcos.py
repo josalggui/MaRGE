@@ -11,6 +11,7 @@ import platform
 import experiment as ex
 import numpy as np
 import shutil
+import configs.hw_config as hw
 
 
 class MarcosController(MarcosToolBar):
@@ -36,28 +37,20 @@ class MarcosController(MarcosToolBar):
         @email: josalggui@i3m.upv.es
         @Summary: execute startRP.sh: copy_bitstream.sh & marcos_server
         """
-
-        # Set the path to the Git Bash executable
-        bash_path = r"D:\Archivos de Programa\Git\git-bash.exe"
-
-        # Set the path to the shell script
-        script_path = "..\PhysioMRI_GUI\startRP.sh"
-
         if not self.demo:
             os.system('ssh root@192.168.1.101 "killall marcos_server"')
             if platform.system() == 'Windows':
-                result = subprocess.run([bash_path, script_path])
+                subprocess.run([hw.bash_path, "startRP.sh"])
                 self.action_server.toggle()
                 self.initgpa()
-                # os.system('start ./startRP.sh')
             elif platform.system() == 'Linux':
-                os.system('./startRP.sh &')
+                subprocess.run(["gnome_terminal", "", "./startRP.sh"])
                 self.action_server.toggle()
                 self.initgpa()
             print("\nMaRCoS updated, server connected, gpa initialized.")
 
         else:
-            print("\nThis is a demo.")
+            print("\nThis is a demo")
 
     def controlMarcosServer(self):
         """
@@ -94,7 +87,7 @@ class MarcosController(MarcosToolBar):
             if platform.system() == 'Windows':
                 os.system("start ./copy_bitstream.sh 192.168.1.101 rp-122")
             elif platform.system() == 'Linux':
-                os.system('./copy_bitstream.sh 192.168.1.101 rp-122')
+                subprocess.run(['gnome_terminal', '--', './copy_bitstream.sh' '192.168.1.101' 'rp-122'])
             print("\nMaRCoS updated")
         else:
             print("\nThis is a demo.")
