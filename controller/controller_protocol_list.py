@@ -14,6 +14,9 @@ class ProtocolListController(ProtocolListWidget):
         self.protocol = None
         self.protocols = None
 
+        if not os.path.exists('protocols'):
+            os.makedirs('protocols')
+
         self.updateProtocolList()
 
         self.currentTextChanged.connect(self.updateProtocolInputs)

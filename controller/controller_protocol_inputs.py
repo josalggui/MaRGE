@@ -76,7 +76,8 @@ class ProtocolInputsController(ProtocolInputsWidget):
 
         # Add the predefined sequences of the first protocol to the protocol_input list
         protocol = self.main.protocol_list.getCurrentProtocol()
-        self.addItems(self.sequences[protocol])
+        if len(self.sequences) > 0:
+            self.addItems(self.sequences[protocol])
 
     def showSequenceInputs(self, item):
         # Get file name

@@ -3,6 +3,7 @@
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
+import os
 from datetime import datetime
 
 from PyQt5.QtGui import QPixmap
@@ -14,6 +15,9 @@ from configs.sys_config import screenshot_folder
 class FiguresController(FiguresToolBar):
     def __init__(self, *args, **kwargs):
         super(FiguresController, self).__init__(*args, **kwargs)
+
+        if not os.path.exists(screenshot_folder):
+            os.makedirs(screenshot_folder)
 
         self.action_full_screen.setCheckable(True)
         self.action_full_screen.triggered.connect(self.doFullScreen)
