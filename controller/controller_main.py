@@ -4,14 +4,9 @@ session_controller.py
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
-import csv
-import os
+import subprocess
 import sys
 import threading
-from datetime import datetime
-
-import numpy as np
-from PyQt5.QtWidgets import QAction, QFileDialog
 
 from seq.sequences import defaultsequences
 from ui.window_main import MainWindow
@@ -36,6 +31,6 @@ class MainController(MainWindow):
         # Return stdout to defaults.
         sys.stdout = sys.__stdout__
         if not self.demo:
-            os.system('ssh root@192.168.1.101 "killall marcos_server"') # Kill marcos server
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
         print('\nGUI closed successfully!')
         super().closeEvent(event)

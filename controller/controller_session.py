@@ -35,14 +35,11 @@ class SessionController(SessionWindow):
         self.hide()
         self.main_gui.show()
 
-    def closeEvent(self, *args, **kwargs):
-        if not self.demo:
-            os.system('ssh root@192.168.1.101 "killall marcos_server"')
+    def closeEvent(self, event):
         print('GUI closed successfully!')
+        super().closeEvent(event)
 
     def close(self):
-        if not self.demo:
-            os.system('ssh root@192.168.1.101 "killall marcos_server"')
         print('GUI closed successfully!')
         sys.exit()
 

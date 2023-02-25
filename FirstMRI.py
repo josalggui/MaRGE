@@ -37,9 +37,6 @@ cgitb.enable(format = 'text')
 
 # Run the gui
 demo = False
-if not demo:
-    os.system('ssh root@192.168.1.101 "killall marcos_server"')
-
 app = QApplication(sys.argv)
 gui = SessionController(demo)
 sys.exit(app.exec_())

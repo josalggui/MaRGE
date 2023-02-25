@@ -25,4 +25,6 @@ antenna_dict = {"RF01": np.pi/(0.3*70), "RF02": np.pi/(0.3*70)}
 fov = [20.0, 20.0, 20.0]
 dfov = [0.0, 0.0, 0.0]
 bash_path = "D:\Archivos de Programa\Git\git-bash.exe" # use "gnome-terminal" for genome linux
+rp_ip_address = "192.168.1.101"
+rp_version = "rp-122"
 

@@ -38,8 +38,8 @@ class MarcosController(MarcosToolBar):
         @Summary: execute startRP.sh: copy_bitstream.sh & marcos_server
         """
         if not self.demo:
-            os.system('ssh root@192.168.1.101 "killall marcos_server"')
-            subprocess.run([hw.bash_path, "--", "./startRP.sh"])
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+            subprocess.run([hw.bash_path, "--", "./startRP.sh", hw.rp_ip_address, hw.rp_version])
             self.action_server.toggle()
             self.initgpa()
             print("\nMaRCoS updated, server connected, gpa initialized.")
@@ -52,23 +52,20 @@ class MarcosController(MarcosToolBar):
         @email: josalggui@i3m.upv.es
         @Summary: connect to marcos_server
         """
-
-        if not self.action_server.isChecked():
-            self.action_server.setStatusTip('Connect to marcos server')
-            self.action_server.setToolTip('Connect to marcos server')
-            if not self.demo:
-                os.system('ssh root@192.168.1.101 "killall marcos_server"')
-            print("\nServer disconnected.")
+        if not self.demo:
+            if not self.action_server.isChecked():
+                self.action_server.setStatusTip('Connect to marcos server')
+                self.action_server.setToolTip('Connect to marcos server')
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                print("\nServer disconnected")
+            else:
+                self.action_server.setStatusTip('Kill marcos server')
+                self.action_server.setToolTip('Kill marcos server')
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
+                print("\nServer connected")
         else:
-            self.action_server.setStatusTip('Kill marcos server')
-            self.action_server.setToolTip('Kill marcos server')
-            if platform.system() == 'Windows' and not self.demo:
-                os.system('ssh root@192.168.1.101 "killall marcos_server"')
-                os.system('start ssh root@192.168.1.101 "~/marcos_server"')
-            elif platform.system() == 'Linux' and not self.demo:
-                os.system('ssh root@192.168.1.101 "killall marcos_server"')
-                os.system('ssh root@192.168.1.101 "~/marcos_server" &')
-            print("\nServer connected.")
+            print("\nThis is a demo")
 
     def copyBitStream(self):
         """
@@ -77,7 +74,7 @@ class MarcosController(MarcosToolBar):
         @Summary: execute copy_bitstream.sh
         """
         if not self.demo:
-            os.system('ssh root@192.168.1.101 "killall marcos_server"')
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
             subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', '192.168.1.101', 'rp-122'])
             print("\nMaRCoS updated")
         else:
