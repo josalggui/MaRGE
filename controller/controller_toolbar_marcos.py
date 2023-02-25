@@ -44,7 +44,7 @@ class MarcosController(MarcosToolBar):
                 self.action_server.toggle()
                 self.initgpa()
             elif platform.system() == 'Linux':
-                subprocess.run(["gnome_terminal", "", "./startRP.sh"])
+                subprocess.run(["gnome-terminal", "", "./startRP.sh"])
                 self.action_server.toggle()
                 self.initgpa()
             print("\nMaRCoS updated, server connected, gpa initialized.")
@@ -87,7 +87,7 @@ class MarcosController(MarcosToolBar):
             if platform.system() == 'Windows':
                 os.system("start ./copy_bitstream.sh 192.168.1.101 rp-122")
             elif platform.system() == 'Linux':
-                subprocess.run(['gnome_terminal', '--', './copy_bitstream.sh' '192.168.1.101' 'rp-122'])
+                subprocess.run(['gnome-terminal', '--', './copy_bitstream.sh', '192.168.1.101', 'rp-122'])
             print("\nMaRCoS updated")
         else:
             print("\nThis is a demo.")
