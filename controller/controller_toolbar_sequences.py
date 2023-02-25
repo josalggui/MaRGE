@@ -44,42 +44,10 @@ class SequenceController(SequenceToolBar):
         self.action_bender.triggered.connect(self.bender)
 
     def bender(self):
-        """
-        @author:    José Miguel Algarín
-        @email:     josalggui@i3m.upv.es
-        @affiliation:MRILab, i3M, CSIC, Valencia, Spain
-        # Summary: it runs a full protocol with a single click
-        """
-
-        # Larmor calibration
-        defaultsequences['Larmor'].loadParams(directory="calibration", file="Larmor_last_parameters.csv")
-        self.runToList('Larmor')
-        time.sleep(0.1)
-
-        # Noise measurement
-        defaultsequences['Noise'].loadParams(directory="calibration", file="Noise_last_parameters.csv")
-        self.runToList('Noise')
-        time.sleep(0.1)
-
-        # Rabi flops
-        defaultsequences['RabiFlops'].loadParams(directory="calibration", file="RabiFlops_last_parameters.csv")
-        self.runToList('RabiFlops')
-        time.sleep(0.1)
-
-        # Shimming
-        defaultsequences['Shimming'].loadParams(directory="calibration", file="ShimmingSweep_last_parameters.csv")
-        self.runToList('Shimming')
-        time.sleep(0.1)
-
-        # Larmor calibration
-        defaultsequences['Larmor'].loadParams(directory="calibration", file="Larmor_last_parameters.csv")
-        self.runToList('Larmor')
-        time.sleep(0.1)
-
-        # First image sequence
-        defaultsequences['RARE'].loadParams(directory="automatic/bender", file="RARE01.csv")
-        self.runToList('RARE')
-        time.sleep(0.1)
+        items = [self.main.protocol_inputs.item(index) for index in range(self.main.protocol_inputs.count())]
+        for item in items:
+            self.main.protocol_inputs.sequenceDoubleClicked(item)
+            time.sleep(0.1)
 
     def autocalibration(self):
         self.main.figures_layout.clearFiguresLayout()
@@ -98,6 +66,7 @@ class SequenceController(SequenceToolBar):
         for seq_name in seq_names:
             # Execute the sequence
             sequence = defaultsequences[seq_name]
+            sequence.loadParams(directory="experiments/parameterization")
             sequence.sequenceRun()
             output = sequence.sequenceAnalysis(obj='autocalibration')
             delattr(sequence, 'out')

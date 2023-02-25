@@ -10,11 +10,16 @@ import qdarkstyle
 from controller.controller_console import ConsoleController
 from controller.controller_figures import FiguresLayoutController
 from controller.controller_history_list import HistoryListController
+from controller.controller_menu import MenuController
+from controller.controller_protocol_inputs import ProtocolInputsController
+from controller.controller_protocol_list import ProtocolListController
 from controller.controller_toolbar_figures import FiguresController
 from controller.controller_toolbar_marcos import MarcosController
+from controller.controller_toolbar_protocols import ProtocolsController
 from controller.controller_toolbar_sequences import SequenceController
 from controller.controller_sequence_list import SequenceListController
 from controller.controller_sequence_inputs import SequenceInputsController
+from widgets.widget_custom_and_protocol import CustomAndProtocolWidget
 
 
 class MainWindow(QMainWindow):
@@ -35,13 +40,6 @@ class MainWindow(QMainWindow):
         self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
         self.setStyleSheet(self.styleSheet)
 
-        # Add Scanner menu
-        self.menu = self.menuBar()
-        self.menu_scanner = self.menu.addMenu("Scanner")
-        self.menu_protocols = self.menu.addMenu("Protocols")
-        self.menu_sequences = self.menu.addMenu("Sequences")
-        self.menu_session = self.menu.addMenu("Session")
-
         # Add marcos toolbar
         self.toolbar_marcos = MarcosController(self.demo, "MaRCoS toolbar")
         self.addToolBar(self.toolbar_marcos)
@@ -54,6 +52,14 @@ class MainWindow(QMainWindow):
         self.toolbar_figures = FiguresController(self, "Figures toolbar")
         self.addToolBar(self.toolbar_figures)
 
+        # Add protocol toolbar
+        self.toolbar_protocols = ProtocolsController(self, "Protocols toolbar")
+        self.addToolBar(self.toolbar_protocols)
+
+        # Add Scanner menu
+        self.menu = self.menuBar()
+        MenuController(main=self)
+
         # Status bar
         self.setStatusBar(QStatusBar(self))
 
@@ -61,11 +67,11 @@ class MainWindow(QMainWindow):
         self.main_widget = QWidget()
         self.setCentralWidget(self.main_widget)
 
-        # Add layout to input parameters
+        # Add main layout to input other layouts
         self.main_layout = QHBoxLayout()
         self.main_widget.setLayout(self.main_layout)
 
-        # Layout for inputs
+        # Layout for sequences and console
         self.input_layout = QVBoxLayout()
         self.main_layout.addLayout(self.input_layout)
 
@@ -73,13 +79,25 @@ class MainWindow(QMainWindow):
         self.output_layout = QVBoxLayout()
         self.main_layout.addLayout(self.output_layout)
 
-        # Add sequence list
-        self.sequence_list = SequenceListController(parent=self)
-        self.input_layout.addWidget(self.sequence_list)
+        # Add custom_and_protocol widget
+        self.custom_and_protocol = CustomAndProtocolWidget()
+        self.input_layout.addWidget(self.custom_and_protocol)
 
-        # Add sequence inputs
+        # Add sequence list to custom tab
+        self.sequence_list = SequenceListController(parent=self)
+        self.custom_and_protocol.custom_layout.addWidget(self.sequence_list)
+
+        # Add sequence inputs to custom tab
         self.sequence_inputs = SequenceInputsController(parent=self)
-        self.input_layout.addWidget(self.sequence_inputs)
+        self.custom_and_protocol.custom_layout.addWidget(self.sequence_inputs)
+
+        # Add protocols list to protocol tab
+        self.protocol_list = ProtocolListController(main=self)
+        self.custom_and_protocol.protocol_layout.addWidget(self.protocol_list)
+
+        # Add protocol sequences to protocol tab
+        self.protocol_inputs = ProtocolInputsController(main=self)
+        self.custom_and_protocol.protocol_layout.addWidget(self.protocol_inputs)
 
         # Add console
         self.console = ConsoleController()

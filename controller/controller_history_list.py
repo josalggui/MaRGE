@@ -46,7 +46,7 @@ class HistoryListController(HistoryListWidget):
             action1.triggered.connect(self.addFigure)
             menu.addAction(action1)
 
-            selected_action = menu.exec_(self.mapToGlobal(point))
+            menu.exec_(self.mapToGlobal(point))
 
     def addNewFigure(self):
         self.figures = []
