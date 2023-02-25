@@ -4,10 +4,10 @@ session_controller.py
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
+import time
+
 from widgets.widget_toolbar_marcos import MarcosToolBar
-import os
 import subprocess
-import platform
 import experiment as ex
 import numpy as np
 import shutil
@@ -88,13 +88,20 @@ class MarcosController(MarcosToolBar):
         """
         if self.action_server.isChecked():
             if not self.demo:
-                expt = ex.Experiment(init_gpa=True)
-                expt.add_flodict({
-                    'grad_vx': (np.array([100]), np.array([0])),
-                })
-                expt.run()
-                expt.__del__()
-            print("\nGPA init done!")
+                link = False
+                while link==False:
+                    try:
+                        expt = ex.Experiment(init_gpa=True)
+                        expt.add_flodict({
+                            'grad_vx': (np.array([100]), np.array([0])),
+                        })
+                        expt.run()
+                        expt.__del__()
+                        link = True
+                        print("\nGPA init done!")
+                    except:
+                        link = False
+                        time.sleep(1)
         else:
             print("\nNo connection to the server")
             print("Please, connect to MaRCoS server first")
