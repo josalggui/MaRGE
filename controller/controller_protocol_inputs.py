@@ -43,7 +43,7 @@ class ProtocolInputsController(ProtocolInputsWidget):
         path = "protocols/%s/%s" % (protocol, file)
         os.remove(path)
         self.updateProtocolInputs()
-        print("Protocol deleted")
+        print("\nProtocol removed")
 
     def sequenceDoubleClicked(self, item):
         protocol = self.main.protocol_list.getCurrentProtocol()

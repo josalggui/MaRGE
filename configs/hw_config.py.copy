@@ -21,8 +21,8 @@ deadTime = 400 # us, RF coil dead time
 b1Efficiency = np.pi/(0.3*70) # rads / (a.u. * us)
 larmorFreq = 3.066 # MHz
 scanner_name = "Physio V1.01"
-antenna_dict = {"RF01": 0.3, "RF02": 0.8}
+antenna_dict = {"RF01": np.pi/(0.3*70), "RF02": np.pi/(0.3*70)}
 fov = [20.0, 20.0, 20.0]
 dfov = [0.0, 0.0, 0.0]
-bash_path = "D:\Archivos de Programa\Git\git-bash.exe"
+bash_path = "D:\Archivos de Programa\Git\git-bash.exe" # use "gnome-terminal" for genome linux
 

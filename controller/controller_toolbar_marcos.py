@@ -39,16 +39,10 @@ class MarcosController(MarcosToolBar):
         """
         if not self.demo:
             os.system('ssh root@192.168.1.101 "killall marcos_server"')
-            if platform.system() == 'Windows':
-                subprocess.run([hw.bash_path, "startRP.sh"])
-                self.action_server.toggle()
-                self.initgpa()
-            elif platform.system() == 'Linux':
-                subprocess.run(["gnome-terminal", "", "./startRP.sh"])
-                self.action_server.toggle()
-                self.initgpa()
+            subprocess.run([hw.bash_path, "--", "./startRP.sh"])
+            self.action_server.toggle()
+            self.initgpa()
             print("\nMaRCoS updated, server connected, gpa initialized.")
-
         else:
             print("\nThis is a demo")
 
@@ -84,10 +78,7 @@ class MarcosController(MarcosToolBar):
         """
         if not self.demo:
             os.system('ssh root@192.168.1.101 "killall marcos_server"')
-            if platform.system() == 'Windows':
-                os.system("start ./copy_bitstream.sh 192.168.1.101 rp-122")
-            elif platform.system() == 'Linux':
-                subprocess.run(['gnome-terminal', '--', './copy_bitstream.sh', '192.168.1.101', 'rp-122'])
+            subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', '192.168.1.101', 'rp-122'])
             print("\nMaRCoS updated")
         else:
             print("\nThis is a demo.")
