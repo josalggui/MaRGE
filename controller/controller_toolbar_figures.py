@@ -30,12 +30,14 @@ class FiguresController(FiguresToolBar):
             self.main.sequence_inputs.hide()
             self.main.console.hide()
             self.main.input_table.hide()
+            self.main.custom_and_protocol.hide()
         else:
             self.main.history_list.show()
             self.main.sequence_list.show()
             self.main.sequence_inputs.show()
             self.main.console.show()
             self.main.input_table.show()
+            self.main.custom_and_protocol.show()
 
     def doScreenshot(self):
         name = datetime.now()

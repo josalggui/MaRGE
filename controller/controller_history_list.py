@@ -156,13 +156,17 @@ class HistoryListController(HistoryListWidget):
         output = self.outputs[self.current_output]
 
         # Get rotations and shifts from history
-        rotations = self.rotations[self.current_output]
-        shifts = self.shifts[self.current_output]
-        fovs = self.fovs[self.current_output]
-        for sequence in defaultsequences.values():
-            sequence.rotations = rotations.copy()
-            sequence.dfovs = shifts.copy()
-            sequence.fovs = fovs.copy()
+        try:
+            rotations = self.rotations[self.current_output]
+            shifts = self.shifts[self.current_output]
+            fovs = self.fovs[self.current_output]
+            for sequence in defaultsequences.values():
+                sequence.rotations = rotations.copy()
+                sequence.dfovs = shifts.copy()
+                sequence.fovs = fovs.copy()
+            print("\nReference system fixed to image %s" % self.current_output)
+        except:
+            pass
 
         # Clear the plotview
         self.main.figures_layout.clearFiguresLayout()
@@ -207,7 +211,7 @@ class HistoryListController(HistoryListWidget):
 
                     # Get the sequence to run
                     seq_name = self.inputs[key][1][0]
-                    sequence = copy.copy(defaultsequences[seq_name])
+                    sequence = copy.deepcopy(defaultsequences[seq_name])
                     # Modify input parameters of the sequence
                     n = 0
                     input_list = list(sequence.mapVals.keys())
@@ -215,16 +219,13 @@ class HistoryListController(HistoryListWidget):
                         sequence.mapVals[keyParam] = self.inputs[key][1][n]
                         n += 1
                     # Run the sequence
-                    output = self.runSequenceInlist(sequence=sequence)
+                    output = self.runSequenceInlist(sequence=sequence, key=key)
                     # Add item to the history list
                     file_name = sequence.mapVals['fileName']
                     self.item(element).setText(key + " | " + file_name)
-                    # self.history_list.addItem()
                     # Save results into the history
                     self.outputs[key] = output
-                    self.inputs[key] = [list(defaultsequences[seq_name].mapNmspc.values()),
-                                        list(defaultsequences[seq_name].mapVals.values()),
-                                        False]
+                    self.inputs[key][2] = False
                     # Delete outputs from the sequence
                     sequence.resetMapVals()
                     print(key + " Done!")
@@ -236,18 +237,21 @@ class HistoryListController(HistoryListWidget):
 
         return 0
 
-    @staticmethod
-    def runSequenceInlist(sequence=None):
+    def runSequenceInlist(self, sequence=None, key=None):
         # Save sequence list into the current sequence, just in case you need to do sweep
         sequence.sequenceList = defaultsequences
 
         # Save input parameters
         sequence.saveParams()
 
+        # Update possible rotation, fov and dfov before the sequence is executed in parallel thread
+        sequence.sequenceAtributes()
+        self.rotations[key] = sequence.rotations.copy()
+        self.shifts[key] = sequence.dfovs.copy()
+        self.fovs[key] = sequence.fovs.copy()
+
         # Create and execute selected sequence
         sequence.sequenceRun(0)
-
-        time.sleep(1)
 
         # Do sequence analysis and get results
         return sequence.sequenceAnalysis()

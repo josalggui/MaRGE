@@ -4,12 +4,15 @@
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
 import copy
+import csv
+import os
 import threading
 import time
 from datetime import datetime
 
+import numpy as np
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QLabel, QFileDialog
 
 from configs import hw_config
 from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
@@ -42,6 +45,9 @@ class SequenceController(SequenceToolBar):
         self.action_localizer.triggered.connect(self.startLocalizer)
         self.action_iterate.triggered.connect(self.iterate)
         self.action_bender.triggered.connect(self.bender)
+        self.action_save_parameters.triggered.connect(self.saveParameters)
+        self.action_load_parameters.triggered.connect(self.loadParameters)
+        self.action_save_parameters_cal.triggered.connect(self.saveParametersCalibration)
 
     def bender(self):
         items = [self.main.protocol_inputs.item(index) for index in range(self.main.protocol_inputs.count())]
@@ -174,6 +180,9 @@ class SequenceController(SequenceToolBar):
             self.label.setStyleSheet("background-color: black;color: white")
             self.main.figures_layout.addWidget(self.label, row=0, col=0, colspan=2)
 
+            # Update possible rotation, fov and dfov before the sequence is executed in parallel thread
+            defaultsequences[seq_name].sequenceAtributes()
+
             # Create and execute selected sequence
             defaultsequences[self.seq_name].sequenceRun(0)
 
@@ -259,13 +268,16 @@ class SequenceController(SequenceToolBar):
 
         # Save results into the history
         self.main.history_list.inputs[name[0:12]] = [list(defaultsequences[seq_name].mapNmspc.values()),
-                                                list(defaultsequences[seq_name].mapVals.values()),
-                                                True]
+                                                     list(defaultsequences[seq_name].mapVals.values()),
+                                                     True]
 
-        # Save the rotation and shift to the history list
-        self.main.history_list.rotations[name[0:12]] = defaultsequences[seq_name].rotations.copy()
-        self.main.history_list.shifts[name[0:12]] = defaultsequences[seq_name].dfovs.copy()
-        self.main.history_list.fovs[name[0:12]] = defaultsequences[seq_name].fovs.copy()
+        # Set to zero the dfov and angle for next figures
+        for sequence in defaultsequences.values():
+            if 'dfov' in sequence.mapKeys:
+                sequence.mapVals['dfov'] = [0.0, 0.0, 0.0]   # mm
+            if 'angle' in sequence.mapKeys:
+                sequence.mapVals['angle'] = 0.0
+        self.main.sequence_list.updateSequence()
 
     def startSequencePlot(self):
         """
@@ -434,3 +446,93 @@ class SequenceController(SequenceToolBar):
                     defaultsequences[self.seq_name].dfovs.copy()
                 self.main.history_list.fovs[self.main.history_list.current_output] = \
                     defaultsequences[self.seq_name].fovs.copy()
+
+    def loadParameters(self):
+
+        file_name, _ = QFileDialog.getOpenFileName(self.main, 'Open Parameters File', "experiments/parameterization/")
+
+        seq = defaultsequences[self.main.sequence_list.getCurrentSequence()]
+        map_vals_old = seq.mapVals
+        with open(file_name, 'r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for l in reader:
+                map_vals_new = l
+
+        seq.mapVals = {}
+
+        # Get key for corresponding modified parameter
+        for key in seq.mapKeys:
+            data_len = seq.mapLen[key]
+            val_old = map_vals_old[key]
+            val_new = map_vals_new[key]
+            val_new = val_new.replace('[', '')
+            val_new = val_new.replace(']', '')
+            val_new = val_new.split(',')
+            if type(val_old) == str:
+                val_old = [val_old]
+            elif data_len == 1:
+                val_old = [val_old]
+            data_type = type(val_old[0])
+
+            inputNum = []
+            for ii in range(data_len):
+                if data_type == float or data_type == np.float64:
+                    try:
+                        inputNum.append(float(val_new[ii]))
+                    except:
+                        inputNum.append(float(val_old[ii]))
+                elif data_type == int:
+                    try:
+                        inputNum.append(int(val_new[ii]))
+                    except:
+                        inputNum.append(int(val_old[ii]))
+                else:
+                    try:
+                        inputNum.append(str(val_new[0]))
+                        break
+                    except:
+                        inputNum.append(str(val_old[0]))
+                        break
+            if data_type == str:
+                seq.mapVals[key] = inputNum[0]
+            else:
+                if data_len == 1:  # Save value into mapVals
+                    seq.mapVals[key] = inputNum[0]
+                else:
+                    seq.mapVals[key] = inputNum
+
+        self.main.sequence_list.updateSequence()
+        print("\nParameters of %s sequence loaded" % (self.main.sequence_list.getCurrentSequence()))
+
+    def saveParameters(self):
+        dt = datetime.now()
+        dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
+        seq = defaultsequences[self.main.sequence_list.getCurrentSequence()]
+
+        # Save csv with input parameters
+        if not os.path.exists('experiments/parameterization'):
+            os.makedirs('experiments/parameterization')
+        with open('experiments/parameterization/%s.%s.csv' % (seq.mapNmspc['seqName'], dt_string), 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=seq.mapKeys)
+            writer.writeheader()
+            map_vals = {}
+            for key in seq.mapKeys:  # take only the inputs from mapVals
+                map_vals[key] = seq.mapVals[key]
+            writer.writerows([seq.mapNmspc, map_vals])
+
+        # self.messages("Parameters of %s sequence saved" %(self.sequence))
+        print("\nParameters of %s sequence saved" %(self.main.sequence_list.getCurrentSequence()))
+
+    def saveParametersCalibration(self):
+        seq = defaultsequences[self.main.sequence_list.getCurrentSequence()]
+
+        # Save csv with input parameters
+        with open('calibration/%s_last_parameters.csv' % seq.mapVals['seqName'], 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=seq.mapKeys)
+            writer.writeheader()
+            map_vals = {}
+            for key in seq.mapKeys:  # take only the inputs from mapVals
+                map_vals[key] = seq.mapVals[key]
+            writer.writerows([seq.mapNmspc, map_vals])
+
+        print("\nParameters of %s sequence saved" %(self.main.sequence_list.getCurrentSequence()))

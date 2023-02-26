@@ -91,15 +91,19 @@ class Plot3DController(Plot3DWidget):
         x_axis = 0
         y_axis = 1
         z_axis = 2
+        d = [1, 1]
         if self.title == "Sagittal":
+            d = [-1, -1]
             x_axis = 1
             y_axis = 0
             z_axis = 2
         elif self.title == "Coronal":
+            d = [1, -1]
             x_axis = 2
             y_axis = 0
             z_axis = 1
         elif self.title == "Transversal":
+            d = [1, -1]
             x_axis = 2
             y_axis = 1
             z_axis = 0
@@ -125,8 +129,8 @@ class Plot3DController(Plot3DWidget):
         fov_roi[x_axis] = np.round(roi_fov_px[0]*self.img_resolution[0] * 1e2, decimals=1) # cm
         fov_roi[y_axis] = np.round(roi_fov_px[1]*self.img_resolution[1] * 1e2, decimals=1) # cm
         dfov_roi = [0, 0, 0]
-        dfov_roi[x_axis] = np.round(x0_ru * 1e3, decimals=1) # mm
-        dfov_roi[y_axis] = np.round(y0_ru * 1e3, decimals=1) # mm
+        dfov_roi[x_axis] = d[0]*np.round(x0_ru * 1e3, decimals=1) # mm
+        dfov_roi[y_axis] = d[1]*np.round(y0_ru * 1e3, decimals=1) # mm
         hw.fov = fov_roi.copy()
         hw.dfov = dfov_roi.copy()
 
