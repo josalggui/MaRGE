@@ -699,11 +699,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
             result2 = {}
             result2['widget'] = 'image'
-            try:
+            if self.parFourierFraction==1:
                 result2['data'] = np.log10(np.abs(self.mapVals['kSpace3D']))
-            except:
+            else:
                 result2['data'] = np.abs(self.mapVals['kSpace3D'])
-                result2['data']
             result2['xLabel'] = "k%s"%axesStr[1]
             result2['yLabel'] = "k%s"%axesStr[0]
             result2['title'] = "k-Space"

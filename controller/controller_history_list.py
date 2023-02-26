@@ -231,7 +231,8 @@ class HistoryListController(HistoryListWidget):
                     print(key + " Done!")
                 else:
                     # Enable acquire button
-                    self.main.toolbar_sequences.action_acquire.setEnabled(True)
+                    if self.main.toolbar_marcos.action_server.isChecked():
+                        self.main.toolbar_sequences.action_acquire.setEnabled(True)
                 element += 1
             time.sleep(1)
 
