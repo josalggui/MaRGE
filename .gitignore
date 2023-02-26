@@ -2,6 +2,7 @@ __pycache__/
 *.py[cod]
 experiments
 calibration
+protocols
 .idea/
 configs/hw_config.py
 *.dcm

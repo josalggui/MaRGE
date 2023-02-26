@@ -37,6 +37,8 @@ if not os.path.exists('experiments/parameterization'):
     os.makedirs('experiments/parameterization')
 if not os.path.exists('calibration'):
     os.makedirs('calibration')
+if not os.path.exists('protocols'):
+    os.makedirs('protocols')
 if not os.path.exists(sys_config.screenshot_folder):
     os.makedirs(sys_config.screenshot_folder)
 
