@@ -36,6 +36,7 @@ class SequenceController(SequenceToolBar):
         self.seq_name = "RARE"
         self.iterative_run = None
         self.action_iterate.setCheckable(True)
+        self.serverConnected()
 
         # Connect the action buttons to the slots
         self.action_autocalibration.triggered.connect(self.autocalibration)
@@ -48,6 +49,7 @@ class SequenceController(SequenceToolBar):
         self.action_save_parameters.triggered.connect(self.saveParameters)
         self.action_load_parameters.triggered.connect(self.loadParameters)
         self.action_save_parameters_cal.triggered.connect(self.saveParametersCalibration)
+        self.main.toolbar_marcos.action_server.triggered.connect(self.serverConnected)
 
     def bender(self):
         items = [self.main.protocol_inputs.item(index) for index in range(self.main.protocol_inputs.count())]
@@ -534,3 +536,19 @@ class SequenceController(SequenceToolBar):
             writer.writerows([seq.mapNmspc, map_vals])
 
         print("\nParameters of %s sequence saved in 'calibration'" %(self.main.sequence_list.getCurrentSequence()))
+
+    def serverConnected(self):
+        if self.main.toolbar_marcos.action_server.isChecked():
+            self.action_acquire.setDisabled(False)
+            self.action_localizer.setDisabled(False)
+            self.action_autocalibration.setDisabled(False)
+            self.action_bender.setDisabled(False)
+            self.action_view_sequence.setDisabled(False)
+            self.action_add_to_list.setDisabled(False)
+        else:
+            self.action_acquire.setDisabled(True)
+            self.action_localizer.setDisabled(True)
+            self.action_autocalibration.setDisabled(True)
+            self.action_bender.setDisabled(True)
+            self.action_view_sequence.setDisabled(True)
+            self.action_add_to_list.setDisabled(True)
