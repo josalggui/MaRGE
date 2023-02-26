@@ -48,16 +48,17 @@ class SequenceToolBar(QToolBar):
         self.addAction(self.action_view_sequence)
 
         # Save sequence parameters
-        self.action_save_parameters = QAction(QIcon("resources/icons/calibration-light.png"), "Save parameters", self)
+        self.action_save_parameters = QAction(QIcon("resources/icons/saveParameters.png"), "Save parameters", self)
         self.action_save_parameters.setStatusTip("Save the current parameters")
         self.addAction(self.action_save_parameters)
 
         # Load sequence parameters
-        self.action_load_parameters = QAction(QIcon("resources/icons/calibration-light.png"), "Load parameters", self)
+        self.action_load_parameters = QAction(QIcon("resources/icons/loadParameters.png"), "Load parameters", self)
         self.action_load_parameters.setStatusTip("Load parameters and update current sequence to loaded values")
         self.addAction(self.action_load_parameters)
 
         # Save sequence parameters for calibration
-        self.action_save_parameters_cal = QAction(QIcon("resources/icons/calibration-light.png"), "Save for calibration", self)
+        self.action_save_parameters_cal = QAction(QIcon("resources/icons/favouriteParameters.png"),
+                                                  "Save for calibration", self)
         self.action_save_parameters_cal.setStatusTip("Save current configuration for calibration")
         self.addAction(self.action_save_parameters_cal)
