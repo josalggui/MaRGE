@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 experiments
+calibration
 .idea/
 configs/hw_config.py
 *.dcm
@@ -10,4 +11,3 @@ marcos_fpga_rp-122.bit
 marcos_fpga_rp-122.bit.bin
 marcos_fpga_rp-122.dtbo
 readme.org
-*.csv
