@@ -132,7 +132,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
             nScans = self.mapVals['nScans']
             rxd, msgs = self.expt.run()
             rxd['rx%i' % rxChannel] = np.real(rxd['rx%i'%rxChannel])-1j*np.imag(rxd['rx%i'%rxChannel])
-            overData = rxd['rx%i'%rxChannel]*13.788
+            overData = rxd['rx%i'%rxChannel]*hw.adcFactor
             dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['overData'] = overData
             self.mapVals['dataFull'] = dataFull

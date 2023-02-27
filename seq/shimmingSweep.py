@@ -146,7 +146,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             print('Runing...')
             rxd, msgs = self.expt.run()
             print(msgs)
-            data = sig.decimate(rxd['rx0'] * 13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            data = sig.decimate(rxd['rx0'] * hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = data
         self.expt.__del__()
 

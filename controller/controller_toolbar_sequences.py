@@ -535,7 +535,7 @@ class SequenceController(SequenceToolBar):
                 map_vals[key] = seq.mapVals[key]
             writer.writerows([seq.mapNmspc, map_vals])
 
-        print("\nParameters of %s sequence saved in 'calibration'" %(self.main.sequence_list.getCurrentSequence()))
+        print("\nParameters of %s sequence saved in 'calibration'" % (self.main.sequence_list.getCurrentSequence()))
 
     def serverConnected(self):
         if self.main.toolbar_marcos.action_server.isChecked():

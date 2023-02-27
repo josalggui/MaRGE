@@ -466,7 +466,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     if not plotSeq:
                         print('Batch ', nBatches, ', Scan ', ii+1, ' running...')
                         rxd, msgs = self.expt.run()
-                        rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
+                        rxd['rx0'] = rxd['rx0']*hw.adcFactor   # Here I normalize to get the result in mV
                         # Get noise data
                         noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
                         rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]

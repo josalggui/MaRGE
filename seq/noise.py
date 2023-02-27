@@ -94,7 +94,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
                 rxd, msgs = self.expt.run()
                 t1 = time.time()
                 print('Noise run time = %f s' %(t1-t0))
-                data = sig.decimate(rxd['rx%i'%self.rxChannel]*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+                data = sig.decimate(rxd['rx%i' % self.rxChannel]*hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
                 self.mapVals['data'] = data
                 tVector = np.linspace(0, acqTime, num=self.nPoints) * 1e-3  # ms
                 spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))

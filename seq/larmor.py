@@ -131,7 +131,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
             for ii in range(nScans):
                 rxd, msgs = self.expt.run()
                 rxd['rx0'] = np.real(rxd['rx0']) - 1j * np.imag(rxd['rx0'])
-                dataFull = np.concatenate((dataFull, rxd['rx0'] * 13.788), axis=0)
+                dataFull = np.concatenate((dataFull, rxd['rx0'] * hw.adcFactor), axis=0)
             dataFull = sig.decimate(dataFull, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['dataFull'] = dataFull
             data = np.average(np.reshape(dataFull, (nScans, -1)), axis=0)

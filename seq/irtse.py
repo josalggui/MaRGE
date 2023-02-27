@@ -151,7 +151,7 @@ class IRTSE(blankSeq.MRIBLANKSEQ):
             for repeIndex in range(nScans):
                 rxd, msgs = self.expt.run()
                 print(msgs)
-                dataOv = np.concatenate((dataOv, rxd['rx0'] * 13.788), axis=0)
+                dataOv = np.concatenate((dataOv, rxd['rx0'] * hw.adcFactor), axis=0)
             self.expt.__del__()
             self.mapVals['dataOv'] = dataOv
             dataFull = sig.decimate(dataOv, hw.oversamplingFactor, ftype='fir', zero_phase=True)

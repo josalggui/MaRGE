@@ -1,6 +1,7 @@
 import experiment as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+import configs.hw_config as hw
 
 class ADCdelayTest(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -62,7 +63,7 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
             # Run the experiment and get data
             rxd, msgs = self.expt.run()
             rxd['rx%i' % rxChannel] = np.real(rxd['rx%i'%rxChannel])-1j*np.imag(rxd['rx%i'%rxChannel])
-            overData = rxd['rx%i'%rxChannel]*13.788
+            overData = rxd['rx%i'%rxChannel]*hw.adcFactor
             # dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             dataFull = overData
             self.mapVals['overData'] = overData
