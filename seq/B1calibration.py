@@ -5,9 +5,7 @@ import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new se
 import scipy.signal as sig
 import configs.hw_config as hw
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider, Button
 from scipy.interpolate import InterpolatedUnivariateSpline
-from plotview.spectrumplot import SpectrumPlot, Spectrum3DPlot
 
 
 class B1calibration(blankSeq.MRIBLANKSEQ):
@@ -196,11 +194,13 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
     def sequenceAnalysis(self, obj=''):
 
         self.saveRawData()
-        fids = Spectrum3DPlot(np.squeeze(np.abs(self.matrix[ self.mapVals['RFampSteps']-1, :, :])),
-                              title='FID maps',
-                              xLabel="tRF (us)",
-                              yLabel="Npoint")
-        FIDWidget = fids.getImageWidget()
-        addRdPoints = self.mapVals['addRdPoints']
+        result1 = {'widget': 'image',
+                   'data': np.squeeze(np.abs(self.matrix[ self.mapVals['RFampSteps']-1, :, :])),
+                   'xLabel': "tRF (us)",
+                   'yLabel': "Npoint",
+                   'title': "FID maps",
+                   'row': 0,
+                   'col': 0
+                   }
 
-        return([FIDWidget])
+        return [result1]
