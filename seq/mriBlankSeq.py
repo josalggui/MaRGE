@@ -9,7 +9,7 @@ import os
 import numpy as np
 import configs.hw_config as hw
 from datetime import date, datetime
-from scipy.io import savemat
+from scipy.io import savemat, loadmat
 import experiment as ex
 import scipy.signal as sig
 import csv
@@ -411,6 +411,33 @@ class MRIBLANKSEQ:
             data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n + idx[ii]]
         return (data1)
 
+    def decimate(self, dataOver, nRdLines):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        This code:
+            - deletes the added points that account by the time shift and ramp of the CIC filter
+            - preprocess data to avoid oscillations due to 'fir' filter in the decimation
+        It must be used if the sequence uses "rxGateSync" to acquire data
+        """
+        # Preprocess the signal to avoid oscillations due to decimation
+        dataOver = np.reshape(dataOver, (nRdLines, -1))
+        for line in range(nRdLines):
+            dataOver[line, 0:hw.addRdPoints * hw.oversamplingFactor] = dataOver[line, hw.addRdPoints * hw.oversamplingFactor]
+        dataOver = np.reshape(dataOver, -1)
+        self.mapVals['dataOver'] = dataOver
+
+        # Decimate the signal after 'fir' filter
+        dataFull = sig.decimate(dataOver[int((hw.cicDelayPoints-1)/2)::], hw.oversamplingFactor, ftype='fir', zero_phase=True)
+
+        # Remove addRdPoints
+        nPoints = int(dataFull.shape[0]/nRdLines)-2*hw.addRdPoints
+        dataFull = np.reshape(dataFull, (nRdLines, -1))
+        dataFull = dataFull[:, hw.addRdPoints:hw.addRdPoints+nPoints]
+        dataFull = np.reshape(dataFull, -1)
+
+        return dataFull
+
     def rfSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -461,6 +488,24 @@ class MRIBLANKSEQ:
         @email: josalggui@i3m.upv.es
         """
         rxGateTime = np.array([tStart, tStart + gateTime])
+        rxGateAmp = np.array([1, 0])
+        self.expt.add_flodict({
+            'rx%i_en' % rxChannel: (rxGateTime, rxGateAmp),
+        }, rewrite)
+
+    def rxGateSync(self, tStart, gateTime, rxChannel=0, rewrite=True):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        This code open the rx channel with additional points to take into account the time shift and ramp of the CIC filter
+        It only works with the Experiment class in controller, that inherits from Experiment in marcos_client
+        """
+        # Generate instructions taking into account the cic filter delay and addRdPoints
+        cicDelayPoints = 3
+        samplingRate = self.expt.getSamplingRate() / hw.oversamplingFactor # us
+        t0 = tStart - (hw.addRdPoints*hw.oversamplingFactor-cicDelayPoints) * samplingRate # us
+        t1 = tStart + gateTime + (hw.addRdPoints*hw.oversamplingFactor + cicDelayPoints) * samplingRate
+        rxGateTime = np.array([t0, t1])
         rxGateAmp = np.array([1, 0])
         self.expt.add_flodict({
             'rx%i_en' % rxChannel: (rxGateTime, rxGateAmp),

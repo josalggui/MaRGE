@@ -3,6 +3,7 @@ import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
+from scipy.optimize import curve_fit
 
 class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -17,7 +18,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='deadTime', string='RF dead time (us)', val=80.0, field='RF')
         self.addParameter(key='txChannel', string='Tx channel', val=0, field='RF')
         self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
-
+        self.addParameter(key='sampleLength', string='Sample length (cm)', val=4.0, field='SEQ')
         self.addParameter(key='nReadout', string='Number of points', val=600, field='SEQ')
         self.addParameter(key='tAdq', string='Acquisition time (ms)', val=3.0, field='SEQ')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000, field='SEQ')
@@ -144,6 +145,8 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
             self.expt.__del__()
 
     def sequenceAnalysis(self, obj=''):
+        gamma = 2*np.pi*hw.gammaB
+        sampleLength=self.mapVals['sampleLength']*1e-3
         BW = self.mapVals['BWoriginal']*1e3
         FreqVector = np.linspace(-BW/2, BW/2, self.mapVals['nReadout'])
         ReadoutVector = np.linspace(0, self.mapVals['tAdq'], self.mapVals['nReadout'])
@@ -155,6 +158,27 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         spectrumup = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signalup))))
         spectrumdown = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signaldown))))
 
+        signalupNorm=abs(signalup)*abs(signal0[0])/abs(signalup[0])
+        signaldownNorm = abs(signaldown) * abs(signal0[0]) / abs(signaldown[0])
+
+        ratio_plus= abs(signalupNorm)/abs(signal0)
+        ratio_minus = abs(signaldownNorm)/abs(signal0)
+
+        def objective(x, a):
+            return (1 - a * x ** 2)
+
+        # curve fit a+
+        popt, _ = curve_fit(objective, ReadoutVector, ratio_plus)
+        # summarize the parameter values
+        a_plus = popt
+
+        # curve fit a-
+        popt, _ = curve_fit(objective, ReadoutVector, ratio_minus)
+        # summarize the parameter values
+        a_minus = popt
+
+        ResidualGradient = np.sqrt(12*(a_plus+a_minus)/(gamma*sampleLength*gamma*sampleLength))
+
         self.saveRawData()
 
         # Add time signal to the layout
@@ -163,7 +187,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
                    'yData': [np.abs(signal0), np.abs(signalup), np.abs(signaldown)],
                    'xLabel': 'Time (ms)',
                    'yLabel': 'Signal amplitude (mV)',
-                   'title': 'Signal vs time',
+                   'title': 'Signal vs time, Residual Gradient: %1.3f mT/m' % ResidualGradient*1e3,
                    'legend': ['G=0', 'G-', 'G+'],
                    'row': 0,
                    'col': 0}

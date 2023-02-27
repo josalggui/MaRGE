@@ -7,6 +7,7 @@
 # X axis: 25 mT/m/o.u., 0.5 mT/m/A, 2.5 mT/m/V
 # Y axis: 40 mT/m/o.u., 0.8 mT/m/A, 4.0 mT/m/V
 # Z axis: 35 mT/m/o.u., 0.7 mT/m/A, 3.5 mT/m/V
+import numpy as np
 
 gFactor = [0.025, 0.040, 0.035] # (X, Y, Z) in T/m/o.u.
 slewRate = 1000 # us/o.u., slew rate for gradient rises
