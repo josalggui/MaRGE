@@ -183,7 +183,7 @@ class SequenceController(SequenceToolBar):
             self.main.figures_layout.addWidget(self.label, row=0, col=0, colspan=2)
 
             # Update possible rotation, fov and dfov before the sequence is executed in parallel thread
-            defaultsequences[seq_name].sequenceAtributes()
+            defaultsequences[self.seq_name].sequenceAtributes()
 
             # Create and execute selected sequence
             defaultsequences[self.seq_name].sequenceRun(0)
@@ -299,6 +299,7 @@ class SequenceController(SequenceToolBar):
 
         # Create sequence to plot
         print('Plot sequence')
+        defaultsequences[self.seq_name].sequenceAtributes()
         defaultsequences[self.seq_name].sequenceRun(1)  # Run sequence only for plot
 
         # Get sequence to plot

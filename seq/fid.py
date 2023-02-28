@@ -133,9 +133,6 @@ class FID(blankSeq.MRIBLANKSEQ):
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
 
-        print("\nT2* = %0.2f ms" % t2)
-        print("Peak amplitude = %0.3f, FWHM = %0.1f kHz" % (maxValue, freqB - freqA))
-
         self.saveRawData()
 
         # Add time signal to the layout

@@ -92,17 +92,21 @@ class Plot3DController(Plot3DWidget):
         y_axis = 1
         z_axis = 2
         d = [1, 1]
+        a = 1
         if self.title == "Sagittal":
+            a = -1
             d = [-1, -1]
             x_axis = 1
             y_axis = 0
             z_axis = 2
         elif self.title == "Coronal":
+            a = -1
             d = [1, -1]
             x_axis = 2
             y_axis = 0
             z_axis = 1
         elif self.title == "Transversal":
+            a = 1
             d = [1, -1]
             x_axis = 2
             y_axis = 1
@@ -112,7 +116,7 @@ class Plot3DController(Plot3DWidget):
         ima_fov_px = np.array(np.shape(self.getProcessedImage()))[1::]
         roi_fov_px = self.roiFOV.size()
         roi_pos_px = self.roiFOV.pos()
-        roi_angle = self.roiFOV.angle()
+        roi_angle = a*self.roiFOV.angle()
 
         # ROI center in pixel units
         x0_px = (+ (ima_fov_px[0] / 2 - roi_pos_px[0]) * np.cos(roi_angle * np.pi / 180)

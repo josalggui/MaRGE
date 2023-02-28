@@ -174,7 +174,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                    'yData': [np.abs(signal), np.real(signal), np.imag(signal)],
                    'xLabel': 'Time (ms)',
                    'yLabel': 'Signal amplitude (mV)',
-                   'title': '',
+                   'title': 'Echo',
                    'legend': ['abs', 'real', 'imag'],
                    'row': 0,
                    'col': 0}
