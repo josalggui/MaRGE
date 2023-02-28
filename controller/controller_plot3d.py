@@ -13,6 +13,7 @@ import configs.hw_config as hw
 class Plot3DController(Plot3DWidget):
     def __init__(self, data=np.random.randn(10, 50, 50), x_label='', y_label='', title='', *args, **kwargs):
         super(Plot3DController, self).__init__(*args, **kwargs)
+        self.seq_name = None
         self.data = data
         self.x_label = x_label
         self.y_label = y_label
@@ -55,29 +56,50 @@ class Plot3DController(Plot3DWidget):
             x_axis = 0
             y_axis = 1
             z_axis = 2
+            d = [1, 1]
+            a = 1
             if self.title == "Sagittal":
+                a = -1
+                d = [1, 1]
                 x_axis = 1
                 y_axis = 0
                 z_axis = 2
             elif self.title == "Coronal":
+                a = -1
+                d = [-1, 1]
                 x_axis = 2
                 y_axis = 0
                 z_axis = 1
             elif self.title == "Transversal":
+                a = 1
+                d = [-1, 1]
                 x_axis = 2
                 y_axis = 1
                 z_axis = 0
 
             # Get image fov and resolution
             current_output = self.main.history_list.current_output
-            n_points = np.array(np.shape(self.getProcessedImage()))[1::]
-            fov = self.main.history_list.fovs[current_output][-1]
-            img_fov_ru = [fov[x_axis], fov[y_axis]]
-            self.img_resolution = np.array(img_fov_ru) / n_points
+            self.seq_name = self.main.sequence_list.getCurrentSequence()
+            img_fov = self.main.history_list.fovs[current_output][-1]
+            if self.seq_name in defaultsequences.keys():
+                roi_fov = np.array(defaultsequences[self.seq_name].mapVals['fov']) * 1e-2  # m
+                roi_pos = np.array(defaultsequences[self.seq_name].mapVals['dfov']) * 1e-3  # m
+            else:
+                roi_fov = img_fov
+                roi_pos = [0.0, 0.0, 0.0]
+
+            img_fov_px = np.array(np.shape(self.getProcessedImage()))[1::]
+            img_fov_ru = [img_fov[x_axis], img_fov[y_axis]]
+            self.img_resolution = np.array(img_fov_ru) / img_fov_px
+            roi_fov_ru = np.array([roi_fov[x_axis], roi_fov[y_axis]])
+            roi_pos_ru = np.array([roi_pos[x_axis], roi_pos[y_axis]])
+            roi_fov_px = np.array(roi_fov_ru) / self.img_resolution
+            roi_pos_px = np.array(roi_pos_ru) / self.img_resolution
+            roi_pos_px = roi_pos_px + img_fov_px / 2 - roi_fov_px / 2
 
             # Set roi size and angle
-            self.roiFOV.setPos([0.0, 0.0], update=False)
-            self.roiFOV.setSize(n_points, update=False)
+            self.roiFOV.setPos(d * roi_pos_px, update=False)
+            self.roiFOV.setSize(roi_fov_px, update=False)
             self.roiFOV.setAngle(0.0, update=False)
             self.roiFOV.stateChanged()
 
@@ -116,25 +138,25 @@ class Plot3DController(Plot3DWidget):
         ima_fov_px = np.array(np.shape(self.getProcessedImage()))[1::]
         roi_fov_px = self.roiFOV.size()
         roi_pos_px = self.roiFOV.pos()
-        roi_angle = a*self.roiFOV.angle()
+        roi_angle = a * self.roiFOV.angle()
 
-        # ROI center in pixel units
+        # ROI center in pixels respect to the roi upper-left corner
         x0_px = (+ (ima_fov_px[0] / 2 - roi_pos_px[0]) * np.cos(roi_angle * np.pi / 180)
                  + (ima_fov_px[1] / 2 - roi_pos_px[1]) * np.sin(roi_angle * np.pi / 180))
         y0_px = (- (ima_fov_px[0] / 2 - roi_pos_px[0]) * np.sin(roi_angle * np.pi / 180)
                  + (ima_fov_px[1] / 2 - roi_pos_px[1]) * np.cos(roi_angle * np.pi / 180))
 
         # ROI center in real units
-        x0_ru = (x0_px - roi_fov_px[0]/2) * self.img_resolution[0]
-        y0_ru = (y0_px - roi_fov_px[1]/2) * self.img_resolution[1]
+        x0_ru = (x0_px - roi_fov_px[0] / 2) * self.img_resolution[0]
+        y0_ru = (y0_px - roi_fov_px[1] / 2) * self.img_resolution[1]
 
         # Set fov properties in true units
         fov_roi = [0, 0, 0]
-        fov_roi[x_axis] = np.round(roi_fov_px[0]*self.img_resolution[0] * 1e2, decimals=1) # cm
-        fov_roi[y_axis] = np.round(roi_fov_px[1]*self.img_resolution[1] * 1e2, decimals=1) # cm
+        fov_roi[x_axis] = np.round(roi_fov_px[0] * self.img_resolution[0] * 1e2, decimals=1)  # cm
+        fov_roi[y_axis] = np.round(roi_fov_px[1] * self.img_resolution[1] * 1e2, decimals=1)  # cm
         dfov_roi = [0, 0, 0]
-        dfov_roi[x_axis] = d[0]*np.round(x0_ru * 1e3, decimals=1) # mm
-        dfov_roi[y_axis] = d[1]*np.round(y0_ru * 1e3, decimals=1) # mm
+        dfov_roi[x_axis] = d[0] * np.round(x0_ru * 1e3, decimals=1)  # mm
+        dfov_roi[y_axis] = d[1] * np.round(y0_ru * 1e3, decimals=1)  # mm
         hw.fov = fov_roi.copy()
         hw.dfov = dfov_roi.copy()
 
@@ -146,15 +168,27 @@ class Plot3DController(Plot3DWidget):
         # Update sequence parameters
         for sequence in defaultsequences.values():
             if 'fov' in sequence.mapKeys:
-                sequence.mapVals['fov'][x_axis] = np.round(fov_roi[x_axis])       # cm
-                sequence.mapVals['fov'][y_axis] = np.round(fov_roi[y_axis])       # cm
+                sequence.mapVals['fov'][x_axis] = np.round(fov_roi[x_axis])  # cm
+                sequence.mapVals['fov'][y_axis] = np.round(fov_roi[y_axis])  # cm
             if 'dfov' in sequence.mapKeys:
-                sequence.mapVals['dfov'][x_axis] = np.round(dfov_roi[x_axis])     # mm
-                sequence.mapVals['dfov'][y_axis] = np.round(dfov_roi[y_axis])     # mm
+                sequence.mapVals['dfov'][x_axis] = np.round(dfov_roi[x_axis])  # mm
+                sequence.mapVals['dfov'][y_axis] = np.round(dfov_roi[y_axis])  # mm
             if 'angle' in sequence.mapKeys:
-                sequence.mapVals['angle'] = np.round(rotation[3], decimals=2)                        # degrees
+                sequence.mapVals['angle'] = np.round(rotation[3], decimals=2)  # degrees
             if 'rotationAxis' in sequence.mapKeys:
                 sequence.mapVals['rotationAxis'] = rotation[0:3]
+
+        # Loop over the widgets in the figure_layout to link the roiFOV
+        for widget in self.main.figures_layout.findChildren(Plot3DController):
+            if id(widget) == id(self):
+                pass
+            else:
+                widget.roiFOV.blockSignals(True)
+                widget.menuClicked()
+                widget.roiFOV.blockSignals(False)
+                if widget.title == 'Sagittal' or widget.title == 'Coronal' or widget.title == 'Transversal':
+                    if roi_angle != 0:
+                        print("\nWarning: it is not recommended to angle the figure with multiplot.")
 
         self.main.sequence_list.updateSequence()
 
@@ -209,7 +243,7 @@ class Plot3DController(Plot3DWidget):
             # Average data within entire ROI for each frame
             mean = data.mean(axis=axes)
             std = data.std(axis=axes)
-            data = mean/std
+            data = mean / std
             xvals = self.tVals
 
         # Handle multi-channel data
@@ -236,7 +270,7 @@ class Plot3DController(Plot3DWidget):
             self.roiCurves[i].setData(x, y, pen=p)
 
         # Update text_item
-        self.text_item.setText("Mean = %0.1f \nstd = %0.1f \nsnr = %0.1f"%(self.dataAvg, self.dataStd, self.dataSnr))
+        self.text_item.setText("Mean = %0.1f \nstd = %0.1f \nsnr = %0.1f" % (self.dataAvg, self.dataStd, self.dataSnr))
         self.text_item.show()
 
     def roiClicked(self):
@@ -247,7 +281,7 @@ class Plot3DController(Plot3DWidget):
             self.roi.show()
             self.ui.roiPlot.setMouseEnabled(True, True)
             # self.ui.splitter.setSizes([int(self.height() * 0.6), int(self.height() * 0.4)])
-            self.ui.splitter.handle(1).setEnabled(True) # Allow to change the window size
+            self.ui.splitter.handle(1).setEnabled(True)  # Allow to change the window size
             self.roiChanged()
             for c in self.roiCurves:
                 c.hide()
@@ -275,7 +309,7 @@ class Plot3DController(Plot3DWidget):
             self.timeLine.hide()
 
         self.ui.roiPlot.setVisible(show_roi_plot)
-    
+
     def updateImage(self, autoHistogramRange=True):
         ## Redraw image on screen
         if self.image is None:
