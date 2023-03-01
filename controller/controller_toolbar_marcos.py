@@ -40,11 +40,12 @@ class MarcosController(MarcosToolBar):
         if not self.demo:
             subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
             subprocess.run([hw.bash_path, "--", "./startRP.sh", hw.rp_ip_address, hw.rp_version])
-            self.action_server.toggle()
             self.initgpa()
             print("\nMaRCoS updated, server connected, gpa initialized.")
         else:
             print("\nThis is a demo")
+        self.action_server.setChecked(True)
+        self.main.toolbar_sequences.serverConnected()
 
     def controlMarcosServer(self):
         """
@@ -79,6 +80,8 @@ class MarcosController(MarcosToolBar):
             print("\nMaRCoS updated")
         else:
             print("\nThis is a demo.")
+        self.action_server.setChecked(False)
+        self.main.toolbar_sequences.serverConnected()
 
     def initgpa(self):
         """

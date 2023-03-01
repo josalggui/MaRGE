@@ -42,11 +42,17 @@ class HistoryListController(HistoryListWidget):
             action1 = QAction("Add new image", self)
             action1.triggered.connect(self.addNewFigure)
             menu.addAction(action1)
-            action1 = QAction("Add another image", self)
-            action1.triggered.connect(self.addFigure)
-            menu.addAction(action1)
+            action2 = QAction("Add another image", self)
+            action2.triggered.connect(self.addFigure)
+            menu.addAction(action2)
+            action3 = QAction("Delete task", self)
+            action3.triggered.connect(self.deleteTask)
+            menu.addAction(action3)
 
             menu.exec_(self.mapToGlobal(point))
+
+    def deleteTask(self):
+        self.takeItem(self.row(self.currentItem()))
 
     def addNewFigure(self):
         self.figures = []
@@ -202,38 +208,41 @@ class HistoryListController(HistoryListWidget):
         @Summary: this method is continuously waiting for running new sequences in the history_list
         """
         while self.main.app_open:
-            keys = list(self.inputs.keys())  # List of elements in the sequence history list
-            element = 0
-            for key in keys:
-                if self.inputs[key][2]:
-                    # Disable acquire button
-                    self.main.toolbar_sequences.action_acquire.setEnabled(False)
+            if self.main.toolbar_marcos.action_server.isChecked():
+                keys = list(self.inputs.keys())  # List of elements in the sequence history list
+                element = 0
+                for key in keys:
+                    if self.inputs[key][2]:
+                        # Disable acquire button
+                        self.main.toolbar_sequences.action_acquire.setEnabled(False)
 
-                    # Get the sequence to run
-                    seq_name = self.inputs[key][1][0]
-                    sequence = copy.deepcopy(defaultsequences[seq_name])
-                    # Modify input parameters of the sequence
-                    n = 0
-                    input_list = list(sequence.mapVals.keys())
-                    for keyParam in input_list:
-                        sequence.mapVals[keyParam] = self.inputs[key][1][n]
-                        n += 1
-                    # Run the sequence
-                    output = self.runSequenceInlist(sequence=sequence, key=key)
-                    # Add item to the history list
-                    file_name = sequence.mapVals['fileName']
-                    self.item(element).setText(key + " | " + file_name)
-                    # Save results into the history
-                    self.outputs[key] = output
-                    self.inputs[key][2] = False
-                    # Delete outputs from the sequence
-                    sequence.resetMapVals()
-                    print(key + " Done!")
-                else:
-                    # Enable acquire button
-                    if self.main.toolbar_marcos.action_server.isChecked():
-                        self.main.toolbar_sequences.action_acquire.setEnabled(True)
-                element += 1
+                        # Get the sequence to run
+                        seq_name = self.inputs[key][1][0]
+                        sequence = copy.deepcopy(defaultsequences[seq_name])
+                        # Modify input parameters of the sequence
+                        n = 0
+                        input_list = list(sequence.mapVals.keys())
+                        for keyParam in input_list:
+                            sequence.mapVals[keyParam] = self.inputs[key][1][n]
+                            n += 1
+                        # Run the sequence
+                        output = self.runSequenceInlist(sequence=sequence, key=key)
+                        # Add item to the history list
+                        file_name = sequence.mapVals['fileName']
+                        self.item(element).setText(key + " | " + file_name)
+                        # Save results into the history
+                        self.outputs[key] = output
+                        self.inputs[key][2] = False
+                        # Delete outputs from the sequence
+                        sequence.resetMapVals()
+                        print(key + " Done!")
+                    else:
+                        # Enable acquire button
+                        if self.main.toolbar_marcos.action_server.isChecked():
+                            self.main.toolbar_sequences.action_acquire.setEnabled(True)
+                    element += 1
+            else:
+                pass
             time.sleep(1)
 
         return 0

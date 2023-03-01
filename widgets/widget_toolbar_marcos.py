@@ -7,9 +7,10 @@ from PyQt5.QtWidgets import QToolBar, QAction
 from PyQt5.QtGui import QIcon
 
 class MarcosToolBar(QToolBar):
-    def __init__(self, demo, *args, **kwargs):
+    def __init__(self, main, *args, **kwargs):
         super(MarcosToolBar, self).__init__(*args, **kwargs)
-        self.demo = demo
+        self.main = main
+        self.demo = self.main.demo
 
         # Setup all
         self.action_start = QAction(QIcon("resources/icons/initGPA.png"), "Setup MaRCoS", self)

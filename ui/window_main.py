@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(self.styleSheet)
 
         # Add marcos toolbar
-        self.toolbar_marcos = MarcosController(self.demo, "MaRCoS toolbar")
+        self.toolbar_marcos = MarcosController(self, "MaRCoS toolbar")
         self.addToolBar(self.toolbar_marcos)
 
         # Add sequence toolbar
