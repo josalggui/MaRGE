@@ -6,16 +6,17 @@ MRILAB @ I3M
 
 import os
 import sys
-#*****************************************************************************
+
+# *****************************************************************************
 # Add path to the working directory
 path = os.path.realpath(__file__)
 ii = 0
 for char in path:
-    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
-        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
-        sys.path.append(path[0:ii+1]+'marcos_client')
+    if (char == '\\' or char == '/') and path[ii + 1:ii + 14] == 'PhysioMRI_GUI':
+        sys.path.append(path[0:ii + 1] + 'PhysioMRI_GUI')
+        sys.path.append(path[0:ii + 1] + 'marcos_client')
     ii += 1
-#******************************************************************************
+# ******************************************************************************
 import experiment as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
@@ -37,7 +38,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ')
         self.addParameter(key='bw', string='Bandwidth (kHz)', val=50, field='RF')
         self.addParameter(key='dF', string='Frequency resolution (Hz)', val=100, field='RF')
-        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-12.5,-12.5,7.5], field='OTH')
+        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-12.5, -12.5, 7.5], field='OTH')
 
     def sequenceInfo(self):
         print(" ")
@@ -159,12 +160,16 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         # Get the central frequency
         idf = np.argmax(np.abs(spectrum))
-        fCentral = fVector[idf] * 1e-3
-        hw.larmorFreq = self.mapVals['larmorFreq']+fCentral
+        fCentral = fVector[idf] * 1e-3  # MHz
+        hw.larmorFreq = self.mapVals['larmorFreq'] + fCentral
         print('\nLarmor frequency: %1.5f MHz' % hw.larmorFreq)
         self.mapVals['larmorFreq'] = hw.larmorFreq
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
+
+        if obj != 'Standalone':
+            for sequence in self.sequenceList.values():
+                sequence.mapVals['larmorFreq'] = hw.larmorFreq
 
         self.saveRawData()
 

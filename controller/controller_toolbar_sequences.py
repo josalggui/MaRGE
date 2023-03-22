@@ -58,8 +58,6 @@ class SequenceController(SequenceToolBar):
             time.sleep(0.1)
 
     def autocalibration(self):
-        self.main.figures_layout.clearFiguresLayout()
-
         # Include here the sequences to run on autocalibration
         seq_names = [
             'Larmor',
@@ -68,75 +66,9 @@ class SequenceController(SequenceToolBar):
             'Shimming'
         ]
 
-        # Add plots to the plotview_layout
-        self.plots = []
-
         for seq_name in seq_names:
             # Execute the sequence
-            sequence = defaultsequences[seq_name]
-            sequence.loadParams(directory="experiments/parameterization")
-            sequence.sequenceRun()
-            output = sequence.sequenceAnalysis(obj='autocalibration')
-            delattr(sequence, 'out')
-
-            # Add item to the history list
-            file_name = sequence.mapVals['fileName']
-            name = str(datetime.now())[11:23] + " | " + file_name
-            self.main.history_list.addItem(name)
-
-            # Save results into the history
-            self.main.history_list.outputs[name[0:12]] = output
-            self.main.history_list.inputs[name[0:12]] = [list(sequence.mapNmspc.values()),
-                                                         list(sequence.mapVals.values()),
-                                                         False]
-
-            # Specific for larmor
-            if seq_name == 'Larmor':
-                for seq in defaultsequences.values():
-                    seq.mapVals['larmorFreq'] = hw_config.larmorFreq
-
-            # Specific for noise
-            if seq_name == 'Noise':
-                # Create label with rawdata name
-                self.label = QLabel()
-                self.label.setAlignment(QtCore.Qt.AlignCenter)
-                self.label.setStyleSheet("background-color: black;color: white")
-                self.label.setText(sequence.mapVals['fileName'])
-                self.main.figures_layout.addWidget(self.label, row=0, col=0, colspan=2)
-
-                # Noise spectrum
-                item = output[1]
-                self.plots.append(SpectrumPlot(x_data=item['xData'],
-                                               y_data=item['yData'],
-                                               legend=item['legend'],
-                                               x_label=item['xLabel'],
-                                               y_label=item['yLabel'],
-                                               title=item['title']))
-                self.main.figures_layout.addWidget(self.plots[-1], row=1, col=0)
-
-            # Specific for rabi
-            if seq_name == 'RabiFlops':
-                item = output[0]
-                self.plots.append(SpectrumPlot(x_data=item['xData'],
-                                               y_data=item['yData'],
-                                               legend=item['legend'],
-                                               x_label=item['xLabel'],
-                                               y_label=item['yLabel'],
-                                               title=item['title']))
-                self.main.figures_layout.addWidget(self.plots[-1], row=2, col=0)
-
-            # Specific for shimming
-            if seq_name == 'Shimming':
-                for seq in defaultsequences.values():
-                    seq.mapVals['shimming'] = output[1]
-                item = output[0]
-                self.plots.append(SpectrumPlot(x_data=item['xData'],
-                                               y_data=item['yData'],
-                                               legend=item['legend'],
-                                               x_label=item['xLabel'],
-                                               y_label=item['yLabel'],
-                                               title=item['title']))
-                self.main.figures_layout.addWidget(self.plots[-1], row=3, col=0)
+            self.runToList(seq_name=seq_name)
 
         # Update the inputs of the sequences
         self.main.sequence_list.updateSequence()

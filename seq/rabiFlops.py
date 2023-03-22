@@ -13,6 +13,7 @@ import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new se
 import scipy.signal as sig
 import configs.hw_config as hw
 
+
 class RabiFlops(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RabiFlops, self).__init__()
@@ -27,7 +28,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
-        self.addParameter(key='shimming', string='Shimming (*1e-4)', val=[-12.5,-12.5,7.5], field='OTH')
+        self.addParameter(key='shimming', string='Shimming (*1e-4)', val=[-12.5, -12.5, 7.5], field='OTH')
         self.addParameter(key='rfExTime0', string='Rf pulse time, Start (us)', val=5.0, field='RF')
         self.addParameter(key='rfExTime1', string='RF pulse time, End (us)', val=100.0, field='RF')
         self.addParameter(key='nSteps', string='Number of steps', val=20, field='RF')
@@ -54,8 +55,8 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         nScans = self.mapVals['nScans']
         nSteps = self.mapVals['nSteps']
         dummyPulses = self.mapVals['dummyPulses']
-        repetitionTime = self.mapVals['repetitionTime']*1e-3
-        return(repetitionTime*nScans*nSteps*(dummyPulses+1)/60)  # minutes, scanTime
+        repetitionTime = self.mapVals['repetitionTime'] * 1e-3
+        return (repetitionTime * nScans * nSteps * (dummyPulses + 1) / 60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq=0):
         init_gpa = False  # Starts the gpa
@@ -95,56 +96,56 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         shimming = shimming * 1e-4
 
         # Rf excitation time vector
-        rfTime = np.linspace(rfExTime0, rfExTime1, num=nSteps, endpoint=True) # us
-        self.mapVals['rfTime'] = rfTime*1e-6 # s
+        rfTime = np.linspace(rfExTime0, rfExTime1, num=nSteps, endpoint=True)  # us
+        self.mapVals['rfTime'] = rfTime * 1e-6  # s
 
         def createSequence():
             # Set shimming
             self.iniSequence(20, shimming)
 
-            tEx = 1000 # First excitation at 1 ms
+            tEx = 1000  # First excitation at 1 ms
             for scan in range(nScans):
                 for step in range(nSteps):
-                    for pulse in range(dummyPulses+1):
+                    for pulse in range(dummyPulses + 1):
                         # Excitation pulse
-                        t0 = tEx - hw.blkTime - rfTime[step]/2
+                        t0 = tEx - hw.blkTime - rfTime[step] / 2
                         self.rfRecPulse(t0, rfTime[step], rfExAmp, 0)
 
                         # Rx gate for FID
-                        if pulse==dummyPulses:
+                        if pulse == dummyPulses:
                             t0 = tEx + rfTime[step] / 2 + deadTime
                             self.rxGate(t0, acqTime)
 
                         # Refocusing pulse
                         if method:  # time
-                            if rfReTime==0.0:
-                                t0 = tEx + echoTime/2 - hw.blkTime - rfTime[step]
-                                self.rfRecPulse(t0, rfTime[step]*2, rfReAmp, rfRefPhase*np.pi/180.0)
+                            if rfReTime == 0.0:
+                                t0 = tEx + echoTime / 2 - hw.blkTime - rfTime[step]
+                                self.rfRecPulse(t0, rfTime[step] * 2, rfReAmp, rfRefPhase * np.pi / 180.0)
                             else:
-                                t0 = tEx + echoTime/2 - hw.blkTime - rfReTime/2
+                                t0 = tEx + echoTime / 2 - hw.blkTime - rfReTime / 2
                                 self.rfRecPulse(t0, rfReTime, rfReAmp, rfRefPhase * np.pi / 180.0)
-                        else:   # amplitude
-                            if rfReTime==0.0:
-                                t0 = tEx + echoTime / 2 - hw.blkTime - rfTime[step]/2
+                        else:  # amplitude
+                            if rfReTime == 0.0:
+                                t0 = tEx + echoTime / 2 - hw.blkTime - rfTime[step] / 2
                                 self.rfRecPulse(t0, rfTime[step], rfExAmp * 2, rfRefPhase * np.pi / 180.0)
                             else:
                                 t0 = tEx + echoTime / 2 - hw.blkTime - rfReTime
                                 self.rfRecPulse(t0, rfReTime, rfExAmp * 2, rfRefPhase * np.pi / 180.0)
 
                         # Rx gate for Echo
-                        if pulse==dummyPulses:
-                            t0 = tEx + echoTime - acqTime/2
+                        if pulse == dummyPulses:
+                            t0 = tEx + echoTime - acqTime / 2
                             self.rxGate(t0, acqTime)
 
                         # Update exitation time for next repetition
                         tEx += repetitionTime
 
             # Turn off the gradients after the end of the batch
-            self.endSequence(repetitionTime*nSteps*nScans*(dummyPulses+1))
+            self.endSequence(repetitionTime * nSteps * nScans * (dummyPulses + 1))
 
         # Create experiment
-        bw = nPoints/acqTime*hw.oversamplingFactor # MHz
-        samplingPeriod = 1/bw
+        bw = nPoints / acqTime * hw.oversamplingFactor  # MHz
+        samplingPeriod = 1 / bw
         self.expt = ex.Experiment(lo_freq=hw.larmorFreq + freqOffset,
                                   rx_t=samplingPeriod,
                                   init_gpa=init_gpa,
@@ -188,20 +189,21 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
         rabiFID = dataFIDAvg[:, 10]
         self.mapVals['rabiFID'] = rabiFID
-        rabiEcho = dataEchoAvg[:, np.int(nPoints/2)]
+        rabiEcho = dataEchoAvg[:, np.int(nPoints / 2)]
         self.mapVals['rabiEcho'] = rabiEcho
 
         # Get values for pi/2 and pi pulses
         test = True
         n = 1
         while test:
-            d = np.abs(rabiFID[n])-np.abs(rabiFID[n-1])
+            d = np.abs(rabiFID[n]) - np.abs(rabiFID[n - 1])
             n += 1
-            if d<0: test = False
-        piHalfTime = timeVector[n-2]*1e6 # us
+            if d < 0: test = False
+        piHalfTime = timeVector[n - 2] * 1e6  # us
         self.mapVals['piHalfTime'] = piHalfTime
-        print("\npi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us"%(self.mapVals['rfExAmp'], self.mapVals['piHalfTime']))
-        hw.b1Efficiency = np.pi/2/(self.mapVals['rfExAmp']*piHalfTime)
+        print("\npi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us" % (self.mapVals['rfExAmp'],
+                                                                                   self.mapVals['piHalfTime']))
+        hw.b1Efficiency = np.pi / 2 / (self.mapVals['rfExAmp'] * piHalfTime)
 
         self.saveRawData()
 
@@ -229,4 +231,3 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.out = [result1, result2]
 
         return self.out
-
