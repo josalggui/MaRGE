@@ -99,6 +99,10 @@ class FID(blankSeq.MRIBLANKSEQ):
         self.mapVals['acqTime'] = acqTime*1e-3 # ms
         self.mapVals['bw'] = bw # MHz
         createSequence()
+        if self.floDict2Exp():
+            pass
+        else:
+            return 0
 
         if not plotSeq:
             # Run the experiment and get data

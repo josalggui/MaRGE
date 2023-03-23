@@ -87,10 +87,10 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
                 tGup0 = tini + TR
                 self.gradTrap(tGup0, gRiseTime, gDuration, 0, gSteps, gAxis, shimming)
                 tRF0 = tGup0 + gDuration + 2*gRiseTime + delayGtoRF - hw.blkTime
-                self.rfRecPulse(tRF0, rfExTime, rfExAmp, rfExPhase, txChannel=txChannel)
+                self.rfRecPulse(tRF0, rfExTime, rfExAmp, rfExPhase, channel=txChannel)
                 # Rx gate
                 tRx0 = tRF0 + hw.blkTime + rfExTime + deadTime - addRdPoints / BWreal
-                self.rxGate(tRx0, acqTimeReal + addRdPoints / BWreal, rxChannel=rxChannel)
+                self.rxGate(tRx0, acqTimeReal + addRdPoints / BWreal, channel=rxChannel)
                 # # **********************************************
 
                 # Gradient pulse +
@@ -98,10 +98,10 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
                 self.gradTrap(tGup1, gRiseTime, gDuration, +gAmp, gSteps, gAxis, shimming)
                 # RF pulse
                 tRF1 = tGup1 + gDuration + 2 * gRiseTime + delayGtoRF - hw.blkTime
-                self.rfRecPulse(tRF1, rfExTime, rfExAmp, rfExPhase, txChannel=txChannel)
+                self.rfRecPulse(tRF1, rfExTime, rfExAmp, rfExPhase, channel=txChannel)
                 # Rx gate
                 tRx1 = tRF1 + hw.blkTime + rfExTime + deadTime - addRdPoints / BWreal
-                self.rxGate(tRx1, acqTimeReal + addRdPoints / BWreal, rxChannel=rxChannel)
+                self.rxGate(tRx1, acqTimeReal + addRdPoints / BWreal, channel=rxChannel)
                 # **********************************************
 
                 # Gradient pulse -
@@ -109,10 +109,10 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
                 self.gradTrap(tGup2, gRiseTime, gDuration, -gAmp, gSteps, gAxis, shimming)
                 # RF pulse
                 tRF2 = tGup2 + gDuration + 2 * gRiseTime + delayGtoRF - hw.blkTime
-                self.rfRecPulse(tRF2, rfExTime, rfExAmp, rfExPhase, txChannel=txChannel)
+                self.rfRecPulse(tRF2, rfExTime, rfExAmp, rfExPhase, channel=txChannel)
                 # Rx gate
                 tRx2 = tRF2 + hw.blkTime + rfExTime + deadTime - addRdPoints / BWreal
-                self.rxGate(tRx2, acqTimeReal + addRdPoints / BWreal, rxChannel=rxChannel)
+                self.rxGate(tRx2, acqTimeReal + addRdPoints / BWreal, channel=rxChannel)
 
             self.endSequence(tini + 4*TR)
 
@@ -127,6 +127,10 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         BWreal = 1 / samplingPeriodReal / hw.oversamplingFactor  # MHz
         acqTimeReal = nReadout / BWreal  # us
         createSequence()
+        if self.floDict2Exp():
+            pass
+        else:
+            return 0
 
         if plotSeq == 0:
             # Run the experiment and get data

@@ -159,6 +159,10 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
         # Execute the experiment
         createSequence()
+        if self.floDict2Exp():
+            pass
+        else:
+            return 0
         if not plotSeq:
             print('Runing...')
             rxd, msgs = self.expt.run()

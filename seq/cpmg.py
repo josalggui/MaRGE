@@ -114,6 +114,10 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         acqTime = nPoints / bw  # us
         self.mapVals['bw'] = bw
         createSequence()
+        if self.floDict2Exp():
+            pass
+        else:
+            return 0
 
         if plotSeq == 1:
             self.expt.__del__()

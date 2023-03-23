@@ -48,9 +48,8 @@ class Noise(blankSeq.MRIBLANKSEQ):
     def sequenceTime(self):
         return(0)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False
-        demo = False
 
         # Create the inputs automatically as class properties
         for key in self.mapKeys:
@@ -86,8 +85,12 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
             # SEQUENCE
             self.iniSequence(20, np.array((0, 0, 0)))
-            self.rxGate(20, acqTime, rxChannel=self.rxChannel)
+            self.rxGate(30, acqTime, channel=self.rxChannel)
             self.endSequence(acqTime+40)
+            if self.floDict2Exp():
+                pass
+            else:
+                return 0
 
             if plotSeq == 0:
                 t0 = time.time()

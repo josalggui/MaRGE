@@ -71,11 +71,11 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
                 tRx = 10000+scan*repetitionTime
 
                 # Excitation rf pulse
-                self.rfRecPulse(tRx - hw.blkTime, rfExTime, rfExAmp, 0, txChannel=txChannel)
+                self.rfRecPulse(tRx - hw.blkTime, rfExTime, rfExAmp, 0, channel=txChannel)
 
                 # Rx gate
                 t0 = tRx+rfExTime/2+hw.deadTime-addRdPoints/bw
-                self.rxGate(t0, acqTime+addRdPoints/bw, rxChannel=rxChannel)
+                self.rxGate(t0, acqTime+addRdPoints/bw, channel=rxChannel)
 
             self.endSequence(tRx + addRdPoints / bw + 2 * acqTime)
 
@@ -89,6 +89,10 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
         self.mapVals['acqTime'] = acqTime
         self.mapVals['bw'] = bw*1e3 # kHz
         createSequence()
+        if self.floDict2Exp():
+            pass
+        else:
+            return 0
 
         if plotSeq == 0:
             # Run the experiment and get data

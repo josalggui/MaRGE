@@ -124,7 +124,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa=False # Starts the gpa
-        self.demo = False
 
         # Set the fov
         self.dfov = self.getFovDisplacement()
@@ -221,7 +220,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         print("Readout direction:")
         print(np.reshape(result, (1, 3)))
 
-        def createSequenceDemo(phIndex=0, slIndex=0, repeIndexGlobal=0, rewrite=True):
+        def createSequenceDemo(phIndex=0, slIndex=0, repeIndexGlobal=0):
             repeIndex = 0
             acqPoints = 0
             orders = 0
@@ -249,7 +248,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             # Return the output variables
             return (phIndex, slIndex, repeIndexGlobal, acqPoints, data)
 
-        def createSequence(phIndex=0, slIndex=0, repeIndexGlobal=0, rewrite=True):
+        def createSequence(phIndex=0, slIndex=0, repeIndexGlobal=0):
             repeIndex = 0
             if self.rdGradTime==0:   # Check if readout gradient is dc or pulsed
                 dc = True
@@ -264,7 +263,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 return()
 
             # Set shimming
-            self.iniSequence(20, self.shimming, rewrite=rewrite)
+            self.iniSequence(20, self.shimming)
             while acqPoints+self.etl*nRD<=hw.maxRdPoints and orders<=hw.maxOrders and repeIndexGlobal<nRepetitions:
                 # Initialize time
                 tEx = 20e3+self.repetitionTime*repeIndex+self.inversionTime+self.preExTime
@@ -421,7 +420,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['scanTime'] = scanTime*nSL*1e-6
 
         # Calibrate frequency
-        if self.freqCal and (not plotSeq) and (not self.demo):
+        if self.freqCal and (not plotSeq) and (not demo):
             hw.larmorFreq = self.freqCalibration(bw=0.05)
             hw.larmorFreq = self.freqCalibration(bw=0.005)
         self.mapVals['larmorFreq'] = hw.larmorFreq
@@ -440,7 +439,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         acqPointsPerBatch = []
         while repeIndexGlobal<nRepetitions:
             nBatches += 1
-            if not self.demo:
+            if not demo:
                 self.expt = ex.Experiment(lo_freq=hw.larmorFreq+self.freqOffset, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
                 samplingPeriod = self.expt.get_rx_ts()[0]
                 BW = 1/samplingPeriod/hw.oversamplingFactor
@@ -448,21 +447,23 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 self.mapVals['bw'] = BW
                 phIndex, slIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
                                                                    slIndex=slIndex,
-                                                                   repeIndexGlobal=repeIndexGlobal,
-                                                                   rewrite=nBatches==1)
+                                                                   repeIndexGlobal=repeIndexGlobal)
+                if self.floDict2Exp(rewrite=nBatches==1):
+                    pass
+                else:
+                    return 0
                 repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
                 acqPointsPerBatch.append(aa)
             else:
                 phIndex, slIndex, repeIndexGlobal, aa, dataA = createSequenceDemo(phIndex=phIndex,
                                                                    slIndex=slIndex,
-                                                                   repeIndexGlobal=repeIndexGlobal,
-                                                                   rewrite=nBatches==1)
+                                                                   repeIndexGlobal=repeIndexGlobal)
                 repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
                 acqPointsPerBatch.append(aa)
                 self.mapVals['bw'] = 1/samplingPeriod/hw.oversamplingFactor
 
             for ii in range(self.nScans):
-                if not self.demo:
+                if not demo:
                     if not plotSeq:
                         print('Batch ', nBatches, ', Scan ', ii+1, ' running...')
                         rxd, msgs = self.expt.run()
@@ -488,7 +489,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     else:
                         overData = np.concatenate((overData, data), axis = 0)
 
-            if not self.demo: self.expt.__del__()
+            if not demo: self.expt.__del__()
         del aa
 
         if not plotSeq:
@@ -645,7 +646,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         else:
             # Plot image
             image = np.abs(self.mapVals['image3D'])
-            if self.demo:
+            if demo:
                 image = shepp_logan((nPoints[2], nPoints[1], nPoints[0]))
             else:
                 image = np.abs(self.mapVals['image3D'])

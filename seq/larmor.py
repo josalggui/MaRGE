@@ -123,6 +123,10 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         acqTime = nPoints / bw  # us
         self.mapVals['bw'] = bw * 1e3  # kHz
         createSequence()
+        if self.floDict2Exp():
+            pass
+        else:
+            return 0
 
         dataFull = []
         if plotSeq == 1:

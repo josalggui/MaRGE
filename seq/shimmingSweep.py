@@ -146,6 +146,10 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.mapVals['bw'] = bw * 1e6  # Hz
         acqTime = nPoints / bw  # us
         createSequence()
+        if self.floDict2Exp():
+            pass
+        else:
+            return 0
 
         if not plotSeq:
             print('Runing...')

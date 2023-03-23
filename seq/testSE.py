@@ -111,6 +111,10 @@ class testSE(blankSeq.MRIBLANKSEQ):
         acqTime = nPoints / bw  # us
         self.mapVals['bw'] = bw
         createSequence()
+        if self.floDict2Exp():
+            pass
+        else:
+            return 0
 
         if plotSeq == 0:
             # Run the experiment and get data

@@ -39,6 +39,17 @@ class MRIBLANKSEQ:
         self.dfovs = []
         self.fovs = []
         self.session = None
+        self.flo_dict = {'g0': [[],[]],
+                         'g1': [[],[]],
+                         'g2': [[],[]],
+                         'rx0': [[],[]],
+                         'rx1': [[],[]],
+                         'tx0': [[],[]],
+                         'tx1': [[],[]],
+                         'ttl0': [[],[]],
+                         'ttl1': [[],[]],}
+
+
 
     # *********************************************************************************
     # *********************************************************************************
@@ -113,8 +124,7 @@ class MRIBLANKSEQ:
             dr = np.dot(Mii, (dr + rii))
 
         return dr
-        
-        
+
     def getRotationMatrix(self):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -449,14 +459,14 @@ class MRIBLANKSEQ:
         tx = np.linspace(-nZeros / 2, nZeros / 2, num=100, endpoint=True)
         hanning = 0.5 * (1 + np.cos(2 * np.pi * tx / nZeros))
         txAmp = rfAmplitude * np.exp(1j * rfPhase) * hanning * np.abs(np.sinc(tx))
-        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
+        txGateTime = np.array(tStart, tStart + hw.blkTime + rfTime)
         txGateAmp = np.array([1, 0])
-        self.expt.add_flodict({
-            'tx0': (txTime, txAmp),
-            'tx_gate': (txGateTime, txGateAmp)
-        }, rewrite)
+        self.flo_dict['tx0'][0] = np.concatenate((self.flo_dict['tx0'][0], txTime), axis=0)
+        self.flo_dict['tx0'][1] = np.concatenate((self.flo_dict['tx0'][1], txAmp), axis=0)
+        self.flo_dict['ttl0' % rxChannel][0] = np.concatenate((self.flo_dict['ttl0' % rxChannel][0], txGateTime), axis=0)
+        self.flo_dict['ttl0' % rxChannel][1] = np.concatenate((self.flo_dict['ttl0' % rxChannel][1], txGateAmp), axis=0)
 
-    def rfRecPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, txChannel=0, rewrite=True):
+    def rfRecPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, channel=0):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -466,34 +476,32 @@ class MRIBLANKSEQ:
         txAmp = np.array([rfAmplitude * np.exp(1j * rfPhase), 0.])
         txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
         txGateAmp = np.array([1, 0])
-        self.expt.add_flodict({
-            'tx%i' % txChannel: (txTime, txAmp),
-            'tx_gate': (txGateTime, txGateAmp)
-        }, rewrite)
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
 
-    def rfRawPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, txChannel=0, rewrite=True):
+    def rfRawPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, channel=0):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
         """
         txTime = np.array([tStart, tStart + rfTime])
         txAmp = np.array([rfAmplitude * np.exp(1j * rfPhase), 0.])
-        self.expt.add_flodict({
-            'tx%i' % txChannel: (txTime, txAmp),
-        }, rewrite)
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
 
-    def rxGate(self, tStart, gateTime, rxChannel=0, rewrite=True):
+    def rxGate(self, tStart, gateTime, channel=0):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
         """
-        rxGateTime = np.array([tStart, tStart + gateTime])
-        rxGateAmp = np.array([1, 0])
-        self.expt.add_flodict({
-            'rx%i_en' % rxChannel: (rxGateTime, rxGateAmp),
-        }, rewrite)
+        self.flo_dict['rx%i' % channel][0] = \
+            np.concatenate((self.flo_dict['rx%i' % channel][0], np.array([tStart, tStart + gateTime])), axis=0)
+        self.flo_dict['rx%i' % channel][1] = \
+            np.concatenate((self.flo_dict['rx%i' % channel][1], np.array([1, 0])), axis=0)
 
-    def rxGateSync(self, tStart, gateTime, rxChannel=0, rewrite=True):
+    def rxGateSync(self, tStart, gateTime, channel=0):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -505,29 +513,22 @@ class MRIBLANKSEQ:
         samplingRate = self.expt.getSamplingRate() / hw.oversamplingFactor # us
         t0 = tStart - (hw.addRdPoints*hw.oversamplingFactor-cicDelayPoints) * samplingRate # us
         t1 = tStart + gateTime + (hw.addRdPoints*hw.oversamplingFactor + cicDelayPoints) * samplingRate
-        rxGateTime = np.array([t0, t1])
-        rxGateAmp = np.array([1, 0])
-        self.expt.add_flodict({
-            'rx%i_en' % rxChannel: (rxGateTime, rxGateAmp),
-        }, rewrite)
+        self.flo_dict['rx%i' % channel][0] = \
+            np.concatenate((self.flo_dict['rx%i' % channel][0], np.array([t0, t1])), axis=0)
+        self.flo_dict['rx%i' % channel][1] = \
+            np.concatenate((self.flo_dict['rx%i' % channel][1], np.array([1, 0])), axis=0)
 
-    def ttl(self, tStart, ttlTime, channel=0, rewrite=True):
+    def ttl(self, tStart, ttlTime, channel=0):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
         """
-        ttlGateTime = np.array([tStart, tStart + ttlTime])
-        ttlAmp = np.array([1, 0])
-        if channel==0:
-            self.expt.add_flodict({
-                'tx_gate': (ttlGateTime, ttlAmp),
-            }, rewrite)
-        else:
-            self.expt.add_flodict({
-                'rx_gate': (ttlGateTime, ttlAmp),
-            }, rewrite)
+        self.flo_dict['ttl%i' % channel][0] = \
+            np.concatenate((self.flo_dict['ttl%i' % channel][0], np.array([tStart, tStart + ttlTime])), axis=0)
+        self.flo_dict['ttl%i' % channel][1] = \
+            np.concatenate((self.flo_dict['ttl%i' % channel][1], np.array([1, 0])), axis=0)
 
-    def gradTrap(self, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming, rewrite=True):
+    def gradTrap(self, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -538,16 +539,14 @@ class MRIBLANKSEQ:
         tUp = np.linspace(tStart, tStart + gRiseTime, num=gSteps, endpoint=False)
         tDown = tUp + gRiseTime + gFlattopTime
         t = np.concatenate((tUp, tDown), axis=0)
+        
         dAmp = gAmp / gSteps
         aUp = np.linspace(dAmp, gAmp, num=gSteps)
         aDown = np.linspace(gAmp - dAmp, 0, num=gSteps)
-        a = np.concatenate((aUp, aDown), axis=0) / hw.gFactor[gAxis]
-        if gAxis == 0:
-            self.expt.add_flodict({'grad_vx': (t, a + shimming[0])}, rewrite)
-        elif gAxis == 1:
-            self.expt.add_flodict({'grad_vy': (t, a + shimming[1])}, rewrite)
-        elif gAxis == 2:
-            self.expt.add_flodict({'grad_vz': (t, a + shimming[2])}, rewrite)
+        a = np.squeeze(np.concatenate((aUp, aDown), axis=0)) / hw.gFactor[gAxis] + shimming[gAxis]
+
+        self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], t), axis=0)
+        self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], a), axis=0)
 
     def gradTrapMomentum(self, tStart, kMax, gTotalTime, gAxis, shimming, rewrite=True):
         """"
@@ -632,30 +631,44 @@ class MRIBLANKSEQ:
             self.expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
 
     def endSequence(self, tEnd):
-        self.expt.add_flodict({
-            'grad_vx': (np.array([tEnd]), np.array([0])),
-            'grad_vy': (np.array([tEnd]), np.array([0])),
-            'grad_vz': (np.array([tEnd]), np.array([0])),
-            'rx0_en': (np.array([tEnd]), np.array([0])),
-            'rx1_en': (np.array([tEnd]), np.array([0])),
-            'rx_gate': (np.array([tEnd]), np.array([0])),
-            'tx0': (np.array([tEnd]), np.array([0 * np.exp(0)])),
-            'tx1': (np.array([tEnd]), np.array([0 * np.exp(0)])),
-            'tx_gate': (np.array([tEnd]), np.array([0]))
-        })
+        self.flo_dict['g0'][0] = np.concatenate((self.flo_dict['g0'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['g0'][1] = np.concatenate((self.flo_dict['g0'][1], np.array([0])), axis=0)
+        self.flo_dict['g1'][0] = np.concatenate((self.flo_dict['g1'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['g1'][1] = np.concatenate((self.flo_dict['g1'][1], np.array([0])), axis=0)
+        self.flo_dict['g2'][0] = np.concatenate((self.flo_dict['g2'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['g2'][1] = np.concatenate((self.flo_dict['g2'][1], np.array([0])), axis=0)
+        self.flo_dict['rx0'][0] = np.concatenate((self.flo_dict['rx0'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['rx0'][1] = np.concatenate((self.flo_dict['rx0'][1], np.array([0])), axis=0)
+        self.flo_dict['rx1'][0] = np.concatenate((self.flo_dict['rx1'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['rx1'][1] = np.concatenate((self.flo_dict['rx1'][1], np.array([0])), axis=0)
+        self.flo_dict['tx0'][0] = np.concatenate((self.flo_dict['tx0'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['tx0'][1] = np.concatenate((self.flo_dict['tx0'][1], np.array([0])), axis=0)
+        self.flo_dict['tx1'][0] = np.concatenate((self.flo_dict['tx1'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['tx1'][1] = np.concatenate((self.flo_dict['tx1'][1], np.array([0])), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], np.array([0])), axis=0)
+        self.flo_dict['ttl1'][0] = np.concatenate((self.flo_dict['ttl1'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['ttl1'][1] = np.concatenate((self.flo_dict['ttl1'][1], np.array([0])), axis=0)
 
-    def iniSequence(self, t0, shimming, rewrite=True):
-        self.expt.add_flodict({
-            'grad_vx': (np.array([t0]), np.array([shimming[0]])),
-            'grad_vy': (np.array([t0]), np.array([shimming[1]])),
-            'grad_vz': (np.array([t0]), np.array([shimming[2]])),
-            'rx0_en': (np.array([t0]), np.array([0])),
-            'rx1_en': (np.array([t0]), np.array([0])),
-            'rx_gate': (np.array([t0]), np.array([0])),
-            'tx0': (np.array([t0]), np.array([0 * np.exp(0)])),
-            'tx1': (np.array([t0]), np.array([0 * np.exp(0)])),
-            'tx_gate': (np.array([t0]), np.array([0]))
-        }, rewrite)
+    def iniSequence(self, t0, shimming):
+        self.flo_dict['g0'][0] = np.array([t0])
+        self.flo_dict['g0'][1] = np.array([shimming[0]])
+        self.flo_dict['g1'][0] = np.array([t0])
+        self.flo_dict['g1'][1] = np.array([shimming[1]])
+        self.flo_dict['g2'][0] = np.array([t0])
+        self.flo_dict['g2'][1] = np.array([shimming[2]])
+        self.flo_dict['rx0'][0] = np.array([t0])
+        self.flo_dict['rx0'][1] = np.array([0])
+        self.flo_dict['rx1'][0] = np.array([t0])
+        self.flo_dict['rx1'][1] = np.array([0])
+        self.flo_dict['tx0'][0] = np.array([t0])
+        self.flo_dict['tx0'][1] = np.array([0])
+        self.flo_dict['tx1'][0] = np.array([t0])
+        self.flo_dict['tx1'][1] = np.array([0])
+        self.flo_dict['ttl0'][0] = np.array([t0])
+        self.flo_dict['ttl0'][1] = np.array([0])
+        self.flo_dict['ttl1'][0] = np.array([t0])
+        self.flo_dict['ttl1'][1] = np.array([0])
 
     def setGradient(self, t0, gAmp, gAxis, rewrite=True):
         """"
@@ -665,12 +678,36 @@ class MRIBLANKSEQ:
         Time inputs in us
         Amplitude inputs in Ocra1 units
         """
-        if gAxis == 0:
-            self.expt.add_flodict({'grad_vx': (np.array([t0]), np.array([gAmp]))}, rewrite)
-        elif gAxis == 1:
-            self.expt.add_flodict({'grad_vy': (np.array([t0]), np.array([gAmp]))}, rewrite)
-        elif gAxis == 2:
-            self.expt.add_flodict({'grad_vz': (np.array([t0]), np.array([gAmp]))}, rewrite)
+        self.flo_dict['g%i' % gAxis][0].append(t0)
+        self.flo_dict['g%i' % gAxis][1].append(gAmp)
+
+    def floDict2Exp(self, rewrite=True):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        Check for errors and add instructions to red pitaya if no errors are found
+        """
+        # Check errors:
+        for item in self.flo_dict.values():
+            dt = item[0][1::]-item[0][0:-1]
+            if (dt<=0).any():
+                print("\nSequence timing error")
+                return False
+            if (item[1]>1).any() or (item[1]<-1).any():
+                print("\nSequence amplitude error")
+                return False
+
+        self.expt.add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
+                               'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
+                               'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
+                               'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
+                               'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
+                               'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
+                               'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
+                               'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
+                               'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
+                               }, rewrite)
+        return True
 
     def saveRawData(self):
         """"

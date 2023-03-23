@@ -64,8 +64,8 @@ class EDDYCURRENTS(eddycurrents.EDDYCURRENTS):
 class IR(inversionRecovery.InversionRecovery):
     def __init__(self): super(IR, self).__init__()
 
-class ADCtest(ADCdelayTest.ADCdelayTest):
-    def __init__(self): super(ADCtest, self).__init__()
+# class ADCtest(ADCdelayTest.ADCdelayTest):
+#     def __init__(self): super(ADCtest, self).__init__()
 
 class Shimming(shimming.ShimmingSweep):
     def __init__(self): super(Shimming, self).__init__()
@@ -99,7 +99,7 @@ defaultsequences = {
     'CPMG': CPMG(),
     'EDDYCURRENTS': EDDYCURRENTS(),
     'InversionRecovery': IR(),
-    'ADCtest': ADCtest(),
+    # 'ADCtest': ADCtest(),
     'Shimming': Shimming(),
     'SWEEP': SWEEP(),
     'testSE': testSE(),

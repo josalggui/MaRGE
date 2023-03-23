@@ -89,10 +89,10 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
                     for indexExTime in range(nExTime):
                         # Excitation pulse
                         tTx = tTx + repetitionTime
-                        self.rfRecPulse(tTx, rfExTime[indexExTime], rfExAmp[indexAmp], 0, txChannel=txChannel)
+                        self.rfRecPulse(tTx, rfExTime[indexExTime], rfExAmp[indexAmp], 0, channel=txChannel)
                         # Rx gate
                         tRx = tTx + hw.blkTime + rfExTime[indexExTime] + deadTime - addRdPoints / bwReal
-                        self.rxGate(tRx, acqTimeReal + addRdPoints / bwReal, rxChannel=rxChannel)
+                        self.rxGate(tRx, acqTimeReal + addRdPoints / bwReal, channel=rxChannel)
                 self.endSequence(repetitionTime * nExAmp * nExTime * nScans)
 
         # Initialize the experiment
@@ -104,6 +104,10 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
         acqTimeReal = nReadout / bwReal  # us
         self.mapVals['bwReal'] = bwReal  # MHz
         createSequence()
+        if self.floDict2Exp():
+            pass
+        else:
+            return 0
 
         if plotSeq == 0:
             # Run the experiment and get data

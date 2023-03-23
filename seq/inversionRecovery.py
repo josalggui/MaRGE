@@ -165,6 +165,10 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         self.mapVals['samplingPeriod'] = samplingPeriod * 1e-6
         self.mapVals['bw'] = bw * 1e6
         createSequence()
+        if self.floDict2Exp():
+            pass
+        else:
+            return 0
         if plotSeq:
             self.expt.__del__()
         else:

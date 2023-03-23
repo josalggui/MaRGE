@@ -222,7 +222,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             return(phIndex, slIndex, repeIndexGlobal, acqPoints, data)
 
         # Create sequence instructions
-        def createSequence(phIndex=0, slIndex=0, repeIndexGlobal=0, rewrite=True):
+        def createSequence(phIndex=0, slIndex=0, repeIndexGlobal=0):
             repeIndex = 0
             acqPoints = 0
             orders = 0
@@ -233,7 +233,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                 return()
 
             # Set shimming
-            self.iniSequence(20, shimming, rewrite=rewrite)
+            self.iniSequence(20, shimming)
 
             # Run sequence batch
             while acqPoints+nRD<=hw.maxRdPoints and orders<=hw.maxOrders and repeIndexGlobal<nRepetitions:
@@ -323,8 +323,11 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                 acqTime = nPoints[0]/BW        # us
                 phIndex, slIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
                                                                    slIndex=slIndex,
-                                                                   repeIndexGlobal=repeIndexGlobal,
-                                                                   rewrite=False)
+                                                                   repeIndexGlobal=repeIndexGlobal)
+                if self.floDict2Exp():
+                    pass
+                else:
+                    return 0
                 repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
                 acqPointsPerBatch.append(aa)
             else:
