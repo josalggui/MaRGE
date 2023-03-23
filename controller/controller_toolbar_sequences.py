@@ -14,7 +14,6 @@ import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QLabel, QFileDialog
 
-from configs import hw_config
 from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from controller.controller_plot1d import Plot1DController as SpectrumPlot
 from seq.sequences import defaultsequences
@@ -242,10 +241,10 @@ class SequenceController(SequenceToolBar):
         plot = []
         for item in out[0:3]:
             plot.append(SpectrumPlot(item[0], item[1], item[2], 'Time (ms)', 'Amplitude (a.u.)', item[3]))
-            if n > 0: plot[n].plot_item.setXLink(plot[0].plot_item)
-            n += 1
         for n in range(3):
             self.main.figures_layout.addWidget(plot[n], n, 0)
+        plot[0].plot_item.setXLink(plot[1].plot_item)
+        plot[2].plot_item.setXLink(plot[1].plot_item)
 
     def startLocalizer(self):
         """
