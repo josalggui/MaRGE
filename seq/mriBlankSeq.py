@@ -34,6 +34,7 @@ class MRIBLANKSEQ:
         self.mapVals = {}
         self.mapFields = {}
         self.mapLen = {}
+        self.mapTips = {}
         self.meta_data = {}
         self.rotations = []
         self.dfovs = []
@@ -61,37 +62,45 @@ class MRIBLANKSEQ:
     def RFproperties(self):
         # Automatically select the inputs related to RF fields
         out = {}
+        tips = {}
         for key in self.mapKeys:
             if self.mapFields[key] == 'RF':
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
-        return out
+                tips[self.mapNmspc[key]] = [self.mapTips[key]]
+        return out, tips
 
     @property
     def IMproperties(self) -> dict:
         # Automatically select the inputs related to IM fields
         out = {}
+        tips = {}
         for key in self.mapKeys:
             if self.mapFields[key] == 'IM':
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
-        return out
+                tips[self.mapNmspc[key]] = [self.mapTips[key]]
+        return out, tips
 
     @property
     def SEQproperties(self) -> dict:
         # Automatically select the inputs related to SEQ fields
         out = {}
+        tips = {}
         for key in self.mapKeys:
             if self.mapFields[key] == 'SEQ':
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
-        return out
+                tips[self.mapNmspc[key]] = [self.mapTips[key]]
+        return out, tips
 
     @property
     def OTHproperties(self) -> dict:
         # Automatically select the inputs related to OTH fields
         out = {}
+        tips = {}
         for key in self.mapKeys:
             if self.mapFields[key] == 'OTH':
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
-        return out
+                tips[self.mapNmspc[key]] = [self.mapTips[key]]
+        return out, tips
 
     def getFovDisplacement(self):
         """"
@@ -863,11 +872,12 @@ class MRIBLANKSEQ:
         # Finalize sequence
         self.endSequence(repetitionTime)
 
-    def addParameter(self, key='', string='', val=0, field=''):
+    def addParameter(self, key='', string='', val=0, field='', tip=None):
         if key is not self.mapVals.keys(): self.mapKeys.append(key)
         self.mapNmspc[key] = string
         self.mapVals[key] = val
         self.mapFields[key] = field
+        self.mapTips[key] = tip
         try:
             self.mapLen[key] = len(val)
         except:
