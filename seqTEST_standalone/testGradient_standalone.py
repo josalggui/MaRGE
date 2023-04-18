@@ -24,19 +24,19 @@ def testGradient_standalone(
         bw = 0.1,
 
         gAxis = 2,
-        gFlattopTime=6.0,
+        gFlattopTime=2000.0,
         gRiseTime = 0.5, #ms
-        gSteps =10, # El minimo es 2
-        gAmp = 0.1, # balanced; 10 V/a.u. Ocra1 conversion factor; [0.1 a.u. 10 A]
-        nRepetition = 1,
-        extraTime = 100,
+        gSteps =16, # El minimo es 2
+        gAmp = 0.06, # balanced; 10 V/a.u. Ocra1 conversion factor; [0.1 a.u. 10 A]
+        nRepetition = 2,
+        extraTime = 1,
         plotSeq = 0,
         init_gpa = False,):
 
     # Initialize the experiment
 
     samplingPeriod = 1 / bw  # us
-    expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=0)
+    expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
     samplingPeriod = expt.get_rx_ts()[0]
     # bw = 1 / samplingPeriod  / hw.oversamplingFactor  # MHz
     tStart = 25

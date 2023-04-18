@@ -22,28 +22,37 @@ import matplotlib.pyplot as plt
 
 def FID_EddyCurrents(
     init_gpa= False,                 
-    larmorFreq=3.060, 
+    larmorFreq=3.059, #MHz
     rfExAmp=0.3, 
     rfReAmp=None, 
     rfExPhase = 0,
-    rfExTime=45, 
+    rfExTime=41, #us
     rfReTime=None,
-    nReadout = 500,
-    tAdq =3*1e3,
-    tEcho = 20*1e3,
+    nReadout = 400,
+    tAdq = 4, #ms
+    tEcho = 20, #ms
     echo = 2, #0 FID, 1 Echo, 2 Both
-    tRepetition = 1000*1e3,  
-#    shimming=[-100, -70, 80],
-#    shimming=[0, 0, 0],
-    shimming=[-30, -30, 15],
-    gAxis =0,
-    gNsteps =20, #50
-    gRiseTime = 150,
-    gAmp = 0.2, # Max.1=50A 0.2=2V=10A; 0.2V=1A
-    gDuration = 500,
-    tDelay =0, 
-    plotSeq =1):
-    
+    tRepetition = 1000,  #ms
+    shimming=[135, -40, -5],
+    # shimming=[0,0,0],
+    nDummyPulses = 0,
+
+    gAxis =1,
+    gNsteps =16,
+    gRiseTime = 0.5,    #ms
+    gAmp = 0.3, # 1 a.u. ---> 10 V
+    gFlatTop = 1.0, #ms
+    tDelay = 18.0, #ms
+    plotSeq = 0):
+
+    tAdq = tAdq * 1e3
+    tEcho = tEcho * 1e3
+    tRepetition = tRepetition * 1e3
+    gRiseTime = gRiseTime * 1e3
+    gFlatTop = gFlatTop * 1e3
+    tDelay = tDelay * 1e3
+    gDuration = gFlatTop + 2*gRiseTime
+
     #CONSTANTES
     tStart = 20
     txGatePre = 15
@@ -51,7 +60,7 @@ def FID_EddyCurrents(
     blkTime = 300  #Tiempo que dejo entre el rfPulse y la lectura. 
     gAmpMax = 1
     nGOptions = 3 
-    nReadout = nReadout +5
+    nReadout = nReadout + 5
     shimming=np.array(shimming)*1e-4
     tDelayShimming = 15*1e3
     
@@ -151,10 +160,17 @@ def FID_EddyCurrents(
     elif gAxis == 2:
             gAmp = np.array(gAmp)+shimming[2]
     iniSequence(10)
+
     timeSeq = tStart+tDelayShimming #For shimming stabilization
+    tDelaySeq = tDelay + gDuration
+    for m in range(nDummyPulses):
+        timeSeq = rfPulse(timeSeq+tDelaySeq, rfExAmp, rfExTime)
+        timeSeq = rfPulse(timeSeq + tEcho, rfReAmp, rfReTime)
+        timeSeq = tRepetition * (m + 1) + tStart +tDelayShimming
+
     for n in range(nGOptions):
-        timeSeq = gradPulse(timeSeq, gDuration, gAmp[n], gAxis)
-        timeSeq = rfPulse(timeSeq+tDelay,rfExAmp, rfExTime) 
+        gradPulse(timeSeq, gDuration, gAmp[n], gAxis)
+        timeSeq = rfPulse(timeSeq+tDelaySeq,rfExAmp, rfExTime)
         if echo == 0:
             readoutGate(timeSeq+blkTime,tAdq)
         elif echo == 1:
@@ -164,7 +180,7 @@ def FID_EddyCurrents(
             readoutGate(timeSeq+blkTime,tAdq)
             timeSeq = rfPulse(timeSeq+tEcho,rfReAmp, rfReTime) 
             timeSeq = readoutGate(timeSeq+tEcho-tAdq/2,tAdq)
-        timeSeq=tRepetition*(n+1)+tStart  
+        timeSeq=tRepetition*(nDummyPulses+n+1)+tStart+tDelayShimming
     endSequence(timeSeq-tStart)
     
     #RUN
@@ -191,12 +207,20 @@ def FID_EddyCurrents(
             plt.legend()
             
             plt.figure(2)
-            dataIndivFft = np.fft.fft(dataIndiv)
-            dataOr1, dataOr2 = np.split(dataIndivFft, 2, axis=1)
-            dataOr = np.concatenate((dataOr2, dataOr1), axis=1)
-            plt.plot(np.abs(dataOr[0]), 'r', label="-g")
-            plt.plot(np.abs(dataOr[1]), 'b', label=" 0")
-            plt.plot(np.abs(dataOr[2]), 'g', label="+g")
+
+            fVector = np.linspace(-BW * 1e3 / 2, BW * 1e3 / 2, nReadout-5)
+            spectrum0 = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataIndiv[0]))))
+            spectrum0 = np.reshape(spectrum0, -1)
+            spectrum1 = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataIndiv[1]))))
+            spectrum1 = np.reshape(spectrum1, -1)
+            spectrum2 = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataIndiv[2]))))
+            spectrum2 = np.reshape(spectrum2, -1)
+            # dataIndivFft = np.fft.fft(dataIndiv)
+            # dataOr1, dataOr2 = np.split(dataIndivFft, 2, axis=1)
+            # dataOr = np.concatenate((dataOr2, dataOr1), axis=1)
+            plt.plot(fVector,np.abs(spectrum0), 'r', label="-g")
+            plt.plot(fVector,np.abs(spectrum1), 'b', label=" 0")
+            plt.plot(fVector,np.abs(spectrum2), 'g', label="+g")
             plt.legend()
         elif echo == 2:
             plt.rcParams["figure.figsize"] = (16,6)
