@@ -5,6 +5,7 @@
 """
 import csv
 import os
+import platform
 import shutil
 
 from PyQt5.QtWidgets import QFileDialog
@@ -79,7 +80,10 @@ class ProtocolsController(ProtocolsToolBar):
         directory = 'protocols/%s' % protocol
         file_name, _ = QFileDialog.getSaveFileName(self.main, 'Add sequence to protocol', directory, '(*.csv)')
         if file_name:
-            file_name = "%s_%s" % (seq_name, file_name.split('/')[-1])
+            if platform.system()=='Linux':
+                file_name = "%s_%s.csv" % (seq_name, file_name.split('/')[-1])
+            else:
+                file_name = "%s_%s" % (seq_name, file_name.split('/')[-1])
 
             # Save csv with input parameters
             with open('%s/%s' % (directory, file_name), 'w') as csvfile:

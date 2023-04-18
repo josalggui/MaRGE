@@ -28,7 +28,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(ShimmingSweep, self).__init__()
         # Input the parameters
-        self.addParameter(key='seqName', string='ShimmingSweepInfo', val='ShimmingSweep')
+        self.addParameter(key='seqName', string='ShimmingSweepInfo', val='Shimming')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90.0, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180.0, field='RF')
@@ -113,7 +113,9 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                 t0 = 20 + repeIndex * repetitionTime
 
                 # Set shimming
-                self.iniSequence(t0, shimmingMatrix[repeIndex, :])
+                self.setGradient(t0, shimmingMatrix[repeIndex, 0], 0)
+                self.setGradient(t0, shimmingMatrix[repeIndex, 1], 1)
+                self.setGradient(t0, shimmingMatrix[repeIndex, 2], 2)
 
                 # Initialize time
                 tEx = t0 + 20e3
@@ -152,7 +154,6 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             return 0
 
         if not plotSeq:
-            print('Runing...')
             rxd, msgs = self.expt.run()
             print(msgs)
             data = sig.decimate(rxd['rx0'] * hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)

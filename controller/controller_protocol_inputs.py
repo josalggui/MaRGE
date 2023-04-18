@@ -48,11 +48,11 @@ class ProtocolInputsController(ProtocolInputsWidget):
     def sequenceDoubleClicked(self, item):
         protocol = self.main.protocol_list.getCurrentProtocol()
         sequence = item.text()
-        file = protocol + sequence + ".csv"
+        file = sequence + ".csv"
         seq_name = sequence.split('_')[0]
 
         # Load parameters
-        defaultsequences[seq_name].loadParams(file)
+        defaultsequences[seq_name].loadParams("protocols/"+protocol, file)
 
         # Set larmor frequency, fov and dfov to the value into the hw_config file
         defaultsequences[seq_name].mapVals['larmorFreq'] = hw.larmorFreq

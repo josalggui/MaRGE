@@ -171,9 +171,9 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
 
-        if obj != 'Standalone':
-            for sequence in self.sequenceList.values():
-                sequence.mapVals['larmorFreq'] = hw.larmorFreq
+        # if obj != 'Standalone':
+        #     for sequence in self.sequenceList.values():
+        #         sequence.mapVals['larmorFreq'] = hw.larmorFreq
 
         self.saveRawData()
 

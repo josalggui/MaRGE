@@ -93,10 +93,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
                 return 0
 
             if plotSeq == 0:
-                t0 = time.time()
                 rxd, msgs = self.expt.run()
-                t1 = time.time()
-                print('Noise run time = %f s' %(t1-t0))
                 data = sig.decimate(rxd['rx%i' % self.rxChannel]*hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
                 self.mapVals['data'] = data
                 tVector = np.linspace(0, acqTime, num=self.nPoints) * 1e-3  # ms

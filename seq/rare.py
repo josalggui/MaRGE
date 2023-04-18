@@ -124,6 +124,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa=False # Starts the gpa
+        self.demo = demo
 
         # Set the fov
         self.dfov = self.getFovDisplacement()
@@ -420,7 +421,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['scanTime'] = scanTime*nSL*1e-6
 
         # Calibrate frequency
-        if self.freqCal and (not plotSeq) and (not demo):
+        if self.freqCal and (not plotSeq) and (not self.demo):
             hw.larmorFreq = self.freqCalibration(bw=0.05)
             hw.larmorFreq = self.freqCalibration(bw=0.005)
         self.mapVals['larmorFreq'] = hw.larmorFreq
@@ -439,7 +440,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         acqPointsPerBatch = []
         while repeIndexGlobal<nRepetitions:
             nBatches += 1
-            if not demo:
+            if not self.demo:
                 self.expt = ex.Experiment(lo_freq=hw.larmorFreq+self.freqOffset, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
                 samplingPeriod = self.expt.get_rx_ts()[0]
                 BW = 1/samplingPeriod/hw.oversamplingFactor
@@ -463,7 +464,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 self.mapVals['bw'] = 1/samplingPeriod/hw.oversamplingFactor
 
             for ii in range(self.nScans):
-                if not demo:
+                if not self.demo:
                     if not plotSeq:
                         print('Batch ', nBatches, ', Scan ', ii+1, ' running...')
                         rxd, msgs = self.expt.run()
@@ -478,7 +479,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                         else:
                             overData = np.concatenate((overData, rxd['rx0']), axis = 0)
                 else:
-                    print('Batch ', nBatches, ', Scan ', ii, ' runing...')
+                    print('Batch ', nBatches, ', Scan ', ii, ' running...')
                     data = dataA
                     noise = np.concatenate((noise, data[0:nRD*hw.oversamplingFactor]), axis = 0)
                     data = data[nRD*hw.oversamplingFactor::]
@@ -489,7 +490,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     else:
                         overData = np.concatenate((overData, data), axis = 0)
 
-            if not demo: self.expt.__del__()
+            if not self.demo: self.expt.__del__()
         del aa
 
         if not plotSeq:
@@ -646,7 +647,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         else:
             # Plot image
             image = np.abs(self.mapVals['image3D'])
-            if demo:
+            if self.demo:
                 image = shepp_logan((nPoints[2], nPoints[1], nPoints[0]))
             else:
                 image = np.abs(self.mapVals['image3D'])
@@ -713,6 +714,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             # Reset rotation angle and dfov to zero
             self.mapVals['angle'] = 0.0
             self.mapVals['dfov'] = [0.0, 0.0, 0.0]
+            hw.dfov = [0.0, 0.0, 0.0]
 
             # Add parameters to meta_data dictionary
             self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']

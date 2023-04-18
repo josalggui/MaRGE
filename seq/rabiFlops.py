@@ -164,7 +164,6 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         else:
             return 0
         if not plotSeq:
-            print('Runing...')
             rxd, msgs = self.expt.run()
             rxd['rx0'] = rxd['rx0'] * hw.adcFactor  # Here I normalize to get the result in mV
             self.mapVals['dataOversampled'] = rxd['rx0']

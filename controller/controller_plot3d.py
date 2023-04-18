@@ -151,10 +151,10 @@ class Plot3DController(Plot3DWidget):
         y0_ru = (y0_px - roi_fov_px[1] / 2) * self.img_resolution[1]
 
         # Set fov properties in true units
-        fov_roi = [0, 0, 0]
+        fov_roi = hw.fov.copy()
         fov_roi[x_axis] = np.round(roi_fov_px[0] * self.img_resolution[0] * 1e2, decimals=1)  # cm
         fov_roi[y_axis] = np.round(roi_fov_px[1] * self.img_resolution[1] * 1e2, decimals=1)  # cm
-        dfov_roi = [0, 0, 0]
+        dfov_roi = hw.dfov.copy()
         dfov_roi[x_axis] = d[0] * np.round(x0_ru * 1e3, decimals=1)  # mm
         dfov_roi[y_axis] = d[1] * np.round(y0_ru * 1e3, decimals=1)  # mm
         hw.fov = fov_roi.copy()
