@@ -208,7 +208,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         shimming = [np.round(sx * 1e4, decimals=1), np.round(sy * 1e4, decimals=1), np.round(sz * 1e4, decimals=1)]
         self.mapVals['shimming0'] = shimming
 
-        self.out = [result1, shimming]
+        self.out = [result1]
         return self.out
 
 

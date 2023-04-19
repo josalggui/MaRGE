@@ -28,6 +28,9 @@ import seq.localizer as localizer
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
 
+class RAREProtocols(rare.RARE):
+    def __init__(self): super(RAREProtocols, self).__init__()
+
 class testSE(testSE.testSE):
     def __init__(self): super(testSE, self).__init__()
 
@@ -87,6 +90,7 @@ Definition of default sequences
 """
 defaultsequences = {
     'RARE': RARE(),
+    'RARE Protocols': RAREProtocols(),
     'GRE3D': GRE3D(),
     # 'PETRA': PETRA(),
     # 'HASTE': HASTE(),
