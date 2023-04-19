@@ -33,7 +33,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RAREProtocols, self).__init__()
         # Input the parameters
-        self.addParameter(key='seqName', string='RAREInfo', val='RARE')
+        self.addParameter(key='seqName', string='RAREInfo', val='RARE Protocols')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
         self.addParameter(key='rfExFA', string='Exitation flip angle (º)', val=90, field='RF')
@@ -60,7 +60,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-12.5, -12.5, 7.5], field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH')
         self.addParameter(key='freqCal', string='Calibrate frequency (0 or 1)', val=1, field='OTH')
-        self.addParameter(key='gradSteps', string='Gradient steps', val=8, field='OTH')
+        self.addParameter(key='gradSteps', string='Gradient steps', val=16, field='OTH')
         self.addParameter(key='gRiseTime', string='Gradient Rise Time (us)', val=500, field='OTH')
 
     def sequenceInfo(self):
@@ -161,7 +161,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
         self.freqOffset = self.freqOffset*1e6 # MHz
         self.gRiseTime = self.gRiseTime*1e-6
         gradRiseTime = self.gRiseTime
-        #gradRiseTime = 500e-6       # s
+        # self.gradRiseTime = 500e-6       # s
         # gSteps = int(gradRiseTime*1e6/5)*0+1
         gSteps = self.gradSteps
         addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
@@ -282,7 +282,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                 print('ERROR: Too many acquired points.')
                 return()
             # Set shimming
-            self.iniSequence(20, self.shimming, rewrite=rewrite)
+            self.iniSequence(20, self.shimming)
             while acqPoints+self.etl*nRD<=hw.maxRdPoints and orders<=hw.maxOrders and repeIndexGlobal<nRepetitions:
                 # Initialize time
                 tEx = 20e3+self.repetitionTime*repeIndex+self.inversionTime+self.preExTime
@@ -397,9 +397,9 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
         self.mapVals['scanTime'] = scanTime*nSL*1e-6
 
         # Calibrate frequency
-        if self.freqCal and (not plotSeq) and (not demo):
-            hw.larmorFreq = self.freqCalibration(bw=0.05)
-            hw.larmorFreq = self.freqCalibration(bw=0.005)
+        # if self.freqCal and (not plotSeq) and (not demo):
+            # hw.larmorFreq = self.freqCalibration(bw=0.05)
+            # hw.larmorFreq = self.freqCalibration(bw=0.005)
         self.mapVals['larmorFreq'] = hw.larmorFreq
 
         # Create full sequence
@@ -692,7 +692,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
     #             pg.exec()
     #         return([win])
 
- def sequenceAnalysis(self, obj=''):
+    def sequenceAnalysis(self, obj=''):
         nPoints = self.mapVals['nPoints']
         axesEnable = self.mapVals['axesEnable']
 

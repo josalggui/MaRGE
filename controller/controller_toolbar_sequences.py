@@ -85,7 +85,7 @@ class SequenceController(SequenceToolBar):
             self.seq_name = seq_name
 
         # Delete ouput if sequence is different from previous one
-        if hasattr(self, "oldSeqName"):
+        if hasattr(self, "old_seq_name"):
             if self.seq_name != self.old_seq_name:
                 self.new_run = True
                 defaultsequences[self.seq_name].deleteOutput()

@@ -218,7 +218,8 @@ class HistoryListController(HistoryListWidget):
 
                         # Get the sequence to run
                         seq_name = self.inputs[key][1][0]
-                        sequence = copy.deepcopy(defaultsequences[seq_name])
+                        # sequence = copy.deepcopy(defaultsequences[seq_name])
+                        sequence = defaultsequences[seq_name]
                         # Modify input parameters of the sequence
                         n = 0
                         input_list = list(sequence.mapVals.keys())

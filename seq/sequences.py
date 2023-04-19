@@ -6,6 +6,7 @@ Created on Thu June 2 2022
 """
 
 import seq.rare as rare
+import seq.rareProtocols as rareProtocols
 # import seq.haste as haste
 import seq.gre3d as gre
 # import seq.petra as petra
@@ -28,7 +29,7 @@ import seq.localizer as localizer
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
 
-class RAREProtocols(rare.RARE):
+class RAREProtocols(rareProtocols.RAREProtocols):
     def __init__(self): super(RAREProtocols, self).__init__()
 
 class testSE(testSE.testSE):
