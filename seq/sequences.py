@@ -9,15 +9,16 @@ import seq.rare as rare
 import seq.rareProtocols as rareProtocols
 # import seq.haste as haste
 import seq.gre3d as gre
-# import seq.petra as petra
+import seq.petra as petra
 import seq.fid as fid
+import seq.FIDandNoise as FIDandNoise
 import seq.rabiFlops as rabiFlops
 import seq.B1calibration as B1calibration
 import seq.cpmg as cpmg
 import seq.eddycurrents as eddycurrents
 import seq.larmor as larmor
 import seq.inversionRecovery as inversionRecovery
-import seq.ADCdelayTest as ADCdelayTest
+# import seq.ADCdelayTest as ADCdelayTest
 import seq.noise as noise
 import seq.shimmingSweep as shimming
 import seq.testSE as testSE
@@ -38,14 +39,17 @@ class testSE(testSE.testSE):
 class GRE3D(gre.GRE3D):
     def __init__(self): super(GRE3D, self).__init__()
 
-# class PETRA(petra.PETRA):
-#     def __init__(self): super(PETRA, self).__init__()
+class PETRA(petra.PETRA):
+    def __init__(self): super(PETRA, self).__init__()
 
 # class HASTE(haste.HASTE):
 #     def __init__(self): super(HASTE, self).__init__()
 
 class FID(fid.FID):
     def __init__(self): super(FID, self).__init__()
+
+class FIDandNoise(FIDandNoise.FIDandNoise):
+    def __init__(self): super(FIDandNoise, self).__init__()
 
 class RabiFlops(rabiFlops.RabiFlops):
     def __init__(self): super(RabiFlops, self).__init__()
@@ -93,10 +97,11 @@ defaultsequences = {
     'RARE': RARE(),
     'RARE Protocols': RAREProtocols(),
     'GRE3D': GRE3D(),
-    # 'PETRA': PETRA(),
+    'PETRA': PETRA(),
     # 'HASTE': HASTE(),
     # 'AutoTuning': AutoTuning(),
     'FID': FID(),
+    'FIDandNoise': FIDandNoise(),
     'Larmor': Larmor(),
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),

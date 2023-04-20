@@ -32,4 +32,5 @@ dfov = [0.0, 0.0, 0.0]
 bash_path = "D:\Archivos de Programa\Git\git-bash.exe" # use "gnome-terminal" for genome linux
 rp_ip_address = "192.168.1.101"
 rp_version = "rp-122"
-
+lnaGain = 50 # dB
+temperature = 293 # k
