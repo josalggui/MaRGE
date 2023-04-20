@@ -108,9 +108,10 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         #  SEQUENCE  ############################################################################################
         def createSequence():
+            self.iniSequence(20, [0.0, 0.0, 0.0])
             for repeIndex in range(3 * nShimming):
                 # Set time for repetition
-                t0 = 20 + repeIndex * repetitionTime
+                t0 = 40 + repeIndex * repetitionTime
 
                 # Set shimming
                 self.setGradient(t0, shimmingMatrix[repeIndex, 0], 0)
@@ -151,6 +152,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         if self.floDict2Exp():
             pass
         else:
+            print("\nERROR: Experiment parameters out of hardware bounds.")
             return 0
 
         if not plotSeq:

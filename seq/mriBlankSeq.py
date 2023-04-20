@@ -687,8 +687,8 @@ class MRIBLANKSEQ:
         Time inputs in us
         Amplitude inputs in Ocra1 units
         """
-        self.flo_dict['g%i' % gAxis][0].append(t0)
-        self.flo_dict['g%i' % gAxis][1].append(gAmp)
+        self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], np.array([t0])), axis=0)
+        self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], np.array([gAmp])), axis=0)
 
     def floDict2Exp(self, rewrite=True):
         """"
