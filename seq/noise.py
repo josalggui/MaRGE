@@ -95,7 +95,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
                 rxd, msgs = self.expt.run()
                 t1 = time.time()
                 print('Noise run time = %f s' %(t1-t0))
-                data = sig.decimate(rxd['rx%i'%self.rxChannel]*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+                data = sig.decimate(rxd['rx%i'%self.rxChannel]*hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
                 self.mapVals['data'] = data
                 tVector = np.linspace(0, acqTime, num=self.nPoints) * 1e-3  # ms
                 spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
@@ -106,11 +106,15 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
     def sequenceAnalysis(self, obj=''):
         noise = np.abs(self.dataTime[1])
-        noiserms = np.mean(noise)
+        noiserms = np.sqrt(2)*np.std(noise.real)*1e3 # uV
         self.mapVals['RMS noise'] = noiserms
         self.mapVals['sampledPoint'] = noiserms # for sweep method
         self.saveRawData()
-        print('rms noise: %0.5f mV' % noiserms)
+
+        bw = self.mapVals['bw']*1e3 # Hz
+        johnson = np.sqrt(2 * 50 * hw.temperature * bw * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e6  # uV
+        print('Expected by Johnson: %0.5f uV' % johnson)
+        print('rms noise: %0.5f uV' % noiserms)
 
         # Plot signal versus time
         timePlotWidget = SpectrumPlot(xData=self.dataTime[0],
@@ -125,7 +129,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
                                 yData=[np.abs(self.dataSpec[1])],
                                 legend=[''],
                                 xLabel='Frequency (kHz)',
-                                yLabel='Mag FFT (a.u.)',
+                                yLabel='Mag FFT (mV)',
                                 title='Noise spectrum')
 
         self.out = [timePlotWidget, freqPlotWidget]

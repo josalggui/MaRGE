@@ -10,6 +10,7 @@ import seq.haste as haste
 import seq.gre3d as gre
 import seq.petra as petra
 import seq.fid as fid
+import seq.FIDandNoise as FIDandNoise
 import seq.rabiFlops as rabiFlops
 import seq.B1calibration as B1calibration
 import seq.cpmg as cpmg
@@ -38,6 +39,9 @@ class HASTE(haste.HASTE):
 
 class FID(fid.FID):
     def __init__(self): super(FID, self).__init__()
+
+class FIDandNoise(FIDandNoise.FIDandNoise):
+    def __init__(self): super(FIDandNoise, self).__init__()
 
 class RabiFlops(rabiFlops.RabiFlops):
     def __init__(self): super(RabiFlops, self).__init__()
@@ -88,6 +92,7 @@ defaultsequences = {
     'HASTE': HASTE(),
     'AutoTuning': AutoTuning(),
     'FID': FID(),
+    'FIDandNoise': FIDandNoise(),
     'Larmor': Larmor(),
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),

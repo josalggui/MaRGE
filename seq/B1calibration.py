@@ -1,5 +1,5 @@
 
-import experiment as ex
+import controller.experiment_gui as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
 from scipy.interpolate import InterpolatedUnivariateSpline
 from plotview.spectrumplot import SpectrumPlot, Spectrum3DPlot
+
 
 
 class B1calibration(blankSeq.MRIBLANKSEQ):
@@ -95,6 +96,8 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
                         # Rx gate
                         tRx = tTx + hw.blkTime + rfExTime[indexExTime] + deadTime - addRdPoints / bwReal
                         self.rxGate(tRx, acqTimeReal + addRdPoints / bwReal, rxChannel=rxChannel)
+                        # self.rxGateSync(tRx, acqTimeReal, rxChannel=rxChannel)
+                        # self.ttl(tRx - 100, acqTime, channel=1, rewrite=True)
                 self.endSequence(repetitionTime * nExAmp * nExTime * nScans)
 
         # Initialize the experiment
@@ -143,6 +146,7 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
                 plt.plot(rfExTime, abs(data), 'k-', rfExTime, data.real, 'r--', rfExTime, data.imag, 'b--')
                 plt.xlabel('t(us)', fontsize=8)
                 plt.ylabel('A(mV)', fontsize=8)
+                plt.xlim([0, rfExTimeEnd])
                 plt.tick_params(labelsize=8)
                 titleRF = 'RF amp=' + str(float("{:.2f}".format(rfAmp[indexAmp]))) + ', t90=' + str(float("{:.3f}".format(t90[indexAmp]))) + ' us, B1=' + str(float("{:.3f}".format(B1[indexAmp]))) + ' uT'
                 plt.title(titleRF, fontsize=10)
@@ -167,7 +171,6 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
                 plt.figure(4)
                 data = matrix[0, :, 1]
                 plt.plot(rfExTime, abs(data), 'k-', rfExTime, data.real, 'r--', rfExTime, data.imag, 'b--')
-                plt.xlabel('t(us)', fontsize=8)
                 plt.ylabel('A(mV)', fontsize=8)
                 plt.tick_params(labelsize=8)
                 titleRF = 'RF amp=' + str(float("{:.2f}".format(rfAmp[0]))) + ', t90=' + str(
