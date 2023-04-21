@@ -88,9 +88,11 @@ class Noise(blankSeq.MRIBLANKSEQ):
             self.rxGate(30, acqTime, channel=self.rxChannel)
             self.endSequence(acqTime+40)
             if self.floDict2Exp():
+                print("\nSequence waveforms loaded successfully")
                 pass
             else:
-                return 0
+                print("\nERROR: sequence waveforms out of hardware bounds")
+                return False
 
             if plotSeq == 0:
                 rxd, msgs = self.expt.run()
@@ -103,12 +105,13 @@ class Noise(blankSeq.MRIBLANKSEQ):
                 self.dataSpec = [fVector, spectrum]
             self.expt.__del__()
 
+            return True
+
     def sequenceAnalysis(self, obj=''):
         noiserms = np.std(self.dataTime[1])
         self.mapVals['RMS noise'] = noiserms
         self.mapVals['sampledPoint'] = noiserms # for sweep method
-        self.saveRawData()
-        print('\nrms noise: %0.5f mV' % noiserms)
+        print('\nrms noise: %0.5f uV' % noiserms*1e3)
         bw = self.mapVals['bw']*1e3 # Hz
         johnson = np.sqrt(2 * 50 * hw.temperature * bw * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e6  # uV
         print('Expected by Johnson: %0.5f uV' % johnson)
@@ -136,6 +139,8 @@ class Noise(blankSeq.MRIBLANKSEQ):
                    'col': 0}
 
         self.out = [result1, result2]
+
+        self.saveRawData()
 
         return self.out
 

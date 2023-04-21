@@ -54,7 +54,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime'] * 1e-3
         return (repetitionTime * nScans / 60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
 
         # Create the inputs automatically. For some reason it only works if there is a few code later...
@@ -124,9 +124,11 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.mapVals['bw'] = bw * 1e3  # kHz
         createSequence()
         if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
             pass
         else:
-            return 0
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
 
         dataFull = []
         if plotSeq == 1:
@@ -146,7 +148,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
             # Process data to be plotted
             self.results = [data]
             self.mapVals['sampledPoint'] = data[int(nPoints / 2)]
-        return 0
+        return True
 
     def sequenceAnalysis(self, obj=''):
         # Load data

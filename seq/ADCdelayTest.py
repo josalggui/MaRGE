@@ -48,7 +48,7 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
     def sequenceTime(self):
         return  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
 
         # Create input parameters
@@ -90,9 +90,11 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
         self.mapVals['bw'] = bw*1e3 # kHz
         createSequence()
         if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
             pass
         else:
-            return 0
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
 
         if plotSeq == 0:
             # Run the experiment and get data
@@ -128,6 +130,8 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
                     print('\n0 mV crossing time: %0.0f ms' % (self.mapVals['sampledPoint']))
                 ii += 1
         self.expt.__del__()
+
+        return True
 
     def sequenceAnalysis(self, obj=''):
         data = self.mapVals['data']

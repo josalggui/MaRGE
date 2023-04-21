@@ -44,7 +44,7 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']*1e-3
         return(repetitionTime*nScans/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
         demo = False
 
@@ -115,9 +115,11 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         self.mapVals['bw'] = bw
         createSequence()
         if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
             pass
         else:
-            return 0
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
 
         if plotSeq == 1:
             self.expt.__del__()
@@ -136,7 +138,8 @@ class CPMG(blankSeq.MRIBLANKSEQ):
             data = np.abs(data[:, int(nPoints/2)])
             echoTimeVector = np.linspace(echoSpacing, echoSpacing * etl, num=etl, endpoint=True)
             self.results = [echoTimeVector, data]
-        return 0
+
+        return True
 
     def sequenceAnalysis(self, obj=''):
         data = np.abs(self.mapVals['data'])

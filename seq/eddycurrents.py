@@ -210,7 +210,6 @@ import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new se
 import scipy.signal as sig
 import configs.hw_config as hw
 from tkinter import messagebox
-from plotview.spectrumplot import SpectrumPlot
 
 class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -248,7 +247,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
     def sequenceTime(self):
         return(4*self.mapVals['repetitionTime']*1e-3/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
 
         # Create input parameters
@@ -336,10 +335,11 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         acqTimeReal = nReadout / BWreal  # us
         createSequence()
         if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
             pass
         else:
-            print("ERROR: sequence waveforms out of hardware bounds.")
-            return 0
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
 
         if plotSeq == 0:
             # Run the experiment and get data
@@ -356,6 +356,8 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
             signalFiltered = np.delete(signal, np.s_[0:addRdPoints], axis=1)
             self.mapVals['signals'] = signalFiltered
             self.expt.__del__()
+
+        return True
 
     def sequenceAnalysis(self, obj=''):
         BW = self.mapVals['BWoriginal']*1e3

@@ -9,7 +9,6 @@ import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
-from plotview.spectrumplot import SpectrumPlot
 import pyqtgraph as pg
 
 class FIDandNoise(blankSeq.MRIBLANKSEQ):
@@ -43,7 +42,7 @@ class FIDandNoise(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']*1e-3
         return(repetitionTime*nScans/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
 
         # Create input parameters
@@ -96,6 +95,12 @@ class FIDandNoise(blankSeq.MRIBLANKSEQ):
         self.mapVals['acqTime'] = acqTime*1e-3 # ms
         self.mapVals['bw'] = bw # MHz
         createSequence()
+        if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
+            pass
+        else:
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
 
         if plotSeq == 0:
             # Run the experiment and get data
@@ -123,6 +128,8 @@ class FIDandNoise(blankSeq.MRIBLANKSEQ):
             fVector = np.linspace(-bw / 2, bw / 2, nPoints) * 1e3  # kHz
             self.dataTime = [tVector, noisetemp]
             self.dataSpec = [fVector, spectrumnoise]
+
+        return True
 
     def sequenceAnalysis(self, obj=''):
         addRdPoints = self.mapVals['addRdPoints']

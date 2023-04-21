@@ -450,9 +450,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                                                    slIndex=slIndex,
                                                                    repeIndexGlobal=repeIndexGlobal)
                 if self.floDict2Exp(rewrite=nBatches==1):
+                    print("\nSequence waveforms loaded successfully")
                     pass
                 else:
-                    return 0
+                    print("\nERROR: sequence waveforms out of hardware bounds")
+                    return False
                 repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
                 acqPointsPerBatch.append(aa)
             else:
@@ -595,6 +597,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             self.mapVals['sampledCartesian'] = self.mapVals['sampled']  # To sweep
             data = np.reshape(data, (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
 
+        return True
 
     def sequenceAnalysis(self, obj=''):
         nPoints = self.mapVals['nPoints']

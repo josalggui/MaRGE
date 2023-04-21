@@ -25,7 +25,6 @@ from tkinter import ttk
 from tkinter import Menu
 from sys import exit
 from scipy.interpolate import griddata
-from plotview.spectrumplot import Spectrum3DPlot # To show nice 2d or 3d images
 
 
 #*********************************************************************************
@@ -76,7 +75,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         self.sequenceRun(2)
         return self.mapVals['nScans'] * self.mapVals['repetitionTime'] * 1e-3 * self.mapVals['SequenceGradients'].shape[0] / 60
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
         freqCal = True  # Swich off only if you want and you are on debug mode
 
@@ -371,6 +370,12 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             self.mapVals['BW-real'] = BWreal
             self.mapVals['acqTimeSeq'] = acqTimeSeq
             createSequence()
+            if self.floDict2Exp():
+                print("\nSequence waveforms loaded successfully")
+                pass
+            else:
+                print("\nERROR: sequence waveforms out of hardware bounds")
+                return False
 
             if plotSeq == 0:
                 # Warnings before run sequence
@@ -462,6 +467,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                 self.mapVals['ImageFFT'] = ImageFFT
             self.expt.__del__()
 
+        return True
 
     def sequenceAnalysis(self, obj=''):
         self.saveRawData()

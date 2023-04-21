@@ -228,6 +228,9 @@ class HistoryListController(HistoryListWidget):
                             n += 1
                         # Run the sequence
                         output = self.runSequenceInlist(sequence=sequence, key=key)
+                        if output == 0:
+                            self.inputs[key][2] = False
+                            return 0
                         # Add item to the history list
                         file_name = sequence.mapVals['fileName']
                         self.item(element).setText(key + " | " + file_name)
@@ -236,7 +239,7 @@ class HistoryListController(HistoryListWidget):
                         self.inputs[key][2] = False
                         # Delete outputs from the sequence
                         sequence.resetMapVals()
-                        print(key + " Done!")
+                        print("\n" + key + " Done!")
                     else:
                         # Enable acquire button
                         if self.main.toolbar_marcos.action_server.isChecked():
@@ -262,7 +265,10 @@ class HistoryListController(HistoryListWidget):
         self.fovs[key] = sequence.fovs.copy()
 
         # Create and execute selected sequence
-        sequence.sequenceRun(0)
+        if sequence.sequenceRun(0, self.main.demo):
+            pass
+        else:
+            return 0
 
         # Do sequence analysis and get results
         return sequence.sequenceAnalysis()

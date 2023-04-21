@@ -46,7 +46,7 @@ class IRTSE(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']*1e-3
         return(repetitionTime*nScans/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq):
+    def sequenceRun(self, plotSeq, demo=False):
         init_gpa = False  # Starts the gpa
 
         # Create the inputs automatically. For some reason it only works if there is a few code later...
@@ -144,6 +144,12 @@ class IRTSE(blankSeq.MRIBLANKSEQ):
         self.mapVals['samplingPeriod'] = samplingPeriod * 1e-6
         self.mapVals['bw'] = bw * 1e6
         createSequence()
+        if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
+            pass
+        else:
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
         if plotSeq:
             self.expt.__del__()
         else:
@@ -160,7 +166,7 @@ class IRTSE(blankSeq.MRIBLANKSEQ):
             self.mapVals['data'] = data
             data = np.reshape(data, (etl, -1))
             self.mapVals['sampledPoint'] = data[0, int(nPoints / 2)]   # To be used by sweep class
-        return 0
+        return True
 
     def sequenceAnalysis(self, obj=''):
         self.saveRawData()

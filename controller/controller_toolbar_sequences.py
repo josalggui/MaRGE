@@ -18,6 +18,7 @@ from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from controller.controller_plot1d import Plot1DController as SpectrumPlot
 from seq.sequences import defaultsequences
 from widgets.widget_toolbar_sequences import SequenceToolBar
+import configs.hw_config as hw
 
 
 class SequenceController(SequenceToolBar):
@@ -67,6 +68,10 @@ class SequenceController(SequenceToolBar):
 
         for seq_name in seq_names:
             # Execute the sequence
+            if seq_name == 'RabiFlops':
+                rf_amp = np.pi/(hw.b1Efficiency*70)
+                defaultsequences[seq_name].mapVals['rfExAmp'] = rf_amp
+                defaultsequences[seq_name].mapVals['rfReAmp'] = rf_amp
             self.runToList(seq_name=seq_name)
 
         # Update the inputs of the sequences
@@ -104,20 +109,21 @@ class SequenceController(SequenceToolBar):
         if self.new_run:
             self.new_run = False
 
-            # Delete previous plots
-            self.main.figures_layout.clearFiguresLayout()
-
-            # Create label with rawdata name
-            self.label = QLabel()
-            self.label.setAlignment(QtCore.Qt.AlignCenter)
-            self.label.setStyleSheet("background-color: black;color: white")
-            self.main.figures_layout.addWidget(self.label, row=0, col=0, colspan=2)
-
             # Update possible rotation, fov and dfov before the sequence is executed in parallel thread
             defaultsequences[self.seq_name].sequenceAtributes()
 
             # Create and execute selected sequence
-            defaultsequences[self.seq_name].sequenceRun(0)
+            if defaultsequences[self.seq_name].sequenceRun(0):
+                # Delete previous plots
+                self.main.figures_layout.clearFiguresLayout()
+
+                # Create label with rawdata name
+                self.label = QLabel()
+                self.label.setAlignment(QtCore.Qt.AlignCenter)
+                self.label.setStyleSheet("background-color: black;color: white")
+                self.main.figures_layout.addWidget(self.label, row=0, col=0, colspan=2)
+            else:
+                return 0
 
             # Do sequence analysis and acquire de plots
             self.old_out = defaultsequences[self.seq_name].sequenceAnalysis()
@@ -222,16 +228,17 @@ class SequenceController(SequenceToolBar):
             print("\nIt is not possible to plot a sequence in demo mode.")
             return
 
-        # Delete previous plots
-        self.main.figures_layout.clearFiguresLayout()
-
         # Load sequence name
         self.seq_name = self.main.sequence_list.getCurrentSequence()
 
         # Create sequence to plot
         print('Plot sequence')
         defaultsequences[self.seq_name].sequenceAtributes()
-        defaultsequences[self.seq_name].sequenceRun(1)  # Run sequence only for plot
+        if defaultsequences[self.seq_name].sequenceRun(1):
+            # Delete previous plots
+            self.main.figures_layout.clearFiguresLayout()
+        else:
+            return 0
 
         # Get sequence to plot
         out = defaultsequences[self.seq_name].sequencePlot()  # Plot results

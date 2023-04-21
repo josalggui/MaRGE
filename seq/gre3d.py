@@ -56,7 +56,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']
         return(nPoints[1]*nPoints[2]*repetitionTime*1e-3*nScans/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq):
+    def sequenceRun(self, plotSeq, demo=False):
         init_gpa=False, # Starts the gpa
         nScans = self.mapVals['nScans'] # NEX
         larmorFreq = self.mapVals['larmorFreq'] # MHz, Larmor frequency
@@ -325,9 +325,11 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                                                                    slIndex=slIndex,
                                                                    repeIndexGlobal=repeIndexGlobal)
                 if self.floDict2Exp():
+                    print("\nSequence waveforms loaded successfully")
                     pass
                 else:
-                    return 0
+                    print("\nERROR: sequence waveforms out of hardware bounds")
+                    return False
                 repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
                 acqPointsPerBatch.append(aa)
             else:
@@ -462,6 +464,8 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             self.mapVals['kMax'] = kMax
             self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
             data = np.reshape(data, (nPoints[2], nPoints[1], nPoints[0]))
+
+        return True
 
     def sequenceAnalysis(self, obj=''):
         self.saveRawData()

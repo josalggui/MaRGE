@@ -55,7 +55,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         nShimming = self.mapVals['nShimming']
         return (repetitionTime * nShimming * 3 / 60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
         demo = False
 
@@ -150,10 +150,11 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         acqTime = nPoints / bw  # us
         createSequence()
         if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
             pass
         else:
-            print("\nERROR: Experiment parameters out of hardware bounds.")
-            return 0
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
 
         if not plotSeq:
             rxd, msgs = self.expt.run()
@@ -161,6 +162,8 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             data = sig.decimate(rxd['rx0'] * hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = data
         self.expt.__del__()
+
+        return True
 
     def sequenceAnalysis(self, obj=''):
         # Get data

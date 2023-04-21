@@ -43,7 +43,7 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']*1e-3
         return(RFampSteps*RFtimeSteps*repetitionTime*nScans/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
 
         # Create input parameters
@@ -108,9 +108,11 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
         self.mapVals['bwReal'] = bwReal  # MHz
         createSequence()
         if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
             pass
         else:
-            return 0
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
 
         if plotSeq == 0:
             # Run the experiment and get data
@@ -197,6 +199,7 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
             #     freq.on_changed(update)
             #     plt.show()
 
+        return True
 
     def sequenceAnalysis(self, obj=''):
 

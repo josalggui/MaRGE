@@ -58,7 +58,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime'] * 1e-3
         return (repetitionTime * nScans * nSteps * (dummyPulses + 1) / 60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
 
         # # Create the inputs automatically. For some reason it only works if there is a few code later...
@@ -160,15 +160,17 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # Execute the experiment
         createSequence()
         if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
             pass
         else:
-            return 0
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
         if not plotSeq:
             rxd, msgs = self.expt.run()
             rxd['rx0'] = rxd['rx0'] * hw.adcFactor  # Here I normalize to get the result in mV
             self.mapVals['dataOversampled'] = rxd['rx0']
         self.expt.__del__()
-        return 0
+        return True
 
     def sequenceAnalysis(self, obj=''):
         nScans = self.mapVals['nScans']
@@ -208,8 +210,6 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                                                                                    self.mapVals['piHalfTime']))
         hw.b1Efficiency = np.pi / 2 / (self.mapVals['rfExAmp'] * piHalfTime)
 
-        self.saveRawData()
-
         # Signal vs rf time
         result1 = {'widget': 'curve',
                    'xData': timeVector * 1e6,
@@ -232,5 +232,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                    'col': 0}
 
         self.out = [result1, result2]
+
+        self.saveRawData()
 
         return self.out
