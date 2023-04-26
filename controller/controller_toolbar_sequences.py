@@ -62,8 +62,9 @@ class SequenceController(SequenceToolBar):
         seq_names = [
             'Larmor',
             'Noise',
+            'Shimming',
             'RabiFlops',
-            'Shimming'
+
         ]
 
         for seq_name in seq_names:
@@ -266,6 +267,7 @@ class SequenceController(SequenceToolBar):
         seq_name = 'Localizer'
 
         defaultsequences[seq_name].loadParams(directory="calibration")
+        defaultsequences[seq_name].mapVals['shimming'] = defaultsequences['RARE'].mapVals['shimming']
 
         # Sagittal localizer
         if defaultsequences[seq_name].mapVals['planes'][0]:

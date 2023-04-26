@@ -94,24 +94,28 @@ class Localizer(localizer.Localizer):
 Definition of default sequences
 """
 defaultsequences = {
+    'Larmor': Larmor(),
+    'RAREprotocols': RAREProtocols(),
     'RARE': RARE(),
-    'RARE Protocols': RAREProtocols(),
+    'Noise': Noise(),
+    'RabiFlops': RabiFlops(),
+    'Shimming': Shimming(),
+    'Localizer': Localizer(),
     'GRE3D': GRE3D(),
     'PETRA': PETRA(),
     # 'HASTE': HASTE(),
     # 'AutoTuning': AutoTuning(),
     'FID': FID(),
     'FIDandNoise': FIDandNoise(),
-    'Larmor': Larmor(),
-    'Noise': Noise(),
-    'RabiFlops': RabiFlops(),
+
+
     'B1calibration': B1calibration(),
     'CPMG': CPMG(),
     'EDDYCURRENTS': EDDYCURRENTS(),
     'InversionRecovery': IR(),
     # 'ADCtest': ADCtest(),
-    'Shimming': Shimming(),
+
     'SWEEP': SWEEP(),
     'testSE': testSE(),
-    'Localizer': Localizer(),
+
 }

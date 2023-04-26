@@ -86,7 +86,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
             # SEQUENCE
             self.iniSequence(20, np.array((0, 0, 0)))
             self.rxGate(30, acqTime, channel=self.rxChannel)
-            self.endSequence(acqTime+40)
+            self.endSequence(acqTime+400000)
             if self.floDict2Exp():
                 print("\nSequence waveforms loaded successfully")
                 pass
@@ -111,7 +111,8 @@ class Noise(blankSeq.MRIBLANKSEQ):
         noiserms = np.std(self.dataTime[1])
         self.mapVals['RMS noise'] = noiserms
         self.mapVals['sampledPoint'] = noiserms # for sweep method
-        print('\nrms noise: %0.5f uV' % noiserms*1e3)
+        noiserms = noiserms*1e3
+        print('\nrms noise: %0.5f uV' % noiserms)
         bw = self.mapVals['bw']*1e3 # Hz
         johnson = np.sqrt(2 * 50 * hw.temperature * bw * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e6  # uV
         print('Expected by Johnson: %0.5f uV' % johnson)
