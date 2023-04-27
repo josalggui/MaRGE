@@ -24,6 +24,7 @@ import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new se
 import pyqtgraph as pg
 import time
 from phantominator import shepp_logan
+import datetime
 
 #*********************************************************************************
 #*********************************************************************************
@@ -163,7 +164,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
         self.gRiseTime = self.gRiseTime*1e-6
         gradRiseTime = self.gRiseTime
         # self.gradRiseTime = 500e-6       # s
-        # gSteps = int(gradRiseTime*1e6/5)*0+1
+        # gSteps = int(g, radRiseTime*1e6/5)*0+1
         gSteps = self.gradSteps
         addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
         randFactor = 0e-3                        # Random amplitude to add to the phase gradients
@@ -826,8 +827,50 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             self.mapVals['dfov'] = [0.0, 0.0, 0.0]
             hw.dfov = [0.0, 0.0, 0.0]
 
+            # DICOM ISSUES
+            # Image data
+            img = self.mapVals['image3D']
+            nRd = nPoints[0]
+            nPh = nPoints[1]
+            allSlices = nPoints[2]
+            imgAbs = np.abs(img)
+            imgFullAbs = np.abs(img) * (2 ** 15 - 1) / np.amax(np.abs(img))
+            x2 = np.amax(np.abs(img))
+            imgFullInt = np.int16(np.abs(imgFullAbs))
+            imgFullInt = np.reshape(imgFullInt, (allSlices, nPh, nRd))
+            arr = np.zeros((allSlices, nPh, nRd), dtype=np.int16)
+            arr = imgFullInt
             # Add parameters to meta_data dictionary
+            self.meta_data["PixelData"] = arr.tobytes()
+
+            # Date and time
+            current_time = datetime.datetime.now()
+            self.meta_data["StudyDate"] = current_time.strftime("%Y%m%d")
+            self.meta_data["StudyTime"] = current_time.strftime("%H%M%S")
+
+            # Sequence parameters
+            self.meta_data["Columns"] = nRd
+            self.meta_data["Rows"] = nPh
+            self.meta_data["NumberOfSlices"] = allSlices
             self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
+            self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
+            self.meta_data["EchoTrainLength"] = self.mapVals['etl']
+
+            # More DICOM tags
+            self.meta_data["PatientName"] = self.session["subject_id"]
+            # self.meta_data["PatientID"] = self.session["subject_id"]
+            self.meta_data["PatientSex"] = " "
+            self.meta_data["StudyID"] = self.session["project"]
+            self.meta_data["InstitutionName"] = self.session["scanner"]
+            self.meta_data["ImageComments"] = " "
+            # SOPInstanceUID = self.session["subject_id"]
+            # self.meta_data["SOPInstanceUID"] = SOPInstanceUID
+            # Full dinamic window
+            self.meta_data["WindowWidth"] = 26373
+            self.meta_data["WindowCenter"] = 13194
+
+            #### DICOM 3.0 ####
+            self.meta_data["NumberOfFrames"] = allSlices
 
         # Add results into the output attribute (result1 must be the image to save in dicom)
         self.output = [result1, result2]

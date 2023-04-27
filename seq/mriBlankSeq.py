@@ -749,6 +749,7 @@ class MRIBLANKSEQ:
         # Generate filename
         name = datetime.now()
         name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
+        self.mapVals['name_string'] = name_string
         file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
         self.mapVals['fileName'] = "%s.mat" % file_name
 
@@ -780,27 +781,30 @@ class MRIBLANKSEQ:
         dicom_image = DICOMImage()
 
         # Save image into dicom object
-        image = self.output[0]['data']
-        dicom_image.meta_data["PixelData"] = image.astype(np.int16).tobytes()
-
-        # If it is a 3d image
-        if len(image.shape) > 2:
-            # Obtener dimensiones
-            slices, rows, columns = image.shape
-            dicom_image.meta_data["Columns"] = columns
-            dicom_image.meta_data["Rows"] = rows
-            dicom_image.meta_data["NumberOfSlices"] = slices
-            dicom_image.meta_data["NumberOfFrames"] = slices
-        # if it is a 2d image
-        else:
-            # Obtener dimensiones
-            rows, columns = image.shape
-            dicom_image.meta_data["Columns"] = columns
-            dicom_image.meta_data["Rows"] = rows
-            dicom_image.meta_data["NumberOfSlices"] = 1
-            dicom_image.meta_data["NumberOfFrames"] = 1
+        if not self.meta_data["PixelData"]:
+            image = self.output[0]['data']
+            dicom_image.meta_data["PixelData"] = image.astype(np.int16).tobytes()
+            # If it is a 3d image
+            if len(image.shape) > 2:
+                # Obtener dimensiones
+                slices, rows, columns = image.shape
+                dicom_image.meta_data["Columns"] = columns
+                dicom_image.meta_data["Rows"] = rows
+                dicom_image.meta_data["NumberOfSlices"] = slices
+                dicom_image.meta_data["NumberOfFrames"] = slices
+            # if it is a 2d image
+            else:
+                # Obtener dimensiones
+                rows, columns = image.shape
+                dicom_image.meta_data["Columns"] = columns
+                dicom_image.meta_data["Rows"] = rows
+                dicom_image.meta_data["NumberOfSlices"] = 1
+                dicom_image.meta_data["NumberOfFrames"] = 1
 
         # Add sequence meta_data (dictionary) to dicom object meta_data (dictionary)
+        self.meta_data["PatientID"] = self.mapVals['name_string']
+        self.meta_data["SOPInstanceUID"] = self.mapVals['name_string']
+
         dicom_image.meta_data = dicom_image.meta_data | self.meta_data
 
         # Save meta_data dictionary into dicom object metadata (Standard DICOM 3.0)
