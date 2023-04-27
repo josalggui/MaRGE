@@ -828,12 +828,33 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             hw.dfov = [0.0, 0.0, 0.0]
 
             # DICOM ISSUES
-            # Image data
+            # DICOM Image orientation
             img = self.mapVals['image3D']
+            if self.axesOrientation[2] == 2:  # Sagital
+                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:
+                    img = np.flip(image, axis=2)
+                    img = np.flip(image, axis=1)
+                else:
+                    img = np.transpose(image, (0, 2, 1))
+                    img = np.flip(image, axis=2)
+                    img = np.flip(image, axis=1)
+            if self.axesOrientation[2] == 1:  # Coronal
+                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2:
+                    img = np.flip(image, axis=2)
+                else:
+                    img = np.transpose(image, (0, 2, 1))
+                    img = np.flip(image, axis=2)
+            if self.axesOrientation[2] == 0:  # Transversal
+                if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
+                    img = np.flip(image, axis=2)
+                else:
+                    img = np.transpose(image, (0, 2, 1))
+                    img = np.flip(image, axis=2)
+            # Image data to DICOM
             nRd = nPoints[0]
             nPh = nPoints[1]
             allSlices = nPoints[2]
-            imgAbs = np.abs(img)
+            # imgAbs = np.abs(img)
             imgFullAbs = np.abs(img) * (2 ** 15 - 1) / np.amax(np.abs(img))
             x2 = np.amax(np.abs(img))
             imgFullInt = np.int16(np.abs(imgFullAbs))

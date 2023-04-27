@@ -781,25 +781,24 @@ class MRIBLANKSEQ:
         dicom_image = DICOMImage()
 
         # Save image into dicom object
-        if not self.meta_data["PixelData"]:
-            image = self.output[0]['data']
-            dicom_image.meta_data["PixelData"] = image.astype(np.int16).tobytes()
-            # If it is a 3d image
-            if len(image.shape) > 2:
-                # Obtener dimensiones
-                slices, rows, columns = image.shape
-                dicom_image.meta_data["Columns"] = columns
-                dicom_image.meta_data["Rows"] = rows
-                dicom_image.meta_data["NumberOfSlices"] = slices
-                dicom_image.meta_data["NumberOfFrames"] = slices
-            # if it is a 2d image
-            else:
-                # Obtener dimensiones
-                rows, columns = image.shape
-                dicom_image.meta_data["Columns"] = columns
-                dicom_image.meta_data["Rows"] = rows
-                dicom_image.meta_data["NumberOfSlices"] = 1
-                dicom_image.meta_data["NumberOfFrames"] = 1
+        image = self.output[0]['data']
+        dicom_image.meta_data["PixelData"] = image.astype(np.int16).tobytes()
+        # If it is a 3d image
+        if len(image.shape) > 2:
+            # Obtener dimensiones
+            slices, rows, columns = image.shape
+            dicom_image.meta_data["Columns"] = columns
+            dicom_image.meta_data["Rows"] = rows
+            dicom_image.meta_data["NumberOfSlices"] = slices
+            dicom_image.meta_data["NumberOfFrames"] = slices
+        # if it is a 2d image
+        else:
+            # Obtener dimensiones
+            rows, columns = image.shape
+            dicom_image.meta_data["Columns"] = columns
+            dicom_image.meta_data["Rows"] = rows
+            dicom_image.meta_data["NumberOfSlices"] = 1
+            dicom_image.meta_data["NumberOfFrames"] = 1
 
         # Add sequence meta_data (dictionary) to dicom object meta_data (dictionary)
         self.meta_data["PatientID"] = self.mapVals['name_string']

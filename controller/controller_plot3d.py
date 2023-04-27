@@ -82,6 +82,11 @@ class Plot3DController(Plot3DWidget):
             self.seq_name = self.main.sequence_list.getCurrentSequence()
             img_fov = self.main.history_list.fovs[current_output][-1]
             if self.seq_name in defaultsequences.keys():
+                try:
+                    defaultsequences[self.seq_name].mapVals['fov']
+                except KeyError:
+                    defaultsequences[self.seq_name].mapVals['fov'] =[20.0,15.0,15.0]
+                    defaultsequences[self.seq_name].mapVals['dfov'] = [0.0, 0.0, 0.0]
                 roi_fov = np.array(defaultsequences[self.seq_name].mapVals['fov']) * 1e-2  # m
                 roi_pos = np.array(defaultsequences[self.seq_name].mapVals['dfov']) * 1e-3  # m
             else:
