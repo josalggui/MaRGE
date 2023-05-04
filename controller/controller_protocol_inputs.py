@@ -60,7 +60,7 @@ class ProtocolInputsController(ProtocolInputsWidget):
         defaultsequences[seq_name].mapVals['dfov'] = hw.dfov
 
         # Run the sequence
-        self.main.toolbar_sequences.runToList(seq_name=seq_name)
+        self.main.toolbar_sequences.runToList(seq_name=seq_name, item_name=sequence)
 
     def updateProtocolInputs(self):
         self.clear()

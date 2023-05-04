@@ -192,7 +192,7 @@ class SequenceController(SequenceToolBar):
             thread = threading.Thread(target=self.repeatAcquisition)
             thread.start()
 
-    def runToList(self, seq_name=None):
+    def runToList(self, seq_name=None, item_name=None):
         """
         @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
         @email: josalggui@i3m.upv.es
@@ -203,7 +203,10 @@ class SequenceController(SequenceToolBar):
             seq_name = self.main.sequence_list.getCurrentSequence()
 
         # Add item to the history list
-        name = str(datetime.now())[11:23] + " | " + seq_name
+        if item_name is None:
+            name = str(datetime.now())[11:23] + " | " + seq_name
+        else:
+            name = str(datetime.now())[11:23] + " | " + item_name
         self.main.history_list.addItem(name)
 
         # Save results into the history

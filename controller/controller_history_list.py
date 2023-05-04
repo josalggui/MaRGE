@@ -233,7 +233,8 @@ class HistoryListController(HistoryListWidget):
                             return 0
                         # Add item to the history list
                         file_name = sequence.mapVals['fileName']
-                        self.item(element).setText(key + " | " + file_name)
+                        date = ".".join(file_name.split('.')[1::])
+                        self.item(element).setText(self.item(element).text() + "." + date)
                         # Save results into the history
                         self.outputs[key] = output
                         self.inputs[key][2] = False
