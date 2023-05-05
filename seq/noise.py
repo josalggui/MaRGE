@@ -105,7 +105,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
                 self.dataSpec = [fVector, spectrum]
             self.expt.__del__()
 
-            return True
+        return True
 
     def sequenceAnalysis(self, obj=''):
         noiserms = np.std(self.dataTime[1])

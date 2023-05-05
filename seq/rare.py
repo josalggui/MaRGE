@@ -221,34 +221,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
         print("Readout direction:")
         print(np.reshape(result, (1, 3)))
 
-        def createSequenceDemo(phIndex=0, slIndex=0, repeIndexGlobal=0):
-            repeIndex = 0
-            acqPoints = 0
-            orders = 0
-            data = []
-            while acqPoints + self.etl * nRD <= hw.maxRdPoints and orders <= hw.maxOrders and repeIndexGlobal < nRepetitions:
-                if repeIndex == 0:
-                    acqPoints += nRD
-                    data = np.concatenate((data, np.random.randn(nRD * hw.oversamplingFactor)), axis=0)
-
-                for echoIndex in range(self.etl):
-                    if (repeIndex == 0 or repeIndex >= self.dummyPulses):
-                        acqPoints += nRD
-                        data = np.concatenate((data, np.random.randn(nRD * hw.oversamplingFactor)), axis=0)
-
-                    # Update the phase and slice gradient
-                    if repeIndex >= self.dummyPulses:
-                        if phIndex == nPH - 1:
-                            phIndex = 0
-                            slIndex += 1
-                        else:
-                            phIndex += 1
-                if repeIndex >= self.dummyPulses: repeIndexGlobal += 1  # Update the global repeIndex
-                repeIndex += 1  # Update the repeIndex after the ETL
-
-            # Return the output variables
-            return (phIndex, slIndex, repeIndexGlobal, acqPoints, data)
-
         def createSequence(phIndex=0, slIndex=0, repeIndexGlobal=0):
             repeIndex = 0
             if self.rdGradTime==0:   # Check if readout gradient is dc or pulsed
@@ -440,64 +412,62 @@ class RARE(blankSeq.MRIBLANKSEQ):
         acqPointsPerBatch = []
         while repeIndexGlobal<nRepetitions:
             nBatches += 1
+            # Create the experiment if it is not a demo
             if not self.demo:
                 self.expt = ex.Experiment(lo_freq=hw.larmorFreq+self.freqOffset, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
                 samplingPeriod = self.expt.get_rx_ts()[0]
                 BW = 1/samplingPeriod/hw.oversamplingFactor
-                self.acqTime = self.nPoints[0]/BW        # us
-                self.mapVals['bw'] = BW
-                phIndex, slIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
-                                                                   slIndex=slIndex,
-                                                                   repeIndexGlobal=repeIndexGlobal)
+
+            # Run the createSequence method
+            self.acqTime = self.nPoints[0]/BW        # us
+            self.mapVals['bw'] = BW
+            phIndex, slIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
+                                                               slIndex=slIndex,
+                                                               repeIndexGlobal=repeIndexGlobal)
+            # Save instructions into MaRCoS if not a demo
+            if not self.demo:
                 if self.floDict2Exp(rewrite=nBatches==1):
                     print("\nSequence waveforms loaded successfully")
                     pass
                 else:
                     print("\nERROR: sequence waveforms out of hardware bounds")
                     return False
-                repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
-                acqPointsPerBatch.append(aa)
-            else:
-                phIndex, slIndex, repeIndexGlobal, aa, dataA = createSequenceDemo(phIndex=phIndex,
-                                                                   slIndex=slIndex,
-                                                                   repeIndexGlobal=repeIndexGlobal)
-                repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
-                acqPointsPerBatch.append(aa)
-                self.mapVals['bw'] = 1/samplingPeriod/hw.oversamplingFactor
+
+            repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
+            acqPointsPerBatch.append(aa)
 
             for ii in range(self.nScans):
-                if not self.demo:
-                    if not plotSeq:
-                        print('Batch ', nBatches, ', Scan ', ii+1, ' running...')
-                        rxd, msgs = self.expt.run()
-                        rxd['rx0'] = rxd['rx0']*hw.adcFactor   # Here I normalize to get the result in mV
-                        # Get noise data
-                        noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
-                        rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
-                        # Get data
-                        if self.dummyPulses>0:
-                            dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*self.etl*hw.oversamplingFactor]), axis = 0)
-                            overData = np.concatenate((overData, rxd['rx0'][nRD*self.etl*hw.oversamplingFactor::]), axis = 0)
-                        else:
-                            overData = np.concatenate((overData, rxd['rx0']), axis = 0)
-                else:
-                    print('Batch ', nBatches, ', Scan ', ii, ' running...')
-                    data = dataA
-                    noise = np.concatenate((noise, data[0:nRD*hw.oversamplingFactor]), axis = 0)
-                    data = data[nRD*hw.oversamplingFactor::]
+                if not plotSeq:
+                    print("\nBatch %i, scan %i running..." % (nBatches, ii+1))
+                    if not self.demo:
+                        acq_points = 0
+                        while acq_points != (aa * hw.oversamplingFactor):
+                            rxd, msgs = self.expt.run()
+                            rxd['rx0'] = rxd['rx0']*hw.adcFactor   # Here I normalize to get the result in mV
+                            acq_points = np.size(rxd['rx0'])
+                            print("Acquired points = %i" % acq_points)
+                            print("Expected points = %i" % (aa * hw.oversamplingFactor))
+                        print("Batch %i, scan %i ready!")
+                    else:
+                        rxd = {}
+                        rxd['rx0'] = np.random.randn(aa*hw.oversamplingFactor)
+                        print("Batch %i, scan %i ready!" % (nBatches, ii+1))
+                    # Get noise data
+                    noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
+                    rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
                     # Get data
                     if self.dummyPulses>0:
-                        dummyData = np.concatenate((dummyData, data[0:nRD*self.etl*hw.oversamplingFactor]), axis = 0)
-                        overData = np.concatenate((overData, data[nRD*self.etl*hw.oversamplingFactor::]), axis = 0)
+                        dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*self.etl*hw.oversamplingFactor]), axis = 0)
+                        overData = np.concatenate((overData, rxd['rx0'][nRD*self.etl*hw.oversamplingFactor::]), axis = 0)
                     else:
-                        overData = np.concatenate((overData, data), axis = 0)
+                        overData = np.concatenate((overData, rxd['rx0']), axis = 0)
 
             if not self.demo: self.expt.__del__()
         del aa
 
         if not plotSeq:
             acqPointsPerBatch= (np.array(acqPointsPerBatch)-self.etl*nRD*(self.dummyPulses>0)-nRD)*self.nScans
-            print('Scans done!')
+            print('\nScans ready!')
             self.mapVals['noiseData'] = noise
             self.mapVals['overData'] = overData
 
@@ -649,9 +619,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
             return([result1, result2])
         else:
             # Plot image
-            image = np.abs(self.mapVals['image3D'])
             if self.demo:
-                image = shepp_logan((nPoints[2], nPoints[1], nPoints[0]))
+                image = np.random.randn(nPoints[2], nPoints[1], nPoints[0])
             else:
                 image = np.abs(self.mapVals['image3D'])
             image = image/np.max(np.reshape(image,-1))*100
