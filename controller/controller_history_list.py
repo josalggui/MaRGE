@@ -222,30 +222,34 @@ class HistoryListController(HistoryListWidget):
                         sequence = defaultsequences[seq_name]
                         # Modify input parameters of the sequence
                         n = 0
-                        input_list = list(sequence.mapVals.keys())
-                        for keyParam in input_list:
+                        for keyParam in sequence.mapKeys:
                             sequence.mapVals[keyParam] = self.inputs[key][1][n]
                             n += 1
                         # Run the sequence
                         output = self.runSequenceInlist(sequence=sequence, key=key)
+                        key_index = keys.index(key)
                         if output == 0:
+                            del self.inputs[key]
+                            del keys[key_index]
+                            self.takeItem(key_index)
+                            print("\n%s deleted!" % key)
+                            # self.inputs[key][2] = False
+                        else:
+                            # Add item to the history list
+                            file_name = sequence.mapVals['fileName']
+                            date = ".".join(file_name.split('.')[1::])
+                            self.item(key_index).setText(self.item(key_index).text() + "." + date)
+                            # Save results into the history
+                            self.outputs[key] = output
                             self.inputs[key][2] = False
-                            return 0
-                        # Add item to the history list
-                        file_name = sequence.mapVals['fileName']
-                        date = ".".join(file_name.split('.')[1::])
-                        self.item(element).setText(self.item(element).text() + "." + date)
-                        # Save results into the history
-                        self.outputs[key] = output
-                        self.inputs[key][2] = False
-                        # Delete outputs from the sequence
-                        sequence.resetMapVals()
-                        print("\n" + key + " ready!")
+                            # Delete outputs from the sequence
+                            sequence.resetMapVals()
+                            print("\n" + key + " ready!")
                     else:
                         # Enable acquire button
                         if self.main.toolbar_marcos.action_server.isChecked():
                             self.main.toolbar_sequences.action_acquire.setEnabled(True)
-                    element += 1
+                    time.sleep(1)
             else:
                 pass
             time.sleep(1)
