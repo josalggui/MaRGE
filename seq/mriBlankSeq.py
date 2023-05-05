@@ -774,6 +774,7 @@ class MRIBLANKSEQ:
         @author: F. Juan-Llorís, PhysioMRI S.L., Valencia, Spain
         @email: franc.juan@physiomri.com
         @modified: J.M. Algarín, MRILab, i3M, CSIC, Spain
+        @modified: T. Guallart-Naval, MRILab, i3M, CSIC, Spain
         Save the dicom
         """
 
@@ -781,28 +782,46 @@ class MRIBLANKSEQ:
         dicom_image = DICOMImage()
 
         # Save image into dicom object
-        image = self.output[0]['data']
-        dicom_image.meta_data["PixelData"] = image.astype(np.int16).tobytes()
-        # If it is a 3d image
-        if len(image.shape) > 2:
-            # Obtener dimensiones
-            slices, rows, columns = image.shape
-            dicom_image.meta_data["Columns"] = columns
-            dicom_image.meta_data["Rows"] = rows
-            dicom_image.meta_data["NumberOfSlices"] = slices
-            dicom_image.meta_data["NumberOfFrames"] = slices
-        # if it is a 2d image
-        else:
-            # Obtener dimensiones
-            rows, columns = image.shape
-            dicom_image.meta_data["Columns"] = columns
-            dicom_image.meta_data["Rows"] = rows
-            dicom_image.meta_data["NumberOfSlices"] = 1
-            dicom_image.meta_data["NumberOfFrames"] = 1
+        try:
+            dicom_image.meta_data["PixelData"] = self.meta_data["PixelData"]
+        except KeyError:
+            image = self.output[0]['data']
+            dicom_image.meta_data["PixelData"] = image.astype(np.int16).tobytes()
+            # If it is a 3d image
+            if len(image.shape) > 2:
+                # Obtener dimensiones
+                slices, rows, columns = image.shape
+                dicom_image.meta_data["Columns"] = columns
+                dicom_image.meta_data["Rows"] = rows
+                dicom_image.meta_data["NumberOfSlices"] = slices
+                dicom_image.meta_data["NumberOfFrames"] = slices
+            # if it is a 2d image
+            else:
+                # Obtener dimensiones
+                rows, columns = image.shape
+                dicom_image.meta_data["Columns"] = columns
+                dicom_image.meta_data["Rows"] = rows
+                dicom_image.meta_data["NumberOfSlices"] = 1
+                dicom_image.meta_data["NumberOfFrames"] = 1
 
-        # Add sequence meta_data (dictionary) to dicom object meta_data (dictionary)
+        # Date and time
+        current_time = datetime.now()
+        self.meta_data["StudyDate"] = current_time.strftime("%Y%m%d")
+        self.meta_data["StudyTime"] = current_time.strftime("%H%M%S")
+
+        # More DICOM tags
+        self.meta_data["PatientName"] = self.session["subject_id"]
+        self.meta_data["PatientSex"] = " "
+        self.meta_data["StudyID"] = self.session["project"]
+        self.meta_data["InstitutionName"] = self.session["scanner"]
+        self.meta_data["ImageComments"] = " "
         self.meta_data["PatientID"] = self.mapVals['name_string']
         self.meta_data["SOPInstanceUID"] = self.mapVals['name_string']
+
+        # Full dinamic window
+        #self.meta_data["WindowWidth"] = 26373
+        #self.meta_data["WindowCenter"] = 13194
+
 
         dicom_image.meta_data = dicom_image.meta_data | self.meta_data
 
