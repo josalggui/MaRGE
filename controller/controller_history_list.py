@@ -240,7 +240,7 @@ class HistoryListController(HistoryListWidget):
                         self.inputs[key][2] = False
                         # Delete outputs from the sequence
                         sequence.resetMapVals()
-                        print("\n" + key + " Done!")
+                        print("\n" + key + " ready!")
                     else:
                         # Enable acquire button
                         if self.main.toolbar_marcos.action_server.isChecked():
