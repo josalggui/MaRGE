@@ -750,7 +750,10 @@ class MRIBLANKSEQ:
         name = datetime.now()
         name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
         self.mapVals['name_string'] = name_string
-        file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
+        if hasattr(self, 'raw_data_name'):
+            file_name = "%s.%s" % (self.raw_data_name, name_string)
+        else:
+            file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
         self.mapVals['fileName'] = "%s.mat" % file_name
 
         # Save mat file with the outputs
