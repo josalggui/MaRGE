@@ -55,6 +55,12 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='AutoTuningInfo', val='AutoTuning')
         self.addParameter(key='seriesTarget', string='Series target (Ohms)', val=50.0, field='RF')
         self.addParameter(key='iterations', string='Max iterations', val=10, field='RF')
+        self.addParameter(key='series', string='Series capacitor', val='00000', field='RF')
+        self.addParameter(key='tuning', string='Tuning capacitor', val='00000', field='RF')
+        self.addParameter(key='matching', string='Matching capacitor', val='00000', field='RF')
+        self.addParameter(key='switch', string='Switch', val='0', field='RF')
+        self.addParameter(key='test', string='Test', val=0, field='RF')
+
 
     def sequenceInfo(self):
         print("\n RF Auto-tuning")
@@ -72,11 +78,17 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         for key in self.mapKeys:
             setattr(self, key, self.mapVals[key])
 
-        # Run sequence continuously
-        self.threadpool = QThreadPool()
-        print("Multithreading with maximum %d threads \n" % self.threadpool.maxThreadCount())
-        worker = Worker(self.runAutoTuning)  # Any other args, kwargs are passed to the run function
-        self.threadpool.start(worker)
+        if self.test == 0:
+            # Run sequence continuously
+            self.threadpool = QThreadPool()
+            print("Multithreading with maximum %d threads \n" % self.threadpool.maxThreadCount())
+            worker = Worker(self.runAutoTuning)  # Any other args, kwargs are passed to the run function
+            self.threadpool.start(worker)
+        else:
+            self.arduino.write((self.series+self.tuning+self.matching+self.switch).encode())
+            while self.arduino.in_waiting == 0:
+                time.sleep(0.1)
+            result = self.arduino.readline()
 
     def sequenceAnalysis(self, obj=''):
         # self.mapVals['bestSState'] = self.bestSState

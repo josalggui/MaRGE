@@ -1,6 +1,6 @@
 // Code to control the autotuning circuit with python.
-
-int cPins[] = {24, 32, 30, 28, 26, 31, 29, 27, 25, 23, 33, 41, 39, 37, 35, 34};
+//  cPins[] = {S1, S2, S3, S4, S5, T1, T2, T3, T4, T5, M1, M2, M3, M4, M5, TTL}
+int cPins[] = {22, 24, 26, 28, 30, 33, 35, 37, 39, 41, 42, 44, 46, 48, 50, 53};
 int nPins = 16;
 
 void setup() {
