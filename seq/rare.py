@@ -133,8 +133,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         # Miscellaneous
         self.freqOffset = self.freqOffset*1e6 # MHz
-        gradRiseTime = 500e-6       # s
-        gSteps = int(gradRiseTime*1e6/5)*0+16
+        gradRiseTime = hw.grad_rise_time
+        gSteps = hw.grad_steps
         addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
         randFactor = 0e-3                        # Random amplitude to add to the phase gradients
         resolution = self.fov/self.nPoints
