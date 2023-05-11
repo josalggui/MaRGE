@@ -77,7 +77,6 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         spoiler = self.mapVals['spoiler'] # set 1 or 0 if you want or do not want to apply spoiler gradients
 
         freqCal = False
-        demo = False
 
         # Conversion of variables to non-multiplied units
         larmorFreq = larmorFreq*1e6
@@ -94,8 +93,8 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
 
         # Miscellaneous
         larmorFreq = larmorFreq*1e-6
-        gradRiseTime = 100e-6       # Estimated gradient rise time
-        gSteps = int(gradRiseTime*1e6/5)*0+1
+        gradRiseTime = hw.grad_rise_time       # Estimated gradient rise time
+        gSteps = hw.grad_steps
         addRdPoints = 5             # Initial rd points to avoid artifact at the begining of rd
         resolution = fov/nPoints
         randFactor = 0.
