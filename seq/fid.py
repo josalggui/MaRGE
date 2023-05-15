@@ -66,7 +66,7 @@ class FID(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']*1e3 # us
         acqTime = self.mapVals['acqTime']*1e3 # us
         nPoints = self.mapVals['nPoints']
-        shimming = np.array(self.mapVals['shimming'])*1e-4
+        shimming = np.array(self.mapVals['shimming'])*hw.shimming_factor
         txChannel = self.mapVals['txChannel']
         rxChannel = self.mapVals['rxChannel']
         shimmingTime = self.mapVals['shimmingTime']*1e3 # us

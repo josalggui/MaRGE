@@ -26,3 +26,4 @@ addRdPoints = 10 # to account for wrong first points after decimation
 adcFactor = 13.788 # mV/adcUnit
 lnaGain = 50 # dB
 temperature = 293 # k
+shimming_factor = 1e-5

@@ -48,7 +48,7 @@ class DataManager(QObject):
                  '_f_fft2Data', 
                  '_f_fft2DMagnitude']
 
-    def __init__(self, data: np.complex, p_frequency: float, samples: int, n:list, bandWidth: float, ):
+    def __init__(self, data: np.complex_, p_frequency: float, samples: int, n:list, bandWidth: float, ):
         """
         Initialisation of data manager class
         @param data:        Raw data
