@@ -34,3 +34,5 @@ rp_ip_address = "192.168.1.101"
 rp_version = "rp-122"
 lnaGain = 50 # dB
 temperature = 293 # k
+shimming_factor = 1e-5
+
