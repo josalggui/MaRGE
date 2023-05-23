@@ -10,8 +10,8 @@
 import numpy as np
 
 gFactor = [0.025, 0.040, 0.035] # (X, Y, Z) in T/m/o.u.
-slewRate = 1000 # us/o.u., slew rate for gradient rises
-stepsRate = 200 # steps/o.u., steps rate for gradient rises
+grad_rise_time = 400e-6 # s, time for gradient ramps
+grad_steps = 16 # steps to gradient ramps
 gammaB = 42.56e6 # Hz/T, Gyromagnetic ratio
 blkTime = 15 # us, blanking time of Barthel's RFPA
 gradDelay = 9 # Gradient amplifier delay (us)

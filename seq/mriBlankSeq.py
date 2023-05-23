@@ -447,7 +447,7 @@ class MRIBLANKSEQ:
         self.mapVals['dataOver'] = dataOver
 
         # Decimate the signal after 'fir' filter
-        dataFull = sig.decimate(dataOver[int((hw.cicDelayPoints-1)/2)::], hw.oversamplingFactor, ftype='fir', zero_phase=True)
+        dataFull = sig.decimate(dataOver[int((hw.oversamplingFactor-1)/2)::], hw.oversamplingFactor, ftype='fir', zero_phase=True)
 
         # Remove addRdPoints
         nPoints = int(dataFull.shape[0]/nRdLines)-2*hw.addRdPoints
@@ -518,10 +518,9 @@ class MRIBLANKSEQ:
         It only works with the Experiment class in controller, that inherits from Experiment in marcos_client
         """
         # Generate instructions taking into account the cic filter delay and addRdPoints
-        cicDelayPoints = 3
         samplingRate = self.expt.getSamplingRate() / hw.oversamplingFactor # us
-        t0 = tStart - (hw.addRdPoints*hw.oversamplingFactor-cicDelayPoints) * samplingRate # us
-        t1 = tStart + gateTime + (hw.addRdPoints*hw.oversamplingFactor + cicDelayPoints) * samplingRate
+        t0 = tStart - (hw.addRdPoints * hw.oversamplingFactor - hw.cic_delay_points) * samplingRate # us
+        t1 = tStart + (hw.addRdPoints * hw.oversamplingFactor + hw.cic_delay_points) * samplingRate + gateTime # us
         self.flo_dict['rx%i' % channel][0] = \
             np.concatenate((self.flo_dict['rx%i' % channel][0], np.array([t0, t1])), axis=0)
         self.flo_dict['rx%i' % channel][1] = \
@@ -750,7 +749,10 @@ class MRIBLANKSEQ:
         name = datetime.now()
         name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
         self.mapVals['name_string'] = name_string
-        file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
+        if hasattr(self, 'raw_data_name'):
+            file_name = "%s.%s" % (self.raw_data_name, name_string)
+        else:
+            file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
         self.mapVals['fileName'] = "%s.mat" % file_name
 
         # Save mat file with the outputs

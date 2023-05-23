@@ -133,8 +133,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         # Miscellaneous
         self.freqOffset = self.freqOffset*1e6 # MHz
-        gradRiseTime = 400e-6       # s
-        gSteps = int(gradRiseTime*1e6/5)*0+10
+        gradRiseTime = hw.grad_rise_time
+        gSteps = hw.grad_steps
         addRdPoints = 10             # Initial rd points to avoid artifact at the begining of rd
         randFactor = 0e-3                        # Random amplitude to add to the phase gradients
         resolution = self.fov/self.nPoints
@@ -477,7 +477,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 dummyData = np.average(dummyData, axis=0)
                 self.mapVals['dummyData'] = dummyData
                 overData = np.reshape(overData, (-1, self.etl, nRD*hw.oversamplingFactor))
-                overData = self.fixEchoPosition(dummyData, overData)
+                #overData = self.fixEchoPosition(dummyData, overData)
                 overData = np.reshape(overData, -1)
 
             # Generate dataFull
@@ -626,9 +626,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
             image = image/np.max(np.reshape(image,-1))*100
 
             # Image orientation
+            # Image orientation
             if self.axesOrientation[2] == 2:  # Sagital
                 title = "Sagittal"
-                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:
+                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  #OK
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
                     xLabel = "A | PHASE | P"
@@ -641,8 +642,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     yLabel = "I | PHASE | S"
             if self.axesOrientation[2] == 1: # Coronal
                 title = "Coronal"
-                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2:
+                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2: #OK
                     image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    image = np.flip(image, axis=0)
                     xLabel = "L | PHASE | R"
                     yLabel = "I | READOUT | S"
                 else:
@@ -656,11 +659,13 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     image = np.flip(image, axis=2)
                     xLabel = "L | PHASE | R"
                     yLabel = "P | READOUT | A"
-                else:
+                else:  #OK
                     image = np.transpose(image, (0, 2, 1))
                     image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
                     xLabel = "L | READOUT | R"
                     yLabel = "P | PHASE | A"
+
 
             result1 = {}
             result1['widget'] = 'image'
@@ -688,8 +693,39 @@ class RARE(blankSeq.MRIBLANKSEQ):
             self.mapVals['dfov'] = [0.0, 0.0, 0.0]
             hw.dfov = [0.0, 0.0, 0.0]
 
-            # Add parameters to meta_data dictionary
+            # DICOM TAGS
+            # Image
+            imageDICOM = np.transpose(image, (0, 2, 1))
+            # If it is a 3d image
+            if len(imageDICOM.shape) > 2:
+                # Obtener dimensiones
+                slices, rows, columns = imageDICOM.shape
+                self.meta_data["Columns"] = columns
+                self.meta_data["Rows"] = rows
+                self.meta_data["NumberOfSlices"] = slices
+                self.meta_data["NumberOfFrames"] = slices
+            # if it is a 2d image
+            else:
+                # Obtener dimensiones
+                rows, columns = imageDICOM.shape
+                self.meta_data["Columns"] = columns
+                self.meta_data["Rows"] = rows
+                self.meta_data["NumberOfSlices"] = 1
+                self.meta_data["NumberOfFrames"] = 1
+            imgAbs = np.abs(imageDICOM)
+            imgFullAbs = np.abs(imageDICOM) * (2 ** 15 - 1) / np.amax(np.abs(imageDICOM))
+            x2 = np.amax(np.abs(imageDICOM))
+            imgFullInt = np.int16(np.abs(imgFullAbs))
+            imgFullInt = np.reshape(imgFullInt, (slices, rows, columns))
+            arr = np.zeros((slices, rows, columns), dtype=np.int16)
+            arr = imgFullInt
+            self.meta_data["PixelData"] = arr.tobytes()
+            self.meta_data["WindowWidth"] = 26373
+            self.meta_data["WindowCenter"] = 13194
+            # Sequence parameters
             self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
+            self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
+            self.meta_data["EchoTrainLength"] = self.mapVals['etl']
 
             # Add results into the output attribute (result1 must be the image to save in dicom)
             self.output = [result1, result2]
