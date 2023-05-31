@@ -88,7 +88,7 @@ class FID(blankSeq.MRIBLANKSEQ):
                 self.rxGateSync(t0, acqTime, rxChannel=rxChannel)
                 # self.ttl(t0, acqTime, channel=1, rewrite=True)
 
-            self.endSequence(repetitionTime*nScans)
+            self.endSequence(shimmingTime + repetitionTime*nScans)
 
 
         # Initialize the experiment
