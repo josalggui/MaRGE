@@ -106,7 +106,6 @@ class SequenceController(SequenceToolBar):
         # Save input parameters
         defaultsequences[self.seq_name].saveParams()
 
-        # if not hasattr(defaultsequences[self.seq_name], 'out'):  # If it is the first execution
         if self.new_run:
             self.new_run = False
 
@@ -114,7 +113,7 @@ class SequenceController(SequenceToolBar):
             defaultsequences[self.seq_name].sequenceAtributes()
 
             # Create and execute selected sequence
-            if defaultsequences[self.seq_name].sequenceRun(0):
+            if defaultsequences[self.seq_name].sequenceRun(0, self.main.demo):
                 # Delete previous plots
                 self.main.figures_layout.clearFiguresLayout()
 
@@ -137,9 +136,9 @@ class SequenceController(SequenceToolBar):
             self.label.setText(file_name)
 
             # Add item to the history list
-            self.main.history_list.current_output = str(datetime.now())[11:23]
-            name = self.main.history_list.current_output + " | " + file_name
-            self.main.history_list.addItem(name)
+            self.main.history_list.current_output = str(datetime.now())[11:23] + " | " + file_name.split('.')[0]
+            item_name = str(datetime.now())[11:23] + " | " + file_name
+            self.main.history_list.addItem(item_name)
 
             # Clear inputs
             defaultsequences[self.seq_name].resetMapVals()
@@ -148,8 +147,7 @@ class SequenceController(SequenceToolBar):
             self.main.history_list.outputs[self.main.history_list.current_output] = self.old_out
             self.main.history_list.inputs[self.main.history_list.current_output] = \
                 [list(defaultsequences[self.seq_name].mapNmspc.values()),
-                 list(defaultsequences[self.seq_name].mapVals.values()),
-                 False]
+                 list(defaultsequences[self.seq_name].mapVals.values())]
 
             # Save the rotation and shifts to the history list
             self.main.history_list.rotations[self.main.history_list.current_output] = \
@@ -210,9 +208,10 @@ class SequenceController(SequenceToolBar):
         self.main.history_list.addItem(name)
 
         # Save results into the history
-        self.main.history_list.inputs[name[0:12]] = [list(defaultsequences[seq_name].mapNmspc.values()),
-                                                     list(defaultsequences[seq_name].mapVals.values()),
-                                                     True]
+        self.main.history_list.inputs[name] = [list(defaultsequences[seq_name].mapNmspc.values()),
+                                                     list(defaultsequences[seq_name].mapVals.values())]
+        self.main.history_list.pending_inputs[name] = [list(defaultsequences[seq_name].mapNmspc.values()),
+                                                             list(defaultsequences[seq_name].mapVals.values())]
 
         # Set to zero the dfov and angle for next figures
         for sequence in defaultsequences.values():
@@ -308,12 +307,10 @@ class SequenceController(SequenceToolBar):
         @email: josalggui@i3m.upv.es
         @Summary: executed when you repeat some calibration sequences
         """
-        single_repetition = not self.action_iterate.isChecked()
-
         # Acquire while iterativeRun is True
         if not self.action_iterate.isChecked():
             # Create and execute selected sequence
-            defaultsequences[self.seq_name].sequenceRun(0)
+            defaultsequences[self.seq_name].sequenceRun(0, self.main.demo)
 
             # Do sequence analysis and acquire de plots
             self.new_out = defaultsequences[self.seq_name].sequenceAnalysis()
@@ -323,9 +320,9 @@ class SequenceController(SequenceToolBar):
             self.label.setText(file_name)
 
             # Add item to the history list
-            self.main.history_list.current_output = str(datetime.now())[11:23]
-            name = self.main.history_list.current_output + " | " + file_name
-            self.main.history_list.addItem(name)
+            self.main.history_list.current_output = str(datetime.now())[11:23] + " | " + file_name.split('.')[0]
+            item_name = str(datetime.now())[11:23] + " | " + file_name
+            self.main.history_list.addItem(item_name)
 
             for plot_index in range(len(self.new_out)):
                 old_curves = self.plots[plot_index].plot_item.listDataItems()
@@ -341,8 +338,7 @@ class SequenceController(SequenceToolBar):
             self.main.history_list.outputs[self.main.history_list.current_output] = self.new_out
             self.main.history_list.inputs[self.main.history_list.current_output] = \
                 [list(defaultsequences[self.seq_name].mapNmspc.values()),
-                 list(defaultsequences[self.seq_name].mapVals.values()),
-                 False]
+                 list(defaultsequences[self.seq_name].mapVals.values())]
 
             # Save the rotation and shifts to the history list
             self.main.history_list.rotations[self.main.history_list.current_output] = \
@@ -354,7 +350,7 @@ class SequenceController(SequenceToolBar):
         else:
             while self.action_iterate.isChecked():
                 # Create and execute selected sequence
-                defaultsequences[self.seq_name].sequenceRun(0)
+                defaultsequences[self.seq_name].sequenceRun(0, self.main.demo)
 
                 # Do sequence analysis and acquire de plots
                 self.new_out = defaultsequences[self.seq_name].sequenceAnalysis()
@@ -364,9 +360,9 @@ class SequenceController(SequenceToolBar):
                 self.label.setText(file_name)
 
                 # Add item to the history list
-                self.main.history_list.current_output = str(datetime.now())[11:23]
-                name = self.main.history_list.current_output + " | " + file_name
-                self.main.history_list.addItem(name)
+                self.main.history_list.current_output = str(datetime.now())[11:23] + " | " + file_name.split('.')[0]
+                item_name = str(datetime.now())[11:23] + " | " + file_name
+                self.main.history_list.addItem(item_name)
 
                 for plot_index in range(len(self.new_out)):
                     old_curves = self.plots[plot_index].plot_item.listDataItems()
@@ -382,8 +378,7 @@ class SequenceController(SequenceToolBar):
                 self.main.history_list.outputs[self.main.history_list.current_output] = self.new_out
                 self.main.history_list.inputs[self.main.history_list.current_output] = \
                     [list(defaultsequences[self.seq_name].mapNmspc.values()),
-                     list(defaultsequences[self.seq_name].mapVals.values()),
-                     False]
+                     list(defaultsequences[self.seq_name].mapVals.values())]
 
                 # Save the rotation and shifts to the history list
                 self.main.history_list.rotations[self.main.history_list.current_output] = \
