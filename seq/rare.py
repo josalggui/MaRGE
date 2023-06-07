@@ -540,6 +540,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
             dataTemp[0:nSL, :, :] = data
             data = np.reshape(dataTemp, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
 
+            if self.demo:
+                data = self.myPhantom()
+
             # Fix the position of the sample according to dfov
             kMax = np.array(self.nPoints)/(2*np.array(self.fov))*np.array(self.axesEnable)
             kRD = np.linspace(-kMax[0],kMax[0],num=self.nPoints[0],endpoint=False)
@@ -619,10 +622,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             return([result1, result2])
         else:
             # Plot image
-            if self.demo:
-                image = np.random.randn(nPoints[2], nPoints[1], nPoints[0])
-            else:
-                image = np.abs(self.mapVals['image3D'])
+            image = np.abs(self.mapVals['image3D'])
             image = image/np.max(np.reshape(image,-1))*100
 
             # Image orientation
@@ -745,7 +745,45 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
             return self.output
 
+    def myPhantom(self):
+        # Reorganize the fov
+        n_pixels = self.nPoints[0]*self.nPoints[1]*self.nPoints[2]
+
+        # Get x, y and z vectors in real (x, y, z) and relative (rd, ph, sl) coordinates
+        rd = np.linspace(-self.fov[0] / 2, self.fov[0] / 2, self.nPoints[0])
+        ph = np.linspace(-self.fov[1] / 2, self.fov[1] / 2, self.nPoints[1])
+        if self.nPoints[2]==1:
+            sl = sl = np.linspace(-0, 0, 1)
+            p = np.array([0.01, 0.01, 0.0])
+            p = p[self.axesOrientation]
+        else:
+            sl = np.linspace(-self.fov[2] / 2, self.fov[2] / 2, self.nPoints[2])
+            p = np.array([0.01, 0.01, 0.01])
+        ph, sl, rd = np.meshgrid(ph, sl, rd)
+        rd = np.reshape(rd, (1, -1))
+        ph = np.reshape(ph, (1, -1))
+        sl = np.reshape(sl, (1, -1))
+        pos_rela = np.concatenate((rd, ph, sl), axis=0)
+        pos_real = pos_rela[self.axesOrientation, :]
+
+        # Generate the phantom
+        image = np.zeros((1, n_pixels))
+        image = np.concatenate((pos_real, image), axis=0)
+        r = 0.01
+        for ii in range(n_pixels):
+            d = np.sqrt((pos_real[0,ii] - p[0])**2 + (pos_real[1,ii] - p[1])**2 + (pos_real[2,ii] - p[2])**2)
+            if d <= r:
+                image[3, ii] = 1
+        image_3d = np.reshape(image[3, :], self.nPoints[-1::-1])
+        
+        # Generate k-space
+        kspace_3d = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(image_3d)))
+        
+        kspace = np.reshape(kspace_3d, (1, -1))
+        
+        return kspace
+        
+
 if __name__=="__main__":
-    seq = RAREProtocols()
-    seq.sequenceRun()
-    seq.sequenceAnalysis(obj='Standalone')
+    seq = RARE()
+    seq.myPhantom()
