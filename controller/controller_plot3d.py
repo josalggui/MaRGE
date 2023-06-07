@@ -65,19 +65,19 @@ class Plot3DController(Plot3DWidget):
             a = 1
             if self.title == "Sagittal":
                 a = -1
-                d = [1, 1]
+                d = [1, 1] #[PA, IS]
                 x_axis = 1
                 y_axis = 0
                 z_axis = 2
             elif self.title == "Coronal":
                 a = -1
-                d = [-1, 1]
+                d = [-1, 1] #[LR, IS]
                 x_axis = 2
                 y_axis = 0
                 z_axis = 1
             elif self.title == "Transversal":
                 a = 1
-                d = [-1, 1]
+                d = [-1, 1] #[LA, PA]
                 x_axis = 2
                 y_axis = 1
                 z_axis = 0
@@ -97,13 +97,13 @@ class Plot3DController(Plot3DWidget):
             img_fov_ru = [img_fov[x_axis], img_fov[y_axis]]
             self.img_resolution = np.array(img_fov_ru) / img_fov_px
             roi_fov_ru = np.array([roi_fov[x_axis], roi_fov[y_axis]])
-            roi_pos_ru = np.array([roi_pos[x_axis], roi_pos[y_axis]])
+            roi_pos_ru = np.array([d[0] * roi_pos[x_axis], d[1] * roi_pos[y_axis]])
             roi_fov_px = np.array(roi_fov_ru) / self.img_resolution
             roi_pos_px = np.array(roi_pos_ru) / self.img_resolution
             roi_pos_px = roi_pos_px + img_fov_px / 2 - roi_fov_px / 2
 
             # Set roi size and angle
-            self.roiFOV.setPos(d * roi_pos_px, update=False)
+            self.roiFOV.setPos(roi_pos_px, update=False)
             self.roiFOV.setSize(roi_fov_px, update=False)
             self.roiFOV.setAngle(0.0, update=False)
             self.roiFOV.stateChanged()
