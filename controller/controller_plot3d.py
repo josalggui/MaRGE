@@ -166,8 +166,10 @@ class Plot3DController(Plot3DWidget):
         dfov_roi = hw.dfov.copy()
         dfov_roi[x_axis] = d[0] * np.round(x0_ru * 1e3, decimals=1)  # mm
         dfov_roi[y_axis] = d[1] * np.round(y0_ru * 1e3, decimals=1)  # mm
-        hw.fov = fov_roi.copy()
-        hw.dfov = dfov_roi.copy()
+        hw.fov[x_axis] = np.round(fov_roi[x_axis])
+        hw.fov[y_axis] = np.round(fov_roi[y_axis])
+        hw.dfov[x_axis] = np.round(dfov_roi[x_axis])
+        hw.dfov[y_axis] = np.round(dfov_roi[y_axis])
 
         # Define rotation
         rotation = [0, 0, 0, 0]
