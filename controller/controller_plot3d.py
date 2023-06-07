@@ -71,13 +71,13 @@ class Plot3DController(Plot3DWidget):
                 z_axis = 2
             elif self.title == "Coronal":
                 a = -1
-                d = [1, 1]
+                d = [-1, 1]
                 x_axis = 2
                 y_axis = 0
                 z_axis = 1
             elif self.title == "Transversal":
                 a = 1
-                d = [1, 1]
+                d = [-1, 1]
                 x_axis = 2
                 y_axis = 1
                 z_axis = 0
@@ -132,13 +132,13 @@ class Plot3DController(Plot3DWidget):
             z_axis = 2
         elif self.title == "Coronal":
             a = -1
-            d = [-1, -1]
+            d = [1, -1]
             x_axis = 2
             y_axis = 0
             z_axis = 1
         elif self.title == "Transversal":
             a = 1
-            d = [-1, -1]
+            d = [1, -1]
             x_axis = 2
             y_axis = 1
             z_axis = 0
