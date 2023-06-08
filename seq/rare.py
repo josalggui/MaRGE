@@ -626,7 +626,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
             image = image/np.max(np.reshape(image,-1))*100
 
             # Image orientation
-            # Image orientation
             if self.axesOrientation[2] == 2:  # Sagital
                 title = "Sagittal"
                 if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  #OK
