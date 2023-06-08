@@ -7,6 +7,7 @@ Created on Thu June 2 2022
 
 import seq.rare as rare
 import seq.rareProtocols as rareProtocols
+import seq.rareProtocolsTest as rareProtocolsTest
 # import seq.haste as haste
 import seq.gre3d as gre
 import seq.petra as petra
@@ -32,6 +33,9 @@ class RARE(rare.RARE):
 
 class RAREProtocols(rareProtocols.RAREProtocols):
     def __init__(self): super(RAREProtocols, self).__init__()
+
+class RAREProtocolsTest(rareProtocolsTest.RAREProtocolsTest):
+    def __init__(self): super(RAREProtocolsTest, self).__init__()
 
 class testSE(testSE.testSE):
     def __init__(self): super(testSE, self).__init__()
@@ -96,6 +100,7 @@ Definition of default sequences
 defaultsequences = {
     'Larmor': Larmor(),
     'RAREprotocols': RAREProtocols(),
+    'RAREprotocolsTest': RAREProtocolsTest(),
     'RARE': RARE(),
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),
