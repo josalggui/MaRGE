@@ -236,7 +236,7 @@ class HistoryListController(HistoryListWidget):
                     output = self.runSequenceInlist(sequence=sequence, key=key, raw_data_name=raw_data_name)
                     if output == 0:
                         # There is an error
-                        self.inputs[key][2] = False
+                        del self.pending_inputs[key]
                         print("\n"+key+" sequence finished abruptly with error.")
                     else:
                         # Add item to the history list
