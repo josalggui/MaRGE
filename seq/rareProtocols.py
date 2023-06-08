@@ -103,6 +103,29 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
         seqTime = np.round(seqTime, decimals=1)
         return(seqTime)  # minutes, scanTime
 
+    def sequenceAtributes(self):
+        super().sequenceAtributes()
+
+        # Conversion of variables to non-multiplied units
+        self.freqOffset = self.freqOffset * 1e3
+        self.rfExTime = self.rfExTime * 1e-6
+        self.rfReTime = self.rfReTime * 1e-6
+        self.fov = np.array(self.fov) * 1e-2
+        self.dfov = np.array(self.dfov) * 1e-3
+        self.echoSpacing = self.echoSpacing * 1e-3
+        self.acqTime = self.acqTime * 1e-3
+        self.shimming = np.array(self.shimming) * 1e-4
+        self.repetitionTime = self.repetitionTime * 1e-3
+        self.preExTime = self.preExTime * 1e-3
+        self.inversionTime = self.inversionTime * 1e-3
+        self.rdGradTime = self.rdGradTime * 1e-3
+        self.rdDephTime = self.rdDephTime * 1e-3
+        self.phGradTime = self.phGradTime * 1e-3
+
+        # Add rotation, dfov and fov to the history
+        self.dfovs.append(self.dfov)
+        self.fovs.append(self.fov)
+
     def sequenceRun(self, plotSeq=0, demo=False):
         self.demo = demo
         init_gpa=False # Starts the gpa
@@ -484,7 +507,6 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             # Reorganize dataFull
             dataProv = np.zeros([self.nScans,nSL*nPH*nRD])
             dataProv = dataProv+1j*dataProv
-            dataFull = np.reshape(dataFull, (nBatches, self.nScans, -1, nRD))
             if nBatches>1:
                 dataFullA = np.reshape(dataFullA, (nBatches-1, self.nScans, -1, nRD))
                 dataFullB = np.reshape(dataFullB, (1, self.nScans, -1, nRD))
