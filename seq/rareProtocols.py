@@ -661,25 +661,29 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                 title = "Coronal"
                 if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2:  # OK
                     image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
                     image = np.flip(image, axis=0)
-                    xLabel = "L | PHASE | R"
+                    xLabel = "R | PHASE | L"
                     yLabel = "I | READOUT | S"
                 else:
                     image = np.transpose(image, (0, 2, 1))
                     image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
                     image = np.flip(image, axis=0)
-                    xLabel = "L | READOUT | R"
+                    xLabel = "R | READOUT | L"
                     yLabel = "I | PHASE | S"
             if self.axesOrientation[2] == 0:  # Transversal
                 title = "Transversal"
                 if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
                     image = np.flip(image, axis=2)
-                    xLabel = "L | PHASE | R"
+                    image = np.flip(image, axis=1)
+                    xLabel = "R | PHASE | L"
                     yLabel = "P | READOUT | A"
                 else:  # OK
                     image = np.transpose(image, (0, 2, 1))
                     image = np.flip(image, axis=2)
-                    xLabel = "L | READOUT | R"
+                    image = np.flip(image, axis=1)
+                    xLabel = "R | READOUT | L"
                     yLabel = "P | PHASE | A"
 
             result1 = {}
@@ -708,18 +712,6 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             self.mapVals['dfov'] = [0.0, 0.0, 0.0]
             hw.dfov = [0.0, 0.0, 0.0]
 
-            # Reorientate for DICOM
-            if title == "Coronal":
-                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2:  # OK
-                    image = np.flip(image, axis=1)
-                else:
-                    pass
-            if title == "Transversal":
-                if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
-                    pass
-                else:
-                    image = np.flip(image, axis=1)
-                    
             # DICOM TAGS
             # Image
             imageDICOM = np.transpose(image, (0,2,1))
