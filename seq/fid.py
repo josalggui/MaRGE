@@ -81,14 +81,14 @@ class FID(blankSeq.MRIBLANKSEQ):
 
                 # Excitation pulse
                 t0 = tEx - hw.blkTime - rfExTime / 2
-                self.rfRecPulse(t0, rfExTime, rfExAmp, 0, txChannel=txChannel)
+                self.rfRecPulse(t0, rfExTime, rfExAmp, 0, channel=txChannel)
 
                 # Rx gate
                 t0 = tEx + rfExTime / 2 + deadTime
-                self.rxGateSync(t0, acqTime, rxChannel=rxChannel)
+                self.rxGateSync(t0, acqTime, channel=rxChannel)
                 # self.ttl(t0, acqTime, channel=1, rewrite=True)
 
-            self.endSequence(repetitionTime*nScans)
+            self.endSequence(shimmingTime + repetitionTime*nScans)
 
 
         # Initialize the experiment

@@ -518,7 +518,10 @@ class MRIBLANKSEQ:
         It only works with the Experiment class in controller, that inherits from Experiment in marcos_client
         """
         # Generate instructions taking into account the cic filter delay and addRdPoints
-        samplingRate = self.expt.getSamplingRate() / hw.oversamplingFactor # us
+        try:
+            samplingRate = self.expt.getSamplingRate() / hw.oversamplingFactor # us
+        except:
+            samplingRate = self.mapVals['samplingPeriod']*1e3 / hw.oversamplingFactor
         t0 = tStart - (hw.addRdPoints * hw.oversamplingFactor - hw.cic_delay_points) * samplingRate # us
         t1 = tStart + (hw.addRdPoints * hw.oversamplingFactor + hw.cic_delay_points) * samplingRate + gateTime # us
         self.flo_dict['rx%i' % channel][0] = \
@@ -592,19 +595,19 @@ class MRIBLANKSEQ:
         elif gAxis == 2:
             self.expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
 
-    def setGradientRamp(self, tStart, gradRiseTime, nStepsGradRise, g0, gf, gAxes, shimming, rewrite=True):
-        tRamp = np.zeros(nStepsGradRise)
-        gAmp = np.zeros(nStepsGradRise)
+    def setGradientRamp(self, tStart, gradRiseTime, nStepsGradRise, g0, gf, gAxis, shimming, rewrite=True):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        gradient ramp from 'g0' to 'gf'
+        Time inputs in us
+        Amplitude inputs in T/m
+        """
         for kk in range(nStepsGradRise):
-            tRamp[kk] = tStart + gradRiseTime * kk / nStepsGradRise
-            gAmp[kk] = (g0 + ((gf - g0) * (kk + 1) / nStepsGradRise)) / hw.gFactor[gAxes]
-
-            if gAxes == 0:
-                self.expt.add_flodict({'grad_vx': (tRamp[kk], gAmp[kk] + shimming[0])}, rewrite)
-            elif gAxes == 1:
-                self.expt.add_flodict({'grad_vy': (tRamp[kk], gAmp[kk] + shimming[1])}, rewrite)
-            elif gAxes == 2:
-                self.expt.add_flodict({'grad_vz': (tRamp[kk], gAmp[kk] + shimming[2])}, rewrite)
+            tRamp = tStart + gradRiseTime * kk / nStepsGradRise
+            gAmp = (g0 + ((gf - g0) * (kk + 1) / nStepsGradRise)) / hw.gFactor[gAxis]
+            self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], np.array([tRamp])), axis=0)
+            self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], np.array([gAmp])), axis=0)
 
     def gradTrapAmplitude(self, tStart, gAmplitude, gTotalTime, gAxis, shimming, orders, rewrite=True):
         """"
@@ -696,13 +699,14 @@ class MRIBLANKSEQ:
         Check for errors and add instructions to red pitaya if no errors are found
         """
         # Check errors:
-        for item in self.flo_dict.values():
+        for key in self.flo_dict.keys():
+            item = self.flo_dict[key]
             dt = item[0][1::]-item[0][0:-1]
             if (dt<=0).any():
-                print("\nSequence timing error")
+                print("\n%s timing error" % key)
                 return False
             if (item[1]>1).any() or (item[1]<-1).any():
-                print("\nSequence amplitude error")
+                print("\n%s amplitude error" % key)
                 return False
 
         self.expt.add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),

@@ -26,6 +26,7 @@ import seq.testSE as testSE
 import seq.sweepImage as sweep
 # import seq.autoTuning as autoTuning
 import seq.localizer as localizer
+import seq.MRID as mrid
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
@@ -47,6 +48,9 @@ class PETRA(petra.PETRA):
 
 class FID(fid.FID):
     def __init__(self): super(FID, self).__init__()
+
+class MRID(mrid.MRID):
+    def __init__(self): super(MRID, self).__init__()
 
 class FIDandNoise(FIDandNoise.FIDandNoise):
     def __init__(self): super(FIDandNoise, self).__init__()
@@ -97,6 +101,7 @@ defaultsequences = {
     'Larmor': Larmor(),
     'RAREprotocols': RAREProtocols(),
     'RARE': RARE(),
+    'MRID': MRID(),
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),
     'Shimming': Shimming(),
