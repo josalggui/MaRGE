@@ -30,11 +30,11 @@ from phantominator import shepp_logan
 #*********************************************************************************
 #*********************************************************************************
 
-class RAREProtocols(blankSeq.MRIBLANKSEQ):
+class RAREProtocolsTest(blankSeq.MRIBLANKSEQ):
     def __init__(self):
-        super(RAREProtocols, self).__init__()
+        super(RAREProtocolsTest, self).__init__()
         # Input the parameters
-        self.addParameter(key='seqName', string='RAREInfo', val='RAREprotocols')
+        self.addParameter(key='seqName', string='RAREInfo', val='RAREprotocolsTest')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
         self.addParameter(key='rfExFA', string='Exitation flip angle (º)', val=90, field='RF')
@@ -63,7 +63,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='freqCal', string='Calibrate frequency (0 or 1)', val=0, field='OTH')
         self.addParameter(key='gradSteps', string='Gradient steps', val=16, field='OTH')
         self.addParameter(key='gRiseTime', string='Gradient Rise Time (us)', val=500, field='OTH')
-
+        self.addParameter(key='delay', string='Delay (us)', val=0, field='OTH')
     def sequenceInfo(self):
         print(" ")
         print("3D RARE sequence")
@@ -102,29 +102,6 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
         seqTime = nPoints[1]/etl*nPoints[2]*repetitionTime*1e-3*nScans*parFourierFraction/60
         seqTime = np.round(seqTime, decimals=1)
         return(seqTime)  # minutes, scanTime
-
-    def sequenceAtributes(self):
-        super().sequenceAtributes()
-
-        # Conversion of variables to non-multiplied units
-        self.freqOffset = self.freqOffset * 1e3
-        self.rfExTime = self.rfExTime * 1e-6
-        self.rfReTime = self.rfReTime * 1e-6
-        self.fov = np.array(self.fov) * 1e-2
-        self.dfov = np.array(self.dfov) * 1e-3
-        self.echoSpacing = self.echoSpacing * 1e-3
-        self.acqTime = self.acqTime * 1e-3
-        self.shimming = np.array(self.shimming) * 1e-4
-        self.repetitionTime = self.repetitionTime * 1e-3
-        self.preExTime = self.preExTime * 1e-3
-        self.inversionTime = self.inversionTime * 1e-3
-        self.rdGradTime = self.rdGradTime * 1e-3
-        self.rdDephTime = self.rdDephTime * 1e-3
-        self.phGradTime = self.phGradTime * 1e-3
-
-        # Add rotation, dfov and fov to the history
-        self.dfovs.append(self.dfov)
-        self.fovs.append(self.fov)
 
     def sequenceRun(self, plotSeq=0, demo=False):
         self.demo = demo
@@ -165,6 +142,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
         resolution = self.fov/self.nPoints
         rfExAmp = self.rfExFA/(self.rfExTime*1e6*hw.b1Efficiency)*np.pi/180
         rfReAmp = self.rfReFA/(self.rfReTime*1e6*hw.b1Efficiency)*np.pi/180
+        delay = self.delay
         self.mapVals['rfExAmp'] = rfExAmp
         self.mapVals['rfReAmp'] = rfReAmp
         self.mapVals['resolution'] = resolution
@@ -172,6 +150,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
         self.mapVals['gSteps'] = gSteps
         self.mapVals['randFactor'] = randFactor
         self.mapVals['addRdPoints'] = addRdPoints
+        self.mapVals['delay'] = self.delay
 
         if rfExAmp>1 or rfReAmp>1:
             print("RF amplitude is too high, try with longer RF pulse time.")
@@ -197,7 +176,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
 
         # Readout gradient time
         if self.rdGradTime<self.acqTime:
-            self.rdGradTime = self.acqTime
+            self.rdGradTime = self.acqTime+2*addRdPoints/BW
         self.mapVals['rdGradTime'] = self.rdGradTime * 1e3 # ms
 
         # Phase and slice de- and re-phasing time
@@ -340,18 +319,18 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
 
                     # Readout gradient
                     if (repeIndex==(self.dummyPulses-1) or repeIndex>=self.dummyPulses) and dc==False:         # This is to account for dummy pulses
-                        t0 = tEcho-self.rdGradTime/2-gradRiseTime-hw.gradDelay
+                        t0 = tEcho-self.rdGradTime/2-gradRiseTime-hw.gradDelay+delay
                         self.gradTrap(t0, gradRiseTime, self.rdGradTime, rdGradAmplitude, gSteps, self.axesOrientation[0], self.shimming)
                         orders = orders+gSteps*2
 
                     # Rx gate
                     if (repeIndex==(self.dummyPulses-1) or repeIndex>=self.dummyPulses):
-                        t0 = tEcho-self.acqTime/2-addRdPoints/BW
+                        t0 = tEcho-self.acqTime/2-addRdPoints/BW+delay
                         self.rxGate(t0, self.acqTime+2*addRdPoints/BW)
                         acqPoints += nRD
 
                     # Rephasing phase and slice gradients
-                    t0 = tEcho+self.acqTime/2+addRdPoints/BW-hw.gradDelay
+                    t0 = tEcho+self.acqTime/2+addRdPoints/BW-hw.gradDelay+delay
                     if (echoIndex<self.etl-1 and repeIndex>=self.dummyPulses):
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, -phGradients[phIndex], gSteps, self.axesOrientation[1], self.shimming)
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, -slGradients[slIndex], gSteps, self.axesOrientation[2], self.shimming)
@@ -507,6 +486,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             # Reorganize dataFull
             dataProv = np.zeros([self.nScans,nSL*nPH*nRD])
             dataProv = dataProv+1j*dataProv
+            dataFull = np.reshape(dataFull, (nBatches, self.nScans, -1, nRD))
             if nBatches>1:
                 dataFullA = np.reshape(dataFullA, (nBatches-1, self.nScans, -1, nRD))
                 dataFullB = np.reshape(dataFullB, (1, self.nScans, -1, nRD))
@@ -643,55 +623,55 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                 image = np.abs(self.mapVals['image3D'])
             image = image/np.max(np.reshape(image,-1))*100
 
-            # Image orientation
-            if self.axesOrientation[2] == 2:  # Sagital
-                title = "Sagittal"
-                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  # OK
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    xLabel = "A | PHASE | P"
-                    yLabel = "I | READOUT | S"
-                else:
-                    image = np.transpose(image, (0, 2, 1))
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    xLabel = "A | READOUT | P"
-                    yLabel = "I | PHASE | S"
-            if self.axesOrientation[2] == 1:  # Coronal
-                title = "Coronal"
-                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2:  # OK
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    image = np.flip(image, axis=0)
-                    xLabel = "R | PHASE | L"
-                    yLabel = "I | READOUT | S"
-                else:
-                    image = np.transpose(image, (0, 2, 1))
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    image = np.flip(image, axis=0)
-                    xLabel = "R | READOUT | L"
-                    yLabel = "I | PHASE | S"
-            if self.axesOrientation[2] == 0:  # Transversal
-                title = "Transversal"
-                if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    xLabel = "R | PHASE | L"
-                    yLabel = "P | READOUT | A"
-                else:  # OK
-                    image = np.transpose(image, (0, 2, 1))
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    xLabel = "R | READOUT | L"
-                    yLabel = "P | PHASE | A"
+            # # Image orientation
+            # if self.axesOrientation[2] == 2:  # Sagital
+            #     title = "Sagittal"
+            #     if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  #OK
+            #         image = np.flip(image, axis=2)
+            #         image = np.flip(image, axis=1)
+            #         xLabel = "A | PHASE | P"
+            #         yLabel = "I | READOUT | S"
+            #     else:
+            #         image = np.transpose(image, (0, 2, 1))
+            #         image = np.flip(image, axis=2)
+            #         image = np.flip(image, axis=1)
+            #         xLabel = "A | READOUT | P"
+            #         yLabel = "I | PHASE | S"
+            # if self.axesOrientation[2] == 1: # Coronal
+            #     title = "Coronal"
+            #     if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2: #OK
+            #         image = np.flip(image, axis=2)
+            #         image = np.flip(image, axis=1)
+            #         image = np.flip(image, axis=0)
+            #         xLabel = "L | PHASE | R"
+            #         yLabel = "I | READOUT | S"
+            #     else:
+            #         image = np.transpose(image, (0, 2, 1))
+            #         image = np.flip(image, axis=2)
+            #         xLabel = "L | READOUT | R"
+            #         yLabel = "I | PHASE | S"
+            # if self.axesOrientation[2] == 0:  # Transversal
+            #     title = "Transversal"
+            #     if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
+            #         image = np.flip(image, axis=2)
+            #         xLabel = "L | PHASE | R"
+            #         yLabel = "P | READOUT | A"
+            #     else:  #OK
+            #         image = np.transpose(image, (0, 2, 1))
+            #         image = np.flip(image, axis=2)
+            #         image = np.flip(image, axis=1)
+            #         xLabel = "L | READOUT | R"
+            #         yLabel = "P | PHASE | A"
 
             result1 = {}
             result1['widget'] = 'image'
             result1['data'] = image
-            result1['xLabel'] = xLabel
-            result1['yLabel'] = yLabel
-            result1['title'] = title
+            # result1['xLabel'] = xLabel
+            # result1['yLabel'] = yLabel
+            # result1['title'] = title
+            result1['xLabel'] = "%s axis"%axesStr[1]
+            result1['yLabel'] = "%s axis"%axesStr[0]
+            result1['title'] = "Image"
             result1['row'] = 0
             result1['col'] = 0
 

@@ -25,6 +25,7 @@ class HistoryListController(HistoryListWidget):
         self.rotations = {}
         self.outputs = {}
         self.inputs = {}
+        self.pending_inputs = {}
         self.current_output = None
         self.figures = []
         self.labels = []
@@ -71,9 +72,10 @@ class HistoryListController(HistoryListWidget):
             print("You can add only 4 figures to the layout")
             return
 
-        # Get file self.current_output
-        file_name = self.clicked_item.text()[15::]
-        self.current_output = self.clicked_item.text()[0:12]
+        # Get clicked item self.current_output
+        item_time = self.clicked_item.text().split(' | ')[0]
+        item_name = self.clicked_item.text().split(' | ')[1].split('.')[0]
+        self.current_output = item_time + " | " + item_name
 
         # Get the widget from history
         output = self.outputs[self.current_output]
@@ -92,7 +94,7 @@ class HistoryListController(HistoryListWidget):
         item = output[0]
         if item['widget'] == 'image':
             self.figures.append(item)
-            self.labels.append(file_name)
+            self.labels.append(item_name)
         else:
             print("The selected raw data does not contain an image")
 
@@ -127,8 +129,10 @@ class HistoryListController(HistoryListWidget):
         @email: josalggui@i3m.upv.es
         @Summary: update the table when new element is clicked in the history list
         """
-        # Get file name
-        name = item.text()[0:12]
+        # Get the corresponding key to get access to the history dictionary
+        item_time = item.text().split(' | ')[0]
+        item_name = item.text().split(' | ')[1].split('.')[0]
+        name = item_time + " | " + item_name
 
         # Get the input data from history
         input_data = self.inputs[name]
@@ -154,9 +158,10 @@ class HistoryListController(HistoryListWidget):
         @email: josalggui@i3m.upv.es
         @Summary: update the shown figure when new element is double clicked in the history list
         """
-        # Get file self.current_output
-        file_name = item.text()[15::]
-        self.current_output = item.text()[0:12]
+        # Get the corresponding key to get access to the history dictionary
+        item_time = item.text().split(' | ')[0]
+        item_name = item.text().split(' | ')[1].split('.')[0]
+        self.current_output = item_time + " | " + item_name
 
         # Get the widget from history
         output = self.outputs[self.current_output]
@@ -182,7 +187,7 @@ class HistoryListController(HistoryListWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet("background-color: black;color: white")
         self.main.figures_layout.addWidget(label, row=0, col=0, colspan=2)
-        label.setText(file_name)
+        label.setText(item.text().split(' | ')[1])
 
         for item in output:
             if item['widget'] == 'image':
@@ -209,54 +214,46 @@ class HistoryListController(HistoryListWidget):
         """
         while self.main.app_open:
             if self.main.toolbar_marcos.action_server.isChecked():
-                keys = list(self.inputs.keys())  # List of elements in the sequence history list
-                element = 0
-                for key in keys:
-                    if self.inputs[key][2]:
-                        # Disable acquire button
-                        self.main.toolbar_sequences.action_acquire.setEnabled(False)
+                pending_keys = list(self.pending_inputs.keys())     # List of elements in the pending sequence list
+                keys = list(self.inputs.keys())                     # List of elements in the sequence history list
+                for key in pending_keys:
+                    # Disable acquire button
+                    self.main.toolbar_sequences.action_acquire.setEnabled(False)
 
-                        # Get the sequence to run
-                        seq_name = self.inputs[key][1][0]
-                        sequence = defaultsequences[seq_name]
+                    # Get the sequence to run
+                    seq_name = self.pending_inputs[key][1][0]
+                    sequence = defaultsequences[seq_name]
 
-                        # Modify input parameters of the sequence
-                        n = 0
-                        for keyParam in sequence.mapKeys:
-                            sequence.mapVals[keyParam] = self.inputs[key][1][n]
-                            n += 1
+                    # Modify input parameters of the sequence
+                    n = 0
+                    for keyParam in sequence.mapKeys:
+                        sequence.mapVals[keyParam] = self.pending_inputs[key][1][n]
+                        n += 1
 
-                        # Run the sequence
-                        key_index = keys.index(key)
-                        raw_data_name = self.item(key_index).text().split('|')[1].split(' ')[1]
-                        output = self.runSequenceInlist(sequence=sequence, key=key, raw_data_name=raw_data_name)
-                        if output == 0:
-                            # del self.inputs[key]
-                            # del keys[key_index]
-                            # self.takeItem(key_index)
-                            # print("\n%s deleted!" % key)
-                            self.inputs[key][2] = False
-                            print("\n"+key+" sequence finished abruptly with error.")
-                        else:
-                            # Add item to the history list
-                            file_name = sequence.mapVals['fileName']
-                            date = ".".join(file_name.split('.')[1::])
-                            self.item(key_index).setText(self.item(key_index).text() + "." + date)
-                            # Save results into the history
-                            self.outputs[key] = output
-                            self.inputs[key][2] = False
-                            # Delete outputs from the sequence
-                            sequence.resetMapVals()
-                            print("\n" + key + " ready!")
+                    # Run the sequence
+                    key_index = keys.index(key)
+                    raw_data_name = key.split('|')[1].split(' ')[1]
+                    output = self.runSequenceInlist(sequence=sequence, key=key, raw_data_name=raw_data_name)
+                    if output == 0:
+                        # There is an error
+                        del self.pending_inputs[key]
+                        print("\n"+key+" sequence finished abruptly with error.")
                     else:
-                        # Enable acquire button
-                        if self.main.toolbar_marcos.action_server.isChecked():
-                            self.main.toolbar_sequences.action_acquire.setEnabled(True)
+                        # Add item to the history list
+                        file_name = sequence.mapVals['fileName']
+                        date = ".".join(file_name.split('.')[1::])
+                        self.item(key_index).setText(self.item(key_index).text() + "." + date)
+                        # Save results into the history
+                        self.outputs[key] = output
+                        del self.pending_inputs[key]
+                        # Delete outputs from the sequence
+                        sequence.resetMapVals()
+                        print("\n" + key + " ready!")
                     time.sleep(0.1)
-            else:
-                pass
-            time.sleep(1)
-
+                # Enable acquire button
+                if self.main.toolbar_marcos.action_server.isChecked():
+                    self.main.toolbar_sequences.action_acquire.setEnabled(True)
+            time.sleep(0.1)
         return 0
 
     def runSequenceInlist(self, sequence=None, key=None, raw_data_name=""):
