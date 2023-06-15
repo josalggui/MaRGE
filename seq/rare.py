@@ -21,6 +21,7 @@ import numpy as np
 import experiment as ex
 import scipy.signal as sig
 import configs.hw_config as hw # Import the scanner hardware config
+import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import pyqtgraph as pg
 import time
@@ -36,28 +37,28 @@ class RARE(blankSeq.MRIBLANKSEQ):
         # Input the parameters
         self.addParameter(key='seqName', string='RAREInfo', val='RARE')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
-        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
+        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
-        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=35.0, field='RF')
-        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=70.0, field='RF')
-        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=20.0, field='SEQ')
-        self.addParameter(key='preExTime', string='Preexitation time (ms)', val=0.0, field='SEQ')
-        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, field='SEQ', tip="0 to ommit this pulse")
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., field='SEQ', tip="0 to ommit this pulse")
-        self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], field='IM')
-        self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], field='IM', tip="Position of the gradient isocenter")
+        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=35.0, units=units.us, field='RF')
+        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=70.0, units=units.us, field='RF')
+        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=20.0, units=units.ms, field='SEQ')
+        self.addParameter(key='preExTime', string='Preexitation time (ms)', val=0.0, units=units.ms, field='SEQ')
+        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ', tip="0 to ommit this pulse")
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
+        self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
+        self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 1, 1], field='IM')
-        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
+        self.addParameter(key='angle', string='Angle (º)', val=0.0, units=units.degrees, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM', tip="0=x, 1=y, 2=z")
         self.addParameter(key='axesEnable', string='Axes enable', val=[1, 0, 0], field='IM', tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
         self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
-        self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, field='OTH')
-        self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, field='OTH')
-        self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, field='OTH')
+        self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, units=units.ms, field='OTH')
+        self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
+        self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-12.5, -12.5, 7.5], field='OTH')
@@ -95,32 +96,20 @@ class RARE(blankSeq.MRIBLANKSEQ):
         seqTime = np.round(seqTime, decimals=1)
         return(seqTime)  # minutes, scanTime
 
+        # TODO: check for min and max values for all fields
+
     def sequenceAtributes(self):
         super().sequenceAtributes()
 
         # Conversion of variables to non-multiplied units
-        self.freqOffset = self.freqOffset * 1e3
-        self.rfExTime = self.rfExTime * 1e-6
-        self.rfReTime = self.rfReTime * 1e-6
-        self.fov = np.array(self.fov) * 1e-2
-        self.dfov = np.array(self.dfov) * 1e-3
-        self.echoSpacing = self.echoSpacing * 1e-3
-        self.acqTime = self.acqTime * 1e-3
-        self.shimming = np.array(self.shimming) * 1e-4
-        self.repetitionTime = self.repetitionTime * 1e-3
-        self.preExTime = self.preExTime * 1e-3
-        self.inversionTime = self.inversionTime * 1e-3
-        self.rdGradTime = self.rdGradTime * 1e-3
-        self.rdDephTime = self.rdDephTime * 1e-3
-        self.phGradTime = self.phGradTime * 1e-3
-        self.angle = self.angle * np.pi / 180
+        self.angle = self.angle * np.pi / 180 # rads
 
         # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.copy()
+        self.rotation = self.rotationAxis.tolist()
         self.rotation.append(self.angle)
         self.rotations.append(self.rotation)
-        self.dfovs.append(self.dfov)
-        self.fovs.append(self.fov)
+        self.dfovs.append(self.dfov.tolist())
+        self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa=False # Starts the gpa
