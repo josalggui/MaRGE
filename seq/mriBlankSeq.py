@@ -35,6 +35,7 @@ class MRIBLANKSEQ:
         self.mapFields = {}
         self.mapLen = {}
         self.mapTips = {}
+        self.map_units = {}
         self.meta_data = {}
         self.rotations = []
         self.dfovs = []
@@ -1003,12 +1004,13 @@ class MRIBLANKSEQ:
         # Finalize sequence
         self.endSequence(repetitionTime)
 
-    def addParameter(self, key='', string='', val=0, field='', tip=None):
+    def addParameter(self, key='', string='', val=0, units=True, field='', tip=None):
         if key is not self.mapVals.keys(): self.mapKeys.append(key)
         self.mapNmspc[key] = string
         self.mapVals[key] = val
         self.mapFields[key] = field
         self.mapTips[key] = tip
+        self.map_units[key] = units
         try:
             self.mapLen[key] = len(val)
         except:
@@ -1017,7 +1019,12 @@ class MRIBLANKSEQ:
     def sequenceAtributes(self):
         # Add input parameters to the self
         for key in self.mapKeys:
-            setattr(self, key, self.mapVals[key])
+            if isinstance(self.mapVals[key], list):
+                setattr(self, key, np.array([element * self.map_units[key] for element in self.mapVals[key]]))
+            else:
+                setattr(self, key, self.mapVals[key]*self.map_units[key])
+
+            x = 0
 
     def getParameter(self, key):
         return (self.mapVals[key])
