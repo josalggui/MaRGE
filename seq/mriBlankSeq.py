@@ -814,12 +814,14 @@ class MRIBLANKSEQ:
         # More DICOM tags
         self.meta_data["PatientName"] = self.session["subject_id"]
         self.meta_data["PatientSex"] = " "
-        self.meta_data["StudyID"] = self.session["project"]
+        self.meta_data["StudyID"] = self.session["subject_id"]
         self.meta_data["InstitutionName"] = self.session["scanner"]
         self.meta_data["ImageComments"] = " "
-        self.meta_data["PatientID"] = self.mapVals['name_string']
+        self.meta_data["PatientID"] = self.session["subject_id"]
         self.meta_data["SOPInstanceUID"] = self.mapVals['name_string']
-
+        self.meta_data["SeriesDescription"] = self.raw_data_name
+        self.session['seriesNumber'] = self.session['seriesNumber'] + 1
+        self.meta_data["SeriesNumber"] = self.session['seriesNumber']
         # Full dinamic window
         #self.meta_data["WindowWidth"] = 26373
         #self.meta_data["WindowCenter"] = 13194
