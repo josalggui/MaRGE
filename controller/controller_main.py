@@ -22,6 +22,7 @@ class MainController(MainWindow):
         for sequence in defaultsequences.values():
             sequence.session = self.session
 
+        # Start the sniffer
         thread = threading.Thread(target=self.history_list.waitingForRun)
         thread.start()
 

@@ -288,8 +288,6 @@ class MRIBLANKSEQ:
 
         # (txs, grads, rxs, ios) = axes
 
-        fd = self.expt.get_flodict()
-
         def getStepData(data):
             t = data[0]
             s = data[1]
@@ -302,63 +300,172 @@ class MRIBLANKSEQ:
             sStep[1::2] = s[0:-1]
             return [tStep, sStep]
 
-        # Plot TX channels
-        xData = []
-        yData = []
-        legend = []
-        for txl in ['tx0_i', 'tx0_q', 'tx1_i', 'tx1_q']:
-            try:
-                dataStep = getStepData(fd[txl])
-                xData.append(dataStep[0] * 1e-3)
-                yData.append(dataStep[1])
-                legend.append(txl)
-            except KeyError:
-                continue
-        plotTx = [xData, yData, legend, 'Tx gate']
+        # Plots
+        if self.demo:
+            # Plot tx channels
+            xData = []
+            yData = []
+            legend = []
 
-        # Plot gradient channels
-        xData = []
-        yData = []
-        legend = []
-        for gradl in self.expt.gradb.keys():
-            try:
-                dataStep = getStepData(fd[gradl])
-                xData.append(dataStep[0] * 1e-3)
-                yData.append(dataStep[1])
-                legend.append(gradl)
-            except KeyError:
-                continue
-        plotGrad = [xData, yData, legend, 'Gradients']
+            # tx0_i
+            x = self.flo_dict['tx0'][0]
+            y = np.real(self.flo_dict['tx0'][1])
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('tx0_i')
 
-        # Plot RX enable channels
-        xData = []
-        yData = []
-        legend = []
-        for rxl in ['rx0_en', 'rx1_en']:
-            try:
-                dataStep = getStepData(fd[rxl])
-                xData.append(dataStep[0] * 1e-3)
-                yData.append(dataStep[1])
-                legend.append(rxl)
-            except KeyError:
-                continue
-        plotRx = [xData, yData, legend, 'Rx gate']
+            # tx0_q
+            x = self.flo_dict['tx0'][0]
+            y = np.imag(self.flo_dict['tx0'][1])
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('tx0_q')
 
-        # Plot digital outputs
-        xData = []
-        yData = []
-        legend = []
-        for iol in ['tx_gate', 'rx_gate', 'trig_out', 'leds']:
-            try:
-                dataStep = getStepData(fd[iol])
-                xData.append(dataStep[0] * 1e-3)
-                yData.append(dataStep[1])
-                legend.append(iol)
-            except KeyError:
-                continue
-        plotDigital = [xData, yData, legend, 'Digital']
+            # tx1_i
+            x = self.flo_dict['tx1'][0]
+            y = np.real(self.flo_dict['tx1'][1])
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('tx1_i')
 
-        return ([plotTx, plotGrad, plotRx, plotDigital])
+            # tx1_q
+            x = self.flo_dict['tx1'][0]
+            y = np.imag(self.flo_dict['tx1'][1])
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('tx1_q')
+
+            plotTx = [xData, yData, legend, 'Tx gate']
+
+            # Plot gradients
+            xData = []
+            yData = []
+            legend = []
+
+            # g0
+            x = self.flo_dict['g0'][0]
+            y = self.flo_dict['g0'][1]
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('g0')
+
+            # g1
+            x = self.flo_dict['g1'][0]
+            y = self.flo_dict['g1'][1]
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('g1')
+
+            # g0
+            x = self.flo_dict['g2'][0]
+            y = self.flo_dict['g2'][1]
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('g2')
+
+            plotGrad = [xData, yData, legend, 'Gradients']
+
+            # Plot readouts
+            xData = []
+            yData = []
+            legend = []
+
+            # rx_0
+            x = self.flo_dict['rx0'][0]
+            y = self.flo_dict['rx0'][1]
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('rx0_en')
+
+            # rx_1
+            x = self.flo_dict['rx1'][0]
+            y = self.flo_dict['rx1'][1]
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('rx1_en')
+
+            plotRx = [xData, yData, legend, 'Rx gate']
+
+            return ([plotTx, plotGrad, plotRx])
+        else:
+            # Get instructions from experiment object
+            fd = self.expt.get_flodict()
+
+            # Plot tx channels
+            xData = []
+            yData = []
+            legend = []
+            for txl in ['tx0_i', 'tx0_q', 'tx1_i', 'tx1_q']:
+                try:
+                    dataStep = getStepData(fd[txl])
+                    xData.append(dataStep[0] * 1e-3)
+                    yData.append(dataStep[1])
+                    legend.append(txl)
+                except KeyError:
+                    continue
+            plotTx = [xData, yData, legend, 'Tx gate']
+
+            # Plot gradient channels
+            xData = []
+            yData = []
+            legend = []
+            for gradl in self.expt.gradb.keys():
+                try:
+                    dataStep = getStepData(fd[gradl])
+                    xData.append(dataStep[0] * 1e-3)
+                    yData.append(dataStep[1])
+                    legend.append(gradl)
+                except KeyError:
+                    continue
+            plotGrad = [xData, yData, legend, 'Gradients']
+
+            # Plot RX enable channels
+            xData = []
+            yData = []
+            legend = []
+            for rxl in ['rx0_en', 'rx1_en']:
+                try:
+                    dataStep = getStepData(fd[rxl])
+                    xData.append(dataStep[0] * 1e-3)
+                    yData.append(dataStep[1])
+                    legend.append(rxl)
+                except KeyError:
+                    continue
+            plotRx = [xData, yData, legend, 'Rx gate']
+
+            # Plot digital outputs
+            xData = []
+            yData = []
+            legend = []
+            for iol in ['tx_gate', 'rx_gate', 'trig_out', 'leds']:
+                try:
+                    dataStep = getStepData(fd[iol])
+                    xData.append(dataStep[0] * 1e-3)
+                    yData.append(dataStep[1])
+                    legend.append(iol)
+                except KeyError:
+                    continue
+            plotDigital = [xData, yData, legend, 'Digital']
+
+            return ([plotTx, plotGrad, plotRx, plotDigital])
 
     def getIndex(self, etl=1, nPH=1, sweepMode=1):
         """"
