@@ -227,9 +227,9 @@ class SequenceController(SequenceToolBar):
         @email: josalggui@i3m.upv.es
         @Summary: plot sequence instructions
         """
-        if self.main.demo:
-            print("\nIt is not possible to plot a sequence in demo mode.")
-            return
+        # if self.main.demo:
+        #     print("\nIt is not possible to plot a sequence in demo mode.")
+        #     return
 
         # Load sequence name
         self.seq_name = self.main.sequence_list.getCurrentSequence()
@@ -237,7 +237,7 @@ class SequenceController(SequenceToolBar):
         # Create sequence to plot
         print('Plot sequence')
         defaultsequences[self.seq_name].sequenceAtributes()
-        if defaultsequences[self.seq_name].sequenceRun(1):
+        if defaultsequences[self.seq_name].sequenceRun(1, demo=self.demo):
             # Delete previous plots
             self.main.figures_layout.clearFiguresLayout()
         else:

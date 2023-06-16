@@ -4,6 +4,7 @@ experiments
 calibration
 protocols
 .idea/
+configs/units.py
 configs/hw_config.py
 *.dcm
 *.pptx

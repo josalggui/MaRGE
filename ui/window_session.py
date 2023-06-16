@@ -98,6 +98,14 @@ class SessionWindow(QMainWindow):
         self.id_line_edit.setStatusTip("Write the subject id")
         self.main_layout.addWidget(self.id_line_edit, row, 1)
 
+        # Create QLineEdit for study id
+        row += 1
+        date = datetime.now()
+        self.main_layout.addWidget(QLabel("Study ID"), row, 0)
+        self.idS_line_edit = ClickableLineEdit(date_string)
+        self.idS_line_edit.setStatusTip("Write the study id")
+        self.main_layout.addWidget(self.idS_line_edit, row, 1)
+
         # Create QLineEdit for subject name
         row += 1
         self.main_layout.addWidget(QLabel("Subject name"), row, 0)

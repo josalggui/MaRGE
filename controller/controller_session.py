@@ -50,6 +50,7 @@ class SessionController(SessionWindow):
             'side': self.side_combo_box.currentText(),
             'orientation': self.orientation_combo_box.currentText(),
             'subject_id': self.id_line_edit.text(),
+            'study_id': self.idS_line_edit.text(),
             'subject_name': self.name_line_edit.text(),
             'subject_surname': self.surname_line_edit.text(),
             'subject_birthday': self.birthday_line_edit.text(),
@@ -57,5 +58,6 @@ class SessionController(SessionWindow):
             'subject_height': self.height_line_edit.text(),
             'scanner': self.scanner_line_edit.text(),
             'rf_coil': self.rf_coil_combo_box.currentText(),
+            'seriesNumber': 0,
         }
         hw.b1Efficiency = hw.antenna_dict[self.session['rf_coil']]
