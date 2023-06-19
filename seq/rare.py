@@ -210,7 +210,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
         print("Readout direction:")
         print(np.reshape(result, (1, 3)))
 
-        def createSequence(phIndex=0, slIndex=0, repeIndexGlobal=0):
+        # Initialize k-vectors
+        k_ph_sl_xyz = np.ones((3, self.nPoints[0]*self.nPoints[1]*nSL))*hw.gammaB*(self.phGradTime+hw.grad_rise_time)
+        k_rd_xyz = np.ones((3, self.nPoints[0]*self.nPoints[1]*nSL))*hw.gammaB
+
+        def createSequence(phIndex=0, slIndex=0, lnIndex=0, repeIndexGlobal=0):
             repeIndex = 0
             if self.rdGradTime==0:   # Check if readout gradient is dc or pulsed
                 dc = True
@@ -314,6 +318,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[1], gSteps, 1, self.shimming)
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[2], gSteps, 2, self.shimming)
                         orders = orders+gSteps*6
+                        # get k-point
+                        k_ph_sl_xyz[:, self.nPoints[0]*lnIndex:self.nPoints[0]*(lnIndex+1)] = \
+                            np.diag(np.reshape(gradAmp, -1)) @ \
+                            k_ph_sl_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)]
 
                     # Readout gradient
                     gradAmp = np.array([0.0, 0.0, 0.0])
@@ -331,6 +339,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
                         t0 = tEcho-self.acqTime/2-addRdPoints/BW
                         self.rxGate(t0, self.acqTime+2*addRdPoints/BW)
                         acqPoints += nRD
+
+                    if repeIndex>=self.dummyPulses:
+                        k_rd_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)] = \
+                            np.diag(np.reshape(gradAmp, -1)) @ \
+                            k_rd_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)]  @ \
+                            np.diag(self.time_vector)
 
                     # Rephasing phase and slice gradients
                     gradAmp = np.array([0.0, 0.0, 0.0])
@@ -352,19 +366,21 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
                     # Update the phase and slice gradient
                     if repeIndex>=self.dummyPulses:
+                        lnIndex +=1
                         if phIndex == nPH-1:
                             phIndex = 0
                             slIndex += 1
                         else:
                             phIndex += 1
-                if repeIndex>=self.dummyPulses: repeIndexGlobal += 1 # Update the global repeIndex
+                if repeIndex>=self.dummyPulses: 
+                    repeIndexGlobal += 1 # Update the global repeIndex
                 repeIndex+=1 # Update the repeIndex after the ETL
 
             # Turn off the gradients after the end of the batch
             self.endSequence(repeIndex*self.repetitionTime)
 
             # Return the output variables
-            return(phIndex, slIndex, repeIndexGlobal, acqPoints)
+            return(phIndex, slIndex, lnIndex, repeIndexGlobal, acqPoints)
 
         # Changing time parameters to us
         self.rfExTime = self.rfExTime*1e6
@@ -398,6 +414,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         repeIndexGlobal = repeIndexArray[0]
         phIndex = 0
         slIndex = 0
+        lnIndex = 0
         acqPointsPerBatch = []
         while repeIndexGlobal<nRepetitions:
             nBatches += 1
@@ -407,12 +424,17 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 samplingPeriod = self.expt.get_rx_ts()[0]
                 BW = 1/samplingPeriod/hw.oversamplingFactor
 
+            # Time vector for main points
+            self.time_vector = np.linspace(-self.nPoints[0]/BW/2 + 0.5/BW, self.nPoints[0]/BW/2 - 0.5/BW,
+                                           self.nPoints[0]) * 1e-6 # s
+            
             # Run the createSequence method
             self.acqTime = self.nPoints[0]/BW        # us
             self.mapVals['bw'] = BW
-            phIndex, slIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
-                                                               slIndex=slIndex,
-                                                               repeIndexGlobal=repeIndexGlobal)
+            phIndex, slIndex, lnIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
+                                                                           slIndex=slIndex,
+                                                                           lnIndex=lnIndex,
+                                                                           repeIndexGlobal=repeIndexGlobal)
             # Save instructions into MaRCoS if not a demo
             if not self.demo:
                 if self.floDict2Exp(rewrite=nBatches==1):
@@ -439,7 +461,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                         print("Batch %i, scan %i ready!")
                     else:
                         rxd = {}
-                        rxd['rx0'] = np.random.randn(aa*hw.oversamplingFactor)
+                        rxd['rx0'] = np.random.randn(aa*hw.oversamplingFactor) + 1j * np.random.randn(aa*hw.oversamplingFactor)
                         print("Batch %i, scan %i ready!" % (nBatches, ii+1))
                     # Get noise data
                     noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
@@ -521,6 +543,16 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
             # Average data
             data = np.average(dataFull, axis=0)
+
+            # Concatenate with k_xyz
+            for ii in range(3):
+                k_prov = np.reshape(k_ph_sl_xyz[ii, :], (nSL, nPH, self.nPoints[0]))
+                k_temp = k_prov * 0
+                for jj in range(nPH):
+                    k_temp[:, ind[jj], :] = k_prov[:, jj, :]
+                k_ph_sl_xyz[ii, :] = np.reshape(k_temp, -1)
+            k_xyz = k_ph_sl_xyz + k_rd_xyz
+            self.mapVals['sampled_xyz'] = np.concatenate((k_xyz.T, np.reshape(data, (nSL*nPH*self.nPoints[0], 1))), axis=1)
             data = np.reshape(data, (nSL, nPH, self.nPoints[0]))
 
             # Do zero padding
@@ -529,15 +561,13 @@ class RARE(blankSeq.MRIBLANKSEQ):
             dataTemp[0:nSL, :, :] = data
             data = np.reshape(dataTemp, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
 
-            if self.demo:
-                data = self.myPhantom()
+            # if self.demo:
+            #     data = self.myPhantom()
 
             # Fix the position of the sample according to dfov
             kMax = np.array(self.nPoints)/(2*np.array(self.fov))*np.array(self.axesEnable)
-            kRD = np.linspace(-kMax[0],kMax[0],num=self.nPoints[0],endpoint=False)
-        #        kPH = np.linspace(-kMax[1],kMax[1],num=nPoints[1],endpoint=False)
+            kRD = self.time_vector*hw.gammaB*rdGradAmplitude
             kSL = np.linspace(-kMax[2],kMax[2],num=self.nPoints[2],endpoint=False)
-            kPH = kPH[::-1]
             kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
             kRD = np.reshape(kRD, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
             kPH = np.reshape(kPH, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
