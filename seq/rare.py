@@ -61,7 +61,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
-        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-12.5, -12.5, 7.5], field='OTH')
+        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='freqCal', string='Calibrate frequency', val=1, field='OTH', tip="0 to not calibrate, 1 to calibrate")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
@@ -102,7 +102,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         # Conversion of variables to non-multiplied units
         self.angle = self.angle * np.pi / 180 # rads
-        self.shimming *= 1e-4
 
         # Add rotation, dfov and fov to the history
         self.rotation = self.rotationAxis.tolist()
