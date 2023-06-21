@@ -189,7 +189,12 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
 
                 # Excitation pulse
                 t0 = t_ex-hw.blkTime-self.rfExTime/2
-                self.rfRecPulse(t0, self.rfExTime, rfExAmp)
+                if self.mode==1 or self.mode==3: # rf spoiling
+                    self.rfRecPulse(t0, self.rfExTime, rfExAmp * np.exp(1j * 117 * np.pi / 180 * repe_index))
+                elif self.mode==4: # balanced
+                    self.rfRecPulse(t0, self.rfExTime, rfExAmp * np.exp(1j * np.pi/2 * (1 + (-1) ** repe_index)))
+                elif self.mode==0 or self.mode==2:
+                    self.rfRecPulse(t0, self.rfExTime, rfExAmp)
 
                 # Dephasing gradient
                 if repe_index>=self.dummy_pulses:
@@ -215,15 +220,16 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                     grad_amp_reph = np.dot(rot, np.reshape(grad_amp_reph, (3, 1)))
                     t0 = t_ex + self.echo_time - self.rdGradTime / 2 - grad_rise_time - hw.gradDelay
                     orders = orders + hw.grad_steps * 6
-                    if self.mode==0 or self.mode==2: # normal or balanced
-                        self.gradTrap(t0, grad_rise_time, self.rdGradTime, grad_amp_reph[0], hw.grad_steps, 0, self.shimming)
-                        self.gradTrap(t0, grad_rise_time, self.rdGradTime, grad_amp_reph[1], hw.grad_steps, 1, self.shimming)
-                        self.gradTrap(t0, grad_rise_time, self.rdGradTime, grad_amp_reph[2], hw.grad_steps, 2, self.shimming)
-                    elif self.mode==1: # spoiler
-                        rd_grad_time = self.echo_time/2+self.rdGradTime/2-grad_rise_time-self.rfExTime
-                        self.gradTrap(t0, grad_rise_time, self.rdGradTime, grad_amp_reph[0], hw.grad_steps, 0, self.shimming)
-                        self.gradTrap(t0, grad_rise_time, self.rdGradTime, grad_amp_reph[1], hw.grad_steps, 1, self.shimming)
-                        self.gradTrap(t0, grad_rise_time, self.rdGradTime, grad_amp_reph[2], hw.grad_steps, 2, self.shimming)
+                    if self.mode==0 or self.mode==1 or self.mode==4: # normal, only rf spoiler, or balanced
+                        rd_grad_time = self.rdGradTime
+                    elif self.mode==2 or self.mode==3: # gradient spoiler
+                        rd_grad_time = 0.5*(self.rdGradTime-grad_rise_time)+self.acq_time*self.spoiler_order
+                    self.gradTrap(t0, grad_rise_time, rd_grad_time, grad_amp_reph[0], hw.grad_steps, 0,
+                                  self.shimming)
+                    self.gradTrap(t0, grad_rise_time, rd_grad_time, grad_amp_reph[1], hw.grad_steps, 1,
+                                  self.shimming)
+                    self.gradTrap(t0, grad_rise_time, rd_grad_time, grad_amp_reph[2], hw.grad_steps, 2,
+                                  self.shimming)
 
                 # Rx gate
                 if repe_index>=self.dummy_pulses:
@@ -237,13 +243,14 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                         np.diag(self.time_vector)
                 
                 # gradient balance
-                if repe_index>=self.dummy_pulses and self.mode==2:
+                if repe_index>=self.dummy_pulses and (self.mode==2 or self.mode==3 or self.mode==4):
                     grad_amp_bala = np.array([0.0, 0.0, 0.0])
-                    grad_amp_bala[self.axesOrientation[0]] = rd_deph_amplitude
+                    if self.mode==4: # bSSFP
+                        grad_amp_bala[self.axesOrientation[0]] = rd_deph_amplitude
                     grad_amp_bala[self.axesOrientation[1]] = -ph_gradients[ph_index]
                     grad_amp_bala[self.axesOrientation[2]] = -sl_gradients[sl_index]
                     grad_amp_bala = np.dot(rot, np.reshape(grad_amp_bala, (3, 1)))
-                    t0 = t_ex + self.echo_time + self.rdGradTime / 2 + grad_rise_time - hw.gradDelay
+                    t0 = t_ex + self.echo_time - self.rdGradTime / 2 + rd_grad_time + grad_rise_time - hw.gradDelay
                     self.gradTrap(t0, grad_rise_time, self.dephGradTime, grad_amp_bala[0], hw.grad_steps, 0,
                                   self.shimming)
                     self.gradTrap(t0, grad_rise_time, self.dephGradTime, grad_amp_bala[1], hw.grad_steps, 1,
@@ -353,6 +360,38 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             if n_batches>1:
                 data_full_a = data_full[0:sum(acq_points_per_batch[0:-1])]
                 data_full_b = data_full[sum(acq_points_per_batch[0:-1])::]
+
+            # Subtract phase in case of rf spoling or balanced
+            if n_batches>1:
+                if self.mode==1 or self.mode==3:  # rf spoiling
+                    data_full_a = np.reshape(data_full_a, ((n_batches - 1) * self.nScans, -1, n_rd))
+                    for repe_index in range(np.size(data_full_a, 1)):
+                        data_full_a[:, repe_index, :] *= np.exp(-1j * 117 * np.pi / 180 * repe_index)
+                    data_full_a = np.reshape(data_full_a, -1)
+                    data_full_b = np.reshape(data_full_b, (self.nScans, -1, n_rd))
+                    for repe_index in range(np.size(data_full_b, 1)):
+                        data_full_b[:, repe_index, :] *= np.exp(-1j * 117 * np.pi / 180 * repe_index)
+                    data_full_b = np.reshape(data_full_b, -1)
+                if self.mode==4:
+                    data_full_a = np.reshape(data_full_a, ((n_batches - 1) * self.nScans, -1, n_rd))
+                    for repe_index in range(np.size(data_full_a, 1)):
+                        data_full_a[:, repe_index, :] *= np.exp(-1j * np.pi / 2 *(1 + (-1) ** repe_index))
+                    data_full_a = np.reshape(data_full_a, -1)
+                    data_full_b = np.reshape(data_full_b, ((n_batches - 1) * self.nScans, -1, n_rd))
+                    for repe_index in range(np.size(data_full_b, 1)):
+                        data_full_b[:, repe_index, :] *= np.exp(-1j * np.pi / 2 * (1 + (-1) ** repe_index))
+                    data_full_b = np.reshape(data_full_b, -1)
+            else:
+                if self.mode==1 or self.mode==3:  # rf spoiling
+                    data_full = np.reshape(data_full, (n_batches * self.nScans, -1, n_rd))
+                    for repe_index in range(np.size(data_full, 1)):
+                        data_full[:, repe_index, :] *= np.exp(-1j * 117 * np.pi / 180 * repe_index)
+                    data_full = np.reshape(data_full, -1)
+                if self.mode==4:
+                    data_full = np.reshape(data_full, (n_batches * self.nScans, -1, n_rd))
+                    for repe_index in range(np.size(data_full, 1)):
+                        data_full[:, repe_index, :] *= np.exp(-1j * np.pi / 2 * (1 + (-1) ** repe_index))
+                    data_full = np.reshape(data_full, -1)
 
             # Reorganize data_full
             data_prov = np.zeros([self.nScans,n_sl*n_ph*n_rd], dtype=complex)
@@ -473,50 +512,54 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         else:
             # Plot image
             image = np.abs(self.mapVals['image3D'])
-            image = image/np.max(np.reshape(image, -1))*100
+            image = image / np.max(np.reshape(image, -1)) * 100
 
-            # Image orientation
-            if self.axesOrientation[2] == 2:  # Sagittal
-                title = "Sagittal"
-                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  # OK
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    xLabel = "A | PHASE | P"
-                    yLabel = "I | READOUT | S"
-                else:
-                    image = np.transpose(image, (0, 2, 1))
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    xLabel = "A | READOUT | P"
-                    yLabel = "I | PHASE | S"
-            if self.axesOrientation[2] == 1:  # Coronal
-                title = "Coronal"
-                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2:  # OK
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    image = np.flip(image, axis=0)
-                    xLabel = "R | PHASE | L"
-                    yLabel = "I | READOUT | S"
-                else:
-                    image = np.transpose(image, (0, 2, 1))
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    image = np.flip(image, axis=0)
-                    xLabel = "R | READOUT | L"
-                    yLabel = "I | PHASE | S"
-            if self.axesOrientation[2] == 0:  # Transversal
-                title = "Transversal"
-                if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    xLabel = "R | PHASE | L"
-                    yLabel = "P | READOUT | A"
-                else:  # OK
-                    image = np.transpose(image, (0, 2, 1))
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    xLabel = "R | READOUT | L"
-                    yLabel = "P | PHASE | A"
+            if not self.unlock_orientation:  # Image orientation
+                if self.axesOrientation[2] == 2:  # Sagittal
+                    title = "Sagittal"
+                    if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  # OK
+                        image = np.flip(image, axis=2)
+                        image = np.flip(image, axis=1)
+                        xLabel = "(-Y) A | PHASE | P (+Y)"
+                        yLabel = "(-X) I | READOUT | S (+X)"
+                    else:
+                        image = np.transpose(image, (0, 2, 1))
+                        image = np.flip(image, axis=2)
+                        image = np.flip(image, axis=1)
+                        xLabel = "(-Y) A | READOUT | P (+Y)"
+                        yLabel = "(-X) I | PHASE | S (+X)"
+                elif self.axesOrientation[2] == 1:  # Coronal
+                    title = "Coronal"
+                    if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2:  # OK
+                        image = np.flip(image, axis=2)
+                        image = np.flip(image, axis=1)
+                        image = np.flip(image, axis=0)
+                        xLabel = "(+Z) R | PHASE | L (-Z)"
+                        yLabel = "(-X) I | READOUT | S (+X)"
+                    else:
+                        image = np.transpose(image, (0, 2, 1))
+                        image = np.flip(image, axis=2)
+                        image = np.flip(image, axis=1)
+                        image = np.flip(image, axis=0)
+                        xLabel = "(+Z) R | READOUT | L (-Z)"
+                        yLabel = "(-X) I | PHASE | S (+X)"
+                elif self.axesOrientation[2] == 0:  # Transversal
+                    title = "Transversal"
+                    if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
+                        image = np.flip(image, axis=2)
+                        image = np.flip(image, axis=1)
+                        xLabel = "(+Z) R | PHASE | L (-Z)"
+                        yLabel = "(+Y) P | READOUT | A (-Y)"
+                    else:  # OK
+                        image = np.transpose(image, (0, 2, 1))
+                        image = np.flip(image, axis=2)
+                        image = np.flip(image, axis=1)
+                        xLabel = "(+Z) R | READOUT | L (-Z)"
+                        yLabel = "(+Y) P | PHASE | A (-Y)"
+            else:
+                xLabel = "%s axis" % axesStr[1]
+                yLabel = "%s axis" % axesStr[0]
+                title = "Image"
 
             result1 = {}
             result1['widget'] = 'image'
