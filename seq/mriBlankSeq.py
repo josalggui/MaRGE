@@ -804,13 +804,14 @@ class MRIBLANKSEQ:
         Check for errors and add instructions to red pitaya if no errors are found
         """
         # Check errors:
-        for item in self.flo_dict.values():
+        for key in self.flo_dict.keys():
+            item = self.flo_dict[key]
             dt = item[0][1::]-item[0][0:-1]
             if (dt<=0).any():
-                print("\nSequence timing error")
+                print("\n%s timing error" % key)
                 return False
             if (item[1]>1).any() or (item[1]<-1).any():
-                print("\nSequence amplitude error")
+                print("\n%s amplitude error" % key)
                 return False
 
         self.expt.add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
