@@ -44,7 +44,9 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='sl_fraction', string='Partial fourier fraction', val=1.0, field='OTH',
                           tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='mode', string='Sequence mode', val=0, field='SEQ',
-                          tip='0: normal, 1: rd spoiler, 2: balanced.')
+                          tip='0: normal, 1: rf spoiler, 2: gradient spoiler, 3: rf and gradient spoilre, 4: balanced.')
+        self.addParameter(key='spoiler_order', string='Gradient spoiler order', val=3, field='SEQ',
+                          tip='Higher orders will require longer repetition times')
         self.addParameter(key='freqCal', string='Calibrate frequency', val=1, field='OTH',
                           tip="0 to not calibrate, 1 to calibrate")
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH',
