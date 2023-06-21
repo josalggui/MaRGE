@@ -48,8 +48,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 1, 1], field='IM')
-        self.addParameter(key='angle', string='Angle (º)', val=0.0, units=units.degrees, field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 30, 1], field='IM')
+        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
@@ -62,17 +62,16 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-12.5, -12.5, 7.5], field='OTH')
-        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice diretion")
+        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='freqCal', string='Calibrate frequency', val=1, field='OTH', tip="0 to not calibrate, 1 to calibrate")
+        self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
+        self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
 
     def sequenceInfo(self):
-        print(" ")
-        print("3D RARE sequence")
+        print("\n3D RARE sequence")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain \n")
-        print("Sweep modes: 0:k20, 1:02k, 2:k2k")
-        print("Axes: 0:x, 1:y, 2:z")
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
@@ -103,6 +102,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         # Conversion of variables to non-multiplied units
         self.angle = self.angle * np.pi / 180 # rads
+        self.shimming *= 1e-4
 
         # Add rotation, dfov and fov to the history
         self.rotation = self.rotationAxis.tolist()
@@ -226,7 +226,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             # Check in case of dummy pulse fill the cache
             if (self.dummyPulses>0 and self.etl*nRD*2>hw.maxRdPoints) or (self.dummyPulses==0 and self.etl*nRD>hw.maxRdPoints):
                 print('ERROR: Too many acquired points.')
-                return()
+                return 0
 
             # Set shimming
             self.iniSequence(20, self.shimming)
@@ -328,7 +328,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     gradAmp[self.axesOrientation[0]] = rdGradAmplitude
                     gradAmp = np.dot(rot, np.reshape(gradAmp, (3, 1)))
                     if (repeIndex==0 or repeIndex>=self.dummyPulses) and dc==False:         # This is to account for dummy pulses
-                        t0 = tEcho-self.rdGradTime/2-gradRiseTime-hw.gradDelay
+                        t0 = tEcho-self.rdGradTime/2-gradRiseTime-hw.gradDelay+self.echo_shift
                         self.gradTrap(t0, gradRiseTime, self.rdGradTime, gradAmp[0], gSteps, 0, self.shimming)
                         self.gradTrap(t0, gradRiseTime, self.rdGradTime, gradAmp[1], gSteps, 1, self.shimming)
                         self.gradTrap(t0, gradRiseTime, self.rdGradTime, gradAmp[2], gSteps, 2, self.shimming)
@@ -336,7 +336,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
                     # Rx gate
                     if (repeIndex==0 or repeIndex>=self.dummyPulses):
-                        t0 = tEcho-self.acqTime/2-addRdPoints/BW
+                        t0 = tEcho-self.acqTime/2-addRdPoints/BW+self.echo_shift
                         self.rxGate(t0, self.acqTime+2*addRdPoints/BW)
                         acqPoints += nRD
 
@@ -351,8 +351,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     gradAmp[self.axesOrientation[1]] = phGradients[phIndex]
                     gradAmp[self.axesOrientation[2]] = slGradients[slIndex]
                     gradAmp = np.dot(rot, np.reshape(gradAmp, (3, 1)))
-                    # t0 = tEcho+self.acqTime/2+addRdPoints/BW-hw.gradDelay
-                    t0 = tEcho+self.rdGradTime/2+gradRiseTime-hw.gradDelay
+                    t0 = tEcho+self.rdGradTime/2+gradRiseTime-hw.gradDelay+self.echo_shift
                     if (echoIndex<self.etl-1 and repeIndex>=self.dummyPulses):
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, -gradAmp[0], gSteps, 0, self.shimming)
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, -gradAmp[1], gSteps, 1, self.shimming)
@@ -393,6 +392,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.rdDephTime = self.rdDephTime*1e6
         self.inversionTime = self.inversionTime*1e6
         self.preExTime = self.preExTime*1e6
+        self.echo_shift = self.echo_shift*1e6
         nRepetitions = int(nSL*nPH/self.etl)
         scanTime = nRepetitions*self.repetitionTime
         self.mapVals['scanTime'] = scanTime*nSL*1e-6
@@ -432,9 +432,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
             self.acqTime = self.nPoints[0]/BW        # us
             self.mapVals['bw'] = BW
             phIndex, slIndex, lnIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
-                                                                           slIndex=slIndex,
-                                                                           lnIndex=lnIndex,
-                                                                           repeIndexGlobal=repeIndexGlobal)
+                                                                            slIndex=slIndex,
+                                                                            lnIndex=lnIndex,
+                                                                            repeIndexGlobal=repeIndexGlobal)
             # Save instructions into MaRCoS if not a demo
             if not self.demo:
                 if self.floDict2Exp(rewrite=nBatches==1):
@@ -525,7 +525,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             # Check where is krd = 0
             dataProv = dataProv[int(self.nPoints[2]/2), int(nPH/2), :]
             indkrd0 = np.argmax(np.abs(dataProv))
-            if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
+            if indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
                 indkrd0 = int(nRD/2)
 
             # Get individual images
@@ -644,48 +644,52 @@ class RARE(blankSeq.MRIBLANKSEQ):
             image = np.abs(self.mapVals['image3D'])
             image = image/np.max(np.reshape(image,-1))*100
 
-            # Image orientation
-            if self.axesOrientation[2] == 2:  # Sagital
-                title = "Sagittal"
-                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  #OK
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    xLabel = "A | PHASE | P"
-                    yLabel = "I | READOUT | S"
-                else:
-                    image = np.transpose(image, (0, 2, 1))
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    xLabel = "A | READOUT | P"
-                    yLabel = "I | PHASE | S"
-            if self.axesOrientation[2] == 1: # Coronal
-                title = "Coronal"
-                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2: #OK
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    image = np.flip(image, axis=0)
-                    xLabel = "R | PHASE | L"
-                    yLabel = "I | READOUT | S"
-                else:
-                    image = np.transpose(image, (0, 2, 1))
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    image = np.flip(image, axis=0)
-                    xLabel = "R | READOUT | L"
-                    yLabel = "I | PHASE | S"
-            if self.axesOrientation[2] == 0:  # Transversal
-                title = "Transversal"
-                if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    xLabel = "R | PHASE | L"
-                    yLabel = "P | READOUT | A"
-                else:  #OK
-                    image = np.transpose(image, (0, 2, 1))
-                    image = np.flip(image, axis=2)
-                    image = np.flip(image, axis=1)
-                    xLabel = "R | READOUT | L"
-                    yLabel = "P | PHASE | A"
+            if not self.unlock_orientation: # Image orientation
+                if self.axesOrientation[2] == 2:  # Sagittal
+                    title = "Sagittal"
+                    if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  #OK
+                        image = np.flip(image, axis=2)
+                        image = np.flip(image, axis=1)
+                        xLabel = "(-Y) A | PHASE | P (+Y)"
+                        yLabel = "(-X) I | READOUT | S (+X)"
+                    else:
+                        image = np.transpose(image, (0, 2, 1))
+                        image = np.flip(image, axis=2)
+                        image = np.flip(image, axis=1)
+                        xLabel = "(-Y) A | READOUT | P (+Y)"
+                        yLabel = "(-X) I | PHASE | S (+X)"
+                elif self.axesOrientation[2] == 1: # Coronal
+                    title = "Coronal"
+                    if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2: #OK
+                        image = np.flip(image, axis=2)
+                        image = np.flip(image, axis=1)
+                        image = np.flip(image, axis=0)
+                        xLabel = "(+Z) R | PHASE | L (-Z)"
+                        yLabel = "(-X) I | READOUT | S (+X)"
+                    else:
+                        image = np.transpose(image, (0, 2, 1))
+                        image = np.flip(image, axis=2)
+                        image = np.flip(image, axis=1)
+                        image = np.flip(image, axis=0)
+                        xLabel = "(+Z) R | READOUT | L (-Z)"
+                        yLabel = "(-X) I | PHASE | S (+X)"
+                elif self.axesOrientation[2] == 0:  # Transversal
+                    title = "Transversal"
+                    if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
+                        image = np.flip(image, axis=2)
+                        image = np.flip(image, axis=1)
+                        xLabel = "(+Z) R | PHASE | L (-Z)"
+                        yLabel = "(+Y) P | READOUT | A (-Y)"
+                    else:  #OK
+                        image = np.transpose(image, (0, 2, 1))
+                        image = np.flip(image, axis=2)
+                        image = np.flip(image, axis=1)
+                        xLabel = "(+Z) R | READOUT | L (-Z)"
+                        yLabel = "(+Y) P | PHASE | A (-Y)"
+            else:
+                xLabel = "%s axis" % axesStr[1]
+                yLabel = "%s axis" % axesStr[0]
+                title = "Image"
 
             result1 = {}
             result1['widget'] = 'image'
