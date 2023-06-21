@@ -48,8 +48,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 1, 1], field='IM')
-        self.addParameter(key='angle', string='Angle (º)', val=0.0, units=units.degrees, field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 30, 1], field='IM')
+        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
@@ -62,17 +62,14 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-12.5, -12.5, 7.5], field='OTH')
-        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice diretion")
+        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='freqCal', string='Calibrate frequency', val=1, field='OTH', tip="0 to not calibrate, 1 to calibrate")
 
     def sequenceInfo(self):
-        print(" ")
-        print("3D RARE sequence")
+        print("\n3D RARE sequence")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain \n")
-        print("Sweep modes: 0:k20, 1:02k, 2:k2k")
-        print("Axes: 0:x, 1:y, 2:z")
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
@@ -103,6 +100,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         # Conversion of variables to non-multiplied units
         self.angle = self.angle * np.pi / 180 # rads
+        self.shimming *= 1e-4
 
         # Add rotation, dfov and fov to the history
         self.rotation = self.rotationAxis.tolist()
@@ -226,7 +224,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             # Check in case of dummy pulse fill the cache
             if (self.dummyPulses>0 and self.etl*nRD*2>hw.maxRdPoints) or (self.dummyPulses==0 and self.etl*nRD>hw.maxRdPoints):
                 print('ERROR: Too many acquired points.')
-                return()
+                return 0
 
             # Set shimming
             self.iniSequence(20, self.shimming)
@@ -432,9 +430,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
             self.acqTime = self.nPoints[0]/BW        # us
             self.mapVals['bw'] = BW
             phIndex, slIndex, lnIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
-                                                                           slIndex=slIndex,
-                                                                           lnIndex=lnIndex,
-                                                                           repeIndexGlobal=repeIndexGlobal)
+                                                                            slIndex=slIndex,
+                                                                            lnIndex=lnIndex,
+                                                                            repeIndexGlobal=repeIndexGlobal)
             # Save instructions into MaRCoS if not a demo
             if not self.demo:
                 if self.floDict2Exp(rewrite=nBatches==1):
@@ -525,7 +523,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             # Check where is krd = 0
             dataProv = dataProv[int(self.nPoints[2]/2), int(nPH/2), :]
             indkrd0 = np.argmax(np.abs(dataProv))
-            if  indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
+            if indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
                 indkrd0 = int(nRD/2)
 
             # Get individual images
@@ -645,7 +643,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             image = image/np.max(np.reshape(image,-1))*100
 
             # Image orientation
-            if self.axesOrientation[2] == 2:  # Sagital
+            if self.axesOrientation[2] == 2:  # Sagittal
                 title = "Sagittal"
                 if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  #OK
                     image = np.flip(image, axis=2)
