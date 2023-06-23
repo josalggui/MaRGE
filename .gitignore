@@ -9,6 +9,8 @@ configs/hw_config.py
 *.dcm
 *.pptx
 configs/sys_config.py
+doc/
+venv/
 marcos_fpga_rp-122.bit
 marcos_fpga_rp-122.bit.bin
 marcos_fpga_rp-122.dtbo
