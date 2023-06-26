@@ -1,5 +1,5 @@
 """
-:author:    José Miguel Algarín
+:author:    J.M. Algarín
 :email:     josalggui@i3m.upv.es
 :affiliation: MRILab, i3M, CSIC, Valencia, Spain
 
@@ -18,6 +18,9 @@ from widgets.widget_history_list import HistoryListWidget
 
 
 class HistoryListController(HistoryListWidget):
+    """
+    Controller for the history list.
+    """
     def __init__(self, *args, **kwargs):
         """
         Controller for the history list.

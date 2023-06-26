@@ -1,8 +1,8 @@
 """
-session_controller.py
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 import subprocess
 import sys
@@ -27,7 +27,19 @@ class MainController(MainWindow):
         thread.start()
 
     def closeEvent(self, event):
-        """Shuts down application on close."""
+        """
+        Shuts down the application on close.
+
+        This method is called when the application is being closed. It sets the `app_open` flag to False, restores
+        `sys.stdout` to its default value, and performs additional cleanup tasks if the `demo` flag is not set.
+        It also prints a closing message to the console.
+
+        Args:
+            event (QCloseEvent): The close event triggered by the user.
+
+        Returns:
+            None
+        """
         self.app_open = False
         # Return stdout to defaults.
         sys.stdout = sys.__stdout__

@@ -1,7 +1,8 @@
 """
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 import numpy as np
 
@@ -11,7 +12,22 @@ import configs.hw_config as hw
 
 
 class Plot3DController(Plot3DWidget):
-    def __init__(self, data=np.random.randn(10, 50, 50), x_label='', y_label='', title='', *args, **kwargs):
+    """
+    Controller class for a 3D plot widget.
+    """
+    def __init__(self, data=np.array([]), x_label='', y_label='', title='', *args, **kwargs):
+        """
+        Initialize the Plot3DController.
+
+        Args:
+            data (ndarray): The 3D data array for the plot.
+            x_label (str): The label for the x-axis.
+            y_label (str): The label for the y-axis.
+            title (str): The title of the plot.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        """
         super(Plot3DController, self).__init__(*args, **kwargs)
         self.seq_name = None
         self.data = data
@@ -50,6 +66,12 @@ class Plot3DController(Plot3DWidget):
         self.setImage(data)
 
     def menuClicked(self):
+        """
+        Handle the FOV button click event.
+
+        This method is called when the FOV button is clicked.
+
+        """
         # Now the menu button is the FOV button
 
         # Provisionally stop signals from roi changes
@@ -118,6 +140,14 @@ class Plot3DController(Plot3DWidget):
             widget.roiFOV.blockSignals(False)
 
     def roiFOVChanged(self):
+        """
+        Update sequence parameters and propagate changes to other widgets based on the region of interest (ROI) field
+        of view (FOV).
+
+        This method calculates the necessary parameters for the ROI FOV, updates the sequence parameters, and ensures
+        that the changes are reflected in other widgets.
+
+        """
         # Get the corresponding axes from the image
         x_axis = 0
         y_axis = 1
@@ -202,6 +232,13 @@ class Plot3DController(Plot3DWidget):
         self.main.sequence_list.updateSequence()
 
     def roiChanged(self):
+        """
+        Update the plot and text items based on the selected region of interest (ROI).
+
+        This method extracts the image data within the ROI, calculates necessary statistics, and updates the plot and
+        text items accordingly.
+
+        """
         # Extract image data from ROI
         if self.image is None:
             return
@@ -283,7 +320,13 @@ class Plot3DController(Plot3DWidget):
         self.text_item.show()
 
     def roiClicked(self):
+        """
+        Handle the event when the ROI button is clicked.
 
+        This method shows or hides the ROI plot based on the button state. It also updates the visibility of the ROI
+        and the time line.
+
+        """
         show_roi_plot = False
         if self.ui.roiBtn.isChecked():
             show_roi_plot = True
@@ -320,6 +363,13 @@ class Plot3DController(Plot3DWidget):
         self.ui.roiPlot.setVisible(show_roi_plot)
 
     def updateImage(self, autoHistogramRange=True):
+        """
+        Update and redraw the image on the screen.
+
+        Args:
+            autoHistogramRange (bool, optional): Flag indicating whether to automatically set the histogram range based on the level min and max. Defaults to True.
+
+        """
         ## Redraw image on screen
         if self.image is None:
             return
@@ -347,19 +397,55 @@ class Plot3DController(Plot3DWidget):
         self.imageItem.updateImage(image)
 
     def hideAxis(self, axis):
+        """
+        Hide the specified axis in the plot.
+
+        Args:
+            axis (str): The axis to hide. Possible values are 'left', 'right', 'top', and 'bottom'.
+
+        """
         self.plot_item.hideAxis(axis)
 
     def updateText(self, info):
+        """
+        Update the text item with the provided information.
+
+        Args:
+            info (str): The text to be displayed.
+
+        """
         self.vbox.removeItem()
         self.text_item.setText(info)
         self.vbox.addItem(self.textitem)
 
     def setLabel(self, axis, text):
+        """
+        Set the label for the specified axis.
+
+        Args:
+            axis (str): The axis for which to set the label. Possible values are 'left', 'right', 'top', and 'bottom'.
+            text (str): The label text.
+
+        """
         self.plot_item.setLabel(axis=axis, text=text)
 
     def setTitle(self, title):
+        """
+        Set the title of the plot.
+
+        Args:
+            title (str): The title text.
+
+        """
         self.plot_item.setTitle(title=title)
 
     def showHistogram(self, show=True):
+        """
+        Show or hide the histogram widget.
+
+        Args:
+            show (bool, optional): Flag indicating whether to show the histogram. Defaults to True.
+
+        """
         hist = self.getHistogramWidget()
         hist.setVisible(show)
