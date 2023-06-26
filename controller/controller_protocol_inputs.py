@@ -4,6 +4,7 @@
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
 import os
+import csv
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTableWidgetItem, QMenu, QAction
@@ -12,6 +13,8 @@ from seq.sequences import defaultsequences
 from widgets.widget_protocol_inputs import ProtocolInputsWidget
 
 import configs.hw_config as hw
+
+import numpy as np
 
 
 class ProtocolInputsController(ProtocolInputsWidget):
@@ -31,9 +34,21 @@ class ProtocolInputsController(ProtocolInputsWidget):
         self.clicked_item = self.itemAt(point)
         if self.clicked_item is not None:
             menu = QMenu(self)
+
+            # Delete action button
             action1 = QAction("Delete", self)
             action1.triggered.connect(self.deleteSequence)
             menu.addAction(action1)
+
+            # Show input action button
+            action2 = QAction("Show inputs", self)
+            action2.triggered.connect(self.showProtocolInputs)
+            menu.addAction(action2)
+
+            # Load inputs action button
+            action3 = QAction("Load inputs", self)
+            action3.triggered.connect(self.loadProtocolInputs)
+            menu.addAction(action3)
 
             menu.exec_(self.mapToGlobal(point))
 
@@ -98,3 +113,100 @@ class ProtocolInputsController(ProtocolInputsWidget):
         for m, item in enumerate(input_vals):
             new_item = QTableWidgetItem(str(item))
             self.main.input_table.setItem(m, 0, new_item)
+
+    def showProtocolInputs(self):
+
+        # Get path to the file
+        protocol = self.main.protocol_list.getCurrentProtocol()
+        file_name = "%s.csv" % self.clicked_item.text()
+        path_to_file = "protocols/%s/%s" % (protocol, file_name)
+
+        # Get strings for the info
+        seq_name = file_name.split('_')[0]
+        input_info = defaultsequences[seq_name].mapNmspc.values()
+
+        # Get value for the info
+        map_vals = {}
+        with open(path_to_file, 'r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for l in reader:
+                map_vals = l
+        input_vals = map_vals.values()
+
+        # Set number of rows
+        self.main.input_table.setColumnCount(1)
+        self.main.input_table.setRowCount(len(input_info))
+
+        # Input items into the table
+        self.main.input_table.setVerticalHeaderLabels(input_info)
+        self.main.input_table.setHorizontalHeaderLabels(['Values'])
+        for m, item in enumerate(input_vals):
+            new_item = QTableWidgetItem(str(item))
+            self.main.input_table.setItem(m, 0, new_item)
+
+    def loadProtocolInputs(self):
+        # Get path to the file
+        protocol = self.main.protocol_list.getCurrentProtocol()
+        file_name = "%s.csv" % self.clicked_item.text()
+        path_to_file = "protocols/%s/%s" % (protocol, file_name)
+
+        # Get strings for the info
+        seq_name = file_name.split('_')[0]
+        seq = defaultsequences[seq_name]
+        map_vals_old = seq.mapVals
+
+        # Get value for the info
+        map_vals_new = {}
+        with open(path_to_file, 'r') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for l in reader:
+                map_vals_new = l
+
+        seq.mapVals = {}
+
+        # Get key for corresponding modified parameter
+        for key in seq.mapKeys:
+            data_len = seq.mapLen[key]
+            val_old = map_vals_old[key]
+            try:
+                val_new = map_vals_new[key]
+            except:
+                val_new = str(val_old)*1
+            val_new = val_new.replace('[', '')
+            val_new = val_new.replace(']', '')
+            val_new = val_new.split(',')
+            if type(val_old) == str:
+                val_old = [val_old]
+            elif data_len == 1:
+                val_old = [val_old]
+            data_type = type(val_old[0])
+
+            inputNum = []
+            for ii in range(data_len):
+                if data_type == float or data_type == np.float64:
+                    try:
+                        inputNum.append(float(val_new[ii]))
+                    except:
+                        inputNum.append(float(val_old[ii]))
+                elif data_type == int:
+                    try:
+                        inputNum.append(int(val_new[ii]))
+                    except:
+                        inputNum.append(int(val_old[ii]))
+                else:
+                    try:
+                        inputNum.append(str(val_new[0]))
+                        break
+                    except:
+                        inputNum.append(str(val_old[0]))
+                        break
+            if data_type == str:
+                seq.mapVals[key] = inputNum[0]
+            else:
+                if data_len == 1:  # Save value into mapVals
+                    seq.mapVals[key] = inputNum[0]
+                else:
+                    seq.mapVals[key] = inputNum
+
+        self.main.sequence_list.updateSequence()
+        print("\nParameters of %s sequence loaded" % file_name)
