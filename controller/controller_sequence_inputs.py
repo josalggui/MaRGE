@@ -1,7 +1,8 @@
 """
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit
 from widgets.widget_sequence_inputs import SequenceInputsWidget
@@ -10,12 +11,32 @@ import numpy as np
 
 
 class SequenceInputsController(SequenceInputsWidget):
+    """
+    Controller class for managing sequence inputs.
+
+    Args:
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Inherits:
+        SequenceInputsWidget: Base class for sequence inputs widget.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initializes the SequenceInputsController.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super(SequenceInputsController, self).__init__(*args, **kwargs)
         self.seq_name = self.main.sequence_list.seq_name
         self.displayInputParameters()
 
     def displayInputParameters(self):
+        """
+        Displays the input parameters for the selected sequence.
+        """
         self.seq_name = self.main.sequence_list.seq_name
         if hasattr(defaultsequences[self.seq_name], 'IMproperties'):
             props, tips = defaultsequences[self.seq_name].IMproperties
@@ -38,12 +59,25 @@ class SequenceInputsController(SequenceInputsWidget):
             self.addTab(input_widgets_4, "Others")
 
     def removeTabs(self):
+        """
+        Removes all the tabs from the sequence inputs widget.
+        """
         self.removeTab(0)
         self.removeTab(0)
         self.removeTab(0)
         self.removeTab(0)
 
     def createTab(self, inputs, tips):
+        """
+        Creates a tab for the given inputs and tips.
+
+        Args:
+            inputs (dict): The input parameters.
+            tips (dict): The tips for the input parameters.
+
+        Returns:
+            QWidget: The created tab widget.
+        """
         # Create widget
         widget = QWidget()
 
@@ -63,7 +97,30 @@ class SequenceInputsController(SequenceInputsWidget):
 
 
 class SequenceParameter(QHBoxLayout):
+    """
+    Custom QHBoxLayout class for managing sequence parameters.
+
+    Args:
+        values (list): The parameter values.
+        tip (str): The status tip for the input value.
+        seq_name (str): The sequence name.
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Inherits:
+        QHBoxLayout: Base class for horizontal layout.
+    """
     def __init__(self, values, tip, seq_name, *args, **kwargs):
+        """
+        Initializes the SequenceParameter.
+
+        Args:
+            values (list): The parameter values.
+            tip (str): The status tip for the input value.
+            seq_name (str): The sequence name.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super(SequenceParameter, self).__init__(*args, **kwargs)
         self.seq_name = seq_name
         self.param_text = values[0]
@@ -81,10 +138,8 @@ class SequenceParameter(QHBoxLayout):
         self.input_value.textChanged.connect(self.getValue)
 
     def getValue(self):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Here is where input values obtained from the gui are input into the sequence property mapVals
+        """
+        Gets the input value and updates the sequence property mapVals.
         """
         sequence = defaultsequences[self.seq_name]
 

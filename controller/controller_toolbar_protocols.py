@@ -1,7 +1,8 @@
 """
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 import csv
 import os
@@ -15,7 +16,24 @@ from widgets.widget_toolbar_protocols import ProtocolsToolBar
 
 
 class ProtocolsController(ProtocolsToolBar):
+    """
+    Controller class for managing protocols in the application.
+
+    Args:
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Inherits:
+        ProtocolsToolBar: Base class for the protocols toolbar.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initializes the ProtocolsController.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super().__init__(*args, **kwargs)
 
         self.action_new_protocol.triggered.connect(self.newProtocol)
@@ -24,6 +42,11 @@ class ProtocolsController(ProtocolsToolBar):
         self.action_del_sequence.triggered.connect(self.delSequence)
 
     def delProtocol(self):
+        """
+        Deletes a protocol.
+
+        Opens a file dialog to select a protocol directory for removal.
+        """
         # Open a file dialog to get the filename to save to
         directory = 'protocols'
         folder_name = QFileDialog.getExistingDirectory(self.main, "Remove protocol", directory)
@@ -34,6 +57,11 @@ class ProtocolsController(ProtocolsToolBar):
             self.main.protocol_list.updateProtocolList()
 
     def delSequence(self):
+        """
+        Deletes a sequence from a protocol.
+
+        Opens a file dialog to select a sequence file for removal from the current protocol.
+        """
         # Get the current protocol
         protocol = self.main.protocol_list.getCurrentProtocol()
 
@@ -48,6 +76,11 @@ class ProtocolsController(ProtocolsToolBar):
             self.main.protocol_inputs.updateProtocolInputs()
 
     def newProtocol(self):
+        """
+        Creates a new protocol.
+
+        Opens a file dialog to specify the name and location for the new protocol.
+        """
         # Open a file dialog to get the filename to save to
         file_name, _ = QFileDialog.getSaveFileName(self.main, 'New Protocol', 'protocols', '')
 
@@ -69,6 +102,12 @@ class ProtocolsController(ProtocolsToolBar):
                 print("Protocol already exist")
 
     def newSequence(self):
+        """
+        Adds a new sequence to a protocol.
+
+        Gets the current protocol and sequence, opens a file dialog to specify the name and location
+        for the new sequence file within the current protocol directory, and saves the sequence as a CSV file.
+        """
         # Get the current protocol
         protocol = self.main.protocol_list.getCurrentProtocol()
 

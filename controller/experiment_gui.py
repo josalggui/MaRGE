@@ -21,6 +21,33 @@ import configs.hw_config as hw
 import numpy as np
 
 class Experiment(ex.Experiment):
+    """
+    Custom experiment class that extends the base Experiment class from the 'ex' module.
+
+    Args:
+        lo_freq (float): Frequency of the LO (Local Oscillator) in MHz.
+        rx_t (float): RX (Receiver) time in microseconds. Should be multiples of 1/122.88, where some values like 3.125 are exact.
+        seq_dict (dict): Dictionary containing the sequence information.
+        seq_csv (str): Path to a CSV file containing the sequence information.
+        rx_lo (int): Specifies which internal NCO (Numerically Controlled Oscillator) local oscillator to use for each channel.
+        grad_max_update_rate (float): Maximum update rate of the gradient in MSPS (Mega Samples Per Second) across all channels in parallel.
+        gpa_fhdo_offset_time (int): Offset time used when GPA-FHDO (Gradient Pulse Amplitude - Fractional High Dynamic Range Output) is used.
+        print_infos (bool): Flag to control the display of server info messages.
+        assert_errors (bool): Flag to control whether to halt on server errors.
+        init_gpa (bool): Flag to initialize the GPA (Gradient Pulse Amplitude) when the Experiment object is created.
+        initial_wait (float): Initial pause before the experiment begins, in microseconds. Required to configure the LOs (Local Oscillators) and RX rate.
+        auto_leds (bool): Flag to automatically scan the LED (Light-Emitting Diode) pattern from 0 to 255 as the sequence runs.
+        prev_socket (socket): Previously-opened socket to maintain status.
+        fix_cic_scale (bool): Flag to scale the RX (Receiver) data precisely based on the rate being used.
+        set_cic_shift (bool): Flag to program the CIC (Cascaded Integrator-Comb) internal bit shift to maintain the gain within a factor of 2 independent of the rate.
+        allow_user_init_cfg (bool): Flag to allow user-defined alteration of flocra (Field-Programmable Logic Controller for Real-Time Acquisition) configuration set by init.
+        halt_and_reset (bool): Flag to halt any existing sequences that may be running upon connecting to the server.
+        flush_old_rx (bool): Flag to read out and clear the old RX (Receiver) FIFOs before running a sequence.
+
+    Summary:
+        The Experiment class extends the base Experiment class from the 'ex' module and provides additional functionality and customization for experiments.
+        It inherits all the attributes and methods from the base class and overrides the __init__() and run() methods.
+    """
     def __init__(self,
                  lo_freq=1,  # MHz
                  rx_t=3.125, # us; multiples of 1/122.88, such as 3.125, are exact, others will be rounded to the nearest multiple of the 122.88 MHz clock
@@ -41,6 +68,9 @@ class Experiment(ex.Experiment):
                  halt_and_reset=False,  # upon connecting to the server, halt any existing sequences that may be running
                  flush_old_rx=False, # when debugging or developing new code, you may accidentally fill up the RX FIFOs - they will not automatically be cleared in case there is important data inside. Setting this true will always read them out and clear them before running a sequence. More advanced manual code can read RX from existing sequences.
                  ):
+        """
+        Initialize the Experiment object with the specified parameters.
+        """
         super(Experiment, self).__init__(lo_freq,
                                          rx_t / hw.oversamplingFactor,
                                          seq_dict,
@@ -61,11 +91,27 @@ class Experiment(ex.Experiment):
                                          flush_old_rx,)
 
     def getSamplingRate(self):
+        """
+        Get the sampling rate of the experiment in the sequence sampling rate.
+
+        Returns:
+            float: The sampling rate in samples per second.
+        """
         return self.get_rx_ts()[0] * hw.oversamplingFactor
 
     def run(self):
-        """ compile the TX and grad data, send everything over.
-        Returns the resultant data """
+        """
+        Compile the TX and gradient data and send everything over to the server.
+        Returns the resultant data.
+
+        Returns:
+            tuple: A tuple containing the resultant data and messages.
+                   The resultant data is a dictionary containing the received IQ signals for each channel in mV.
+                   The messages are server messages.
+
+        Raises:
+            None
+        """
 
         if not self._seq_compiled:
             self.compile()
