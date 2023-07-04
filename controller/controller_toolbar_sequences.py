@@ -405,7 +405,10 @@ class SequenceController(SequenceToolBar):
         for key in seq.mapKeys:
             data_len = seq.mapLen[key]
             val_old = map_vals_old[key]
-            val_new = map_vals_new[key]
+            try:
+                val_new = map_vals_new[key]
+            except:
+                val_new = str(val_old) * 1
             val_new = val_new.replace('[', '')
             val_new = val_new.replace(']', '')
             val_new = val_new.split(',')
