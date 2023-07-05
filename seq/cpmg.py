@@ -50,6 +50,14 @@ class TSE(blankSeq.MRIBLANKSEQ):
         init_gpa = False  # Starts the gpa
         self.demo = demo
 
+        # Check that self.phase_mode is once of the good values
+        phase_modes = ['CP', 'CPMG', 'APCP', 'APCPMG']
+        if not self.phase_mode in phase_modes:
+            print('\nError: unexpected phase mode.')
+            print('Please select one of possible modes:')
+            print('CP\nCPMG\nAPCP\nAPCPMG')
+            return False
+
         # I do not understand why I cannot create the input parameters automatically
         def createSequence():
             acq_points = 0
@@ -131,8 +139,7 @@ class TSE(blankSeq.MRIBLANKSEQ):
                 rxd['rx0'] *= hw.adcFactor
             else:
                 rxd = {}
-                rxd['rx0'] = np.random.randn(acq_points * hw.oversamplingFactor) + 1j * \
-                             np.random.randn(acq_points * hw.oversamplingFactor)
+                rxd['rx0'] = self.mySignal()
             self.mapVals['dataFull'] = rxd['rx0']
             data = sig.decimate(rxd['rx0'], hw.oversamplingFactor, ftype='fir', zero_phase=True)
             data = np.average(np.reshape(data, (self.nScans, -1)), axis=0)
@@ -150,7 +157,8 @@ class TSE(blankSeq.MRIBLANKSEQ):
         data_echoes[:, 0] = 0.
         data_echoes[:, -1] = 0.
         data_echoes = np.reshape(data, -1)
-        t0 = np.linspace(self.echoSpacing - self.acqTime / 2, self.echoSpacing + self.acqTime / 2, self.nPoints)*1e-3 # ms
+        t0 = np.linspace(self.echoSpacing - self.acqTime / 2, self.echoSpacing + self.acqTime / 2,
+                         self.nPoints) * 1e-3  # ms
         t1_vector = t0
         for echo_index in range(self.etl - 1):
             t1_vector = np.concatenate((t1_vector, t0 + self.echoSpacing*1e-3 * (echo_index + 1)), axis=0)
@@ -167,52 +175,29 @@ class TSE(blankSeq.MRIBLANKSEQ):
         def func1(x, m, t2):
             return m*np.exp(-x/t2)
 
-        def func2(x, ma, t2a, mb, t2b):
-            return ma*np.exp(-x/t2a)+mb*np.exp(-x/t2b)
-
-        def func3(x, ma, t2a, mb, t2b, mc, t2c):
-            return ma*np.exp(-x/t2a)+mb*np.exp(-x/t2b)+mc*np.exp(-x/t2c)
-
         # Fitting to functions
-        # # For 1 component
-        # fitData1, xxx = curve_fit(func1, results[0],  results[1])
-        # print('For one component:')
-        # print('mA', round(fitData1[0], 1))
-        # print('T2', round(fitData1[1]), ' ms')
-        # self.mapVals['T21'] = fitData1[1]
-        # self.mapVals['M1'] = fitData1[0]
-        #
-        # # For 2 components
-        # fitData2, xxx = curve_fit(func2, results[0],  results[1])
-        # print('For two components:')
-        # print('Ma', round(fitData2[0], 1))
-        # print('Mb', round(fitData2[2], 1))
-        # print('T2a', round(fitData2[1]), ' ms')
-        # print('T2b', round(fitData2[3]), ' ms')
-        # self.mapVals['T22'] = [fitData2[1], fitData2[3]]
-        # self.mapVals['M2'] = [fitData2[0], fitData2[2]]
-        #
-        # # For 3 components
-        # fitData3, xxx = curve_fit(func3, results[0],  results[1])
-        # print('For three components:')
-        # print('Ma', round(fitData3[0], 1), ' ms')
-        # print('Mb', round(fitData3[2], 1), ' ms')
-        # print('Mc', round(fitData3[4], 1), ' ms')
-        # print('T2a', round(fitData3[1]), ' ms')
-        # print('T2b', round(fitData3[3]), ' ms')
-        # print('T2c', round(fitData3[5]), ' ms')
-        # self.mapVals['T23'] = [fitData3[1], fitData3[3], fitData3[5]]
-        # self.mapVals['M3'] = [fitData3[0], fitData3[2], fitData3[4]]
-
+        fitData1, xxx = curve_fit(func1, t2_vector,  np.abs(data),
+                                  p0=[np.abs(data[0]), 10])
+        fitting1 = func1(t2_vector,
+                         fitData1[0], fitData1[1])
+        corr_coef1 = np.corrcoef(np.abs(data), fitting1)
+        print('\nFor one component:')
+        print('rho:', round(fitData1[0], 1))
+        print('T2 (ms):', round(fitData1[1], 1), ' ms')
+        print('Correlation: %0.3f' % corr_coef1[0, 1])
+        self.mapVals['T21'] = fitData1[1]
+        self.mapVals['M1'] = fitData1[0]
 
         # Signal vs rf time
         result1 = {'widget': 'curve',
                    'xData': t2_vector,
-                   'yData': [np.abs(data)],
+                   'yData': [np.abs(data),
+                             func1(t2_vector, fitData1[0], fitData1[1])],
                    'xLabel': 'Echo time (ms)',
                    'yLabel': 'Echo amplitude (mV)',
                    'title': 'Echo amplitude VS Echo time',
-                   'legend': ['Experimental at echo time', 'Experimental at maximum'],
+                   'legend': ['Experimental at echo time',
+                              'Fitting to monoexponential'],
                    'row': 0,
                    'col': 0}
 
@@ -239,3 +224,37 @@ class TSE(blankSeq.MRIBLANKSEQ):
         # create self.out to run in iterative mode
         self.out = [result1, result2]
         return self.out
+
+    def mySignal(self):
+        # Get inputs
+        te = self.mapVals['echoSpacing']
+        acq_time = self.mapVals['acqTime']
+        n_points = self.mapVals['nPoints'] * hw.oversamplingFactor
+        t2 = 10.0 # ms
+        t2_star = 1.0 # ms
+
+        # Define gaussian function
+        def gaussian(a, t, mu, sig):
+            return a*np.exp(-np.power(t - mu, 2.) / (2 * np.power(sig, 2.)))
+
+        # Generate signal vector
+        t0 = np.linspace(te - acq_time / 2, te + acq_time / 2, n_points)  # ms
+        t1_vector = t0
+        signal = gaussian(np.exp(-te/t2), t0, te, t2_star)
+        for echo_index in range(self.etl - 1):
+            t0 += te
+            sig_prov = gaussian(np.exp(-te*(echo_index+2)/t2), t0, te*(echo_index+2), t2_star)
+
+            t1_vector = np.concatenate((t1_vector, t0), axis=0)
+            signal = np.concatenate((signal, sig_prov), axis=0)
+
+        if self.nScans > 1:
+            signal0 = signal.copy()
+            for repetition in range(self.nScans-1):
+                signal0 = np.concatenate((signal0, signal), axis=0)
+            signal = signal0
+
+        # Add noise
+        signal = signal + (np.random.randn(np.size(signal)) + 1j * np.random.randn(np.size(signal))) * 0.01
+
+        return signal
