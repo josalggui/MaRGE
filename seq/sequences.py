@@ -15,7 +15,7 @@ import seq.fid as fid
 import seq.FIDandNoise as FIDandNoise
 import seq.rabiFlops as rabiFlops
 import seq.B1calibration as B1calibration
-import seq.cpmg as cpmg
+import seq.cpmg as tse
 import seq.eddycurrents as eddycurrents
 import seq.larmor as larmor
 import seq.inversionRecovery as inversionRecovery
@@ -71,8 +71,8 @@ class Larmor(larmor.Larmor):
 class Noise(noise.Noise):
     def __init__(self): super(Noise, self).__init__()
 
-class CPMG(cpmg.CPMG):
-    def __init__(self): super(CPMG, self).__init__()
+class TSE(tse.TSE):
+    def __init__(self): super(TSE, self).__init__()
 
 class EDDYCURRENTS(eddycurrents.EDDYCURRENTS):
     def __init__(self): super(EDDYCURRENTS, self).__init__()
@@ -120,7 +120,7 @@ defaultsequences = {
 
 
     'B1calibration': B1calibration(),
-    'CPMG': CPMG(),
+    'TSE': TSE(),
     'EDDYCURRENTS': EDDYCURRENTS(),
     'InversionRecovery': IR(),
     # 'ADCtest': ADCtest(),
