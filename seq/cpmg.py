@@ -30,6 +30,7 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-12.5,-12.5,7.5], field='OTH')
         self.addParameter(key='echoObservation', string='Echo Observation', val=1, field='OTH')
+        self.addParameter(key='turbo_mode', string='Turbo mode', val=0, tip='0:CP, 1:CPMG, 2:ACP, 3:ACPMG', field='SEQ')
 
     def sequenceInfo(self):
         print(" ")
@@ -46,14 +47,7 @@ class CPMG(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
-        demo = False
-
-        # Create the inputs automatically. For some reason it only works if there is a few code later...
-        # for key in self.mapKeys:
-        #     if type(self.mapVals[key])==list:
-        #         locals()[key] = np.array(self.mapVals[key])
-        #     else:
-        #         locals()[key] = self.mapVals[key]
+        self.demo = demo
 
         # I do not understand why I cannot create the input parameters automatically
         seqName = self.mapVals['seqName']
@@ -70,6 +64,7 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         acqTime = self.mapVals['acqTime']
         shimming = np.array(self.mapVals['shimming'])
         echoObservation = self.mapVals['echoObservation']
+        self.turbo_mode = self.mapVals['turbo_mode']
 
         def createSequence():
             # Initialize time
@@ -91,7 +86,16 @@ class CPMG(blankSeq.MRIBLANKSEQ):
 
                     # Refocusing pulse
                     t0 = tEcho - echoSpacing / 2 - hw.blkTime - rfReTime / 2
-                    self.rfRecPulse(t0, rfReTime, rfReAmp, np.pi / 2)
+                    phase = 0
+                    if self.turbo_mode==0: # CP
+                        phase = 0.0
+                    elif self.turbo_mode==1: # CPMG
+                        phase = np.pi/2
+                    elif self.turbo_mode==2: # ACP
+                        phase = ((-1)**(echoIndex)+1)*np.pi/2
+                    elif self.turbo_mode==3: # ACPMG
+                        phase = (-1)**echoIndex*np.pi/2
+                    self.rfRecPulse(t0, rfReTime, rfReAmp, rfPhase=phase)
 
                     # Rx gate
                     t0 = tEcho - acqTime / 2
@@ -134,10 +138,19 @@ class CPMG(blankSeq.MRIBLANKSEQ):
             self.mapVals['data'] = data
             self.expt.__del__()
 
+            data_echoes = data*1
+            t0 = np.linspace(echoSpacing-acqTime/2, echoSpacing+acqTime/2, nPoints)
+            time_vector = t0
+            for echo_index in range(etl-1):
+                time_vector = np.concatenate((time_vector, t0+echoSpacing*(echo_index+1)), axis=0)
+            self.mapVals['full_result'] = [time_vector, data_echoes]
+
             data = np.reshape(data, (etl, -1))
             data = np.abs(data[:, int(nPoints/2)])
             echoTimeVector = np.linspace(echoSpacing, echoSpacing * etl, num=etl, endpoint=True)
             self.results = [echoTimeVector, data]
+            self.mapVals['results'] = self.results
+
 
         return True
 
@@ -196,23 +209,23 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         # Signal vs rf time
         result1 = {'widget': 'curve',
                    'xData': results[0]*1e-3,
-                   'yData': [results[1], func1(results[0], *fitData1), func2(results[0], *fitData2)],
+                   'yData': [results[1]],
                    'xLabel': 'Echo time (ms)',
                    'yLabel': 'Echo amplitude (mV)',
-                   'title': '',
-                   'legend': ['Experimental', 'Fitting 1 component', 'Fitting 2 components'],
+                   'title': 'Echo amplitude VS Echo time',
+                   'legend': ['Experimental at echo time', 'Experimental at maximum'],
                    'row': 0,
                    'col': 0}
 
-        # 2D image
-        result2 = {'widget': 'image',
-                   'data': data,
-                   'xLabel': "Echo index",
-                   'yLabel': "Acquired point",
-                   'title': "Acquired echoes",
+        result2 = {'widget': 'curve',
+                   'xData': self.mapVals['full_result'][0] * 1e-3,
+                   'yData': [np.abs(self.mapVals['full_result'][1])],
+                   'xLabel': 'Echo time (ms)',
+                   'yLabel': 'Echo amplitude (mV)',
+                   'title': 'Echo train',
+                   'legend': ['Experimental measurement'],
                    'row': 1,
                    'col': 0}
-
 
         # create self.out to run in iterative mode
         self.out = [result1, result2]
