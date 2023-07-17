@@ -1,8 +1,8 @@
 """
-session_controller.py
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 from ui.window_session import SessionWindow
 from controller.controller_main import MainController
@@ -12,7 +12,22 @@ import configs.hw_config as hw
 
 
 class SessionController(SessionWindow):
+    """
+    Controller class for managing the session.
+
+    Args:
+        demo (bool): Indicates whether the session is a demo or not.
+
+    Inherits:
+        SessionWindow: Base class for the session window.
+    """
     def __init__(self, demo):
+        """
+        Initializes the SessionController.
+
+        Args:
+            demo (bool): Indicates whether the session is a demo or not.
+        """
         super(SessionController, self).__init__()
         self.main_gui = None
         self.demo = demo
@@ -22,6 +37,11 @@ class SessionController(SessionWindow):
         self.close_action.triggered.connect(self.close)
 
     def runMainGui(self):
+        """
+        Runs the main GUI and sets up the session.
+
+        Creates a folder for the session and opens the main GUI.
+        """
         self.updateSessionDict()
 
         # Create folder
@@ -36,14 +56,26 @@ class SessionController(SessionWindow):
         self.main_gui.show()
 
     def closeEvent(self, event):
+        """
+        Event handler for the session window close event.
+
+        Args:
+            event: The close event.
+        """
         print('GUI closed successfully!')
         super().closeEvent(event)
 
     def close(self):
+        """
+        Closes the session and exits the program.
+        """
         print('GUI closed successfully!')
         sys.exit()
 
     def updateSessionDict(self):
+        """
+        Updates the session dictionary with the current session information.
+        """
         self.session = {
             'project': self.project_combo_box.currentText(),
             'study': self.study_combo_box.currentText(),

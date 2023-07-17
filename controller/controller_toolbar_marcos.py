@@ -1,8 +1,8 @@
 """
-session_controller.py
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 import time
 
@@ -15,7 +15,25 @@ import configs.hw_config as hw
 
 
 class MarcosController(MarcosToolBar):
+    """
+    Controller class for managing MaRCoS (Magnetic Resonance Compatible
+    Optical Stimulation) functionality.
+
+    Args:
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Inherits:
+        MarcosToolBar: Base class for the MaRCoS toolbar.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initializes the MarcosController.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super(MarcosController, self).__init__(*args, **kwargs)
 
         # Copy relevant files from marcos_extras
@@ -33,9 +51,9 @@ class MarcosController(MarcosToolBar):
 
     def startMaRCoS(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: execute startRP.sh: copy_bitstream.sh & marcos_server
+        Starts the MaRCoS system.
+
+        Executes startRP.sh: copy_bitstream.sh & marcos_server.
         """
         if not self.demo:
             subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
@@ -49,9 +67,9 @@ class MarcosController(MarcosToolBar):
 
     def controlMarcosServer(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: connect to marcos_server
+        Controls the MaRCoS server connection.
+
+        Connects or disconnects from the MaRCoS server.
         """
         if not self.demo:
             if not self.action_server.isChecked():
@@ -70,9 +88,9 @@ class MarcosController(MarcosToolBar):
 
     def copyBitStream(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: execute copy_bitstream.sh
+        Copies the MaRCoS bitstream to the remote platform.
+
+        Executes copy_bitstream.sh.
         """
         if not self.demo:
             subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
@@ -85,9 +103,7 @@ class MarcosController(MarcosToolBar):
 
     def initgpa(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: initialize the gpa board
+        Initializes the GPA board.
         """
         if self.action_server.isChecked():
             if not self.demo:

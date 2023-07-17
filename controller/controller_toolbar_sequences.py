@@ -1,7 +1,8 @@
 """
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 import copy
 import csv
@@ -22,7 +23,19 @@ import configs.hw_config as hw
 
 
 class SequenceController(SequenceToolBar):
+    """
+    A class that controls the sequence and provides methods for interacting with it.
+
+    Inherits from `SequenceToolBar`.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the SequenceController object.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super(SequenceController, self).__init__(*args, **kwargs)
 
         # Set the action_iterate button checkable
@@ -52,12 +65,27 @@ class SequenceController(SequenceToolBar):
         self.main.toolbar_marcos.action_server.triggered.connect(self.serverConnected)
 
     def bender(self):
+        """
+        Simulates a bender action.
+
+        Iterates through the `protocol_inputs` items in the main window and triggers a sequence double-click action for each item.
+        Adds a small delay of 0.1 seconds between each action to simulate the bender action.
+        """
         items = [self.main.protocol_inputs.item(index) for index in range(self.main.protocol_inputs.count())]
         for item in items:
             self.main.protocol_inputs.sequenceDoubleClicked(item)
             time.sleep(0.1)
 
     def autocalibration(self):
+        """
+        Executes autocalibration sequences.
+
+        Runs a predefined set of sequences for autocalibration purposes.
+        The `seq_names` list contains the names of the sequences to be executed.
+        For the sequence 'RabiFlops', custom modifications are made to the sequence parameters before execution.
+        Finally, the `runToList` method is called for each sequence in `seq_names`.
+        Updates the inputs of the sequences in the main window after execution.
+        """
         # Include here the sequences to run on autocalibration
         seq_names = [
             'Larmor',
@@ -80,9 +108,20 @@ class SequenceController(SequenceToolBar):
 
     def startAcquisition(self, seq_name=None):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: run selected sequence
+        Run the selected sequence and perform data acquisition.
+
+        Args:
+            seq_name (str, optional): Name of the sequence to run. If not provided or False, the current sequence in the sequence list is used.
+
+        Returns:
+            int: Return 0 if the sequence run fails.
+
+        Summary:
+            This method executes the selected sequence and handles the data acquisition process.
+            It performs various operations such as loading the sequence name, deleting output if the sequence has changed,
+            saving input parameters, updating sequence attributes, creating and executing the sequence, analyzing the
+            sequence output, updating parameters, displaying the output label, saving results to history, adding plots to
+            the plot view, and optionally iterating the acquisition in a separate thread.
         """
         # Load sequence name
         if seq_name is None or seq_name is False:
@@ -192,9 +231,15 @@ class SequenceController(SequenceToolBar):
 
     def runToList(self, seq_name=None, item_name=None):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: add new run to the waiting list
+        Add a new run to the waiting list.
+
+        Args:
+            seq_name (str, optional): Name of the sequence. If not provided or False, the current sequence in the sequence list is used.
+            item_name (str, optional): Name of the item to add to the history list. If not provided, a timestamped name is used.
+
+        Summary:
+            This method adds a new run to the waiting list. It retrieves the sequence name, adds the item to the history list,
+            saves the results into the history, and sets the dfov and angle values to zero for the next figures.
         """
         # Load sequence name
         if seq_name is None or seq_name is False:
@@ -223,9 +268,14 @@ class SequenceController(SequenceToolBar):
 
     def startSequencePlot(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: plot sequence instructions
+        Plot the sequence instructions.
+
+        Returns:
+            int: Return 0 if plotting fails.
+
+        Summary:
+            This method plots the instructions of the current sequence. It retrieves the sequence name, creates the sequence
+            to plot, runs the sequence in demo mode, and creates the necessary plots based on the sequence output.
         """
         # if self.main.demo:
         #     print("\nIt is not possible to plot a sequence in demo mode.")
@@ -258,9 +308,11 @@ class SequenceController(SequenceToolBar):
 
     def startLocalizer(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: run localizer
+        Run the localizer sequence.
+
+        Summary:
+            This method runs the localizer sequence. It loads the sequence parameters, sets the shimming values from the 'RARE'
+            sequence, and runs the sagittal, transversal, and coronal localizers based on the specified planes.
         """
 
         print('Start localizer')
@@ -290,9 +342,12 @@ class SequenceController(SequenceToolBar):
 
     def iterate(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: swtich the iterative mode
+        Switch the iterative mode.
+
+        Summary:
+            This method switches the iterative mode based on the state of the 'iterate' action. If the action is checked, the
+            tooltip and status tip are updated to indicate that switching to single run is possible. If the action is unchecked,
+            the tooltip and status tip are updated to indicate that switching to iterative run is possible.
         """
         if self.action_iterate.isChecked():
             self.action_iterate.setToolTip('Switch to single run')
@@ -303,9 +358,13 @@ class SequenceController(SequenceToolBar):
     
     def repeatAcquisition(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: executed when you repeat some calibration sequences
+        Executed when you repeat some calibration sequences.
+
+        Summary:
+            This method is executed when you repeat some calibration sequences. If the iterative run mode is not enabled, it
+            creates and executes the selected sequence. It performs sequence analysis, updates the plots, adds the item to the
+            history list, and saves the results. If the iterative run mode is enabled, it repeatedly creates and executes the
+            selected sequence until the iterative run action is unchecked.
         """
         # Acquire while iterativeRun is True
         if not self.action_iterate.isChecked():
@@ -389,7 +448,15 @@ class SequenceController(SequenceToolBar):
                     defaultsequences[self.seq_name].fovs.copy()
 
     def loadParameters(self):
+        """
+        Opens a file dialog to load parameters from a CSV file and updates the sequence's mapVals with the new values.
 
+        Summary:
+            This method opens a file dialog to allow the user to select a CSV file containing parameter values. The selected
+            file is read, and the mapVals of the current sequence are updated with the new parameter values. The CSV file is
+            expected to have the same fieldnames as the mapKeys of the sequence. After updating the mapVals, the sequence list
+            is updated to reflect the changes.
+        """
         file_name, _ = QFileDialog.getOpenFileName(self.main, 'Open Parameters File', "experiments/parameterization/")
 
         seq = defaultsequences[self.main.sequence_list.getCurrentSequence()]
@@ -449,6 +516,15 @@ class SequenceController(SequenceToolBar):
         print("\nParameters of %s sequence loaded" % (self.main.sequence_list.getCurrentSequence()))
 
     def saveParameters(self):
+        """
+        Saves the current sequence's parameter values to a CSV file in the 'experiments/parameterization/' directory.
+
+        Summary:
+            This method saves the parameter values of the current sequence to a CSV file in the 'experiments/parameterization/'
+            directory. The file is named using the sequence's name and the current timestamp. The mapKeys and mapVals of the
+            sequence are used to construct the CSV file. The sequence's mapNmspc is written as the first row of the CSV file,
+            followed by the mapVals.
+        """
         dt = datetime.now()
         dt_string = dt.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
         seq = defaultsequences[self.main.sequence_list.getCurrentSequence()]
@@ -466,6 +542,15 @@ class SequenceController(SequenceToolBar):
         print("\nParameters of %s sequence saved in 'experiments/parameterization'" %(self.main.sequence_list.getCurrentSequence()))
 
     def saveParametersCalibration(self):
+        """
+        Saves the current sequence's parameter values to a CSV file in the 'calibration/' directory.
+
+        Summary:
+            This method saves the parameter values of the current sequence to a CSV file in the 'calibration/' directory.
+            The file is named using the sequence's name appended with '_last_parameters.csv'. The mapKeys and mapVals of the
+            sequence are used to construct the CSV file. The sequence's mapNmspc is written as the first row of the CSV file,
+            followed by the mapVals.
+"""
         seq = defaultsequences[self.main.sequence_list.getCurrentSequence()]
 
         # Save csv with input parameters
@@ -480,6 +565,14 @@ class SequenceController(SequenceToolBar):
         print("\nParameters of %s sequence saved in 'calibration'" % (self.main.sequence_list.getCurrentSequence()))
 
     def serverConnected(self):
+        """
+        Enables or disables certain actions based on the server connection status.
+
+        Summary:
+            This method is called when the server connection status changes. If the server is connected (checked), it enables
+            certain actions including 'action_acquire', 'action_localizer', 'action_autocalibration', 'action_bender',
+            'action_view_sequence', and 'action_add_to_list'. If the server is not connected (unchecked), it disables these actions.
+        """
         if self.main.toolbar_marcos.action_server.isChecked():
             self.action_acquire.setDisabled(False)
             self.action_localizer.setDisabled(False)

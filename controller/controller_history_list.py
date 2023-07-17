@@ -1,7 +1,8 @@
 """
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 import copy
 import time
@@ -17,7 +18,15 @@ from widgets.widget_history_list import HistoryListWidget
 
 
 class HistoryListController(HistoryListWidget):
+    """
+    Controller for the history list.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Controller for the history list.
+
+        It has a dictionary with the input and outputs of executed and pending sequences.
+        """
         super(HistoryListController, self).__init__(*args, **kwargs)
         self.clicked_item = None
         self.fovs = {}
@@ -37,6 +46,11 @@ class HistoryListController(HistoryListWidget):
         self.customContextMenuRequested.connect(self.showContextMenu)
 
     def showContextMenu(self, point):
+        """
+        Displays a context menu at the given point.
+
+        :param point: The position where the context menu should be displayed.
+        """
         self.clicked_item = self.itemAt(point)
         if self.clicked_item is not None:
             menu = QMenu(self)
@@ -53,19 +67,43 @@ class HistoryListController(HistoryListWidget):
             menu.exec_(self.mapToGlobal(point))
 
     def deleteTask(self):
+        """
+        Deletes the currently selected task from the list.
+
+        This method removes the currently selected task item from the list widget.
+        """
         self.takeItem(self.row(self.currentItem()))
 
     def addNewFigure(self):
+        """
+        Adds a new figure and initializes the figures and labels lists.
+
+        This method adds a new figure and initializes the `figures` and `labels` lists to empty lists.
+        It then calls the `addFigure` method to add the new figure to the list.
+        """
         self.figures = []
         self.labels = []
         self.addFigure()
 
     def addFigure(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: add another figure from the history list
-        TODO: link the slice of different figures
+        Adds a figure to the layout and updates the figures and labels lists.
+
+        This method clears the figures layout, checks the number of existing figures, and returns early if the maximum
+        limit of 4 figures is reached.
+        It retrieves information from the clicked item, such as the time and name, and assigns it to
+        `self.current_output`.
+        The method then fetches the relevant data and configurations from the history based on `self.current_output`.
+        It creates the label and figure for the image widget, adds them to the figures layout, and updates the figures
+        and labels lists.
+
+        Note: The figures layout is assumed to be available as `self.main.figures_layout`.
+
+        If the selected raw data does not contain an image, a message is printed.
+
+        Raises:
+            - Exception: An exception may be raised if there is an error creating a Spectrum3DPlot.
+
         """
         self.main.figures_layout.clearFiguresLayout()
         if len(self.figures) > 3:
@@ -125,9 +163,17 @@ class HistoryListController(HistoryListWidget):
 
     def updateHistoryTable(self, item):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: update the table when new element is clicked in the history list
+        Updates the history table with input data corresponding to the selected item.
+
+        This method takes an item as input, retrieves the corresponding key from the item's text, and accesses the
+        history dictionary using the key.
+        It extracts the input data from the history and separates it into input_info and input_vals.
+        The method sets the number of rows in the main input_table and populates it with the input_info and input_vals.
+        The input_info is used as the vertical header labels, and 'Values' is set as the horizontal header label.
+
+        Note: The main input_table is assumed to be available as self.main.input_table.
+
+        :param item: The selected item from which to retrieve the corresponding input data.
         """
         # Get the corresponding key to get access to the history dictionary
         item_time = item.text().split(' | ')[0]
@@ -154,9 +200,18 @@ class HistoryListController(HistoryListWidget):
 
     def updateHistoryFigure(self, item):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: update the shown figure when new element is double clicked in the history list
+        Updates the history figure based on the selected item.
+
+        This method takes an item as input, retrieves the corresponding key from the item's text, and assigns it to `self.current_output`.
+        It accesses the history dictionary using `self.current_output` to retrieve the output widget information.
+        If available, it also retrieves the rotations, shifts, and field of views (fovs) from the history.
+        The method then clears the plot view by calling `self.main.figures_layout.clearFiguresLayout()`.
+        It adds a label to show the rawData corresponding to the selected item at the top of the figures layout.
+        Finally, it iterates through the output items, adds either a Spectrum3DPlot or SpectrumPlot widget to the figures layout based on the item's widget type and populates it with the relevant data and configurations.
+
+        Note: The figures layout is assumed to be available as `self.main.figures_layout`.
+
+        :param item: The selected item from which to retrieve the corresponding output information.
         """
         # Get the corresponding key to get access to the history dictionary
         item_time = item.text().split(' | ')[0]
@@ -208,9 +263,16 @@ class HistoryListController(HistoryListWidget):
 
     def waitingForRun(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: this method is continuously waiting for running new sequences in the history_list
+        Wait for the run to start.
+
+        This method waits until the main application is open and the server action is checked in the toolbar.
+        It then iterates over the pending inputs and runs the corresponding sequence for each input. After running the
+        sequence, it handles the output and updates the history list accordingly.
+
+        This method is executed in a parallel thread.
+
+        Returns:
+            int: The value 0 indicating the completion of the method.
         """
         while self.main.app_open:
             if self.main.toolbar_marcos.action_server.isChecked():
@@ -257,6 +319,21 @@ class HistoryListController(HistoryListWidget):
         return 0
 
     def runSequenceInlist(self, sequence=None, key=None, raw_data_name=""):
+        """
+        Run a sequence in the list.
+
+        This method executes a given sequence in the list. It saves the sequence list, input parameters, and updates
+        the rotation, field of view (FOV), and dynamic field of view (dFOV) values. The sequence is then executed, and
+        afterwards, sequence analysis is performed to retrieve the results.
+
+        Args:
+            sequence (object): The sequence object to be executed.
+            key (str): The key associated with the sequence to get previous rotations, shifts and fovs.
+            raw_data_name (str): The name of the raw data to be included in the file name.
+
+        Returns:
+            object: The result of the sequence analysis.
+        """
         # Save sequence list into the current sequence, just in case you need to do sweep
         sequence.sequenceList = defaultsequences
         sequence.raw_data_name = raw_data_name

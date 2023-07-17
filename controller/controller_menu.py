@@ -1,7 +1,8 @@
 """
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 import csv
 import os
@@ -14,7 +15,32 @@ from seq.sequences import defaultsequences
 
 
 class MenuController:
+    """
+    Menu controller class.
+
+    This class is responsible for controlling the menus in the application. It adds menus to the main window and
+    connects actions to them.
+
+    Methods:
+        __init__(self, main): Initialize the MenuController instance.
+
+    Attributes:
+        main: The main window instance.
+
+    """
     def __init__(self, main):
+        """
+        Initialize the MenuController instance.
+
+        This method initializes the MenuController instance by setting the `main` attribute to the provided `main`
+        window instance. It adds menus to the main window and connects actions to them.
+
+        Args:
+            main: The main window instance.
+
+        Returns:
+            None
+        """
         self.main = main
 
         # Add menus

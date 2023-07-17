@@ -1,7 +1,8 @@
 """
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 import os
 import csv
@@ -18,7 +19,24 @@ import numpy as np
 
 
 class ProtocolInputsController(ProtocolInputsWidget):
+    """
+    Controller class for managing protocol inputs.
+
+    Args:
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Inherits:
+        ProtocolInputsWidget: Base class for protocol inputs widget.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initializes the ProtocolInputsController.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super().__init__(*args, **kwargs)
 
         self.clicked_item = None
@@ -31,6 +49,12 @@ class ProtocolInputsController(ProtocolInputsWidget):
         self.customContextMenuRequested.connect(self.showContextMenu)
 
     def showContextMenu(self, point):
+        """
+        Displays the context menu when right-clicked on an item.
+
+        Args:
+            point (QPoint): The position where the context menu was requested.
+        """
         self.clicked_item = self.itemAt(point)
         if self.clicked_item is not None:
             menu = QMenu(self)
@@ -53,6 +77,9 @@ class ProtocolInputsController(ProtocolInputsWidget):
             menu.exec_(self.mapToGlobal(point))
 
     def deleteSequence(self):
+        """
+        Deletes a sequence from the protocol inputs.
+        """
         protocol = self.main.protocol_list.getCurrentProtocol()
         file = "%s.csv" % self.clicked_item.text()
         path = "protocols/%s/%s" % (protocol, file)
@@ -61,6 +88,12 @@ class ProtocolInputsController(ProtocolInputsWidget):
         print("\nProtocol removed")
 
     def sequenceDoubleClicked(self, item):
+        """
+        Handles double-click event on a sequence item.
+
+        Args:
+            item (QListWidgetItem): The item that was double-clicked.
+        """
         protocol = self.main.protocol_list.getCurrentProtocol()
         sequence = item.text()
         file = sequence + ".csv"
@@ -78,6 +111,9 @@ class ProtocolInputsController(ProtocolInputsWidget):
         self.main.toolbar_sequences.runToList(seq_name=seq_name, item_name=sequence)
 
     def updateProtocolInputs(self):
+        """
+        Updates the protocol inputs list.
+        """
         self.clear()
 
         # Get predefined sequences for each protocol
@@ -95,6 +131,12 @@ class ProtocolInputsController(ProtocolInputsWidget):
             self.addItems(self.sequences[protocol])
 
     def showSequenceInputs(self, item):
+        """
+        Displays the inputs for a selected sequence.
+
+        Args:
+            item (QListWidgetItem): The selected item.
+        """
         # Get file name
         file_name = "%s.csv" % item.text()
         seq_name = file_name.split('_')[0]

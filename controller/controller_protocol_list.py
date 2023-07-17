@@ -1,7 +1,8 @@
 """
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 import os
 
@@ -9,7 +10,24 @@ from widgets.widget_protocol_list import ProtocolListWidget
 
 
 class ProtocolListController(ProtocolListWidget):
+    """
+    Controller class for managing the protocol list.
+
+    Args:
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Inherits:
+        ProtocolListWidget: Base class for protocol list widget.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initializes the ProtocolListController.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super(ProtocolListController, self).__init__(*args, **kwargs)
         self.protocol = None
         self.protocols = None
@@ -22,9 +40,18 @@ class ProtocolListController(ProtocolListWidget):
         self.currentTextChanged.connect(self.updateProtocolInputs)
 
     def getCurrentProtocol(self):
+        """
+        Returns the currently selected protocol.
+
+        Returns:
+            str: The name of the current protocol.
+        """
         return self.currentText()
 
     def updateProtocolInputs(self):
+        """
+        Updates the protocol inputs based on the selected protocol.
+        """
         # Get the name of the selected sequence
         self.protocol = self.getCurrentProtocol()
 
@@ -35,6 +62,9 @@ class ProtocolListController(ProtocolListWidget):
         self.main.protocol_inputs.addItems(self.main.protocol_inputs.sequences[self.protocol])
 
     def updateProtocolList(self):
+        """
+        Updates the list of protocols.
+        """
         self.blockSignals(True)
         self.clear()
         self.blockSignals(False)
