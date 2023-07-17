@@ -61,8 +61,8 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.demo = demo
 
         # Calculate the rf amplitudes
-        rfExAmp = self.rfExFA / (self.rfExTime * hw.b1Efficiency)
-        rfReAmp = self.rfReFA / (self.rfReTime * hw.b1Efficiency)
+        self.rfExAmp = self.rfExFA / (self.rfExTime * hw.b1Efficiency)
+        self.rfReAmp = self.rfReFA / (self.rfReTime * hw.b1Efficiency)
 
         # Shimming vectors
         dsx = self.nShimming * self.dShimming[0]
@@ -77,50 +77,9 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         szVector = np.reshape(
             np.linspace(self.shimming0[2] - dsz / 2, self.shimming0[2] + dsz / 2, num=self.nShimming, endpoint=False),
             (self.nShimming, 1))
-        sxStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[0], (self.nShimming, 1))
-        syStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[1], (self.nShimming, 1))
-        szStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[2], (self.nShimming, 1))
-        sx = np.concatenate((sxVector, syStatic, szStatic), axis=1)
-        sy = np.concatenate((sxStatic, syVector, szStatic), axis=1)
-        sz = np.concatenate((sxStatic, syStatic, szVector), axis=1)
-        s0 = np.zeros((self.dummyPulses,3))
-        shimmingMatrix = np.concatenate((s0 ,sx, sy, sz), axis=0)
-        # shimmingMatrix = np.concatenate((s0, shimmingMatrix), axis=0)
         self.mapVals['sxVector'] = sxVector
         self.mapVals['syVector'] = syVector
         self.mapVals['szVector'] = szVector
-
-        #  SEQUENCE  ############################################################################################
-        def createSequence():
-            self.iniSequence(20, [0.0, 0.0, 0.0])
-
-            for repeIndex in range((3 * self.nShimming) + self.dummyPulses):
-                # Set time for repetition
-                t0 = 40 + repeIndex * self.repetitionTime
-
-                # Set shimming
-                self.setGradient(t0, shimmingMatrix[repeIndex, 0], 0)
-                self.setGradient(t0, shimmingMatrix[repeIndex, 1], 1)
-                self.setGradient(t0, shimmingMatrix[repeIndex, 2], 2)
-
-                # Initialize time
-                tEx = t0 + 20e3
-
-                # Excitation pulse
-                t0 = tEx - hw.blkTime - self.rfExTime / 2
-                self.rfRecPulse(t0, self.rfExTime, rfExAmp, 0)
-
-                # Refocusing pulse
-                t0 = tEx + self.echoTime / 2 - self.rfReTime / 2 - hw.blkTime
-                self.rfRecPulse(t0, self.rfReTime, rfReAmp, np.pi / 2)
-
-                # Acquisition window
-                if repeIndex >= self.dummyPulses:
-                    t0 = tEx + self.echoTime - self.acqTime / 2
-                    self.rxGate(t0, self.acqTime)
-
-            # End sequence
-            self.endSequence((3 * self.nShimming + self.dummyPulses) * self.repetitionTime)
 
         # Set time parameters to us
         self.repetitionTime *= 1e6
@@ -129,35 +88,13 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.rfReTime *= 1e6
         self.acqTime *= 1e6
 
+        # Perform shimming
+        self.mapVals['data'] = np.array([])
+        self.shimming(axis='x')
+        self.shimming(axis='y')
+        self.shimming(axis='z')
 
-        # Create experiment
-        bw = self.nPoints / self.acqTime * hw.oversamplingFactor  # MHz
-        samplingPeriod = 1 / bw
-        self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset,
-                                  rx_t=samplingPeriod,
-                                  init_gpa=init_gpa,
-                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                  )
-        samplingPeriod = self.expt.get_rx_ts()[0]
-        bw = 1 / samplingPeriod / hw.oversamplingFactor  # MHz
-        self.mapVals['bw'] = bw * 1e6  # Hz
-        self.acqTime = self.nPoints / bw  # us
-        createSequence()
-        if self.floDict2Exp():
-            print("\nSequence waveforms loaded successfully")
-            pass
-        else:
-            print("\nERROR: sequence waveforms out of hardware bounds")
-            return False
 
-        if not plotSeq:
-            rxd, msgs = self.expt.run()
-            print(msgs)
-            data = sig.decimate(rxd['rx0'] * hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            self.mapVals['data'] = data
-        self.expt.__del__()
-
-        return True
 
     def sequenceAnalysis(self, obj=''):
         # Get data
@@ -208,6 +145,95 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.out = [result1]
         return self.out
 
+    def createSequence(self):
+        self.iniSequence(20, [0.0, 0.0, 0.0])
+
+        for repeIndex in range((3 * self.nShimming) + self.dummyPulses):
+            # Set time for repetition
+            t0 = 40 + repeIndex * self.repetitionTime
+
+            # Set shimming
+            self.setGradient(t0, shimmingMatrix[repeIndex, 0], 0)
+            self.setGradient(t0, shimmingMatrix[repeIndex, 1], 1)
+            self.setGradient(t0, shimmingMatrix[repeIndex, 2], 2)
+
+            # Initialize time
+            tEx = t0 + 20e3
+
+            # Excitation pulse
+            t0 = tEx - hw.blkTime - self.rfExTime / 2
+            self.rfRecPulse(t0, self.rfExTime, self.rfExAmp, 0)
+
+            # Refocusing pulse
+            t0 = tEx + self.echoTime / 2 - self.rfReTime / 2 - hw.blkTime
+            self.rfRecPulse(t0, self.rfReTime, self.rfReAmp, np.pi / 2)
+
+            # Acquisition window
+            if repeIndex >= self.dummyPulses:
+                t0 = tEx + self.echoTime - self.acqTime / 2
+                self.rxGate(t0, self.acqTime)
+
+        # End sequence
+        self.endSequence((3 * self.nShimming + self.dummyPulses) * self.repetitionTime)
+
+    def shimming(self, axis='x'):
+        # Create shimming matrix
+        sxVector = self.mapVals['sxVector']
+        syVector = self.mapVals['syVector']
+        szVector = self.mapVals['szVector']
+        if axis=='x':
+            syStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[1], (self.nShimming, 1))
+            szStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[2], (self.nShimming, 1))
+            shimmingMatrix = np.concatenate((sxVector, syStatic, szStatic), axis=1)
+        elif axis=='y':
+            sxStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[0], (self.nShimming, 1))
+            szStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[2], (self.nShimming, 1))
+            shimmingMatrix = np.concatenate((sxStatic, syVector, szStatic), axis=1)
+        elif axis=='z':
+            sxStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[0], (self.nShimming, 1))
+            syStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[1], (self.nShimming, 1))
+            shimmingMatrix = np.concatenate((sxStatic, syStatic, szVector), axis=1)
+        s0 = np.zeros((self.dummyPulses, 3))
+        shimmingMatrix = np.concatenate((s0, shimmingMatrix), axis=0)
+
+        # Create experiment
+        bw = self.nPoints / self.acqTime * hw.oversamplingFactor  # MHz
+        samplingPeriod = 1 / bw
+        self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset,
+                                  rx_t=samplingPeriod,
+                                  init_gpa=init_gpa,
+                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                                  )
+        samplingPeriod = self.expt.get_rx_ts()[0]
+        bw = 1 / samplingPeriod / hw.oversamplingFactor  # MHz
+        self.mapVals['bw'] = bw * 1e6  # Hz
+        self.acqTime = self.nPoints / bw  # us
+        self.createSequence()
+        if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
+            pass
+        else:
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
+
+        # Run experiment and get best shimming for current axis
+        if not plotSeq:
+            rxd, msgs = self.expt.run()
+            self.expt.__del__()
+            print(msgs)
+            data = sig.decimate(rxd['rx0'] * hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            self.mapVals['data'] = np.concatenate((self.mapVals['data'], data), axis=0)
+            data = np.reshape(self.mapVals['data'], (3, self.nShimming, -1))
+            dataFFT = np.zeros(self.nShimming)
+            for ii in range(self.nShimming):
+                dataFFT[ii] = np.max(np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data[ii, :])))))
+            if axis=='x':
+                self.shimming0[0] = sxVector[np.argmax(dataFFT)]
+            elif axis=='y':
+                self.shimming0[1] = syVector[np.argmax(dataFFT)]
+            elif axis=='z':
+                self.shimming0[2] = szVector[np.argmax(dataFFT)]
+        return True
 
 if __name__ == '__main__':
     seq = ShimmingSweep()
