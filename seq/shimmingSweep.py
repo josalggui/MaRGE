@@ -40,9 +40,9 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ')
-        self.addParameter(key='shimming0', string='Shimming (*1e4)', val=[-12.5, -12.5, 7.5], units=units.sh, field='OTH')
+        self.addParameter(key='shimming0', string='Shimming', val=[-12.5, -12.5, 7.5], units=units.sh, field='OTH')
         self.addParameter(key='nShimming', string='n Shimming steps', val=10, field='OTH')
-        self.addParameter(key='dShimming', string='Shiming step', val=[2.5, 2.5, 2.5], field='OTH')
+        self.addParameter(key='dShimming', string='Shiming step', val=[2.5, 2.5, 2.5], units=units.sh, field='OTH')
 
     def sequenceInfo(self):
         print(" ")
@@ -62,8 +62,8 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.demo = demo
 
         # Calculate the rf amplitudes
-        self.rfExAmp = self.rfExFA / (self.rfExTime * hw.b1Efficiency)
-        self.rfReAmp = self.rfReFA / (self.rfReTime * hw.b1Efficiency)
+        self.rfExAmp = self.rfExFA * np.pi / 180 / (self.rfExTime*1e6 * hw.b1Efficiency)
+        self.rfReAmp = self.rfReFA * np.pi / 180 / (self.rfReTime*1e6 * hw.b1Efficiency)
 
         # Shimming vectors
         dsx = self.nShimming * self.dShimming[0]
@@ -91,9 +91,20 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         # Perform shimming
         self.mapVals['data'] = np.array([])
-        self.shimming(axis='x')
-        self.shimming(axis='y')
-        self.shimming(axis='z')
+        if self.shimming(axis='x'):
+            pass
+        else:
+            return False
+        if self.shimming(axis='y'):
+            pass
+        else:
+            return False
+        if self.shimming(axis='z'):
+            pass
+        else:
+            return False
+
+        return True
 
 
 
@@ -149,7 +160,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
     def createSequence(self):
         self.iniSequence(20, [0.0, 0.0, 0.0])
 
-        for repeIndex in range((3 * self.nShimming) + self.dummyPulses):
+        for repeIndex in range(self.nShimming + self.dummyPulses):
             # Set time for repetition
             t0 = 40 + repeIndex * self.repetitionTime
 
@@ -224,7 +235,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             print(msgs)
             data = sig.decimate(rxd['rx0'] * hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = np.concatenate((self.mapVals['data'], data), axis=0)
-            data = np.reshape(self.mapVals['data'], (3, self.nShimming, -1))
+            data = np.reshape(self.mapVals['data'], (self.nShimming, -1))
             dataFFT = np.zeros(self.nShimming)
             for ii in range(self.nShimming):
                 dataFFT[ii] = np.max(np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data[ii, :])))))
