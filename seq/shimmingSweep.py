@@ -22,6 +22,7 @@ import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
+import configs.units as units
 
 
 class ShimmingSweep(blankSeq.MRIBLANKSEQ):
@@ -29,17 +30,17 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         super(ShimmingSweep, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='ShimmingSweepInfo', val='Shimming')
-        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
+        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90.0, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180.0, field='RF')
-        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
-        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='RF')
-        self.addParameter(key='echoTime', string='Echo time (ms)', val=10., field='SEQ')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ')
+        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, units=units.us, field='RF')
+        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, units=units.us, field='RF')
+        self.addParameter(key='echoTime', string='Echo time (ms)', val=10., units=units.ms, field='SEQ')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., units=units.ms, field='SEQ')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ')
-        self.addParameter(key='shimming0', string='Shimming (*1e4)', val=[-12.5, -12.5, 7.5], field='OTH')
+        self.addParameter(key='shimming0', string='Shimming (*1e4)', val=[-12.5, -12.5, 7.5], units=units.sh, field='OTH')
         self.addParameter(key='nShimming', string='n Shimming steps', val=10, field='OTH')
         self.addParameter(key='dShimming', string='Shiming step', val=[2.5, 2.5, 2.5], field='OTH')
 
@@ -57,7 +58,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         return (repetitionTime * nShimming * 3 / 60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq=0, demo=False):
-        init_gpa = False  # Starts the gpa
+        self.plot_seq = plotSeq
         self.demo = demo
 
         # Calculate the rf amplitudes
@@ -153,9 +154,9 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             t0 = 40 + repeIndex * self.repetitionTime
 
             # Set shimming
-            self.setGradient(t0, shimmingMatrix[repeIndex, 0], 0)
-            self.setGradient(t0, shimmingMatrix[repeIndex, 1], 1)
-            self.setGradient(t0, shimmingMatrix[repeIndex, 2], 2)
+            self.setGradient(t0, self.shimmingMatrix[repeIndex, 0], 0)
+            self.setGradient(t0, self.shimmingMatrix[repeIndex, 1], 1)
+            self.setGradient(t0, self.shimmingMatrix[repeIndex, 2], 2)
 
             # Initialize time
             tEx = t0 + 20e3
@@ -184,24 +185,24 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         if axis=='x':
             syStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[1], (self.nShimming, 1))
             szStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[2], (self.nShimming, 1))
-            shimmingMatrix = np.concatenate((sxVector, syStatic, szStatic), axis=1)
+            self.shimmingMatrix = np.concatenate((sxVector, syStatic, szStatic), axis=1)
         elif axis=='y':
             sxStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[0], (self.nShimming, 1))
             szStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[2], (self.nShimming, 1))
-            shimmingMatrix = np.concatenate((sxStatic, syVector, szStatic), axis=1)
+            self.shimmingMatrix = np.concatenate((sxStatic, syVector, szStatic), axis=1)
         elif axis=='z':
             sxStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[0], (self.nShimming, 1))
             syStatic = np.reshape(np.ones(self.nShimming) * self.shimming0[1], (self.nShimming, 1))
-            shimmingMatrix = np.concatenate((sxStatic, syStatic, szVector), axis=1)
+            self.shimmingMatrix = np.concatenate((sxStatic, syStatic, szVector), axis=1)
         s0 = np.zeros((self.dummyPulses, 3))
-        shimmingMatrix = np.concatenate((s0, shimmingMatrix), axis=0)
+        self.shimmingMatrix = np.concatenate((s0, self.shimmingMatrix), axis=0)
 
         # Create experiment
         bw = self.nPoints / self.acqTime * hw.oversamplingFactor  # MHz
         samplingPeriod = 1 / bw
         self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset,
                                   rx_t=samplingPeriod,
-                                  init_gpa=init_gpa,
+                                  init_gpa=False,
                                   gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
                                   )
         samplingPeriod = self.expt.get_rx_ts()[0]
@@ -217,7 +218,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             return False
 
         # Run experiment and get best shimming for current axis
-        if not plotSeq:
+        if not self.plot_seq:
             rxd, msgs = self.expt.run()
             self.expt.__del__()
             print(msgs)
