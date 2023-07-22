@@ -198,7 +198,10 @@ class SequenceController(SequenceToolBar):
 
             # Add plots to the plotview_layout
             self.plots = []
+            n_columns = 1
             for item in self.old_out:
+                if item['col'] > n_columns:
+                    n_columns = item['col']
                 if item['widget'] == 'image':
                     image = Spectrum3DPlot(main=self.main,
                                            data=item['data'],
@@ -215,6 +218,7 @@ class SequenceController(SequenceToolBar):
                                                    y_label=item['yLabel'],
                                                    title=item['title']))
                     self.main.figures_layout.addWidget(self.plots[-1], row=item['row'] + 1, col=item['col'])
+                self.main.figures_layout.addWidget(self.label, row=0, col=0, colspan=n_columns)
 
             # Iterate in parallel thread (only for 1d plots)
             if self.action_iterate.isChecked() and hasattr(defaultsequences[self.seq_name], 'out'):

@@ -45,7 +45,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
     def sequenceTime(self):
         return(0)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=True):
         # Inputs
         seqName = self.mapVals['seqNameSweep']
         parameters = [self.mapVals['parameter0'], self.mapVals['parameter1']]
@@ -66,7 +66,8 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                 parMatrix[n, 1] = parVector1[step1]
                 seq.mapVals[parameters[0]] = parVector0[step0]
                 seq.mapVals[parameters[1]] = parVector1[step1]
-                seq.sequenceRun(0)
+                seq.sequenceAtributes()
+                seq.sequenceRun(plotSeq=0, demo=demo)
                 seq.sequenceAnalysis()
                 if 'sampledCartesian' in seq.mapVals:
                     sampled.append(seq.mapVals['sampledCartesian']) # sampledCartesian is four column kx, ky, kz and S(kx, ky, kz)
@@ -79,7 +80,8 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
 
         self.seq = seq
         self.sampled = sampled
-        return 0
+
+        return True
 
     def sequenceAnalysis(self, obj=''):
         nPoints = np.array(self.seq.mapVals['nPoints'])
@@ -140,11 +142,11 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
             return [result1, result2]
 
         elif 'sampledPoint' in self.seq.mapVals:  # In case of points (calibration sequences)
-            image = np.zeros((nSteps[0], nSteps[1]), dtype=complex)
+            image = np.zeros((1, nSteps[0], nSteps[1]), dtype=complex)
             n = 0
             for step0 in range(nSteps[0]):
                 for step1 in range(nSteps[1]):
-                    image[step0, step1] = self.sampled[n]
+                    image[0, step0, step1] = self.sampled[n]
                     n += 1
 
             # Plot image
@@ -171,7 +173,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                            'col': 0}
                 self.mapVals['sweepResult'] = [parVector0, np.abs(image)]
             self.saveRawData()
-            return[result1]
+            return [result1]
 
 if __name__=='__main__':
     seq = SweepImage()
