@@ -18,6 +18,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RabiFlops, self).__init__()
         # Input the parameters
+        self.cal_method = None
         self.addParameter(key='seqName', string='RabiFlopsInfo', val='RabiFlops')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
@@ -36,6 +37,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfRefPhase', string='Refocusing phase (degrees)', val=0.0, field='RF')
         self.addParameter(key='method', string='Rephasing method: 0->Amp, 1->Time', val=0, field='RF')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ')
+        self.addParameter(key='cal_method', string='Calibration method', val='FID', tip='FID or ECHO', field='OTH')
 
     def sequenceInfo(self):
         print(" ")
@@ -60,13 +62,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
-
-        # # Create the inputs automatically. For some reason it only works if there is a few code later...
-        # for key in self.mapKeys:
-        #     if type(self.mapVals[key])==list:
-        #         locals()[key] = np.array(self.mapVals[key])
-        #     else:
-        #         locals()[key] = self.mapVals[key]
+        self.demo = demo
 
         # I do not understand why I cannot create the input parameters automatically
         seqName = self.mapVals['seqName']
@@ -201,9 +197,15 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         test = True
         n = 1
         while test:
-            d = np.abs(rabiFID[n]) - np.abs(rabiFID[n - 1])
+            if self.cal_method == 'FID':
+                d = np.abs(rabiFID[n]) - np.abs(rabiFID[n - 1])
+            elif self.cal_method == 'ECHO':
+                d = np.abs(rabiEcho[n]) - np.abs(rabiEcho[n - 1])
+            else:
+                break
             n += 1
-            if d < 0: test = False
+            if d < 0:
+                test = False
         piHalfTime = timeVector[n - 2] * 1e6  # us
         self.mapVals['piHalfTime'] = piHalfTime
         print("\npi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us" % (self.mapVals['rfExAmp'],
