@@ -73,13 +73,13 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         # I do not understand why I cannot create the input parameters automatically
         shimming = np.array(self.mapVals['shimming']) * 1e-4
 
-        # Calculate the excitation amplitude
-        rfExAmp = rfExFA / (rfExTime * hw.b1Efficiency)
-        rfReAmp = rfReFA / (rfReTime * hw.b1Efficiency)
-
         # Set the refocusing time in to twice the excitation time
         if self.rfReTime == 0:
             self.rfReTime = 2 * self.rfExTime
+
+        # Calculate the excitation amplitude
+        rf_ex_amp = self.rfExFA / (self.rfExTime * hw.b1Efficiency)
+        rf_re_amp = self.rfReFA / (self.rfReTime * hw.b1Efficiency)
 
         # Calculate acq_time and echo_time
         n_points = int(self.bw / self.dF)
@@ -126,7 +126,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.bw = n_points / acq_time * hw.oversamplingFactor  # MHz
         sampling_period = 1 / self.bw  # us
         if not self.demo:
-            self.expt = ex.Experiment(lo_freq=self.larmorFreq,
+            self.expt = ex.Experiment(lo_freq=self.larmorFreq * 1e-6,
                                       rx_t=sampling_period,
                                       init_gpa=init_gpa,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
