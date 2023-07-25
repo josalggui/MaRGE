@@ -146,13 +146,14 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         # Update the shimming in hw_config
         if obj != "standalone":
             for seqName in self.sequenceList:
-                self.sequenceList[seqName].mapVals['shimming'] = [np.round(sx * 1e4, decimals=1),
-                                                                  np.round(sy * 1e4, decimals=1),
-                                                                  np.round(sz * 1e4, decimals=1)]
-
-        self.saveRawData()
-        shimming = [np.round(sx * 1e4, decimals=1), np.round(sy * 1e4, decimals=1), np.round(sz * 1e4, decimals=1)]
+                self.sequenceList[seqName].mapVals['shimming'] = [np.round(sx * units.sh, decimals=1),
+                                                                  np.round(sy * units.sh, decimals=1),
+                                                                  np.round(sz * units.sh, decimals=1)]
+        shimming = [np.round(sx * units.sh, decimals=1),
+                    np.round(sy * units.sh, decimals=1),
+                    np.round(sz * units.sh, decimals=1)]
         self.mapVals['shimming0'] = shimming
+        self.saveRawData()
 
         self.out = [result1]
         return self.out
@@ -235,7 +236,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             print(msgs)
             data = sig.decimate(rxd['rx0'] * hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = np.concatenate((self.mapVals['data'], data), axis=0)
-            data = np.reshape(self.mapVals['data'], (self.nShimming, -1))
+            data = np.reshape(data, (self.nShimming, -1))
             dataFFT = np.zeros(self.nShimming)
             for ii in range(self.nShimming):
                 dataFFT[ii] = np.max(np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data[ii, :])))))
