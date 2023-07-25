@@ -209,11 +209,11 @@ class Plot3DController(Plot3DWidget):
         # Update sequence parameters
         for sequence in defaultsequences.values():
             if 'fov' in sequence.mapKeys:
-                sequence.mapVals['fov'][x_axis] = np.round(fov_roi[x_axis])  # cm
-                sequence.mapVals['fov'][y_axis] = np.round(fov_roi[y_axis])  # cm
+                sequence.mapVals['fov'][x_axis] = np.round(fov_roi[x_axis], decimals=1)  # cm
+                sequence.mapVals['fov'][y_axis] = np.round(fov_roi[y_axis], decimals=1)  # cm
             if 'dfov' in sequence.mapKeys:
-                sequence.mapVals['dfov'][x_axis] = np.round(dfov_roi[x_axis])  # mm
-                sequence.mapVals['dfov'][y_axis] = np.round(dfov_roi[y_axis])  # mm
+                sequence.mapVals['dfov'][x_axis] = np.round(dfov_roi[x_axis], decimals=1)  # mm
+                sequence.mapVals['dfov'][y_axis] = np.round(dfov_roi[y_axis], decimals=1)  # mm
             if 'angle' in sequence.mapKeys:
                 sequence.mapVals['angle'] = np.round(rotation[3], decimals=2)  # degrees
             if 'rotationAxis' in sequence.mapKeys:

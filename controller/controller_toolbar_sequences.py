@@ -92,7 +92,6 @@ class SequenceController(SequenceToolBar):
             'Noise',
             'Shimming',
             'RabiFlops',
-
         ]
 
         for seq_name in seq_names:
