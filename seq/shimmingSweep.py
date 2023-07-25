@@ -134,7 +134,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         # Shimming plot
         result1 = {'widget': 'curve',
-                   'xData': sxVector * 1e4,
+                   'xData': [sxVector * units.sh, syVector * units.sh, szVector * units.sh],
                    'yData': [np.abs(dataFFT[0, :]), np.abs(dataFFT[1, :]), np.abs(dataFFT[2, :])],
                    'xLabel': 'Shimming',
                    'yLabel': 'Spectrum amplitude',
