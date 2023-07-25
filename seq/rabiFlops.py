@@ -190,7 +190,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
         rabiFID = dataFIDAvg[:, 10]
         self.mapVals['rabiFID'] = rabiFID
-        rabiEcho = dataEchoAvg[:, np.int(nPoints / 2)]
+        rabiEcho = dataEchoAvg[:, int(nPoints / 2)]
         self.mapVals['rabiEcho'] = rabiEcho
 
         # Get values for pi/2 and pi pulses
