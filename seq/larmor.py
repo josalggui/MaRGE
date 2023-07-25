@@ -78,8 +78,8 @@ class Larmor(blankSeq.MRIBLANKSEQ):
             self.rfReTime = 2 * self.rfExTime
 
         # Calculate the excitation amplitude
-        rf_ex_amp = self.rfExFA / (self.rfExTime * hw.b1Efficiency)
-        rf_re_amp = self.rfReFA / (self.rfReTime * hw.b1Efficiency)
+        rf_ex_amp = self.rfExFA * np.pi / 180 / (self.rfExTime * 1e6 * hw.b1Efficiency)
+        rf_re_amp = self.rfReFA * np.pi / 180 / (self.rfReTime * 1e6 * hw.b1Efficiency)
 
         # Calculate acq_time and echo_time
         n_points = int(self.bw / self.dF)
