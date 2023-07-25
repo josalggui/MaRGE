@@ -247,8 +247,8 @@ class HistoryListController(HistoryListWidget):
         # Add plots to the plotview_layout
         n_columns = 1
         for item in output:
-            if item['col']>n_columns:
-                n_columns = item['col']
+            if item['col']+1 > n_columns:
+                n_columns = item['col']+1
             if item['widget'] == 'image':
                 image = Spectrum3DPlot(main=self.main,
                                        data=item['data'],
@@ -264,7 +264,7 @@ class HistoryListController(HistoryListWidget):
                                     y_label=item['yLabel'],
                                     title=item['title'])
                 self.main.figures_layout.addWidget(plot, row=item['row'] + 1, col=item['col'])
-            self.main.figures_layout.addWidget(label, row=0, col=0, colspan=n_columns)
+        self.main.figures_layout.addWidget(label, row=0, col=0, colspan=n_columns)
 
     def waitingForRun(self):
         """

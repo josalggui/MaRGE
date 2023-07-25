@@ -96,7 +96,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
             t_ex = 20e3
 
             # Shimming
-            self.iniSequence(t0, shimming)
+            self.iniSequence(t0, self.shimming)
 
             # Excitation pulse
             t0 = t_ex - hw.blkTime - self.rfExTime / 2
