@@ -43,7 +43,7 @@ class testSE(blankSeq.MRIBLANKSEQ):
         nScans = self.mapVals['nScans']
         return(repetitionTime*nRepetitions*nScans/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
 
         seqName = self.mapVals['seqName']
@@ -111,6 +111,12 @@ class testSE(blankSeq.MRIBLANKSEQ):
         acqTime = nPoints / bw  # us
         self.mapVals['bw'] = bw
         createSequence()
+        if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
+            pass
+        else:
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
 
         if plotSeq == 0:
             # Run the experiment and get data
@@ -136,7 +142,7 @@ class testSE(blankSeq.MRIBLANKSEQ):
 
         self.expt.__del__()
 
-        return 0
+        return True
 
     def sequenceAnalysis(self, obj=''):
         self.saveRawData()

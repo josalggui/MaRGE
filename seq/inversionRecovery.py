@@ -49,7 +49,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']*1e-3
         return(repetitionTime*nScans/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq):
+    def sequenceRun(self, plotSeq, demo=False):
         init_gpa = False  # Starts the gpa
 
         # Create the inputs automatically. For some reason it only works if there is a few code later...
@@ -165,12 +165,18 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         self.mapVals['samplingPeriod'] = samplingPeriod * 1e-6
         self.mapVals['bw'] = bw * 1e6
         createSequence()
+        if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
+            pass
+        else:
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
         if plotSeq:
             self.expt.__del__()
         else:
             rxd, msgs = self.expt.run()
             print(msgs)
-            data = sig.decimate(rxd['rx0']*13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            data = sig.decimate(rxd['rx0']*hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = data
             self.expt.__del__()
 
@@ -179,7 +185,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
             data = data[:, int(nPoints / 2)]
             self.data = [irTimeVector*1e-3, data]
             self.mapVals['sampledPoint'] = data
-        return 0
+        return True
 
     def sequenceAnalysis(self, obj=''):
         self.saveRawData()

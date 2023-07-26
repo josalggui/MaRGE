@@ -1,7 +1,8 @@
 """
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 import copy
 import time
@@ -17,7 +18,15 @@ from widgets.widget_history_list import HistoryListWidget
 
 
 class HistoryListController(HistoryListWidget):
+    """
+    Controller for the history list.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Controller for the history list.
+
+        It has a dictionary with the input and outputs of executed and pending sequences.
+        """
         super(HistoryListController, self).__init__(*args, **kwargs)
         self.clicked_item = None
         self.fovs = {}
@@ -25,6 +34,7 @@ class HistoryListController(HistoryListWidget):
         self.rotations = {}
         self.outputs = {}
         self.inputs = {}
+        self.pending_inputs = {}
         self.current_output = None
         self.figures = []
         self.labels = []
@@ -36,38 +46,74 @@ class HistoryListController(HistoryListWidget):
         self.customContextMenuRequested.connect(self.showContextMenu)
 
     def showContextMenu(self, point):
+        """
+        Displays a context menu at the given point.
+
+        :param point: The position where the context menu should be displayed.
+        """
         self.clicked_item = self.itemAt(point)
         if self.clicked_item is not None:
             menu = QMenu(self)
             action1 = QAction("Add new image", self)
             action1.triggered.connect(self.addNewFigure)
             menu.addAction(action1)
-            action1 = QAction("Add another image", self)
-            action1.triggered.connect(self.addFigure)
-            menu.addAction(action1)
+            action2 = QAction("Add another image", self)
+            action2.triggered.connect(self.addFigure)
+            menu.addAction(action2)
+            action3 = QAction("Delete task", self)
+            action3.triggered.connect(self.deleteTask)
+            menu.addAction(action3)
 
-            selected_action = menu.exec_(self.mapToGlobal(point))
+            menu.exec_(self.mapToGlobal(point))
+
+    def deleteTask(self):
+        """
+        Deletes the currently selected task from the list.
+
+        This method removes the currently selected task item from the list widget.
+        """
+        self.takeItem(self.row(self.currentItem()))
 
     def addNewFigure(self):
+        """
+        Adds a new figure and initializes the figures and labels lists.
+
+        This method adds a new figure and initializes the `figures` and `labels` lists to empty lists.
+        It then calls the `addFigure` method to add the new figure to the list.
+        """
         self.figures = []
         self.labels = []
         self.addFigure()
 
     def addFigure(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: add another figure from the history list
-        TODO: link the slice of different figures
+        Adds a figure to the layout and updates the figures and labels lists.
+
+        This method clears the figures layout, checks the number of existing figures, and returns early if the maximum
+        limit of 4 figures is reached.
+        It retrieves information from the clicked item, such as the time and name, and assigns it to
+        `self.current_output`.
+        The method then fetches the relevant data and configurations from the history based on `self.current_output`.
+        It creates the label and figure for the image widget, adds them to the figures layout, and updates the figures
+        and labels lists.
+
+        Note: The figures layout is assumed to be available as `self.main.figures_layout`.
+
+        If the selected raw data does not contain an image, a message is printed.
+
+        Raises:
+            - Exception: An exception may be raised if there is an error creating a Spectrum3DPlot.
+
         """
         self.main.figures_layout.clearFiguresLayout()
         if len(self.figures) > 3:
             print("You can add only 4 figures to the layout")
             return
 
-        # Get file self.current_output
-        file_name = self.clicked_item.text()[15::]
-        self.current_output = self.clicked_item.text()[0:12]
+        # Get clicked item self.current_output
+        item_time = self.clicked_item.text().split(' | ')[0]
+        item_name = self.clicked_item.text().split(' | ')[1].split('.')[0]
+        self.current_output = item_time + " | " + item_name
 
         # Get the widget from history
         output = self.outputs[self.current_output]
@@ -86,7 +132,7 @@ class HistoryListController(HistoryListWidget):
         item = output[0]
         if item['widget'] == 'image':
             self.figures.append(item)
-            self.labels.append(file_name)
+            self.labels.append(item_name)
         else:
             print("The selected raw data does not contain an image")
 
@@ -117,12 +163,22 @@ class HistoryListController(HistoryListWidget):
 
     def updateHistoryTable(self, item):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: update the table when new element is clicked in the history list
+        Updates the history table with input data corresponding to the selected item.
+
+        This method takes an item as input, retrieves the corresponding key from the item's text, and accesses the
+        history dictionary using the key.
+        It extracts the input data from the history and separates it into input_info and input_vals.
+        The method sets the number of rows in the main input_table and populates it with the input_info and input_vals.
+        The input_info is used as the vertical header labels, and 'Values' is set as the horizontal header label.
+
+        Note: The main input_table is assumed to be available as self.main.input_table.
+
+        :param item: The selected item from which to retrieve the corresponding input data.
         """
-        # Get file name
-        name = item.text()[0:12]
+        # Get the corresponding key to get access to the history dictionary
+        item_time = item.text().split(' | ')[0]
+        item_name = item.text().split(' | ')[1].split('.')[0]
+        name = item_time + " | " + item_name
 
         # Get the input data from history
         input_data = self.inputs[name]
@@ -144,25 +200,39 @@ class HistoryListController(HistoryListWidget):
 
     def updateHistoryFigure(self, item):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: update the shown figure when new element is double clicked in the history list
+        Updates the history figure based on the selected item.
+
+        This method takes an item as input, retrieves the corresponding key from the item's text, and assigns it to `self.current_output`.
+        It accesses the history dictionary using `self.current_output` to retrieve the output widget information.
+        If available, it also retrieves the rotations, shifts, and field of views (fovs) from the history.
+        The method then clears the plot view by calling `self.main.figures_layout.clearFiguresLayout()`.
+        It adds a label to show the rawData corresponding to the selected item at the top of the figures layout.
+        Finally, it iterates through the output items, adds either a Spectrum3DPlot or SpectrumPlot widget to the figures layout based on the item's widget type and populates it with the relevant data and configurations.
+
+        Note: The figures layout is assumed to be available as `self.main.figures_layout`.
+
+        :param item: The selected item from which to retrieve the corresponding output information.
         """
-        # Get file self.current_output
-        file_name = item.text()[15::]
-        self.current_output = item.text()[0:12]
+        # Get the corresponding key to get access to the history dictionary
+        item_time = item.text().split(' | ')[0]
+        item_name = item.text().split(' | ')[1].split('.')[0]
+        self.current_output = item_time + " | " + item_name
 
         # Get the widget from history
         output = self.outputs[self.current_output]
 
         # Get rotations and shifts from history
-        rotations = self.rotations[self.current_output]
-        shifts = self.shifts[self.current_output]
-        fovs = self.fovs[self.current_output]
-        for sequence in defaultsequences.values():
-            sequence.rotations = rotations.copy()
-            sequence.dfovs = shifts.copy()
-            sequence.fovs = fovs.copy()
+        try:
+            rotations = self.rotations[self.current_output]
+            shifts = self.shifts[self.current_output]
+            fovs = self.fovs[self.current_output]
+            for sequence in defaultsequences.values():
+                sequence.rotations = rotations.copy()
+                sequence.dfovs = shifts.copy()
+                sequence.fovs = fovs.copy()
+            print("\nReference system fixed to image %s" % self.current_output)
+        except:
+            pass
 
         # Clear the plotview
         self.main.figures_layout.clearFiguresLayout()
@@ -172,9 +242,13 @@ class HistoryListController(HistoryListWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet("background-color: black;color: white")
         self.main.figures_layout.addWidget(label, row=0, col=0, colspan=2)
-        label.setText(file_name)
+        label.setText(item.text().split(' | ')[1])
 
+        # Add plots to the plotview_layout
+        n_columns = 1
         for item in output:
+            if item['col']+1 > n_columns:
+                n_columns = item['col']+1
             if item['widget'] == 'image':
                 image = Spectrum3DPlot(main=self.main,
                                        data=item['data'],
@@ -190,64 +264,99 @@ class HistoryListController(HistoryListWidget):
                                     y_label=item['yLabel'],
                                     title=item['title'])
                 self.main.figures_layout.addWidget(plot, row=item['row'] + 1, col=item['col'])
+        self.main.figures_layout.addWidget(label, row=0, col=0, colspan=n_columns)
 
     def waitingForRun(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: this method is continuously waiting for running new sequences in the history_list
+        Wait for the run to start.
+
+        This method waits until the main application is open and the server action is checked in the toolbar.
+        It then iterates over the pending inputs and runs the corresponding sequence for each input. After running the
+        sequence, it handles the output and updates the history list accordingly.
+
+        This method is executed in a parallel thread.
+
+        Returns:
+            int: The value 0 indicating the completion of the method.
         """
         while self.main.app_open:
-            keys = list(self.inputs.keys())  # List of elements in the sequence history list
-            element = 0
-            for key in keys:
-                if self.inputs[key][2]:
+            if self.main.toolbar_marcos.action_server.isChecked():
+                pending_keys = list(self.pending_inputs.keys())     # List of elements in the pending sequence list
+                keys = list(self.inputs.keys())                     # List of elements in the sequence history list
+                for key in pending_keys:
                     # Disable acquire button
                     self.main.toolbar_sequences.action_acquire.setEnabled(False)
 
                     # Get the sequence to run
-                    seq_name = self.inputs[key][1][0]
-                    sequence = copy.copy(defaultsequences[seq_name])
+                    seq_name = self.pending_inputs[key][1][0]
+                    sequence = defaultsequences[seq_name]
+
                     # Modify input parameters of the sequence
                     n = 0
-                    input_list = list(sequence.mapVals.keys())
-                    for keyParam in input_list:
-                        sequence.mapVals[keyParam] = self.inputs[key][1][n]
+                    for keyParam in sequence.mapKeys:
+                        sequence.mapVals[keyParam] = self.pending_inputs[key][1][n]
                         n += 1
-                    # Run the sequence
-                    output = self.runSequenceInlist(sequence=sequence)
-                    # Add item to the history list
-                    file_name = sequence.mapVals['fileName']
-                    self.item(element).setText(key + " | " + file_name)
-                    # self.history_list.addItem()
-                    # Save results into the history
-                    self.outputs[key] = output
-                    self.inputs[key] = [list(defaultsequences[seq_name].mapNmspc.values()),
-                                        list(defaultsequences[seq_name].mapVals.values()),
-                                        False]
-                    # Delete outputs from the sequence
-                    sequence.resetMapVals()
-                    print(key + " Done!")
-                else:
-                    # Enable acquire button
-                    self.main.toolbar_sequences.action_acquire.setEnabled(True)
-                element += 1
-            time.sleep(1)
 
+                    # Run the sequence
+                    key_index = keys.index(key)
+                    raw_data_name = key.split('|')[1].split(' ')[1]
+                    output = self.runSequenceInlist(sequence=sequence, key=key, raw_data_name=raw_data_name)
+                    if output == 0:
+                        # There is an error
+                        del self.pending_inputs[key]
+                        print("\n"+key+" sequence finished abruptly with error.")
+                    else:
+                        # Add item to the history list
+                        file_name = sequence.mapVals['fileName']
+                        date = ".".join(file_name.split('.')[1::])
+                        self.item(key_index).setText(self.item(key_index).text() + "." + date)
+                        # Save results into the history
+                        self.outputs[key] = output
+                        del self.pending_inputs[key]
+                        # Delete outputs from the sequence
+                        sequence.resetMapVals()
+                        print("\n" + key + " ready!")
+                    time.sleep(0.1)
+                # Enable acquire button
+                if self.main.toolbar_marcos.action_server.isChecked():
+                    self.main.toolbar_sequences.action_acquire.setEnabled(True)
+            time.sleep(0.1)
         return 0
 
-    @staticmethod
-    def runSequenceInlist(sequence=None):
+    def runSequenceInlist(self, sequence=None, key=None, raw_data_name=""):
+        """
+        Run a sequence in the list.
+
+        This method executes a given sequence in the list. It saves the sequence list, input parameters, and updates
+        the rotation, field of view (FOV), and dynamic field of view (dFOV) values. The sequence is then executed, and
+        afterwards, sequence analysis is performed to retrieve the results.
+
+        Args:
+            sequence (object): The sequence object to be executed.
+            key (str): The key associated with the sequence to get previous rotations, shifts and fovs.
+            raw_data_name (str): The name of the raw data to be included in the file name.
+
+        Returns:
+            object: The result of the sequence analysis.
+        """
         # Save sequence list into the current sequence, just in case you need to do sweep
         sequence.sequenceList = defaultsequences
+        sequence.raw_data_name = raw_data_name
 
         # Save input parameters
         sequence.saveParams()
 
-        # Create and execute selected sequence
-        sequence.sequenceRun(0)
+        # Update possible rotation, fov and dfov before the sequence is executed in parallel thread
+        sequence.sequenceAtributes()
+        self.rotations[key] = sequence.rotations.copy()
+        self.shifts[key] = sequence.dfovs.copy()
+        self.fovs[key] = sequence.fovs.copy()
 
-        time.sleep(1)
+        # Create and execute selected sequence
+        if sequence.sequenceRun(0, self.main.demo):
+            pass
+        else:
+            return 0
 
         # Do sequence analysis and get results
         return sequence.sequenceAnalysis()

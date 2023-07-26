@@ -17,8 +17,8 @@ class Plot1DWidget(pg.GraphicsLayoutWidget):
         # Create set of colors
         self.pen = [[255, 0, 0],
                     [0, 255, 0],
-                    [0, 0, 255],
                     [255, 255, 0],
+                    [0, 0, 255],
                     [255, 0, 255],
                     [0, 255, 255],
                     [255, 255, 255],

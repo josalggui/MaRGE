@@ -1,192 +1,273 @@
-# PhysioMRI_GUI
+# MaRCoS Graphical User Interface
 
-Python code associated to the Graphical User Interface of PhysioMRI scanner from MRILab.
+Python code associated to the Graphical User Interface of MaRCoS.
 
-## Technical requirements to use PhysioMRI GUI 
+## Installation
 
-1. Install python3.
+The Graphical User Interface (GUI) for MaRCoS has been developed in python. Then, to run the GUI the user need to
+install python3 into the computer.
 
-2. Install pyQt5 and other python packages like datetime, nibabel, numpy,  .
+Then, clone in the same folder the four repositories indicated here:
 
-3. Clone the following repositories from *https://github.com/vnegnev* at the same level of directories than PhysioMRI_GUI:
+- marcos_client from *https://github.com/vnegnev*
+- marcos_server from *https://github.com/vnegnev*
+- marcos_extras from *https://github.com/vnegnev*
+- PhysioMRI_GUI from *https://github.com/yvives/PhysioMRI_GUI*
 
-- marcos_client
-- marcos_server
-- marcos_extras
+Once the four repositories are cloned in your computer, the folders should look similar to 
 
-Edit the values of the variables in `local_config.py` inside marcos_client according to your IP address, Red Pitaya model and kind of gradient board available.
+<img src="resources/images/folder_example.png" alt="alt text">
 
-Execute the GUI by running ***FirstMRI.py***.
+**Figure 1.- Example of folder structure**
 
-## How to use the GUI
+Once the four repositories are already cloned in the desired folder, we need to modify some files to make the GUI work.
+The files to modify are:
+- `local_config.py` from marcos_client folder. This file contains information about the version of the red pitaya, its
+ip, and the GPA board used together with the redpitaya.
+- `hw_config.py` from PhysioMRI_GUI/configs folder. This file contains information about the scanner hardware.
+- `sys_config.py` from PhysioMRI_GUI/configs folder This file contains information to show the session windows of the
+GUI.
 
-### Start the connection with the Red Pitaya
+Note that, once the repositories are downloaded, these files do not exist in the folder, but copies of the files do.
 
-When the GUI starts by executing ***FirstMRI.py***, the latest FPGA firmware and MaRCoS server are installed onto the Red Pitaya.
-If the user is working under Windows os, a popup screen will show information about the server connection.
-If the user is working under Linux os, information about server connection is usually shown on the python console.
+Finally, after proper modification of the files is done, the user can run the ***FirstMRI.py*** file to run the GUI.
 
-If the initialization shows warnings related to the server connection proccess, make sure the .sh files in the PhysioMRI_GUI directory have permission to be executed as a program.
-If the problems persist, try to install the latest version of FPGA firmware manually.
-To do this, open a terminal and type:
-```
-../marcos_extras/copy_bitstream.sh "ip_of_your_red_pitaya" rp-122
-ssh root@"ip_of_your_red_pitaya" "~/marcos_server"
-```
+## Description of the GUI
+
+### Session window
+
+When the user executes FirstMRI.py, the session window is displayed in the screen. 
+
+<img src="resources/images/session.png" alt="alt text">
+
+**Figure 2.- Session window**
+
+The session window allows the user to input useful information like patient name, or weight. It also automatically
+generates an ID number. This ID number is currently given by the date and time, but the user can modify the id number as
+desired. Some information can only be selected between the provided options. The options available are given
+according to the information contained in the file `sys_config.py`. Once the information has been completed, just click
+on the `Launch GUI` button to execute the main window. At this point, a new folder is created in
+`experiments/acquisitions` according to the Project and Subject ID.
+
+### Main window
+
+The main window opens after pushing the `Launch GUI` button on the session window. Here is where most of the work is
+done, like calibrate the system, setup parameters of desired sequences, visualize results and others.
+
+<img src="resources/images/main.png" alt="alt text">
+
+**Figure 3.- Main window**
+
+The main window is composed of different widgets
+1) Menubar. It contains different options related to set up the redpitaya, sequences and others.
+2) MaRCoS toolbar
+3) Sequence toolbar
+4) Image toolbar
+5) Protocol toolbar
+6) Sequence area. It includes custom modification or protocols to run pre-defined parameters
+7) Console
+8) History list table
+9) Info table
+10) Image area
+
+Next, it is explained how to use the GUI through the most relevant controls.
+
+## Toolbars
+### MaRCoS toolbar (2)
+
+The first that the user must do before to execute any sequence is to start the connection between the
+GUI and the red pitaya. The connection to the red pitaya is done through the MaRCoS toolbar (2) or through the 
+scanner menubar. 
+This toolbar contains four different action buttons. From left to right we find:
+- `Setup MaRCoS`. Execute MaRCoS init, MaRCoS server and init GPA, in that order.
+- `MaRCoS init`. Update the last version of MaRCoS into the red pitaya.
+- `MaRCoS server`. Connect or disconnect to the server.
+- `Init GPA`. Execute a code to initialize the GPA board. The GUI must be previously connected to the server.
+
+After executing `Setup MaRCoS` or `MaRCoS server`, the `MaRCoS server` button stays pressed and sequence buttons become 
+enable. However, note that this happens even if the connection to the server fails.
+
+***Poner figura de marcos server aquí***
+
+### Sequence toolbar (3)
+
+Here is the core of the GUI: run sequences. Sequence execution is performed through the sequence toolbar (3) or sequence
+menubar. From left to right, the sequence toolbar contains:
+- `Autocalibration`. It runs different sequences automatically and use the results to calibrate the system. This
+task includes Larmor calibration, noise measurement, rabi flops and shimming.
+- `Localizer`. It runs a fast RARE sequence with low resolution to help select the fov for next sequences.
+- `Sequence to list`. It adds the current sequence configuration to the waiting list. It allows to continue working in
+the GUI while the sequences are running.
+- `Acquire`. It directly runs the current sequence configuration. When a new sequence is selected and the `Acquire`
+button is clicked, the GUI may look frozen. This button will be deprecated in future versions.
+- `Iterative run`. It activates the iterative mode. This is only available for some sequences such as larmor or noise.
+Sequences to acquire images do not support iterative mode and the button will be toggled after the end of the sequence.
+- `Bender button`.  This button place in the history list all the sequences contained in the selected protocol.
+- `Plot sequence`. It plots the instructions that will be sent to the red pitaya.
+- `Save parameters`. Save the parameters to ***experiments/parameterisations/SequenceNameInfo.year.month.day.hour.minutes.seconds.milliseconds.csv"
+- `Load parameters`. Load input parameters files and update the sequence parameters to current sequence.
+- `Save for calibration`. This button saves the parameters of the sequence into the ***calibration*** folder. In case the sequence
+is used for autocalibration, it automatically loads parameters contained in ***calibration*** folder
+
+### Figures toolbar (4)
+It contains two buttons:
+- `Fullscreen`. Expand image area to full screen mode.
+- `Screenshot`. Take a snapshot of the GUI and save the image in ***screenshots*** folder 
+
+### Protocols toolbar (5)
+This toolbar allows the user to manage the protocols.
+- `Add protocol`. Create a new protocol.
+- `Remove protocol`. Delete a protocol.
+- `Add sequence`. Add custom sequence to the selected protocol.
+- `Remove sequence`. Remove a sequence from the selected protocol.
+
+### GUI menubar (1)
+
+1) `Scanner`
+   1) `Setup MaRCoS`
+   2) `MaRCoS init`
+   3) `MaRCoS server`
+   4) `Init GPA board`
+2) `Protocoles`
+   1) `New protocol`
+   2) `Remove protocol`
+   3) `New sequence`
+   4) `Remove sequence`
+3) `Sequences`
+   1) `Load parameters`
+   2) `Save parameters`
+   3) `Save for calibration`
+   4) `Sequence to list`
+   5) `Acquire`
+   6) `Bender`
+   7) `Plot sequence`
+4) `Session`
+   1) `New session`
+
+## Configure the system
+### Autocalibration
+The `Autocalibration` button runs a set of sequence to provide some required information to the GUI. `Autocalibration` runs four sequences:
+- `Noise`
+- `Larmor`
+- `Rabi flops`
+- `Shimming`
+
+However, `Autocalibration` requires some files to run properly. The steps to create the file corresponding to each
+sequence are described here and must be done for each sequence used by `autocalibration`:
+1) Select one of the four mentioned sequences from the sequence list in the `Custom` tab.
+2) Configure the desired input parameters.
+3) Save the configuration using the `Save for calibration` button in the sequence toolbar (3).
+
+`Save for calibration` button creates a .csv file in the ***calibration*** folder. Once the process has been complete for
+the four sequences, four .csv files should be available in the folder and the user should be able to run autocalibration
+properly.
+
+### Localizer
+Localizer typically is a fast sequence with low resolution to get information about the field of view. As for
+autocalibration, it also needs a file with parameters to run when the `Localizer` button is clicked by the user.
+To create the file:
+1) Select `Localizer` sequence from the sequence list in `Custom` tab.
+2) Configure the localizer with the desired parameters.
+3) In the tab `Others` set the `Planes` inputs. This parameter is a list of three elements that can be 0 or 1. Use 1 (0)
+to (not) acquire the corresponding plane. For example, [1, 1, 0] means that only sagittal and coronal planes will be
+acquired after clicking the localizer button.
+4) Save the configuration using the `Save for calibration` button in the sequence toolbar (3).
+
+After saving configuration, clicking the `Localizer` button will place one Localizer sequence into the history list for
+each selected plane in the `Others` tab.
 
 
-### Launch FirstMRI.py
+## Run a custom sequence
+1) To run a custom sequence, it is first required to run the `Autocalibration` and `Localizer`. After left-clicking the 
+`Localizer` button, the sequence is placed in the waiting list (8) and it is executed in a parallel thread to prevent
+the GUI from getting frozen. 
+2) When the localizer finish, a message is shown in the console (7) and the item in the waiting list get its full name. 
+The user can see the image by left double-clicking in the corresponding item of the waiting list, or can show more than
+one image with right click menu. On the image widget,
+click the FOV button to see a square representing the FOV that will be used to the next image. The user can change 
+the size, position and angle (angle modification is not recommended in multiplot view) 
+of the fov with the mouse, and the corresponding values in the sequence list will be
+automatically updated. It is always preferred to use this method to modify the fov, given that this method update the
+fov of all sequences, while typing the fov values directly in the corresponding text box of the sequence list will
+affect only to the selected sequence.
+3) Once the fov has been selected, select an image sequence and modify the parameters as desired. Right now, only three
+image sequences are available: RARE, GRE and PETRA.
+4) Run the sequence with the `Acquire button` (this will freeze the GUI until the end of the sequence) or place the
+sequence in the waiting list with the `Sequence to list` button. It is preferred to use the `Sequence to list` button to
+place the sequence in the waiting list. In this way, the user can continue programing the next image while others are
+acquired. As in the localizer, once the result is ready, a message will appear in the console indicating that a sequence
+is finished. Then you can see the results in the image area.
 
-The first window to appear is the sessionWindow (Figure 1), where the user can first select the object that is going to be imaged and introduce parameters like the ID, demographic variables, etc.
-
-<img src="images/SessionWindow_completo.png" alt="alt text" width=200 height=350>
-
-**Figure 1.- Session Window**
-
-Then, we launch the GUI main window by clicking to the corresponding icon. We distinguish 5 different areas in the GUI main window: 1) Main menu icons, 2) Sequence selection, 3) Parameters area, 4) Plotting area and 5) Console area. Figure 2.
-
-<img src="images/MainWindow_completo.png" alt="alt text" width=600>
-
-**Figure 2.- Main Window**
-
-### GUI main menu
-
-<img src="images/GUI_main_icons.png">
-
-1) Initialization of the GPA: makes the initialization of the GPA gradients card.
-2) Calibration of the system: run a set of sequences that allows system calibration.
-The calibration sequences that are executed include larmor calibration, b1 efficiency and noise.
-Future releases will include shimming calibration.
-3) Localizer: run a localizer sequence.
-It is based on RARE sequence with three 2-dimensional projections, one for each direction x, y and z.
-4) Activate upload to XNAT: if this button is enabled, the GUI uploads the MRI to the XNAT system if XNAT is installed.
-5) Start acquisition: start the acquisition with the selected sequence and the parameters introduced.
-6) Iterative run: If this button is enabled, the start acquisition button runs the selected calibration sequence indefinitely.
-Sequence run stops once this button is disable.
-This allows to interactively modify sequence parameters while the sequence is running. 
-7) View the defined sequence: plot the sequence (RF pulses and X, Y and Z gradients). 
-8) Batch acquisition: it allows acquiring multiple images with multiple sequences sequentially, without human intervention. 
-9) Change session: it closes the `GUI main window` and it opens the `Session Window` again. 
-10) Change Window appearance
-11) Close window: it closes the GUI and the server connection.
-
-### GUI menubar
-
-<img src="images/GUI_menubar.png" alt="alt text">
-
-The last version of the GUI also includes a menubar with different options.
-
-1) `Calibration`: directly run calibration sequences with previously saved parameters.
-   1) `Larmor`: it runs a quick spin echo and shows the time-domain and frequency-domain signal providing information about the Larmor frequency.
-   2) `Noise`: it runs a single acquisition of noise and shows the time-domain noise and frequency-domain spectrum providing information about the rms noise.
-   3) `Rabi flops`: it runs spin echoes while sweeping flip angles. It shows the amplitude evolution of the FID after the excitation pulse and the echo.
-   4) `CPMG`: it runs CPMG to estimate T2 values. It fit the curve to different exponential evolutions.
-   5) `Inversion Recovery`: it runs spin echo with inversion recovery to estimate T1 values.
-   6) `Shimming`: it sweeps the shimming in the three axis to estimate the best value
-   7) `Autocalibration`: it runs Larmor, Noise and Rabi flops sequentially.
-2) `Protocoles`: directly run pre-defined image protocoles, e.g., RARE with specific contrasts. Right now, the options are:
-   1) `Localizer`: it runs 3 RARE projections, one per main axis and show the resulting images into the localizer region.
-   2) `RARE 3D T1`.
-   3) `RARE 3D T2` (under development).
-   4) `RARE 3D Rho` (under development).
-3) `Sequence`: show different options related to sequences.
-   1) `Load parameters`: it allows the user to load previously saved parameters.
-   2) `Save parameters`: it saves the parameters to ***experiments/parameterisations/SequenceNameInfo.year.month.day.hour.minutes.seconds.milliseconds.csv"
-   3) `Run sequence`: it runs the selected sequence.
-   4) `Plot sequence`: it plot the selected sequence.
-4) `Session`:
-   1) `New session`: it closes the main GUI and open the session windows again.
-5) `Scanner`:
-   1) `Init GPA`: initialize the GPA.
-   When doing this, GPA generates a high peak voltage, so it is recommended to turn off the gradient amplifier before clicking this button.
-   2) `Init Red Pitaya`: install the last version of MaRCoS and connect to the server.
-   This is equivalent to Copybitstream + Init marcos server buttons.
-   3) `Copybitstream`: install the last version of MaRCoS into the Red Pitaya
-   4) `Init marcos server`: connect to the server
-   5) `Close marcos server`: close the server
-
-I noted that in some cases under Ubuntu OS, the Init Red Pitaya does not work properly.
-In that case, try with Copybitstream and Init marcos server individually.
-Note that the Init Red Pitaya or Copybitstream is required only the first time that you run the GUI after plugging the Red Pitaya to the power.
-### Running Localizer
-(Under development)
-
-### Running custom sequence.
-
-<img src="images/CustomSequences.png" alt="alt text">
-
-It is possible to run customized sequences from the GUI.
-Sequence parameters are customized from the sequence area in the main window of the GUI.
-To do this, select the sequence that you would like tu run and, then, modify the parameters conveniently.
-The parameters are classified in four different fields:
+The parameters of the sequences are classified in four different fields:
 1) ***RF***: it includes parameters related to RF signal like pulse amplitude, frequency or duration.
 2) ***Image***: it includes parameters related to the image like field of view or matrix size.
 3) ***Sequence***: it includes parameters related to contrast like echo time or repetition time.
 4) ***Others***: a field to include other interesting parameters like gradient rise time or dummy pulses.
 
-When the parameters are properly modified, you can run the sequence by clicking ***Sequence/Run sequence*** or the corresponding run icon button.
-
-Each time you run a sequence:
+Each time the user runs a sequence:
 1) It automatically save a file in ***experiments/parameterisation/SequenceName_last_parameters.csv***.
 When the user initialize the GUI, it automatically loads the parameters from the files with ***last_parameters*** in the name to continue the session from the last point.
-This file is also used by the sequences in `Calibration` option.
-So if you want to modify the quick calibration sequences, just run a custom calibration sequence first to save the parameters.
-2) It creates two files in ***experiments/acquisitions*** inside a folder with the date of the experiment:
+2) It creates three files in ***experiments/acquisitions*** inside the session folder
    1) a .mat raw data with name ***SequenceName.year.month.day.hour.minutes.secons.milliseconds.mat***.
    This file contains the inputs and outputs as well as any other useful variable.
    The values saved in the raw data are those contained inside the `mapVals` dictionary.
    2) a .csv file with the input parameters with name ***SequenceNameInfo.year.month.day.hour.minutes.secons.milliseconds.csv***
 The .csv file is useful if you want to repeat a specific experiment by loading the parameters into the corresponding sequence with the ***Sequence/Load parameteres*** menu.
+   3) a .dcm file in Dicom Standard 3.0
 
-      
-#### Calibration of the system
+## Create a protocol
+The GUI offers the possibility to run previously defined protocols. A protocol consists in a number of different
+sequences with predefined parameters. `Protocols` are shown in the sequence area (6). The first time that the user runs
+the GUI, the `Protocols` tab will be empty.
 
-(under development)
+The user can create protocols by clicking the `New protocol` button. After clicking the `New protocol` button, a 
+dialog box opens where the user can type the name of the protocol. The protocols must be created in the 
+***protocols*** folder. Once the protocol is created, it will appear in the protocol list.
 
-#### Batch acquisition
+The user can add new sequences to the protocol. To add a sequence:
+1) Select a sequence from the sequence list in the `Custom` tab.
+2) Customize the sequence parameters as desired for the protocol.
+3) Go to the `Protocol` tab and select the desired protocol.
+4) Click the `Add sequence` button.
+5) In the dialog box, write the name of the sequence to be shown in the `Protocol tab` tab.
 
-It allows acquiring multiple images with different sequences sequentially, without human intervention (Figure 4). With the `plus` button you can add files with sequence parameters previously saved in the GUI main window. You can remove them with the `minus` button.
+After saving the sequence, it will appear in the `Protocols` in the corresponding protocol. To run the sequences from
+the protocol, just double-click on the desired sequence to add the sequence to the waiting list.
 
-<img src="images/batchWindow_completo.png" alt="alt text" width=200 height=350>
-
-**Figure 4.- Batch acquisition window** 
+Sequences can be deleted from protocols by right-clicking the sequence and selecting `Delete` or clicking the 
+`Delete sequence` button. Also, protocols can be deleted by clicking the `Delete protocol` button and selecting the
+protocol to delete from the dialog box.
 
 ## Structure of the folders and files in the GUI     
 
-PhysioMRI_GUI folder contains many folders and files. You find here a description of their content.
+Here the GUI internal architecture is described. The GUI is composed of widgets and windows (even if a window is strictly
+speaking a widget). Windows and widgets views are defined in the scripts contained in ***ui*** and ***widgets*** folders.
+How the windows and widgets react to the user interaction is defined in scripts contained in the ***controller*** folder.
 
 ### `ui` folder
-		
-It contains the files created with Designer Qt5, which are a basic structure of the different windows.
-There are different kinds of ui files in the GUI.
-On the one hand, we have the general structure of the four windows: session window, main window, calibration window (under development) and batch window (under development).
-Session and batch uis are similar with each other (Figure 6).
-
-<img src="images/mainwindow.png" width=900 height=350>
-
-**Figure 5.- Main ui**
-
-<img src="images/session_batch.png" width=400 height=350>
-
-**Figure 6.- Session and batch uis**
-
-There are also ui files that represent single elements that will be introduced programally to the general structure of the windows (to one of the four previous windows).
-Right now the gui uses only one sigle element:
-
-- inputparameters.ui (Figure 7)
-
-<img src="images/ui_elements.png" width=300>
-
-**Figure 7.- Input parameter ui**
+It conatins ***window_main.py***, ***window_session.py*** and ***window_postprocessing.py*** (uder development). The three
+scripts contains a class that inherits from QMainWindow.
 
 ### `controller` folder
 
 In this folder you will find all the python functions that control:
-
-1. The 4 GUI windows (*sessioncontroller.py, mainviewcontroller.py, calibrationcontroller.py (under development), batchcontroller.py*).
-These files give functionality to the different icons in the menus, 
-2. The interactive addition of input elements in these windows, i.e. according to the sequence selected in the sequence selector, many inputparameter.ui will be added to the mainwindow.ui.
-These controllers are: *sequencecontroller.py* for the main window, *calibfunctionscontroller.py* (under development) for the calibration window and *sessionviewer_controller.py* for the session window. The batch window does not load input parameters automatically.
+1) controller_main.py
+2) controller_session.py
+3) controller_postprocessing.py (under development)
+4) controller_console.py
+5) controller_figures.py
+6) controller_history_list.py
+7) controller_menu.py
+8) controller_plot1d.py
+9) controller_plot3d.py
+10) controller_protocol_inputs.py
+11) controller_protocol_list.py
+12) controller_sequence_inputs.py
+13) controller_sequence.list.py
+14) controller_toolbar_figures.py
+15) controller_toolbar_marcos.py
+16) controller_toolbar_protocols.py
+17) controller_toolbar_sequences.py
 
 ### `seq` folder
 
@@ -201,21 +282,17 @@ Last version of the GUI does not require of this folder.
 Sequences in *`seq`* folder can be executed in the scanner with or without the GUI.
 Then, in a future release of the GUI this folder will not be available.
 
-### `manager` folder
-
-- *datamanager.py*: class for managing the data processing of acquired data.
-
 ### `configs` folder
 
-- *hw_config.py*: a file with variables used in all the sequences. 
+- *hw_config.py*: a file with hardware information. 
 These variables depend on the scanner hardware (i.e. gradients) or other general values.
 When downloading the GUI by the first time, the file name is *hw_config.py.copy*.
 The filename needs to be properly modified according to your hardware and renamed before to run the GUI.
-- *globalFunctions.py*: script with multiple functions that can be used globally.
+- *sys_config.py*: file that contains usefully information for the session window.
 
 ### `protocols` folder
 
-This folder contains the parameter files (in csv format) to be used as protocols.
+This folder contains the protocols created by the user.
 
 ### `experiments` folder
 
@@ -225,26 +302,14 @@ The results of the experiments are stored in this file. There are three folders 
 A folder per day is created, with the date as name (YYYY.MM.DD).
 The output of the scanner is stored inside, which is:
   - .mat file with raw data.
-  - .nii file with image.
+  - .dcm file with image.
   - .csv file with input parameters.
 - *parameterization*: folder that contains:
   - the sequence last parameters in csv format
   - csv file generated when you click the *Save the parameters of a sequence to a file* icon in the GUI main window.
 
 ### `resources` folder
-
-In this folder, the icons used in the main menu (and others) are stored.
-
-### `images` folder
-
-The images used in this readme are stored here.
-
-### `view` folder
-
-Some stylesheets are stored in this folder, which allow changing the appearance of the GUI with the button in the GUI main menu. These two styles are in use at the moment:
-       
-- breeze-light.qss
-- breeze-dark.qss
+In this folder, the icons used in the main menu (and others) are stored as well as the images used in this readme.
 
 ### Other files 
 

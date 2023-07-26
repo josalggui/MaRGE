@@ -9,27 +9,29 @@ import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
+import configs.units as units
 from scipy.optimize import curve_fit
 
 
-class CPMG(blankSeq.MRIBLANKSEQ):
+class TSE(blankSeq.MRIBLANKSEQ):
     def __init__(self):
-        super(CPMG, self).__init__()
+        super(TSE, self).__init__()
         # Input the parameters
-        self.addParameter(key='seqName', string='CPMGInfo', val='CPMG')
+        self.addParameter(key='seqName', string='TSEInfo', val='TSE')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, units=units.MHz, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
         self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
-        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF')
-        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='RF')
-        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, field='SEQ')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ')
-        self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
+        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, units=units.us, field='RF')
+        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, units=units.us, field='RF')
+        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, units=units.ms, field='SEQ')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., units=units.ms, field='SEQ')
+        self.addParameter(key='nPoints', string='Number of acquired points', val=60, field='IM')
         self.addParameter(key='etl', string='Echo train length', val=50, field='SEQ')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, field='SEQ')
-        self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-12.5,-12.5,7.5], field='OTH')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
+        self.addParameter(key='shimming', string='shimming', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='echoObservation', string='Echo Observation', val=1, field='OTH')
+        self.addParameter(key='phase_mode', string='Phase mode', val='CPMG', tip='CP, CPMG, APCP, APCPMG', field='SEQ')
 
     def sequenceInfo(self):
         print(" ")
@@ -44,168 +46,215 @@ class CPMG(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']*1e-3
         return(repetitionTime*nScans/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
-        demo = False
+        self.demo = demo
 
-        # Create the inputs automatically. For some reason it only works if there is a few code later...
-        # for key in self.mapKeys:
-        #     if type(self.mapVals[key])==list:
-        #         locals()[key] = np.array(self.mapVals[key])
-        #     else:
-        #         locals()[key] = self.mapVals[key]
+        # Check that self.phase_mode is once of the good values
+        phase_modes = ['CP', 'CPMG', 'APCP', 'APCPMG']
+        if not self.phase_mode in phase_modes:
+            print('\nError: unexpected phase mode.')
+            print('Please select one of possible modes:')
+            print('CP\nCPMG\nAPCP\nAPCPMG')
+            return False
 
         # I do not understand why I cannot create the input parameters automatically
-        seqName = self.mapVals['seqName']
-        nScans = self.mapVals['nScans']
-        larmorFreq = self.mapVals['larmorFreq']
-        rfExAmp = self.mapVals['rfExAmp']
-        rfExTime = self.mapVals['rfExTime']
-        rfReAmp = self.mapVals['rfReAmp']
-        rfReTime = self.mapVals['rfReTime']
-        echoSpacing = self.mapVals['echoSpacing']
-        repetitionTime = self.mapVals['repetitionTime']
-        nPoints = self.mapVals['nPoints']
-        etl = self.mapVals['etl']
-        acqTime = self.mapVals['acqTime']
-        shimming = np.array(self.mapVals['shimming'])
-        echoObservation = self.mapVals['echoObservation']
-
         def createSequence():
+            acq_points = 0
+
             # Initialize time
             t0 = 20
             tEx = 20e3
 
-            # Shimming
-            self.iniSequence(t0, shimming)
+            # self.shimming
+            self.iniSequence(t0, self.shimming)
 
-            # Excitation pulse
-            t0 = tEx - hw.blkTime - rfExTime / 2
-            self.rfRecPulse(t0, rfExTime, rfExAmp, 0)
+            for scan in range(self.nScans):
 
-            # Echo train
-            for echoIndex in range(etl):
-                tEcho = tEx + (echoIndex + 1) * echoSpacing
+                # Excitation pulse
+                t0 = tEx - hw.blkTime - self.rfExTime / 2 + self.repetitionTime*scan
+                self.rfRecPulse(t0, self.rfExTime, self.rfExAmp, 0)
 
-                # Refocusing pulse
-                t0 = tEcho - echoSpacing / 2 - hw.blkTime - rfReTime / 2
-                self.rfRecPulse(t0, rfReTime, rfReAmp, np.pi / 2)
-                if echoIndex == echoObservation:
-                    self.ttl(t0, rfReTime, channel=1)
+                # Echo train
+                for echoIndex in range(self.etl):
+                    tEcho = tEx + (echoIndex + 1) * self.echoSpacing + self.repetitionTime*scan
 
-                # Rx gate
-                t0 = tEcho - acqTime / 2
-                self.rxGate(t0, acqTime)
+                    # Refocusing pulse
+                    t0 = tEcho - self.echoSpacing / 2 - hw.blkTime - self.rfReTime / 2
+                    phase = 0
+                    if self.phase_mode == 'CP':
+                        phase = 0.0
+                    elif self.phase_mode == 'CPMG':
+                        phase = np.pi/2
+                    elif self.phase_mode == 'APCP':
+                        phase = ((-1)**(echoIndex)+1)*np.pi/2
+                    elif self.phase_mode == 'APCPMG':
+                        phase = (-1)**echoIndex*np.pi/2
+                    self.rfRecPulse(t0, self.rfReTime, self.rfReAmp, rfPhase=phase)
 
-            self.endSequence(repetitionTime)
+                    # Rx gate
+                    t0 = tEcho - self.acqTime / 2
+                    self.rxGate(t0, self.acqTime)
+                    acq_points += self.nPoints
+
+            self.endSequence(self.repetitionTime*self.nScans)
+
+            return acq_points
 
         # Time variables in us
-        echoSpacing = echoSpacing * 1e3
-        repetitionTime = repetitionTime * 1e3
-        acqTime = acqTime * 1e3
-        shimming = np.array(shimming) * 1e-4
+        self.echoSpacing *= 1e6
+        self.repetitionTime *= 1e6
+        self.acqTime *= 1e6
+        self.rfExTime *= 1e6
+        self.rfReTime *= 1e6
 
         # Initialize the experiment
-        bw = nPoints / acqTime * hw.oversamplingFactor  # MHz
+        bw = self.nPoints / self.acqTime * hw.oversamplingFactor  # MHz
         samplingPeriod = 1 / bw  # us
-        self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = self.expt.get_rx_ts()[0]
-        bw = 1 / samplingPeriod / hw.oversamplingFactor  # MHz
-        acqTime = nPoints / bw  # us
+        if not self.demo:
+            # Create experiment object and update parameters
+            self.expt = ex.Experiment(lo_freq=self.larmorFreq*1e-6, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+            samplingPeriod = self.expt.get_rx_ts()[0] # us
+            bw = 1 / samplingPeriod / hw.oversamplingFactor  # MHz
+            self.acqTime = self.nPoints / bw  # us
+
+        # Run the createSequence method
+        acq_points = createSequence()
         self.mapVals['bw'] = bw
-        createSequence()
+        print("\nAcquisition bandwidth = %0.1f kHz"%(bw*1e3))
 
-        if plotSeq == 1:
-            self.expt.__del__()
-        elif plotSeq == 0:
-            # Run the experiment and get data
-            print('Runing...')
-            rxd, msgs = self.expt.run()
-            print(msgs)
-            self.mapVals['dataFull'] = rxd['rx0'] * 13.788
-            data = sig.decimate(rxd['rx0'] * 13.788, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+        # Save instructions into MaRCoS if not a demo
+        if not self.demo:
+            if self.floDict2Exp():
+                print("\nSequence waveforms loaded successfully")
+                pass
+            else:
+                print("\nERROR: sequence waveforms out of hardware bounds")
+                return False
+
+        # Execute the experiment if not plot
+        if not plotSeq:
+            if not self.demo:
+                rxd, msgs = self.expt.run()
+                rxd['rx0'] *= hw.adcFactor
+            else:
+                rxd = {}
+                rxd['rx0'] = self.mySignal()
+            self.mapVals['dataFull'] = rxd['rx0']
+            data = sig.decimate(rxd['rx0'], hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            data = np.average(np.reshape(data, (self.nScans, -1)), axis=0)
             self.mapVals['data'] = data
-            self.expt.__del__()
 
-            data = np.reshape(data, (etl, -1))
-            data = np.abs(data[:, int(nPoints/2)])
-            echoTimeVector = np.linspace(echoSpacing, echoSpacing * etl, num=etl, endpoint=True)
-            self.results = [echoTimeVector, data]
-        return 0
+        if not self.demo: self.expt.__del__()
+
+        return True
 
     def sequenceAnalysis(self, obj=''):
-        data = np.abs(self.mapVals['data'])
-        etl = self.mapVals['etl']
-        data = np.reshape(data, (etl, -1))
-        results = self.results
-        nPoints = self.mapVals['nPoints']
-        echo1Amp = self.mapVals['data'][int(nPoints/2)]
-        self.mapVals['sampledPoint'] = echo1Amp  # Save point here to sweep class
+        data = self.mapVals['data']
+
+        # Prepare data for full data plot
+        data_echoes = np.reshape(data, (self.etl, -1))
+        data_echoes[:, 0] = 0.
+        data_echoes[:, -1] = 0.
+        data_echoes = np.reshape(data, -1)
+        t0 = np.linspace(self.echoSpacing - self.acqTime / 2, self.echoSpacing + self.acqTime / 2,
+                         self.nPoints) * 1e-3  # ms
+        t1_vector = t0
+        for echo_index in range(self.etl - 1):
+            t1_vector = np.concatenate((t1_vector, t0 + self.echoSpacing*1e-3 * (echo_index + 1)), axis=0)
+
+        # Prepare data for echo amplitude vs echo time
+        data = np.reshape(data, (self.etl, -1))
+        data = data[:, int(self.nPoints / 2)]
+        t2_vector = np.linspace(self.echoSpacing, self.echoSpacing * self.etl, num=self.etl, endpoint=True)*1e-3 # ms
+
+        # Save point here to sweep class
+        self.mapVals['sampledPoint'] = data[0]
 
         # Functions for fitting
         def func1(x, m, t2):
             return m*np.exp(-x/t2)
 
-        def func2(x, ma, t2a, mb, t2b):
-            return ma*np.exp(-x/t2a)+mb*np.exp(-x/t2b)
-
-        def func3(x, ma, t2a, mb, t2b, mc, t2c):
-            return ma*np.exp(-x/t2a)+mb*np.exp(-x/t2b)+mc*np.exp(-x/t2c)
-
         # Fitting to functions
-        # For 1 component
-        fitData1, xxx = curve_fit(func1, results[0],  results[1])
-        print('For one component:')
-        print('mA', round(fitData1[0], 1))
-        print('T2', round(fitData1[1]), ' ms')
+        fitData1, xxx = curve_fit(func1, t2_vector,  np.abs(data),
+                                  p0=[np.abs(data[0]), 10])
+        fitting1 = func1(t2_vector,
+                         fitData1[0], fitData1[1])
+        corr_coef1 = np.corrcoef(np.abs(data), fitting1)
+        print('\nFor one component:')
+        print('rho:', round(fitData1[0], 1))
+        print('T2 (ms):', round(fitData1[1], 1), ' ms')
+        print('Correlation: %0.3f' % corr_coef1[0, 1])
         self.mapVals['T21'] = fitData1[1]
         self.mapVals['M1'] = fitData1[0]
 
-        # For 2 components
-        fitData2, xxx = curve_fit(func2, results[0],  results[1])
-        print('For two components:')
-        print('Ma', round(fitData2[0], 1))
-        print('Mb', round(fitData2[2], 1))
-        print('T2a', round(fitData2[1]), ' ms')
-        print('T2b', round(fitData2[3]), ' ms')
-        self.mapVals['T22'] = [fitData2[1], fitData2[3]]
-        self.mapVals['M2'] = [fitData2[0], fitData2[2]]
-
-        # For 3 components
-        fitData3, xxx = curve_fit(func3, results[0],  results[1])
-        print('For three components:')
-        print('Ma', round(fitData3[0], 1), ' ms')
-        print('Mb', round(fitData3[2], 1), ' ms')
-        print('Mc', round(fitData3[4], 1), ' ms')
-        print('T2a', round(fitData3[1]), ' ms')
-        print('T2b', round(fitData3[3]), ' ms')
-        print('T2c', round(fitData3[5]), ' ms')
-        self.mapVals['T23'] = [fitData3[1], fitData3[3], fitData3[5]]
-        self.mapVals['M3'] = [fitData3[0], fitData3[2], fitData3[4]]
-
-        self.saveRawData()
-
         # Signal vs rf time
         result1 = {'widget': 'curve',
-                   'xData': results[0]*1e-3,
-                   'yData': [results[1], func1(results[0], *fitData1), func2(results[0], *fitData2)],
+                   'xData': t2_vector,
+                   'yData': [np.abs(data),
+                             func1(t2_vector, fitData1[0], fitData1[1])],
                    'xLabel': 'Echo time (ms)',
                    'yLabel': 'Echo amplitude (mV)',
-                   'title': '',
-                   'legend': ['Experimental', 'Fitting 1 component', 'Fitting 2 components'],
+                   'title': 'Echo amplitude VS Echo time',
+                   'legend': ['Experimental at echo time',
+                              'Fitting to monoexponential'],
                    'row': 0,
                    'col': 0}
 
-        # 2D image
-        result2 = {'widget': 'image',
-                   'data': data,
-                   'xLabel': "Echo index",
-                   'yLabel': "Acquired point",
-                   'title': "Acquired echoes",
+        result2 = {'widget': 'curve',
+                   'xData': t1_vector,
+                   'yData': [np.abs(data_echoes)],
+                   'xLabel': 'Echo time (ms)',
+                   'yLabel': 'Echo amplitude (mV)',
+                   'title': 'Echo train',
+                   'legend': ['Experimental measurement'],
                    'row': 1,
                    'col': 0}
 
+        # Save results into rawData
+        t1_vector = np.reshape(t1_vector, (-1, 1))
+        data_echoes = np.reshape(data_echoes, (-1, 1))
+        self.mapVals['signal_vs_time'] = np.concatenate((t1_vector, data_echoes), axis=1)
+        t2_vector = np.reshape(t2_vector, (-1, 1))
+        data = np.reshape(data, (-1, 1))
+        self.mapVals['echo_amplitude_vs_time'] = np.concatenate((t2_vector, data), axis=1)
+
+        self.saveRawData()
 
         # create self.out to run in iterative mode
         self.out = [result1, result2]
         return self.out
+
+    def mySignal(self):
+        # Get inputs
+        te = self.mapVals['echoSpacing']
+        acq_time = self.mapVals['acqTime']
+        n_points = self.mapVals['nPoints'] * hw.oversamplingFactor
+        t2 = 10.0 # ms
+        t2_star = 1.0 # ms
+
+        # Define gaussian function
+        def gaussian(a, t, mu, sig):
+            return a*np.exp(-np.power(t - mu, 2.) / (2 * np.power(sig, 2.)))
+
+        # Generate signal vector
+        t0 = np.linspace(te - acq_time / 2, te + acq_time / 2, n_points)  # ms
+        t1_vector = t0
+        signal = gaussian(np.exp(-te/t2), t0, te, t2_star)
+        for echo_index in range(self.etl - 1):
+            t0 += te
+            sig_prov = gaussian(np.exp(-te*(echo_index+2)/t2), t0, te*(echo_index+2), t2_star)
+
+            t1_vector = np.concatenate((t1_vector, t0), axis=0)
+            signal = np.concatenate((signal, sig_prov), axis=0)
+
+        if self.nScans > 1:
+            signal0 = signal.copy()
+            for repetition in range(self.nScans-1):
+                signal0 = np.concatenate((signal0, signal), axis=0)
+            signal = signal0
+
+        # Add noise
+        signal = signal + (np.random.randn(np.size(signal)) + 1j * np.random.randn(np.size(signal))) * 0.01
+
+        return signal

@@ -1,3 +1,0 @@
-seqName,freqOffset,rfExFA,rfReFA,rfExTime,rfReTime,echoTime,repetitionTime,nPoints,acqTime,shimming0,nShimming,dShimming
-ShimmingSweepInfo,Larmor frequency offset (kHz),Excitation flip angle (º),Refocusing flip angle (º),RF excitation time (us),RF refocusing time (us),Echo time (ms),Repetition time (ms),nPoints,Acquisition time (ms),Shimming (*1e4),n Shimming steps,Shiming step
-ShimmingSweep,0.0,90.0,180.0,37.5,75.0,10.0,500.0,60,4.0,"[-10, -20, 10]",20,"[5.0, 5.0, 5.0]"

@@ -19,7 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def testSE_standalone(
-        larmorFreq = 3.060,
+        larmorFreq = 3.0495,
         rfExAmp = 0.3,
         rfExTime = 40,
         rfReAmp = 0.6,
@@ -30,7 +30,7 @@ def testSE_standalone(
         nPoints = 200,
         acqTime = 4.0,
         repetitionTime = 50,
-        nRepetitions  = 20,
+        nRepetitions  = 10,
         nScans = 1,
         acqCenter = 0.0,
         plotSeq = 0,

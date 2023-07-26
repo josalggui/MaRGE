@@ -5,6 +5,7 @@
 """
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QToolBar, QAction
+from configs.sys_config import screenshot_folder
 
 
 class FiguresToolBar(QToolBar):
@@ -16,3 +17,8 @@ class FiguresToolBar(QToolBar):
         self.action_full_screen = QAction(QIcon("resources/icons/expand.png"), "Full sreen", self)
         self.action_full_screen.setStatusTip("Figure layout in full screen")
         self.addAction(self.action_full_screen)
+
+        # Action button to do a screenshot
+        self.action_screenshot = QAction(QIcon("resources/icons/screenshot.png"), "Screenshot", self)
+        self.action_screenshot.setStatusTip("Save screenshot in %s" % screenshot_folder)
+        self.addAction(self.action_screenshot)

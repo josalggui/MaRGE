@@ -7,19 +7,15 @@ from PyQt5.QtWidgets import QToolBar, QAction
 from PyQt5.QtGui import QIcon
 
 class MarcosToolBar(QToolBar):
-    def __init__(self, demo, *args, **kwargs):
+    def __init__(self, main, *args, **kwargs):
         super(MarcosToolBar, self).__init__(*args, **kwargs)
-        self.demo = demo
+        self.main = main
+        self.demo = self.main.demo
 
         # Setup all
         self.action_start = QAction(QIcon("resources/icons/initGPA.png"), "Setup MaRCoS", self)
         self.action_start.setStatusTip("Setup MaRCoS")
         self.addAction(self.action_start)
-
-        # Setup GPA board
-        self.action_gpa_init = QAction(QIcon("resources/icons/gpa.png"), "Init GPA board", self)
-        self.action_gpa_init.setStatusTip("Init GPA board")
-        self.addAction(self.action_gpa_init)
 
         # Setup MaRCoS
         self.action_copybitstream = QAction(QIcon("resources/icons/M.png"), "MaRCoS init", self)
@@ -30,4 +26,9 @@ class MarcosToolBar(QToolBar):
         self.action_server = QAction(QIcon("resources/icons/server-light.png"), "MaRCoS server", self)
         self.action_server.setStatusTip("Connect to server")
         self.addAction(self.action_server)
+
+        # Setup GPA board
+        self.action_gpa_init = QAction(QIcon("resources/icons/gpa.png"), "Init GPA board", self)
+        self.action_gpa_init.setStatusTip("Init GPA board")
+        self.addAction(self.action_gpa_init)
         

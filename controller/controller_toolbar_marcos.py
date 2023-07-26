@@ -1,20 +1,39 @@
 """
-session_controller.py
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
+import time
+
 from widgets.widget_toolbar_marcos import MarcosToolBar
-import os
 import subprocess
-import platform
 import experiment as ex
 import numpy as np
 import shutil
+import configs.hw_config as hw
 
 
 class MarcosController(MarcosToolBar):
+    """
+    Controller class for managing MaRCoS (Magnetic Resonance Compatible
+    Optical Stimulation) functionality.
+
+    Args:
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Inherits:
+        MarcosToolBar: Base class for the MaRCoS toolbar.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initializes the MarcosController.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super(MarcosController, self).__init__(*args, **kwargs)
 
         # Copy relevant files from marcos_extras
@@ -32,88 +51,76 @@ class MarcosController(MarcosToolBar):
 
     def startMaRCoS(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: execute startRP.sh: copy_bitstream.sh & marcos_server
+        Starts the MaRCoS system.
+
+        Executes startRP.sh: copy_bitstream.sh & marcos_server.
         """
-
-        # Set the path to the Git Bash executable
-        bash_path = r"D:\Archivos de Programa\Git\git-bash.exe"
-
-        # Set the path to the shell script
-        script_path = "..\PhysioMRI_GUI\startRP.sh"
-
         if not self.demo:
-            os.system('ssh root@192.168.1.101 "killall marcos_server"')
-            if platform.system() == 'Windows':
-                result = subprocess.run([bash_path, script_path])
-                self.action_server.toggle()
-                self.initgpa()
-                # os.system('start ./startRP.sh')
-            elif platform.system() == 'Linux':
-                os.system('./startRP.sh &')
-                self.action_server.toggle()
-                self.initgpa()
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+            subprocess.run([hw.bash_path, "--", "./startRP.sh", hw.rp_ip_address, hw.rp_version])
+            self.initgpa()
             print("\nMaRCoS updated, server connected, gpa initialized.")
-
         else:
-            print("\nThis is a demo.")
+            print("\nThis is a demo")
+        self.action_server.setChecked(True)
+        self.main.toolbar_sequences.serverConnected()
 
     def controlMarcosServer(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: connect to marcos_server
-        """
+        Controls the MaRCoS server connection.
 
-        if not self.action_server.isChecked():
-            self.action_server.setStatusTip('Connect to marcos server')
-            self.action_server.setToolTip('Connect to marcos server')
-            if not self.demo:
-                os.system('ssh root@192.168.1.101 "killall marcos_server"')
-            print("\nServer disconnected.")
+        Connects or disconnects from the MaRCoS server.
+        """
+        if not self.demo:
+            if not self.action_server.isChecked():
+                self.action_server.setStatusTip('Connect to marcos server')
+                self.action_server.setToolTip('Connect to marcos server')
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                print("\nServer disconnected")
+            else:
+                self.action_server.setStatusTip('Kill marcos server')
+                self.action_server.setToolTip('Kill marcos server')
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
+                print("\nServer connected")
         else:
-            self.action_server.setStatusTip('Kill marcos server')
-            self.action_server.setToolTip('Kill marcos server')
-            if platform.system() == 'Windows' and not self.demo:
-                os.system('ssh root@192.168.1.101 "killall marcos_server"')
-                os.system('start ssh root@192.168.1.101 "~/marcos_server"')
-            elif platform.system() == 'Linux' and not self.demo:
-                os.system('ssh root@192.168.1.101 "killall marcos_server"')
-                os.system('ssh root@192.168.1.101 "~/marcos_server" &')
-            print("\nServer connected.")
+            print("\nThis is a demo")
 
     def copyBitStream(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: execute copy_bitstream.sh
+        Copies the MaRCoS bitstream to the remote platform.
+
+        Executes copy_bitstream.sh.
         """
         if not self.demo:
-            os.system('ssh root@192.168.1.101 "killall marcos_server"')
-            if platform.system() == 'Windows':
-                os.system("start ./copy_bitstream.sh 192.168.1.101 rp-122")
-            elif platform.system() == 'Linux':
-                os.system('./copy_bitstream.sh 192.168.1.101 rp-122')
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+            subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', '192.168.1.101', 'rp-122'])
             print("\nMaRCoS updated")
         else:
             print("\nThis is a demo.")
+        self.action_server.setChecked(False)
+        self.main.toolbar_sequences.serverConnected()
 
     def initgpa(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: initialize the gpa board
+        Initializes the GPA board.
         """
         if self.action_server.isChecked():
             if not self.demo:
-                expt = ex.Experiment(init_gpa=True)
-                expt.add_flodict({
-                    'grad_vx': (np.array([100]), np.array([0])),
-                })
-                expt.run()
-                expt.__del__()
-            print("\nGPA init done!")
+                link = False
+                while link==False:
+                    try:
+                        expt = ex.Experiment(init_gpa=True)
+                        expt.add_flodict({
+                            'grad_vx': (np.array([100]), np.array([0])),
+                        })
+                        expt.run()
+                        expt.__del__()
+                        link = True
+                        print("\nGPA init done!")
+                    except:
+                        link = False
+                        time.sleep(1)
         else:
             print("\nNo connection to the server")
             print("Please, connect to MaRCoS server first")

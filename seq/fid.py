@@ -1,12 +1,23 @@
 """
 @author: José Miguel Algarín Guisado
-@modifield: T. Guallart Naval, february 28th 2022
 MRILAB @ I3M
 """
 
-import experiment as ex
+import os
+import sys
+#*****************************************************************************
+# Add path to the working directory
+path = os.path.realpath(__file__)
+ii = 0
+for char in path:
+    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
+        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
+        sys.path.append(path[0:ii+1]+'marcos_client')
+    ii += 1
+#******************************************************************************
+import controller.experiment_gui as ex
 import numpy as np
-import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+import seq.mriBlankSeq as blankSeq
 import scipy.signal as sig
 import configs.hw_config as hw
 
@@ -41,7 +52,7 @@ class FID(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']*1e-3
         return(repetitionTime*nScans/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
 
         # Create input parameters
@@ -53,14 +64,13 @@ class FID(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']*1e3 # us
         acqTime = self.mapVals['acqTime']*1e3 # us
         nPoints = self.mapVals['nPoints']
-        shimming = np.array(self.mapVals['shimming'])*1e-4
+        shimming = np.array(self.mapVals['shimming'])*hw.shimming_factor
         txChannel = self.mapVals['txChannel']
         rxChannel = self.mapVals['rxChannel']
         shimmingTime = self.mapVals['shimmingTime']*1e3 # us
 
         # Miscellaneus
-        addRdPoints = 10
-        self.mapVals['addRdPoints'] = addRdPoints
+        bw = nPoints/acqTime # MHz
 
         def createSequence():
             # Shimming
@@ -71,76 +81,66 @@ class FID(blankSeq.MRIBLANKSEQ):
 
                 # Excitation pulse
                 t0 = tEx - hw.blkTime - rfExTime / 2
-                self.rfRecPulse(t0, rfExTime, rfExAmp, 0, txChannel=txChannel)
+                self.rfRecPulse(t0, rfExTime, rfExAmp, 0, channel=txChannel)
 
                 # Rx gate
-                t0 = tEx + rfExTime / 2 + deadTime - addRdPoints / bw
-                self.rxGate(t0, acqTime + 2 * addRdPoints / bw, rxChannel=rxChannel)
+                t0 = tEx + rfExTime / 2 + deadTime
+                self.rxGateSync(t0, acqTime, channel=rxChannel)
+                # self.ttl(t0, acqTime, channel=1, rewrite=True)
 
-            self.endSequence(repetitionTime*nScans)
+            self.endSequence(shimmingTime + repetitionTime*nScans)
 
 
         # Initialize the experiment
-        bw = nPoints / acqTime * hw.oversamplingFactor  # MHz
         samplingPeriod = 1 / bw  # us
         self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = self.expt.get_rx_ts()[0]
-        bw = 1 / samplingPeriod / hw.oversamplingFactor  # MHz
+        samplingPeriod = self.expt.getSamplingRate()
+        bw = 1 / samplingPeriod
         acqTime = nPoints / bw  # us
         self.mapVals['acqTime'] = acqTime*1e-3 # ms
         self.mapVals['bw'] = bw # MHz
         createSequence()
+        if self.floDict2Exp():
+            print("\nSequence waveforms loaded successfully")
+            pass
+        else:
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
 
-        if plotSeq == 0:
+        if not plotSeq:
             # Run the experiment and get data
             rxd, msgs = self.expt.run()
-            rxd['rx%i' % rxChannel] = np.real(rxd['rx%i'%rxChannel])-1j*np.imag(rxd['rx%i'%rxChannel])
-            overData = rxd['rx%i'%rxChannel]*13.788
-            dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            self.mapVals['overData'] = overData
-            self.mapVals['dataFull'] = dataFull
+
+            # Decimate the signal
+            dataFull = self.decimate(rxd['rx%i' % rxChannel], nScans)
+
+            # Average data
             data = np.average(np.reshape(dataFull, (nScans, -1)), axis=0)
             self.mapVals['data'] = data
-            self.expt.__del__()
 
             # Save data to sweep plot (single point)
             self.mapVals['sampledPoint'] = data[0]
 
+        self.expt.__del__()
+
+        return True
+
     def sequenceAnalysis(self, obj=''):
-        addRdPoints = self.mapVals['addRdPoints']
-        nPoints = self.mapVals['nPoints']
-        signal = self.mapVals['data'][addRdPoints:nPoints+addRdPoints]
-        signal = np.reshape(signal, (-1))
-        acqTime = self.mapVals['acqTime'] # ms
+        # Signal and spectrum from 'fir' and decimation
+        signal = self.mapVals['data']
         bw = self.mapVals['bw']*1e3 # kHz
         nPoints = self.mapVals['nPoints']
         deadTime = self.mapVals['deadTime']*1e-3 # ms
         rfExTime = self.mapVals['rfExTime']*1e-3 # ms
-
-        tVector = np.linspace(rfExTime/2+deadTime+0.5/bw, rfExTime/2+deadTime+acqTime-0.5/bw, nPoints)
+        tVector = np.linspace(rfExTime/2 + deadTime + 0.5/bw, rfExTime/2 + deadTime + (nPoints-0.5)/bw, nPoints)
         fVector = np.linspace(-bw/2, bw/2, nPoints)
         spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal))))
-        spectrum = np.reshape(spectrum, -1)
+        fitedLarmor=self.mapVals['larmorFreq'] + fVector[np.argmax(np.abs(spectrum))] * 1e-3
 
-        # Get max and FHWM
-        spectrum = np.abs(spectrum)
-        maxValue = np.max(spectrum)
-        maxIndex = np.argmax(spectrum)
-        spectrumA = np.abs(spectrum[0:maxIndex]-maxValue)
-        spectrumB = np.abs(spectrum[maxIndex:nPoints]-maxValue)
-        indexA = np.argmin(spectrumA)
-        indexB = np.argmin(spectrumB)+maxIndex
-        freqA = fVector[indexA]
-        freqB = fVector[indexB]
-
-        # Get the T2*
-        maxSignal = np.max(np.abs(signal))
-        maxIndex = np.argmax(np.abs(signal))
-        t2Index = np.argmin(np.abs(np.abs(signal)-maxSignal/3.))
-        t2 = tVector[t2Index]-tVector[maxIndex]
-
-        print("\nT2* = %0.2f ms" % t2)
-        print("Peak amplitude = %0.3f, FWHM = %0.1f kHz" % (maxValue, freqB - freqA))
+        # Get the central frequency
+        print('Larmor frequency: %1.5f MHz' % fitedLarmor)
+        self.mapVals['signalVStime'] = [tVector, signal]
+        self.mapVals['spectrum'] = [fVector, spectrum]
 
         self.saveRawData()
 
@@ -170,3 +170,9 @@ class FID(blankSeq.MRIBLANKSEQ):
         self.out = [result1, result2]
 
         return self.out
+
+
+if __name__=='__main__':
+    seq = FID()
+    seq.sequenceRun()
+    seq.sequenceAnalysis(obj='Standalone')

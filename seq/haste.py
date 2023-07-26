@@ -347,7 +347,7 @@ class HASTE(blankSeq.MRIBLANKSEQ):
                 print("Scan %s ..." % (ii+1))
                 if not demo:
                     rxd, msgs = self.expt.run()
-                    rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
+                    rxd['rx0'] = rxd['rx0']*hw.adcFactor  # Here I normalize to get the result in mV
                 else:
                     data, acqPoints = createSequenceDemo()
                 # Get data

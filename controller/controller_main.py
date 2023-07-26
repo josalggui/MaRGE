@@ -1,15 +1,17 @@
 """
-session_controller.py
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
-import os
+import subprocess
 import sys
 import threading
 
 from seq.sequences import defaultsequences
 from ui.window_main import MainWindow
+
+from configs import hw_config as hw
 
 
 class MainController(MainWindow):
@@ -20,15 +22,28 @@ class MainController(MainWindow):
         for sequence in defaultsequences.values():
             sequence.session = self.session
 
+        # Start the sniffer
         thread = threading.Thread(target=self.history_list.waitingForRun)
         thread.start()
 
     def closeEvent(self, event):
-        """Shuts down application on close."""
+        """
+        Shuts down the application on close.
+
+        This method is called when the application is being closed. It sets the `app_open` flag to False, restores
+        `sys.stdout` to its default value, and performs additional cleanup tasks if the `demo` flag is not set.
+        It also prints a closing message to the console.
+
+        Args:
+            event (QCloseEvent): The close event triggered by the user.
+
+        Returns:
+            None
+        """
         self.app_open = False
         # Return stdout to defaults.
         sys.stdout = sys.__stdout__
         if not self.demo:
-            os.system('ssh root@192.168.1.101 "killall marcos_server"') # Kill marcos server
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
         print('\nGUI closed successfully!')
         super().closeEvent(event)

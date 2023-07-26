@@ -1,7 +1,8 @@
 """
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    J.M. Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 import numpy as np
 
@@ -9,6 +10,27 @@ from widgets.widget_plot1d import Plot1DWidget
 
 
 class Plot1DController(Plot1DWidget):
+    """
+    1D plot controller class.
+
+    This class extends the `Plot1DWidget` class and serves as a controller for a 1D plot. It initializes the plot with
+    the provided data and handles mouse movement events to display information about the data at the cursor position.
+
+    Methods:
+        __init__(self, x_data, y_data, legend, x_label, y_label, title): Initialize the Plot1DController instance.
+        mouseMoved(self, evt): Handle the mouseMoved event to display information about the data at the cursor position.
+
+    Attributes:
+        y_data: The y data for the plot.
+        x_data: The x data for the plot.
+        x_label: The label for the x axis.
+        y_label: The label for the y axis.
+        title: The title of the plot.
+        lines: A list of LineItems representing the plotted lines.
+        plot_item: The PlotItem representing the plot.
+        pen: A list of QPen objects representing the line colors.
+
+    """
     def __init__(self,
                  x_data,  # numpy array
                  y_data,  # list of numpy array
@@ -17,6 +39,23 @@ class Plot1DController(Plot1DWidget):
                  y_label,  # string
                  title,  # string
                  ):
+        """
+        Initialize the Plot1DController instance.
+
+        This method initializes the Plot1DController instance by calling the constructor of the parent class (`Plot1DWidget`).
+        It sets the provided data and creates the plot lines. It also sets the plot properties such as title and axis labels.
+
+        Args:
+            x_data: The x data for the plot (numpy array).
+            y_data: The y data for the plot (list of numpy arrays).
+            legend: The legend for each line (list of strings).
+            x_label: The label for the x axis (string).
+            y_label: The label for the y axis (string).
+            title: The title of the plot (string).
+
+        Returns:
+            None
+        """
         super(Plot1DController, self).__init__()
         self.y_data = y_data
         self.x_data = x_data
@@ -30,6 +69,10 @@ class Plot1DController(Plot1DWidget):
         # Add lines to plot_item
         n_lines = len(y_data)
         self.lines = []
+        x_min = 0
+        x_max = 0
+        y_min = 0
+        y_max = 0
         for line in range(n_lines):
             if type(x_data) is list:
                 x = x_data[line]
@@ -37,8 +80,17 @@ class Plot1DController(Plot1DWidget):
                 x = x_data.copy()
             y = y_data[line]
             self.lines.append(self.plot_item.plot(x, y, pen=self.pen[line], name=legend[line]))
-            self.plot_item.setXRange(x[0], x[-1], padding=0)
-            if np.min(y) == np.max(y):
+            if x[0] < x_min:
+                x_min = x[0]
+            if x[-1] > x_max:
+                x_max = x[-1]
+            if np.min(y) < y_min:
+                y_min = np.min(y)
+            if np.max(y) > y_max:
+                y_max = np.max(y)
+            self.plot_item.setXRange(x_min, x_max, padding=0)
+            self.plot_item.setYRange(y_min, y_max, padding=0)
+            if y_min == y_max:
                 self.plot_item.setYRange(-1, 1, padding=0)
 
         # Set the plot properties
@@ -47,6 +99,15 @@ class Plot1DController(Plot1DWidget):
         self.plot_item.setLabel('left', y_label)
 
     def mouseMoved(self, evt):
+        """
+        Handle the mouseMoved event and update the information displayed at the cursor position on the plot.
+
+        Args:
+            evt (QGraphicsSceneMouseEvent): The mouse event object.
+
+        Returns:
+            None
+        """
         pos = evt[0]
         if self.plot_item.sceneBoundingRect().contains(pos):
             if type(self.x_data) is not list:

@@ -82,6 +82,13 @@ class SessionWindow(QMainWindow):
         self.orientation_combo_box.setStatusTip("Select the subject orientation")
         self.main_layout.addWidget(self.orientation_combo_box, row, 1)
 
+        # Create QLineEdit for user id
+        row += 1
+        self.main_layout.addWidget(QLabel("User"), row, 0)
+        self.user_line_edit = ClickableLineEdit("User")
+        self.user_line_edit.setStatusTip("Write the user name")
+        self.main_layout.addWidget(self.user_line_edit, row, 1)
+
         # Create QLineEdit for subject id
         row += 1
         date = datetime.now()
@@ -90,6 +97,14 @@ class SessionWindow(QMainWindow):
         self.id_line_edit = ClickableLineEdit(date_string)
         self.id_line_edit.setStatusTip("Write the subject id")
         self.main_layout.addWidget(self.id_line_edit, row, 1)
+
+        # Create QLineEdit for study id
+        row += 1
+        date = datetime.now()
+        self.main_layout.addWidget(QLabel("Study ID"), row, 0)
+        self.idS_line_edit = ClickableLineEdit(date_string)
+        self.idS_line_edit.setStatusTip("Write the study id")
+        self.main_layout.addWidget(self.idS_line_edit, row, 1)
 
         # Create QLineEdit for subject name
         row += 1
@@ -129,7 +144,7 @@ class SessionWindow(QMainWindow):
         # Create QLineEdit for subject scanner
         row += 1
         self.main_layout.addWidget(QLabel("Scanner"), row, 0)
-        self.scanner_line_edit = ClickableLineEdit(hw.scannerName)
+        self.scanner_line_edit = ClickableLineEdit(hw.scanner_name)
         self.scanner_line_edit.setDisabled(True)
         self.scanner_line_edit.setStatusTip("Scanner version")
         self.main_layout.addWidget(self.scanner_line_edit, row, 1)
@@ -138,7 +153,7 @@ class SessionWindow(QMainWindow):
         row += 1
         self.main_layout.addWidget(QLabel("RF coil"), row, 0)
         self.rf_coil_combo_box = QComboBox()
-        self.rf_coil_combo_box.addItems(hw.antennaList)
+        self.rf_coil_combo_box.addItems(hw.antenna_dict.keys())
         self.rf_coil_combo_box.setStatusTip("Select the rf coil")
         self.main_layout.addWidget(self.rf_coil_combo_box, row, 1)
 

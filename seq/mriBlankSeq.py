@@ -9,7 +9,7 @@ import os
 import numpy as np
 import configs.hw_config as hw
 from datetime import date, datetime
-from scipy.io import savemat
+from scipy.io import savemat, loadmat
 import experiment as ex
 import scipy.signal as sig
 import csv
@@ -34,11 +34,24 @@ class MRIBLANKSEQ:
         self.mapVals = {}
         self.mapFields = {}
         self.mapLen = {}
+        self.mapTips = {}
+        self.map_units = {}
         self.meta_data = {}
         self.rotations = []
         self.dfovs = []
         self.fovs = []
         self.session = None
+        self.flo_dict = {'g0': [[],[]],
+                         'g1': [[],[]],
+                         'g2': [[],[]],
+                         'rx0': [[],[]],
+                         'rx1': [[],[]],
+                         'tx0': [[],[]],
+                         'tx1': [[],[]],
+                         'ttl0': [[],[]],
+                         'ttl1': [[],[]],}
+
+
 
     # *********************************************************************************
     # *********************************************************************************
@@ -50,37 +63,45 @@ class MRIBLANKSEQ:
     def RFproperties(self):
         # Automatically select the inputs related to RF fields
         out = {}
+        tips = {}
         for key in self.mapKeys:
             if self.mapFields[key] == 'RF':
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
-        return out
+                tips[self.mapNmspc[key]] = [self.mapTips[key]]
+        return out, tips
 
     @property
     def IMproperties(self) -> dict:
         # Automatically select the inputs related to IM fields
         out = {}
+        tips = {}
         for key in self.mapKeys:
             if self.mapFields[key] == 'IM':
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
-        return out
+                tips[self.mapNmspc[key]] = [self.mapTips[key]]
+        return out, tips
 
     @property
     def SEQproperties(self) -> dict:
         # Automatically select the inputs related to SEQ fields
         out = {}
+        tips = {}
         for key in self.mapKeys:
             if self.mapFields[key] == 'SEQ':
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
-        return out
+                tips[self.mapNmspc[key]] = [self.mapTips[key]]
+        return out, tips
 
     @property
     def OTHproperties(self) -> dict:
         # Automatically select the inputs related to OTH fields
         out = {}
+        tips = {}
         for key in self.mapKeys:
             if self.mapFields[key] == 'OTH':
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
-        return out
+                tips[self.mapNmspc[key]] = [self.mapTips[key]]
+        return out, tips
 
     def getFovDisplacement(self):
         """"
@@ -94,27 +115,26 @@ class MRIBLANKSEQ:
             uy = rotation[1]
             uz = rotation[2]
             out = np.zeros((3, 3))
-            out[0, 0] = np.cos(theta) + ux ** 2 * (1 - np.cos(theta));
-            out[0, 1] = ux * uy * (1 - np.cos(theta)) - uz * np.sin(theta);
-            out[0, 2] = ux * uz * (1 - np.cos(theta)) + uy * np.sin(theta);
-            out[1, 0] = uy * ux * (1 - np.cos(theta)) + uz * np.sin(theta);
-            out[1, 1] = np.cos(theta) + uy ** 2 * (1 - np.cos(theta));
-            out[1, 2] = uy * uz * (1 - np.cos(theta)) - ux * np.sin(theta);
-            out[2, 0] = uz * ux * (1 - np.cos(theta)) - uy * np.sin(theta);
-            out[2, 1] = uz * uy * (1 - np.cos(theta)) + ux * np.sin(theta);
-            out[2, 2] = np.cos(theta) + uz ** 2 * (1 - np.cos(theta));
+            out[0, 0] = np.cos(theta) + ux ** 2 * (1 - np.cos(theta))
+            out[0, 1] = ux * uy * (1 - np.cos(theta)) - uz * np.sin(theta)
+            out[0, 2] = ux * uz * (1 - np.cos(theta)) + uy * np.sin(theta)
+            out[1, 0] = uy * ux * (1 - np.cos(theta)) + uz * np.sin(theta)
+            out[1, 1] = np.cos(theta) + uy ** 2 * (1 - np.cos(theta))
+            out[1, 2] = uy * uz * (1 - np.cos(theta)) - ux * np.sin(theta)
+            out[2, 0] = uz * ux * (1 - np.cos(theta)) - uy * np.sin(theta)
+            out[2, 1] = uz * uy * (1 - np.cos(theta)) + ux * np.sin(theta)
+            out[2, 2] = np.cos(theta) + uz ** 2 * (1 - np.cos(theta))
 
             return out
         
         dr = np.reshape(np.array([0, 0, 0]), (3, 1))
         for ii in range(1, len(self.dfovs)):
             Mii = rotationMatrix(self.rotations[ii])
-            rii = np.reshape(np.array(self.dfovs[ii]), (3,1))
+            rii = np.reshape(np.array(self.dfovs[ii]), (3, 1))
             dr = np.dot(Mii, (dr + rii))
 
         return dr
-        
-        
+
     def getRotationMatrix(self):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -122,20 +142,20 @@ class MRIBLANKSEQ:
         Matrix to rotate through an arbitrary axis
         """
         def rotationMatrix(rotation):
-            theta = rotation[3]*np.pi/180
+            theta = rotation[3]
             ux = rotation[0]
             uy = rotation[1]
             uz = rotation[2]
             out = np.zeros((3, 3))
-            out[0, 0] = np.cos(theta) + ux ** 2 * (1 - np.cos(theta));
-            out[0, 1] = ux * uy * (1 - np.cos(theta)) - uz * np.sin(theta);
-            out[0, 2] = ux * uz * (1 - np.cos(theta)) + uy * np.sin(theta);
-            out[1, 0] = uy * ux * (1 - np.cos(theta)) + uz * np.sin(theta);
-            out[1, 1] = np.cos(theta) + uy ** 2 * (1 - np.cos(theta));
-            out[1, 2] = uy * uz * (1 - np.cos(theta)) - ux * np.sin(theta);
-            out[2, 0] = uz * ux * (1 - np.cos(theta)) - uy * np.sin(theta);
-            out[2, 1] = uz * uy * (1 - np.cos(theta)) + ux * np.sin(theta);
-            out[2, 2] = np.cos(theta) + uz ** 2 * (1 - np.cos(theta));
+            out[0, 0] = np.cos(theta) + ux ** 2 * (1 - np.cos(theta))
+            out[0, 1] = ux * uy * (1 - np.cos(theta)) - uz * np.sin(theta)
+            out[0, 2] = ux * uz * (1 - np.cos(theta)) + uy * np.sin(theta)
+            out[1, 0] = uy * ux * (1 - np.cos(theta)) + uz * np.sin(theta)
+            out[1, 1] = np.cos(theta) + uy ** 2 * (1 - np.cos(theta))
+            out[1, 2] = uy * uz * (1 - np.cos(theta)) - ux * np.sin(theta)
+            out[2, 0] = uz * ux * (1 - np.cos(theta)) - uy * np.sin(theta)
+            out[2, 1] = uz * uy * (1 - np.cos(theta)) + ux * np.sin(theta)
+            out[2, 2] = np.cos(theta) + uz ** 2 * (1 - np.cos(theta))
 
             return out
 
@@ -269,8 +289,6 @@ class MRIBLANKSEQ:
 
         # (txs, grads, rxs, ios) = axes
 
-        fd = self.expt.get_flodict()
-
         def getStepData(data):
             t = data[0]
             s = data[1]
@@ -283,63 +301,172 @@ class MRIBLANKSEQ:
             sStep[1::2] = s[0:-1]
             return [tStep, sStep]
 
-        # Plot TX channels
-        xData = []
-        yData = []
-        legend = []
-        for txl in ['tx0_i', 'tx0_q', 'tx1_i', 'tx1_q']:
-            try:
-                dataStep = getStepData(fd[txl])
-                xData.append(dataStep[0] * 1e-3)
-                yData.append(dataStep[1])
-                legend.append(txl)
-            except KeyError:
-                continue
-        plotTx = [xData, yData, legend, 'Tx gate']
+        # Plots
+        if self.demo:
+            # Plot tx channels
+            xData = []
+            yData = []
+            legend = []
 
-        # Plot gradient channels
-        xData = []
-        yData = []
-        legend = []
-        for gradl in self.expt.gradb.keys():
-            try:
-                dataStep = getStepData(fd[gradl])
-                xData.append(dataStep[0] * 1e-3)
-                yData.append(dataStep[1])
-                legend.append(gradl)
-            except KeyError:
-                continue
-        plotGrad = [xData, yData, legend, 'Gradients']
+            # tx0_i
+            x = self.flo_dict['tx0'][0]
+            y = np.real(self.flo_dict['tx0'][1])
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('tx0_i')
 
-        # Plot RX enable channels
-        xData = []
-        yData = []
-        legend = []
-        for rxl in ['rx0_en', 'rx1_en']:
-            try:
-                dataStep = getStepData(fd[rxl])
-                xData.append(dataStep[0] * 1e-3)
-                yData.append(dataStep[1])
-                legend.append(rxl)
-            except KeyError:
-                continue
-        plotRx = [xData, yData, legend, 'Rx gate']
+            # tx0_q
+            x = self.flo_dict['tx0'][0]
+            y = np.imag(self.flo_dict['tx0'][1])
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('tx0_q')
 
-        # Plot digital outputs
-        xData = []
-        yData = []
-        legend = []
-        for iol in ['tx_gate', 'rx_gate', 'trig_out', 'leds']:
-            try:
-                dataStep = getStepData(fd[iol])
-                xData.append(dataStep[0] * 1e-3)
-                yData.append(dataStep[1])
-                legend.append(iol)
-            except KeyError:
-                continue
-        plotDigital = [xData, yData, legend, 'Digital']
+            # tx1_i
+            x = self.flo_dict['tx1'][0]
+            y = np.real(self.flo_dict['tx1'][1])
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('tx1_i')
 
-        return ([plotTx, plotGrad, plotRx, plotDigital])
+            # tx1_q
+            x = self.flo_dict['tx1'][0]
+            y = np.imag(self.flo_dict['tx1'][1])
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('tx1_q')
+
+            plotTx = [xData, yData, legend, 'Tx gate']
+
+            # Plot gradients
+            xData = []
+            yData = []
+            legend = []
+
+            # g0
+            x = self.flo_dict['g0'][0]
+            y = self.flo_dict['g0'][1]
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('g0')
+
+            # g1
+            x = self.flo_dict['g1'][0]
+            y = self.flo_dict['g1'][1]
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('g1')
+
+            # g0
+            x = self.flo_dict['g2'][0]
+            y = self.flo_dict['g2'][1]
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('g2')
+
+            plotGrad = [xData, yData, legend, 'Gradients']
+
+            # Plot readouts
+            xData = []
+            yData = []
+            legend = []
+
+            # rx_0
+            x = self.flo_dict['rx0'][0]
+            y = self.flo_dict['rx0'][1]
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('rx0_en')
+
+            # rx_1
+            x = self.flo_dict['rx1'][0]
+            y = self.flo_dict['rx1'][1]
+            data = [x, y]
+            dataStep = getStepData(data)
+            xData.append(dataStep[0] * 1e-3)
+            yData.append(dataStep[1])
+            legend.append('rx1_en')
+
+            plotRx = [xData, yData, legend, 'Rx gate']
+
+            return ([plotTx, plotGrad, plotRx])
+        else:
+            # Get instructions from experiment object
+            fd = self.expt.get_flodict()
+
+            # Plot tx channels
+            xData = []
+            yData = []
+            legend = []
+            for txl in ['tx0_i', 'tx0_q', 'tx1_i', 'tx1_q']:
+                try:
+                    dataStep = getStepData(fd[txl])
+                    xData.append(dataStep[0] * 1e-3)
+                    yData.append(dataStep[1])
+                    legend.append(txl)
+                except KeyError:
+                    continue
+            plotTx = [xData, yData, legend, 'Tx gate']
+
+            # Plot gradient channels
+            xData = []
+            yData = []
+            legend = []
+            for gradl in self.expt.gradb.keys():
+                try:
+                    dataStep = getStepData(fd[gradl])
+                    xData.append(dataStep[0] * 1e-3)
+                    yData.append(dataStep[1])
+                    legend.append(gradl)
+                except KeyError:
+                    continue
+            plotGrad = [xData, yData, legend, 'Gradients']
+
+            # Plot RX enable channels
+            xData = []
+            yData = []
+            legend = []
+            for rxl in ['rx0_en', 'rx1_en']:
+                try:
+                    dataStep = getStepData(fd[rxl])
+                    xData.append(dataStep[0] * 1e-3)
+                    yData.append(dataStep[1])
+                    legend.append(rxl)
+                except KeyError:
+                    continue
+            plotRx = [xData, yData, legend, 'Rx gate']
+
+            # Plot digital outputs
+            xData = []
+            yData = []
+            legend = []
+            for iol in ['tx_gate', 'rx_gate', 'trig_out', 'leds']:
+                try:
+                    dataStep = getStepData(fd[iol])
+                    xData.append(dataStep[0] * 1e-3)
+                    yData.append(dataStep[1])
+                    legend.append(iol)
+                except KeyError:
+                    continue
+            plotDigital = [xData, yData, legend, 'Digital']
+
+            return ([plotTx, plotGrad, plotRx, plotDigital])
 
     def getIndex(self, etl=1, nPH=1, sweepMode=1):
         """"
@@ -411,6 +538,33 @@ class MRIBLANKSEQ:
             data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n + idx[ii]]
         return (data1)
 
+    def decimate(self, dataOver, nRdLines):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        This code:
+            - deletes the added points that account by the time shift and ramp of the CIC filter
+            - preprocess data to avoid oscillations due to 'fir' filter in the decimation
+        It must be used if the sequence uses "rxGateSync" to acquire data
+        """
+        # Preprocess the signal to avoid oscillations due to decimation
+        dataOver = np.reshape(dataOver, (nRdLines, -1))
+        for line in range(nRdLines):
+            dataOver[line, 0:hw.addRdPoints * hw.oversamplingFactor] = dataOver[line, hw.addRdPoints * hw.oversamplingFactor]
+        dataOver = np.reshape(dataOver, -1)
+        self.mapVals['dataOver'] = dataOver
+
+        # Decimate the signal after 'fir' filter
+        dataFull = sig.decimate(dataOver[int((hw.oversamplingFactor-1)/2)::], hw.oversamplingFactor, ftype='fir', zero_phase=True)
+
+        # Remove addRdPoints
+        nPoints = int(dataFull.shape[0]/nRdLines)-2*hw.addRdPoints
+        dataFull = np.reshape(dataFull, (nRdLines, -1))
+        dataFull = dataFull[:, hw.addRdPoints:hw.addRdPoints+nPoints]
+        dataFull = np.reshape(dataFull, -1)
+
+        return dataFull
+
     def rfSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, rewrite=True):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
@@ -422,14 +576,14 @@ class MRIBLANKSEQ:
         tx = np.linspace(-nZeros / 2, nZeros / 2, num=100, endpoint=True)
         hanning = 0.5 * (1 + np.cos(2 * np.pi * tx / nZeros))
         txAmp = rfAmplitude * np.exp(1j * rfPhase) * hanning * np.abs(np.sinc(tx))
-        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
+        txGateTime = np.array(tStart, tStart + hw.blkTime + rfTime)
         txGateAmp = np.array([1, 0])
-        self.expt.add_flodict({
-            'tx0': (txTime, txAmp),
-            'tx_gate': (txGateTime, txGateAmp)
-        }, rewrite)
+        self.flo_dict['tx0'][0] = np.concatenate((self.flo_dict['tx0'][0], txTime), axis=0)
+        self.flo_dict['tx0'][1] = np.concatenate((self.flo_dict['tx0'][1], txAmp), axis=0)
+        self.flo_dict['ttl0' % rxChannel][0] = np.concatenate((self.flo_dict['ttl0' % rxChannel][0], txGateTime), axis=0)
+        self.flo_dict['ttl0' % rxChannel][1] = np.concatenate((self.flo_dict['ttl0' % rxChannel][1], txGateAmp), axis=0)
 
-    def rfRecPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, txChannel=0, rewrite=True):
+    def rfRecPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, channel=0):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -439,50 +593,61 @@ class MRIBLANKSEQ:
         txAmp = np.array([rfAmplitude * np.exp(1j * rfPhase), 0.])
         txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
         txGateAmp = np.array([1, 0])
-        self.expt.add_flodict({
-            'tx%i' % txChannel: (txTime, txAmp),
-            'tx_gate': (txGateTime, txGateAmp)
-        }, rewrite)
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
 
-    def rfRawPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, txChannel=0, rewrite=True):
+    def rfRawPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, channel=0):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
         """
         txTime = np.array([tStart, tStart + rfTime])
         txAmp = np.array([rfAmplitude * np.exp(1j * rfPhase), 0.])
-        self.expt.add_flodict({
-            'tx%i' % txChannel: (txTime, txAmp),
-        }, rewrite)
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
 
-    def rxGate(self, tStart, gateTime, rxChannel=0, rewrite=True):
+    def rxGate(self, tStart, gateTime, channel=0):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
         """
-        rxGateTime = np.array([tStart, tStart + gateTime])
-        rxGateAmp = np.array([1, 0])
-        self.expt.add_flodict({
-            'rx%i_en' % rxChannel: (rxGateTime, rxGateAmp),
-        }, rewrite)
+        self.flo_dict['rx%i' % channel][0] = \
+            np.concatenate((self.flo_dict['rx%i' % channel][0], np.array([tStart, tStart + gateTime])), axis=0)
+        self.flo_dict['rx%i' % channel][1] = \
+            np.concatenate((self.flo_dict['rx%i' % channel][1], np.array([1, 0])), axis=0)
 
-    def ttl(self, tStart, ttlTime, channel=0, rewrite=True):
+    def rxGateSync(self, tStart, gateTime, channel=0):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        This code open the rx channel with additional points to take into account the time shift and ramp of the CIC filter
+        It only works with the Experiment class in controller, that inherits from Experiment in marcos_client
+        """
+        # Generate instructions taking into account the cic filter delay and addRdPoints
+        try:
+            samplingRate = self.expt.getSamplingRate() / hw.oversamplingFactor # us
+        except:
+            samplingRate = self.mapVals['samplingPeriod']*1e3 / hw.oversamplingFactor
+        t0 = tStart - (hw.addRdPoints * hw.oversamplingFactor - hw.cic_delay_points) * samplingRate # us
+        t1 = tStart + (hw.addRdPoints * hw.oversamplingFactor + hw.cic_delay_points) * samplingRate + gateTime # us
+        self.flo_dict['rx%i' % channel][0] = \
+            np.concatenate((self.flo_dict['rx%i' % channel][0], np.array([t0, t1])), axis=0)
+        self.flo_dict['rx%i' % channel][1] = \
+            np.concatenate((self.flo_dict['rx%i' % channel][1], np.array([1, 0])), axis=0)
+
+    def ttl(self, tStart, ttlTime, channel=0):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
         """
-        ttlGateTime = np.array([tStart, tStart + ttlTime])
-        ttlAmp = np.array([1, 0])
-        if channel==0:
-            self.expt.add_flodict({
-                'tx_gate': (ttlGateTime, ttlAmp),
-            }, rewrite)
-        else:
-            self.expt.add_flodict({
-                'rx_gate': (ttlGateTime, ttlAmp),
-            }, rewrite)
+        self.flo_dict['ttl%i' % channel][0] = \
+            np.concatenate((self.flo_dict['ttl%i' % channel][0], np.array([tStart, tStart + ttlTime])), axis=0)
+        self.flo_dict['ttl%i' % channel][1] = \
+            np.concatenate((self.flo_dict['ttl%i' % channel][1], np.array([1, 0])), axis=0)
 
-    def gradTrap(self, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming, rewrite=True):
+    def gradTrap(self, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -493,16 +658,14 @@ class MRIBLANKSEQ:
         tUp = np.linspace(tStart, tStart + gRiseTime, num=gSteps, endpoint=False)
         tDown = tUp + gRiseTime + gFlattopTime
         t = np.concatenate((tUp, tDown), axis=0)
+        
         dAmp = gAmp / gSteps
         aUp = np.linspace(dAmp, gAmp, num=gSteps)
         aDown = np.linspace(gAmp - dAmp, 0, num=gSteps)
-        a = np.concatenate((aUp, aDown), axis=0) / hw.gFactor[gAxis]
-        if gAxis == 0:
-            self.expt.add_flodict({'grad_vx': (t, a + shimming[0])}, rewrite)
-        elif gAxis == 1:
-            self.expt.add_flodict({'grad_vy': (t, a + shimming[1])}, rewrite)
-        elif gAxis == 2:
-            self.expt.add_flodict({'grad_vz': (t, a + shimming[2])}, rewrite)
+        a = np.squeeze(np.concatenate((aUp, aDown), axis=0)) / hw.gFactor[gAxis] + shimming[gAxis]
+
+        self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], t), axis=0)
+        self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], a), axis=0)
 
     def gradTrapMomentum(self, tStart, kMax, gTotalTime, gAxis, shimming, rewrite=True):
         """"
@@ -540,19 +703,19 @@ class MRIBLANKSEQ:
         elif gAxis == 2:
             self.expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
 
-    def setGradientRamp(self, tStart, gradRiseTime, nStepsGradRise, g0, gf, gAxes, shimming, rewrite=True):
-        tRamp = np.zeros(nStepsGradRise)
-        gAmp = np.zeros(nStepsGradRise)
+    def setGradientRamp(self, tStart, gradRiseTime, nStepsGradRise, g0, gf, gAxis, shimming, rewrite=True):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        gradient ramp from 'g0' to 'gf'
+        Time inputs in us
+        Amplitude inputs in T/m
+        """
         for kk in range(nStepsGradRise):
-            tRamp[kk] = tStart + gradRiseTime * kk / nStepsGradRise
-            gAmp[kk] = (g0 + ((gf - g0) * (kk + 1) / nStepsGradRise)) / hw.gFactor[gAxes]
-
-            if gAxes == 0:
-                self.expt.add_flodict({'grad_vx': (tRamp[kk], gAmp[kk] + shimming[0])}, rewrite)
-            elif gAxes == 1:
-                self.expt.add_flodict({'grad_vy': (tRamp[kk], gAmp[kk] + shimming[1])}, rewrite)
-            elif gAxes == 2:
-                self.expt.add_flodict({'grad_vz': (tRamp[kk], gAmp[kk] + shimming[2])}, rewrite)
+            tRamp = tStart + gradRiseTime * kk / nStepsGradRise
+            gAmp = (g0 + ((gf - g0) * (kk + 1) / nStepsGradRise)) / hw.gFactor[gAxis]
+            self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], np.array([tRamp])), axis=0)
+            self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], np.array([gAmp])), axis=0)
 
     def gradTrapAmplitude(self, tStart, gAmplitude, gTotalTime, gAxis, shimming, orders, rewrite=True):
         """"
@@ -587,30 +750,44 @@ class MRIBLANKSEQ:
             self.expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
 
     def endSequence(self, tEnd):
-        self.expt.add_flodict({
-            'grad_vx': (np.array([tEnd]), np.array([0])),
-            'grad_vy': (np.array([tEnd]), np.array([0])),
-            'grad_vz': (np.array([tEnd]), np.array([0])),
-            'rx0_en': (np.array([tEnd]), np.array([0])),
-            'rx1_en': (np.array([tEnd]), np.array([0])),
-            'rx_gate': (np.array([tEnd]), np.array([0])),
-            'tx0': (np.array([tEnd]), np.array([0 * np.exp(0)])),
-            'tx1': (np.array([tEnd]), np.array([0 * np.exp(0)])),
-            'tx_gate': (np.array([tEnd]), np.array([0]))
-        })
+        self.flo_dict['g0'][0] = np.concatenate((self.flo_dict['g0'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['g0'][1] = np.concatenate((self.flo_dict['g0'][1], np.array([0])), axis=0)
+        self.flo_dict['g1'][0] = np.concatenate((self.flo_dict['g1'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['g1'][1] = np.concatenate((self.flo_dict['g1'][1], np.array([0])), axis=0)
+        self.flo_dict['g2'][0] = np.concatenate((self.flo_dict['g2'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['g2'][1] = np.concatenate((self.flo_dict['g2'][1], np.array([0])), axis=0)
+        self.flo_dict['rx0'][0] = np.concatenate((self.flo_dict['rx0'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['rx0'][1] = np.concatenate((self.flo_dict['rx0'][1], np.array([0])), axis=0)
+        self.flo_dict['rx1'][0] = np.concatenate((self.flo_dict['rx1'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['rx1'][1] = np.concatenate((self.flo_dict['rx1'][1], np.array([0])), axis=0)
+        self.flo_dict['tx0'][0] = np.concatenate((self.flo_dict['tx0'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['tx0'][1] = np.concatenate((self.flo_dict['tx0'][1], np.array([0])), axis=0)
+        self.flo_dict['tx1'][0] = np.concatenate((self.flo_dict['tx1'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['tx1'][1] = np.concatenate((self.flo_dict['tx1'][1], np.array([0])), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], np.array([0])), axis=0)
+        self.flo_dict['ttl1'][0] = np.concatenate((self.flo_dict['ttl1'][0], np.array([tEnd])), axis=0)
+        self.flo_dict['ttl1'][1] = np.concatenate((self.flo_dict['ttl1'][1], np.array([0])), axis=0)
 
-    def iniSequence(self, t0, shimming, rewrite=True):
-        self.expt.add_flodict({
-            'grad_vx': (np.array([t0]), np.array([shimming[0]])),
-            'grad_vy': (np.array([t0]), np.array([shimming[1]])),
-            'grad_vz': (np.array([t0]), np.array([shimming[2]])),
-            'rx0_en': (np.array([t0]), np.array([0])),
-            'rx1_en': (np.array([t0]), np.array([0])),
-            'rx_gate': (np.array([t0]), np.array([0])),
-            'tx0': (np.array([t0]), np.array([0 * np.exp(0)])),
-            'tx1': (np.array([t0]), np.array([0 * np.exp(0)])),
-            'tx_gate': (np.array([t0]), np.array([0]))
-        }, rewrite)
+    def iniSequence(self, t0, shimming):
+        self.flo_dict['g0'][0] = np.array([t0])
+        self.flo_dict['g0'][1] = np.array([shimming[0]])
+        self.flo_dict['g1'][0] = np.array([t0])
+        self.flo_dict['g1'][1] = np.array([shimming[1]])
+        self.flo_dict['g2'][0] = np.array([t0])
+        self.flo_dict['g2'][1] = np.array([shimming[2]])
+        self.flo_dict['rx0'][0] = np.array([t0])
+        self.flo_dict['rx0'][1] = np.array([0])
+        self.flo_dict['rx1'][0] = np.array([t0])
+        self.flo_dict['rx1'][1] = np.array([0])
+        self.flo_dict['tx0'][0] = np.array([t0])
+        self.flo_dict['tx0'][1] = np.array([0])
+        self.flo_dict['tx1'][0] = np.array([t0])
+        self.flo_dict['tx1'][1] = np.array([0])
+        self.flo_dict['ttl0'][0] = np.array([t0])
+        self.flo_dict['ttl0'][1] = np.array([0])
+        self.flo_dict['ttl1'][0] = np.array([t0])
+        self.flo_dict['ttl1'][1] = np.array([0])
 
     def setGradient(self, t0, gAmp, gAxis, rewrite=True):
         """"
@@ -620,12 +797,37 @@ class MRIBLANKSEQ:
         Time inputs in us
         Amplitude inputs in Ocra1 units
         """
-        if gAxis == 0:
-            self.expt.add_flodict({'grad_vx': (np.array([t0]), np.array([gAmp]))}, rewrite)
-        elif gAxis == 1:
-            self.expt.add_flodict({'grad_vy': (np.array([t0]), np.array([gAmp]))}, rewrite)
-        elif gAxis == 2:
-            self.expt.add_flodict({'grad_vz': (np.array([t0]), np.array([gAmp]))}, rewrite)
+        self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], np.array([t0])), axis=0)
+        self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], np.array([gAmp])), axis=0)
+
+    def floDict2Exp(self, rewrite=True):
+        """"
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        Check for errors and add instructions to red pitaya if no errors are found
+        """
+        # Check errors:
+        for key in self.flo_dict.keys():
+            item = self.flo_dict[key]
+            dt = item[0][1::]-item[0][0:-1]
+            if (dt<=0).any():
+                print("\n%s timing error" % key)
+                return False
+            if (item[1]>1).any() or (item[1]<-1).any():
+                print("\n%s amplitude error" % key)
+                return False
+
+        self.expt.add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
+                               'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
+                               'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
+                               'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
+                               'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
+                               'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
+                               'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
+                               'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
+                               'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
+                               }, rewrite)
+        return True
 
     def saveRawData(self):
         """"
@@ -658,7 +860,11 @@ class MRIBLANKSEQ:
         # Generate filename
         name = datetime.now()
         name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
-        file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
+        self.mapVals['name_string'] = name_string
+        if hasattr(self, 'raw_data_name'):
+            file_name = "%s.%s" % (self.raw_data_name, name_string)
+        else:
+            file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
         self.mapVals['fileName'] = "%s.mat" % file_name
 
         # Save mat file with the outputs
@@ -682,6 +888,7 @@ class MRIBLANKSEQ:
         @author: F. Juan-Llorís, PhysioMRI S.L., Valencia, Spain
         @email: franc.juan@physiomri.com
         @modified: J.M. Algarín, MRILab, i3M, CSIC, Spain
+        @modified: T. Guallart-Naval, MRILab, i3M, CSIC, Spain
         Save the dicom
         """
 
@@ -689,27 +896,49 @@ class MRIBLANKSEQ:
         dicom_image = DICOMImage()
 
         # Save image into dicom object
-        image = self.output[0]['data']
-        dicom_image.meta_data["PixelData"] = image.astype(np.int16).tobytes()
+        try:
+            dicom_image.meta_data["PixelData"] = self.meta_data["PixelData"]
+        except KeyError:
+            image = self.output[0]['data']
+            dicom_image.meta_data["PixelData"] = image.astype(np.int16).tobytes()
+            # If it is a 3d image
+            if len(image.shape) > 2:
+                # Obtener dimensiones
+                slices, rows, columns = image.shape
+                dicom_image.meta_data["Columns"] = columns
+                dicom_image.meta_data["Rows"] = rows
+                dicom_image.meta_data["NumberOfSlices"] = slices
+                dicom_image.meta_data["NumberOfFrames"] = slices
+            # if it is a 2d image
+            else:
+                # Obtener dimensiones
+                rows, columns = image.shape
+                dicom_image.meta_data["Columns"] = columns
+                dicom_image.meta_data["Rows"] = rows
+                dicom_image.meta_data["NumberOfSlices"] = 1
+                dicom_image.meta_data["NumberOfFrames"] = 1
 
-        # If it is a 3d image
-        if len(image.shape) > 2:
-            # Obtener dimensiones
-            slices, rows, columns = image.shape
-            dicom_image.meta_data["Columns"] = columns
-            dicom_image.meta_data["Rows"] = rows
-            dicom_image.meta_data["NumberOfSlices"] = slices
-            dicom_image.meta_data["NumberOfFrames"] = slices
-        # if it is a 2d image
-        else:
-            # Obtener dimensiones
-            rows, columns = image.shape
-            dicom_image.meta_data["Columns"] = columns
-            dicom_image.meta_data["Rows"] = rows
-            dicom_image.meta_data["NumberOfSlices"] = 1
-            dicom_image.meta_data["NumberOfFrames"] = 1
+        # Date and time
+        current_time = datetime.now()
+        self.meta_data["StudyDate"] = current_time.strftime("%Y%m%d")
+        self.meta_data["StudyTime"] = current_time.strftime("%H%M%S")
 
-        # Add sequence meta_data (dictionary) to dicom object meta_data (dictionary)
+        # More DICOM tags
+        self.meta_data["PatientName"] = self.session["subject_id"]
+        self.meta_data["PatientSex"] = " "
+        self.meta_data["StudyID"] = self.session["subject_id"]
+        self.meta_data["InstitutionName"] = self.session["scanner"]
+        self.meta_data["ImageComments"] = " "
+        self.meta_data["PatientID"] = self.session["subject_id"]
+        self.meta_data["SOPInstanceUID"] = self.mapVals['name_string']
+        self.meta_data["SeriesDescription"] = self.raw_data_name
+        self.session['seriesNumber'] = self.session['seriesNumber'] + 1
+        self.meta_data["SeriesNumber"] = self.session['seriesNumber']
+        # Full dinamic window
+        #self.meta_data["WindowWidth"] = 26373
+        #self.meta_data["WindowCenter"] = 13194
+
+
         dicom_image.meta_data = dicom_image.meta_data | self.meta_data
 
         # Save meta_data dictionary into dicom object metadata (Standard DICOM 3.0)
@@ -781,15 +1010,27 @@ class MRIBLANKSEQ:
         # Finalize sequence
         self.endSequence(repetitionTime)
 
-    def addParameter(self, key='', string='', val=0, field=''):
+    def addParameter(self, key='', string='', val=0, units=True, field='', tip=None):
         if key is not self.mapVals.keys(): self.mapKeys.append(key)
         self.mapNmspc[key] = string
         self.mapVals[key] = val
         self.mapFields[key] = field
+        self.mapTips[key] = tip
+        self.map_units[key] = units
         try:
             self.mapLen[key] = len(val)
         except:
             self.mapLen[key] = 1
+
+    def sequenceAtributes(self):
+        # Add input parameters to the self
+        for key in self.mapKeys:
+            if isinstance(self.mapVals[key], list):
+                setattr(self, key, np.array([element * self.map_units[key] for element in self.mapVals[key]]))
+            else:
+                setattr(self, key, self.mapVals[key]*self.map_units[key])
+
+            x = 0
 
     def getParameter(self, key):
         return (self.mapVals[key])

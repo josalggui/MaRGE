@@ -1,7 +1,8 @@
 """
-@author:    José Miguel Algarín
-@email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+:author:    José Miguel Algarín
+:email:     josalggui@i3m.upv.es
+:affiliation: MRILab, i3M, CSIC, Valencia, Spain
+
 """
 import imageio.v2 as imageio
 
@@ -10,6 +11,9 @@ from widgets.widget_figures import FiguresLayoutWidget
 
 
 class FiguresLayoutController(FiguresLayoutWidget):
+    """
+    Controller for figures layout
+    """
     def __init__(self, *args, **kwargs):
         super(FiguresLayoutController, self).__init__(*args, **kwargs)
 
@@ -21,6 +25,14 @@ class FiguresLayoutController(FiguresLayoutWidget):
 
     @staticmethod
     def wellcomeMessage():
+        """
+        Display the welcome message.
+
+        This static method displays the welcome message for the Graphical User Interface for MaRCoS. It prints information about the developer, contact details, and the GitHub repository URL.
+
+        Note:
+            The method does not return any value.
+        """
         print("Graphical User Interface for MaRCoS")
         print("J.M. Algarín, PhD")
         print("josalggui@i3m.upv.es")
@@ -29,9 +41,12 @@ class FiguresLayoutController(FiguresLayoutWidget):
 
     def firstPlot(self):
         """
-        @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-        @email: josalggui@i3m.upv.es
-        @Summary: show the initial figure
+        Display the first plot.
+
+        This method displays the first plot by loading an image, creating a Spectrum3DPlot object, and customizing its appearance. The plot is added to the figures layout.
+
+        Note:
+            The method does not return any value.
         """
         logo = imageio.imread("resources/images/logo.png")
         self.clearFiguresLayout()
@@ -45,6 +60,14 @@ class FiguresLayoutController(FiguresLayoutWidget):
         self.addWidget(welcome)
 
     def clearFiguresLayout(self) -> None:
+        """
+        Clear the figures layout.
+
+        This method removes all widgets from the figures layout.
+
+        Returns:
+            None
+        """
         for ii in range(self.layout.count()):
             item = self.layout.takeAt(0)
             item.widget().deleteLater()
