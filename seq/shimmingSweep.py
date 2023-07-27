@@ -128,13 +128,13 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         sx = sxVector[np.argmax(dataFFT[0, :])]
         sy = syVector[np.argmax(dataFFT[1, :])]
         sz = szVector[np.argmax(dataFFT[2, :])]
-        print("Shimming X = %0.1f" % (sx * 1e4))
-        print("Shimming Y = %0.1f" % (sy * 1e4))
-        print("Shimming Z = %0.1f" % (sz * 1e4))
+        print("Shimming X = %0.1f" % (sx / units.sh))
+        print("Shimming Y = %0.1f" % (sy / units.sh))
+        print("Shimming Z = %0.1f" % (sz / units.sh))
 
         # Shimming plot
         result1 = {'widget': 'curve',
-                   'xData': [sxVector * units.sh, syVector * units.sh, szVector * units.sh],
+                   'xData': [sxVector / units.sh, syVector / units.sh, szVector / units.sh],
                    'yData': [np.abs(dataFFT[0, :]), np.abs(dataFFT[1, :]), np.abs(dataFFT[2, :])],
                    'xLabel': 'Shimming',
                    'yLabel': 'Spectrum amplitude',
@@ -146,12 +146,12 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         # Update the shimming in hw_config
         if obj != "standalone":
             for seqName in self.sequenceList:
-                self.sequenceList[seqName].mapVals['shimming'] = [np.round(sx * units.sh, decimals=1),
-                                                                  np.round(sy * units.sh, decimals=1),
-                                                                  np.round(sz * units.sh, decimals=1)]
-        shimming = [np.round(sx * units.sh, decimals=1),
-                    np.round(sy * units.sh, decimals=1),
-                    np.round(sz * units.sh, decimals=1)]
+                self.sequenceList[seqName].mapVals['shimming'] = [np.round(sx / units.sh, decimals=1),
+                                                                  np.round(sy / units.sh, decimals=1),
+                                                                  np.round(sz / units.sh, decimals=1)]
+        shimming = [np.round(sx / units.sh, decimals=1),
+                    np.round(sy / units.sh, decimals=1),
+                    np.round(sz / units.sh, decimals=1)]
         self.mapVals['shimming0'] = shimming
         self.saveRawData()
 
