@@ -70,9 +70,6 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         init_gpa = False  # Starts the gpa
         self.demo = demo
 
-        # I do not understand why I cannot create the input parameters automatically
-        shimming = np.array(self.mapVals['shimming']) * 1e-4
-
         # Set the refocusing time in to twice the excitation time
         if self.rfReTime == 0:
             self.rfReTime = 2 * self.rfExTime
