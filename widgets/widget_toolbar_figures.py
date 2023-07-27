@@ -22,3 +22,8 @@ class FiguresToolBar(QToolBar):
         self.action_screenshot = QAction(QIcon("resources/icons/screenshot.png"), "Screenshot", self)
         self.action_screenshot.setStatusTip("Save screenshot in %s" % screenshot_folder)
         self.addAction(self.action_screenshot)
+
+        # Action button to open postprocessing gui
+        self.action_postprocessing = QAction(QIcon("resources/icons/postprocessing.png"), "Open post-processing GUI", self)
+        self.action_postprocessing.setStatusTip("Open the post-processing GUI")
+        self.addAction(self.action_postprocessing)
