@@ -187,7 +187,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                 self.rxGate(t0, self.acqTime)
 
         # End sequence
-        self.endSequence((3 * self.nShimming + self.dummyPulses) * self.repetitionTime)
+        self.endSequence((self.nShimming + self.dummyPulses) * self.repetitionTime)
 
     def shimming(self, axis='x'):
         # Create shimming matrix
