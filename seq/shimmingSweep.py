@@ -112,11 +112,26 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         # Get data
         data = np.reshape(self.mapVals['data'], (3, self.nShimming, -1))
 
+        def getFHWM(s=None):
+            bw = self.mapVals['bw']*1e-3
+            f_vector = np.linspace(-bw/2, bw/2, self.nPoints)
+            target = np.max(s) / 2
+            p0 = np.argmax(s)
+            f0 = f_vector[p0]
+            s1 = np.abs(s[0:p0]-target)
+            f1 = f_vector[np.argmin(s1)]
+            s2 = np.abs(s[p0::]-target)
+            f2 = f_vector[np.argmin(s2)+p0]
+            return f2-f1
+
         # Get FFT
         dataFFT = np.zeros((3, self.nShimming), dtype=complex)
+        dataFWHM = np.zeros((3, self.nShimming))
         for ii in range(3):
             for jj in range(self.nShimming):
-                dataFFT[ii, jj] = np.max(np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data[ii, jj, :])))))
+                spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data[ii, jj, :]))))
+                dataFFT[ii, jj] = np.max(spectrum)
+                dataFWHM[ii, jj] = getFHWM(spectrum)
         self.mapVals['amplitudeVSshimming'] = dataFFT
 
         # Get max signal for each excitation
@@ -128,19 +143,32 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         sx = sxVector[np.argmax(dataFFT[0, :])]
         sy = syVector[np.argmax(dataFFT[1, :])]
         sz = szVector[np.argmax(dataFFT[2, :])]
+        fwhm = dataFWHM[2, np.argmax(dataFFT[2, :])]
         print("Shimming X = %0.1f" % (sx / units.sh))
         print("Shimming Y = %0.1f" % (sy / units.sh))
         print("Shimming Z = %0.1f" % (sz / units.sh))
+        print("FHWM = %0.0f Hz" % (fwhm*1e3))
+        print("Homogeneity = %0.0f ppm" % (fwhm*1e3/hw.larmorFreq))
 
         # Shimming plot
         result1 = {'widget': 'curve',
                    'xData': [sxVector / units.sh, syVector / units.sh, szVector / units.sh],
                    'yData': [np.abs(dataFFT[0, :]), np.abs(dataFFT[1, :]), np.abs(dataFFT[2, :])],
                    'xLabel': 'Shimming',
-                   'yLabel': 'Spectrum amplitude',
-                   'title': 'Shimming',
+                   'yLabel': 'a.u.',
+                   'title': 'Spectrum amplitude',
                    'legend': ['X', 'Y', 'Z'],
                    'row': 0,
+                   'col': 0}
+
+        result2 = {'widget': 'curve',
+                   'xData': [sxVector / units.sh, syVector / units.sh, szVector / units.sh],
+                   'yData': [dataFWHM[0, :], dataFWHM[1, :], dataFWHM[2, :]],
+                   'xLabel': 'Shimming',
+                   'yLabel': 'FHWM (kHz)',
+                   'title': 'FWHM',
+                   'legend': ['X', 'Y', 'Z'],
+                   'row': 2,
                    'col': 0}
 
         # Update the shimming in hw_config
@@ -155,7 +183,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.mapVals['shimming0'] = shimming
         self.saveRawData()
 
-        self.out = [result1]
+        self.out = [result1, result2]
         return self.out
 
     def createSequence(self):
