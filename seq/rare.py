@@ -637,7 +637,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
             result2['row'] = 1
             result2['col'] = 0
 
-            return([result1, result2])
+            self.output = [result1, result2]
+            
         else:
             # Plot image
             image = np.abs(self.mapVals['image3D'])
@@ -753,10 +754,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
             # Add results into the output attribute (result1 must be the image to save in dicom)
             self.output = [result1, result2]
 
-            # Save results
-            self.saveRawData()
+        # Save results
+        self.saveRawData()
 
-            return self.output
+        return self.output
 
     def myPhantom(self):
         # Reorganize the fov
