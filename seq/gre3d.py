@@ -83,7 +83,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plotSeq, demo=False):
-        init_gpa = False, # Starts the gpa
+        init_gpa = False  # Starts the gpa
         self.demo = demo
 
         # Set the fov
@@ -512,7 +512,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                        'row': 1,
                        'col': 0}
 
-            return [result1, result2]
+            self.output = [result1, result2]
 
         else:
             # Plot image
@@ -628,7 +628,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             # Add results into the output attribute (result1 must be the image to save in dicom)
             self.output = [result1, result2]
 
-            # Save results
-            self.saveRawData()
+        # Save results
+        self.saveRawData()
 
-            return self.output
+        return self.output
