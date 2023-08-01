@@ -86,6 +86,11 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         init_gpa = False, # Starts the gpa
         self.demo = demo
 
+        # Set the fov
+        self.dfov = self.getFovDisplacement()
+        self.dfov = self.dfov[self.axesOrientation]
+        self.fov = self.fov[self.axesOrientation]
+        
         # Miscellaneous
         resolution = self.fov/self.nPoints
         rfExAmp = self.rfExFA / (self.rfExTime * 1e6 * hw.b1Efficiency) * np.pi / 180
