@@ -79,7 +79,7 @@ class TSEPRE(blankSeq.MRIBLANKSEQ):
         # Readout gradient time
         if self.rdGradTime < self.acqTime:
             self.rdGradTime = self.acqTime
-        self.mapVals['rdGradTime'] = self.rdGradTime
+            self.mapVals['rdGradTime'] = self.rdGradTime*1
 
         # Max gradient amplitude
         rd_grad_amplitude = self.nPoints / (hw.gammaB * self.fov * self.acqTime)
@@ -141,7 +141,7 @@ class TSEPRE(blankSeq.MRIBLANKSEQ):
         grad_rise_time = hw.grad_rise_time * 1e6
 
         # Bandwidth and sampling rate
-        bw = self.nPoints / self.acqTime * hw.oversamplingFactor  # MHz
+        bw = self.nPoints / self.acqTime # MHz
         sampling_period = 1 / bw  # us
 
         # Create sequence
@@ -193,34 +193,37 @@ class TSEPRE(blankSeq.MRIBLANKSEQ):
         return True
 
     def sequenceAnalysis(self, obj=''):
+        # Get images
         signal = np.reshape(self.mapVals['data'], (self.etl, -1))
-        t_vector = np.linspace(-self.acqTime * 1e-3 / 2, self.acqTime * 1e-3 / 2, self.nPoints)
+        img1 = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal[0, :])))
+        img2 = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal[1, :])))
+        x_vector = np.linspace(-self.fov/2, self.fov/2, self.nPoints)
 
-        # Plot signal
+        # Plot image magnitude
         result1 = {'widget': 'curve',
-                   'xData': t_vector,
-                   'yData': [np.abs(signal[0, :]), np.abs(signal[1, :])],
-                   'xLabel': 'Time (ms)',
-                   'yLabel': 'Signal amplitude (mV)',
-                   'title': 'Echo',
-                   'legend': ['1st echo', '2nd echo'],
+                   'xData': x_vector,
+                   'yData': [np.abs(img1), np.abs(img2)],
+                   'xLabel': 'FOV (cm)',
+                   'yLabel': 'Amplitude (a.u.)',
+                   'title': 'Image amplitude',
+                   'legend': ['First echo', 'Second echo'],
                    'row': 0,
                    'col': 0}
 
-        # Plot signal
+        # Plot image phase
         result2 = {'widget': 'curve',
-                   'xData': t_vector,
-                   'yData': [np.angle(signal[0, :]), np.angle(signal[1, :])],
-                   'xLabel': 'Time (ms)',
-                   'yLabel': 'Signal amplitude (mV)',
-                   'title': 'Echo',
-                   'legend': ['abs', 'real', 'imag'],
+                   'xData': x_vector,
+                   'yData': [np.unwrap(np.angle(img1)), np.unwrap(np.angle(img2))],
+                   'xLabel': 'FOV (cm)',
+                   'yLabel': 'Image phase (rads)',
+                   'title': 'Image phase',
+                   'legend': ['First echo', 'Second echo'],
                    'row': 0,
                    'col': 1}
 
         # create self.out to run in iterative mode
-        self.out = [result1, result2]
+        self.output = [result1, result2]
 
         self.saveRawData()
 
-        return self.out
+        return self.output
