@@ -28,9 +28,13 @@ import seq.sweepImage as sweep
 # import seq.autoTuning as autoTuning
 import seq.localizer as localizer
 import seq.MRID as mrid
+import seq.tsePrescan as tsePrescan
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
+
+class TSEPrescan(tsePrescan.TSEPRE):
+    def __init__(self): super(TSEPrescan, self).__init__()
 
 class RAREProtocols(rareProtocols.RAREProtocols):
     def __init__(self): super(RAREProtocols, self).__init__()
@@ -110,6 +114,7 @@ defaultsequences = {
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),
     'Shimming': Shimming(),
+    'TSE_prescan': TSEPrescan(),
     'Localizer': Localizer(),
     'GRE3D': GRE3D(),
     'PETRA': PETRA(),
@@ -117,14 +122,11 @@ defaultsequences = {
     # 'AutoTuning': AutoTuning(),
     'FID': FID(),
     'FIDandNoise': FIDandNoise(),
-
-
     'B1calibration': B1calibration(),
     'TSE': TSE(),
     'EDDYCURRENTS': EDDYCURRENTS(),
     'InversionRecovery': IR(),
     # 'ADCtest': ADCtest(),
-
     'SWEEP': SWEEP(),
     'testSE': testSE(),
 
