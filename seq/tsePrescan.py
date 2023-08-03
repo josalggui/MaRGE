@@ -79,7 +79,7 @@ class TSEPRE(blankSeq.MRIBLANKSEQ):
         # Readout gradient time
         if self.rdGradTime < self.acqTime:
             self.rdGradTime = self.acqTime
-            self.mapVals['rdGradTime'] = self.rdGradTime*1
+            self.mapVals['rdGradTime'] = self.rdGradTime * 1
 
         # Max gradient amplitude
         rd_grad_amplitude = self.nPoints / (hw.gammaB * self.fov * self.acqTime)
