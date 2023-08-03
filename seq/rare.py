@@ -20,6 +20,7 @@ for char in path:
 import numpy as np
 import experiment as ex
 import scipy.signal as sig
+from scipy.stats import linregress
 import configs.hw_config as hw # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
@@ -60,6 +61,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
+        self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
@@ -304,7 +306,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
                     # Refocusing pulse
                     t0 = tEcho-self.echoSpacing/2-self.rfReTime/2-hw.blkTime
-                    self.rfRecPulse(t0, self.rfReTime, rfReAmp, np.pi/2)
+                    self.rfRecPulse(t0, self.rfReTime, rfReAmp, np.pi/2+self.rfPhase*np.pi/180)
 
                     # Dephasing phase and slice gradients
                     gradAmp = np.array([0.0, 0.0, 0.0])
@@ -489,6 +491,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 overData = np.reshape(overData, (-1, self.etl, nRD*hw.oversamplingFactor))
                 #overData = self.fixEchoPosition(dummyData, overData)
                 overData = np.reshape(overData, -1)
+                self.dummyAnalysis()
 
             # Generate dataFull
             dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
@@ -796,6 +799,47 @@ class RARE(blankSeq.MRIBLANKSEQ):
         kspace = np.reshape(kspace_3d, (1, -1))
         
         return kspace
+
+    def dummyAnalysis(self):
+        # Get position vector
+        fov = self.fov[0]
+        n = self.nPoints[0]
+        res = fov / n
+        rd_vec = np.linspace(-fov / 2, fov / 2, n)
+
+        # Get dummy data
+        dummy_pulses = self.mapVals['dummyData'] * 1
+        dummy_pulses = np.reshape(sig.decimate(np.reshape(dummy_pulses, -1), 6, ftype='fir', zero_phase=True),
+                                  (self.etl, -1))
+        dummy1 = dummy_pulses[0, 10:-10]
+        dummy2 = dummy_pulses[1, 10:-10]
+
+        # Calculate 1d projections from odd and even echoes
+        proj1 = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dummy1)))
+        proj2 = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dummy2)))
+        proj1 = proj1 / np.max(np.abs(proj1))
+        proj2 = proj2 / np.max(np.abs(proj2))
+        proj1[np.abs(proj1) < 0.1] = 0
+        proj2[np.abs(proj2) < 0.1] = 0
+
+        # Maks the results
+        rd_1 = rd_vec[np.abs(proj1) != 0]
+        proj1 = proj1[np.abs(proj1) != 0]
+        rd_2 = rd_vec[np.abs(proj2) != 0]
+        proj2 = proj2[np.abs(proj2) != 0]
+
+        # Get phase
+        phase1 = np.unwrap(np.angle(proj1))
+        phase2 = np.unwrap(np.angle(proj2))
+
+        # Do linear regression
+        res1 = linregress(rd_1, phase1)
+        res2 = linregress(rd_2, phase2)
+
+        # Print info
+        print('\nInfo from dummy pulses')
+        print('Phase difference at iso-center: %0.1f º' % ((res2.intercept - res1.intercept) * 180 / np.pi))
+        print('Phase slope difference %0.3f rads/m' % (res2.slope - res1.slope))
         
 
 if __name__=="__main__":
