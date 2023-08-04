@@ -9,7 +9,8 @@ import seq.rare as rare
 import seq.rareProtocols as rareProtocols
 import seq.rareProtocolsTest as rareProtocolsTest
 # import seq.haste as haste
-import seq.gre3d as gre
+import seq.gre3d as gre3d
+import seq.gre1d as gre1d
 import seq.petra as petra
 import seq.fid as fid
 import seq.FIDandNoise as FIDandNoise
@@ -41,8 +42,11 @@ class RAREProtocolsTest(rareProtocolsTest.RAREProtocolsTest):
 class testSE(testSE.testSE):
     def __init__(self): super(testSE, self).__init__()
 
-class GRE3D(gre.GRE3D):
+class GRE3D(gre3d.GRE3D):
     def __init__(self): super(GRE3D, self).__init__()
+
+class GRE1D(gre1d.GRE1D):
+    def __init__(self): super(GRE1D, self).__init__()
 
 class PETRA(petra.PETRA):
     def __init__(self): super(PETRA, self).__init__()
@@ -112,6 +116,7 @@ defaultsequences = {
     'Shimming': Shimming(),
     'Localizer': Localizer(),
     'GRE3D': GRE3D(),
+    'GRE1D': GRE1D(),
     'PETRA': PETRA(),
     # 'HASTE': HASTE(),
     # 'AutoTuning': AutoTuning(),
