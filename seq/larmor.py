@@ -177,7 +177,8 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         return True
 
-    def sequenceAnalysis(self, obj=''):
+    def sequenceAnalysis(self, mode=None):
+        self.mode = mode
         # Load data
         signal = self.mapVals['data']
         acq_time = self.mapVals['acqTime'] * 1e3  # ms
@@ -226,12 +227,16 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                    'col': 0}
 
         # create self.out to run in iterative mode
-        self.out = [result1, result2]
+        self.output = [result1, result2]
 
-        return self.out
+        if self.mode == 'Standalone':
+            self.plotResults()
+
+        return self.output
 
 
 if __name__ == '__main__':
     seq = Larmor()
-    seq.sequenceRun()
-    seq.sequenceAnalysis(obj='Standalone')
+    seq.sequenceAtributes()
+    seq.sequenceRun(demo=True)
+    seq.sequenceAnalysis(mode='Standalone')

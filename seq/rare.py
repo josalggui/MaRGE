@@ -759,7 +759,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         # Save results
         self.saveRawData()
 
-        if self.mode=='Standalone':
+        if self.mode == 'Standalone':
             self.plotResults()
 
         return self.output

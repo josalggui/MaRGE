@@ -178,10 +178,10 @@ class MRIBLANKSEQ:
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
-        Delete the output if it exist in the sequence
+        Delete the output if it exists in the sequence
         """
         # Delete the out attribute if exist
-        if hasattr(self, 'out'): delattr(self, 'out')
+        if hasattr(self, 'output'): delattr(self, 'output')
 
     def saveParams(self):
         """"

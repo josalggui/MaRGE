@@ -6,7 +6,6 @@
 
 import os
 import sys
-
 # *****************************************************************************
 # Add path to the working directory
 path = os.path.realpath(__file__)
@@ -108,7 +107,9 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
 
 
-    def sequenceAnalysis(self, obj=''):
+    def sequenceAnalysis(self, mode=None):
+        self.mode = mode
+
         # Get data
         data = np.reshape(self.mapVals['data'], (3, self.nShimming, -1))
 
@@ -172,7 +173,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                    'col': 0}
 
         # Update the shimming in hw_config
-        if obj != "standalone":
+        if mode != "standalone":
             for seqName in self.sequenceList:
                 self.sequenceList[seqName].mapVals['shimming'] = [np.round(sx / units.sh, decimals=1),
                                                                   np.round(sy / units.sh, decimals=1),
@@ -183,8 +184,12 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.mapVals['shimming0'] = shimming
         self.saveRawData()
 
-        self.out = [result1, result2]
-        return self.out
+        self.output = [result1, result2]
+
+        if self.mode == 'Standalone':
+            self.plotResults()
+
+        return self.output
 
     def createSequence(self):
         self.iniSequence(20, [0.0, 0.0, 0.0])
@@ -278,5 +283,6 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
 if __name__ == '__main__':
     seq = ShimmingSweep()
-    seq.sequenceRun()
-    seq.sequenceAnalysis(obj='Standalone')
+    seq.sequenceAtributes()
+    seq.sequenceRun(demo=True)
+    seq.sequenceAnalysis(mode='Standalone')
