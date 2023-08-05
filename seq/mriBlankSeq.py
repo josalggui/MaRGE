@@ -13,6 +13,7 @@ from scipy.io import savemat, loadmat
 import experiment as ex
 import scipy.signal as sig
 import csv
+import matplotlib.pyplot as plt
 
 # Import dicom saver
 from manager.dicommanager import DICOMImage
@@ -40,7 +41,9 @@ class MRIBLANKSEQ:
         self.rotations = []
         self.dfovs = []
         self.fovs = []
-        self.session = None
+        self.session = {}
+        self.demo = None
+        self.mode = None
         self.flo_dict = {'g0': [[],[]],
                          'g1': [[],[]],
                          'g2': [[],[]],
@@ -175,10 +178,10 @@ class MRIBLANKSEQ:
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
-        Delete the output if it exist in the sequence
+        Delete the output if it exists in the sequence
         """
         # Delete the out attribute if exist
-        if hasattr(self, 'out'): delattr(self, 'out')
+        if hasattr(self, 'output'): delattr(self, 'output')
 
     def saveParams(self):
         """"
@@ -840,7 +843,7 @@ class MRIBLANKSEQ:
         if 'directory' in self.session.keys():
             directory = self.session['directory']
         else:
-            date = date.today()
+            dt2 = date.today()
             date_string = dt2.strftime("%Y.%m.%d")
             directory = 'experiments/acquisitions/%s' % (date_string)
         if not os.path.exists(directory):
@@ -880,7 +883,7 @@ class MRIBLANKSEQ:
             writer.writerows([self.mapNmspc, mapVals])
 
         # Save dcm with the final image
-        if (len(self.output) > 0) and (self.output[0]['widget'] == 'image'):
+        if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode==None):
             self.image2Dicom(fileName = "%s/%s.dcm" % (directory_dcm, file_name))
 
     def image2Dicom(self, fileName):
@@ -1031,6 +1034,50 @@ class MRIBLANKSEQ:
                 setattr(self, key, self.mapVals[key]*self.map_units[key])
 
             x = 0
+
+    def plotResults(self):
+        # Get number of collumns and rows
+        cols = 1
+        rows = 1
+        for item in self.output:
+            if item['row'] + 1 > rows:
+                rows += 1
+            if item['col'] + 1 > cols:
+                cols += 1
+
+        # Create plot window
+        fig, axes = plt.subplots(rows, cols, figsize=(10, 5))
+
+        # Insert plots
+        plot = 0
+        for item in self.output:
+            if item['widget'] == 'image':
+                nz, ny, nx = item['data'].shape
+                plt.subplot(rows, cols, plot+1)
+                plt.imshow(item['data'][int(nz/2), :, :], cmap='gray')
+                plt.title(item['title'])
+                plt.xlabel(item['xLabel'])
+                plt.ylabel(item['yLabel'])
+            elif item['widget'] == 'curve':
+                plt.subplot(rows, cols, plot+1)
+                n = 0
+                for y_data in item['yData']:
+                    plt.plot(item['xData'], y_data, label=item['legend'][n])
+                    n += 1
+                plt.title(item['title'])
+                plt.xlabel(item['xLabel'])
+                plt.ylabel(item['yLabel'])
+            plot += 1
+
+        # Set figure title
+        plt.suptitle(self.mapVals['fileName'])
+
+        # Adjust the layout to prevent overlapping titles
+        plt.tight_layout()
+
+        # Show the plot
+        plt.show()
+
 
     def getParameter(self, key):
         return (self.mapVals[key])

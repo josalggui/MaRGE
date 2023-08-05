@@ -5,7 +5,18 @@ Created on Sat Nov  13 13:45:05 2021
 @author: José Miguel Algarín Guisado
 MRILAB @ I3M
 """
-
+import os
+import sys
+# *****************************************************************************
+# Add path to the working directory
+path = os.path.realpath(__file__)
+ii = 0
+for char in path:
+    if (char == '\\' or char == '/') and path[ii + 1:ii + 14] == 'PhysioMRI_GUI':
+        sys.path.append(path[0:ii + 1] + 'PhysioMRI_GUI')
+        sys.path.append(path[0:ii + 1] + 'marcos_client')
+    ii += 1
+# ******************************************************************************
 import numpy as np
 import experiment as ex
 import scipy.signal as sig
@@ -82,7 +93,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         self.dfovs.append(self.dfov.tolist())
         self.fovs.append(self.fov.tolist())
 
-    def sequenceRun(self, plotSeq, demo=False):
+    def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
         self.demo = demo
 
@@ -474,7 +485,8 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
 
         return True
 
-    def sequenceAnalysis(self, obj=''):
+    def sequenceAnalysis(self, mode=None):
+        self.mode = mode
         # Get axes in strings
         axes_dict = {'x': 0, 'y': 1, 'z': 2}
         axes_keys = list(axes_dict.keys())
@@ -631,4 +643,13 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         # Save results
         self.saveRawData()
 
+        if self.mode == 'Standalone':
+            self.plotResults()
+
         return self.output
+
+if __name__ == '__main__':
+    seq = GRE3D()
+    seq.sequenceAtributes()
+    seq.sequenceRun(demo=True)
+    seq.sequenceAnalysis(mode='Standalone')

@@ -107,7 +107,8 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
         return True
 
-    def sequenceAnalysis(self, obj=''):
+    def sequenceAnalysis(self, mode=None):
+        self.mode = mode
         noiserms = np.std(self.dataTime[1])
         self.mapVals['RMS noise'] = noiserms
         self.mapVals['sampledPoint'] = noiserms # for sweep method
@@ -139,18 +140,19 @@ class Noise(blankSeq.MRIBLANKSEQ):
                    'row': 1,
                    'col': 0}
 
-        self.out = [result1, result2]
+        self.output = [result1, result2]
 
         self.saveRawData()
 
-        return self.out
+        if self.mode == 'Standalone':
+            self.plotResults()
+
+        return self.output
 
 
 if __name__=='__main__':
-    # seq = Noise()
-    # seq.sequenceRun()
-    # seq.sequenceAnalysis(obj='Standalone')
-
-    import pyqtgraph.examples
-    pyqtgraph.examples.run()
+    seq = Noise()
+    seq.sequenceAtributes()
+    seq.sequenceRun(demo=True)
+    seq.sequenceAnalysis(mode='Standalone')
 

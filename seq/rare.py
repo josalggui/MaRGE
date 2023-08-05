@@ -24,9 +24,6 @@ from scipy.stats import linregress
 import configs.hw_config as hw # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import pyqtgraph as pg
-import time
-from phantominator import shepp_logan
 
 #*********************************************************************************
 #*********************************************************************************
@@ -49,7 +46,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 30, 1], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 1, 1], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
@@ -491,7 +488,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 overData = np.reshape(overData, (-1, self.etl, nRD*hw.oversamplingFactor))
                 #overData = self.fixEchoPosition(dummyData, overData)
                 overData = np.reshape(overData, -1)
-                self.dummyAnalysis()
+                if self.etl > 1:
+                    self.dummyAnalysis()
 
             # Generate dataFull
             dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
@@ -593,9 +591,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         return True
 
-    def sequenceAnalysis(self, obj=''):
+    def sequenceAnalysis(self, mode=None):
         nPoints = self.mapVals['nPoints']
         axesEnable = self.mapVals['axesEnable']
+        self.mode = mode
 
         # Get axes in strings
         axes = self.mapVals['axesOrientation']
@@ -760,6 +759,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
         # Save results
         self.saveRawData()
 
+        if self.mode == 'Standalone':
+            self.plotResults()
+
         return self.output
 
     def myPhantom(self):
@@ -809,7 +811,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         # Get dummy data
         dummy_pulses = self.mapVals['dummyData'] * 1
-        dummy_pulses = np.reshape(sig.decimate(np.reshape(dummy_pulses, -1), 6, ftype='fir', zero_phase=True),
+        dummy_pulses = np.reshape(sig.decimate(np.reshape(dummy_pulses, -1),
+                                               hw.oversamplingFactor,
+                                               ftype='fir',
+                                               zero_phase=True),
                                   (self.etl, -1))
         dummy1 = dummy_pulses[0, 10:-10]
         dummy2 = dummy_pulses[1, 10:-10]
@@ -844,4 +849,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
 if __name__=="__main__":
     seq = RARE()
-    seq.myPhantom()
+    seq.sequenceAtributes()
+    seq.sequenceRun(demo=True)
+    seq.sequenceAnalysis(mode='Standalone')
