@@ -74,7 +74,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         else:
             self.bw = self.bw * hw.oversamplingFactor
             samplingPeriod = 1 / self.bw
-            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset*1e-3,
+            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset,
                                       rx_t=samplingPeriod,
                                       init_gpa=init_gpa,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
