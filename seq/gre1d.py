@@ -200,7 +200,8 @@ class GRE1D(blankSeq.MRIBLANKSEQ):
 
         return True
 
-    def sequenceAnalysis(self, obj=''):
+    def sequenceAnalysis(self, mode=None):
+        self.mode = mode
         # Get images
         s0 = self.mapVals['data']
         s1 = s0[int(self.n_rd / 2 - self.nPoints / 2):int(self.n_rd / 2 + self.nPoints / 2)]
@@ -234,13 +235,16 @@ class GRE1D(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # create self.out to run in iterative mode
-        self.out = [result1, result2]
+        self.output = [result1, result2]
 
-        return self.out
+        if self.mode == 'Standalone':
+            self.plotResults()
+
+        return self.output
 
 
 if __name__ == '__main__':
     seq = GRE1D()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=0, demo=True)
-    seq.sequenceAnalysis()
+    seq.sequenceRun(demo=True)
+    seq.sequenceAnalysis(mode='Standalone')

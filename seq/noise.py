@@ -74,7 +74,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         else:
             self.bw = self.bw * hw.oversamplingFactor
             samplingPeriod = 1 / self.bw
-            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset*1e-3,
+            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset,
                                       rx_t=samplingPeriod,
                                       init_gpa=init_gpa,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
@@ -107,7 +107,8 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
         return True
 
-    def sequenceAnalysis(self, obj=''):
+    def sequenceAnalysis(self, mode=None):
+        self.mode = mode
         noiserms = np.std(self.dataTime[1])
         self.mapVals['RMS noise'] = noiserms
         self.mapVals['sampledPoint'] = noiserms # for sweep method
@@ -139,18 +140,19 @@ class Noise(blankSeq.MRIBLANKSEQ):
                    'row': 1,
                    'col': 0}
 
-        self.out = [result1, result2]
+        self.output = [result1, result2]
 
         self.saveRawData()
 
-        return self.out
+        if self.mode == 'Standalone':
+            self.plotResults()
+
+        return self.output
 
 
 if __name__=='__main__':
-    # seq = Noise()
-    # seq.sequenceRun()
-    # seq.sequenceAnalysis(obj='Standalone')
-
-    import pyqtgraph.examples
-    pyqtgraph.examples.run()
+    seq = Noise()
+    seq.sequenceAtributes()
+    seq.sequenceRun(demo=True)
+    seq.sequenceAnalysis(mode='Standalone')
 

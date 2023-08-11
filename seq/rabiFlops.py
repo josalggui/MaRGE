@@ -7,6 +7,18 @@
 @todo:
 
 """
+import os
+import sys
+# *****************************************************************************
+# Add path to the working directory
+path = os.path.realpath(__file__)
+ii = 0
+for char in path:
+    if (char == '\\' or char == '/') and path[ii + 1:ii + 14] == 'PhysioMRI_GUI':
+        sys.path.append(path[0:ii + 1] + 'PhysioMRI_GUI')
+        sys.path.append(path[0:ii + 1] + 'marcos_client')
+    ii += 1
+# ******************************************************************************
 import experiment as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
@@ -168,7 +180,8 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.expt.__del__()
         return True
 
-    def sequenceAnalysis(self, obj=''):
+    def sequenceAnalysis(self, mode=None):
+        self.mode = mode
         nScans = self.mapVals['nScans']
         nSteps = self.mapVals['nSteps']
         nPoints = self.mapVals['nPoints']
@@ -233,8 +246,17 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                    'row': 1,
                    'col': 0}
 
-        self.out = [result1, result2]
+        self.output = [result1, result2]
 
         self.saveRawData()
 
-        return self.out
+        if self.mode == 'Standalone':
+            self.plotResults()
+
+        return self.output
+
+if __name__ == '__main__':
+    seq = RabiFlops()
+    seq.sequenceAtributes()
+    seq.sequenceRun(demo=True)
+    seq.sequenceAnalysis(mode='Standalone')

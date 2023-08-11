@@ -177,7 +177,8 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         return True
 
-    def sequenceAnalysis(self, obj=''):
+    def sequenceAnalysis(self, mode=None):
+        self.mode = mode
         # Load data
         signal = self.mapVals['data']
         acq_time = self.mapVals['acqTime'] * 1e3  # ms
@@ -200,8 +201,6 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         # if obj != 'Standalone':
         #     for sequence in self.sequenceList.values():
         #         sequence.mapVals['larmorFreq'] = hw.larmorFreq
-
-        self.saveRawData()
 
         # Add time signal to the layout
         result1 = {'widget': 'curve',
@@ -226,12 +225,20 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                    'col': 0}
 
         # create self.out to run in iterative mode
-        self.out = [result1, result2]
+        self.output = [result1, result2]
 
-        return self.out
+        # save data once self.output is created
+        self.saveRawData()
+
+        # Plot result in standalone execution
+        if self.mode == 'Standalone':
+            self.plotResults()
+
+        return self.output
 
 
 if __name__ == '__main__':
     seq = Larmor()
-    seq.sequenceRun()
-    seq.sequenceAnalysis(obj='Standalone')
+    seq.sequenceAtributes()
+    seq.sequenceRun(demo=True)
+    seq.sequenceAnalysis(mode='Standalone')
