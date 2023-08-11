@@ -126,7 +126,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             return f2-f1
 
         # Get FFT
-        dataFFT = np.zeros((3, self.nShimming), dtype=complex)
+        dataFFT = np.zeros((3, self.nShimming))
         dataFWHM = np.zeros((3, self.nShimming))
         for ii in range(3):
             for jj in range(self.nShimming):
