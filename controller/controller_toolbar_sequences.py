@@ -371,6 +371,9 @@ class SequenceController(SequenceToolBar):
         """
         # Acquire while iterativeRun is True
         if not self.action_iterate.isChecked():
+            # Generate atributes according to inputs
+            defaultsequences[self.seq_name].sequenceAtributes()
+
             # Create and execute selected sequence
             defaultsequences[self.seq_name].sequenceRun(0, self.main.demo)
 
@@ -411,6 +414,9 @@ class SequenceController(SequenceToolBar):
                 defaultsequences[self.seq_name].fovs.copy()
         else:
             while self.action_iterate.isChecked():
+                # Generate atributes according to inputs
+                defaultsequences[self.seq_name].sequenceAtributes()
+
                 # Create and execute selected sequence
                 defaultsequences[self.seq_name].sequenceRun(0, self.main.demo)
 
