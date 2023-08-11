@@ -30,9 +30,12 @@ import seq.sweepImage as sweep
 import seq.localizer as localizer
 import seq.MRID as mrid
 import seq.tsePrescan as tsePrescan
+import seq.PETRAphysio as PETRAphysio
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
+class PETRAphysio(PETRAphysio.PETRAphysio):
+    def __init__(self): super(PETRAphysio, self).__init__()
 
 class TSEPrescan(tsePrescan.TSEPRE):
     def __init__(self): super(TSEPrescan, self).__init__()
@@ -134,5 +137,6 @@ defaultsequences = {
     # 'ADCtest': ADCtest(),
     'SWEEP': SWEEP(),
     'testSE': testSE(),
+    'PETRAphysio': PETRAphysio(),
 
 }

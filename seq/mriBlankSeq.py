@@ -27,7 +27,7 @@ class MRIBLANKSEQ:
     mapLen = {}
     plotSeq = 1  # it plots the sequence
     meta_data = {} # Dictionary to save meta data for dicom file
-    output = []
+    # output = []
 
     def __init__(self):
         self.mapKeys = []
@@ -716,7 +716,7 @@ class MRIBLANKSEQ:
         """
         for kk in range(nStepsGradRise):
             tRamp = tStart + gradRiseTime * kk / nStepsGradRise
-            gAmp = (g0 + ((gf - g0) * (kk + 1) / nStepsGradRise)) / hw.gFactor[gAxis]
+            gAmp = (g0 + ((gf - g0) * (kk + 1) / nStepsGradRise)) / hw.gFactor[gAxis] + shimming[gAxis]
             self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], np.array([tRamp])), axis=0)
             self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], np.array([gAmp])), axis=0)
 

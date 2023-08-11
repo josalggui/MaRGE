@@ -202,8 +202,6 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         #     for sequence in self.sequenceList.values():
         #         sequence.mapVals['larmorFreq'] = hw.larmorFreq
 
-        self.saveRawData()
-
         # Add time signal to the layout
         result1 = {'widget': 'curve',
                    'xData': tVector,
@@ -229,6 +227,10 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         # create self.out to run in iterative mode
         self.output = [result1, result2]
 
+        # save data once self.output is created
+        self.saveRawData()
+
+        # Plot result in standalone execution
         if self.mode == 'Standalone':
             self.plotResults()
 

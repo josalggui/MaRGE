@@ -135,7 +135,7 @@ class SequenceController(SequenceToolBar):
                 defaultsequences[self.seq_name].deleteOutput()
         self.old_seq_name = copy.copy(self.seq_name)
 
-        if not hasattr(defaultsequences[self.seq_name], 'out'):
+        if not hasattr(defaultsequences[self.seq_name], 'output'):
             self.new_run = True
 
         # Save sequence list into the current sequence, just in case you need to do sweep
@@ -220,12 +220,12 @@ class SequenceController(SequenceToolBar):
             self.main.figures_layout.addWidget(self.label, row=0, col=0, colspan=n_columns)
 
             # Iterate in parallel thread (only for 1d plots)
-            if self.action_iterate.isChecked() and hasattr(defaultsequences[self.seq_name], 'out'):
+            if self.action_iterate.isChecked() and hasattr(defaultsequences[self.seq_name], 'output'):
                 thread = threading.Thread(target=self.repeatAcquisition)
                 thread.start()
 
             # Deactivate the iterative buttom if sequence is not iterable (2d and 3d plots)
-            if not hasattr(defaultsequences[self.seq_name], 'out') and self.action_iterate.isChecked():
+            if not hasattr(defaultsequences[self.seq_name], 'output') and self.action_iterate.isChecked():
                 self.action_iterate.toggle()
 
         else:
@@ -371,6 +371,9 @@ class SequenceController(SequenceToolBar):
         """
         # Acquire while iterativeRun is True
         if not self.action_iterate.isChecked():
+            # Generate atributes according to inputs
+            defaultsequences[self.seq_name].sequenceAtributes()
+
             # Create and execute selected sequence
             defaultsequences[self.seq_name].sequenceRun(0, self.main.demo)
 
@@ -411,6 +414,9 @@ class SequenceController(SequenceToolBar):
                 defaultsequences[self.seq_name].fovs.copy()
         else:
             while self.action_iterate.isChecked():
+                # Generate atributes according to inputs
+                defaultsequences[self.seq_name].sequenceAtributes()
+
                 # Create and execute selected sequence
                 defaultsequences[self.seq_name].sequenceRun(0, self.main.demo)
 

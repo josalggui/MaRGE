@@ -312,7 +312,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         while repe_index_global<n_repetitions:
             n_batches += 1
             if not demo:
-                self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset, rx_t=sampling_period,
+                self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6, rx_t=sampling_period,
                                           init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
                 sampling_period = self.expt.get_rx_ts()[0]
                 bw = 1/sampling_period/hw.oversamplingFactor # MHz

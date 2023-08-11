@@ -126,7 +126,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             return f2-f1
 
         # Get FFT
-        dataFFT = np.zeros((3, self.nShimming), dtype=complex)
+        dataFFT = np.zeros((3, self.nShimming))
         dataFWHM = np.zeros((3, self.nShimming))
         for ii in range(3):
             for jj in range(self.nShimming):
@@ -182,9 +182,10 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                     np.round(sy / units.sh, decimals=1),
                     np.round(sz / units.sh, decimals=1)]
         self.mapVals['shimming0'] = shimming
-        self.saveRawData()
 
         self.output = [result1, result2]
+
+        self.saveRawData()
 
         if self.mode == 'Standalone':
             self.plotResults()
