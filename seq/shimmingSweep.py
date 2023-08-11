@@ -182,9 +182,10 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                     np.round(sy / units.sh, decimals=1),
                     np.round(sz / units.sh, decimals=1)]
         self.mapVals['shimming0'] = shimming
-        self.saveRawData()
 
         self.output = [result1, result2]
+
+        self.saveRawData()
 
         if self.mode == 'Standalone':
             self.plotResults()
