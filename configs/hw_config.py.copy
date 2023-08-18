@@ -24,7 +24,6 @@ larmorFreq = 3.066 # MHz
 cicDelayPoints = 3 # to account for signal delay from red pitaya due to cic filter
 addRdPoints = 10 # to account for wrong first points after decimation
 adcFactor = 13.788 # mV/adcUnit
-arduinoPort = 'COM7'
 scanner_name = "Physio V1.01"
 antenna_dict = {"RF01": np.pi/(0.3*70), "RF02": np.pi/(0.3*70)}
 fov = [20.0, 20.0, 20.0]

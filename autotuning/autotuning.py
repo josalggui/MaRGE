@@ -71,13 +71,17 @@ class VNA:
         self.data = []
 
     def connect(self):
-        self.interface = Hardware.get_interfaces()[0]
-        self.interface.open()
-        self.interface.timeout = 0.05
-        time.sleep(0.1)
-        self.vna = Hardware.get_VNA(self.interface)
-        self.frequencies = np.array(self.vna.readFrequencies()) * 1e-6  # MHz
-        print("\nConnected to nanoVNA for auto-tuning")
+        try:
+            self.interface = Hardware.get_interfaces()[0]
+            self.interface.open()
+            self.interface.timeout = 0.05
+            time.sleep(0.1)
+            self.vna = Hardware.get_VNA(self.interface)
+            self.frequencies = np.array(self.vna.readFrequencies()) * 1e-6  # MHz
+            print("\nConnected to nanoVNA for auto-tuning")
+        except:
+            print("\nNo nanoVNA detected for auto-tuning")
+            return
 
     def getFrequency(self):
         return self.frequencies

@@ -9,6 +9,7 @@ configs/hw_config.py
 *.dcm
 *.pptx
 configs/sys_config.py
+configs/autotuning.py
 doc/
 venv/
 marcos_fpga_rp-122.bit

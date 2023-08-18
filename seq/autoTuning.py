@@ -89,7 +89,6 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             self.runAutoTuning()
         else:
             self.arduino.send(self.series + self.tuning + self.matching + self.switch)
-            print(self.arduino.receive())
 
     def sequenceAnalysis(self, mode = None):
         self.mode = mode
