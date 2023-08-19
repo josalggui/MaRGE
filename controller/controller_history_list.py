@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QMenu, QAction
 
 from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from controller.controller_plot1d import Plot1DController as SpectrumPlot
+from controller.controller_smith_chart import PlotSmithChartController as SmithChart
 from seq.sequences import defaultsequences
 from widgets.widget_history_list import HistoryListWidget
 
@@ -263,6 +264,14 @@ class HistoryListController(HistoryListWidget):
                                     x_label=item['xLabel'],
                                     y_label=item['yLabel'],
                                     title=item['title'])
+                self.main.figures_layout.addWidget(plot, row=item['row'] + 1, col=item['col'])
+            elif item['widget'] == 'smith':
+                plot = SmithChart(x_data=item['xData'],
+                                  y_data=item['yData'],
+                                  legend=item['legend'],
+                                  x_label=item['xLabel'],
+                                  y_label=item['yLabel'],
+                                  title=item['title'])
                 self.main.figures_layout.addWidget(plot, row=item['row'] + 1, col=item['col'])
         self.main.figures_layout.addWidget(label, row=0, col=0, colspan=n_columns)
 
