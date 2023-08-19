@@ -69,7 +69,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='tuning', string='Tuning capacitor', val='00000', field='RF')
         self.addParameter(key='matching', string='Matching capacitor', val='00000', field='RF')
         self.addParameter(key='switch', string='Switch', val='0', field='RF')
-        self.addParameter(key='test', string='Test', val=0, field='RF')
+        self.addParameter(key='test', string='Test', val=1, field='RF')
 
         self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "1")
 
@@ -102,11 +102,16 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             self.arduino.send(self.series + self.tuning + self.matching + self.switch)
             if self.vna.device is not None:
                 s11, impedance = self.vna.getS11(self.larmorFreq)
-                r0 = impedance.real
-                x0 = impedance.imag
-                print("\nInput impedance:")
-                print("R = %0.2f Ohms" % r0)
-                print("X = %0.2f Ohms" % x0)
+                self.mapVals['s11'] = s11
+                s11r = np.real(s11)
+                s11i = np.imag(s11)
+                if s11i >= 0:
+                    print("S11 = %0.3f + j %0.3f" % (s11r, s11i))
+                else:
+                    print("S11 = %0.3f - j %0.3f" % (s11r, np.abs(s11i)))
+                print("R = %0.2f Ohms" % np.real(impedance))
+                print("X = %0.2f Ohms" % np.imag(impedance))
+                self.arduino.send(self.series + self.tuning + self.matching + "1")
             else:
                 return False
 
@@ -116,13 +121,14 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.mode = mode
         f_vec = self.vna.getFrequency()
         s_vec = self.vna.getData()
-        s11 = self.mapVals['s11']
+        s11 = np.reshape(self.mapVals['s11'], -1)
+        s11 = np.concatenate((s11, s11), axis=0)
 
         # Plot signal versus time
         result1 = {'widget': 'curve',
-                   'xData': f_vec - self.larmorFreq * 1e-6,
+                   'xData': (f_vec - self.larmorFreq) * 1e3,
                    'yData': [20 * np.log10(np.abs(s_vec))],
-                   'xLabel': 'Frequency (MHz)',
+                   'xLabel': 'Frequency (kHz)',
                    'yLabel': 'S11 (dB)',
                    'title': 'Reflection coefficient',
                    'legend': [''],
@@ -135,11 +141,11 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                    'xLabel': 'Real(S11)',
                    'yLabel': 'Imag(S11)',
                    'title': 'Smith chart',
-                   'legend': [''],
+                   'legend': ['', ''],
                    'row': 0,
                    'col': 1}
 
-        self.output = [result1]
+        self.output = [result1, result2]
 
         self.saveRawData()
 
@@ -236,10 +242,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             print("S11 = %0.3f + j %0.3f" % (s11r, s11i))
         else:
             print("S11 = %0.3f - j %0.3f" % (s11r, np.abs(s11i)))
-        if x >= 0:
-            print("Z = %0.1f + j %0.1f Ohms" % (r, x))
-        else:
-            print("Z = %0.1f - j %0.1f Ohms" % (r, np.abs(x)))
+        print("R = %0.2f Ohms" % np.real(z))
+        print("X = %0.2f Ohms" % np.imag(z))
 
     def getCsS(self, n0, stateCt, stateCm):
         print("\nObtaining series capacitor...")
