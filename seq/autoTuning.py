@@ -71,6 +71,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='switch', string='Switch', val='0', field='RF')
         self.addParameter(key='test', string='Test', val=0, field='RF')
 
+        self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "1")
+
     def sequenceInfo(self):
         print("\nRF automatic impedance matching")
         print("Author: Dr. J.M. Algarín")
@@ -85,19 +87,40 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
     def sequenceRun(self, plotSeq=0, demo=False):
         self.demo = demo
 
+        if self.arduino.device is None:
+            print("\nNo Arduino found for auto-tuning.")
+            return False
+
+        if self.vna.device is None:
+            print("\nNo nanoVNA found for auto-tuning.")
+            print("Only test mode.")
+            self.test = 1
+
         if self.test == 0:
             self.runAutoTuning()
         else:
             self.arduino.send(self.series + self.tuning + self.matching + self.switch)
+            if self.vna.device is not None:
+                s11, impedance = self.vna.getS11(self.larmorFreq)
+                r0 = impedance.real
+                x0 = impedance.imag
+                print("\nInput impedance:")
+                print("R = %0.2f Ohms" % r0)
+                print("X = %0.2f Ohms" % x0)
+            else:
+                return False
 
-    def sequenceAnalysis(self, mode = None):
+        return True
+
+    def sequenceAnalysis(self, mode=None):
         self.mode = mode
         f_vec = self.vna.getFrequency()
         s_vec = self.vna.getData()
+        s11 = self.mapVals['s11']
 
         # Plot signal versus time
         result1 = {'widget': 'curve',
-                   'xData': f_vec,
+                   'xData': f_vec - self.larmorFreq * 1e-6,
                    'yData': [20 * np.log10(np.abs(s_vec))],
                    'xLabel': 'Frequency (MHz)',
                    'yLabel': 'S11 (dB)',
@@ -105,6 +128,16 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                    'legend': [''],
                    'row': 0,
                    'col': 0}
+
+        result2 = {'widget': 'smith',
+                   'xData': [np.real(s11), np.real(s_vec)],
+                   'yData': [np.imag(s11), np.imag(s_vec)],
+                   'xLabel': 'Real(S11)',
+                   'yLabel': 'Imag(S11)',
+                   'title': 'Smith chart',
+                   'legend': [''],
+                   'row': 0,
+                   'col': 1}
 
         self.output = [result1]
 
@@ -183,12 +216,30 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
         stateCm = self.getCmS(stateCm, stateCs, stateCt)
 
-        stateCs = self.getCsS(stateCs, stateCt, stateCm)
+        stateCs, s11 = self.getCsS(stateCs, stateCt, stateCm)
 
         self.arduino.send(self.states[stateCs] + self.states[stateCt] + self.states[stateCm] + "1")
 
+        self.mapVals['series'] = self.states[stateCs]
+        self.mapVals['tuning'] = self.states[stateCt]
+        self.mapVals['matching'] = self.states[stateCm]
+        self.mapVals['s11'] = s11
+        s11r = np.real(s11)
+        s11i = np.imag(s11)
+        z = 50*(1+s11)/(1-s11)
+        r = np.real(z)
+        x = np.imag(z)
+
         print("\nFinal state")
         print(self.states[stateCs] + self.states[stateCt] + self.states[stateCm])
+        if s11i >= 0:
+            print("S11 = %0.3f + j %0.3f" % (s11r, s11i))
+        else:
+            print("S11 = %0.3f - j %0.3f" % (s11r, np.abs(s11i)))
+        if x >= 0:
+            print("Z = %0.1f + j %0.1f Ohms" % (r, x))
+        else:
+            print("Z = %0.1f - j %0.1f Ohms" % (r, np.abs(x)))
 
     def getCsS(self, n0, stateCt, stateCm):
         print("\nObtaining series capacitor...")
@@ -239,7 +290,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         print("S11 = %0.2f dB" % (20 * np.log10(np.abs(s11))))
         print("R = %0.2f Ohms" % r0)
         print("X = %0.2f Ohms" % x0)
-        return stateCs
+        return stateCs, s11
 
     def getCsZ(self, stateCt, stateCm, auto):
         # Sweep series impedances until reactance goes higher than 50 Ohms
@@ -332,7 +383,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         print("S11 = %0.2f dB" % (20 * np.log10(np.abs(s11))))
         print("R = %0.2f Ohms" % r0)
         print("X = %0.2f Ohms" % x0)
-        return stateCt
+        return stateCt, s11
 
     def getCtZ(self, n0, stateCs, stateCm, auto):
         # Sweep tuning capacitances until resistance goes higher than 50 Ohms
@@ -418,7 +469,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         print("S11 = %0.2f dB" % (20 * np.log10(np.abs(s11))))
         print("R = %0.2f Ohms" % r0)
         print("X = %0.2f Ohms" % x0)
-        return stateCm
+        return stateCm, s11
 
     def getCmZ(self, n0, stateCs, stateCt, auto):
         # Sweep matching capacitances until reactance goes negative
@@ -454,100 +505,6 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         print("X = %0.2f Ohms" % x0)
 
         return stateCm
-
-
-# class AutoTuningTest(blankSeq.MRIBLANKSEQ):
-#     def __init__(self):
-#         super(AutoTuningTest, self).__init__()
-#         # Input the parameters
-#         self.state = None
-#         self.seriesTarget = None
-#         self.state0 = None
-#         self.frequencies = None
-#         self.expt = None
-#         self.threadpool = None
-#
-#         # Open arduino serial port
-#         self.arduino = serial.Serial(port=hw.arduinoPort, baudrate=115200, timeout=.1)
-#         print('\nArduino connected!')
-#         time.sleep(1)
-#
-#         # Initial state
-#         self.arduino.write('0000000000000000'.encode())
-#
-#         # Read arduino state
-#         while self.arduino.in_waiting == 0:
-#             time.sleep(0.1)
-#         result = self.arduino.readline()
-#
-#         # Parameters
-#         self.addParameter(key='seqName', string='AutoTuningInfo', val='AutoTuning')
-#         self.addParameter(key='seriesTarget', string='Series target (Ohms)', val=50.0, field='RF')
-#         self.addParameter(key='iterations', string='Max iterations', val=10, field='RF')
-#         self.addParameter(key='state', string="State", val='0000000000000000', field='RF')
-#
-#
-#
-#     def sequenceInfo(self):
-#         print("\n RF Auto-tuning")
-#         print("Author: Dr. J.M. Algarín")
-#         print("Contact: josalggui@i3m.upv.es")
-#         print("mriLab @ i3M, CSIC, Spain")
-#         print("Look for the best combination of tuning/matching.")
-#         print("Specific hardware from MRILab @ i3M is required. \n")
-#
-#     def sequenceTime(self):
-#         return 0  # minutes, scanTime
-#
-#     def sequenceRun(self, plotSeq=0):
-#         # Create the inputs automatically as class properties
-#         for key in self.mapKeys:
-#             setattr(self, key, self.mapVals[key])
-#
-#         # Run sequence continuously
-#         self.threadpool = QThreadPool()
-#         print("Multithreading with maximum %d threads \n" % self.threadpool.maxThreadCount())
-#         worker = Worker(self.runAutoTuning)  # Any other args, kwargs are passed to the run function
-#         self.threadpool.start(worker)
-#
-#     def sequenceAnalysis(self, obj=''):
-#         # self.mapVals['bestSState'] = self.bestSState
-#         # self.mapVals['bestTmState'] = self.bestTmState
-#         # self.mapVals['minVoltage'] = self.vMin
-#         self.saveRawData()
-#
-#         return([])
-#
-#     def runAutoTuning(self):
-#         # Open nanoVNA
-#         # scan serial ports and connect
-#         interface = get_interfaces()[0]
-#         interface.open()
-#         interface.timeout = 0.05
-#         time.sleep(0.1)
-#         self.vna = get_VNA(interface)
-#
-#         # Get frequencies
-#         self.frequencies = np.array(self.vna.readFrequencies()) * 1e-6
-#         self.idf = np.argmin(abs(self.frequencies - hw.larmorFreq))
-#
-#         # Get initial impedance
-#         self.arduino.write(self.state.encode())
-#         while self.arduino.in_waiting == 0:
-#             time.sleep(0.1)
-#         result = self.arduino.readline()
-#         s11 = np.array(
-#             [float(value) for value in
-#              self.vna.readValues("data 0")[self.idf].split(" ")])  # "data 0"->S11, "data 1"->S21
-#         s11 = s11[0] + s11[1] * 1j
-#         impedance = 50 * (1. + s11) / (1. - s11)
-#         r0 = impedance.real
-#         x0 = impedance.imag
-#         print("\nInput impedance:")
-#         print("R = %0.2f Ohms" % r0)
-#         print("X = %0.2f Ohms" % x0)
-#
-#         interface.close()
 
 
 if __name__ == '__main__':
