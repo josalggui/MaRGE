@@ -38,16 +38,24 @@ class PlotSmithChartController(PlotSmithChartWidget):
         theta = np.linspace(0, 2*np.pi, 100)
         x0 = np.cos(theta)
         y0 = np.sin(theta)
-        x1 = 0.25 + 0.5 * np.cos(theta)
+        x1 = 0.5 + 0.5 * np.cos(theta)
         y1 = 0.5 * np.sin(theta)
-        x_smith = np.concatenate((x0, x1), axis=0)
-        y_smith = np.concatenate((y0, y1), axis=0)
+        x2 = np.array([1, -1, 1])
+        y2 = np.array([0, 0, 0])
+        x3 = 0.1*np.cos(theta)
+        y3 = 0.1*np.sin(theta)
+        x_smith = np.concatenate((x0, x1, x2, x3), axis=0)
+        y_smith = np.concatenate((y0, y1, y2, y3), axis=0)
+        l_smith = 'Smith chart'
+
+        # Add smith chart to plots
         if type(x_data) is list:
             x_data.append(x_smith)
         else:
             x_data = [x_data]
             x_data.append(x_smith)
-        y_data = [y_data].append(y_data)
+        y_data.append(y_smith)
+        legend.append(l_smith)
 
         # Add lines to plot_item
         n_lines = len(y_data)
@@ -62,14 +70,16 @@ class PlotSmithChartController(PlotSmithChartWidget):
             else:
                 x = x_data.copy()
             y = y_data[line]
-            if line == 1:
+            if line == 0:
                 self.lines.append(self.plot_item.plot(x, y, pen=self.pen[line], name=legend[line], symbol='o'))
+            elif line == 2:
+                self.lines.append(self.plot_item.plot(x, y, pen=self.pen[6], name=legend[line]))
             else:
                 self.lines.append(self.plot_item.plot(x, y, pen=self.pen[line], name=legend[line]))
-            if x[0] < x_min:
-                x_min = x[0]
-            if x[-1] > x_max:
-                x_max = x[-1]
+            if np.min(x) < x_min:
+                x_min = np.min(x)
+            if np.max(x) > x_max:
+                x_max = np.max(x)
             if np.min(y) < y_min:
                 y_min = np.min(y)
             if np.max(y) > y_max:
