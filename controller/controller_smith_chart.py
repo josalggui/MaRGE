@@ -5,6 +5,7 @@
 
 """
 import numpy as np
+import copy
 
 from widgets.widget_smith_chart import PlotSmithChartWidget
 
@@ -25,8 +26,8 @@ class PlotSmithChartController(PlotSmithChartWidget):
         TODO
         """
         super(PlotSmithChartController, self).__init__()
-        self.y_data = y_data
-        self.x_data = x_data
+        self.y_data = copy.copy(y_data)
+        self.x_data = copy.copy(x_data)
         self.x_label = x_label
         self.y_label = y_label
         self.title = title
@@ -49,27 +50,27 @@ class PlotSmithChartController(PlotSmithChartWidget):
         l_smith = 'Smith chart'
 
         # Add smith chart to plots
-        if type(x_data) is list:
-            x_data.append(x_smith)
+        if type(self.x_data) is list:
+            self.x_data.append(x_smith)
         else:
-            x_data = [x_data]
-            x_data.append(x_smith)
-        y_data.append(y_smith)
+            self.x_data = [self.x_data]
+            self.x_data.append(x_smith)
+        self.y_data.append(y_smith)
         legend.append(l_smith)
 
         # Add lines to plot_item
-        n_lines = len(y_data)
+        n_lines = len(self.y_data)
         self.lines = []
         x_min = 0
         x_max = 0
         y_min = 0
         y_max = 0
         for line in range(n_lines):
-            if type(x_data) is list:
-                x = x_data[line]
+            if type(self.x_data) is list:
+                x = self.x_data[line]
             else:
-                x = x_data.copy()
-            y = y_data[line]
+                x = self.x_data.copy()
+            y = self.y_data[line]
             if line == 0:
                 self.lines.append(self.plot_item.plot(x, y, pen=self.pen[line], name=legend[line], symbol='o'))
             elif line == 2:
