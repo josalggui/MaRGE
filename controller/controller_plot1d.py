@@ -31,6 +31,7 @@ class Plot1DController(Plot1DWidget):
         pen: A list of QPen objects representing the line colors.
 
     """
+
     def __init__(self,
                  x_data,  # numpy array
                  y_data,  # list of numpy array
@@ -80,10 +81,13 @@ class Plot1DController(Plot1DWidget):
                 x = x_data.copy()
             y = y_data[line]
             self.lines.append(self.plot_item.plot(x, y, pen=self.pen[line], name=legend[line]))
-            if x[0] < x_min:
-                x_min = x[0]
-            if x[-1] > x_max:
-                x_max = x[-1]
+            if line == 0:
+                x_min = np.min(x)
+                x_max = np.max(x)
+            if np.min(x) < x_min:
+                x_min = np.min(x)
+            if np.max(x) > x_max:
+                x_max = np.max(x)
             if np.min(y) < y_min:
                 y_min = np.min(y)
             if np.max(y) > y_max:

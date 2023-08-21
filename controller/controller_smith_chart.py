@@ -73,6 +73,8 @@ class PlotSmithChartController(PlotSmithChartWidget):
             y = self.y_data[line]
             if line == 0:
                 self.lines.append(self.plot_item.plot(x, y, pen=self.pen[line], name=legend[line], symbol='o'))
+                x_min = np.min(x)
+                x_max = np.max(x)
             elif line == 2:
                 self.lines.append(self.plot_item.plot(x, y, pen=self.pen[6], name=legend[line]))
             else:
