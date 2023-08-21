@@ -84,7 +84,6 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         return True
 
     def sequenceAnalysis(self, obj=''):
-        nPoints = np.array(self.seq.mapVals['nPoints'])
         nSteps = [self.mapVals['nSteps0'], self.mapVals['nSteps1']]
         start = [self.mapVals['start0'], self.mapVals['start1']]
         end = [self.mapVals['end0'], self.mapVals['end1']]
@@ -93,6 +92,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
 
         if 'sampledCartesian' in self.seq.mapVals:    # In case of images
             # Initialize data and image variables as zeros
+            nPoints = np.array(self.seq.mapVals['nPoints'])
             dataSteps = np.zeros((nSteps[0] * nSteps[1], nPoints[1], nPoints[0]), dtype=complex)
             imageSteps = dataSteps
 
@@ -138,8 +138,9 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                        'row': 1,
                        'col': 0}
 
+            self.output = [result1, result2]
+
             self.saveRawData()
-            return [result1, result2]
 
         elif 'sampledPoint' in self.seq.mapVals:  # In case of points (calibration sequences)
             image = np.zeros((1, nSteps[0], nSteps[1]), dtype=complex)
@@ -172,8 +173,12 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                            'row': 0,
                            'col': 0}
                 self.mapVals['sweepResult'] = [parVector0, np.abs(image)]
-            self.saveRawData()
-            return [result1]
+
+                self.output = [result1]
+
+                self.saveRawData()
+
+            return self.output
 
 if __name__=='__main__':
     seq = SweepImage()
