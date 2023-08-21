@@ -45,7 +45,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.matching = None
         self.tuning = None
         self.series = None
-        self.seriesTarget = 50
+        self.seriesTarget = 60
+        self.tuningTarget = 55
         self.state0 = None
         self.frequencies = None
         self.expt = None
@@ -54,12 +55,12 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
         # Parameters
         self.addParameter(key='seqName', string='AutoTuningInfo', val='AutoTuning')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.059, field='IM')
-        self.addParameter(key='series', string='Series capacitor', val='01111', field='IM')
-        self.addParameter(key='tuning', string='Tuning capacitor', val='11111', field='IM')
-        self.addParameter(key='matching', string='Matching capacitor', val='01111', field='IM')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.048, field='IM')
+        self.addParameter(key='series', string='Series capacitor', val='11011', field='IM')
+        self.addParameter(key='tuning', string='Tuning capacitor', val='10000', field='IM')
+        self.addParameter(key='matching', string='Matching capacitor', val='10011', field='IM')
         self.addParameter(key='switch', string='Switch', val='0', field='IM')
-        self.addParameter(key='test', string='Test', val='auto', field='IM',
+        self.addParameter(key='test', string='Test', val='manual', field='IM',
                           tip='Choose one option: auto, manual, series, tunin or matching')
 
         # Connect to Arduino and set the initial state
@@ -265,18 +266,17 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         return True
 
     def runManual(self):
-        self.arduino.send(self.series + self.tuning + self.matching + self.switch)
+        self.arduino.send(self.series + self.tuning + self.matching + "0")
         if self.vna.device is not None:
             s11, impedance = self.vna.getS11(self.larmorFreq)
+            self.s11.append(s11)
             self.mapVals['s11'] = s11
-            s11r = np.real(s11)
-            s11i = np.imag(s11)
-            if s11i >= 0:
-                print("S11 = %0.3f + j %0.3f" % (s11r, s11i))
-            else:
-                print("S11 = %0.3f - j %0.3f" % (s11r, np.abs(s11i)))
-            print("R = %0.2f Ohms" % np.real(impedance))
-            print("X = %0.2f Ohms" % np.imag(impedance))
+            s11dB = 20 * np.log10(np.abs(s11))
+            r = impedance.real
+            x = impedance.imag
+            print("\nS11 = %0.2f dB" % s11dB)
+            print("R = %0.2f Ohms" % r)
+            print("X = %0.2f Ohms" % x)
             self.arduino.send(self.series + self.tuning + self.matching + "1")
             return True
         else:
@@ -436,7 +436,10 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         if s11dB <= -20:
             stateCs = n[-1]
         else:
-            stateCs = n[np.argmin(np.abs(np.array(x0) - self.seriesTarget))]
+            try:
+                stateCs = n[np.argmin(np.abs(np.array(x0) - self.seriesTarget))]
+            except:
+                stateCs = n0
         print("\nBest state:")
         print(self.states[stateCs])
 
@@ -524,9 +527,9 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         print("X = %0.2f Ohms" % x)
         r0 = [np.real(impedance)]
 
-        if r0[-1] < 50:
+        if r0[-1] < self.tuningTarget:
             step = 1
-            while r0[-1] < 50.0 and n[-1]+step < 32 and s11dB > -20:
+            while r0[-1] < self.tuningTarget and n[-1]+step < 32 and s11dB > -20:
                 n.append(n[-1]+step)
                 self.arduino.send(self.states[stateCs] + self.states[n[-1]] + self.states[stateCm] + "0")
                 s11, impedance = self.vna.getS11(self.larmorFreq)
@@ -542,7 +545,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                 r0.append(r)
         else:
             step = -1
-            while r0[-1] > 50.0 and n[-1]+step >= 0 and s11dB > -20:
+            while r0[-1] > self.tuningTarget and n[-1]+step >= 0 and s11dB > -20:
                 n.append(n[-1] + step)
                 self.arduino.send(self.states[stateCs] + self.states[n[-1]] + self.states[stateCm] + "0")
                 s11, impedance = self.vna.getS11(self.larmorFreq)
@@ -561,7 +564,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         if s11dB <= -20:
             stateCt = n[-1]
         else:
-            stateCt = n[np.argmin(np.abs(np.array(r0) - 50.0))]
+            stateCt = n[np.argmin(np.abs(np.array(r0) - self.tuningTarget))]
         print("\nBest state:")
         print(self.states[stateCt])
 
