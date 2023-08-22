@@ -233,6 +233,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         # Check current status
         self.arduino.send(self.states[stateCs] + self.states[stateCt] + self.states[stateCm] + "0")
         s11, impedance = self.vna.getS11(self.larmorFreq)
+        self.addValues(s11, self.series, self.tuning, self.matching, stateCs, stateCt, stateCm)
         s11dB = 20 * np.log10(np.abs(s11))
 
         # Iterate to find the best configuration
@@ -241,13 +242,19 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             stateCt = self.getCtZ(stateCs, 0, 16)
             stateCm = self.getCmZ(stateCs, stateCt, 16)
 
+        # Get the best state from all measured states
+        idx = np.argmin(self.s11_db_hist)
+        stateCs = self.n_aux[0][idx]
+        stateCt = self.n_aux[1][idx]
+        stateCm = self.n_aux[2][idx]
         # Measure the best state
         self.arduino.send(self.states[stateCs] + self.states[stateCt] + self.states[stateCm] + "0")
         s11, impedance = self.vna.getS11(self.larmorFreq)
-        self.addValues(s11, cs, ct, cm, stateCs, stateCt, stateCm)
+        self.addValues(s11, self.states[stateCs], self.states[stateCt], self.states[stateCm], stateCs, stateCt, stateCm)
         s11dB = 20 * np.log10(np.abs(s11))
         r = impedance.real
         x = impedance.imag
+
         print("\nBest state:")
         print(self.states[stateCs] + self.states[stateCt] + self.states[stateCm])
         print("S11 = %0.2f dB" % s11dB)
@@ -260,18 +267,24 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             stateCt = self.getCtZ(stateCs, 0, 16)
             stateCm = self.getCmZ(stateCs, stateCt, 16)
 
-            # Measure the best state
-            self.arduino.send(self.states[stateCs] + self.states[stateCt] + self.states[stateCm] + "0")
-            s11, impedance = self.vna.getS11(self.larmorFreq)
-            self.addValues(s11, cs, ct, cm, stateCs, stateCt, stateCm)
-            s11dB = 20 * np.log10(np.abs(s11))
-            r = impedance.real
-            x = impedance.imag
-            print("\nBest state:")
-            print(self.states[stateCs] + self.states[stateCt] + self.states[stateCm])
-            print("S11 = %0.2f dB" % s11dB)
-            print("R = %0.2f Ohms" % r)
-            print("X = %0.2f Ohms" % x)
+
+        # Get the best state from all measured states
+        idx = np.argmin(self.s11_db_hist)
+        stateCs = self.n_aux[0][idx]
+        stateCt = self.n_aux[1][idx]
+        stateCm = self.n_aux[2][idx]
+        self.arduino.send(self.states[stateCs] + self.states[stateCt] + self.states[stateCm] + "0")
+        s11, impedance = self.vna.getS11(self.larmorFreq)
+        self.addValues(s11, self.states[stateCs], self.states[stateCt], self.states[stateCm], stateCs, stateCt, stateCm)
+        s11dB = 20 * np.log10(np.abs(s11))
+        r = impedance.real
+        x = impedance.imag
+
+        print("\nBest state:")
+        print(self.states[stateCs] + self.states[stateCt] + self.states[stateCm])
+        print("S11 = %0.2f dB" % s11dB)
+        print("R = %0.2f Ohms" % r)
+        print("X = %0.2f Ohms" % x)
 
         self.mapVals['series'] = self.states[stateCs]
         self.mapVals['tuning'] = self.states[stateCt]
@@ -290,7 +303,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.arduino.send(self.series + self.tuning + self.matching + "0")
         if self.vna.device is not None:
             s11, impedance = self.vna.getS11(self.larmorFreq)
-            self.s11.append(s11)
+            self.s11_hist.append(s11)
             self.mapVals['s11'] = s11
             s11dB = 20 * np.log10(np.abs(s11))
             r = impedance.real
