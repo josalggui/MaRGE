@@ -15,12 +15,12 @@ for char in path:
         sys.path.append(path[0:ii+1]+'marcos_client')
     ii += 1
 #******************************************************************************
-import time
-import experiment as ex
+import controller.experiment_gui as ex
 import numpy as np
+import matplotlib.pyplot as plt
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import scipy.signal as sig
 import configs.hw_config as hw
+import configs.units as units
 
 class Noise(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -31,9 +31,9 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.bw = None
         self.freqOffset = None
         self.addParameter(key='seqName', string='NoiseInfo', val='Noise')
-        self.addParameter(key='freqOffset', string='RF frequency offset (kHz)', val=0.0, field='RF')
+        self.addParameter(key='freqOffset', string='RF frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='nPoints', string='Number of points', val=2500, field='RF')
-        self.addParameter(key='bw', string='Acquisition bandwidth (kHz)', val=50.0, field='RF')
+        self.addParameter(key='bw', string='Acquisition bandwidth (kHz)', val=50.0, units=units.kHz, field='RF')
         self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
 
     def sequenceInfo(self):
@@ -50,43 +50,40 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False
-
-        # Create the inputs automatically as class properties
-        for key in self.mapKeys:
-            setattr(self, key, self.mapVals[key])
+        self.demo = demo
 
         # Fix units to MHz and us
-        self.freqOffset *= 1e-3 # MHz
-        self.bw *= 1e-3 # MHz
+        self.freqOffset *= 1e-6 # MHz
+        self.bw *= 1e-6 # MHz
 
-        if demo:
-            dataR = np.random.randn(self.nPoints*hw.oversamplingFactor)
-            dataC = np.random.randn(self.nPoints*hw.oversamplingFactor)
+        if self.demo:
+            dataR = np.random.randn((self.nPoints + 2 * hw.addRdPoints) * hw.oversamplingFactor)
+            dataC = np.random.randn((self.nPoints + 2 * hw.addRdPoints) * hw.oversamplingFactor)
             data = dataR+1j*dataC
-            data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            data = self.decimate(dataOver=data, nRdLines=1, option='Normal')
             acqTime = self.nPoints/self.bw
             tVector = np.linspace(0, acqTime, num=self.nPoints) * 1e-3  # ms
             spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
             fVector = np.linspace(-self.bw / 2, self.bw / 2, num=self.nPoints) * 1e3  # kHz
             self.dataTime = [tVector, data]
             self.dataSpec = [fVector, spectrum]
-            #time.sleep(0.5)
         else:
-            self.bw = self.bw * hw.oversamplingFactor
             samplingPeriod = 1 / self.bw
             self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset,
                                       rx_t=samplingPeriod,
                                       init_gpa=init_gpa,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
                                       print_infos=False)
-            samplingPeriod = self.expt.get_rx_ts()[0]
-            self.bw = 1/samplingPeriod/hw.oversamplingFactor
+            samplingPeriod = self.expt.getSamplingRate()
+            self.bw = 1/samplingPeriod
             acqTime = self.nPoints/self.bw
 
             # SEQUENCE
             self.iniSequence(20, np.array((0, 0, 0)))
-            self.rxGate(30, acqTime, channel=self.rxChannel)
-            self.endSequence(acqTime+400000)
+            t0 = 30 + hw.addRdPoints*hw.oversamplingFactor/self.bw
+            self.rxGateSync(t0, acqTime, channel=self.rxChannel)
+            t0 = t0 + acqTime + hw.addRdPoints*hw.oversamplingFactor/self.bw
+            self.endSequence(t0+20)
             if self.floDict2Exp():
                 print("\nSequence waveforms loaded successfully")
                 pass
@@ -96,7 +93,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
             if plotSeq == 0:
                 rxd, msgs = self.expt.run()
-                data = sig.decimate(rxd['rx%i' % self.rxChannel]*hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+                data = self.decimate(rxd['rx%i' % self.rxChannel], 1, option='Normal')
                 self.mapVals['data'] = data
                 tVector = np.linspace(0, acqTime, num=self.nPoints) * 1e-3  # ms
                 spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
@@ -147,12 +144,18 @@ class Noise(blankSeq.MRIBLANKSEQ):
         if self.mode == 'Standalone':
             self.plotResults()
 
+        # ####################
+        # dataOver = self.mapVals['dataOver']
+        # plt.plot(np.real(dataOver))
+        # plt.plot(np.imag(dataOver))
+        # plt.show()
+
         return self.output
 
 
 if __name__=='__main__':
     seq = Noise()
     seq.sequenceAtributes()
-    seq.sequenceRun(demo=True)
+    seq.sequenceRun(demo=False)
     seq.sequenceAnalysis(mode='Standalone')
 
