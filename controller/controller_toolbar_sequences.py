@@ -89,9 +89,11 @@ class SequenceController(SequenceToolBar):
         # Include here the sequences to run on autocalibration
         seq_names = [
             'Larmor',
+            'AutoTuning',
             'Noise',
             'Shimming',
             'RabiFlops',
+            'Larmor',
         ]
 
         for seq_name in seq_names:
