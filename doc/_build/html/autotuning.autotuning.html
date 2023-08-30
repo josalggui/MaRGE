@@ -99,27 +99,52 @@ Specific hardware from MRILab &#64; i3M is required</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="autotuning.autotuning.Arduino.connect">
 <span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/autotuning/autotuning.html#Arduino.connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autotuning.autotuning.Arduino.connect" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Connect to the Arduino.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if connected successfully, otherwise False.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="autotuning.autotuning.Arduino.disconnect">
 <span class="sig-name descname"><span class="pre">disconnect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/autotuning/autotuning.html#Arduino.disconnect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autotuning.autotuning.Arduino.disconnect" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Disconnect from the Arduino.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="autotuning.autotuning.Arduino.findPort">
 <span class="sig-name descname"><span class="pre">findPort</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/autotuning/autotuning.html#Arduino.findPort"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autotuning.autotuning.Arduino.findPort" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Find the port of the connected Arduino.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The port of the Arduino if found, otherwise False.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="autotuning.autotuning.Arduino.receive">
 <span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/autotuning/autotuning.html#Arduino.receive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autotuning.autotuning.Arduino.receive" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Receive data from the Arduino.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The received data.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="autotuning.autotuning.Arduino.send">
 <span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/autotuning/autotuning.html#Arduino.send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autotuning.autotuning.Arduino.send" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Send data to the Arduino.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> – The data to be sent.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -130,22 +155,49 @@ Specific hardware from MRILab &#64; i3M is required</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="autotuning.autotuning.VNA.connect">
 <span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/autotuning/autotuning.html#VNA.connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autotuning.autotuning.VNA.connect" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Connect to the nanoVNA device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if connected successfully, otherwise False.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="autotuning.autotuning.VNA.getData">
 <span class="sig-name descname"><span class="pre">getData</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/autotuning/autotuning.html#VNA.getData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autotuning.autotuning.VNA.getData" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Get the measurement data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of complex measurement data.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="autotuning.autotuning.VNA.getFrequency">
 <span class="sig-name descname"><span class="pre">getFrequency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/autotuning/autotuning.html#VNA.getFrequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autotuning.autotuning.VNA.getFrequency" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Get the array of frequencies at which measurements were taken.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Array of frequencies in MHz.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="autotuning.autotuning.VNA.getS11">
 <span class="sig-name descname"><span class="pre">getS11</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/autotuning/autotuning.html#VNA.getS11"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#autotuning.autotuning.VNA.getS11" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Get S11 parameter and impedance for a specific frequency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>f0</strong> – Frequency at which to get S11 parameter (in MHz).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple containing S11 parameter and impedance at the given frequency.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

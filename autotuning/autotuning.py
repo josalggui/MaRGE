@@ -19,6 +19,12 @@ from vna import Hardware
 
 class Arduino:
     def __init__(self, baudrate=115200, timeout=0.1):
+        """
+        Initialize an Arduino object.
+
+        :param baudrate: Baud rate for communication (default is 115200).
+        :param timeout: Timeout for communication operations (default is 0.1 seconds).
+        """
         self.device = None
         self.serial = None
         self.port = None
@@ -26,6 +32,11 @@ class Arduino:
         self.timeout = timeout
 
     def findPort(self):
+        """
+        Find the port of the connected Arduino.
+
+        :return: The port of the Arduino if found, otherwise False.
+        """
         arduino_port = None
         ports = serial.tools.list_ports.comports()
         for port in ports:
@@ -39,6 +50,11 @@ class Arduino:
             return arduino_port
 
     def connect(self):
+        """
+        Connect to the Arduino.
+
+        :return: True if connected successfully, otherwise False.
+        """
         if not self.device:
             self.port = self.findPort()
             if not self.port:
@@ -49,17 +65,30 @@ class Arduino:
                 time.sleep(1.0)
 
     def disconnect(self):
+        """
+        Disconnect from the Arduino.
+        """
         if self.device is not None:
             self.device.close()
             print("\nDisconnected from Arduino for auto-tuning")
             self.device = None
 
     def send(self, data):
+        """
+        Send data to the Arduino.
+
+        :param data: The data to be sent.
+        """
         if self.device is not None:
             self.device.write(data.encode())
         self.receive()
 
     def receive(self):
+        """
+        Receive data from the Arduino.
+
+        :return: The received data.
+        """
         if self.device is not None:
             while self.device.in_waiting == 0:
                 pass
@@ -67,8 +96,10 @@ class Arduino:
 
 
 class VNA:
-
     def __init__(self):
+        """
+        Initialize a Vectorial Network Analyzer (VNA) object.
+        """
         self.connected = None
         self.frequencies = None
         self.interface = None
@@ -76,6 +107,11 @@ class VNA:
         self.device = None
 
     def connect(self):
+        """
+        Connect to the nanoVNA device.
+
+        :return: True if connected successfully, otherwise False.
+        """
         if not self.device:
             try:
                 self.interface = Hardware.get_interfaces()[0]
@@ -85,19 +121,36 @@ class VNA:
                 self.device = Hardware.get_VNA(self.interface)
                 self.frequencies = np.array(self.device.readFrequencies()) * 1e-6  # MHz
                 print("\nConnected to nanoVNA for auto-tuning")
+                return True
             except:
                 print("\nNo nanoVNA detected for auto-tuning")
                 return False
 
     def getFrequency(self):
+        """
+        Get the array of frequencies at which measurements were taken.
+
+        :return: Array of frequencies in MHz.
+        """
         if self.device is not None:
             return self.frequencies
 
     def getData(self):
+        """
+        Get the measurement data.
+
+        :return: List of complex measurement data.
+        """
         if self.device is not None:
             return self.data
 
     def getS11(self, f0=None):
+        """
+        Get S11 parameter and impedance for a specific frequency.
+
+        :param f0: Frequency at which to get S11 parameter (in MHz).
+        :return: Tuple containing S11 parameter and impedance at the given frequency.
+        """
         if self.device is not None:
             self.data = []
             for value in self.device.readValues("data 0"):
@@ -111,6 +164,7 @@ class VNA:
             z11 = 50 * (1 + s11) / (1 - s11)
 
             return s11, z11
+
 
 
 if __name__ == "__main__":
