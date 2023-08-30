@@ -90,7 +90,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Get the mat data from the loaded .mat file in the main toolbar controller
         mat_data = self.main.toolbar_controller.mat_data
 
-        print('The ART is applying')
+        self.main.console.print('The ART is applying')
 
         # Extract datas data from the loaded .mat file
         self.sampled = self.main.toolbar_controller.k_space_raw
@@ -126,11 +126,11 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
                 rho = rho - lbda * delta_t * np.conj(mt)
 
-                print("Iteration %i of %i" % (t, len(s)))
+                self.main.console.print("Iteration %i of %i" % (t, len(s)))
 
         rho = np.reshape(rho, nPoints[-1::-1])
 
-        print('The ART is applied')
+        self.main.console.print('The ART is applied')
 
         # Update the main matrix of the image view widget with the cosbell data
         self.main.image_view_widget.main_matrix = rho

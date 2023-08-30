@@ -24,7 +24,8 @@ class ReconstructionTabWidget(QTabWidget):
         self.main = parent
 
         # Buttons
-        self.image_fft_button = QPushButton('FFT')
+        self.image_fft_button = QPushButton('k-Space to Image')     # This is actually for ifft
+        self.image_ifft_button = QPushButton('Image to k-Space')    # This is actually for fft
         self.image_art_button = QPushButton('ART')
 
         # Labels
@@ -53,6 +54,7 @@ class ReconstructionTabWidget(QTabWidget):
 
         self.fft_layout = QVBoxLayout()
         self.fft_layout.addWidget(self.image_fft_button)
+        self.fft_layout.addWidget(self.image_ifft_button)
 
         self.fft_group = QGroupBox('FFT')
         self.fft_group.setLayout(self.fft_layout)

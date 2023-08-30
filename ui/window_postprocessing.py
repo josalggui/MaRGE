@@ -11,8 +11,7 @@ from controller.visualisation_tab_controller import VisualisationTabController
 from controller.preprocessing_tab_controller import PreProcessingTabController
 from controller.history_list_controller import HistoryListController
 from controller.imageview_controller import ImageViewController
-# from controller.console_controller import ConsoleController
-from controller.controller_console import ConsoleController
+from controller.controller_console import ConsoleControllerPost
 from controller.toolbar_controller import ToolBarController
 from widgets.history_list_widget import HistoryListWidget
 from controller.tab_controller import TabController
@@ -126,7 +125,7 @@ class MainWindow(QMainWindow):
         self.tab_controller.visualisation_layout.addWidget(self.visualisation_controller)
 
         # Console addition
-        self.console = ConsoleController()
+        self.console = ConsoleControllerPost()
         self.left_layout.addWidget(self.console)
         self.console.setMaximumHeight(200)
 

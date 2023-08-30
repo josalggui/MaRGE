@@ -39,6 +39,17 @@ class ConsoleController(ConsoleWidget):
         self.console.ensureCursorVisible()
 
 
+class ConsoleControllerPost(ConsoleWidget):
+    def __init__(self):
+        super().__init__()
+
+    def print(self, text):
+        cursor = self.console.textCursor()
+        cursor.movePosition(cursor.End)
+        cursor.insertText(text)
+        self.console.setTextCursor(cursor)
+        self.console.ensureCursorVisible()
+
 class EmittingStream(QObject):
     """
     Emitting stream class.
