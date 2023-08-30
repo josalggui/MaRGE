@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>controller.controller_session &mdash; MaRCoS GUI 1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MaRCoS GUI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">PhysioMRI_GUI</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MaRCoS GUI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">controller.controller_session</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for controller.controller_session</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">:author:    J.M. Algarín</span>
+<span class="sd">:email:     josalggui@i3m.upv.es</span>
+<span class="sd">:affiliation: MRILab, i3M, CSIC, Valencia, Spain</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">ui.window_session</span> <span class="kn">import</span> <span class="n">SessionWindow</span>
+<span class="kn">from</span> <span class="nn">controller.controller_main</span> <span class="kn">import</span> <span class="n">MainController</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">configs.hw_config</span> <span class="k">as</span> <span class="nn">hw</span>
+
+
+<div class="viewcode-block" id="SessionController"><a class="viewcode-back" href="../../controller.controller_session.html#controller.controller_session.SessionController">[docs]</a><span class="k">class</span> <span class="nc">SessionController</span><span class="p">(</span><span class="n">SessionWindow</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Controller class for managing the session.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        demo (bool): Indicates whether the session is a demo or not.</span>
+
+<span class="sd">    Inherits:</span>
+<span class="sd">        SessionWindow: Base class for the session window.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">demo</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the SessionController.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            demo (bool): Indicates whether the session is a demo or not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SessionController</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main_gui</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">demo</span> <span class="o">=</span> <span class="n">demo</span>
+
+        <span class="c1"># Set slots for toolbar actions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">launch_gui_action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runMainGui</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close_action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SessionController.runMainGui"><a class="viewcode-back" href="../../controller.controller_session.html#controller.controller_session.SessionController.runMainGui">[docs]</a>    <span class="k">def</span> <span class="nf">runMainGui</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs the main GUI and sets up the session.</span>
+
+<span class="sd">        Creates a folder for the session and opens the main GUI.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updateSessionDict</span><span class="p">()</span>
+
+        <span class="c1"># Create folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s1">&#39;directory&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;experiments/acquisitions/</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s1">&#39;project&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s1">&#39;subject_id&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s1">&#39;study&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s1">&#39;side&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s1">&#39;directory&#39;</span><span class="p">]):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s1">&#39;directory&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Open the main gui</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main_gui</span> <span class="o">=</span> <span class="n">MainController</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main_gui</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SessionController.closeEvent"><a class="viewcode-back" href="../../controller.controller_session.html#controller.controller_session.SessionController.closeEvent">[docs]</a>    <span class="k">def</span> <span class="nf">closeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Event handler for the session window close event.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event: The close event.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;GUI closed successfully!&#39;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">closeEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SessionController.close"><a class="viewcode-back" href="../../controller.controller_session.html#controller.controller_session.SessionController.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Closes the session and exits the program.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;GUI closed successfully!&#39;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SessionController.updateSessionDict"><a class="viewcode-back" href="../../controller.controller_session.html#controller.controller_session.SessionController.updateSessionDict">[docs]</a>    <span class="k">def</span> <span class="nf">updateSessionDict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates the session dictionary with the current session information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;project&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_combo_box</span><span class="o">.</span><span class="n">currentText</span><span class="p">(),</span>
+            <span class="s1">&#39;study&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">study_combo_box</span><span class="o">.</span><span class="n">currentText</span><span class="p">(),</span>
+            <span class="s1">&#39;side&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">side_combo_box</span><span class="o">.</span><span class="n">currentText</span><span class="p">(),</span>
+            <span class="s1">&#39;orientation&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">orientation_combo_box</span><span class="o">.</span><span class="n">currentText</span><span class="p">(),</span>
+            <span class="s1">&#39;subject_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_line_edit</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span>
+            <span class="s1">&#39;study_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">idS_line_edit</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span>
+            <span class="s1">&#39;subject_name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name_line_edit</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span>
+            <span class="s1">&#39;subject_surname&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">surname_line_edit</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span>
+            <span class="s1">&#39;subject_birthday&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">birthday_line_edit</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span>
+            <span class="s1">&#39;subject_weight&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_line_edit</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span>
+            <span class="s1">&#39;subject_height&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">height_line_edit</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span>
+            <span class="s1">&#39;scanner&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">scanner_line_edit</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span>
+            <span class="s1">&#39;rf_coil&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rf_coil_combo_box</span><span class="o">.</span><span class="n">currentText</span><span class="p">(),</span>
+            <span class="s1">&#39;seriesNumber&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">hw</span><span class="o">.</span><span class="n">b1Efficiency</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">antenna_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="s1">&#39;rf_coil&#39;</span><span class="p">]]</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, José Miguel Algarín.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
