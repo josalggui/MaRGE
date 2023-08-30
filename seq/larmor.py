@@ -17,7 +17,7 @@ for char in path:
         sys.path.append(path[0:ii + 1] + 'marcos_client')
     ii += 1
 # ******************************************************************************
-import experiment as ex
+import controller.experiment_gui as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
@@ -105,7 +105,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
             # Rx gate
             t0 = t_ex + echo_time - acq_time / 2
-            self.rxGate(t0, acq_time)
+            self.rxGateSync(t0, acq_time)
             rd_points += n_points
 
             self.endSequence(t_ex + self.repetitionTime)
@@ -120,7 +120,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         echo_time *= 1e6
 
         # Initialize the experiment
-        self.bw = n_points / acq_time * hw.oversamplingFactor  # MHz
+        self.bw = n_points / acq_time  # MHz
         sampling_period = 1 / self.bw  # us
         if not self.demo:
             self.expt = ex.Experiment(lo_freq=self.larmorFreq * 1e-6,
@@ -128,10 +128,10 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                                       init_gpa=init_gpa,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
                                       )
-            sampling_period = self.expt.get_rx_ts()[0]
-        self.bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
+            sampling_period = self.expt.getSamplingRate()
+        self.bw = 1 / sampling_period  # MHz
         acq_time = n_points / self.bw  # us
-        self.mapVals['bw_true'] = self.bw / hw.oversamplingFactor * 1e6
+        self.mapVals['bw_true'] = self.bw * 1e6
 
         # Create the sequence and add instructions to the experiment
         acq_points = createSequence()
@@ -150,14 +150,12 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                 print("\nScan %i running..." % (scan + 1))
                 if not self.demo:
                     rxd, msgs = self.expt.run()
-                    rxd['rx0'] = np.real(rxd['rx0']) - 1j * np.imag(rxd['rx0'])
-                    data_over = np.concatenate((data_over, rxd['rx0'] * hw.adcFactor), axis=0)
                 else:
                     rxd = {'rx0': np.random.randn(acq_points * hw.oversamplingFactor) +
                                   1j * np.random.randn(acq_points * hw.oversamplingFactor)}
-                    data_over = np.concatenate((data_over, rxd['rx0'] * hw.adcFactor), axis=0)
+                data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
                 print("Acquired points = %i" % np.size([rxd['rx0']]))
-                print("Expected points = %i" % (acq_points * hw.oversamplingFactor))
+                print("Expected points = %i" % ((acq_points + 2 * hw.addRdPoints) * hw.oversamplingFactor))
                 print("Scan %i ready!" % (scan + 1))
 
         # Close the experiment
@@ -166,8 +164,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         # Process data to be plotted
         if not plotSeq:
-            self.mapVals['data_over'] = data_over
-            data_full = sig.decimate(data_over, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            data_full = self.decimate(data_over, self.nScans, option='Normal')
             self.mapVals['data_full'] = data_full
             data = np.average(np.reshape(data_full, (self.nScans, -1)), axis=0)
             self.mapVals['data'] = data

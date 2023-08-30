@@ -5,33 +5,15 @@
 
 """
 import numpy as np
+import copy
 
-from widgets.widget_plot1d import Plot1DWidget
+from widgets.widget_smith_chart import PlotSmithChartWidget
 
 
-class Plot1DController(Plot1DWidget):
+class PlotSmithChartController(PlotSmithChartWidget):
     """
-    1D plot controller class.
-
-    This class extends the `Plot1DWidget` class and serves as a controller for a 1D plot. It initializes the plot with
-    the provided data and handles mouse movement events to display information about the data at the cursor position.
-
-    Methods:
-        __init__(self, x_data, y_data, legend, x_label, y_label, title): Initialize the Plot1DController instance.
-        mouseMoved(self, evt): Handle the mouseMoved event to display information about the data at the cursor position.
-
-    Attributes:
-        y_data: The y data for the plot.
-        x_data: The x data for the plot.
-        x_label: The label for the x axis.
-        y_label: The label for the y axis.
-        title: The title of the plot.
-        lines: A list of LineItems representing the plotted lines.
-        plot_item: The PlotItem representing the plot.
-        pen: A list of QPen objects representing the line colors.
-
+    TODO
     """
-
     def __init__(self,
                  x_data,  # numpy array
                  y_data,  # list of numpy array
@@ -41,25 +23,11 @@ class Plot1DController(Plot1DWidget):
                  title,  # string
                  ):
         """
-        Initialize the Plot1DController instance.
-
-        This method initializes the Plot1DController instance by calling the constructor of the parent class (`Plot1DWidget`).
-        It sets the provided data and creates the plot lines. It also sets the plot properties such as title and axis labels.
-
-        Args:
-            x_data: The x data for the plot (numpy array).
-            y_data: The y data for the plot (list of numpy arrays).
-            legend: The legend for each line (list of strings).
-            x_label: The label for the x axis (string).
-            y_label: The label for the y axis (string).
-            title: The title of the plot (string).
-
-        Returns:
-            None
+        TODO
         """
-        super(Plot1DController, self).__init__()
-        self.y_data = y_data
-        self.x_data = x_data
+        super(PlotSmithChartController, self).__init__()
+        self.y_data = copy.copy(y_data)
+        self.x_data = copy.copy(x_data)
         self.x_label = x_label
         self.y_label = y_label
         self.title = title
@@ -67,23 +35,50 @@ class Plot1DController(Plot1DWidget):
         # Set text
         self.label2.setText("<span style='font-size: 8pt'>%s=%0.2f, %s=%0.2f</span>" % (x_label, 0, y_label, 0))
 
+        # Create here the smith chart:
+        theta = np.linspace(0, 2*np.pi, 100)
+        x0 = np.cos(theta)
+        y0 = np.sin(theta)
+        x1 = 0.5 + 0.5 * np.cos(theta)
+        y1 = 0.5 * np.sin(theta)
+        x2 = np.array([1, -1, 1])
+        y2 = np.array([0, 0, 0])
+        x3 = 0.1*np.cos(theta)
+        y3 = 0.1*np.sin(theta)
+        x_smith = np.concatenate((x0, x1, x2, x3), axis=0)
+        y_smith = np.concatenate((y0, y1, y2, y3), axis=0)
+        l_smith = 'Smith chart'
+
+        # Add smith chart to plots
+        if type(self.x_data) is list:
+            self.x_data.append(x_smith)
+        else:
+            self.x_data = [self.x_data]
+            self.x_data.append(x_smith)
+        self.y_data.append(y_smith)
+        legend.append(l_smith)
+
         # Add lines to plot_item
-        n_lines = len(y_data)
+        n_lines = len(self.y_data)
         self.lines = []
         x_min = 0
         x_max = 0
         y_min = 0
         y_max = 0
         for line in range(n_lines):
-            if type(x_data) is list:
-                x = x_data[line]
+            if type(self.x_data) is list:
+                x = self.x_data[line]
             else:
-                x = x_data.copy()
-            y = y_data[line]
-            self.lines.append(self.plot_item.plot(x, y, pen=self.pen[line], name=legend[line]))
+                x = self.x_data.copy()
+            y = self.y_data[line]
             if line == 0:
+                self.lines.append(self.plot_item.plot(x, y, pen=self.pen[line], name=legend[line], symbol='o'))
                 x_min = np.min(x)
                 x_max = np.max(x)
+            elif line == 2:
+                self.lines.append(self.plot_item.plot(x, y, pen=self.pen[6], name=legend[line]))
+            else:
+                self.lines.append(self.plot_item.plot(x, y, pen=self.pen[line], name=legend[line]))
             if np.min(x) < x_min:
                 x_min = np.min(x)
             if np.max(x) > x_max:

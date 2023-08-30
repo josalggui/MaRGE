@@ -541,7 +541,7 @@ class MRIBLANKSEQ:
             data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n + idx[ii]]
         return (data1)
 
-    def decimate(self, dataOver, nRdLines):
+    def decimate(self, dataOver, nRdLines, option='PETRA'):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -551,10 +551,13 @@ class MRIBLANKSEQ:
         It must be used if the sequence uses "rxGateSync" to acquire data
         """
         # Preprocess the signal to avoid oscillations due to decimation
-        dataOver = np.reshape(dataOver, (nRdLines, -1))
-        for line in range(nRdLines):
-            dataOver[line, 0:hw.addRdPoints * hw.oversamplingFactor] = dataOver[line, hw.addRdPoints * hw.oversamplingFactor]
-        dataOver = np.reshape(dataOver, -1)
+        if option=='PETRA':
+            dataOver = np.reshape(dataOver, (nRdLines, -1))
+            for line in range(nRdLines):
+                dataOver[line, 0:hw.addRdPoints * hw.oversamplingFactor] = dataOver[line, hw.addRdPoints * hw.oversamplingFactor]
+            dataOver = np.reshape(dataOver, -1)
+        elif option=='Normal':
+            pass
         self.mapVals['dataOver'] = dataOver
 
         # Decimate the signal after 'fir' filter

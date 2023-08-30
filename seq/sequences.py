@@ -26,7 +26,7 @@ import seq.shimmingSweep as shimming
 import seq.testSE as testSE
 # import seq.sliceSelection as sliceSelection
 import seq.sweepImage as sweep
-# import seq.autoTuning as autoTuning
+import seq.autoTuning as autoTuning
 import seq.localizer as localizer
 import seq.MRID as mrid
 import seq.tsePrescan as tsePrescan
@@ -102,9 +102,9 @@ class Shimming(shimming.ShimmingSweep):
 
 class SWEEP(sweep.SweepImage):
     def __init__(self): super(SWEEP, self).__init__()
-#
-# class AutoTuning(autoTuning.AutoTuning):
-#     def __init__(self): super(AutoTuning, self).__init__()
+
+class AutoTuning(autoTuning.AutoTuning):
+    def __init__(self): super(AutoTuning, self).__init__()
 
 class Localizer(localizer.Localizer):
     def __init__(self): super(Localizer, self).__init__()
@@ -121,6 +121,7 @@ defaultsequences = {
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),
     'Shimming': Shimming(),
+    'AutoTuning': AutoTuning(),
     'TSE_prescan': TSEPrescan(),
     'Localizer': Localizer(),
     'GRE3D': GRE3D(),
