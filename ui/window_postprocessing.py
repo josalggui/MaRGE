@@ -1,6 +1,6 @@
 import sys
 import qdarkstyle
-from PyQt5.QtCore import QThreadPool
+from PyQt5.QtCore import QThreadPool, QSize
 
 from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApplication, QStatusBar, QMenuBar, \
     QSplitter, QTextEdit
@@ -13,6 +13,7 @@ from controller.preprocessing_tab_controller import PreProcessingTabController
 from controller.controller_history_list import HistoryListControllerPos
 from controller.imageview_controller import ImageViewController
 from controller.controller_console import ConsoleControllerPost
+from controller.controller_toolbar_post import ToolBarControllerPost
 from controller.toolbar_controller import ToolBarController
 from widgets.history_list_widget import HistoryListWidget
 from controller.tab_controller import TabController
@@ -59,11 +60,14 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(self.styleSheet)
 
         # Set window parameters
-        self.setWindowTitle('Test')
-        self.setGeometry(0, 0, 1100, 800)
+        self.setWindowTitle('Postprocessing')
 
         # Threadpool for parallel running
         self.threadpool = QThreadPool()
+
+        # Toolbar addition
+        self.toolbar_image = ToolBarControllerPost(self, "Image toolbar")
+        self.addToolBar(self.toolbar_image)
 
         # Status bar and a menu bar adding
         self.setStatusBar(QStatusBar(self))
@@ -99,19 +103,15 @@ class MainWindow(QMainWindow):
 
         # Add list to show the history
         self.history_list = HistoryListControllerPos(parent=self)
-        self.output_layout_h.addWidget(self.history_list)
         self.history_list.setMaximumHeight(200)
         self.history_list.setMinimumHeight(200)
+        self.output_layout_h.addWidget(self.history_list)
 
         # Table with list of applied methods to selected item in the history
         self.methods_list = QTextEdit()
         self.methods_list.setMaximumHeight(200)
         self.methods_list.setMinimumHeight(200)
         self.output_layout_h.addWidget(self.methods_list)
-
-        # Toolbar addition
-        self.toolbar_controller = ToolBarController(parent=self)
-        self.addToolBar(self.toolbar_controller)
 
         # Tab addition
         self.tab_controller = TabController(parent=self)
@@ -133,8 +133,6 @@ class MainWindow(QMainWindow):
         self.console = ConsoleControllerPost()
         self.left_layout.addWidget(self.console)
         self.console.setMaximumHeight(200)
-
-        self.show()
 
 
 if __name__ == '__main__':

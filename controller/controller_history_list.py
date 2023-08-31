@@ -67,8 +67,18 @@ class HistoryListController(HistoryListWidget):
             action3 = QAction("Delete task", self)
             action3.triggered.connect(self.deleteTask)
             menu.addAction(action3)
+            action4 = QAction("Post-processing", self)
+            action4.triggered.connect(self.openPostGui)
+            menu.addAction((action4))
 
             menu.exec_(self.mapToGlobal(point))
+
+    def openPostGui(self):
+        # Get the corresponding key to get access to the history dictionary
+        item_name = self.clicked_item.text().split(' | ')[1]
+        path = self.main.session['directory']
+        self.main.post_gui.showMaximized()
+        self.main.post_gui.toolbar_image.rawDataLoading(file_path=path+"/mat/"+item_name)
 
     def deleteTask(self):
         """

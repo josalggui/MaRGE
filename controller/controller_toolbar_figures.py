@@ -9,7 +9,6 @@ from datetime import datetime
 
 from PyQt5.QtGui import QPixmap
 
-from ui.window_postprocessing import MainWindow as PostWindow
 from widgets.widget_toolbar_figures import FiguresToolBar
 from configs.sys_config import screenshot_folder
 
@@ -44,8 +43,7 @@ class FiguresController(FiguresToolBar):
         self.action_postprocessing.triggered.connect(self.openPostGui)
 
     def openPostGui(self):
-        self.post_gui = PostWindow()
-        self.post_gui.show()
+        self.main.post_gui.showMaximized()
 
     def doFullScreen(self):
         """
