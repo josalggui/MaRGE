@@ -337,7 +337,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         self.n = n
 
         # Get the k_space data
-        self.kSpace_ref = 10 ** self.main.image_view_widget.main_matrix
+        self.kSpace_ref = self.main.image_view_widget.main_matrix
 
         # Create a copy of the signal obtained from the reference image
         self.kSpace_center = self.kSpace_ref.copy()

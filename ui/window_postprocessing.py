@@ -5,10 +5,9 @@ from PyQt5.QtCore import QThreadPool, QSize
 from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApplication, QStatusBar, QMenuBar, \
     QSplitter, QTextEdit
 
-from controller.reconstruction_tab_controller import ReconstructionTabController
+from controller.controller_reconstruction import ReconstructionTabController
 from controller.postpocessing_tab_controller import PostProcessingTabController
 from controller.visualisation_tab_controller import VisualisationTabController
-# from controller.preprocessing_tab_controller import PreProcessingTabController
 from controller.controller_preprocessing import PreProcessingTabController
 from controller.controller_history_list import HistoryListControllerPos
 from controller.imageview_controller import ImageViewController
