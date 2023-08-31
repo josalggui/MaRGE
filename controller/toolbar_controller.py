@@ -66,13 +66,8 @@ class ToolBarController(ToolBarWidget):
             self.k_space = np.reshape(self.k_space_raw[:, 3], self.nPoints[-1::-1])
 
             # Clear the console, history widget, history controller, and history dictionaries
-            self.main.history_widget.clear()
             self.main.console.console.clear()
-            self.main.history_controller.clear()
-            self.main.history_controller.hist_dict.clear()
             self.main.visualisation_controller.clear2DImage()
-            self.main.history_controller.clearSecondImageView()
-            self.main.history_controller.operations_dict.clear()
 
         # Update the main matrix of the image view widget with the k-space data
         self.main.image_view_widget.main_matrix = self.k_space
@@ -81,14 +76,14 @@ class ToolBarController(ToolBarWidget):
         self.main.image_view_widget.setImage(np.abs(self.main.image_view_widget.main_matrix))
 
         # Add the "KSpace" operation to the history
-        self.main.history_controller.addItemWithTimestamp("KSpace")
+        self.main.history_list.addItemWithTimestamp("KSpace")
 
         # Update the history dictionary with the new main matrix for the current matrix info
-        self.main.history_controller.hist_dict[self.main.history_controller.matrix_infos] = \
+        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
             self.main.image_view_widget.main_matrix
 
         # Update the operations history
-        self.main.history_controller.updateOperationsHist(self.main.history_controller.matrix_infos, "KSpace")
+        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "KSpace")
 
     def loadFile(self):
         """

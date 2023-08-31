@@ -3,13 +3,14 @@ import qdarkstyle
 from PyQt5.QtCore import QThreadPool
 
 from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApplication, QStatusBar, QMenuBar, \
-    QSplitter
+    QSplitter, QTextEdit
 
 from controller.reconstruction_tab_controller import ReconstructionTabController
 from controller.postpocessing_tab_controller import PostProcessingTabController
 from controller.visualisation_tab_controller import VisualisationTabController
 from controller.preprocessing_tab_controller import PreProcessingTabController
-from controller.history_list_controller import HistoryListController
+# from controller.history_list_controller import HistoryListController
+from controller.controller_history_list import HistoryListControllerPos
 from controller.imageview_controller import ImageViewController
 from controller.controller_console import ConsoleControllerPost
 from controller.toolbar_controller import ToolBarController
@@ -92,17 +93,21 @@ class MainWindow(QMainWindow):
         self.image_view_widget = ImageViewController(parent=self)
         self.image_view_splitter.addWidget(self.image_view_widget)
 
-        # History addition
-        self.history_layout = QHBoxLayout()
-        self.right_layout.addLayout(self.history_layout)
+        # Layout for output history
+        self.output_layout_h = QHBoxLayout()
+        self.right_layout.addLayout(self.output_layout_h)
 
-        self.history_controller = HistoryListController(parent=self)
-        self.history_layout.addWidget(self.history_controller)
-        self.history_controller.setMaximumHeight(200)
+        # Add list to show the history
+        self.history_list = HistoryListControllerPos(parent=self)
+        self.output_layout_h.addWidget(self.history_list)
+        self.history_list.setMaximumHeight(200)
+        self.history_list.setMinimumHeight(200)
 
-        self.history_widget = HistoryListWidget(parent=self)
-        self.history_layout.addWidget(self.history_widget)
-        self.history_widget.setMaximumHeight(200)
+        # Table with list of applied methods to selected item in the history
+        self.methods_list = QTextEdit()
+        self.methods_list.setMaximumHeight(200)
+        self.methods_list.setMinimumHeight(200)
+        self.output_layout_h.addWidget(self.methods_list)
 
         # Toolbar addition
         self.toolbar_controller = ToolBarController(parent=self)

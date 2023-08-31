@@ -59,14 +59,14 @@ class ReconstructionTabController(ReconstructionTabWidget):
         self.main.image_view_widget.main_matrix = image_fft
 
         # Add the "FFT" operation to the history widget
-        self.main.history_controller.addItemWithTimestamp("FFT")
+        self.main.history_list.addItemWithTimestamp("FFT")
 
         # Update the history dictionary with the new main matrix for the current matrix info
-        self.main.history_controller.hist_dict[self.main.history_controller.matrix_infos] = \
+        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
             self.main.image_view_widget.main_matrix
 
         # Update the operations history
-        self.main.history_controller.updateOperationsHist(self.main.history_controller.matrix_infos, "FFT")
+        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "FFT")
 
     def artReconstruction(self):
         """
