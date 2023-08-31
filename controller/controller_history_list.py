@@ -413,6 +413,7 @@ class HistoryListControllerPos(HistoryListWidget):
         super(HistoryListControllerPos, self).__init__(*args, **kwargs)
         self.hist_dict = {}  # Dictionary to store historical images
         self.operations_dict = {}  # Dictionary to store operations history
+        self.space = {}     # Dictionary to retrieve if matrix is in k-space or image-space
         self.matrix_infos = None
         self.image_view = None
 
@@ -441,7 +442,14 @@ class HistoryListControllerPos(HistoryListWidget):
         selected_text = item.text()
         if selected_text in self.hist_dict.keys():
             self.main.image_view_widget.main_matrix = self.hist_dict[selected_text]
-            self.main.image_view_widget.setImage(np.abs(self.main.image_view_widget.main_matrix))
+            if self.space[selected_text] == 'k':
+                image = np.log10(np.abs(self.main.image_view_widget.main_matrix))
+                image[image == -np.inf] = np.inf
+                val = np.min(image[:])
+                image[image == np.inf] = val
+            else:
+                image = np.abs(self.main.image_view_widget.main_matrix)
+            self.main.image_view_widget.setImage(image)
 
         self.clearSecondImageView()
         self.main.visualisation_controller.clear2DImage()

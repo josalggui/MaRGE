@@ -68,6 +68,9 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Update the operations history
         self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "FFT")
 
+        # Update the space dictionary
+        self.main.history_list.space[self.main.history_list.matrix_infos] = 'i'
+
     def artReconstruction(self):
         """
         Perform ART reconstruction in a separate thread.
@@ -144,3 +147,6 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         # Update the operations history
         self.main.history_controller.operations_dict[self.main.history_controller.matrix_infos] = ["ART"]
+
+        # Update the space dictionary
+        self.main.history_list.space[self.main.history_list.matrix_infos] = 'i'

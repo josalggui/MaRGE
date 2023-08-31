@@ -74,7 +74,11 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         self.main.image_view_widget.main_matrix = self.k_space
 
         # Update the image view widget to display the new main matrix
-        self.main.image_view_widget.setImage(np.abs(self.main.image_view_widget.main_matrix))
+        try:
+            image = np.log10(np.abs(self.main.image_view_widget.main_matrix))
+        except:
+            image = np.abs(self.main.image_view_widget.main_matrix)
+        self.main.image_view_widget.setImage(image)
 
         # Add the "KSpace" operation to the history
         self.main.history_list.addItemWithTimestamp("KSpace")
@@ -85,6 +89,9 @@ class ToolBarControllerPost(ToolBarWidgetPost):
 
         # Update the operations history
         self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "KSpace")
+
+        # Update the space dictionary
+        self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
 
     def loadFile(self):
         """

@@ -8,8 +8,8 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApp
 from controller.reconstruction_tab_controller import ReconstructionTabController
 from controller.postpocessing_tab_controller import PostProcessingTabController
 from controller.visualisation_tab_controller import VisualisationTabController
-from controller.preprocessing_tab_controller import PreProcessingTabController
-# from controller.history_list_controller import HistoryListController
+# from controller.preprocessing_tab_controller import PreProcessingTabController
+from controller.controller_preprocessing import PreProcessingTabController
 from controller.controller_history_list import HistoryListControllerPos
 from controller.imageview_controller import ImageViewController
 from controller.controller_console import ConsoleControllerPost
