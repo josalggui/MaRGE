@@ -1,7 +1,7 @@
-from widgets.tab_widget import TabWidget
+from widgets.widget_processing import ProcessingWidget
 
 
-class TabController(TabWidget):
+class ProcessingController(ProcessingWidget):
     """
     Controller class for the TabWidget.
 
@@ -16,4 +16,4 @@ class TabController(TabWidget):
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        super(TabController, self).__init__(*args, **kwargs)
+        super(ProcessingController, self).__init__(*args, **kwargs)

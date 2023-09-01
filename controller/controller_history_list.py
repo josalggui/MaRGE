@@ -16,7 +16,7 @@ from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from controller.controller_plot1d import Plot1DController as SpectrumPlot
 from controller.controller_smith_chart import PlotSmithChartController as SmithChart
 from seq.sequences import defaultsequences
-from widgets.imageview_widget import ImageViewWidget
+from widgets.widget_imageview import ImageViewWidget
 from widgets.widget_history_list import HistoryListWidget
 import numpy as np
 

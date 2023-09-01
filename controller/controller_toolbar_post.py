@@ -1,8 +1,12 @@
+import copy
+
 import scipy as sp
 import numpy as np
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QLabel
 from scipy.interpolate import griddata
 from widgets.widget_toolbar_post import ToolBarWidgetPost
+from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
+from PyQt5 import QtCore
 
 
 class ToolBarControllerPost(ToolBarWidgetPost):
@@ -78,7 +82,25 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             image = np.log10(np.abs(self.main.image_view_widget.main_matrix))
         except:
             image = np.abs(self.main.image_view_widget.main_matrix)
-        self.main.image_view_widget.setImage(image)
+
+        # Create figure widget
+        image2show, x_label, y_label, title = self.fixImage(image)
+        image = Spectrum3DPlot(main=self.main,
+                               data=image2show,
+                               x_label=x_label,
+                               y_label=y_label,
+                               title=title)
+
+        # Create label widget
+        label = QLabel()
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        label.setStyleSheet("background-color: black;color: white")
+        self.main.image_view_widget.addWidget(label, row=0, col=0, colspan=2)
+        label.setText(self.mat_data['fileName'][0])
+
+        # Add widgets to the figure layout
+        self.main.image_view_widget.addWidget(label, row=0, col=0)
+        self.main.image_view_widget.addWidget(image, row=1, col=0)
 
         # Add the "KSpace" operation to the history
         self.main.history_list.addItemWithTimestamp("KSpace")
@@ -109,3 +131,50 @@ class ToolBarControllerPost(ToolBarWidgetPost):
                                                    options=options)
 
         return file_name
+
+    def fixImage(self, matrix3d):
+        matrix = copy.copy(matrix3d)
+        axes = self.mat_data['axesOrientation'][0]
+        if axes[2] == 2:  # Sagittal
+            title = "Sagittal"
+            if axes[0] == 0 and axes[1] == 1:  # OK
+                matrix = np.flip(matrix, axis=2)
+                matrix = np.flip(matrix, axis=1)
+                x_label = "(-Y) A | PHASE | P (+Y)"
+                y_label = "(-X) I | READOUT | S (+X)"
+            else:
+                matrix = np.transpose(matrix, (0, 2, 1))
+                matrix = np.flip(matrix, axis=2)
+                matrix = np.flip(matrix, axis=1)
+                x_label = "(-Y) A | READOUT | P (+Y)"
+                y_label = "(-X) I | PHASE | S (+X)"
+        elif axes[2] == 1:  # Coronal
+            title = "Coronal"
+            if axes[0] == 0 and axes[1] == 2:  # OK
+                matrix = np.flip(matrix, axis=2)
+                matrix = np.flip(matrix, axis=1)
+                matrix = np.flip(matrix, axis=0)
+                x_label = "(+Z) R | PHASE | L (-Z)"
+                y_label = "(-X) I | READOUT | S (+X)"
+            else:
+                matrix = np.transpose(matrix, (0, 2, 1))
+                matrix = np.flip(matrix, axis=2)
+                matrix = np.flip(matrix, axis=1)
+                matrix = np.flip(matrix, axis=0)
+                x_label = "(+Z) R | READOUT | L (-Z)"
+                y_label = "(-X) I | PHASE | S (+X)"
+        elif axes[2] == 0:  # Transversal
+            title = "Transversal"
+            if axes[0] == 1 and axes[1] == 2:
+                matrix = np.flip(matrix, axis=2)
+                matrix = np.flip(matrix, axis=1)
+                x_label = "(+Z) R | PHASE | L (-Z)"
+                y_label = "(+Y) P | READOUT | A (-Y)"
+            else:  # OK
+                matrix = np.transpose(matrix, (0, 2, 1))
+                matrix = np.flip(matrix, axis=2)
+                matrix = np.flip(matrix, axis=1)
+                x_label = "(+Z) R | READOUT | L (-Z)"
+                y_label = "(+Y) P | PHASE | A (-Y)"
+        
+        return matrix, x_label, y_label, title

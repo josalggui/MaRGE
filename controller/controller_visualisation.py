@@ -1,7 +1,7 @@
 import numpy as np
 from PyQt5.QtWidgets import QGridLayout
-from widgets.imageview_widget import ImageViewWidget
-from widgets.visualisation_tab_widget import VisualisationTabWidget
+from widgets.widget_imageview import ImageViewWidget
+from widgets.widget_visualisation import VisualisationTabWidget
 
 
 class VisualisationTabController(VisualisationTabWidget):

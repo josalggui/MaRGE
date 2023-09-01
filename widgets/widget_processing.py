@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QTabWidget, QWidget, QVBoxLayout
 
 
-class TabWidget(QTabWidget):
+class ProcessingWidget(QTabWidget):
     """
     TabWidget class for displaying a tab widget with different tabs.
 
@@ -20,7 +20,7 @@ class TabWidget(QTabWidget):
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
-        super(TabWidget, self).__init__(*args, **kwargs)
+        super(ProcessingWidget, self).__init__(*args, **kwargs)
         self.main = parent
 
         self.setMaximumWidth(400)

@@ -1,4 +1,4 @@
-from widgets.imageview_widget import ImageViewWidget
+from widgets.widget_imageview import ImageViewWidget
 
 
 class ImageViewController(ImageViewWidget):

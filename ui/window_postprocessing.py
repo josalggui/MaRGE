@@ -7,13 +7,14 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApp
 
 from controller.controller_reconstruction import ReconstructionTabController
 from controller.controller_postpocessing import PostProcessingTabController
-from controller.visualisation_tab_controller import VisualisationTabController
+from controller.controller_visualisation import VisualisationTabController
 from controller.controller_preprocessing import PreProcessingTabController
 from controller.controller_history_list import HistoryListControllerPos
-from controller.imageview_controller import ImageViewController
+from controller.controller_imageview import ImageViewController
+from controller.controller_figures import FiguresLayoutController
 from controller.controller_console import ConsoleControllerPost
 from controller.controller_toolbar_post import ToolBarControllerPost
-from controller.tab_controller import TabController
+from controller.controller_processing import ProcessingController
 
 
 class MainWindow(QMainWindow):
@@ -78,21 +79,17 @@ class MainWindow(QMainWindow):
         self.main_layout = QHBoxLayout()
         self.main_widget.setLayout(self.main_layout)
 
+        # Layout for processing and console
         self.left_layout = QVBoxLayout()
         self.main_layout.addLayout(self.left_layout)
 
+        # Layout for figures and history list
         self.right_layout = QVBoxLayout()
         self.main_layout.addLayout(self.right_layout)
 
-        self.image_view_layout = QHBoxLayout()
-        self.right_layout.addLayout(self.image_view_layout)
-
-        self.image_view_splitter = QSplitter()
-        self.image_view_layout.addWidget(self.image_view_splitter)
-
         # Image view addition
-        self.image_view_widget = ImageViewController(parent=self)
-        self.image_view_splitter.addWidget(self.image_view_widget)
+        self.image_view_widget = FiguresLayoutController()
+        self.right_layout.addWidget(self.image_view_widget)
 
         # Layout for output history
         self.output_layout_h = QHBoxLayout()
@@ -111,7 +108,7 @@ class MainWindow(QMainWindow):
         self.output_layout_h.addWidget(self.methods_list)
 
         # Tab addition
-        self.tab_controller = TabController(parent=self)
+        self.tab_controller = ProcessingController(parent=self)
         self.left_layout.addWidget(self.tab_controller)
 
         self.postprocessing_controller = PostProcessingTabController(parent=self)
