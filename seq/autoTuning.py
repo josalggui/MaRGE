@@ -99,6 +99,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         if self.vna.device is None:
             print("\nNo nanoVNA found for auto-tuning.")
             print("Only test mode.")
+            return False
 
         if self.test == 'auto':
             return self.runAutoTuning()
