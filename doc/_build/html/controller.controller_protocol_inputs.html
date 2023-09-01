@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>controller.controller_protocol_inputs module &mdash; MaRCoS GUI 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="controller.controller_protocol_list module" href="controller.controller_protocol_list.html" />
+    <link rel="prev" title="controller.controller_plot3d module" href="controller.controller_plot3d.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MaRCoS GUI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">PhysioMRI_GUI</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="FirstMRI.html">FirstMRI module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autotuning.html">autotuning package</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="controller.html">controller package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="controller.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_console.html">controller.controller_console module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_figures.html">controller.controller_figures module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_history_list.html">controller.controller_history_list module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_main.html">controller.controller_main module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_menu.html">controller.controller_menu module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_plot1d.html">controller.controller_plot1d module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_plot3d.html">controller.controller_plot3d module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">controller.controller_protocol_inputs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_protocol_list.html">controller.controller_protocol_list module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_sequence_inputs.html">controller.controller_sequence_inputs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_sequence_list.html">controller.controller_sequence_list module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_session.html">controller.controller_session module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_smith_chart.html">controller.controller_smith_chart module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_figures.html">controller.controller_toolbar_figures module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_marcos.html">controller.controller_toolbar_marcos module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_protocols.html">controller.controller_toolbar_protocols module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_sequences.html">controller.controller_toolbar_sequences module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.experiment_gui.html">controller.experiment_gui module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="controller.html#module-controller">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MaRCoS GUI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">PhysioMRI_GUI</a></li>
+          <li class="breadcrumb-item"><a href="controller.html">controller package</a></li>
+      <li class="breadcrumb-item active">controller.controller_protocol_inputs module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/controller.controller_protocol_inputs.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-controller.controller_protocol_inputs">
+<span id="controller-controller-protocol-inputs-module"></span><h1>controller.controller_protocol_inputs module<a class="headerlink" href="#module-controller.controller_protocol_inputs" title="Permalink to this heading"></a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>J.M. Algarín</p>
+</dd>
+<dt class="field-even">email<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="mailto:josalggui&#37;&#52;&#48;i3m&#46;upv&#46;es">josalggui<span>&#64;</span>i3m<span>&#46;</span>upv<span>&#46;</span>es</a></p>
+</dd>
+<dt class="field-odd">affiliation<span class="colon">:</span></dt>
+<dd class="field-odd"><p>MRILab, i3M, CSIC, Valencia, Spain</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="controller.controller_protocol_inputs.ProtocolInputsController">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">controller.controller_protocol_inputs.</span></span><span class="sig-name descname"><span class="pre">ProtocolInputsController</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_protocol_inputs.html#ProtocolInputsController"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_protocol_inputs.ProtocolInputsController" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ProtocolInputsWidget</span></code></p>
+<p>Controller class for managing protocol inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – Variable length argument list.</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Inherits:</dt><dd><p>ProtocolInputsWidget: Base class for protocol inputs widget.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_protocol_inputs.ProtocolInputsController.deleteSequence">
+<span class="sig-name descname"><span class="pre">deleteSequence</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_protocol_inputs.html#ProtocolInputsController.deleteSequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_protocol_inputs.ProtocolInputsController.deleteSequence" title="Permalink to this definition"></a></dt>
+<dd><p>Deletes a sequence from the protocol inputs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_protocol_inputs.ProtocolInputsController.loadProtocolInputs">
+<span class="sig-name descname"><span class="pre">loadProtocolInputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_protocol_inputs.html#ProtocolInputsController.loadProtocolInputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_protocol_inputs.ProtocolInputsController.loadProtocolInputs" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_protocol_inputs.ProtocolInputsController.sequenceDoubleClicked">
+<span class="sig-name descname"><span class="pre">sequenceDoubleClicked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_protocol_inputs.html#ProtocolInputsController.sequenceDoubleClicked"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_protocol_inputs.ProtocolInputsController.sequenceDoubleClicked" title="Permalink to this definition"></a></dt>
+<dd><p>Handles double-click event on a sequence item.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>item</strong> (<em>QListWidgetItem</em>) – The item that was double-clicked.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_protocol_inputs.ProtocolInputsController.showContextMenu">
+<span class="sig-name descname"><span class="pre">showContextMenu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_protocol_inputs.html#ProtocolInputsController.showContextMenu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_protocol_inputs.ProtocolInputsController.showContextMenu" title="Permalink to this definition"></a></dt>
+<dd><p>Displays the context menu when right-clicked on an item.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>point</strong> (<em>QPoint</em>) – The position where the context menu was requested.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_protocol_inputs.ProtocolInputsController.showProtocolInputs">
+<span class="sig-name descname"><span class="pre">showProtocolInputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_protocol_inputs.html#ProtocolInputsController.showProtocolInputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_protocol_inputs.ProtocolInputsController.showProtocolInputs" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_protocol_inputs.ProtocolInputsController.showSequenceInputs">
+<span class="sig-name descname"><span class="pre">showSequenceInputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_protocol_inputs.html#ProtocolInputsController.showSequenceInputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_protocol_inputs.ProtocolInputsController.showSequenceInputs" title="Permalink to this definition"></a></dt>
+<dd><p>Displays the inputs for a selected sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>item</strong> (<em>QListWidgetItem</em>) – The selected item.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_protocol_inputs.ProtocolInputsController.updateProtocolInputs">
+<span class="sig-name descname"><span class="pre">updateProtocolInputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_protocol_inputs.html#ProtocolInputsController.updateProtocolInputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_protocol_inputs.ProtocolInputsController.updateProtocolInputs" title="Permalink to this definition"></a></dt>
+<dd><p>Updates the protocol inputs list.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="controller.controller_plot3d.html" class="btn btn-neutral float-left" title="controller.controller_plot3d module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="controller.controller_protocol_list.html" class="btn btn-neutral float-right" title="controller.controller_protocol_list module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, José Miguel Algarín.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

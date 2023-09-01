@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>controller.experiment_gui module &mdash; MaRCoS GUI 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="controller.controller_toolbar_sequences module" href="controller.controller_toolbar_sequences.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MaRCoS GUI
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">PhysioMRI_GUI</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="FirstMRI.html">FirstMRI module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="autotuning.html">autotuning package</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="controller.html">controller package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="controller.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_console.html">controller.controller_console module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_figures.html">controller.controller_figures module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_history_list.html">controller.controller_history_list module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_main.html">controller.controller_main module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_menu.html">controller.controller_menu module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_plot1d.html">controller.controller_plot1d module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_plot3d.html">controller.controller_plot3d module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_protocol_inputs.html">controller.controller_protocol_inputs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_protocol_list.html">controller.controller_protocol_list module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_sequence_inputs.html">controller.controller_sequence_inputs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_sequence_list.html">controller.controller_sequence_list module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_session.html">controller.controller_session module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_smith_chart.html">controller.controller_smith_chart module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_figures.html">controller.controller_toolbar_figures module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_marcos.html">controller.controller_toolbar_marcos module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_protocols.html">controller.controller_toolbar_protocols module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_sequences.html">controller.controller_toolbar_sequences module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">controller.experiment_gui module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="controller.html#module-controller">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MaRCoS GUI</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">PhysioMRI_GUI</a></li>
+          <li class="breadcrumb-item"><a href="controller.html">controller package</a></li>
+      <li class="breadcrumb-item active">controller.experiment_gui module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/controller.experiment_gui.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-controller.experiment_gui">
+<span id="controller-experiment-gui-module"></span><h1>controller.experiment_gui module<a class="headerlink" href="#module-controller.experiment_gui" title="Permalink to this heading"></a></h1>
+<p>&#64;author: J.M. Algarín, february 03th 2022
+MRILAB &#64; I3M</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="controller.experiment_gui.Experiment">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">controller.experiment_gui.</span></span><span class="sig-name descname"><span class="pre">Experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lo_freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rx_t</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.125</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_csv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rx_lo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_max_update_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpa_fhdo_offset_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_infos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assert_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_gpa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_wait</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_leds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_socket</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fix_cic_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_cic_shift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_user_init_cfg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">halt_and_reset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flush_old_rx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/experiment_gui.html#Experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.experiment_gui.Experiment" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></p>
+<p>Custom experiment class that extends the base Experiment class from the ‘ex’ module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lo_freq</strong> (<em>float</em>) – Frequency of the LO (Local Oscillator) in MHz.</p></li>
+<li><p><strong>rx_t</strong> (<em>float</em>) – RX (Receiver) time in microseconds. Should be multiples of 1/122.88, where some values like 3.125 are exact.</p></li>
+<li><p><strong>seq_dict</strong> (<em>dict</em>) – Dictionary containing the sequence information.</p></li>
+<li><p><strong>seq_csv</strong> (<em>str</em>) – Path to a CSV file containing the sequence information.</p></li>
+<li><p><strong>rx_lo</strong> (<em>int</em>) – Specifies which internal NCO (Numerically Controlled Oscillator) local oscillator to use for each channel.</p></li>
+<li><p><strong>grad_max_update_rate</strong> (<em>float</em>) – Maximum update rate of the gradient in MSPS (Mega Samples Per Second) across all channels in parallel.</p></li>
+<li><p><strong>gpa_fhdo_offset_time</strong> (<em>int</em>) – Offset time used when GPA-FHDO (Gradient Pulse Amplitude - Fractional High Dynamic Range Output) is used.</p></li>
+<li><p><strong>print_infos</strong> (<em>bool</em>) – Flag to control the display of server info messages.</p></li>
+<li><p><strong>assert_errors</strong> (<em>bool</em>) – Flag to control whether to halt on server errors.</p></li>
+<li><p><strong>init_gpa</strong> (<em>bool</em>) – Flag to initialize the GPA (Gradient Pulse Amplitude) when the Experiment object is created.</p></li>
+<li><p><strong>initial_wait</strong> (<em>float</em>) – Initial pause before the experiment begins, in microseconds. Required to configure the LOs (Local Oscillators) and RX rate.</p></li>
+<li><p><strong>auto_leds</strong> (<em>bool</em>) – Flag to automatically scan the LED (Light-Emitting Diode) pattern from 0 to 255 as the sequence runs.</p></li>
+<li><p><strong>prev_socket</strong> (<em>socket</em>) – Previously-opened socket to maintain status.</p></li>
+<li><p><strong>fix_cic_scale</strong> (<em>bool</em>) – Flag to scale the RX (Receiver) data precisely based on the rate being used.</p></li>
+<li><p><strong>set_cic_shift</strong> (<em>bool</em>) – Flag to program the CIC (Cascaded Integrator-Comb) internal bit shift to maintain the gain within a factor of 2 independent of the rate.</p></li>
+<li><p><strong>allow_user_init_cfg</strong> (<em>bool</em>) – Flag to allow user-defined alteration of flocra (Field-Programmable Logic Controller for Real-Time Acquisition) configuration set by init.</p></li>
+<li><p><strong>halt_and_reset</strong> (<em>bool</em>) – Flag to halt any existing sequences that may be running upon connecting to the server.</p></li>
+<li><p><strong>flush_old_rx</strong> (<em>bool</em>) – Flag to read out and clear the old RX (Receiver) FIFOs before running a sequence.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Summary:</dt><dd><p>The Experiment class extends the base Experiment class from the ‘ex’ module and provides additional functionality and customization for experiments.
+It inherits all the attributes and methods from the base class and overrides the __init__() and run() methods.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.experiment_gui.Experiment.getSamplingRate">
+<span class="sig-name descname"><span class="pre">getSamplingRate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/experiment_gui.html#Experiment.getSamplingRate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.experiment_gui.Experiment.getSamplingRate" title="Permalink to this definition"></a></dt>
+<dd><p>Get the sampling rate of the experiment in the sequence sampling rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The sampling rate in samples per second.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.experiment_gui.Experiment.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/experiment_gui.html#Experiment.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.experiment_gui.Experiment.run" title="Permalink to this definition"></a></dt>
+<dd><p>Compile the TX and gradient data and send everything over to the server.
+Returns the resultant data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>A tuple containing the resultant data and messages.</dt><dd><p>The resultant data is a dictionary containing the received IQ signals for each channel in mV.
+The messages are server messages.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>None</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="controller.controller_toolbar_sequences.html" class="btn btn-neutral float-left" title="controller.controller_toolbar_sequences module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, José Miguel Algarín.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

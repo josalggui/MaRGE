@@ -311,7 +311,7 @@ class HistoryListController(HistoryListWidget):
 
                     # Get the sequence to run
                     seq_name = self.pending_inputs[key][1][0]
-                    sequence = defaultsequences[seq_name]
+                    sequence = copy.copy(defaultsequences[seq_name])
 
                     # Modify input parameters of the sequence
                     n = 0

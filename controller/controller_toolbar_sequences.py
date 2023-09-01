@@ -234,7 +234,7 @@ class SequenceController(SequenceToolBar):
             thread = threading.Thread(target=self.repeatAcquisition)
             thread.start()
 
-    def runToList(self, seq_name=None, item_name=None):
+    def runToList(self, seq_name=None, item_name=None, map_nmspc=None, map_vals=None):
         """
         Add a new run to the waiting list.
 
@@ -257,18 +257,21 @@ class SequenceController(SequenceToolBar):
             name = str(datetime.now())[11:23] + " | " + item_name
         self.main.history_list.addItem(name)
 
+        if map_nmspc is None and map_vals is None:
+            map_nmspc = list(defaultsequences[seq_name].mapNmspc.values())
+            map_vals = list(defaultsequences[seq_name].mapVals.values())
+
         # Save results into the history
-        self.main.history_list.inputs[name] = [list(defaultsequences[seq_name].mapNmspc.values()),
-                                                     list(defaultsequences[seq_name].mapVals.values())]
-        self.main.history_list.pending_inputs[name] = [list(defaultsequences[seq_name].mapNmspc.values()),
-                                                             list(defaultsequences[seq_name].mapVals.values())]
+        self.main.history_list.inputs[name] = [map_nmspc, map_vals]
+        self.main.history_list.pending_inputs[name] = [map_nmspc, map_vals]
 
         # Set to zero the dfov and angle for next figures
-        for sequence in defaultsequences.values():
-            if 'dfov' in sequence.mapKeys:
-                sequence.mapVals['dfov'] = [0.0, 0.0, 0.0]   # mm
-            if 'angle' in sequence.mapKeys:
-                sequence.mapVals['angle'] = 0.0
+        # for sequence in defaultsequences.values():
+        #     if 'dfov' in sequence.mapKeys:
+        #         sequence.mapVals['dfov'] = [0.0, 0.0, 0.0]   # mm
+        #     if 'angle' in sequence.mapKeys:
+        #         sequence.mapVals['angle'] = 0.0
+
         self.main.sequence_list.updateSequence()
 
     def startSequencePlot(self):
@@ -282,9 +285,6 @@ class SequenceController(SequenceToolBar):
             This method plots the instructions of the current sequence. It retrieves the sequence name, creates the sequence
             to plot, runs the sequence in demo mode, and creates the necessary plots based on the sequence output.
         """
-        # if self.main.demo:
-        #     print("\nIt is not possible to plot a sequence in demo mode.")
-        #     return
 
         # Load sequence name
         self.seq_name = self.main.sequence_list.getCurrentSequence()

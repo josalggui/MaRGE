@@ -61,13 +61,14 @@ class ProtocolListController(ProtocolListWidget):
         # Add items corresponding to selected protocol
         self.main.protocol_inputs.addItems(self.main.protocol_inputs.sequences[self.protocol])
 
+        return 0
+
     def updateProtocolList(self):
         """
         Updates the list of protocols.
         """
         self.blockSignals(True)
         self.clear()
-        self.blockSignals(False)
 
         # Get the protocols
         self.protocols = []
@@ -77,5 +78,6 @@ class ProtocolListController(ProtocolListWidget):
 
         # Add protocols to list
         self.addItems(self.protocols)
+        self.blockSignals(False)
 
         self.protocol = self.getCurrentProtocol()

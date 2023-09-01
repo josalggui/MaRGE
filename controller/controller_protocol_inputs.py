@@ -6,6 +6,7 @@
 """
 import os
 import csv
+import copy
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTableWidgetItem, QMenu, QAction
@@ -95,20 +96,25 @@ class ProtocolInputsController(ProtocolInputsWidget):
             item (QListWidgetItem): The item that was double-clicked.
         """
         protocol = self.main.protocol_list.getCurrentProtocol()
-        sequence = item.text()
-        file = sequence + ".csv"
-        seq_name = sequence.split('_')[0]
+        protocol_item = item.text()
+        file = protocol_item + ".csv"
+        seq_name = protocol_item.split('_')[0]
+
+        sequence = copy.copy(defaultsequences[seq_name])
 
         # Load parameters
-        defaultsequences[seq_name].loadParams("protocols/"+protocol, file)
+        sequence.loadParams("protocols/"+protocol, file)
 
         # Set larmor frequency, fov and dfov to the value into the hw_config file
-        defaultsequences[seq_name].mapVals['larmorFreq'] = hw.larmorFreq
-        defaultsequences[seq_name].mapVals['fov'] = hw.fov
-        defaultsequences[seq_name].mapVals['dfov'] = hw.dfov
+        sequence.mapVals['larmorFreq'] = hw.larmorFreq
+        sequence.mapVals['fov'] = hw.fov
+        sequence.mapVals['dfov'] = hw.dfov
 
         # Run the sequence
-        self.main.toolbar_sequences.runToList(seq_name=seq_name, item_name=sequence)
+        map_nmspc = list(sequence.mapNmspc.values())
+        map_vals = list(sequence.mapVals.values())
+        self.main.toolbar_sequences.runToList(seq_name=seq_name, item_name=protocol_item, map_nmspc=map_nmspc,
+                                              map_vals=map_vals)
 
     def updateProtocolInputs(self):
         """
