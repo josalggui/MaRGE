@@ -533,7 +533,6 @@ class HistoryListControllerPos(HistoryListWidget):
 
         if selected_item.text() in self.hist_dict:
             del self.hist_dict[selected_item.text()]
-            self.main.history_widget.clear()
             self.main.image_view_widget.clear()
             self.clearSecondImageView()
 

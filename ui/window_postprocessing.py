@@ -6,15 +6,13 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApp
     QSplitter, QTextEdit
 
 from controller.controller_reconstruction import ReconstructionTabController
-from controller.postpocessing_tab_controller import PostProcessingTabController
+from controller.controller_postpocessing import PostProcessingTabController
 from controller.visualisation_tab_controller import VisualisationTabController
 from controller.controller_preprocessing import PreProcessingTabController
 from controller.controller_history_list import HistoryListControllerPos
 from controller.imageview_controller import ImageViewController
 from controller.controller_console import ConsoleControllerPost
 from controller.controller_toolbar_post import ToolBarControllerPost
-from controller.toolbar_controller import ToolBarController
-from widgets.history_list_widget import HistoryListWidget
 from controller.tab_controller import TabController
 
 

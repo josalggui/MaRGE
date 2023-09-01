@@ -107,19 +107,49 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         # Connect the image_fft_button clicked signal to the fftReconstruction method
         self.pocs_button.clicked.connect(self.pocsReconstruction)
-        self.image_fft_button.clicked.connect(self.fftReconstruction)
+        self.ifft_button.clicked.connect(self.ifft)
+        self.dfft_button.clicked.connect(self.dfft)
         self.image_art_button.clicked.connect(self.artReconstruction)
 
-    def fftReconstruction(self):
+    def dfft(self):
+        thread = threading.Thread(target=self.runDFFT)
+        thread.start()
+
+    def runDFFT(self):
+        """
+        """
+        # Get the k-space data from the main matrix
+        image = self.main.image_view_widget.main_matrix
+
+        # Perform direct FFT shift, inverse FFT, and inverse FFT shift to reconstruct the image in the spatial domain
+        k_space = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(image)))
+
+        # Update the main matrix of the image view widget with the image fft data
+        self.main.image_view_widget.main_matrix = k_space
+
+        # Add the "FFT" operation to the history widget
+        self.main.history_list.addItemWithTimestamp("dFFT")
+
+        # Update the history dictionary with the new main matrix for the current matrix info
+        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
+            self.main.image_view_widget.main_matrix
+
+        # Update the operations history
+        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "dFFT")
+
+        # Update the space dictionary
+        self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
+
+    def ifft(self):
         """
         Perform FFT reconstruction in a separate thread.
 
         Creates a new thread and runs the runFftReconstruction method in that thread.
         """
-        thread = threading.Thread(target=self.runFftReconstruction)
+        thread = threading.Thread(target=self.runIFFT)
         thread.start()
 
-    def runFftReconstruction(self):
+    def runIFFT(self):
         """
         Perform FFT reconstruction.
 
@@ -132,20 +162,20 @@ class ReconstructionTabController(ReconstructionTabWidget):
         k_space = self.main.image_view_widget.main_matrix
 
         # Perform inverse FFT shift, inverse FFT, and inverse FFT shift to reconstruct the image in the spatial domain
-        image_fft = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(k_space)))
+        image = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(k_space)))
 
         # Update the main matrix of the image view widget with the image fft data
-        self.main.image_view_widget.main_matrix = image_fft
+        self.main.image_view_widget.main_matrix = image
 
         # Add the "FFT" operation to the history widget
-        self.main.history_list.addItemWithTimestamp("FFT")
+        self.main.history_list.addItemWithTimestamp("iFFT")
 
         # Update the history dictionary with the new main matrix for the current matrix info
         self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
             self.main.image_view_widget.main_matrix
 
         # Update the operations history
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "FFT")
+        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "iFFT")
 
         # Update the space dictionary
         self.main.history_list.space[self.main.history_list.matrix_infos] = 'i'

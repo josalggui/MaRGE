@@ -55,35 +55,31 @@ class PreProcessingTabController(PreProcessingTabWidget):
         cosbell_order = float(self.cosbell_order_field.text())
 
         # Get the mat data from the loaded .mat file in the main toolbar controller
-        mat_data = self.main.toolbar_controller.mat_data
-        sampled = self.main.toolbar_controller.k_space_raw
+        mat_data = self.main.toolbar_image.mat_data
+        sampled = self.main.toolbar_image.k_space_raw
         nPoints = np.reshape(mat_data['nPoints'], -1)
 
         # Check which checkboxes are selected
+        theta = None
         text = "Cosbell -"
         if self.readout_checkbox.isChecked():
             k = np.reshape(sampled[:, 0], nPoints[-1::-1])
             kmax = np.max(np.abs(k[:]))
             text += ' RD,'
+            theta = k / kmax
         if self.phase_checkbox.isChecked():
             k = np.reshape(sampled[:, 1], nPoints[-1::-1])
             kmax = np.max(np.abs(k[:]))
             text += ' PH,'
+            theta = k / kmax
         if self.slice_checkbox.isChecked():
             k = np.reshape(sampled[:, 2], nPoints[-1::-1])
             kmax = np.max(np.abs(k[:]))
             text += ' SL,'
-
-        theta = k / kmax
-        s = np.reshape(sampled[:, 3], nPoints[-1::-1])
-        cosbell = s * (np.cos(theta * (np.pi / 2)) ** cosbell_order)
-
-        # Calculate logarithmic scale
-        small_value = 1e-10
-        cosbell_log = np.log10(cosbell + small_value)
+            theta = k / kmax
 
         # Update the main matrix of the image view widget with the cosbell data
-        self.main.image_view_widget.main_matrix = cosbell_log
+        self.main.image_view_widget.main_matrix *= (np.cos(theta * (np.pi / 2)) ** cosbell_order)
 
         # Add the "Cosbell" operation to the history widget with a timestamp
         self.main.history_list.addItemWithTimestamp("Cosbell")
@@ -93,8 +89,8 @@ class PreProcessingTabController(PreProcessingTabWidget):
             self.main.image_view_widget.main_matrix
 
         # Update the operations history with the Cosbell operation details
-        self.main.history_list.operations_dict[self.main.history_list.matrix_infos] = [text + " Order: "
-                                                                                                   + str(cosbell_order)]
+        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, text + " Order: "
+                                                    + str(cosbell_order))
 
         # Update the space dictionary
         self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
@@ -165,8 +161,8 @@ class PreProcessingTabController(PreProcessingTabWidget):
 
         # Update the operations history with the Zero Padding operation details
         self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos,
-                                                          "Zero Padding - RD: " + str(rd_order) + ", PH: "
-                                                          + str(ph_order) + ", SL: " + str(sl_order))
+                                                    "Zero Padding - RD: " + str(rd_order) + ", PH: "
+                                                    + str(ph_order) + ", SL: " + str(sl_order))
 
         # Update the space dictionary
         self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
@@ -189,8 +185,8 @@ class PreProcessingTabController(PreProcessingTabWidget):
         widget, and updates the operations history.
         """
         # Get the k_space data and its shape
-        k = self.main.toolbar_controller.k_space_raw.copy()
-        nPoints = self.main.toolbar_controller.nPoints
+        k = self.main.toolbar_image.k_space_raw.copy()
+        nPoints = self.main.toolbar_image.nPoints
 
         # Factors for FOV change from the text field
         factors = self.change_fov_field.text().split(',')
@@ -199,45 +195,28 @@ class PreProcessingTabController(PreProcessingTabWidget):
         krd = k[:, 0]
         kph = k[:, 1]
         ksl = k[:, 2]
-        s = k[:, 3]
-
         k = np.column_stack((krd, kph, ksl))
 
         # Convert factors to spatial shifts
-        delta_rd = (float(factors[0])) * 10 ** -3
-        delta_ph = (float(factors[1])) * 10 ** -3
-        delta_sl = (float(factors[2])) * 10 ** -3
+        delta_rd = (float(factors[0])) * 1e-3
+        delta_ph = (float(factors[1])) * 1e-3
+        delta_sl = (float(factors[2])) * 1e-3
         delta_r = np.array([delta_rd, delta_ph, delta_sl])
 
         # Calculate the phase shift using the spatial shifts
         phi = np.exp(-1j * 2 * np.pi * k @ np.reshape(delta_r, (3, 1)))
-        s = np.reshape(s, (np.size(phi, 0), 1)) * phi
-
-        # Reassemble the signal with the phase shift
-        signal = np.column_stack((k, s))
-        new_k_space = np.reshape(signal[:, 3], nPoints[-1::-1])
-
-        # Calculate logarithmic scale
-        small_value = 1e-10
-        new_k_space_log = np.log10(new_k_space + small_value)
-
-        # Update the main matrix of the image view widget with the k-space data
-        self.main.image_view_widget.main_matrix = new_k_space_log
+        self.main.image_view_widget.main_matrix *= np.reshape(phi, nPoints[-1::-1])
 
         # Add the "New FOV" operation to the history widget with a timestamp
-        self.main.history_list.addItemWithTimestamp("New FOV")
+        self.main.history_list.addItemWithTimestamp("FOV shifted")
 
         # Update the history dictionary with the new main matrix for the current matrix info
         self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
             self.main.image_view_widget.main_matrix
 
-        # Update the operations history with the New FOV operation details
-        self.main.history_list.operations_dict[self.main.history_list.matrix_infos] = ["New FOV - RD: " +
-                                                                                                   str(delta_rd) +
-                                                                                                   ", PH: " +
-                                                                                                   str(delta_ph) +
-                                                                                                   ", SL: " +
-                                                                                                   str(delta_sl)]
+        # Update the operations history
+        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "Shifted FOV - RD: " +
+                                                    str(delta_rd) + ", PH: " + str(delta_ph) + ", SL: " + str(delta_sl))
 
         # Update the space dictionary
         self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
@@ -260,8 +239,8 @@ class PreProcessingTabController(PreProcessingTabWidget):
         the history widget, and updates the operations history.
         """
         # Get the k_space data and its shape
-        k_space = self.main.toolbar_controller.k_space_raw.copy()
-        nPoints = self.main.toolbar_controller.nPoints
+        k_space = self.main.toolbar_image.k_space_raw.copy()
+        nPoints = self.main.toolbar_image.nPoints
 
         # Percentage for partial reconstruction from the text field
         percentage = float(self.partial_reconstruction_field.text()) * 10 ** -2
@@ -299,10 +278,9 @@ class PreProcessingTabController(PreProcessingTabWidget):
         self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
             self.main.image_view_widget.main_matrix
 
-        # Update the operations history with the Partial Reconstruction operation details
-        self.main.history_list.operations_dict[self.main.history_list.matrix_infos] = ["Partial "
-                                                                                                   "Reconstruction - "
-                                                                                                   + str(percentage)]
+        # Update the operations history
+        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "Partial Reconstruction - "
+                                                    + str(percentage))
 
         # Update the space dictionary
         self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
@@ -324,7 +302,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         Updates the main matrix of the image view widget with the interpolated image, adds the operation to the history
         widget, and updates the operations history.
         """
-        mat_data = self.main.toolbar_controller.mat_data
+        mat_data = self.main.toolbar_image.mat_data
 
         # Number of extra lines which has been taken past the center of k-space
         m = int(self.extra_lines_text_field.text())
@@ -365,4 +343,3 @@ class PreProcessingTabController(PreProcessingTabWidget):
 
         # Update the space dictionary
         self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
-

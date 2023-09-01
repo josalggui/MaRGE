@@ -53,10 +53,12 @@ class ReconstructionTabWidget(QTabWidget):
         self.art_group.setLayout(self.art_layout)
 
         # FFT
-        self.image_fft_button = QPushButton('FFT')
+        self.ifft_button = QPushButton('k-space -> i-space')
+        self.dfft_button = QPushButton('i-space -> k-space')
 
         self.fft_layout = QVBoxLayout()
-        self.fft_layout.addWidget(self.image_fft_button)
+        self.fft_layout.addWidget(self.ifft_button)
+        self.fft_layout.addWidget(self.dfft_button)
 
         self.fft_group = QGroupBox('FFT')
         self.fft_group.setLayout(self.fft_layout)
