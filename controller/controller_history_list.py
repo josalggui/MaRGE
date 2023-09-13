@@ -326,7 +326,7 @@ class HistoryListController(HistoryListWidget):
                         del self.pending_inputs[key]
                         # Delete outputs from the sequence
                         sequence.resetMapVals()
-                        self.main.sequence_list.updateSequence()
+                        # self.main.sequence_list.updateSequence()
                         print("\n" + key + " ready!")
                     time.sleep(0.1)
                 # Enable acquire button
