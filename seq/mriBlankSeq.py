@@ -217,10 +217,16 @@ class MRIBLANKSEQ:
                         mapValsNew = l
             else:
                 try:
-                    with open('%s/%s_last_parameters.csv' % (directory, file), 'r') as csvfile:
-                        reader = csv.DictReader(csvfile)
-                        for l in reader:
-                            mapValsNew = l
+                    if directory == 'calibration':
+                        with open('%s/%s_last_parameters.csv' % (directory, file), 'r') as csvfile:
+                            reader = csv.DictReader(csvfile)
+                            for l in reader:
+                                mapValsNew = l
+                    else:
+                        with open('%s/%s' % (directory, file), 'r') as csvfile:
+                            reader = csv.DictReader(csvfile)
+                            for l in reader:
+                                mapValsNew = l
                 except:
                     print("File %s/%s does not exist" % (directory, file))
                     print("File %s/%s loaded" % ("experiments/parameterization", self.mapVals['seqName']))
