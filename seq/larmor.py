@@ -122,6 +122,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         # Initialize the experiment
         self.bw = n_points / acq_time  # MHz
         sampling_period = 1 / self.bw  # us
+        self.mapVals['samplingPeriod'] = sampling_period
         if not self.demo:
             self.expt = ex.Experiment(lo_freq=self.larmorFreq * 1e-6,
                                       rx_t=sampling_period,
@@ -151,8 +152,8 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                 if not self.demo:
                     rxd, msgs = self.expt.run()
                 else:
-                    rxd = {'rx0': np.random.randn(acq_points * hw.oversamplingFactor) +
-                                  1j * np.random.randn(acq_points * hw.oversamplingFactor)}
+                    rxd = {'rx0': np.random.randn((acq_points + 2 * hw.addRdPoints) * hw.oversamplingFactor) +
+                                  1j * np.random.randn((acq_points + 2 * hw.addRdPoints) * hw.oversamplingFactor)}
                 data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
                 print("Acquired points = %i" % np.size([rxd['rx0']]))
                 print("Expected points = %i" % ((acq_points + 2 * hw.addRdPoints) * hw.oversamplingFactor))

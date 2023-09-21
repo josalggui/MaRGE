@@ -39,7 +39,7 @@ class GRE1D(blankSeq.MRIBLANKSEQ):
         self.echoTime = None
         self.shimming = None
         self.rdDephTime = None
-        self.fov = None
+        self.fov_1d = None
         self.nPoints = None
         self.rdGradTime = None
         self.acqTime = None
@@ -55,7 +55,7 @@ class GRE1D(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=1.0, field='SEQ', units=units.ms)
         self.addParameter(key='rxTime', string='Acquisition window (ms)', val=1.0, field='SEQ', units=units.ms)
-        self.addParameter(key='fov', string='FOV (cm)', val=15.0, units=units.cm, field='IM')
+        self.addParameter(key='fov_1d', string='FOV (cm)', val=15.0, units=units.cm, field='IM')
         self.addParameter(key='axis', string='Axis', val=0, field='IM', tip="0=x, 1=y, 2=z")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.0, units=units.ms, field='OTH')
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
@@ -90,7 +90,7 @@ class GRE1D(blankSeq.MRIBLANKSEQ):
             self.mapVals['rdGradTime'] = self.rdGradTime * 1
 
         # Max gradient amplitude
-        rd_grad_amplitude = self.nPoints / (hw.gammaB * self.fov * self.acqTime)
+        rd_grad_amplitude = self.nPoints / (hw.gammaB * self.fov_1d * self.acqTime)
         self.mapVals['rd_grad_amplitude'] = rd_grad_amplitude
 
         # Readout dephasing amplitude
@@ -207,7 +207,7 @@ class GRE1D(blankSeq.MRIBLANKSEQ):
         s1 = s0[int(self.n_rd / 2 - self.nPoints / 2):int(self.n_rd / 2 + self.nPoints / 2)]
         img = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(s1)))
         t_vector = np.linspace(-self.rxTime / 2, self.rxTime / 2, self.n_rd) * 1e-3  # ms
-        x_vector = np.linspace(-self.fov / 2, self.fov / 2, self.nPoints) * 1e2  # cm
+        x_vector = np.linspace(-self.fov_1d / 2, self.fov_1d / 2, self.nPoints) * 1e2  # cm
 
         # Plot image magnitude
         result1 = {'widget': 'curve',

@@ -246,28 +246,35 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         # Create experiment
         bw = self.nPoints / self.acqTime * hw.oversamplingFactor  # MHz
         samplingPeriod = 1 / bw
-        self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset,
-                                  rx_t=samplingPeriod,
-                                  init_gpa=False,
-                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                  )
-        samplingPeriod = self.expt.get_rx_ts()[0]
+        if not self.demo:
+            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset,
+                                      rx_t=samplingPeriod,
+                                      init_gpa=False,
+                                      gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                                      )
+            samplingPeriod = self.expt.get_rx_ts()[0]
+        self.mapVals['samplingPeriod'] = samplingPeriod
         bw = 1 / samplingPeriod / hw.oversamplingFactor  # MHz
         self.mapVals['bw'] = bw * 1e6  # Hz
         self.acqTime = self.nPoints / bw  # us
         self.createSequence()
-        if self.floDict2Exp():
-            print("\nSequence waveforms loaded successfully")
-            pass
-        else:
-            print("\nERROR: sequence waveforms out of hardware bounds")
-            return False
+        if not self.demo:
+            if self.floDict2Exp():
+                print("\nSequence waveforms loaded successfully")
+                pass
+            else:
+                print("\nERROR: sequence waveforms out of hardware bounds")
+                return False
 
         # Run experiment and get best shimming for current axis
         if not self.plot_seq:
-            rxd, msgs = self.expt.run()
-            self.expt.__del__()
-            print(msgs)
+            if not self.demo:
+                rxd, msgs = self.expt.run()
+                print(msgs)
+                self.expt.__del__()
+            else:
+                rxd = {'rx0': np.random.randn(self.nPoints * self.nShimming * hw.oversamplingFactor) +
+                              1j * np.random.randn(self.nPoints * self.nShimming * hw.oversamplingFactor)}
             data = sig.decimate(rxd['rx0'] * hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = np.concatenate((self.mapVals['data'], data), axis=0)
             data = np.reshape(data, (self.nShimming, -1))
