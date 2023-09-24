@@ -210,19 +210,19 @@ class MRIBLANKSEQ:
         """
         mapValsOld = self.mapVals
         try:
-            if file is None:
+            if file is None:    # Load last parameters
                 with open('%s/%s_last_parameters.csv' % (directory, self.mapVals['seqName']), 'r') as csvfile:
                     reader = csv.DictReader(csvfile)
                     for l in reader:
                         mapValsNew = l
             else:
                 try:
-                    if directory == 'calibration':
+                    if directory == 'calibration':  # Load parameters from calibration directory
                         with open('%s/%s_last_parameters.csv' % (directory, file), 'r') as csvfile:
                             reader = csv.DictReader(csvfile)
                             for l in reader:
                                 mapValsNew = l
-                    else:
+                    else:   # Load parameters from protocol directory
                         with open('%s/%s' % (directory, file), 'r') as csvfile:
                             reader = csv.DictReader(csvfile)
                             for l in reader:

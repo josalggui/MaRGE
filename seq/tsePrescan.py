@@ -21,7 +21,7 @@ class TSEPRE(blankSeq.MRIBLANKSEQ):
         self.axis = None
         self.rdPreemphasis = None
         self.rdDephTime = None
-        self.fov = None
+        self.fov_1d = None
         self.rdGradTime = None
         self.nScans = None
         self.expt = None
@@ -45,7 +45,7 @@ class TSEPRE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ', units=units.ms)
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ', units=units.ms)
-        self.addParameter(key='fov', string='FOV (cm)', val=15.0, units=units.cm, field='IM')
+        self.addParameter(key='fov_1d', string='FOV (cm)', val=15.0, units=units.cm, field='IM')
         self.addParameter(key='axis', string='Axis', val=0, field='IM', tip="0=x, 1=y, 2=z")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=5.0, units=units.ms, field='OTH')
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
@@ -82,7 +82,7 @@ class TSEPRE(blankSeq.MRIBLANKSEQ):
             self.mapVals['rdGradTime'] = self.rdGradTime * 1
 
         # Max gradient amplitude
-        rd_grad_amplitude = self.nPoints / (hw.gammaB * self.fov * self.acqTime)
+        rd_grad_amplitude = self.nPoints / (hw.gammaB * self.fov_1d * self.acqTime)
         self.mapVals['rd_grad_amplitude'] = rd_grad_amplitude
 
         # Readout dephasing amplitude
@@ -197,7 +197,7 @@ class TSEPRE(blankSeq.MRIBLANKSEQ):
         signal = np.reshape(self.mapVals['data'], (self.etl, -1))
         img1 = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal[0, :])))
         img2 = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal[1, :])))
-        x_vector = np.linspace(-self.fov/2, self.fov/2, self.nPoints)
+        x_vector = np.linspace(-self.fov_1d/2, self.fov_1d/2, self.nPoints)
 
         # Plot image magnitude
         result1 = {'widget': 'curve',
