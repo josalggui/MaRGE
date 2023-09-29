@@ -218,6 +218,8 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         test = True
         n = 1
         while test:
+            if n >= nSteps:
+                break
             if self.cal_method == 'FID':
                 d = np.abs(rabiFID[n]) - np.abs(rabiFID[n - 1])
             elif self.cal_method == 'ECHO':
