@@ -644,6 +644,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             image = image/np.max(np.reshape(image,-1))*100
 
             # Image orientation
+            imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
             if self.axesOrientation[2] == 2:  # Sagital
                 title = "Sagittal"
                 if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  # OK
@@ -651,12 +652,14 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                     image = np.flip(image, axis=1)
                     xLabel = "A | PHASE | P"
                     yLabel = "I | READOUT | S"
+                    imageOrientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
                 else:
                     image = np.transpose(image, (0, 2, 1))
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
                     xLabel = "A | READOUT | P"
                     yLabel = "I | PHASE | S"
+                    imageOrientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
             if self.axesOrientation[2] == 1:  # Coronal
                 title = "Coronal"
                 if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2:  # OK
@@ -665,6 +668,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                     image = np.flip(image, axis=0)
                     xLabel = "R | PHASE | L"
                     yLabel = "I | READOUT | S"
+                    imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
                 else:
                     image = np.transpose(image, (0, 2, 1))
                     image = np.flip(image, axis=2)
@@ -672,6 +676,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                     image = np.flip(image, axis=0)
                     xLabel = "R | READOUT | L"
                     yLabel = "I | PHASE | S"
+                    imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
             if self.axesOrientation[2] == 0:  # Transversal
                 title = "Transversal"
                 if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
@@ -679,12 +684,14 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                     image = np.flip(image, axis=1)
                     xLabel = "R | PHASE | L"
                     yLabel = "P | READOUT | A"
+                    imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
                 else:  # OK
                     image = np.transpose(image, (0, 2, 1))
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
                     xLabel = "R | READOUT | L"
                     yLabel = "P | PHASE | A"
+                    imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
 
             result1 = {}
             result1['widget'] = 'image'
@@ -741,6 +748,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             self.meta_data["PixelData"] = arr.tobytes()
             self.meta_data["WindowWidth"] = 26373
             self.meta_data["WindowCenter"] = 13194
+            self.meta_data["ImageOrientationPatient"] = imageOrientation_dicom
             # Sequence parameters
             self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
             self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
