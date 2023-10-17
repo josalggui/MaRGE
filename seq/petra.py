@@ -538,38 +538,55 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             timesignal = np.linspace(0,self.mapVals['acqTime'], self.mapVals['nPoints'][0])
             pos = np.linspace(-self.mapVals['fov'][0]/2, self.mapVals['fov'][0]/2, self.mapVals['nPoints'][0])
 
+            # Plots to show into the GUI
+            result1 = {}
+            result1['widget'] = 'curve'
+            result1['xData'] = timesignal
+            result1['yData'] = [signal[:, 3], signal[:, 4], signal[:, 5]]
+            result1['xLabel'] = 'Time (ms)'
+            result1['yLabel'] = 'Signal amplitude (mV)'
+            result1['title'] = "Signal"
+            result1['legend'] = ['Magnitude', 'Real', 'Imaginary']
+            result1['row'] = 0
+            result1['col'] = 0
 
-            signalPlotWidget = SpectrumPlot(xData=timesignal,
-                                            yData=[signal[:, 3], signal[:, 4], signal[:, 5]],
-                                            legend=['abs', 'real', 'imag'],
-                                            xLabel='t (ms)',
-                                            yLabel='Signal amplitude (mV)',
-                                            title='Signal vs time')
+            result2 = {}
+            result2['widget'] = 'curve'
+            result2['xData'] = pos
+            result2['yData'] = [np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(self.valCartesian))))]
+            result2['xLabel'] = 'Position (cm)'
+            result2['yLabel'] = "Amplitude (a.u.)"
+            result2['title'] = "Spectrum"
+            result2['legend'] = ['G=0']
+            result2['row'] = 1
+            result2['col'] = 0
 
-
-            spectrumPlotWidget = SpectrumPlot(xData=pos,
-                                              yData=[np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(self.valCartesian))))],
-                                              legend=['G=0'],
-                                              xLabel='Position (cm)',
-                                              yLabel='Signal amplitude (mV)',
-                                              title='Signal vs freq')
-            return ([signalPlotWidget, spectrumPlotWidget])
-
+            self.output = [result1, result2]
+            
         else:
-            image = Spectrum3DPlot(np.abs(image),
-                                   title='Image magnitude',
-                                   xLabel=axislegend[0],
-                                   yLabel=axislegend[1])
+            result1 = {}
+            result1['widget'] = 'image'
+            result1['data'] = np.abs(image)
+            result1['xLabel'] = axislegend[0]
+            result1['yLabel'] = axislegend[1]
+            result1['title'] = "Image magnitude"
+            result1['row'] = 0
+            result1['col'] = 0
 
-            imageWidget = image.getImageWidget()
+            result2 = {}
+            result2['widget'] = 'image'
+            result2['data'] = np.abs(kSpace)
+            result2['xLabel'] = "k"
+            result2['yLabel'] = "k"
+            result2['title'] = "k-Space"
+            result2['row'] = 0
+            result2['col'] = 1
 
-            kSpace = Spectrum3DPlot((np.abs(kSpace)),
-                                    title='k-Space',
-                                    xLabel="k",
-                                    yLabel="k")
-            kSpaceWidget = kSpace.getImageWidget()
+            self.output = [result1, result2]
 
-            return ([imageWidget, kSpaceWidget])
+            self.saveRawData()
+
+        return self.output
 
 
 # if __name__=='__main__':
