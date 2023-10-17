@@ -62,7 +62,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
-        self.addParameter(key='freqCal', string='Calibrate frequency', val=1, field='OTH', tip="0 to not calibrate, 1 to calibrate")
+        # self.addParameter(key='freqCal', string='Calibrate frequency', val=1, field='OTH', tip="0 to not calibrate, 1 to calibrate")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
 
@@ -396,9 +396,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['scanTime'] = scanTime*nSL*1e-6
 
         # Calibrate frequency
-        if self.freqCal and (not plotSeq) and (not self.demo):
-            hw.larmorFreq = self.freqCalibration(bw=0.05)
-            hw.larmorFreq = self.freqCalibration(bw=0.005)
+        # if self.freqCal and (not plotSeq) and (not self.demo):
+        #     hw.larmorFreq = self.freqCalibration(bw=0.05)
+        #     hw.larmorFreq = self.freqCalibration(bw=0.005)
         self.mapVals['larmorFreq'] = hw.larmorFreq
 
         # Create full sequence

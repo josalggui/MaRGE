@@ -58,8 +58,8 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                           tip='0: normal, 1: rf spoiler, 2: gradient spoiler, 3: rf and gradient spoilre, 4: balanced.')
         self.addParameter(key='spoiler_order', string='Gradient spoiler order', val=3, field='SEQ',
                           tip='Higher orders will require longer repetition times')
-        self.addParameter(key='freqCal', string='Calibrate frequency', val=1, field='OTH',
-                          tip="0 to not calibrate, 1 to calibrate")
+        # self.addParameter(key='freqCal', string='Calibrate frequency', val=1, field='OTH',
+        #                   tip="0 to not calibrate, 1 to calibrate")
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH',
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
 
@@ -293,9 +293,9 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             return(ph_index, sl_index, ln_index, repe_index_global, acq_points)
 
         # Calibrate frequency
-        if self.freqCal and (not plotSeq) and (not self.demo):
-            hw.larmorFreq = self.freqCalibration(bw=0.05)
-            hw.larmorFreq = self.freqCalibration(bw=0.005)
+        # if self.freqCal and (not plotSeq) and (not self.demo):
+        #     hw.larmorFreq = self.freqCalibration(bw=0.05)
+        #     hw.larmorFreq = self.freqCalibration(bw=0.005)
         self.mapVals['larmorFreq'] = hw.larmorFreq
 
         # Initialize the experiment
