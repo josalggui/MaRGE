@@ -749,6 +749,9 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             self.meta_data["WindowWidth"] = 26373
             self.meta_data["WindowCenter"] = 13194
             self.meta_data["ImageOrientationPatient"] = imageOrientation_dicom
+            resolution = self.mapVals['resolution']*1e3
+            self.meta_data["PixelSpacing"] = [resolution[0], resolution[1]]
+            self.meta_data["SliceThickness"] = resolution[2]
             # Sequence parameters
             self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
             self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
