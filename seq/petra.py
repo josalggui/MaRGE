@@ -470,7 +470,6 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         return True
 
     def sequenceAnalysis(self, obj=''):
-        self.saveRawData()
         axesEnable = self.mapVals['axesEnable']
         kSpace = self.mapVals['kSpaceArray']
         image = self.mapVals['ImageFFT']
@@ -584,7 +583,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
             self.output = [result1, result2]
 
-            self.saveRawData()
+        self.saveRawData()
 
         return self.output
 
