@@ -312,7 +312,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
             for ii in range(dummyPulses):
                 tdummy = tInit + tr * (ii + 1) + Grisetime + delayGtoRF
-                self.rfRecPulse(tdummy, RFpulsetime, rfExAmp, drfPhase * np.pi / 180, txChannel=txChannel)
+                self.rfRecPulse(tdummy, RFpulsetime, rfExAmp, drfPhase * np.pi / 180, channel=txChannel)
 
             tInit = tInit + tr*dummyPulses
 
@@ -585,6 +585,9 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
         self.saveRawData()
 
+        if self.mode == 'Standalone':
+            self.plotResults()
+            
         return self.output
 
 
