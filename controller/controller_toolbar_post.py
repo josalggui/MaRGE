@@ -2,7 +2,7 @@ import copy
 
 import scipy as sp
 import numpy as np
-from PyQt5.QtWidgets import QFileDialog, QLabel
+from PyQt5.QtWidgets import QFileDialog, QLabel, QSizePolicy
 from scipy.interpolate import griddata
 from widgets.widget_toolbar_post import ToolBarWidgetPost
 from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
@@ -91,12 +91,18 @@ class ToolBarControllerPost(ToolBarWidgetPost):
                                y_label=y_label,
                                title=title)
 
+        # Set window title
+        self.main.setWindowTitle(self.mat_data['fileName'][0])
+
+        # Delete all widgets from image_view_widget
+        self.main.image_view_widget.clearFiguresLayout()
+
         # Create label widget
         label = QLabel()
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet("background-color: black;color: white")
         self.main.image_view_widget.addWidget(label, row=0, col=0, colspan=2)
-        label.setText(self.mat_data['fileName'][0])
+        label.setText(file_path)
 
         # Add widgets to the figure layout
         self.main.image_view_widget.addWidget(label, row=0, col=0)

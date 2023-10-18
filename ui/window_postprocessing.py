@@ -3,7 +3,7 @@ import qdarkstyle
 from PyQt5.QtCore import QThreadPool, QSize
 
 from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApplication, QStatusBar, QMenuBar, \
-    QSplitter, QTextEdit
+    QSplitter, QTextEdit, QSizePolicy
 
 from controller.controller_reconstruction import ReconstructionTabController
 from controller.controller_postpocessing import PostProcessingTabController
@@ -89,6 +89,7 @@ class MainWindow(QMainWindow):
 
         # Image view addition
         self.image_view_widget = FiguresLayoutController()
+        self.image_view_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.right_layout.addWidget(self.image_view_widget)
 
         # Layout for output history

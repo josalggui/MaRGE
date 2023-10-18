@@ -69,7 +69,7 @@ class HistoryListController(HistoryListWidget):
             menu.addAction(action3)
             action4 = QAction("Post-processing", self)
             action4.triggered.connect(self.openPostGui)
-            menu.addAction((action4))
+            menu.addAction(action4)
 
             menu.exec_(self.mapToGlobal(point))
 
@@ -449,7 +449,28 @@ class HistoryListControllerPos(HistoryListWidget):
                 image[image == np.inf] = val
             else:
                 image = np.abs(self.main.image_view_widget.main_matrix)
-            self.main.image_view_widget.setImage(image)
+
+            # Delete all widgets from image_view_widget
+            self.main.image_view_widget.clearFiguresLayout()
+
+            # Create label widget
+            label = QLabel()
+            label.setAlignment(QtCore.Qt.AlignCenter)
+            label.setStyleSheet("background-color: black;color: white")
+            self.main.image_view_widget.addWidget(label, row=0, col=0, colspan=2)
+            label.setText(selected_text)
+
+            # Create image_widget
+            image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(image)
+            image = Spectrum3DPlot(main=self.main,
+                                   data=image2show,
+                                   x_label=x_label,
+                                   y_label=y_label,
+                                   title=title)
+
+            # Add widgets to the figure layout
+            self.main.image_view_widget.addWidget(label, row=0, col=0)
+            self.main.image_view_widget.addWidget(image, row=1, col=0)
 
         self.clearSecondImageView()
         self.main.visualisation_controller.clear2DImage()
