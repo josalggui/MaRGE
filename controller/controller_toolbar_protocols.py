@@ -90,6 +90,7 @@ class ProtocolsController(ProtocolsToolBar):
 
             # Check if the folder is the good one
             directory = os.path.dirname(file_name).split('/')[-1]
+            protocol = file_name.split('/')[-1]
             if directory != 'protocols':
                 print("Error. New protocols should be in 'protocols' folder.")
                 return
@@ -97,7 +98,9 @@ class ProtocolsController(ProtocolsToolBar):
             if not os.path.exists(file_name):
                 os.makedirs(file_name)
                 print("New protocol created successfully")
+                self.main.protocol_inputs.sequences[protocol] = []
                 self.main.protocol_list.updateProtocolList()
+                self.main.protocol_inputs.updateProtocolInputs()
             else:
                 print("Protocol already exist")
 

@@ -141,10 +141,10 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             gradientAmplitudes[2] = 0
 
 
-        nPPL = np.int(np.ceil((1.73205 * acqTime - deadTime - 0.5 * rfExTime) * BW * 1e6 + 1))
-        nLPC = np.int(np.ceil(max(nPoints[0], nPoints[1]) * np.pi / undersampling))
+        nPPL = int(np.ceil((1 * acqTime - deadTime - 0.5 * rfExTime) * BW * 1e6 + 1))
+        nLPC = int(np.ceil(max(nPoints[0], nPoints[1]) * np.pi / undersampling))
         nLPC = max(nLPC - (nLPC % 2), 1)
-        nCir = max(np.int(np.ceil(nPoints[2] * np.pi / 2 / undersampling) + 1), 1)
+        nCir = max(int(np.ceil(nPoints[2] * np.pi / 2 / undersampling) + 1), 1)
 
         if axesEnable[0] == 0 or axesEnable[1] == 0 or axesEnable[2] == 0:
             nCir = 1
@@ -169,7 +169,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             theta = np.linspace(0, np.pi, nCir)
 
         for jj in range(nCir):
-            nRepetitions = nRepetitions + max(np.int(np.ceil(nLPC * np.sin(theta[jj]))), 1)
+            nRepetitions = nRepetitions + max(int(np.ceil(nLPC * np.sin(theta[jj]))), 1)
         self.mapVals['nRadialReadouts'] = nRepetitions
         self.mapVals['theta'] = theta
 
@@ -185,7 +185,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
         # Calculate the normalized gradients:
         for jj in range(nCir):
-            nLPCjj = max(np.int(np.ceil(nLPC * np.sin(theta[jj]))), 1)
+            nLPCjj = max(int(np.ceil(nLPC * np.sin(theta[jj]))), 1)
             deltaPhi = 2 * np.pi / nLPCjj
             phi = np.linspace(0, 2 * np.pi - deltaPhi, nLPCjj)
 
@@ -312,7 +312,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
             for ii in range(dummyPulses):
                 tdummy = tInit + tr * (ii + 1) + Grisetime + delayGtoRF
-                self.rfRecPulse(tdummy, RFpulsetime, rfExAmp, drfPhase * np.pi / 180, txChannel=txChannel)
+                self.rfRecPulse(tdummy, RFpulsetime, rfExAmp, drfPhase * np.pi / 180, channel=txChannel)
 
             tInit = tInit + tr*dummyPulses
 
@@ -336,7 +336,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
                 # Excitation pulse
                 trf0 = t0 + Grisetime + delayGtoRF
-                self.rfRecPulse(trf0, RFpulsetime, rfExAmp, drfPhase * np.pi / 180, txChannel=txChannel)
+                self.rfRecPulse(trf0, RFpulsetime, rfExAmp, drfPhase * np.pi / 180)
 
                 if repeIndex < gradientVectors1.shape[0]:
                     tACQ = acqTimeSeq
@@ -345,7 +345,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
                 # Rx gate
                 t0rx = trf0 + hw.blkTime + RFpulsetime + TxRxtime
-                self.rxGateSync(t0rx, tACQ, rxChannel=rxChannel)
+                self.rxGateSync(t0rx, tACQ)
 
                 if repeIndex == nRep-1:
                     self.endSequence(tInit + (nRep+1) * tr)
@@ -470,7 +470,6 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         return True
 
     def sequenceAnalysis(self, obj=''):
-        self.saveRawData()
         axesEnable = self.mapVals['axesEnable']
         kSpace = self.mapVals['kSpaceArray']
         image = self.mapVals['ImageFFT']
@@ -538,38 +537,58 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             timesignal = np.linspace(0,self.mapVals['acqTime'], self.mapVals['nPoints'][0])
             pos = np.linspace(-self.mapVals['fov'][0]/2, self.mapVals['fov'][0]/2, self.mapVals['nPoints'][0])
 
+            # Plots to show into the GUI
+            result1 = {}
+            result1['widget'] = 'curve'
+            result1['xData'] = timesignal
+            result1['yData'] = [signal[:, 3], signal[:, 4], signal[:, 5]]
+            result1['xLabel'] = 'Time (ms)'
+            result1['yLabel'] = 'Signal amplitude (mV)'
+            result1['title'] = "Signal"
+            result1['legend'] = ['Magnitude', 'Real', 'Imaginary']
+            result1['row'] = 0
+            result1['col'] = 0
 
-            signalPlotWidget = SpectrumPlot(xData=timesignal,
-                                            yData=[signal[:, 3], signal[:, 4], signal[:, 5]],
-                                            legend=['abs', 'real', 'imag'],
-                                            xLabel='t (ms)',
-                                            yLabel='Signal amplitude (mV)',
-                                            title='Signal vs time')
+            result2 = {}
+            result2['widget'] = 'curve'
+            result2['xData'] = pos
+            result2['yData'] = [np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(self.valCartesian))))]
+            result2['xLabel'] = 'Position (cm)'
+            result2['yLabel'] = "Amplitude (a.u.)"
+            result2['title'] = "Spectrum"
+            result2['legend'] = ['G=0']
+            result2['row'] = 1
+            result2['col'] = 0
 
-
-            spectrumPlotWidget = SpectrumPlot(xData=pos,
-                                              yData=[np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(self.valCartesian))))],
-                                              legend=['G=0'],
-                                              xLabel='Position (cm)',
-                                              yLabel='Signal amplitude (mV)',
-                                              title='Signal vs freq')
-            return ([signalPlotWidget, spectrumPlotWidget])
-
+            self.output = [result1, result2]
+            
         else:
-            image = Spectrum3DPlot(np.abs(image),
-                                   title='Image magnitude',
-                                   xLabel=axislegend[0],
-                                   yLabel=axislegend[1])
+            result1 = {}
+            result1['widget'] = 'image'
+            result1['data'] = np.abs(image)
+            result1['xLabel'] = axislegend[0]
+            result1['yLabel'] = axislegend[1]
+            result1['title'] = "Image magnitude"
+            result1['row'] = 0
+            result1['col'] = 0
 
-            imageWidget = image.getImageWidget()
+            result2 = {}
+            result2['widget'] = 'image'
+            result2['data'] = np.abs(kSpace)
+            result2['xLabel'] = "k"
+            result2['yLabel'] = "k"
+            result2['title'] = "k-Space"
+            result2['row'] = 0
+            result2['col'] = 1
 
-            kSpace = Spectrum3DPlot((np.abs(kSpace)),
-                                    title='k-Space',
-                                    xLabel="k",
-                                    yLabel="k")
-            kSpaceWidget = kSpace.getImageWidget()
+            self.output = [result1, result2]
 
-            return ([imageWidget, kSpaceWidget])
+        self.saveRawData()
+
+        if self.mode == 'Standalone':
+            self.plotResults()
+            
+        return self.output
 
 
 # if __name__=='__main__':

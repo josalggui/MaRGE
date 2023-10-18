@@ -98,6 +98,7 @@ class SequenceController(SequenceToolBar):
 
         for seq_name in seq_names:
             # Execute the sequence
+            defaultsequences[seq_name].loadParams(directory='calibration', file=seq_name)
             if seq_name == 'RabiFlops':
                 rf_amp = np.pi/(hw.b1Efficiency*70)
                 defaultsequences[seq_name].mapVals['rfExAmp'] = rf_amp

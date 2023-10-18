@@ -154,30 +154,38 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # Create experiment
         bw = nPoints / acqTime * hw.oversamplingFactor  # MHz
         samplingPeriod = 1 / bw
-        self.expt = ex.Experiment(lo_freq=hw.larmorFreq + freqOffset,
-                                  rx_t=samplingPeriod,
-                                  init_gpa=init_gpa,
-                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                  print_infos=False,
-                                  )
-        samplingPeriod = self.expt.get_rx_ts()[0]
+        if not self.demo:
+            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + freqOffset,
+                                      rx_t=samplingPeriod,
+                                      init_gpa=init_gpa,
+                                      gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                                      print_infos=False,
+                                      )
+            samplingPeriod = self.expt.get_rx_ts()[0]
+        self.mapVals['samplingPeriod'] = samplingPeriod
         bw = 1 / samplingPeriod / hw.oversamplingFactor
         self.mapVals['bw'] = bw * 1e6
         acqTime = nPoints / bw
 
         # Execute the experiment
         createSequence()
-        if self.floDict2Exp():
-            print("\nSequence waveforms loaded successfully")
-            pass
-        else:
-            print("\nERROR: sequence waveforms out of hardware bounds")
-            return False
+        if not self.demo:
+            if self.floDict2Exp():
+                print("\nSequence waveforms loaded successfully")
+                pass
+            else:
+                print("\nERROR: sequence waveforms out of hardware bounds")
+                return False
         if not plotSeq:
-            rxd, msgs = self.expt.run()
+            if not self.demo:
+                rxd, msgs = self.expt.run()
+                self.expt.__del__()
+                print(msgs)
+            else:
+                rxd = {'rx0': np.random.randn(2 * self.nPoints * self.nSteps * hw.oversamplingFactor) +
+                              1j * np.random.randn(2 * self.nPoints * self.nSteps * hw.oversamplingFactor)}
             rxd['rx0'] = rxd['rx0'] * hw.adcFactor  # Here I normalize to get the result in mV
             self.mapVals['dataOversampled'] = rxd['rx0']
-        self.expt.__del__()
         return True
 
     def sequenceAnalysis(self, mode=None):
@@ -210,6 +218,8 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         test = True
         n = 1
         while test:
+            if n >= nSteps:
+                break
             if self.cal_method == 'FID':
                 d = np.abs(rabiFID[n]) - np.abs(rabiFID[n - 1])
             elif self.cal_method == 'ECHO':

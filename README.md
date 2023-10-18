@@ -1,613 +1,687 @@
 # MaRCoS Graphical User Interface
 
-Python code associated to the Graphical User Interface of MaRCoS.
+This repository contains the Python code for the Graphical User Interface (GUI) of MaRCoS, a system for magnetic resonance imaging research. The GUI provides a user-friendly interface to interact with the MaRCoS system.
 
 ## Installation
 
-The Graphical User Interface (GUI) for MaRCoS has been developed in python. Then, to run the GUI the user need to
-install python3 into the computer.
+To run the MaRCoS GUI, you will need to have Python 3 installed on your computer. If you don't have it installed, you can download it from [python.org](https://www.python.org/downloads/).
 
-Then, clone in the same folder the four repositories indicated here:
+Next, follow these steps to set up the MaRCoS GUI:
 
-- marcos_client from *https://github.com/vnegnev*
-- marcos_server from *https://github.com/vnegnev*
-- marcos_extras from *https://github.com/vnegnev*
-- PhysioMRI_GUI from *https://github.com/yvives/PhysioMRI_GUI*
+1. Clone the following repositories into the same folder on your computer:
 
-Once the four repositories are cloned in your computer, the folders should look similar to 
+   - [marcos_client](https://github.com/vnegnev/marcos_client)
+   - [marcos_server](https://github.com/vnegnev/marcos_server)
+   - [marcos_extras](https://github.com/vnegnev/marcos_extras)
+   - [PhysioMRI_GUI](https://github.com/yvives/PhysioMRI_GUI)
+
+   Your folder structure should resemble the following:
 
 <img src="resources/images/folder_example.png" alt="alt text">
 
-**Figure 1.- Example of folder structure**
 
-Once the four repositories are already cloned in the desired folder, we need to modify some files to make the GUI work.
-The files to modify are:
-- `local_config.py` from marcos_client folder. This file contains information about the version of the red pitaya, its
-ip, and the GPA board used together with the redpitaya.
-- `hw_config.py` from PhysioMRI_GUI/configs folder. This file contains information about the scanner hardware.
-- `sys_config.py` from PhysioMRI_GUI/configs folder This file contains information to show the session windows of the
-GUI.
+**Figure 1: Example of folder structure**
 
-Note that, once the repositories are downloaded, these files do not exist in the folder, but copies of the files do.
+2. Modify the following configuration files as needed:
 
-Finally, after proper modification of the files is done, the user can run the ***FirstMRI.py*** file to run the GUI.
+- `local_config.py` in the `marcos_client` folder: This file contains information about the version of the Red Pitaya, its IP address, and the GPA board used in conjunction with the Red Pitaya.
+- `hw_config.py` in the `PhysioMRI_GUI/configs` folder: This file contains information about the scanner hardware.
+- `sys_config.py` in the `PhysioMRI_GUI/configs` folder: This file contains settings for displaying the session windows in the GUI.
+- `autotuning.py` in the `PhysioMRI_GUI/configs` folder: Modify this file if you are using an Arduino for automatic tuning and impedance matching of the RF coil.
+
+Note: These files may not initially exist in the cloned repositories, but you can find copies of them in its corresponding folder.
+
+3. Set up bash: to do communication with server from the GUI, you need to set up the bash_path variable in the hw_config.py file.
+   1. If running under Windows OS, you will need to install git_bash, and then set `bash_path = "directory/git_bash.exe"` in hw_config.py.
+   2. If running under Ubuntu OS, set `bash_path = "gnome-terminal"` 
+
+3. After making the necessary modifications to the configuration files, you can run the `FirstMRI.py` file to launch the MaRCoS GUI.
+
+
+That's it! You should now have the MaRCoS GUI up and running on your computer. Enjoy using it for your MRI research.
+
+If you encounter any issues or have questions, please refer to the documentation or feel free to open an issue on the respective GitHub repositories for assistance.
+
 
 ## Description of the GUI
 
-### Session window
+### Session Window
 
-When the user executes FirstMRI.py, the session window is displayed in the screen. 
+When you execute `FirstMRI.py`, the session window is displayed on the screen.
 
-<img src="resources/images/session.png" alt="alt text">
+![Session Window](resources/images/session.png)
 
-**Figure 2.- Session window**
+**Figure 2: Session Window**
 
-The session window allows the user to input useful information like patient name, or weight. It also automatically
-generates an ID number. This ID number is currently given by the date and time, but the user can modify the id number as
-desired. Some information can only be selected between the provided options. The options available are given
-according to the information contained in the file `sys_config.py`. Once the information has been completed, just click
-on the `Launch GUI` button to execute the main window. At this point, a new folder is created in
-`experiments/acquisitions` according to the Project and Subject ID.
+The session window serves as an input interface for important information such as the patient's name and weight. It also automatically generates an ID number. Currently, this ID number is generated based on the date and time, but users have the flexibility to modify it as needed. Some information can only be selected from predefined options, which are determined by the settings in the `sys_config.py` file.
 
-### Main window
+Once you've filled in the necessary information, simply click the `Launch GUI` button to initiate the main window. At this point, a new folder is created in `experiments/acquisitions` based on the Project and Subject ID you specified.
 
-The main window opens after pushing the `Launch GUI` button on the session window. Here is where most of the work is
-done, like calibrate the system, setup parameters of desired sequences, visualize results and others.
+### Main Window
 
-<img src="resources/images/main.png" alt="alt text">
+The main window becomes accessible after clicking the `Launch GUI` button in the session window. This is where most of the essential tasks are performed, including system calibration, configuration of sequence parameters, visualization of results, and more.
 
-**Figure 3.- Main window**
+![Main Window](resources/images/main.png)
 
-The main window is composed of different widgets
-1) Menubar. It contains different options related to set up the redpitaya, sequences and others.
-2) MaRCoS toolbar
-3) Sequence toolbar
-4) Image toolbar
-5) Protocol toolbar
-6) Sequence area. It includes custom modification or protocols to run pre-defined parameters
-7) Console
-8) History list table
-9) Info table
-10) Image area
+**Figure 3: Main Window**
 
-Next, it is explained how to use the GUI through the most relevant controls.
+The main window is comprised of various components:
 
-## Toolbars
-### MaRCoS toolbar (2)
+1. **Menubar:** This section offers different options related to setting up the Red Pitaya, configuring sequences, and other functionalities.
 
-The first that the user must do before to execute any sequence is to start the connection between the
-GUI and the red pitaya. The connection to the red pitaya is done through the MaRCoS toolbar (2) or through the 
-scanner menubar. 
-This toolbar contains four different action buttons. From left to right we find:
-- `Setup MaRCoS`. Execute MaRCoS init, MaRCoS server and init GPA, in that order.
-- `MaRCoS init`. Update the last version of MaRCoS into the red pitaya.
-- `MaRCoS server`. Connect or disconnect to the server.
-- `Init GPA`. Execute a code to initialize the GPA board. The GUI must be previously connected to the server.
+2. **MaRCoS Toolbar:** Here, you'll find tools specific to the MaRCoS system.
 
-After executing `Setup MaRCoS` or `MaRCoS server`, the `MaRCoS server` button stays pressed and sequence buttons become 
-enable. However, note that this happens even if the connection to the server fails.
+3. **Sequence Toolbar:** This toolbar is dedicated to sequence-related settings.
+
+4. **Image Toolbar:** It provides options for image-related operations.
+
+5. **Protocol Toolbar:** This toolbar allows you to manage protocols.
+
+6. **Sequence Area:** This area enables custom modification of protocols or the execution of predefined parameters through the Protocoles tab.
+
+7. **Console:** The console provides real-time feedback and information about ongoing processes.
+
+8. **History List Table:** This table keeps a record of historical data.
+
+9. **Info Table:** It displays essential information.
+
+10. **Image Area:** This section is reserved for visualizing images and results.
+
+Next, we'll explain how to use the GUI effectively, focusing on the most relevant controls and features.
+
+### Toolbars
+
+#### MaRCoS Toolbar (2)
+
+Before executing any sequence, the user must establish a connection between the GUI and the Red Pitaya. This connection can be initiated through the MaRCoS toolbar (2) or via the scanner menubar. The MaRCoS toolbar consists of four distinct action buttons, from left to right:
+
+- `Setup MaRCoS`: This button executes a sequence of actions in the following order: MaRCoS initialization, starting the MaRCoS server, and initializing the GPA board.
+
+- `MaRCoS init`: This action updates the Red Pitaya with the latest version of the MaRCoS software.
+
+- `MaRCoS server`: Use this button to connect to or disconnect from the MaRCoS server.
+
+- `Init GPA`: Clicking this button triggers a code execution to initialize the GPA board. It's important to note that the GUI must be connected to the server before initializing the GPA board.
+
+Upon executing `MaRCoS server` button remains pressed, and the sequence buttons become enabled. It's worth mentioning that this state remains even if the connection to the server fails.
 
 ***Poner figura de marcos server aquí***
 
-### Sequence toolbar (3)
+#### Sequence Toolbar (3)
 
-Here is the core of the GUI: run sequences. Sequence execution is performed through the sequence toolbar (3) or sequence
-menubar. From left to right, the sequence toolbar contains:
-- `Autocalibration`. It runs different sequences automatically and use the results to calibrate the system. This
-task includes Larmor calibration, noise measurement, rabi flops and shimming.
-- `Localizer`. It runs a fast RARE sequence with low resolution to help select the fov for next sequences.
-- `Sequence to list`. It adds the current sequence configuration to the waiting list. It allows to continue working in
-the GUI while the sequences are running.
-- `Acquire`. It directly runs the current sequence configuration. When a new sequence is selected and the `Acquire`
-button is clicked, the GUI may look frozen. This button will be deprecated in future versions.
-- `Iterative run`. It activates the iterative mode. This is only available for some sequences such as larmor or noise.
-Sequences to acquire images do not support iterative mode and the button will be toggled after the end of the sequence.
-- `Bender button`.  This button place in the history list all the sequences contained in the selected protocol.
-- `Plot sequence`. It plots the instructions that will be sent to the red pitaya.
-- `Save parameters`. Save the parameters to ***experiments/parameterisations/SequenceNameInfo.year.month.day.hour.minutes.seconds.milliseconds.csv"
-- `Load parameters`. Load input parameters files and update the sequence parameters to current sequence.
-- `Save for calibration`. This button saves the parameters of the sequence into the ***calibration*** folder. In case the sequence
-is used for autocalibration, it automatically loads parameters contained in ***calibration*** folder
+The Sequence toolbar is at the heart of the GUI, allowing users to run sequences efficiently. Sequence execution can be initiated through the Sequence toolbar (3) or the Sequence menubar. From left to right, the Sequence toolbar offers the following options:
 
-### Figures toolbar (4)
-It contains two buttons:
-- `Fullscreen`. Expand image area to full screen mode.
-- `Screenshot`. Take a snapshot of the GUI and save the image in ***screenshots*** folder 
+- `Autocalibration`: This button automatically runs a series of sequences and uses the results to calibrate the system. The calibration process includes Larmor calibration, RF coil impedance matching, noise measurement, Rabi flops, and shimming.
 
-### Protocols toolbar (5)
-This toolbar allows the user to manage the protocols.
-- `Add protocol`. Create a new protocol.
-- `Remove protocol`. Delete a protocol.
-- `Add sequence`. Add custom sequence to the selected protocol.
-- `Remove sequence`. Remove a sequence from the selected protocol.
+- `Localizer`: Use this button to execute a quick RARE sequence with low resolution, helping users select the field of view (FOV) for subsequent sequences.
 
-### GUI menubar (1)
+- `Sequence to List`: Clicking this button adds the current sequence configuration to the waiting list. This feature allows you to continue working in the GUI while sequences are running.
 
-1) `Scanner`
-   1) `Setup MaRCoS`
-   2) `MaRCoS init`
-   3) `MaRCoS server`
-   4) `Init GPA board`
-2) `Protocoles`
-   1) `New protocol`
-   2) `Remove protocol`
-   3) `New sequence`
-   4) `Remove sequence`
-3) `Sequences`
-   1) `Load parameters`
-   2) `Save parameters`
-   3) `Save for calibration`
-   4) `Sequence to list`
-   5) `Acquire`
-   6) `Bender`
-   7) `Plot sequence`
-4) `Session`
-   1) `New session`
+- `Acquire`: This button directly runs the current sequence configuration. Note that when a new sequence is selected and the `Acquire` button is clicked, the GUI may appear frozen. Please be aware that this button is slated for deprecation in future versions.
 
-## Configure the system
+- `Iterative Run`: Activate this mode for sequences that support it, such as Larmor or noise measurements. Sequences that acquire images do not support iterative mode, and this button will be automatically toggled after the sequence ends.
+
+- `Bender Button`: This button places all the sequences contained in the selected protocol into the history list.
+
+- `Plot Sequence`: It generates a visualization of the instructions that will be sent to the Red Pitaya.
+
+- `Save Parameters`: Use this button to save the sequence parameters to a CSV file located at `experiments/parameterisations/SequenceNameInfo.year.month.day.hour.minutes.seconds.milliseconds.csv`.
+
+- `Load Parameters`: Load input parameter files and update the sequence parameters to the current sequence.
+
+- `Save for Calibration`: This button saves the sequence parameters in the `calibration` folder. If the sequence is intended for autocalibration, it will automatically load parameters from the `calibration` folder.
+
+These options within the Sequence toolbar provide users with the flexibility and control needed to execute various sequences and manage their parameters effectively.
+
+#### Figures Toolbar (4)
+
+The Figures toolbar provides quick access to two essential functions:
+
+- `Fullscreen`: Clicking this button expands the image area to full-screen mode for a more detailed view.
+
+- `Screenshot`: Use this button to capture a snapshot of the GUI. The captured image is saved in the `screenshots` folder.
+
+These functions enhance the user experience by allowing for better visualization and documentation of the GUI's interface.
+
+#### Protocols Toolbar (5)
+
+The Protocols toolbar facilitates the management of protocols within the GUI. It includes the following options:
+
+- `Add Protocol`: Clicking this button creates a new protocol, enabling users to organize and categorize their sequences.
+
+- `Remove Protocol`: Use this button to delete a protocol that is no longer needed.
+
+- `Add Sequence`: Adding a custom sequence to the selected protocol is made easy with this button.
+
+- `Remove Sequence`: Clicking this button removes a sequence from the currently selected protocol.
+
+The Protocols toolbar streamlines the organization and customization of your workflow, making it easier to work with sequences and protocols.
+
+#### GUI Menubar (1)
+
+The GUI menubar is a centralized hub for accessing various functions and features of the MaRCoS GUI. It is divided into several categories, each containing specific options:
+
+1. **Scanner**
+   - `Setup MaRCoS`: Executes MaRCoS initialization, starts the MaRCoS server, and initializes the GPA board in sequence.
+   - `MaRCoS init`: Updates the Red Pitaya with the latest MaRCoS software version.
+   - `MaRCoS server`: Allows you to connect or disconnect from the MaRCoS server.
+   - `Init GPA board`: Initializes the GPA board. Note that this action requires prior connection to the server.
+
+2. **Protocols**
+   - `New protocol`: Creates a new protocol for organizing and categorizing sequences.
+   - `Remove protocol`: Deletes an existing protocol.
+   - `New sequence`: Adds a custom sequence to the selected protocol.
+   - `Remove sequence`: Removes a sequence from the currently selected protocol.
+
+3. **Sequences**
+   - `Load parameters`: Loads input parameter files and updates the sequence parameters to match the current sequence.
+   - `Save parameters`: Saves the sequence parameters to a designated CSV file.
+   - `Save for calibration`: Saves the sequence parameters to the `calibration` folder, useful for autocalibration purposes.
+   - `Sequence to list`: Adds the current sequence configuration to the waiting list, allowing you to continue working while sequences run.
+   - `Acquire`: Directly executes the current sequence configuration. (Scheduled for deprecation in future versions)
+   - `Bender`: Places all sequences contained in the selected protocol into the history list.
+   - `Plot sequence`: Generates a visualization of the instructions that will be sent to the Red Pitaya.
+
+4. **Session**
+   - `New session`: Initiates a new session, providing a fresh start for inputting essential information (comming soon).
+
+The GUI menubar serves as a user-friendly interface for navigating and accessing the various functionalities of the MaRCoS GUI.
+
+
+## Configure the System
+
 ### Autocalibration
-The `Autocalibration` button runs a set of sequence to provide some required information to the GUI. `Autocalibration` runs four sequences:
-- `Noise`
+
+The `Autocalibration` feature is a vital component of the GUI, as it runs a series of five sequences to provide essential information to the GUI for system calibration. These sequences include:
+
 - `Larmor`
+- `Autotuning`
+- `Noise`
 - `Rabi flops`
 - `Shimming`
 
-However, `Autocalibration` requires some files to run properly. The steps to create the file corresponding to each
-sequence are described here and must be done for each sequence used by `autocalibration`:
-1) Select one of the four mentioned sequences from the sequence list in the `Custom` tab.
-2) Configure the desired input parameters.
-3) Save the configuration using the `Save for calibration` button in the sequence toolbar (3).
+However, to ensure that `Autocalibration` functions correctly, specific configuration steps are required. These steps must be followed for each sequence utilized by `Autocalibration`:
 
-`Save for calibration` button creates a .csv file in the ***calibration*** folder. Once the process has been complete for
-the four sequences, four .csv files should be available in the folder and the user should be able to run autocalibration
-properly.
+1. Select one of the five mentioned sequences from the sequence list in the `Custom` tab.
+2. Configure the desired input parameters for the selected sequence.
+3. Save the configuration by clicking the `Save for Calibration` button in the Sequence toolbar (3).
+
+The `Save for Calibration` button generates a .csv file in the `calibration` folder for each sequence. After completing these steps for all five sequences, there should be five .csv files available in the folder, enabling the proper execution of Autocalibration.
+
+It's important to note that failing to configure these parameters will result in the GUI using the last-used parameters for each calibration sequence, which are saved in the `experiments\parameterization` folder. If this folder is empty (e.g., for first-time users), the GUI will employ default parameters defined in the API.
 
 ### Localizer
-Localizer typically is a fast sequence with low resolution to get information about the field of view. As for
-autocalibration, it also needs a file with parameters to run when the `Localizer` button is clicked by the user.
-To create the file:
-1) Select `Localizer` sequence from the sequence list in `Custom` tab.
-2) Configure the localizer with the desired parameters.
-3) In the tab `Others` set the `Planes` inputs. This parameter is a list of three elements that can be 0 or 1. Use 1 (0)
-to (not) acquire the corresponding plane. For example, [1, 1, 0] means that only sagittal and coronal planes will be
-acquired after clicking the localizer button.
-4) Save the configuration using the `Save for calibration` button in the sequence toolbar (3).
 
-After saving configuration, clicking the `Localizer` button will place one Localizer sequence into the history list for
-each selected plane in the `Others` tab.
+The Localizer sequence is typically a fast sequence with low resolution, designed to provide information about the field of view (FOV). Similar to Autocalibration, the Localizer sequence also requires specific parameters to be configured before use. Follow these steps to create the necessary file for the Localizer sequence:
+
+1. Select the `Localizer` sequence from the sequence list in the `Custom` tab.
+
+2. Configure the Localizer sequence with the desired parameters, taking into account your FOV requirements.
+
+3. In the `Others` tab, set the `Planes` inputs. This parameter is a list of three elements, each of which can be set to 0 or 1. Use 1 to indicate that you want to acquire the corresponding plane and 0 to indicate that you do not want to acquire it. For example, setting `Planes` to [1, 1, 0] means that only sagittal and coronal planes will be acquired when the Localizer button is clicked.
+
+4. Save the Localizer sequence configuration by clicking the `Save for Calibration` button in the Sequence toolbar (3).
+
+After saving the configuration, clicking the `Localizer` button will place one Localizer sequence into the history list for each selected plane in the `Others` tab. This allows you to efficiently acquire the required Localizer data for your specific FOV needs.
 
 
-## Run a custom sequence
-1) To run a custom sequence, it is first required to run the `Autocalibration` and `Localizer`. After left-clicking the 
-`Localizer` button, the sequence is placed in the waiting list (8) and it is executed in a parallel thread to prevent
-the GUI from getting frozen. 
-2) When the localizer finish, a message is shown in the console (7) and the item in the waiting list get its full name. 
-The user can see the image by left double-clicking in the corresponding item of the waiting list, or can show more than
-one image with right click menu. On the image widget,
-click the FOV button to see a square representing the FOV that will be used to the next image. The user can change 
-the size, position and angle (angle modification is not recommended in multiplot view) 
-of the fov with the mouse, and the corresponding values in the sequence list will be
-automatically updated. It is always preferred to use this method to modify the fov, given that this method update the
-fov of all sequences, while typing the fov values directly in the corresponding text box of the sequence list will
-affect only to the selected sequence.
-3) Once the fov has been selected, select an image sequence and modify the parameters as desired. Right now, only three
-image sequences are available: RARE, GRE and PETRA.
-4) Run the sequence with the `Acquire button` (this will freeze the GUI until the end of the sequence) or place the
-sequence in the waiting list with the `Sequence to list` button. It is preferred to use the `Sequence to list` button to
-place the sequence in the waiting list. In this way, the user can continue programing the next image while others are
-acquired. As in the localizer, once the result is ready, a message will appear in the console indicating that a sequence
-is finished. Then you can see the results in the image area.
 
-The parameters of the sequences are classified in four different fields:
-1) ***RF***: it includes parameters related to RF signal like pulse amplitude, frequency or duration.
-2) ***Image***: it includes parameters related to the image like field of view or matrix size.
-3) ***Sequence***: it includes parameters related to contrast like echo time or repetition time.
-4) ***Others***: a field to include other interesting parameters like gradient rise time or dummy pulses.
+## Run a Custom Sequence
 
-Each time the user runs a sequence:
-1) It automatically save a file in ***experiments/parameterisation/SequenceName_last_parameters.csv***.
-When the user initialize the GUI, it automatically loads the parameters from the files with ***last_parameters*** in the name to continue the session from the last point.
-2) It creates three files in ***experiments/acquisitions*** inside the session folder
-   1) a .mat raw data with name ***SequenceName.year.month.day.hour.minutes.secons.milliseconds.mat***.
-   This file contains the inputs and outputs as well as any other useful variable.
-   The values saved in the raw data are those contained inside the `mapVals` dictionary.
-   2) a .csv file with the input parameters with name ***SequenceNameInfo.year.month.day.hour.minutes.secons.milliseconds.csv***
-The .csv file is useful if you want to repeat a specific experiment by loading the parameters into the corresponding sequence with the ***Sequence/Load parameteres*** menu.
-   3) a .dcm file in Dicom Standard 3.0
+Running a custom sequence within the GUI involves several steps to ensure a smooth workflow and accurate data acquisition:
 
-## Create a protocol
-The GUI offers the possibility to run previously defined protocols. A protocol consists in a number of different
-sequences with predefined parameters. `Protocols` are shown in the sequence area (6). The first time that the user runs
-the GUI, the `Protocols` tab will be empty.
+1. **Prerequisite: Autocalibration and Localizer**
+   - Before running a custom sequence, it is essential to perform the `Autocalibration` and `Localizer` processes.
 
-The user can create protocols by clicking the `New protocol` button. After clicking the `New protocol` button, a 
-dialog box opens where the user can type the name of the protocol. The protocols must be created in the 
-***protocols*** folder. Once the protocol is created, it will appear in the protocol list.
+2. **Localizer Completion**
+   - Upon completion of the Localizer sequence, a message will be displayed in the console (7), and the item in the waiting list will be updated with its full name.
+   - To view the image, you can left double-click on the corresponding item in the waiting list or view multiple images through the right-click menu.
+   - In the image widget, you can click the FOV button to display a square representing the FOV that will be used for the next image. You can adjust the size, position, and angle (under development) of the FOV using the mouse. The corresponding values in the sequence list will be automatically updated. It's recommended to modify the FOV using this method, as it updates the FOV for all sequences. Typing the FOV values directly in the text box of the sequence list will only affect the selected sequence.
 
-The user can add new sequences to the protocol. To add a sequence:
-1) Select a sequence from the sequence list in the `Custom` tab.
-2) Customize the sequence parameters as desired for the protocol.
-3) Go to the `Protocol` tab and select the desired protocol.
-4) Click the `Add sequence` button.
-5) In the dialog box, write the name of the sequence to be shown in the `Protocol tab` tab.
+3. **Sequence Selection and Modification**
+   - After selecting the desired FOV, choose an image sequence (RARE, GRE, or PETRA) and modify its parameters as needed.
 
-After saving the sequence, it will appear in the `Protocols` in the corresponding protocol. To run the sequences from
-the protocol, just double-click on the desired sequence to add the sequence to the waiting list.
+4. **Running the Sequence**
+   - Run the sequence by clicking the `Acquire` button (please note that this will freeze the GUI until the sequence completes) or place the sequence in the waiting list using the `Sequence to List` button. It is recommended to use the `Sequence to List` button to add the sequence to the waiting list, allowing you to continue programming the next image while others are acquired.
+   - When the sequence is finished, a message will appear in the console, indicating the completion of the sequence. You can then view the results in the image area.
 
-Sequences can be deleted from protocols by right-clicking the sequence and selecting `Delete` or clicking the 
-`Delete sequence` button. Also, protocols can be deleted by clicking the `Delete protocol` button and selecting the
-protocol to delete from the dialog box.
+The parameters of the sequences are categorized into four different fields:
+1) ***RF***: Contains parameters related to the RF signal, such as pulse amplitude, frequency, or duration.
+2) ***Image***: Includes parameters related to the image, like the field of view or matrix size.
+3) ***Sequence***: Encompasses parameters related to contrast, such as echo time or repetition time.
+4) ***Others***: This field is for including other relevant parameters, such as gradient rise time or dummy pulses.
 
-## Structure of the folders and files in the GUI     
+Each time a sequence is run:
+1) It automatically saves a file in ***experiments/parameterization/SequenceName_last_parameters.csv***.
+   - When you initialize the GUI, it loads the parameters from files with ***last_parameters*** in the name to continue the session from where it left off.
+2) It creates three files in ***experiments/acquisitions*** inside the session folder:
+   1) A .mat raw data file with the name ***SequenceName.year.month.day.hour.minutes.seconds.milliseconds.mat***. This file contains inputs, outputs, and other useful variables.
+   2) A .csv file with the input parameters, named ***SequenceNameInfo.year.month.day.hour.minutes.seconds.milliseconds.csv***. This .csv file is useful if you want to repeat a specific experiment by loading the parameters into the corresponding sequence using the ***Sequence/Load Parameters*** menu.
+   3) A .dcm file in Dicom Standard 3.0 format.
 
-Here the GUI internal architecture is described. The GUI is composed of widgets and windows (even if a window is strictly
-speaking a widget). Windows and widgets views are defined in the scripts contained in ***ui*** and ***widgets*** folders.
-How the windows and widgets react to the user interaction is defined in scripts contained in the ***controller*** folder.
+These steps ensure a well-organized and efficient workflow when running custom sequences within the MaRCoS GUI.
 
-### `ui` folder
-It conatins ***window_main.py***, ***window_session.py*** and ***window_postprocessing.py*** (uder development). The three
-scripts contains a class that inherits from QMainWindow.
 
-### `controller` folder
+## Create a Protocol
 
-In this folder you will find all the python functions that control:
-1) controller_main.py
-2) controller_session.py
-3) controller_postprocessing.py (under development)
-4) controller_console.py
-5) controller_figures.py
-6) controller_history_list.py
-7) controller_menu.py
-8) controller_plot1d.py
-9) controller_plot3d.py
-10) controller_protocol_inputs.py
-11) controller_protocol_list.py
-12) controller_sequence_inputs.py
-13) controller_sequence.list.py
-14) controller_toolbar_figures.py
-15) controller_toolbar_marcos.py
-16) controller_toolbar_protocols.py
-17) controller_toolbar_sequences.py
+The MaRCoS GUI offers the flexibility to run previously defined protocols, which are collections of different sequences with predefined parameters. These protocols are displayed in the Sequence area (6) and provide a convenient way to streamline your experimental workflows. When you first launch the GUI, the Protocols tab will be empty.
 
-### `seq` folder
+To create a new protocol, follow these steps:
 
-Folder that contains the different sequences that can be applied in the scanner.
-In addition to the main sequences, it also contains the parent sequence `mriBlankSeq.py`.
-Also in this folder we can find the `sequences.py` file, where we will import all the sequences that will be read by the GUI.
+1. Click the `New Protocol` button. This action opens a dialog box where you can enter the name of the new protocol.
 
-### `seq_standalone` folder
+2. The protocols must be created in the ***protocols*** folder. Once created, the protocol will appear in the protocol list.
 
-Folder that contains sequences that can be executed in the scanner independently of the GUI and are firstly stored here to be tested.
-Last version of the GUI does not require of this folder.
-Sequences in *`seq`* folder can be executed in the scanner with or without the GUI.
-Then, in a future release of the GUI this folder will not be available.
+With the protocol created, you can start adding sequences to it:
 
-### `configs` folder
+1. Select a sequence from the sequence list in the `Custom` tab.
 
-- *hw_config.py*: a file with hardware information. 
-These variables depend on the scanner hardware (i.e. gradients) or other general values.
-When downloading the GUI by the first time, the file name is *hw_config.py.copy*.
-The filename needs to be properly modified according to your hardware and renamed before to run the GUI.
-- *sys_config.py*: file that contains usefully information for the session window.
+2. Customize the sequence parameters as desired for the protocol.
 
-### `protocols` folder
+3. Switch to the `Protocol` tab and select the desired protocol.
 
-This folder contains the protocols created by the user.
+4. Click the `Add Sequence` button.
 
-### `experiments` folder
+5. In the dialog box that appears, enter the name of the sequence as you'd like it to be displayed in the `Protocol` tab.
 
-The results of the experiments are stored in this file. There are three folders inside:
+After saving the sequence, it will appear within the specified protocol. To execute sequences from the protocol, simply double-click on the desired sequence to add it to the waiting list.
 
-- *acquisitions*: the scanner acquisitions are stored here.
-A folder per day is created, with the date as name (YYYY.MM.DD).
-The output of the scanner is stored inside, which is:
-  - .mat file with raw data.
-  - .dcm file with image.
-  - .csv file with input parameters.
-- *parameterization*: folder that contains:
-  - the sequence last parameters in csv format
-  - csv file generated when you click the *Save the parameters of a sequence to a file* icon in the GUI main window.
+Sequences can be removed from protocols by right-clicking the sequence and selecting `Delete` or by clicking the `Delete Sequence` button. Similarly, protocols can be deleted by clicking the `Delete Protocol` button and selecting the protocol to delete from the dialog box.
 
-### `resources` folder
-In this folder, the icons used in the main menu (and others) are stored as well as the images used in this readme.
+This flexible protocol management system makes it easy to organize and execute sequences according to your experimental needs within the MaRCoS GUI.
 
-### Other files 
 
-- **Console function**: *stream.py* is a class used to write error messages in the console of the GUI.  
+## Structure of Folders and Files in the GUI
 
-## How to add a new sequence to the GUI
+The internal architecture of the MaRCoS GUI is organized into distinct folders and files that define its functionality and user interface. Understanding this structure can be helpful for those interested in further customization or development.
 
-In this section I will show how to create a new sequence.
-To do this, I will go step by step until we can get a noise measurement.
-At the end of this section, the user should be able to run simple sequences.
+### `ui` Folder
 
-### Body of the sequence
+The `ui` folder contains scripts that define the main windows of the GUI. Currently, it includes the following scripts:
 
-We first start by creating a new *noise.py* file inside the *`seq`* folder (check the file to see the full code)
-We need to import some different modules.
-Importantly, to run the sequence wihtout the GUI we need to be able to import the experiment class that it is contained in the *`marcos_client`* repository.
-Then we need to provide access to the folders:
-````python
+- **window_main.py**: This script defines a class that inherits from QMainWindow. It forms the foundation of the main GUI window, where most user interactions take place.
+
+- **window_session.py**: Similar to `window_main.py`, this script also defines a class that inherits from QMainWindow. It is responsible for managing the session window, which allows users to input essential information before conducting experiments.
+
+- **window_postprocessing.py** (under development): This script is intended to define a class for a post-processing window, which will likely offer tools for analyzing and visualizing data after experiments.
+
+### `widgets` Folder
+
+The `widgets` folder contains scripts that define individual widgets or components used within the GUI. These widgets are responsible for various specific functionalities and user interactions.
+
+### `controller` Folder
+
+Scripts in the `controller` folder play a crucial role in determining how the windows and widgets react to user interactions. They define the logic behind the GUI's behavior, ensuring that it responds appropriately to user input.
+
+As the GUI evolves and additional features are developed, more scripts and files may be added to these folders, enhancing the functionality and usability of MaRCoS.
+
+Understanding this folder and file structure can provide a foundation for those interested in extending or customizing the MaRCoS GUI to suit their specific research needs.
+
+### `seq` Folder
+
+The `seq` folder is where you can access the different sequences that can be applied in the scanner. It contains not only the primary sequences but also a parent sequence named `mriBlankSeq.py`. Additionally, you'll find the `sequences.py` file in this folder, which serves as an import point for all the sequences that the GUI can utilize.
+
+### `configs` Folder
+
+Within the `configs` folder, you'll encounter two essential configuration files:
+
+- **hw_config.py**: This file stores hardware-related information crucial for the GUI. Variables in this file depend on the specific scanner hardware, such as gradients, or other essential values. Upon downloading the GUI for the first time, the filename is typically named `hw_config.py.copy`. Be sure to modify the filename appropriately to match your hardware and rename it before running the GUI.
+
+- **sys_config.py**: This file contains useful information utilized by the session window of the GUI.
+
+- **autotuning.py**: This file contains the serial number of the arduino used to control the autotuning.
+
+### `protocols` Folder
+
+The `protocols` folder is where user-created protocols are stored. Protocols are collections of predefined sequences with preset parameters, allowing for streamlined experimental workflows.
+
+### `experiments` Folder
+
+The `experiments` folder serves as the repository for storing the results of experiments conducted within the GUI. Within this folder, you'll find two subfolders:
+
+- **acquisitions**: Scanner acquisitions are stored here, with each day's data stored in a separate folder labeled with the date (YYYY.MM.DD). The outputs of the scanner include:
+  - .mat files containing raw data.
+  - .dcm files with images.
+  - .csv files containing input parameters.
+
+- **parameterization**: This folder contains important data, including:
+  - Sequence last parameters in CSV format.
+  - CSV files generated when you click the "Save the parameters of a sequence to a file" icon in the GUI main window.
+
+### `resources` Folder
+
+In the `resources` folder, you'll find various icons used in the main menu and other parts of the GUI, as well as the images used in this README.
+
+This structured organization of folders and files ensures that the MaRCoS GUI remains efficient and organized, allowing for effective experimentation and customization.
+
+# Adding a New Sequence to the GUI
+
+In this section, we'll guide you through the process of creating and adding a new sequence to the MaRCoS GUI. By following these steps, you'll be able to run simple sequences within the GUI. We'll use the example of creating a noise measurement sequence as a starting point.
+
+## Body of the Sequence
+
+1. **Create a New Sequence File**: Start by creating a new Python file for your sequence. In this example, we'll create a `noise.py` file inside the `seq` folder.
+
+2. **Import Required Modules**: In your sequence file, import the necessary modules. It's crucial to have access to the `experiment` class from the `marcos_client` repository. Additionally, ensure access to the `marcos_client` and `PhysioMRI_GUI` folders for execution in standalone mode. Also, import the `mriBlankSequence` class, which contains various methods commonly used in many sequences. New sequences should inherit from the mriBlankSequence class. We also include the `configs.hw_config` module to get access to hardware properties and `configs.hw.units` that will be used to set the units of input parameters.
+
+```python
 import os
 import sys
-#*****************************************************************************
+
 # Add path to the working directory
 path = os.path.realpath(__file__)
 ii = 0
 for char in path:
-    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
-        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
-        sys.path.append(path[0:ii+1]+'marcos_client')
+    if (char == '\\' or char == '/') and path[ii + 1:ii + 14] == 'PhysioMRI_GUI':
+        sys.path.append(path[0:ii + 1] + 'PhysioMRI_GUI')
+        sys.path.append(path[0:ii + 1] + 'marcos_client')
     ii += 1
-#******************************************************************************
+
+# Add modules from gui
 import experiment as ex
-````
-You may note that I also include the *`PhysioMRI_GUI`* folder.
-This is due to some issues that I found under Windows OS.
-Under linux OS you can just include the *`marcos_client`* directory.
+from seq.mriBlankSeq import mriBlankSequence
+import configs.hw_config as hw
+import configs.units as units
 
-Next we need to import the *mriBlankSequence* class.
-*mriBlankSequence* contains many useful methods that are common to many sequences such as create parameters, rf pulses, gradient pulses, readout or save/load data between others.
-New sequences should inherit from the mriBlankSequence.
+# Add other modules
+import scipy.signal as sig
+import numpy as np
 
-````Python
-import seq.mriBlankSeq as mriBlankSeq  # Import the mriBlankSequence for any new sequence.
-````
+```
 
-Then we can create our class *Noise* that will inherit from *mriBlankSeq*.
-To be properly used by the GUI, the class must contain at least four methods:
-1) *sequenceInfo* that contains any useful information about the sequence.
-2) *sequenceTime* that returns the time required by the sequence in minutes.
-3) *sequenceRun* that inputs the instructions into the Red Pitaya.
-It includes a keyword argument *seqPlot* that should be 1 if user do not want to run the instructions contained in the red pitaya.
-This is used in the GUI to plot the sequence instead of run the experiment.
-4) *sequenceAnalysis* to analyse the data acquired in the experiment.
-````Python
+3. **Create the `Noise` Sequence Class**: In your sequence file (`noise.py` in this example), create the `Noise` class that will inherit from the `mriBlankSeq.MRIBLANKSEQ` class. To be properly used by the GUI, the `Noise` class should contain at least four methods:
+
+    a) **`sequenceInfo`**: This method should provide any useful information about the sequence, such as a brief description or relevant details (it can be empty).
+
+    b) **`sequenceTime`**: Implement the `sequenceTime` method, which should return the time required by the sequence in minutes (it can returns 0).
+
+    c) **`sequenceRun`**: The `sequenceRun` method is responsible for inputting the instructions into the Red Pitaya. It includes a `plotSeq` keyword argument that should be set to `1` if you want to plot the sequence or `0` for running the experiment. Another keyword is `demo` that can be established to True or False in case user can run simulated signals.
+
+    d) **`sequenceAnalysis`**: Lastly, the `sequenceAnalysis` method is used to analyze the data acquired during the experiment. It includes a `mode` keyword that I use to plot call `plotResults` method from `mriBlankSeq` in case this parameter is set to `'standalone'`, but it can be used at convenience.
+
+Here's an example of what the `Noise` class structure might look like:
+
+```python
 class Noise(mriBlankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(Noise, self).__init__()
 
     def sequenceInfo(self):
+        # Provide sequence information here
 
     def sequenceTime(self):
+        # Return the time required by the sequence in minutes
 
-    def sequenceRun(self, plotSeq=0):
+    def sequenceRun(self, plotSeq=0, demo=False):
+        self.demo = demo
+        
+        # Create sequence instructions
+        
+        # Input instructions into the Red Pitaya
+        
+        # Use the plotSeq argument to control plotting versus running.
+        
+        # Use the demo argument to control if you want to simlate signals.
 
-    def sequenceAnalysis(self, obj=''):
-````
-
-### How to add input parameters to the sequence
-To add new input parameters, the *mriBlankSequence* contains the method *addParameter* that needs to be run in the constructor of the class.
-This method requires four keywords arguments: 
-- *key*: a string to be used as key on the dictionaries
-- *string*: a string to be shown in the GUI
-- *value*: number or list of numbers to be shown in the GUI
-- *field*: a string to classify the parameter into the boxes.
-It can be 'RF', 'IMG', 'SEQ' or 'OTH'
-```Python
-def addParameter(self, key='', string='', val=0, field=''):
-```
-For the example of *Noise* sequence I will include the input parameters shown here:
-````Python
-    def __init__(self):
-        super(Noise, self).__init__()
-        # Input the parameters
-        self.addParameter(key='seqName', string='NoiseInfo', val='Noise')
-        self.addParameter(key='larmorFreq', string='Central frequency (MHz)', val=3.00, field='RF')
-        self.addParameter(key='nPoints', string='Number of points', val=2500, field='RF')
-        self.addParameter(key='bw', string='Acquision bandwidth (kHz)', val=50.0, field='RF')
-        self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
-````
-Note that the first parameter does not include the keyword *field*.
-In this way, seqName is not included into the input parameters field of the GUI, but it is still saved in the raw data as information.
-
-### sequenceInfo
-The *sequenceInfo* method contains useful information about the sequence.
-This method is not critical, and you may leave it empty, but make sure that the method exist because the GUI will ask for it.
-For this example I will just do:
-```Python
-    def sequenceInfo(self):
-        print("If you want a better world \n do open source")
+    def sequenceAnalysis(self, mode=None):
+        self.mode = mode
+        ...
+        result1 = {}
+        result2 = {}
+        ...
+        self.output = [result1, result2]
+        
+        return self.output
+        
+        
+        # Implement data analysis logic here
 ```
 
-### sequenceTime
-The *sequenceTime* method returns the time of the sequence in minutes.
-As the *sequenceInfo* method, it is no critical, but the GUI will ask for it.
-```Python
-    def sequenceTime(self):
-        return(0)
+## Adding Input Parameters to the Sequence
+
+```python
+def __init__(self):
+    super(Noise, self).__init__()
+
+    # Input the parameters
+    self.addParameter(key='seqName', string='NoiseInfo', val='Noise')
+    self.addParameter(key='larmorFreq', string='Central frequency (MHz)', val=3.00, field='RF', units=units.MHz)
+    self.addParameter(key='nPoints', string='Number of points', val=2500, field='RF')
+    self.addParameter(key='bw', string='Acquisition bandwidth (kHz)', val=50.0, field='RF', units=units.kHz)
+    self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
 ```
 
-### sequenceRun
-In this method we will input the instructions into the Red Pitaya and we will run the sequence depending on the *plotSeq* value.
-According to the GUI, *plotSeq = 0* is used to run the sequence and *plotSeq = 1* is used to plot the sequence.
-To create the instructions, we will make use of the methods already available into the parent *mriBlankSequence*.
+In this section, we'll walk you through the process of adding input parameters to your sequence. This step is essential for configuring and customizing your sequence within the MaRCoS GUI.
 
-First we will create a local copy of the input parameters into the *sequenceRun*
-````Python
-        # Create inputs parameters
-        larmorFreq = self.mapVals['larmorFreq'] # MHz
-        nPoints = self.mapVals['nPoints']
-        bw = self.mapVals['bw']*1e-3 # MHz
-        rxChannel = self.mapVals['rxChannel']
-````
-Note that time parameters are defined in microseconds, as demanded by the Red Pitaya.
+To add new input parameters, we'll utilize the `addParameter` method available in the `mriBlankSequence` class. This method should be executed in the constructor of your sequence class and has keyword arguments:
 
-Now we create the experiment object.
-The experiment object needs to be defined into the *self* object to be used by the methods of the parent class *mriBlankSequence*.
-````Python
-         bw = bw * hw.oversamplingFactor
-         samplingPeriod = 1 / bw
-         self.expt = ex.Experiment(lo_freq=larmorFreq,
-                                   rx_t=samplingPeriod,
-                                   init_gpa=False,
-                                   gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                   print_infos=False)
-         samplingPeriod = self.expt.get_rx_ts()[0]
-         bw = 1/samplingPeriod/hw.oversamplingFactor
-         acqTime = nPoints/bw
-````
-Note that:
-- To fit an issue related to the CIC filter in the Red Pitaya, we apply an oversampling factor of six to the acquired data.
-This factor is contained into the hardware module
-````Python
-import configs.hw_config as hw
-````
-Once the acquired data is obtained, we apply a decimation with a *fir* filter to recover the required acquisition bandwidth.
-- One of the keyword arguments of the experiment is the sampling period *rx_t*.
-The true sampling rate is not the same as the value that we input to the experiment class.
-Once the experiment is defined, the user needs to get the true sampling rate with the method *get_rx_ts().
-Then, the user must calculate the true bandwidth and acquisition time to avoid data miss registration.
-- Future release will include a method that will do this automatically.
+- **key**: A string to be used as a key in dictionaries.
+- **string**: A string that will be displayed in the GUI, serving as a user-friendly label.
+- **value**: A numerical value or a list of numbers that will be presented in the GUI.
+- **field**: A string to classify the parameter into one of four categories: 'RF', 'IMG', 'SEQ', or 'OTH'. The parameter will be shown in a tab according to this field.
+- **units**: kHz, ms or similar called from `units` module
+- **tip**: A string with tips regarding the parameter that will be shown in the tooltip bar of the GUI.
 
-Now that we have the true values of the sampling period and sampling time, we input the instructions into the Red Pitaya.
-````Python
-         # SEQUENCE
-         self.iniSequence(20, np.array((0, 0, 0)))
-         self.rxGate(20, acqTime, rxChannel=rxChannel)
-         self.endSequence(acqTime+40)
-````
-here we do:
-- initialize the arrays to zero
-- open the Rx gate to measure data
-- finish the experiment by setting all the arrays to zero
+`mriBlankSeq` has the method `sequenceAtributes` that creates attributes with names according to the `key` field and associates values according to the `value` field taking into account the `units`. This method is executed by the GUI when a new run starts.
 
-At this point sequence instructions are already in the Red Pitaya.
-Here is where we have to choose if the sequence is going to be run or not.
-To do this, place the experiment *run* method in a conditional *if not plotSeq*.
-In this way, we will run the sequence only if the keyword argument is *plotSeq = 0*:
-````Python
-         if not plotSeq:
-             rxd, msgs = self.expt.run()
-             data = rxd['rx%i'%rxChannel]*13.788
-             data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-             self.mapVals['data'] = data
-         self.expt.__del__()
-````
-If keyword argument *plotSeq = 0*, then the first is to run the experiment.
-This is done by 
-````Python
-rxd, msgs = self.expt.run()
-````
-that provides two outputs:
-- *rxd* that contains the data from the two different Rx channels in rxd['rx0'] and rxd['rx1']
-- *msgs* that contains information provided by the server.
+In this example, the `Noise` sequence is configured with several input parameters, each associated with a key, a user-friendly label, a default value, and categorized under the 'RF' field. The 'seqName' parameter, however, doesn't include the field keyword, making it informational but not displayed as a user-configurable input.
 
-A correction that I use to employ is to multiply the signal by 13.788.
-````Python
-data = rxd['rx%i'%rxChannel]*13.788
-````
-This is to get the values in millivolts.
+By following this approach, you can seamlessly add and customize input parameters for your sequence, allowing users to tailor the sequence parameters to their specific needs within the MaRCoS GUI.
 
-Finally, data must be decimated and filtered to obtain the results in the required acquisition bandwidth.
-````Python
-data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-````
+## Defining the `sequenceInfo` Method
 
-Then, I save the data into the *mapVals* variable to save data into the rawData as .mat file:
-````Python
-self.mapVals['data'] = data
-````
+```python
+def sequenceInfo(self):
+    print("Be open-mind,\nDo open-source")
+```
 
-At this point the last remaining task is to delete the experiment object:
-````Python
-self.expt.__del__()
-````
+In your sequence, you have the option to include a `sequenceInfo` method that provides useful information about the sequence. While this method is not critical for the functionality of your sequence, it is recommended to have it in place because the GUI may request this information.
 
-### The `mapVals` variable
-`mapVals` is a key variable of the sequences.
-It is a dictionary inherited from the `mriBlankSeq`.
-The `addParameter` method creates the keys and values that are added to the dictionary.
-The `saverRawData` method creates the .mat file with all information contained inside the `mapVals` dictionary.
-Then, you have to save any information that you want into your rawdata in this variable.
-Note that each time tha you run a sequence, the GUI clear all information in the mapVals except for the inputs.
+## Implementing the `sequenceTime` Method
 
-### sequenceAnalysis
-The *sequenceAnalysis* method is where we manipulate the data to be properly shown into the GUI or into our defined plot if we do not use the GUI.
-Basically what this method need to do is
-- Recover the acquired data previously saved in *self.mapVals['data']*
-- Calculate the signal spectrum through the inverse fast fourier transform
-- Save the rawData with *self.saveRawData()*
-- Create the widget to be located into the GUI layout.
+```python
+def sequenceTime(self):
+    return 0  # Duration in minutes (modify as needed)
+```
 
-In our example, to recover the acquired data and other useful data:
-````Python
-acqTime = self.mapVals['acqTime'] # ms
-nPoints = self.mapVals['nPoints']
-bw = self.mapVals['bw'] # kHz
-data = self.mapVals['data']
-````
+The `sequenceTime` method is responsible for returning the duration of the sequence in minutes. While this method is not critical for the sequence's functionality, it is recommended to have it in place because the GUI may request this information.
 
-Then, we need to create the time and frequency arrays, and calculate the spectrum:
-````Python
-tVector = np.linspace(0, acqTime, num=nPoints) # ms
-spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
-fVector = np.linspace(-bw / 2, bw / 2, num=nPoints) * 1e3  # kHz
-dataTime = [tVector, data]
-dataSpec = [fVector, spectrum]
-noise = np.abs(data)
-noiserms = np.mean(noise)
-self.mapVals['RMS noise'] = noiserms
-self.mapVals['spectrum'] = dataSpec
-````
-Note that after processing the data, the results are saved in the *self.mapVals* dictionary.
-Anything you want to save into the raw data file needs to be in the *self.mapVals* dictionary.
-Then we can save the raw data with
-````Python
-self.saveRawData()
-````
+In this example, the `sequenceTime` method returns a default duration of 0 minutes. You should adjust the return value to reflect the actual duration of your sequence.
 
-Once everything is ready, we have to create the pyqtgraph widget that is expected by the GUI.
-For 1D plots, we have to import the class *SpectrumPlot* from the module *spectrumplot*.
-````Python
-from plotview.spectrumplot import SpectrumPlot
-````
-SpectrumPlot is a class that inherits from *GraphicsLayoutWidget* and requires different input arguments:
-- *xData*: a numpy array with x data.
-- *yData*: a list of numpy arrays with different y data.
-- *legend*: a list of strings with legend for different curves in *yData*.
-- *xLabel*: a string with the label of x axis.
-- *yLabel*: a string with the label of y axis.
-- *title*: a string with the label for the title.
+## Implementing the `sequenceRun` Method
 
-for 3D images, we have to import the class *Spectrum3DPlot* from the module *spectrumplot*
-````Python
-from plotview.spectrumplot import Spectrum3DPlot # To show nice 2d or 3d images
-````
-Spectrum3DPlot is a class that make use of a modified version of *ImageView* module from *pyqtgraph*
-to create nice 2D or 3D images.
-This class requires different input arguments:
-- *data*: a 3D numpy array with dimensions given by number of slices, phases and readouts.
-- *xLabel*: a string with the label for the x axis.
-- *yLabel*: a string with the label for the y axis.
+```python
+def sequenceRun(self, plotSeq=0, demo=False):
+    self.demo = demo
+    
+    # 1) Update bandwidth by oversampling factor
+    self.bw = self.bw * hw.oversamplingFactor # Hz
+    samplingPeriod = 1 / self.bw # s
+    
+    # 2) Create the experiment object
+    self.expt = ex.Experiment(
+        lo_freq=self.larmorFreq * 1e-6,
+        rx_t=samplingPeriod * 1e6,
+        init_gpa=False,
+        gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+        print_infos=False
+    )
+    
+    # 3) Get true sampling period from experiment object
+    samplingPeriod = self.expt.get_rx_ts()[0] # us
+    
+    # 4) Update bandwidth and acquision time
+    self.bw = 1 / samplingPeriod / hw.oversamplingFactor # MHz
+    acqTime = self.nPoints / self.bw # us
+    self.mapVals['acqTime'] = acqTime
 
-To do this we type this:
-````Python
-# Plot signal versus time
-timePlotWidget = SpectrumPlot(xData=self.dataTime[0],
-                       yData=[np.abs(self.dataTime[1]), np.real(self.dataTime[1]), np.imag(self.dataTime[1])],
-                       legend=['abs', 'real', 'imag'],
-                       xLabel='Time (ms)',
-                       yLabel='Signal amplitude (mV)',
-                       title='Noise vs time, rms noise: %1.3f mV' %noiserms)
+    # 5) Create sequence instructions
+    self.iniSequence(20, np.array((0, 0, 0)))
+    self.rxGate(20, acqTime, rxChannel=rxChannel)
+    self.endSequence(acqTime+40)
+    
+    # 6) Execute the sequence
+    if not plotSeq:
+        rxd, msgs = self.expt.run()
+        data = rxd['rx%i'%rxChannel]*13.788
+        data = sig.decimate(data, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+        self.mapVals['data'] = data
+    self.expt.__del__()
+```
 
-# Plot spectrum
-freqPlotWidget = SpectrumPlot(xData=self.dataSpec[0],
-                       yData=[np.abs(self.dataSpec[1])],
-                       legend=[''],
-                       xLabel='Frequency (kHz)',
-                       yLabel='Mag FFT (a.u.)',
-                       title='Noise spectrum')
-````
+The `sequenceRun` method plays a pivotal role in your sequence as it manages the input of instructions into the Red Pitaya and controls whether to run or plot the sequence. The value of the `plotSeq` parameter determines the behavior: `plotSeq = 0` is used to run the sequence, while `plotSeq = 1` is used to plot the sequence.
 
-Finally, we create the output variable that contains a list with the widgets to be shown into the GUI:
-````Python
-# create self.out to run in iterative mode
-self.out = [timePlotWidget, freqPlotWidget]
-return (self.out)
-````
-It is convenient to save the output list of widgets into *self.out*.
-This varible is used in the GUI to update the widgets if the user repeats the experiment.
-If *self.out* does not exist, the GUI will delete the previous widgets and new ones will be created each time the user repeat the same experient.
+You may assume that values associated to keys created in the constructor are available as attributes.
 
-Note that the user can create its own widgets from *pyqtgraph* module and the GUI should be able to place it into the layout.
+Here's a step-by-step breakdown of how to implement the `sequenceRun` method:
+
+1. **Get the True Bandwidth and Sampling Period**: To address an issue related to the CIC filter in the Red Pitaya, an oversampling factor is applied to the acquired data. This factor can be encapsulated in the hardware module.
+
+2. **Initialize the Experiment Object**: Next, initialize the experiment object (`self.expt`) using the parameters you've defined. The experiment object must be defined within the self object so that it can be accessed by methods of the parent class `mriBlankSequence`.
+
+3. **Obtain True Sampling Rate**: After defining the experiment, obtain the true sampling rate used by the experiment object using the `get_rx_ts()` method.
+
+4. **Update Acquision Parameters**: Calculate the true bandwidth and acquisition time based on the true sampling rate to prevent data misregistration and ensure precise measurements.
+
+5. **Create sequence instructions**: Now that we have the true values of the sampling period and sampling time, we create the instructions of the pulse sequence.
+   1. **Initialization**:
+      - To begin the sequence, we initialize the necessary arrays and parameters.
+      - In this step, we ensure that all relevant variables are set to zero and that the Red Pitaya is ready for data acquisition.
+
+   2. **Rx Gate Configuration**:
+      - The next step involves configuring the Rx gate for data measurement.
+      - We specify the duration of the Rx gate, which is determined by the acquisition time and the selected Rx channel.
+   
+   3. **Completing the Sequence**:
+      - To finish the experiment, we perform cleanup tasks.
+      - All arrays and variables are reset to their initial values, ensuring a clean slate for the next sequence or experiment.
+      - The total duration of the sequence is adjusted to account for the Rx gate duration and additional time for safety.
+
+6. **Execute the sequence**:
+   1. **Conditional Execution**:
+      - Before running the sequence, we determine whether it should be executed or just plotted.
+      - The decision is made based on the value of the `plotSeq` keyword argument, where:
+        - `plotSeq = 0`: The sequence will be executed to collect data.
+        - `plotSeq = 1`: The sequence will be plotted without data acquisition.
+      - This flexibility allows users to visualize the sequence before running it, which can be useful for verification and debugging.
+
+   2. **Data Acquisition (if applicable)**:
+      - If the sequence is set to run (i.e., `plotSeq = 0`), the Red Pitaya performs data acquisition as instructed.
+      - Data collected during the Rx gate period is processed to yield meaningful experimental results.
+      - The acquired data is decimated, filtered, and stored for subsequent analysis.
+
+   3. **Cleanup**:
+      - Once data acquisition is complete, the sequence is finalized.
+      - Cleanup tasks ensure that the Red Pitaya and related resources are reset to their initial state.
+      - This step is crucial for maintaining the integrity of subsequent experiments.
+
+## Implementing `sequenceAnalysis` method
+
+```Python
+    def sequenceAnalysis(self, mode=None):
+        # Set the mode attribute
+        self.mode = mode
+
+        # 1) Data retrieval
+        acqTime = self.mapVals['acqTime']  # ms
+        data = self.mapVals['data']
+
+        # 2) Data processing
+        tVector = np.linspace(0, acqTime, num=self.nPoints)  # Time vector in milliseconds (ms)
+        spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))  # Signal spectrum
+        fVector = np.linspace(-self.bw / 2, self.bw / 2, num=self.nPoints) * 1e3  # Frequency vector in kilohertz (kHz)
+        dataTime = [tVector, data]  # Time-domain data as a list [time vector, data]
+        dataSpec = [fVector, spectrum]  # Frequency-domain data as a list [frequency vector, spectrum]
+        
+        # 3) Create result dictionaries
+        # Plot signal versus time
+        result1 = {'widget': 'curve',
+                   'xData': dataTime[0],
+                   'yData': [np.abs(dataTime[1]), np.real(dataTime[1]), np.imag(dataTime[1])],
+                   'xLabel': 'Time (ms)',
+                   'yLabel': 'Signal amplitude (mV)',
+                   'title': 'Noise vs time',
+                   'legend': ['abs', 'real', 'imag'],
+                   'row': 0,
+                   'col': 0}
+
+        # Plot spectrum
+        result2 = {'widget': 'curve',
+                   'xData': dataSpec[0],
+                   'yData': [np.abs(dataSpec[1])],
+                   'xLabel': 'Frequency (kHz)',
+                   'yLabel': 'Mag FFT (a.u.)',
+                   'title': 'Noise spectrum',
+                   'legend': [''],
+                   'row': 1,
+                   'col': 0}
+        
+        # 4) Define output
+        self.output = [result1, result2]
+        
+        # 5) Save the rawData
+        self.saveRawData()
+        
+        # In case of 'Standalone' execution, use the plotResults method from mriBlankSeq
+        if self.mode == 'Standalone':
+            self.plotResults()
+        
+        # 6) Return the self.output
+        return self.output
+```
+
+
+The `sequenceAnalysis` method plays a crucial role in preparing data for display in the GUI or generating custom plots when the GUI is not utilized. This method performs a series of tasks to achieve this goal:
+
+1. **Data Retrieval**: It retrieves previously acquired data stored in `self.mapVals`.
+
+2. **Data processing**: Using the Inverse Fast Fourier Transform, it calculates the signal spectrum from the acquired data.
+
+3. **Results**: Creates dictionaries that will be used in the GUI layout for user interaction and data display.
+
+4. **Define Outputs**: `self.outputs` is a list of results that will be used by the `plotResults` method and by the GUI to generate the figure widget. It is convenient to save the list in `self.output` attribute. This attribute is used in the GUI to update the widgets if the user repeats the experiment.
+
+5. **Save rawData**: Saves the raw data using the `self.saveRawData()` method.
+
+6. **return**: the `sequenceAnalysis` method should return the `self.output` variable containing the list of dictionaries that provides the results.
+
+## Execute the sequence in Standalone
+```Python
+if __name__=='__main__':
+    seq = Noise()   # Creates the sequence object
+    seq.sequenceAtributes()     # Creates attributes according to input parameters keys and values
+    seq.sequenceRun(demo=False) # Execute the sequence
+    seq.sequenceAnalysis(mode='Standalone') # Show results
+```
+
+# Additional notes
+
+## CIC filter issues
+
+It's crucial to be aware of a systematic delay that occurs as a result of the CIC filter applied to the acquired data in the Red Pitaya. This delay consists of 3 data points and should be taken into account when processing and analyzing acquired data.
+
+The CIC filter's delay impacts the alignment of acquired data and can influence the timing of various sequence operations. This means that the timestamp associated with a data point may not reflect its true acquisition time accurately. Understanding and accommodating this delay is essential for accurate data processing and interpretation within the MaRCoS GUI.
+
+To mitigate potential issues related to the CIC filter's delay, it is also recommended to discard the first five to ten data points during data processing. This practice helps in stabilizing the data and removing any transient effects caused by the filter's delay. Additionally, consider adjusting timestamps or applying correction factors to accurately account for the delay when conducting precise time-sensitive analyses.
+
+The `mriBlankSeq` module already includes methods for rx gating that account for these considerations, simplifying the implementation of sequences and ensuring reliable data acquisition and processing (not shown in this example).
+
+## The `mapVals` Variable
+
+The `mapVals` variable is a crucial element within the sequences of the MaRCoS GUI. It serves as a dictionary inherited from the `mriBlankSeq` class, playing a vital role in managing and preserving information throughout the sequence execution. Below, we explore the significance and usage of the `mapVals` variable:
+
+- **Initialization and Structure**:
+  - The `mapVals` dictionary is initialized with predefined key-value pairs.
+  - These keys act as unique identifiers for specific information, and their associated values can encompass numbers or lists of numbers.
+
+- **Storage of Information**:
+  - During the sequence's execution, you have the flexibility to store pertinent information within the `mapVals` dictionary. This information can encompass various aspects, including parameters, interim results, or any other data deemed essential.
+
+- **Saving Data in Raw Data**:
+  - Upon the sequence's completion, the `saveRawData` method is utilized to generate .mat and .dcm files containing all the data stored within the `mapVals` dictionary. This .mat file plays a pivotal role in preserving the experimental data and results.
+  - **TODO**: save data in ISMRMD-format and NIFTI-format. Add XNAT.
+- **Persistent Inputs**:
+  - It is worth noting that, although the `mapVals` dictionary is cleared of most information after each sequence run, the inputs defined through the `addParameter` method remain intact. This ensures the retention of critical input parameters for reference and potential use in future experiments.
+
+In summary, the `mapVals` variable functions as a dynamic storage space for various types of data within a sequence. It facilitates the management and organization of vital information throughout the sequence execution process. Additionally, it guarantees that essential input parameters are accessible for reference and subsequent experiments.
+

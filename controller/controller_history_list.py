@@ -48,6 +48,8 @@ class HistoryListController(HistoryListWidget):
         self.itemClicked.connect(self.updateHistoryTable)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.showContextMenu)
+        self.itemChanged.connect(self.main.sequence_list.updateSequence)
+        self.itemEntered.connect(self.main.sequence_list.updateSequence)
 
     def showContextMenu(self, point):
         """
@@ -337,6 +339,7 @@ class HistoryListController(HistoryListWidget):
                         del self.pending_inputs[key]
                         # Delete outputs from the sequence
                         sequence.resetMapVals()
+                        # self.main.sequence_list.updateSequence()
                         print("\n" + key + " ready!")
                     time.sleep(0.1)
                 # Enable acquire button

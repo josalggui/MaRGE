@@ -193,16 +193,16 @@ class MRIBLANKSEQ:
         self.resetMapVals()
 
         # Create directory if it does not exist
-        if not os.path.exists('experiments/parameterisations'):
-            os.makedirs('experiments/parameterisations')
+        if not os.path.exists('experiments/parameterization'):
+            os.makedirs('experiments/parameterization')
 
         # Save csv file with mapVals
-        with open('experiments/parameterisations/%s_last_parameters.csv' % self.mapVals['seqName'], 'w') as csvfile:
+        with open('experiments/parameterization/%s_last_parameters.csv' % self.mapVals['seqName'], 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys)
             writer.writeheader()
             writer.writerows([self.mapNmspc, self.mapVals])
 
-    def loadParams(self, directory='experiments/parameterisations', file=None):
+    def loadParams(self, directory='experiments/parameterization', file=None):
         """"
         @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
         @email: josalggui@i3m.upv.es
@@ -210,19 +210,30 @@ class MRIBLANKSEQ:
         """
         mapValsOld = self.mapVals
         try:
-            if file is None:
+            if file is None:    # Load last parameters
                 with open('%s/%s_last_parameters.csv' % (directory, self.mapVals['seqName']), 'r') as csvfile:
                     reader = csv.DictReader(csvfile)
                     for l in reader:
                         mapValsNew = l
             else:
                 try:
-                    with open('%s/%s' % (directory, file), 'r') as csvfile:
+                    if directory == 'calibration':  # Load parameters from calibration directory
+                        with open('%s/%s_last_parameters.csv' % (directory, file), 'r') as csvfile:
+                            reader = csv.DictReader(csvfile)
+                            for l in reader:
+                                mapValsNew = l
+                    else:   # Load parameters from protocol directory
+                        with open('%s/%s' % (directory, file), 'r') as csvfile:
+                            reader = csv.DictReader(csvfile)
+                            for l in reader:
+                                mapValsNew = l
+                except:
+                    print("File %s/%s does not exist" % (directory, file))
+                    print("File %s/%s loaded" % ("experiments/parameterization", self.mapVals['seqName']))
+                    with open('%s/%s_last_parameters.csv' % ("experiments/parameterization", self.mapVals['seqName']), 'r') as csvfile:
                         reader = csv.DictReader(csvfile)
                         for l in reader:
                             mapValsNew = l
-                except:
-                    print("File %s does not exist. Please create it with save parameters.")
 
             self.mapVals = {}
 

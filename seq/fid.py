@@ -20,6 +20,7 @@ import numpy as np
 import seq.mriBlankSeq as blankSeq
 import scipy.signal as sig
 import configs.hw_config as hw
+import configs.units as units
 
 class FID(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -38,6 +39,7 @@ class FID(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='txChannel', string='Tx channel', val=0, field='RF')
         self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
         self.addParameter(key='shimmingTime', string='Shimming time (ms)', val=1, field='OTH')
+        self.addParameter(key='readRFpulse', string='Read RF Pulse', val=0, field='OTH')
 
     def sequenceInfo(self):
         print(" ")
@@ -64,7 +66,7 @@ class FID(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']*1e3 # us
         acqTime = self.mapVals['acqTime']*1e3 # us
         nPoints = self.mapVals['nPoints']
-        shimming = np.array(self.mapVals['shimming'])*hw.shimming_factor
+        shimming = np.array(self.mapVals['shimming'])*units.sh
         txChannel = self.mapVals['txChannel']
         rxChannel = self.mapVals['rxChannel']
         shimmingTime = self.mapVals['shimmingTime']*1e3 # us
@@ -84,7 +86,10 @@ class FID(blankSeq.MRIBLANKSEQ):
                 self.rfRecPulse(t0, rfExTime, rfExAmp, 0, channel=txChannel)
 
                 # Rx gate
-                t0 = tEx + rfExTime / 2 + deadTime
+                if self.readRFpulse == 0:
+                    t0 = tEx + rfExTime / 2 + deadTime
+                elif self.readRFpulse == 1:
+                    t0 = tEx-rfExTime/2
                 self.rxGateSync(t0, acqTime, channel=rxChannel)
                 # self.ttl(t0, acqTime, channel=1, rewrite=True)
 
@@ -142,8 +147,6 @@ class FID(blankSeq.MRIBLANKSEQ):
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
 
-        self.saveRawData()
-
         # Add time signal to the layout
         result1 = {'widget': 'curve',
                    'xData': tVector,
@@ -167,9 +170,10 @@ class FID(blankSeq.MRIBLANKSEQ):
                    'col': 0}
 
         # create self.out to run in iterative mode
-        self.out = [result1, result2]
+        self.output = [result1, result2]
+        self.saveRawData()
 
-        return self.out
+        return self.output
 
 
 if __name__=='__main__':

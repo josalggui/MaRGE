@@ -99,6 +99,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         if self.vna.device is None:
             print("\nNo nanoVNA found for auto-tuning.")
             print("Only test mode.")
+            return False
 
         if self.test == 'auto':
             return self.runAutoTuning()
@@ -275,6 +276,16 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         # Print results
         print("\nS11 = %0.1f dB" % s11_db)
 
+        # Save parameters to source sequence
+        try:
+            sequence = self.sequenceList[self.mapVals['seqName']]
+            sequence.mapVals['matching'] = self.states[stateCm]
+            sequence.mapVals['tuning'] = self.states[stateCt]
+            sequence.mapVals['series'] = self.states[stateCs]
+        except:
+            pass
+
+        # Save result into the mapVals to save the rawData
         self.mapVals['series'] = self.states[stateCs]
         self.mapVals['tuning'] = self.states[stateCt]
         self.mapVals['matching'] = self.states[stateCm]
