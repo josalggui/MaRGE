@@ -44,7 +44,7 @@ class MainWindow(QMainWindow):
         console (ConsoleController): Controller for the console.
     """
 
-    def __init__(self):
+    def __init__(self, session):
         """
         Initialize the MainWindow.
 
@@ -52,6 +52,7 @@ class MainWindow(QMainWindow):
             None
         """
         super().__init__()
+        self.session = session
 
         # Set stylesheet
         self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()

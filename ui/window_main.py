@@ -127,4 +127,4 @@ class MainWindow(QMainWindow):
         self.output_layout_h.addWidget(self.input_table)
 
         # Create the post-processing toolbox
-        self.post_gui = PostWindow()
+        self.post_gui = PostWindow(self.session)

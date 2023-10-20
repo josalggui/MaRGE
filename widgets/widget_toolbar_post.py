@@ -24,10 +24,7 @@ class ToolBarWidgetPost(QToolBar):
         super(ToolBarWidgetPost, self).__init__(*args, **kwargs)
         self.main = parent
 
-        # self.image_loading_button = QPushButton('File')
-        # self.addWidget(self.image_loading_button)
-
-        # Setup all
+        # Load data
         self.action_load = QAction(QIcon("resources/icons/addSequence.png"), "Load raw-data", self)
         self.action_load.setStatusTip("Open new raw-data")
         self.addAction(self.action_load)

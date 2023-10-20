@@ -3,17 +3,18 @@ from pydicom import dcmread
 from pydicom.data import get_testdata_file
 import datetime
 
+
 class DICOMImage:
-    def __init__(self):
+    def __init__(self, path=None):
         # Cargar el archivo de prueba de DICOM
         self.meta_data = {}
-        filename = get_testdata_file("MR_small.dcm")
-        self.ds = dcmread(filename)
+        if path is None:
+            path = get_testdata_file("MR_small.dcm")
+        self.ds = dcmread(path)
 
     def image2Dicom(self):
         for key in self.meta_data.keys():
             setattr(self.ds, key, self.meta_data[key])
-
 
     def save(self, filename):
         self.ds.save_as(filename)
@@ -23,7 +24,7 @@ class DICOMImage:
 
 
 if __name__ == '__main__':
-#### Random image
+    #### Random image
     name = 'Random'
     nRd = 90
     nPh = 90
@@ -32,10 +33,10 @@ if __name__ == '__main__':
     arr[0, 0:20, 0:20] = 50
     arr[4, 0:40, 0:40] = 100
     repetitionTime = 200
-    echoTime= 20
+    echoTime = 20
     ETL = 5
 
-#### Crear una nueva imagen DICOM
+    #### Crear una nueva imagen DICOM
     # Image data
     dicom_image = DICOMImage()
     dicom_image.meta_data["PixelData"] = arr.tobytes()
@@ -64,9 +65,8 @@ if __name__ == '__main__':
     SOPInstanceUID = name
     dicom_image.meta_data["SOPInstanceUID"] = SOPInstanceUID
 
-
-#### Create DICOM file
-#### DICOM 3.0 ####
+    #### Create DICOM file
+    #### DICOM 3.0 ####
     dicom_image.meta_data["NumberOfFrames"] = allSlices
     dicom_image.image2Dicom()
     nameDcmFile = name + ".dcm"

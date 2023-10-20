@@ -8,6 +8,7 @@ import copy
 import time
 import datetime as dt
 
+import pydicom
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QMenu, QAction
@@ -18,7 +19,9 @@ from controller.controller_smith_chart import PlotSmithChartController as SmithC
 from seq.sequences import defaultsequences
 from widgets.widget_imageview import ImageViewWidget
 from widgets.widget_history_list import HistoryListWidget
+from manager.dicommanager import DICOMImage
 import numpy as np
+
 
 class HistoryListController(HistoryListWidget):
     """
@@ -80,7 +83,7 @@ class HistoryListController(HistoryListWidget):
         item_name = self.clicked_item.text().split(' | ')[1]
         path = self.main.session['directory']
         self.main.post_gui.showMaximized()
-        self.main.post_gui.toolbar_image.rawDataLoading(file_path=path+"/mat/"+item_name)
+        self.main.post_gui.toolbar_image.rawDataLoading(file_path=path + "/mat/", file_name=item_name)
 
     def deleteTask(self):
         """
@@ -416,7 +419,7 @@ class HistoryListControllerPos(HistoryListWidget):
         super(HistoryListControllerPos, self).__init__(*args, **kwargs)
         self.hist_dict = {}  # Dictionary to store historical images
         self.operations_dict = {}  # Dictionary to store operations history
-        self.space = {}     # Dictionary to retrieve if matrix is in k-space or image-space
+        self.space = {}  # Dictionary to retrieve if matrix is in k-space or image-space
         self.matrix_infos = None
         self.image_view = None
 
@@ -538,6 +541,8 @@ class HistoryListControllerPos(HistoryListWidget):
             delete_action = context_menu.addAction('Delete')
             add_action = context_menu.addAction('New image')
             phase_action = context_menu.addAction('Plot phase')
+            save_action = context_menu.addAction('Save figure')
+
             action = context_menu.exec_(self.mapToGlobal(event.pos()))
             if action == delete_action:
                 self.deleteSelectedItem()
@@ -545,6 +550,42 @@ class HistoryListControllerPos(HistoryListWidget):
                 self.addImage()
             if action == phase_action:
                 self.plotPhase()
+            if action == save_action:
+                self.saveImage()
+
+    def saveImage(self):
+        # Path to the DICOM file
+        path = self.main.session['directory'] + "/dcm/" + self.main.file_name[0:-4]
+
+        # Load the DICOM file
+        dicom_image = DICOMImage(path=path + ".dcm")
+
+        # Get image to save into dicom
+        image = self.main.image_view_widget.main_matrix
+        imageDICOM = np.transpose(image, (0, 2, 1))
+        slices, rows, columns = imageDICOM.shape
+        dicom_image.meta_data["Columns"] = columns
+        dicom_image.meta_data["Rows"] = rows
+        dicom_image.meta_data["NumberOfSlices"] = slices
+        dicom_image.meta_data["NumberOfFrames"] = slices
+        imgFullAbs = np.abs(imageDICOM) * (2 ** 15 - 1) / np.amax(np.abs(imageDICOM))
+        imgFullInt = np.int16(np.abs(imgFullAbs))
+        imgFullInt = np.reshape(imgFullInt, (slices, rows, columns))
+        dicom_image.meta_data["PixelData"] = imgFullInt.tobytes()
+
+        # Save meta_data dictionary into dicom object metadata (Standard DICOM 3.0)
+        dicom_image.image2Dicom()
+
+        # Generate date to add to the name
+        name = dt.datetime.now()
+        name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
+
+        # Save dicom file
+        dicom_image.save(path + "_" + name_string + ".dcm")
+
+        self.main.console.print('Image saved into dicom format')
+
+        return 0
 
     def deleteSelectedItem(self):
         """
