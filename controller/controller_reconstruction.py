@@ -4,6 +4,7 @@ import threading
 import numpy as np
 # import matlab.engine
 from widgets.widget_reconstruction import ReconstructionTabWidget
+import cupy as cp
 
 
 def getPath():
@@ -127,18 +128,11 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Update the main matrix of the image view widget with the image fft data
         self.main.image_view_widget.main_matrix = k_space
 
-        # Add the "FFT" operation to the history widget
-        self.main.history_list.addItemWithTimestamp("dFFT")
-
-        # Update the history dictionary with the new main matrix for the current matrix info
-        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
-            self.main.image_view_widget.main_matrix
-
-        # Update the operations history
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "dFFT")
-
-        # Update the space dictionary
-        self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="dFFT",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          operation="dFFT",
+                                          space="k")
 
     def ifft(self):
         """
@@ -167,18 +161,11 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Update the main matrix of the image view widget with the image fft data
         self.main.image_view_widget.main_matrix = image
 
-        # Add the "FFT" operation to the history widget
-        self.main.history_list.addItemWithTimestamp("iFFT")
-
-        # Update the history dictionary with the new main matrix for the current matrix info
-        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
-            self.main.image_view_widget.main_matrix
-
-        # Update the operations history
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "iFFT")
-
-        # Update the space dictionary
-        self.main.history_list.space[self.main.history_list.matrix_infos] = 'i'
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="iFFT",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          operation="iFFT",
+                                          space="i")
 
     def artReconstruction(self):
         """
@@ -200,73 +187,176 @@ class ReconstructionTabController(ReconstructionTabWidget):
         Adds the "ART" operation to the history widget and updates the history dictionary and operations history.
         """
         # Get the mat data from the loaded .mat file in the main toolbar controller
-        mat_data = self.main.toolbar_controller.mat_data
+        mat_data = self.main.toolbar_image.mat_data
 
-        # print('ART is loading')
+        self.main.console.print('Executing ART in GPU...')
+
+        # Extract datas data from the loaded .mat file
+        sampled = self.main.toolbar_image.k_space_raw
+        fov = np.reshape(mat_data['fov'], -1) * 1e-2
+        nPoints = np.reshape(mat_data['nPoints'], -1)
+        k = sampled[:, 0:3]
+        s = sampled[:, 3]
+
+        # Points where rho will be estimated
+        x = np.linspace(-fov[0] / 2, fov[0] / 2, nPoints[0])
+        y = np.linspace(-fov[1] / 2, fov[1] / 2, nPoints[1])
+        z = np.linspace(-fov[2] / 2, fov[2] / 2, nPoints[2])
+        y, z, x = np.meshgrid(y, z, x)
+        x = np.reshape(x, (-1, 1))
+        y = np.reshape(y, (-1, 1))
+        z = np.reshape(z, (-1, 1))
+
+        # k-points
+        kx = np.reshape(k[:, 0], (-1, 1))
+        ky = np.reshape(k[:, 1], (-1, 1))
+        kz = np.reshape(k[:, 2], (-1, 1))
+
+        # Iterative process
+        lbda = float(self.lambda_text_field.text())
+        n_iter = int(self.niter_text_field.text())
+        index = np.arange(len(s))
+
+        # np.random.shuffle(index)
+
+        def iterative_process_gpu(kx, ky, kz, x, y, z, s, rho, lbda, n_iter, index):
+            n = 0
+            n_samples = len(s)
+            m = 0
+            for iteration in range(n_iter):
+                cp.random.shuffle(index)
+                for jj in range(n_samples):
+                    ii = index[jj]
+                    x0 = cp.exp(-1j * 2 * cp.pi * (kx[ii] * x + ky[ii] * y + kz[ii] * z))
+                    x1 = (x0.T @ rho) - s[ii]
+                    x2 = x1 * cp.conj(x0) / (cp.conj(x0.T) @ x0)
+                    d_rho = lbda * x2
+                    rho -= d_rho
+                    n += 1
+                    if n / n_samples > 0.01:
+                        m += 1
+                        n = 0
+                        self.main.console.print("ART iteration %i: %i %%" % (iteration + 1, m))
+
+            return rho
+
+        # Transfer numpy arrays to cupy arrays
+        kx_gpu = cp.asarray(kx)
+        ky_gpu = cp.asarray(ky)
+        kz_gpu = cp.asarray(kz)
+        x_gpu = cp.asarray(x)
+        y_gpu = cp.asarray(y)
+        z_gpu = cp.asarray(z)
+        s_gpu = cp.asarray(s)
+        index = cp.asarray(index)
+
+        # Launch the GPU function
+        rho = np.reshape(np.zeros((nPoints[0] * nPoints[1] * nPoints[2]), dtype=complex), (-1, 1))
+        rho_gpu = cp.asarray(rho)
+        start = time.time()
+        # for iteration in range(n_iter):
+        rho_gpu = iterative_process_gpu(kx_gpu, ky_gpu, kz_gpu, x_gpu, y_gpu, z_gpu, s_gpu, rho_gpu, lbda, n_iter,
+                                        index)
+        end = time.time()
+        rho = cp.asnumpy(rho_gpu)
+        self.main.console.print("Reconstruction time = %0.1f s" % (end - start))
+
+        # # Launch the GPU function
+        # rho = np.reshape(np.zeros((nPoints[0] * nPoints[1] * nPoints[2]), dtype=complex), (-1, 1))
+        # start = time.time()
+        # rho = iterative_process_gpu(kx, ky, kz, x, y, z, s, rho, lbda, n_iter, index)
+        # end = time.time()
+        # print("Elapsed (GPU with compilation) = %s" % (end - start))
         #
-        # # Extract datas data from the loaded .mat file
-        # self.sampled = self.main.toolbar_controller.k_space_raw
-        # fov = np.reshape(mat_data['fov'], -1) * 1e-2
-        # nPoints = np.reshape(mat_data['nPoints'], -1)
-        # s = self.sampled[:, 3]
-        # rho = np.zeros((nPoints[0] * nPoints[1] * nPoints[2]))
-        # lbda = float(self.lambda_text_field.text())
-        # niter = int(self.niter_text_field.text())
-        #
-        # eng = matlab.engine.start_matlab()
-        #
-        # eng.workspace['fov'] = matlab.double(fov.tolist(), is_complex=True)
-        # eng.workspace['nPoints'] = matlab.double(nPoints.tolist(), is_complex=True)
-        # eng.workspace['sampled'] = matlab.double(self.sampled.tolist(), is_complex=True)
-        # eng.workspace['s'] = matlab.double(s.tolist(), is_complex=True)
-        # eng.workspace['niter'] = matlab.double(niter, is_complex=True)
-        # eng.workspace['lbda'] = matlab.double(lbda, is_complex=True)
-        # eng.workspace['rho'] = matlab.double(rho.tolist(), is_complex=True)
-        #
-        # start_time = time.time()
-        #
-        # matlab_script_path = getPath()
-        #
-        # # Run the MATLAB script
-        # eng.run(matlab_script_path, nargout=0)
-        #
-        # rho = eng.workspace['rho']
-        #
-        # # Close MATLAB engine
-        # eng.quit()
-        #
-        # rho = np.array(rho)
-        #
-        # print('ART has been applied')
-        #
-        # # Update the main matrix of the image view widget with the cosbell data
-        # self.main.image_view_widget.main_matrix = rho
-        #
-        # # Add the "Cosbell" operation to the history widget
-        # self.main.history_list.addItemWithTimestamp("ART")
-        #
-        # # Update the history dictionary with the new main matrix for the current matrix info
-        # self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
-        #     self.main.image_view_widget.main_matrix
-        #
-        # # Update the operations history
-        # self.main.history_list.operations_dict[self.main.history_list.matrix_infos] = ["ART"]
-        #
-        # # Update the space dictionary
-        # self.main.history_list.space[self.main.history_list.matrix_infos] = 'i'
-        #
-        # # Get the end time
-        # end_time = time.time()
-        #
-        # # Calculate the elapsed time in seconds
-        # elapsed_time = end_time - start_time
-        #
-        # # Calculate the time components
-        # hours = int(elapsed_time // 3600)
-        # minutes = int((elapsed_time % 3600) // 60)
-        # seconds = int(elapsed_time % 60)
-        #
-        # print(f"Time : {hours} hours, {minutes} minutes, {seconds} seconds")
+        # # Launch the GPU function
+        # rho = np.reshape(np.zeros((nPoints[0] * nPoints[1] * nPoints[2]), dtype=complex), (-1, 1))
+        # start = time.time()
+        # rho = iterative_process_gpu(kx, ky, kz, x, y, z, s, rho, lbda, n_iter, index)
+        # end = time.time()
+        # print("Elapsed (GPU without compilation) = %s" % (end - start))
+
+        # # Transfer the result back from GPU
+        # cuda.synchronize()
+        # rho = rho_gpu.copy_to_host()
+        # rho = np.reshape(np.zeros((nPoints[0] * nPoints[1] * nPoints[2]), dtype=complex), (-1, 1))
+        # start = time.time()
+        # for iteration in range(n_iter):
+        #     np.random.shuffle(index)
+        #     for ii in index:
+        #         x0 = np.exp(-1j*2*np.pi*(kx[ii]*x+ky[ii]*y+kz[ii]*z))
+        #         x1 = (x0.T@rho)-s[ii]
+        #         x2 = x1[0, 0] * np.conj(x0)/(np.conj(x0.T)@x0)
+        #         rho = rho - lbda * x2
+        # end = time.time()
+        # print("Elapsed (CPU) = %s" % (end - start))
+
+        rho = np.reshape(rho, nPoints[-1::-1])
+
+        # Update the main matrix of the image view widget with the image fft data
+        self.main.image_view_widget.main_matrix = rho
+
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="ART",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          operation="ART",
+                                          space="i")
+
+        return
+
+    # eng = matlab.engine.start_matlab()
+    #
+    # eng.workspace['fov'] = matlab.double(fov.tolist(), is_complex=True)
+    # eng.workspace['nPoints'] = matlab.double(nPoints.tolist(), is_complex=True)
+    # eng.workspace['sampled'] = matlab.double(self.sampled.tolist(), is_complex=True)
+    # eng.workspace['s'] = matlab.double(s.tolist(), is_complex=True)
+    # eng.workspace['niter'] = matlab.double(niter, is_complex=True)
+    # eng.workspace['lbda'] = matlab.double(lbda, is_complex=True)
+    # eng.workspace['rho'] = matlab.double(rho.tolist(), is_complex=True)
+    #
+    # start_time = time.time()
+    #
+    # matlab_script_path = getPath()
+    #
+    # # Run the MATLAB script
+    # eng.run(matlab_script_path, nargout=0)
+    #
+    # rho = eng.workspace['rho']
+    #
+    # # Close MATLAB engine
+    # eng.quit()
+    #
+    # rho = np.array(rho)
+    #
+    # print('ART has been applied')
+    #
+    # # Update the main matrix of the image view widget with the cosbell data
+    # self.main.image_view_widget.main_matrix = rho
+    #
+    # # Add the "Cosbell" operation to the history widget
+    # self.main.history_list.addItemWithTimestamp("ART")
+    #
+    # # Update the history dictionary with the new main matrix for the current matrix info
+    # self.main.history_list.image_hist[self.main.history_list.image_key] = \
+    #     self.main.image_view_widget.main_matrix
+    #
+    # # Update the operations history
+    # self.main.history_list.operations_hist[self.main.history_list.image_key] = ["ART"]
+    #
+    # # Update the space dictionary
+    # self.main.history_list.space[self.main.history_list.image_key] = 'i'
+    #
+    # # Get the end time
+    # end_time = time.time()
+    #
+    # # Calculate the elapsed time in seconds
+    # elapsed_time = end_time - start_time
+    #
+    # # Calculate the time components
+    # hours = int(elapsed_time // 3600)
+    # minutes = int((elapsed_time % 3600) // 60)
+    # seconds = int(elapsed_time % 60)
+    #
+    # print(f"Time : {hours} hours, {minutes} minutes, {seconds} seconds")
 
     def pocsReconstruction(self):
         """
@@ -355,15 +445,8 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Update the main matrix of the image view widget with the interpolated image
         self.main.image_view_widget.main_matrix = img_full
 
-        # Add the "Interpolation" operation to the history widget
-        self.main.history_list.addItemWithTimestamp("POCS")
-
-        # Update the history dictionary with the new main matrix for the current matrix info
-        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
-            self.main.image_view_widget.main_matrix
-
-        # Update the operations history
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "POCS")
-
-        # Update the space dictionary
-        self.main.history_list.space[self.main.history_list.matrix_infos] = 'i'
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="POCS",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          operation="POCS",
+                                          space="i")

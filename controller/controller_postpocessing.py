@@ -59,7 +59,6 @@ class PostProcessingTabController(PostProcessingTabWidget):
 
         # Get the absolute value of the main image matrix and convert it to float
         image_data = np.abs(self.main.image_view_widget.main_matrix).astype(float)
-
         # Rescale the image data to the range (0, 100)
         reference = np.max(image_data)
         image_rescaled = image_data/reference*100
@@ -111,20 +110,16 @@ class PostProcessingTabController(PostProcessingTabWidget):
         # Update the main image view widget with the denoised image
         self.main.image_view_widget.main_matrix = denoised_image
 
-        # Add the operation to the history widget with a timestamp
-        self.main.history_list.addItemWithTimestamp("BM4D")
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="BM4D",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          operation="BM4D - Standard deviation: %0.2f" % std,
+                                          space="i")
 
-        # Update the history dictionary with the denoised image data
-        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
-            self.main.image_view_widget.main_matrix
-
-        # Update the operations history with the BM4D operation details
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos,
-                                                          "BM4D - Standard deviation: %0.2f" % std)
         self.main.console.print('BM4D filter has been applied')
 
         # Update the space dictionary
-        self.main.history_list.space[self.main.history_list.matrix_infos] = 'i'
+        self.main.history_list.space[self.main.history_list.image_key] = 'i'
 
     def gaussianFilter(self):
         """
@@ -162,16 +157,11 @@ class PostProcessingTabController(PostProcessingTabWidget):
         # Update the main image view widget with the filtered image
         self.main.image_view_widget.main_matrix = gaussian_image
 
-        # Add the operation to the history widget with a timestamp
-        self.main.history_list.addItemWithTimestamp("Gaussian")
-
-        # Update the history dictionary with the filtered image data
-        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
-            self.main.image_view_widget.main_matrix
-
-        # Update the operations history with the Gaussian operation details
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos,
-                                                          "Gaussian - Standard deviation: " + str(sigma))
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="Gaussian",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          operation="Gaussian - Standard deviation: " + str(sigma),
+                                          space="i")
 
         # Update the space dictionary
-        self.main.history_list.space[self.main.history_list.matrix_infos] = 'i'
+        self.main.history_list.space[self.main.history_list.image_key] = 'i'

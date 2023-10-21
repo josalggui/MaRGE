@@ -8,7 +8,6 @@ import copy
 import time
 import datetime as dt
 
-import pydicom
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QMenu, QAction
@@ -17,7 +16,6 @@ from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from controller.controller_plot1d import Plot1DController as SpectrumPlot
 from controller.controller_smith_chart import PlotSmithChartController as SmithChart
 from seq.sequences import defaultsequences
-from widgets.widget_imageview import ImageViewWidget
 from widgets.widget_history_list import HistoryListWidget
 from manager.dicommanager import DICOMImage
 import numpy as np
@@ -400,9 +398,9 @@ class HistoryListControllerPos(HistoryListWidget):
     Inherits from HistoryListWidget.
 
     Attributes:
-        hist_dict: Dictionary to store images.
-        operations_dict: Dictionary to store operations' history.
-        matrix_infos: Information about the matrix.
+        image_hist: Dictionary to store images.
+        operations_hist: Dictionary to store operations' history.
+        image_key: Information about the matrix.
         image_view: Reference to the ImageViewWidget.
 
     """
@@ -419,10 +417,10 @@ class HistoryListControllerPos(HistoryListWidget):
         super(HistoryListControllerPos, self).__init__(*args, **kwargs)
         self.labels = None
         self.figures = None
-        self.hist_dict = {}  # Dictionary to store historical images
-        self.operations_dict = {}  # Dictionary to store operations history
+        self.image_hist = {}  # Dictionary to store historical images
+        self.operations_hist = {}  # Dictionary to store operations history
         self.space = {}  # Dictionary to retrieve if matrix is in k-space or image-space
-        self.matrix_infos = None
+        self.image_key = None
         self.image_view = None
 
         # Connect methods to item click
@@ -496,9 +494,9 @@ class HistoryListControllerPos(HistoryListWidget):
         if selected_items:
             selected_item = selected_items[0]
             text = selected_item.text()
-            if text in self.hist_dict:
+            if text in self.image_hist:
                 if self.space[text] == 'k':
-                    image = np.log10(np.abs(self.hist_dict.get(text)))
+                    image = np.log10(np.abs(self.image_hist.get(text)))
                     image[image == -np.inf] = np.inf
                     val = np.min(image[:])
                     image[image == np.inf] = val
@@ -539,6 +537,31 @@ class HistoryListControllerPos(HistoryListWidget):
                     pass
                 n += 1
 
+    def addNewItem(self, image_key=None, stamp=None, image=None, operation=None, space=None):
+        # Generate the image key
+        current_time = dt.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        self.image_key = f"{current_time} - {stamp}"
+
+        # Add the item to the history list
+        self.addItem(self.image_key)
+
+        # Update the history dictionary with the new main matrix
+        self.image_hist[self.image_key] = image
+
+        # Update the operations history
+        if len(self.operations_hist) == 0 or image_key is None:
+            self.operations_hist[self.image_key] = [operation]
+        else:
+            operations = self.operations_hist[image_key]
+            operations = operations.copy()
+            operations.append(operation)
+            self.operations_hist[self.image_key] = operations
+
+        # Update the space dictionary
+        self.space[self.image_key] = space
+
+        return 0
+
     def addItemWithTimestamp(self, text):
         """
         Add an item with a timestamp to the history list.
@@ -547,8 +570,8 @@ class HistoryListControllerPos(HistoryListWidget):
             text (str): The text to be added to the history list.
         """
         current_time = dt.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-        self.matrix_infos = f"{current_time} - {text}"
-        self.addItem(self.matrix_infos)
+        self.image_key = f"{current_time} - {text}"
+        self.addItem(self.image_key)
 
     def updateHistoryFigure(self, item):
         """
@@ -557,10 +580,10 @@ class HistoryListControllerPos(HistoryListWidget):
         Args:
             item (QListWidgetItem): The selected item in the history list.
         """
-        selected_text = item.text()
-        if selected_text in self.hist_dict.keys():
-            self.main.image_view_widget.main_matrix = self.hist_dict[selected_text]
-            if self.space[selected_text] == 'k':
+        image_key = item.text()
+        if image_key in self.image_hist.keys():
+            self.main.image_view_widget.main_matrix = self.image_hist[image_key]
+            if self.space[image_key] == 'k':
                 image = np.log10(np.abs(self.main.image_view_widget.main_matrix))
                 image[image == -np.inf] = np.inf
                 val = np.min(image[:])
@@ -576,7 +599,7 @@ class HistoryListControllerPos(HistoryListWidget):
             label.setAlignment(QtCore.Qt.AlignCenter)
             label.setStyleSheet("background-color: black;color: white")
             self.main.image_view_widget.addWidget(label, row=0, col=0, colspan=2)
-            label.setText(selected_text)
+            label.setText(image_key)
 
             # Create image_widget
             image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(image)
@@ -590,22 +613,22 @@ class HistoryListControllerPos(HistoryListWidget):
             self.main.image_view_widget.addWidget(label, row=0, col=0)
             self.main.image_view_widget.addWidget(image, row=1, col=0)
 
-    def updateOperationsHist(self, infos, text, new=False):
+    def updateOperationsHist(self, image_key, text, new=False):
         """
         Update the operations history dictionary with the given information.
 
         Args:
-            infos (str): Information for the operations' history.
+            image_key (str): Information for the operations' history.
             text (str): Text to be added to the operations' history.
             new (bool): True is new loaded image
         """
-        if len(self.operations_dict) == 0 or new is True:
-            self.operations_dict[infos] = [text]
+        if len(self.operations_hist) == 0 or new is True:
+            self.operations_hist[image_key] = [text]
         else:
-            list1 = list(self.operations_dict.values())
+            list1 = list(self.operations_hist.values())
             new_value = list1[-1].copy()
             new_value.append(text)
-            self.operations_dict[infos] = new_value
+            self.operations_hist[image_key] = new_value
 
     def updateHistoryTable(self, item):
         """
@@ -619,7 +642,7 @@ class HistoryListControllerPos(HistoryListWidget):
 
         # Get the values to show in the methods_list table
         selected_text = item.text()
-        values = self.operations_dict.get(selected_text, [])
+        values = self.operations_hist.get(selected_text, [])
 
         # Print the methods
         for value in values:
@@ -637,31 +660,6 @@ class HistoryListControllerPos(HistoryListWidget):
             values = dictionary[key]
             del dictionary[key]
             dictionary[key] = values
-
-    # def contextMenuEvent(self, event):
-    #     """
-    #     Create a context menu for the right-click event.
-    #
-    #     Args:
-    #         event (QContextMenuEvent): The context menu event.
-    #     """
-    #     context_menu = QMenu(self)
-    #     if self.selectedItems():
-    #         delete_action = context_menu.addAction('Delete')
-    #         add_new_figure_action = context_menu.addAction('New image')
-    #         add_figure_action = context_menu.addAction('Compare image')
-    #         phase_action = context_menu.addAction('Plot phase')
-    #         save_action = context_menu.addAction('Save figure')
-    #
-    #         action = context_menu.exec_(self.mapToGlobal(event.pos()))
-    #         if action == delete_action:
-    #             self.deleteSelectedItem()
-    #         if action == add_new_figure_action:
-    #             self.addImage()
-    #         if action == phase_action:
-    #             self.plotPhase()
-    #         if action == save_action:
-    #             self.saveImage()
 
     def saveImage(self):
         # Path to the DICOM file
@@ -706,21 +704,21 @@ class HistoryListControllerPos(HistoryListWidget):
             selected_item = selected_items[0]
             self.takeItem(self.row(selected_item))
 
-        if selected_item.text() in self.hist_dict:
-            del self.hist_dict[selected_item.text()]
+        if selected_item.text() in self.image_hist:
+            del self.image_hist[selected_item.text()]
             self.main.image_view_widget.clear()
             self.clearSecondImageView()
 
-        if selected_item.text() in self.operations_dict:
-            del self.operations_dict[selected_item.text()]
+        if selected_item.text() in self.operations_hist:
+            del self.operations_hist[selected_item.text()]
 
     # def plotPhase(self):
     #     selected_items = self.selectedItems()
     #     if selected_items:
     #         selected_item = selected_items[0]
     #         text = selected_item.text()
-    #         if text in self.hist_dict:
-    #             image = self.hist_dict.get(text)
+    #         if text in self.image_hist:
+    #             image = self.image_hist.get(text)
     #             if self.image_view is None:
     #                 self.image_view = ImageViewWidget(parent=self.main)
     #                 self.main.image_view_splitter.addWidget(self.image_view)

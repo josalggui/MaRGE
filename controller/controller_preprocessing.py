@@ -81,19 +81,11 @@ class PreProcessingTabController(PreProcessingTabWidget):
         # Update the main matrix of the image view widget with the cosbell data
         self.main.image_view_widget.main_matrix *= (np.cos(theta * (np.pi / 2)) ** cosbell_order)
 
-        # Add the "Cosbell" operation to the history widget with a timestamp
-        self.main.history_list.addItemWithTimestamp("Cosbell")
-
-        # Update the history dictionary with the new main matrix for the current matrix info
-        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
-            self.main.image_view_widget.main_matrix
-
-        # Update the operations history with the Cosbell operation details
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, text + " Order: "
-                                                    + str(cosbell_order))
-
-        # Update the space dictionary
-        self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="Cosbell",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          operation=text + " Order: " + str(cosbell_order),
+                                          space="k")
 
     def zeroPadding(self):
         """
@@ -152,74 +144,12 @@ class PreProcessingTabController(PreProcessingTabWidget):
         # Update the main matrix of the image view widget with the padded image
         self.main.image_view_widget.main_matrix = image_matrix
 
-        # Add the "Zero Padding" operation to the history widget with a timestamp
-        self.main.history_list.addItemWithTimestamp("Zero Padding")
-
-        # Update the history dictionary with the new main matrix for the current matrix info
-        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
-            self.main.image_view_widget.main_matrix
-
-        # Update the operations history with the Zero Padding operation details
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos,
-                                                    "Zero Padding - RD: " + str(rd_order) + ", PH: "
-                                                    + str(ph_order) + ", SL: " + str(sl_order))
-
-        # Update the space dictionary
-        self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
-
-    def fovShifting(self):
-        """
-        Perform the FOV change operation using threading.
-
-        Starts a new thread to execute the runFovShifting method.
-        """
-        thread = threading.Thread(target=self.runFovShifting)
-        thread.start()
-
-    def runFovShifting(self):
-        """
-        Run the FOV change operation.
-
-        Retrieves the necessary parameters and performs the FOV change on the loaded image.
-        Updates the main matrix of the image view widget with the new FOV image, adds the operation to the history
-        widget, and updates the operations history.
-        """
-        # Get the k_space data and its shape
-        k = self.main.toolbar_image.k_space_raw.copy()
-        nPoints = self.main.toolbar_image.nPoints
-
-        # Factors for FOV change from the text field
-        factors = self.change_fov_field.text().split(',')
-
-        # Extract the k_space components
-        krd = k[:, 0]
-        kph = k[:, 1]
-        ksl = k[:, 2]
-        k = np.column_stack((krd, kph, ksl))
-
-        # Convert factors to spatial shifts
-        delta_rd = (float(factors[0])) * 1e-3
-        delta_ph = (float(factors[1])) * 1e-3
-        delta_sl = (float(factors[2])) * 1e-3
-        delta_r = np.array([delta_rd, delta_ph, delta_sl])
-
-        # Calculate the phase shift using the spatial shifts
-        phi = np.exp(-1j * 2 * np.pi * k @ np.reshape(delta_r, (3, 1)))
-        self.main.image_view_widget.main_matrix *= np.reshape(phi, nPoints[-1::-1])
-
-        # Add the "New FOV" operation to the history widget with a timestamp
-        self.main.history_list.addItemWithTimestamp("FOV shifted")
-
-        # Update the history dictionary with the new main matrix for the current matrix info
-        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
-            self.main.image_view_widget.main_matrix
-
-        # Update the operations history
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "Shifted FOV - RD: " +
-                                                    str(delta_rd) + ", PH: " + str(delta_ph) + ", SL: " + str(delta_sl))
-
-        # Update the space dictionary
-        self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="Zero Padding",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          operation="Zero Padding - RD: " + str(rd_order) + ", PH: "
+                                                    + str(ph_order) + ", SL: " + str(sl_order),
+                                          space="k")
 
     def partialReconstruction(self):
         """
@@ -271,19 +201,11 @@ class PreProcessingTabController(PreProcessingTabWidget):
         # Update the main matrix of the image view widget with the k-space data
         self.main.image_view_widget.main_matrix = k_log
 
-        # Add the "Partial Reconstruction" operation to the history widget with a timestamp
-        self.main.history_list.addItemWithTimestamp("Partial Reconstruction")
-
-        # Update the history dictionary with the new main matrix for the current matrix info
-        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
-            self.main.image_view_widget.main_matrix
-
-        # Update the operations history
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "Partial Reconstruction - "
-                                                    + str(percentage))
-
-        # Update the space dictionary
-        self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="Partial Reconstruction",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          operation="Partial Reconstruction - " + str(percentage),
+                                          space="k")
 
     def phaseCenter(self):
         """
@@ -331,15 +253,8 @@ class PreProcessingTabController(PreProcessingTabWidget):
         # Update the main matrix of the image view widget with the interpolated image
         self.main.image_view_widget.main_matrix = kSpace_center_log
 
-        # Add the "Phase center" operation to the history widget with a timestamp
-        self.main.history_list.addItemWithTimestamp("Phase center")
-
-        # Update the history dictionary with the new main matrix for the current matrix info
-        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
-            self.main.image_view_widget.main_matrix
-
-        # Update the operations history with the Phase center operation details
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "Phase center")
-
-        # Update the space dictionary
-        self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="Phase center",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          operation="Phase center",
+                                          space="k")

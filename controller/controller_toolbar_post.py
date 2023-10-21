@@ -112,18 +112,11 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         self.main.image_view_widget.addWidget(label, row=0, col=0)
         self.main.image_view_widget.addWidget(image, row=1, col=0)
 
-        # Add the "KSpace" operation to the history
-        self.main.history_list.addItemWithTimestamp("KSpace")
-
-        # Update the history dictionary with the new main matrix for the current matrix info
-        self.main.history_list.hist_dict[self.main.history_list.matrix_infos] = \
-            self.main.image_view_widget.main_matrix
-
-        # Update the operations history
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "KSpace", new=True)
-
-        # Update the space dictionary
-        self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="KSpace",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          operation="KSpace",
+                                          space="k")
 
     def loadFile(self):
         """

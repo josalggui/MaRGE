@@ -46,6 +46,10 @@ class ConsoleControllerPost(ConsoleWidget):
     def print(self, text):
         self.console.append(text)
 
+        # Scroll down the QTextEdit
+        scrollbar = self.console.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
+
 class EmittingStream(QObject):
     """
     Emitting stream class.
