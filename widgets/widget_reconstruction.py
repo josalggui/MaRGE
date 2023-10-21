@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QPushButton, QTabWidget, QVBoxLayout, QLabel, QLineEdit, QHBoxLayout, QGroupBox
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QLabel, QLineEdit, QHBoxLayout, QGroupBox, QWidget
 
 
-class ReconstructionTabWidget(QTabWidget):
+class ReconstructionTabWidget(QWidget):
     """
     ReconstructionTabWidget class for displaying a tab widget for image reconstruction options.
 
@@ -95,4 +95,5 @@ class ReconstructionTabWidget(QTabWidget):
         self.reconstruction_layout.addWidget(self.art_group)
         self.reconstruction_layout.addWidget(self.fft_group)
         self.reconstruction_layout.addWidget(self.pocs_group)
+        self.reconstruction_layout.addStretch()
         self.setLayout(self.reconstruction_layout)

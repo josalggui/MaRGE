@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QTabWidget, QPushButton, QLabel, QLineEdit, QHBoxLayout, QVBoxLayout
+from PyQt5.QtWidgets import QPushButton, QLabel, QLineEdit, QHBoxLayout, QVBoxLayout, QWidget
 
 
-class VisualisationTabWidget(QTabWidget):
+class VisualisationTabWidget(QWidget):
     """
     VisualisationTabWidget class for displaying a tab widget for visualization settings.
 
@@ -50,5 +50,6 @@ class VisualisationTabWidget(QTabWidget):
         self.visualisation_layout.addLayout(self.number_layout)
         self.visualisation_layout.addLayout(self.column_layout)
         self.visualisation_layout.addWidget(self.visualisation_button)
+        self.visualisation_layout.addStretch()
 
         self.setLayout(self.visualisation_layout)

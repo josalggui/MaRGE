@@ -32,7 +32,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         self.image_cosbell_button.clicked.connect(self.cosbellFilter)
         self.image_padding_button.clicked.connect(self.zeroPadding)
         self.phase_center_button.clicked.connect(self.phaseCenter)
-        self.new_fov_button.clicked.connect(self.fovShifting)
+        # self.new_fov_button.clicked.connect(self.fovShifting)
 
     def cosbellFilter(self):
         """

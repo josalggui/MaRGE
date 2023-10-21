@@ -1,7 +1,8 @@
-from PyQt5.QtWidgets import QPushButton, QTabWidget, QWidget, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QHBoxLayout
+from PyQt5.QtWidgets import QPushButton, QTabWidget, QWidget, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QHBoxLayout, \
+    QGroupBox
 
 
-class PostProcessingTabWidget(QTabWidget):
+class PostProcessingTabWidget(QWidget):
     """
     PostProcessingTabWidget class for displaying a tab widget for post-processing options.
 
@@ -25,29 +26,13 @@ class PostProcessingTabWidget(QTabWidget):
         # The 'main' attribute represents the parent widget, which is used to access the main window or controller.
         self.main = parent
 
-        # Create separate tabs for BM4D and Gaussian options
-        bm4d_tab = QWidget()
-        gaussian_tab = QWidget()
-
-        # Add the tabs to the QTabWidget
-        self.addTab(bm4d_tab, 'BM4D')
-        self.addTab(gaussian_tab, 'Gaussian')
-
-        # Labels
+        # Layout for BM4D tab
         self.std_label = QLabel('Standard deviation')
-
-        # Buttons
         self.run_filter_button = QPushButton('Run filter')
-
-        # CheckBox
         self.auto_checkbox = QCheckBox('Auto')
         self.auto_checkbox.setChecked(True)
-
-        # Text Fields
         self.std_text_field = QLineEdit()
-
-        # Layout for BM4D tab
-        self.bm4d_layout = QVBoxLayout(bm4d_tab)
+        self.bm4d_layout = QVBoxLayout()
         self.std_layout = QHBoxLayout()
         self.bm4d_layout.addLayout(self.std_layout)
         self.std_layout.addWidget(self.std_label)
@@ -55,8 +40,11 @@ class PostProcessingTabWidget(QTabWidget):
         self.bm4d_layout.addWidget(self.auto_checkbox)
         self.bm4d_layout.addWidget(self.run_filter_button)
 
+        self.bm4d_group = QGroupBox('BM4D')
+        self.bm4d_group.setLayout(self.bm4d_layout)
+
         # Layout for Gaussian tab
-        self.gaussian_layout = QVBoxLayout(gaussian_tab)
+        self.gaussian_layout = QVBoxLayout()
         self.gaussian_std_layout = QHBoxLayout()
         self.gaussian_label = QLabel('Standard deviation')
         self.gaussian_text_field = QLineEdit()
@@ -65,3 +53,12 @@ class PostProcessingTabWidget(QTabWidget):
         self.run_gaussian_button = QPushButton('Run filter')
         self.gaussian_layout.addLayout(self.gaussian_std_layout)
         self.gaussian_layout.addWidget(self.run_gaussian_button)
+
+        self.gauss_group = QGroupBox('Gaussian filter')
+        self.gauss_group.setLayout(self.gaussian_layout)
+
+        self.post_layout = QVBoxLayout()
+        self.post_layout.addWidget(self.bm4d_group)
+        self.post_layout.addWidget(self.gauss_group)
+        self.post_layout.addStretch()
+        self.setLayout(self.post_layout)

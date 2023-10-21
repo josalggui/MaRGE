@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QPushButton, QTabWidget, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QHBoxLayout, QGroupBox
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QHBoxLayout, QGroupBox, QWidget
 
 
-class PreProcessingTabWidget(QTabWidget):
+class PreProcessingTabWidget(QWidget):
     """
     PreProcessingTabWidget class for displaying a tab widget for image pre-processing options.
 
@@ -77,25 +77,25 @@ class PreProcessingTabWidget(QTabWidget):
         self.zero_padding_group = QGroupBox("Zero Padding")
         self.zero_padding_group.setLayout(self.zero_padding_layout)
 
-        # ***********************
-        # FOV change
-        # ***********************
-        self.change_fov_label = QLabel('New FOV (mm)')
-        self.change_fov_field = QLineEdit()
-        self.change_fov_field.setPlaceholderText("Readout, Phase, Slice")
-
-        self.change_fov_layout = QHBoxLayout()
-        self.change_fov_layout.addWidget(self.change_fov_label)
-        self.change_fov_layout.addWidget(self.change_fov_field)
-
-        self.new_fov_button = QPushButton('Shift FOV')
-
-        self.new_fov_layout = QVBoxLayout()
-        self.new_fov_layout.addLayout(self.change_fov_layout)
-        self.new_fov_layout.addWidget(self.new_fov_button)
-
-        self.new_fov_group = QGroupBox("FOV Shift")
-        self.new_fov_group.setLayout(self.new_fov_layout)
+        # # ***********************
+        # # FOV change
+        # # ***********************
+        # self.change_fov_label = QLabel('New FOV (mm)')
+        # self.change_fov_field = QLineEdit()
+        # self.change_fov_field.setPlaceholderText("Readout, Phase, Slice")
+        #
+        # self.change_fov_layout = QHBoxLayout()
+        # self.change_fov_layout.addWidget(self.change_fov_label)
+        # self.change_fov_layout.addWidget(self.change_fov_field)
+        #
+        # self.new_fov_button = QPushButton('Shift FOV')
+        #
+        # self.new_fov_layout = QVBoxLayout()
+        # self.new_fov_layout.addLayout(self.change_fov_layout)
+        # self.new_fov_layout.addWidget(self.new_fov_button)
+        #
+        # self.new_fov_group = QGroupBox("FOV Shift")
+        # self.new_fov_group.setLayout(self.new_fov_layout)
 
         # ***********************
         # Partial Reconstruction
@@ -141,7 +141,7 @@ class PreProcessingTabWidget(QTabWidget):
         self.preprocessing_layout = QVBoxLayout()
         self.preprocessing_layout.addWidget(self.zero_padding_group)
         self.preprocessing_layout.addWidget(self.cosbell_group)
-        self.preprocessing_layout.addWidget(self.new_fov_group)
         self.preprocessing_layout.addWidget(self.partial_reconstruction_group)
         self.preprocessing_layout.addWidget(self.phase_center_group)
+        self.preprocessing_layout.addStretch()
         self.setLayout(self.preprocessing_layout)

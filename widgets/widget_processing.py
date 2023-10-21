@@ -1,5 +1,10 @@
 from PyQt5.QtWidgets import QTabWidget, QWidget, QVBoxLayout
 
+from controller.controller_postpocessing import PostProcessingTabController
+from controller.controller_preprocessing import PreProcessingTabController
+from controller.controller_reconstruction import ReconstructionTabController
+from controller.controller_visualisation import VisualisationTabController
+
 
 class ProcessingWidget(QTabWidget):
     """
@@ -32,10 +37,10 @@ class ProcessingWidget(QTabWidget):
         visualisation_tab = QWidget()
 
         # Adding Tabs in the QTabWidget
-        self.addTab(preprocessing_tab, 'PreProcessing')
-        self.addTab(reconstruction_tab, 'Reconstruction')
-        self.addTab(postprocessing_tab, 'PostProcessing')
-        self.addTab(visualisation_tab, 'Visualisation')
+        self.addTab(PreProcessingTabController(self.main), 'Pre-Processing')
+        self.addTab(ReconstructionTabController(self.main), 'Reconstruction')
+        self.addTab(PostProcessingTabController(self.main), 'Post-Processing')
+        self.addTab(VisualisationTabController(self.main), 'Visualisation')
 
         # Preprocessing layout
         self.preprocessing_layout = QVBoxLayout(preprocessing_tab)
