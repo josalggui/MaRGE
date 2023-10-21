@@ -120,7 +120,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             self.main.image_view_widget.main_matrix
 
         # Update the operations history
-        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "KSpace")
+        self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos, "KSpace", new=True)
 
         # Update the space dictionary
         self.main.history_list.space[self.main.history_list.matrix_infos] = 'k'

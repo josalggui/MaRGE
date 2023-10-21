@@ -91,7 +91,7 @@ class PostProcessingTabController(PostProcessingTabWidget):
 
             # Extract the block with the highest entropy from the block_std_devs array
             std = 3 * block_std_devs[max_entropy_index]
-            self.main.console.print("Standard deviation for BM4D: %f" % std)
+            self.main.console.print("Standard deviation for BM4D: %0.2f" % std)
 
         else:
             std = float(self.std_text_field.text())
@@ -120,7 +120,7 @@ class PostProcessingTabController(PostProcessingTabWidget):
 
         # Update the operations history with the BM4D operation details
         self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos,
-                                                          "BM4D - Standard deviation: " + str(std))
+                                                          "BM4D - Standard deviation: %0.2f" % std)
         self.main.console.print('BM4D filter has been applied')
 
         # Update the space dictionary

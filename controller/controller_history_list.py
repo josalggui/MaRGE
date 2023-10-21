@@ -417,6 +417,8 @@ class HistoryListControllerPos(HistoryListWidget):
         """
 
         super(HistoryListControllerPos, self).__init__(*args, **kwargs)
+        self.labels = None
+        self.figures = None
         self.hist_dict = {}  # Dictionary to store historical images
         self.operations_dict = {}  # Dictionary to store operations history
         self.space = {}  # Dictionary to retrieve if matrix is in k-space or image-space
@@ -426,6 +428,116 @@ class HistoryListControllerPos(HistoryListWidget):
         # Connect methods to item click
         self.itemDoubleClicked.connect(self.updateHistoryFigure)
         self.itemClicked.connect(self.updateHistoryTable)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.showContextMenu)
+
+    def showContextMenu(self, point):
+        """
+        Displays a context menu at the given point.
+
+        :param point: The position where the context menu should be displayed.
+        """
+        self.clicked_item = self.itemAt(point)
+        if self.clicked_item is not None:
+            menu = QMenu(self)
+            action1 = QAction("Add new image", self)
+            action1.triggered.connect(self.addNewFigure)
+            menu.addAction(action1)
+            action2 = QAction("Add another image", self)
+            action2.triggered.connect(self.addFigure)
+            menu.addAction(action2)
+            action3 = QAction("Delete image", self)
+            action3.triggered.connect(self.deleteSelectedItem)
+            menu.addAction(action3)
+            action4 = QAction("Save figure", self)
+            action4.triggered.connect(self.saveImage)
+            menu.addAction(action4)
+
+            menu.exec_(self.mapToGlobal(point))
+
+    def addNewFigure(self):
+        """
+        Adds a new figure and initializes the figures and labels lists.
+
+        This method adds a new figure and initializes the `figures` and `labels` lists to empty lists.
+        It then calls the `addFigure` method to add the new figure to the list.
+        """
+        self.figures = []
+        self.labels = []
+        self.addFigure()
+
+    def addFigure(self):
+        """
+        Adds a figure to the layout and updates the figures and labels lists.
+
+        This method clears the figures layout, checks the number of existing figures, and returns early if the maximum
+        limit of 4 figures is reached.
+        It retrieves information from the clicked item, such as the time and name, and assigns it to
+        `self.current_output`.
+        The method then fetches the relevant data and configurations from the history based on `self.current_output`.
+        It creates the label and figure for the image widget, adds them to the figures layout, and updates the figures
+        and labels lists.
+
+        Note: The figures layout is assumed to be available as `self.main.figures_layout`.
+
+        If the selected raw data does not contain an image, a message is printed.
+
+        Raises:
+            - Exception: An exception may be raised if there is an error creating a Spectrum3DPlot.
+
+        """
+        self.main.image_view_widget.clearFiguresLayout()
+        if len(self.figures) > 3:
+            print("You can add only 4 figures to the layout")
+            return
+
+        # Get clicked item self.current_output
+        selected_items = self.selectedItems()
+        if selected_items:
+            selected_item = selected_items[0]
+            text = selected_item.text()
+            if text in self.hist_dict:
+                if self.space[text] == 'k':
+                    image = np.log10(np.abs(self.hist_dict.get(text)))
+                    image[image == -np.inf] = np.inf
+                    val = np.min(image[:])
+                    image[image == np.inf] = val
+                else:
+                    image = np.abs(self.main.image_view_widget.main_matrix)
+
+                # Add image and label to the list
+                self.figures.append(image)
+                self.labels.append(text)
+
+                # self.main.image_view_widget.addWidget(image, row=0, col=0)
+
+        # Create the new layout
+        n = 0
+        sub_label = QLabel('Multiplot')
+        sub_label.setAlignment(QtCore.Qt.AlignCenter)
+        sub_label.setStyleSheet("background-color: black;color: white")
+        if len(self.figures) > 1:
+            self.main.image_view_widget.addWidget(sub_label, row=0, col=0, colspan=2)
+        for row in range(2):
+            for col in range(2):
+                try:
+                    # Label
+                    label = QLabel(self.labels[n])
+                    label.setAlignment(QtCore.Qt.AlignCenter)
+                    label.setStyleSheet("background-color: black;color: white")
+                    self.main.image_view_widget.addWidget(label, row=2 * row + 1, col=col)
+
+                    # Figure
+                    image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(self.figures[n])
+                    image = Spectrum3DPlot(main=self.main,
+                                           data=image2show,
+                                           x_label=x_label,
+                                           y_label=y_label,
+                                           title=title)
+                    self.main.image_view_widget.addWidget(image, row=2 * row + 2, col=col)
+                except:
+                    pass
+                n += 1
 
     def addItemWithTimestamp(self, text):
         """
@@ -478,19 +590,16 @@ class HistoryListControllerPos(HistoryListWidget):
             self.main.image_view_widget.addWidget(label, row=0, col=0)
             self.main.image_view_widget.addWidget(image, row=1, col=0)
 
-        self.clearSecondImageView()
-        self.main.visualisation_controller.clear2DImage()
-        self.moveKeyAndValuesToEnd(self.operations_dict, selected_text)
-
-    def updateOperationsHist(self, infos, text):
+    def updateOperationsHist(self, infos, text, new=False):
         """
         Update the operations history dictionary with the given information.
 
         Args:
             infos (str): Information for the operations' history.
             text (str): Text to be added to the operations' history.
+            new (bool): True is new loaded image
         """
-        if len(self.operations_dict) == 0:
+        if len(self.operations_dict) == 0 or new is True:
             self.operations_dict[infos] = [text]
         else:
             list1 = list(self.operations_dict.values())
@@ -529,29 +638,30 @@ class HistoryListControllerPos(HistoryListWidget):
             del dictionary[key]
             dictionary[key] = values
 
-    def contextMenuEvent(self, event):
-        """
-        Create a context menu for the right-click event.
-
-        Args:
-            event (QContextMenuEvent): The context menu event.
-        """
-        context_menu = QMenu(self)
-        if self.selectedItems():
-            delete_action = context_menu.addAction('Delete')
-            add_action = context_menu.addAction('New image')
-            phase_action = context_menu.addAction('Plot phase')
-            save_action = context_menu.addAction('Save figure')
-
-            action = context_menu.exec_(self.mapToGlobal(event.pos()))
-            if action == delete_action:
-                self.deleteSelectedItem()
-            if action == add_action:
-                self.addImage()
-            if action == phase_action:
-                self.plotPhase()
-            if action == save_action:
-                self.saveImage()
+    # def contextMenuEvent(self, event):
+    #     """
+    #     Create a context menu for the right-click event.
+    #
+    #     Args:
+    #         event (QContextMenuEvent): The context menu event.
+    #     """
+    #     context_menu = QMenu(self)
+    #     if self.selectedItems():
+    #         delete_action = context_menu.addAction('Delete')
+    #         add_new_figure_action = context_menu.addAction('New image')
+    #         add_figure_action = context_menu.addAction('Compare image')
+    #         phase_action = context_menu.addAction('Plot phase')
+    #         save_action = context_menu.addAction('Save figure')
+    #
+    #         action = context_menu.exec_(self.mapToGlobal(event.pos()))
+    #         if action == delete_action:
+    #             self.deleteSelectedItem()
+    #         if action == add_new_figure_action:
+    #             self.addImage()
+    #         if action == phase_action:
+    #             self.plotPhase()
+    #         if action == save_action:
+    #             self.saveImage()
 
     def saveImage(self):
         # Path to the DICOM file
@@ -604,39 +714,14 @@ class HistoryListControllerPos(HistoryListWidget):
         if selected_item.text() in self.operations_dict:
             del self.operations_dict[selected_item.text()]
 
-    def addImage(self):
-        """
-        Add an image to a new image view.
-        """
-        selected_items = self.selectedItems()
-        if selected_items:
-            selected_item = selected_items[0]
-            text = selected_item.text()
-            if text in self.hist_dict:
-                image = self.hist_dict.get(text)
-
-                if self.image_view is None:
-                    self.image_view = ImageViewWidget(parent=self.main)
-                    self.main.image_view_splitter.addWidget(self.image_view)
-
-                self.image_view.setImage(np.abs(image))
-
-    def clearSecondImageView(self):
-        """
-        Clear the second image view.
-        """
-        if self.image_view is not None:
-            self.image_view.close()
-            self.image_view = None
-
-    def plotPhase(self):
-        selected_items = self.selectedItems()
-        if selected_items:
-            selected_item = selected_items[0]
-            text = selected_item.text()
-            if text in self.hist_dict:
-                image = self.hist_dict.get(text)
-                if self.image_view is None:
-                    self.image_view = ImageViewWidget(parent=self.main)
-                    self.main.image_view_splitter.addWidget(self.image_view)
-            self.image_view.setImage(np.angle(image))
+    # def plotPhase(self):
+    #     selected_items = self.selectedItems()
+    #     if selected_items:
+    #         selected_item = selected_items[0]
+    #         text = selected_item.text()
+    #         if text in self.hist_dict:
+    #             image = self.hist_dict.get(text)
+    #             if self.image_view is None:
+    #                 self.image_view = ImageViewWidget(parent=self.main)
+    #                 self.main.image_view_splitter.addWidget(self.image_view)
+    #         self.image_view.setImage(np.angle(image))

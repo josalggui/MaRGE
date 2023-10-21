@@ -113,18 +113,6 @@ class MainWindow(QMainWindow):
         self.tab_controller = ProcessingController(parent=self)
         self.left_layout.addWidget(self.tab_controller)
 
-        # self.postprocessing_controller = PostProcessingTabController(parent=self)
-        # self.tab_controller.postprocessing_layout.addWidget(self.postprocessing_controller)
-        #
-        # self.preprocessing_controller = PreProcessingTabController(parent=self)
-        # self.tab_controller.preprocessing_layout.addWidget(self.preprocessing_controller)
-        #
-        # self.reconstruction_controller = ReconstructionTabController(parent=self)
-        # self.tab_controller.reconstruction_layout.addWidget(self.reconstruction_controller)
-        #
-        # self.visualisation_controller = VisualisationTabController(parent=self)
-        # self.tab_controller.visualisation_layout.addWidget(self.visualisation_controller)
-
         # Console addition
         self.console = ConsoleControllerPost()
         self.left_layout.addWidget(self.console)
