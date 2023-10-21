@@ -2,6 +2,7 @@ import numpy as np
 from PyQt5.QtWidgets import QGridLayout
 from widgets.widget_imageview import ImageViewWidget
 from widgets.widget_visualisation import VisualisationTabWidget
+from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 
 
 class VisualisationTabController(VisualisationTabWidget):
@@ -65,11 +66,16 @@ class VisualisationTabController(VisualisationTabWidget):
 
             i += 1
 
-        if self.image_view is None:
-            self.image_view = ImageViewWidget(parent=self.main)
-            self.main.image_view_layout.addWidget(self.image_view)
+        # Clean the image_view_widget
+        self.main.image_view_widget.clearFiguresLayout()
 
-        self.image_view.setImage(abs(image_matrix))
+        # Create new widget
+        image = Spectrum3DPlot(main=self.main,
+                               data=np.abs(np.reshape(image_matrix, (1, image_matrix.shape[0], image_matrix.shape[1]))),
+                               x_label='',
+                               y_label='',
+                               title='')
+        self.main.image_view_widget.addWidget(image)
 
     def clear2DImage(self):
         """
