@@ -3,6 +3,8 @@ import threading
 import numpy as np
 from scipy.ndimage import gaussian_filter
 from widgets.widget_postpocessing import PostProcessingTabWidget
+from skimage.util import view_as_blocks
+from skimage.measure import shannon_entropy
 
 
 class PostProcessingTabController(PostProcessingTabWidget):
@@ -53,24 +55,46 @@ class PostProcessingTabController(PostProcessingTabWidget):
         updates the main matrix of the image view widget, adds the operation to the history widget,
         and updates the operations history.
         """
+        self.main.console.print('BM4D is loading')
+
         # Get the absolute value of the main image matrix and convert it to float
         image_data = np.abs(self.main.image_view_widget.main_matrix).astype(float)
 
         # Rescale the image data to the range (0, 100)
-        image_rescaled = np.interp(image_data, (np.min(image_data), np.max(image_data)), (0, 100))
-
-        # Compute the median and median absolute deviation (MAD) of the rescaled image
-        med = np.median(image_rescaled)
-        mad = np.median(np.abs(image_rescaled - med))
+        reference = np.max(image_data)
+        image_rescaled = image_data/reference*100
 
         # Calculate the standard deviation (sigma_psd) for BM4D filter
         if self.auto_checkbox.isChecked():
-            sigma_psd = (1.4826 * mad) / 2
-        else:
-            std_value = float(self.std_text_field.text())
-            sigma_psd = std_value
+            # Quantize image
+            num_bins = 1000
+            image_quantized = np.digitize(image_rescaled, bins=np.linspace(0, 1, num_bins + 1)) - 1
 
-        self.main.console.print('BM4D is loading')
+            # Divide the image into blocks
+            blocks_q = view_as_blocks(image_quantized, block_shape=(5, 5, 5))
+            blocks_r = view_as_blocks(image_rescaled, block_shape=(5, 5, 5))
+
+            # Calculate the standard deviation for each block
+            block_std_devs = np.std(blocks_r, axis=(3, 4, 5))
+
+            # Calculate entropy for each block
+            block_entropies = np.zeros_like(blocks_q[:, :, :, 0, 0, 0], dtype=np.float32)
+            for ii in range(blocks_q.shape[0]):
+                for jj in range(blocks_q.shape[1]):
+                    for kk in range(blocks_q.shape[2]):
+                        block = blocks_q[ii, jj, kk, :, :, :]
+                        entropy = shannon_entropy(block)
+                        block_entropies[ii, jj, kk] = entropy
+
+            # Find the indices of the block with the highest entropy
+            max_entropy_index = np.unravel_index(np.argmax(block_entropies), block_entropies.shape)
+
+            # Extract the block with the highest entropy from the block_std_devs array
+            std = 3 * block_std_devs[max_entropy_index]
+            self.main.console.print("Standard deviation for BM4D: %f" % std)
+
+        else:
+            std = float(self.std_text_field.text())
 
         # Create a BM4D profile and set the stage argument and blockmatches options
         profile = bm4d.BM4DProfile()
@@ -78,12 +102,11 @@ class PostProcessingTabController(PostProcessingTabWidget):
         blockmatches = (False, False)
 
         # Apply the BM4D filter to the rescaled image
-        denoised_rescaled = bm4d.bm4d(image_rescaled, sigma_psd=sigma_psd, profile=profile, stage_arg=stage_arg,
+        denoised_rescaled = bm4d.bm4d(image_rescaled, sigma_psd=std, profile=profile, stage_arg=stage_arg,
                                       blockmatches=blockmatches)
 
         # Rescale the denoised image back to its original dimensions
-        denoised_image = np.interp(denoised_rescaled, (np.min(denoised_rescaled), np.max(denoised_rescaled)),
-                                   (np.min(image_data), np.max(image_data)))
+        denoised_image = denoised_rescaled/100*reference
 
         # Update the main image view widget with the denoised image
         self.main.image_view_widget.main_matrix = denoised_image
@@ -97,7 +120,7 @@ class PostProcessingTabController(PostProcessingTabWidget):
 
         # Update the operations history with the BM4D operation details
         self.main.history_list.updateOperationsHist(self.main.history_list.matrix_infos,
-                                                          "BM4D - Standard deviation: " + str(sigma_psd))
+                                                          "BM4D - Standard deviation: " + str(std))
         self.main.console.print('BM4D filter has been applied')
 
         # Update the space dictionary

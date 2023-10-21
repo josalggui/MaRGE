@@ -31,25 +31,13 @@ class ProcessingWidget(QTabWidget):
         self.setMaximumWidth(400)
 
         # Tabs
-        preprocessing_tab = QWidget()
-        reconstruction_tab = QWidget()
-        postprocessing_tab = QWidget()
-        visualisation_tab = QWidget()
+        self.main.preprocessing_controller = PreProcessingTabController(self.main)
+        self.main.reconstruction_controller = ReconstructionTabController(self.main)
+        self.main.postprocessing_controller = PostProcessingTabController(self.main)
+        self.main.visualisation_controller = VisualisationTabController(self.main)
 
         # Adding Tabs in the QTabWidget
-        self.addTab(PreProcessingTabController(self.main), 'Pre-Processing')
-        self.addTab(ReconstructionTabController(self.main), 'Reconstruction')
-        self.addTab(PostProcessingTabController(self.main), 'Post-Processing')
-        self.addTab(VisualisationTabController(self.main), 'Visualisation')
-
-        # Preprocessing layout
-        self.preprocessing_layout = QVBoxLayout(preprocessing_tab)
-
-        # Reconstruction layout
-        self.reconstruction_layout = QVBoxLayout(reconstruction_tab)
-
-        # Postprocessing layout
-        self.postprocessing_layout = QVBoxLayout(postprocessing_tab)
-
-        # Visualisation layout
-        self.visualisation_layout = QVBoxLayout(visualisation_tab)
+        self.addTab(self.main.preprocessing_controller, 'Pre-Processing')
+        self.addTab(self.main.reconstruction_controller, 'Reconstruction')
+        self.addTab(self.main.postprocessing_controller, 'Post-Processing')
+        self.addTab(self.main.visualisation_controller, 'Visualisation')
