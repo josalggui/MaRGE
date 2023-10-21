@@ -132,7 +132,8 @@ class ReconstructionTabController(ReconstructionTabWidget):
         self.main.history_list.addNewItem(stamp="dFFT",
                                           image=self.main.image_view_widget.main_matrix,
                                           operation="dFFT",
-                                          space="k")
+                                          space="k",
+                                          image_key=self.main.image_view_widget.image_key)
 
     def ifft(self):
         """
@@ -165,7 +166,8 @@ class ReconstructionTabController(ReconstructionTabWidget):
         self.main.history_list.addNewItem(stamp="iFFT",
                                           image=self.main.image_view_widget.main_matrix,
                                           operation="iFFT",
-                                          space="i")
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
 
     def artReconstruction(self):
         """
@@ -217,8 +219,6 @@ class ReconstructionTabController(ReconstructionTabWidget):
         n_iter = int(self.niter_text_field.text())
         index = np.arange(len(s))
 
-        # np.random.shuffle(index)
-
         def iterative_process_gpu(kx, ky, kz, x, y, z, s, rho, lbda, n_iter, index):
             n = 0
             n_samples = len(s)
@@ -261,35 +261,6 @@ class ReconstructionTabController(ReconstructionTabWidget):
         rho = cp.asnumpy(rho_gpu)
         self.main.console.print("Reconstruction time = %0.1f s" % (end - start))
 
-        # # Launch the GPU function
-        # rho = np.reshape(np.zeros((nPoints[0] * nPoints[1] * nPoints[2]), dtype=complex), (-1, 1))
-        # start = time.time()
-        # rho = iterative_process_gpu(kx, ky, kz, x, y, z, s, rho, lbda, n_iter, index)
-        # end = time.time()
-        # print("Elapsed (GPU with compilation) = %s" % (end - start))
-        #
-        # # Launch the GPU function
-        # rho = np.reshape(np.zeros((nPoints[0] * nPoints[1] * nPoints[2]), dtype=complex), (-1, 1))
-        # start = time.time()
-        # rho = iterative_process_gpu(kx, ky, kz, x, y, z, s, rho, lbda, n_iter, index)
-        # end = time.time()
-        # print("Elapsed (GPU without compilation) = %s" % (end - start))
-
-        # # Transfer the result back from GPU
-        # cuda.synchronize()
-        # rho = rho_gpu.copy_to_host()
-        # rho = np.reshape(np.zeros((nPoints[0] * nPoints[1] * nPoints[2]), dtype=complex), (-1, 1))
-        # start = time.time()
-        # for iteration in range(n_iter):
-        #     np.random.shuffle(index)
-        #     for ii in index:
-        #         x0 = np.exp(-1j*2*np.pi*(kx[ii]*x+ky[ii]*y+kz[ii]*z))
-        #         x1 = (x0.T@rho)-s[ii]
-        #         x2 = x1[0, 0] * np.conj(x0)/(np.conj(x0.T)@x0)
-        #         rho = rho - lbda * x2
-        # end = time.time()
-        # print("Elapsed (CPU) = %s" % (end - start))
-
         rho = np.reshape(rho, nPoints[-1::-1])
 
         # Update the main matrix of the image view widget with the image fft data
@@ -298,8 +269,9 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="ART",
                                           image=self.main.image_view_widget.main_matrix,
-                                          operation="ART",
-                                          space="i")
+                                          operation="ART n = %i, lambda = %0.3f" % (n_iter, lbda),
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
 
         return
 
@@ -449,4 +421,5 @@ class ReconstructionTabController(ReconstructionTabWidget):
         self.main.history_list.addNewItem(stamp="POCS",
                                           image=self.main.image_view_widget.main_matrix,
                                           operation="POCS",
-                                          space="i")
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)

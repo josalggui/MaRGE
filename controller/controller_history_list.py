@@ -556,22 +556,13 @@ class HistoryListControllerPos(HistoryListWidget):
             operations = operations.copy()
             operations.append(operation)
             self.operations_hist[self.image_key] = operations
+        self.main.image_view_widget.image_key = self.image_key
+
 
         # Update the space dictionary
         self.space[self.image_key] = space
 
         return 0
-
-    def addItemWithTimestamp(self, text):
-        """
-        Add an item with a timestamp to the history list.
-
-        Args:
-            text (str): The text to be added to the history list.
-        """
-        current_time = dt.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-        self.image_key = f"{current_time} - {text}"
-        self.addItem(self.image_key)
 
     def updateHistoryFigure(self, item):
         """
@@ -583,6 +574,7 @@ class HistoryListControllerPos(HistoryListWidget):
         image_key = item.text()
         if image_key in self.image_hist.keys():
             self.main.image_view_widget.main_matrix = self.image_hist[image_key]
+            self.main.image_view_widget.image_key = image_key
             if self.space[image_key] == 'k':
                 image = np.log10(np.abs(self.main.image_view_widget.main_matrix))
                 image[image == -np.inf] = np.inf

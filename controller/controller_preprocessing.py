@@ -85,7 +85,8 @@ class PreProcessingTabController(PreProcessingTabWidget):
         self.main.history_list.addNewItem(stamp="Cosbell",
                                           image=self.main.image_view_widget.main_matrix,
                                           operation=text + " Order: " + str(cosbell_order),
-                                          space="k")
+                                          space="k",
+                                          image_key=self.main.image_view_widget.image_key)
 
     def zeroPadding(self):
         """
@@ -149,7 +150,8 @@ class PreProcessingTabController(PreProcessingTabWidget):
                                           image=self.main.image_view_widget.main_matrix,
                                           operation="Zero Padding - RD: " + str(rd_order) + ", PH: "
                                                     + str(ph_order) + ", SL: " + str(sl_order),
-                                          space="k")
+                                          space="k",
+                                          image_key=self.main.image_view_widget.image_key)
 
     def partialReconstruction(self):
         """
@@ -205,7 +207,8 @@ class PreProcessingTabController(PreProcessingTabWidget):
         self.main.history_list.addNewItem(stamp="Partial Reconstruction",
                                           image=self.main.image_view_widget.main_matrix,
                                           operation="Partial Reconstruction - " + str(percentage),
-                                          space="k")
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
 
     def phaseCenter(self):
         """
@@ -257,4 +260,5 @@ class PreProcessingTabController(PreProcessingTabWidget):
         self.main.history_list.addNewItem(stamp="Phase center",
                                           image=self.main.image_view_widget.main_matrix,
                                           operation="Phase center",
-                                          space="k")
+                                          space="k",
+                                          image_key=self.main.image_view_widget.image_key)

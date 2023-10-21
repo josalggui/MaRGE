@@ -114,7 +114,8 @@ class PostProcessingTabController(PostProcessingTabWidget):
         self.main.history_list.addNewItem(stamp="BM4D",
                                           image=self.main.image_view_widget.main_matrix,
                                           operation="BM4D - Standard deviation: %0.2f" % std,
-                                          space="i")
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
 
         self.main.console.print('BM4D filter has been applied')
 
@@ -161,7 +162,8 @@ class PostProcessingTabController(PostProcessingTabWidget):
         self.main.history_list.addNewItem(stamp="Gaussian",
                                           image=self.main.image_view_widget.main_matrix,
                                           operation="Gaussian - Standard deviation: " + str(sigma),
-                                          space="i")
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
 
         # Update the space dictionary
         self.main.history_list.space[self.main.history_list.image_key] = 'i'
