@@ -144,25 +144,25 @@ class HistoryListController(HistoryListWidget):
         sub_label = QLabel('Multiplot')
         sub_label.setAlignment(QtCore.Qt.AlignCenter)
         sub_label.setStyleSheet("background-color: black;color: white")
-        if len(self.figures) > 1:
-            self.main.figures_layout.addWidget(sub_label, row=0, col=0, colspan=2)
-        for row in range(2):
-            for col in range(2):
-                try:
-                    image = Spectrum3DPlot(main=self.main,
-                                           data=self.figures[n]['data'],
-                                           x_label=self.figures[n]['xLabel'],
-                                           y_label=self.figures[n]['yLabel'],
-                                           title=self.figures[n]['title'])
-                    label = QLabel()
-                    label.setAlignment(QtCore.Qt.AlignCenter)
-                    label.setStyleSheet("background-color: black;color: white")
-                    label.setText(self.labels[n])
-                    self.main.figures_layout.addWidget(label, row=2 * row + 1, col=col)
-                    self.main.figures_layout.addWidget(image, row=2 * row + 2, col=col)
-                except:
-                    pass
-                n += 1
+        # if len(self.figures) > 1:
+        #     self.main.figures_layout.addWidget(sub_label, row=0, col=0, colspan=2)
+        for col in range(4):
+            try:
+                image = Spectrum3DPlot(main=self.main,
+                                       data=self.figures[n]['data'],
+                                       x_label=self.figures[n]['xLabel'],
+                                       y_label=self.figures[n]['yLabel'],
+                                       title=self.figures[n]['title'])
+                label = QLabel()
+                label.setAlignment(QtCore.Qt.AlignCenter)
+                label.setStyleSheet("background-color: black;color: white")
+                label.setText(self.labels[n])
+                self.main.figures_layout.addWidget(label, row=1, col=col)
+                self.main.figures_layout.addWidget(image, row=2, col=col)
+                self.main.figures_layout.addWidget(sub_label, row=0, col=0, colspan=col+1)
+            except:
+                pass
+            n += 1
 
     def updateHistoryTable(self, item):
         """
