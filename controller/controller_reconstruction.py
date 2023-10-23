@@ -369,7 +369,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
             correlation = np.corrcoef(previous_img.flatten(), img_reconstructed.flatten())[0, 1]
 
             # Display correlation and current iteration number
-            print(f"Iteration: {num_iterations}, Correlation: {correlation}")
+            self.main.console.print(f"Iteration: {num_iterations}, Correlation: {correlation}")
 
             # Check if correlation reaches the desired threshold
             if correlation >= correlation_threshold:

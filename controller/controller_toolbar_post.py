@@ -1,4 +1,5 @@
 import copy
+import os
 
 import scipy as sp
 import numpy as np
@@ -44,13 +45,14 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         """
         Load raw data from a .mat file and update the image view widget.
         """
-        self.main.file_name = file_name
 
         # Prompt the user to select a .mat file
         if not file_path:
             file_path = self.loadFile()
+            file_name = os.path.basename(file_path)
         else:
             file_path = file_path+file_name
+        self.main.file_name = file_name
         self.mat_data = sp.io.loadmat(file_path)
         self.nPoints = np.reshape(self.mat_data['nPoints'], -1)
 
@@ -84,6 +86,9 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         # Update the image view widget to display the new main matrix
         try:
             image = np.log10(np.abs(self.main.image_view_widget.main_matrix))
+            image[image == -np.inf] = np.inf
+            val = np.min(image[:])
+            image[image == np.inf] = val
         except:
             image = np.abs(self.main.image_view_widget.main_matrix)
 
