@@ -515,28 +515,27 @@ class HistoryListControllerPos(HistoryListWidget):
         sub_label = QLabel('Multiplot')
         sub_label.setAlignment(QtCore.Qt.AlignCenter)
         sub_label.setStyleSheet("background-color: black;color: white")
-        if len(self.figures) > 1:
-            self.main.image_view_widget.addWidget(sub_label, row=0, col=0, colspan=2)
-        for row in range(2):
-            for col in range(2):
-                try:
-                    # Label
-                    label = QLabel(self.labels[n])
-                    label.setAlignment(QtCore.Qt.AlignCenter)
-                    label.setStyleSheet("background-color: black;color: white")
-                    self.main.image_view_widget.addWidget(label, row=2 * row + 1, col=col)
+        for col in range(4):
+            try:
+                # Label
+                label = QLabel(self.labels[n])
+                label.setAlignment(QtCore.Qt.AlignCenter)
+                label.setStyleSheet("background-color: black;color: white")
+                self.main.image_view_widget.addWidget(label, row=1, col=col)
 
-                    # Figure
-                    image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(self.figures[n])
-                    image = Spectrum3DPlot(main=self.main,
-                                           data=image2show,
-                                           x_label=x_label,
-                                           y_label=y_label,
-                                           title=title)
-                    self.main.image_view_widget.addWidget(image, row=2 * row + 2, col=col)
-                except:
-                    pass
-                n += 1
+                # Figure
+                image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(self.figures[n])
+                image = Spectrum3DPlot(main=self.main,
+                                       data=image2show,
+                                       x_label=x_label,
+                                       y_label=y_label,
+                                       title=title)
+                self.main.image_view_widget.addWidget(image, row=2, col=col)
+
+                self.main.image_view_widget.addWidget(sub_label, row=0, col=0, colspan=col+1)
+            except:
+                pass
+            n += 1
 
     def addNewItem(self, image_key=None, stamp=None, image=None, operation=None, space=None):
         # Generate the image key

@@ -194,8 +194,6 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Get the mat data from the loaded .mat file in the main toolbar controller
         mat_data = self.main.toolbar_image.mat_data
 
-        self.main.console.print('Executing ART in GPU...')
-
         # Extract datas data from the loaded .mat file
         sampled = self.main.toolbar_image.k_space_raw
         fov = np.reshape(mat_data['fov'], -1) * 1e-2
@@ -264,26 +262,31 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
             return rho
 
-        # Transfer numpy arrays to cupy arrays
-        kx_gpu = cp.asarray(kx)
-        ky_gpu = cp.asarray(ky)
-        kz_gpu = cp.asarray(kz)
-        x_gpu = cp.asarray(x)
-        y_gpu = cp.asarray(y)
-        z_gpu = cp.asarray(z)
-        s_gpu = cp.asarray(s)
-        index = cp.asarray(index)
-
         # Launch the GPU function
         rho = np.reshape(np.zeros((nPoints[0] * nPoints[1] * nPoints[2]), dtype=complex), (-1, 1))
         start = time.time()
         if 'cp' in globals():
+            self.main.console.print('Executing ART in GPU...')
+
+            # Transfer numpy arrays to cupy arrays
+            kx_gpu = cp.asarray(kx)
+            ky_gpu = cp.asarray(ky)
+            kz_gpu = cp.asarray(kz)
+            x_gpu = cp.asarray(x)
+            y_gpu = cp.asarray(y)
+            z_gpu = cp.asarray(z)
+            s_gpu = cp.asarray(s)
+            index = cp.asarray(index)
             rho_gpu = cp.asarray(rho)
+
+            # Execute ART
             rho_gpu = iterative_process_gpu(kx_gpu, ky_gpu, kz_gpu, x_gpu, y_gpu, z_gpu, s_gpu, rho_gpu, lbda, n_iter,
                                             index)
             rho = cp.asnumpy(rho_gpu)
         else:
-            rho = iterative_process_cpu(kx_gpu, ky_gpu, kz_gpu, x_gpu, y_gpu, z_gpu, s_gpu, rho, lbda, n_iter,
+            self.main.console.print('Executing ART in CPU...')
+
+            rho = iterative_process_cpu(kx, ky, kz, x, y, z, s, rho, lbda, n_iter,
                                             index)
         end = time.time()
         self.main.console.print("Reconstruction time = %0.1f s" % (end - start))
