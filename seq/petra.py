@@ -48,7 +48,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[30, 30, 1], field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=1.0, field='SEQ')
         self.addParameter(key='undersampling', string='Radial undersampling', val=10, field='SEQ')
-        self.addParameter(key='axes', string='Axes', val=[0, 2, 1], field='IM')
+        self.addParameter(key='axesOrientation', string='Axes', val=[0, 2, 1], field='IM')
         self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 0], field='IM')
         self.addParameter(key='axesOn', string='Axes ON', val=[1, 1, 1], field='IM')
         self.addParameter(key='drfPhase', string='Phase of excitation pulse (º)', val=0.0, field='RF')
@@ -91,7 +91,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         dfov = np.array(self.mapVals['dfov'])  # mm
         nPoints = np.array(self.mapVals['nPoints'])
         acqTime = self.mapVals['acqTime']  # ms
-        axes = self.mapVals['axes']
+        axes = self.mapVals['axesOrientation']
         axesEnable = self.mapVals['axesEnable']
         drfPhase = self.mapVals['drfPhase']  # degrees
         dummyPulses = self.mapVals['dummyPulses']
@@ -473,7 +473,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         axesEnable = self.mapVals['axesEnable']
         kSpace = self.mapVals['kSpaceArray']
         image = self.mapVals['ImageFFT']
-        axes = self.mapVals['axes']
+        axes = self.mapVals['axesOrientation']
         reco = self.mapVals['reco']
 
         if reco == 0:
@@ -563,6 +563,48 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             self.output = [result1, result2]
             
         else:
+            if self.axesOrientation[2] == 2:  # Sagittal
+                title = "Sagittal"
+                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  # OK
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    xLabel = "(-Y) A | PHASE | P (+Y)"
+                    yLabel = "(-X) I | READOUT | S (+X)"
+                else:
+                    image = np.transpose(image, (0, 2, 1))
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    xLabel = "(-Y) A | READOUT | P (+Y)"
+                    yLabel = "(-X) I | PHASE | S (+X)"
+            elif self.axesOrientation[2] == 1:  # Coronal
+                title = "Coronal"
+                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2:  # OK
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    image = np.flip(image, axis=0)
+                    xLabel = "(+Z) R | PHASE | L (-Z)"
+                    yLabel = "(-X) I | READOUT | S (+X)"
+                else:
+                    image = np.transpose(image, (0, 2, 1))
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    image = np.flip(image, axis=0)
+                    xLabel = "(+Z) R | READOUT | L (-Z)"
+                    yLabel = "(-X) I | PHASE | S (+X)"
+            elif self.axesOrientation[2] == 0:  # Transversal
+                title = "Transversal"
+                if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    xLabel = "(+Z) R | PHASE | L (-Z)"
+                    yLabel = "(+Y) P | READOUT | A (-Y)"
+                else:  # OK
+                    image = np.transpose(image, (0, 2, 1))
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    xLabel = "(+Z) R | READOUT | L (-Z)"
+                    yLabel = "(+Y) P | PHASE | A (-Y)"
+
             result1 = {}
             result1['widget'] = 'image'
             result1['data'] = np.abs(image)
