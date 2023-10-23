@@ -5,6 +5,7 @@
 
 """
 import copy
+import os
 import time
 import datetime as dt
 
@@ -493,19 +494,19 @@ class HistoryListControllerPos(HistoryListWidget):
         selected_items = self.selectedItems()
         if selected_items:
             selected_item = selected_items[0]
-            text = selected_item.text()
-            if text in self.image_hist:
-                if self.space[text] == 'k':
-                    image = np.log10(np.abs(self.image_hist.get(text)))
+            image_key = selected_item.text()
+            if image_key in self.image_hist:
+                if self.space[image_key] == 'k':
+                    image = np.log10(np.abs(self.image_hist.get(image_key)))
                     image[image == -np.inf] = np.inf
                     val = np.min(image[:])
                     image[image == np.inf] = val
                 else:
-                    image = np.abs(self.main.image_view_widget.main_matrix)
+                    image = np.abs(self.image_hist[image_key])
 
                 # Add image and label to the list
                 self.figures.append(image)
-                self.labels.append(text)
+                self.labels.append(image_key)
 
                 # self.main.image_view_widget.addWidget(image, row=0, col=0)
 
@@ -656,6 +657,8 @@ class HistoryListControllerPos(HistoryListWidget):
     def saveImage(self):
         # Path to the DICOM file
         path = self.main.session['directory'] + "/dcm/" + self.main.file_name[0:-4]
+        if not os.path.exists(self.main.session['directory'] + "/dcm/"):
+            os.makedirs(self.main.session['directory'] + "/dcm/")
 
         # Load the DICOM file
         dicom_image = DICOMImage(path=path + ".dcm")

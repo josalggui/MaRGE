@@ -2,9 +2,12 @@ import os
 import time
 import threading
 import numpy as np
-# import matlab.engine
 from widgets.widget_reconstruction import ReconstructionTabWidget
-import cupy as cp
+try:
+    import cupy as cp
+    print("\nGPU will be used for ART reconstruction")
+except ImportError:
+    pass
 
 
 def getPath():
@@ -240,6 +243,27 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
             return rho
 
+        def iterative_process_cpu(kx, ky, kz, x, y, z, s, rho, lbda, n_iter, index):
+            n = 0
+            n_samples = len(s)
+            m = 0
+            for iteration in range(n_iter):
+                np.random.shuffle(index)
+                for jj in range(n_samples):
+                    ii = index[jj]
+                    x0 = np.exp(-1j * 2 * np.pi * (kx[ii] * x + ky[ii] * y + kz[ii] * z))
+                    x1 = (x0.T @ rho) - s[ii]
+                    x2 = x1 * np.conj(x0) / (np.conj(x0.T) @ x0)
+                    d_rho = lbda * x2
+                    rho -= d_rho
+                    n += 1
+                    if n / n_samples > 0.01:
+                        m += 1
+                        n = 0
+                        self.main.console.print("ART iteration %i: %i %%" % (iteration + 1, m))
+
+            return rho
+
         # Transfer numpy arrays to cupy arrays
         kx_gpu = cp.asarray(kx)
         ky_gpu = cp.asarray(ky)
@@ -252,13 +276,16 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         # Launch the GPU function
         rho = np.reshape(np.zeros((nPoints[0] * nPoints[1] * nPoints[2]), dtype=complex), (-1, 1))
-        rho_gpu = cp.asarray(rho)
         start = time.time()
-        # for iteration in range(n_iter):
-        rho_gpu = iterative_process_gpu(kx_gpu, ky_gpu, kz_gpu, x_gpu, y_gpu, z_gpu, s_gpu, rho_gpu, lbda, n_iter,
-                                        index)
+        if 'cp' in globals():
+            rho_gpu = cp.asarray(rho)
+            rho_gpu = iterative_process_gpu(kx_gpu, ky_gpu, kz_gpu, x_gpu, y_gpu, z_gpu, s_gpu, rho_gpu, lbda, n_iter,
+                                            index)
+            rho = cp.asnumpy(rho_gpu)
+        else:
+            rho = iterative_process_cpu(kx_gpu, ky_gpu, kz_gpu, x_gpu, y_gpu, z_gpu, s_gpu, rho, lbda, n_iter,
+                                            index)
         end = time.time()
-        rho = cp.asnumpy(rho_gpu)
         self.main.console.print("Reconstruction time = %0.1f s" % (end - start))
 
         rho = np.reshape(rho, nPoints[-1::-1])
@@ -274,61 +301,6 @@ class ReconstructionTabController(ReconstructionTabWidget):
                                           image_key=self.main.image_view_widget.image_key)
 
         return
-
-    # eng = matlab.engine.start_matlab()
-    #
-    # eng.workspace['fov'] = matlab.double(fov.tolist(), is_complex=True)
-    # eng.workspace['nPoints'] = matlab.double(nPoints.tolist(), is_complex=True)
-    # eng.workspace['sampled'] = matlab.double(self.sampled.tolist(), is_complex=True)
-    # eng.workspace['s'] = matlab.double(s.tolist(), is_complex=True)
-    # eng.workspace['niter'] = matlab.double(niter, is_complex=True)
-    # eng.workspace['lbda'] = matlab.double(lbda, is_complex=True)
-    # eng.workspace['rho'] = matlab.double(rho.tolist(), is_complex=True)
-    #
-    # start_time = time.time()
-    #
-    # matlab_script_path = getPath()
-    #
-    # # Run the MATLAB script
-    # eng.run(matlab_script_path, nargout=0)
-    #
-    # rho = eng.workspace['rho']
-    #
-    # # Close MATLAB engine
-    # eng.quit()
-    #
-    # rho = np.array(rho)
-    #
-    # print('ART has been applied')
-    #
-    # # Update the main matrix of the image view widget with the cosbell data
-    # self.main.image_view_widget.main_matrix = rho
-    #
-    # # Add the "Cosbell" operation to the history widget
-    # self.main.history_list.addItemWithTimestamp("ART")
-    #
-    # # Update the history dictionary with the new main matrix for the current matrix info
-    # self.main.history_list.image_hist[self.main.history_list.image_key] = \
-    #     self.main.image_view_widget.main_matrix
-    #
-    # # Update the operations history
-    # self.main.history_list.operations_hist[self.main.history_list.image_key] = ["ART"]
-    #
-    # # Update the space dictionary
-    # self.main.history_list.space[self.main.history_list.image_key] = 'i'
-    #
-    # # Get the end time
-    # end_time = time.time()
-    #
-    # # Calculate the elapsed time in seconds
-    # elapsed_time = end_time - start_time
-    #
-    # # Calculate the time components
-    # hours = int(elapsed_time // 3600)
-    # minutes = int((elapsed_time % 3600) // 60)
-    # seconds = int(elapsed_time % 60)
-    #
-    # print(f"Time : {hours} hours, {minutes} minutes, {seconds} seconds")
 
     def pocsReconstruction(self):
         """
