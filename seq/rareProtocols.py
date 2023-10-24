@@ -752,6 +752,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             resolution = self.mapVals['resolution']*1e3
             self.meta_data["PixelSpacing"] = [resolution[0], resolution[1]]
             self.meta_data["SliceThickness"] = resolution[2]
+            self.meta_data["SpacingBetweenSlices"] = resolution[2]
             # Sequence parameters
             self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
             self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
