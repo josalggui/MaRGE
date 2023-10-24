@@ -69,9 +69,11 @@ class PostProcessingTabController(PostProcessingTabWidget):
             num_bins = 1000
             image_quantized = np.digitize(image_rescaled, bins=np.linspace(0, 1, num_bins + 1)) - 1
 
+
             # Divide the image into blocks
-            blocks_q = view_as_blocks(image_quantized, block_shape=(5, 5, 5))
-            blocks_r = view_as_blocks(image_rescaled, block_shape=(5, 5, 5))
+            n_multi = (np.array(image_quantized.shape) / 5).astype(int) * 5
+            blocks_q = view_as_blocks(image_quantized[0:n_multi[0], 0:n_multi[1], 0:n_multi[2]], block_shape=(5, 5, 5))
+            blocks_r = view_as_blocks(image_rescaled[0:n_multi[0], 0:n_multi[1], 0:n_multi[2]], block_shape=(5, 5, 5))
 
             # Calculate the standard deviation for each block
             block_std_devs = np.std(blocks_r, axis=(3, 4, 5))
