@@ -40,6 +40,9 @@ class PreProcessingTabController(PreProcessingTabWidget):
 
         Starts a new thread to execute the runCosbellFilter method.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         thread = threading.Thread(target=self.runCosbellFilter)
         thread.start()
 
@@ -94,6 +97,9 @@ class PreProcessingTabController(PreProcessingTabWidget):
 
         Starts a new thread to execute the runZeroPadding method.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         thread = threading.Thread(target=self.runZeroPadding)
         thread.start()
 
@@ -159,6 +165,9 @@ class PreProcessingTabController(PreProcessingTabWidget):
 
         Starts a new thread to execute the runPartialReconstruction method.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         thread = threading.Thread(target=self.runPartialReconstruction)
         thread.start()
 
@@ -216,6 +225,9 @@ class PreProcessingTabController(PreProcessingTabWidget):
 
         Starts a new thread to execute the runPhaseCenter method.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+        
         thread = threading.Thread(target=self.runPhaseCenter)
         thread.start()
 

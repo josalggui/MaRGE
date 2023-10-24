@@ -44,6 +44,7 @@ class FiguresController(FiguresToolBar):
 
     def openPostGui(self):
         self.main.post_gui.showMaximized()
+        self.main.post_gui.console.setup_console()
 
     def doFullScreen(self):
         """

@@ -116,6 +116,9 @@ class ReconstructionTabController(ReconstructionTabWidget):
         self.image_art_button.clicked.connect(self.artReconstruction)
 
     def dfft(self):
+        # Prints in current console
+        self.main.console.setup_console()
+
         thread = threading.Thread(target=self.runDFFT)
         thread.start()
 
@@ -144,6 +147,9 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         Creates a new thread and runs the runFftReconstruction method in that thread.
         """
+        # Prints in current console
+        self.main.console.setup_console()
+
         thread = threading.Thread(target=self.runIFFT)
         thread.start()
 
@@ -178,6 +184,9 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         Creates a new thread and runs the runArtReconstruction method in that thread.
         """
+        # Prints in current console
+        self.main.console.setup_console()
+
         thread = threading.Thread(target=self.runArtReconstruction)
         thread.start()
 
@@ -237,7 +246,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
                     if n / n_samples > 0.01:
                         m += 1
                         n = 0
-                        self.main.console.print("ART iteration %i: %i %%" % (iteration + 1, m))
+                        print("ART iteration %i: %i %%" % (iteration + 1, m))
 
             return rho
 
@@ -258,7 +267,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
                     if n / n_samples > 0.01:
                         m += 1
                         n = 0
-                        self.main.console.print("ART iteration %i: %i %%" % (iteration + 1, m))
+                        print("ART iteration %i: %i %%" % (iteration + 1, m))
 
             return rho
 
@@ -266,7 +275,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
         rho = np.reshape(np.zeros((nPoints[0] * nPoints[1] * nPoints[2]), dtype=complex), (-1, 1))
         start = time.time()
         if 'cp' in globals():
-            self.main.console.print('Executing ART in GPU...')
+            print('Executing ART in GPU...')
 
             # Transfer numpy arrays to cupy arrays
             kx_gpu = cp.asarray(kx)
@@ -284,12 +293,12 @@ class ReconstructionTabController(ReconstructionTabWidget):
                                             index)
             rho = cp.asnumpy(rho_gpu)
         else:
-            self.main.console.print('Executing ART in CPU...')
+            print('Executing ART in CPU...')
 
             rho = iterative_process_cpu(kx, ky, kz, x, y, z, s, rho, lbda, n_iter,
                                             index)
         end = time.time()
-        self.main.console.print("Reconstruction time = %0.1f s" % (end - start))
+        print("Reconstruction time = %0.1f s" % (end - start))
 
         rho = np.reshape(rho, nPoints[-1::-1])
 
@@ -311,6 +320,9 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         Creates a new thread and runs the runPocsReconstruction method in that thread.
         """
+        # Prints in current console
+        self.main.console.setup_console()
+
         thread = threading.Thread(target=self.runPocsReconstruction)
         thread.start()
 
@@ -372,7 +384,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
             correlation = np.corrcoef(previous_img.flatten(), img_reconstructed.flatten())[0, 1]
 
             # Display correlation and current iteration number
-            self.main.console.print(f"Iteration: {num_iterations}, Correlation: {correlation}")
+            print(f"Iteration: {num_iterations}, Correlation: {correlation}")
 
             # Check if correlation reaches the desired threshold
             if correlation >= correlation_threshold:

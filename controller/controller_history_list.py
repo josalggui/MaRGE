@@ -59,6 +59,9 @@ class HistoryListController(HistoryListWidget):
 
         :param point: The position where the context menu should be displayed.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         self.clicked_item = self.itemAt(point)
         if self.clicked_item is not None:
             menu = QMenu(self)
@@ -193,6 +196,9 @@ class HistoryListController(HistoryListWidget):
 
         :param item: The selected item from which to retrieve the corresponding input data.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         # Get the corresponding key to get access to the history dictionary
         item_time = item.text().split(' | ')[0]
         item_name = item.text().split(' | ')[1].split('.')[0]
@@ -231,6 +237,9 @@ class HistoryListController(HistoryListWidget):
 
         :param item: The selected item from which to retrieve the corresponding output information.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         # Get the corresponding key to get access to the history dictionary
         item_time = item.text().split(' | ')[0]
         item_name = item.text().split(' | ')[1].split('.')[0]
@@ -571,6 +580,9 @@ class HistoryListControllerPos(HistoryListWidget):
         Args:
             item (QListWidgetItem): The selected item in the history list.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         image_key = item.text()
         if image_key in self.image_hist.keys():
             self.main.image_view_widget.main_matrix = self.image_hist[image_key]
@@ -629,6 +641,9 @@ class HistoryListControllerPos(HistoryListWidget):
         Args:
             item (QListWidgetItem): The selected item in the history list.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         # Clear the methods_list table
         self.main.methods_list.setText('')
 
@@ -685,7 +700,7 @@ class HistoryListControllerPos(HistoryListWidget):
         # Save dicom file
         dicom_image.save(path + "_" + name_string + ".dcm")
 
-        self.main.console.print('Image saved into dicom format')
+        print('Image saved into dicom format')
 
         return 0
 

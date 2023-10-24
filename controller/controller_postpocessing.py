@@ -43,6 +43,9 @@ class PostProcessingTabController(PostProcessingTabWidget):
 
         Starts a new thread to execute the runBm4dFilter method.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         thread = threading.Thread(target=self.runBm4dFilter)
         thread.start()
 
@@ -55,7 +58,7 @@ class PostProcessingTabController(PostProcessingTabWidget):
         updates the main matrix of the image view widget, adds the operation to the history widget,
         and updates the operations history.
         """
-        self.main.console.print('BM4D is loading')
+        print('BM4D is loading')
 
         # Get the absolute value of the main image matrix and convert it to float
         image_data = np.abs(self.main.image_view_widget.main_matrix).astype(float)
@@ -92,7 +95,7 @@ class PostProcessingTabController(PostProcessingTabWidget):
 
             # Extract the block with the highest entropy from the block_std_devs array
             std = 3 * block_std_devs[max_entropy_index]
-            self.main.console.print("Standard deviation for BM4D: %0.2f" % std)
+            print("Standard deviation for BM4D: %0.2f" % std)
 
         else:
             std = float(self.std_text_field.text())
@@ -119,7 +122,7 @@ class PostProcessingTabController(PostProcessingTabWidget):
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
 
-        self.main.console.print('BM4D filter has been applied')
+        print('BM4D filter has been applied')
 
         # Update the space dictionary
         self.main.history_list.space[self.main.history_list.image_key] = 'i'
@@ -130,6 +133,9 @@ class PostProcessingTabController(PostProcessingTabWidget):
 
         Starts a new thread to execute the runGaussianFilter method.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         thread = threading.Thread(target=self.runGaussianFilter)
         thread.start()
 

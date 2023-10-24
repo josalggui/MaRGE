@@ -42,6 +42,10 @@ class MainWindow(QMainWindow):
         self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
         self.setStyleSheet(self.styleSheet)
 
+        # Create console
+        self.console = ConsoleController()
+        self.console.setup_console()
+
         # Add marcos toolbar
         self.toolbar_marcos = MarcosController(self, "MaRCoS toolbar")
         self.addToolBar(self.toolbar_marcos)
@@ -102,11 +106,10 @@ class MainWindow(QMainWindow):
         self.custom_and_protocol.protocol_layout.addWidget(self.protocol_inputs)
 
         # Add console
-        self.console = ConsoleController()
         self.input_layout.addWidget(self.console)
 
         # Add layout to show the figures
-        self.figures_layout = FiguresLayoutController()
+        self.figures_layout = FiguresLayoutController(self)
         self.figures_layout.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.output_layout.addWidget(self.figures_layout)
 
@@ -128,3 +131,6 @@ class MainWindow(QMainWindow):
 
         # Create the post-processing toolbox
         self.post_gui = PostWindow(self.session)
+
+        # Send prints to current window console
+        self.console.setup_console()

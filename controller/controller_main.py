@@ -26,6 +26,10 @@ class MainController(MainWindow):
         thread = threading.Thread(target=self.history_list.waitingForRun)
         thread.start()
 
+    def mousePressEvent(self, event):
+        # Send self.main.post_gui.console.setup_console()prints to current window console
+        self.console.setup_console()
+
     def closeEvent(self, event):
         """
         Shuts down the application on close.

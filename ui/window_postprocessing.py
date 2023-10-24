@@ -13,7 +13,7 @@ from controller.controller_preprocessing import PreProcessingTabController
 from controller.controller_history_list import HistoryListControllerPos
 from controller.controller_imageview import ImageViewController
 from controller.controller_figures import FiguresLayoutController
-from controller.controller_console import ConsoleControllerPost
+from controller.controller_console import ConsoleController
 from controller.controller_toolbar_post import ToolBarControllerPost
 from controller.controller_processing import ProcessingController
 
@@ -93,8 +93,18 @@ class MainWindow(QMainWindow):
         self.right_layout = QVBoxLayout()
         self.main_layout.addLayout(self.right_layout)
 
+        # Tab addition
+        self.tab_controller = ProcessingController(parent=self)
+        self.left_layout.addWidget(self.tab_controller)
+
+        # Console addition
+        self.console = ConsoleController()
+        self.console.setup_console()
+        self.left_layout.addWidget(self.console)
+        self.console.setMaximumHeight(200)
+
         # Image view addition
-        self.image_view_widget = FiguresLayoutController()
+        self.image_view_widget = FiguresLayoutController(self)
         self.image_view_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.right_layout.addWidget(self.image_view_widget)
 
@@ -114,15 +124,9 @@ class MainWindow(QMainWindow):
         self.methods_list.setMinimumHeight(200)
         self.output_layout_h.addWidget(self.methods_list)
 
-        # Tab addition
-        self.tab_controller = ProcessingController(parent=self)
-        self.left_layout.addWidget(self.tab_controller)
-
-        # Console addition
-        self.console = ConsoleControllerPost()
-        self.left_layout.addWidget(self.console)
-        self.console.setMaximumHeight(200)
-
+    def mousePressEvent(self, event):
+        # Send prints to current window console
+        self.console.setup_console()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -14,8 +14,9 @@ class FiguresLayoutController(FiguresLayoutWidget):
     """
     Controller for figures layout
     """
-    def __init__(self, *args, **kwargs):
-        super(FiguresLayoutController, self).__init__(*args, **kwargs)
+    def __init__(self, main):
+        super().__init__()
+        self.main = main
 
         # Show the initial plot
         self.firstPlot()
