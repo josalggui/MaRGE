@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApp
 
 from controller.controller_reconstruction import ReconstructionTabController
 from controller.controller_postpocessing import PostProcessingTabController
+from controller.controller_toolbar_figures import FiguresControllerPos
 from controller.controller_visualisation import VisualisationTabController
 from controller.controller_preprocessing import PreProcessingTabController
 from controller.controller_history_list import HistoryListControllerPos
@@ -67,6 +68,10 @@ class MainWindow(QMainWindow):
         # Toolbar addition
         self.toolbar_image = ToolBarControllerPost(self, "Image toolbar")
         self.addToolBar(self.toolbar_image)
+
+        # Image toolbar
+        self.toolbar_image_2 = FiguresControllerPos(self, "Image toolbar 2")
+        self.addToolBar(self.toolbar_image_2)
 
         # Status bar and a menu bar adding
         self.setStatusBar(QStatusBar(self))
