@@ -144,6 +144,9 @@ class SequenceController(SequenceToolBar):
         # Save sequence list into the current sequence, just in case you need to do sweep
         defaultsequences[self.seq_name].sequenceList = defaultsequences
 
+        # Add sequence name for metadata
+        defaultsequences[self.seq_name].raw_data_name = self.seq_name
+
         # Save input parameters
         defaultsequences[self.seq_name].saveParams()
 
