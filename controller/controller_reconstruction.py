@@ -137,6 +137,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="dFFT",
                                           image=self.main.image_view_widget.main_matrix,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
                                           operation="dFFT",
                                           space="k",
                                           image_key=self.main.image_view_widget.image_key)
@@ -171,9 +172,12 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Update the main matrix of the image view widget with the image fft data
         self.main.image_view_widget.main_matrix = image
 
+        figure = image / np.max(np.abs(image)) * 100
+
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="iFFT",
-                                          image=self.main.image_view_widget.main_matrix,
+                                          image=figure,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
                                           operation="iFFT",
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
@@ -305,9 +309,12 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Update the main matrix of the image view widget with the image fft data
         self.main.image_view_widget.main_matrix = rho
 
+        figure = rho/np.max(np.abs(rho))*100
+
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="ART",
-                                          image=self.main.image_view_widget.main_matrix,
+                                          image=figure,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
                                           operation="ART n = %i, lambda = %0.3f" % (n_iter, lbda),
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
@@ -404,9 +411,12 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Update the main matrix of the image view widget with the interpolated image
         self.main.image_view_widget.main_matrix = img_full
 
+        figure = img_full / np.max(np.abs(img_full)) * 100
+
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="POCS",
-                                          image=self.main.image_view_widget.main_matrix,
+                                          image=figure,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
                                           operation="POCS",
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)

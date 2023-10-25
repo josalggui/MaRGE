@@ -427,7 +427,9 @@ class HistoryListControllerPos(HistoryListWidget):
         super(HistoryListControllerPos, self).__init__(*args, **kwargs)
         self.labels = None
         self.figures = None
+        self.orientations = None
         self.image_hist = {}  # Dictionary to store historical images
+        self.image_orientation = {}
         self.operations_hist = {}  # Dictionary to store operations history
         self.space = {}  # Dictionary to retrieve if matrix is in k-space or image-space
         self.image_key = None
@@ -471,6 +473,7 @@ class HistoryListControllerPos(HistoryListWidget):
         It then calls the `addFigure` method to add the new figure to the list.
         """
         self.figures = []
+        self.orientations = []
         self.labels = []
         self.addFigure()
 
@@ -505,6 +508,7 @@ class HistoryListControllerPos(HistoryListWidget):
             selected_item = selected_items[0]
             image_key = selected_item.text()
             if image_key in self.image_hist:
+                self.orientations.append(self.image_orientation.get(image_key))
                 if self.space[image_key] == 'k':
                     image = np.log10(np.abs(self.image_hist.get(image_key)))
                     image[image == -np.inf] = np.inf
@@ -533,7 +537,8 @@ class HistoryListControllerPos(HistoryListWidget):
                 self.main.image_view_widget.addWidget(label, row=1, col=col)
 
                 # Figure
-                image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(self.figures[n])
+                image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(self.figures[n],
+                                                                                       orientation=self.orientations[n])
                 image = Spectrum3DPlot(main=self.main,
                                        data=image2show,
                                        x_label=x_label,
@@ -546,7 +551,7 @@ class HistoryListControllerPos(HistoryListWidget):
                 pass
             n += 1
 
-    def addNewItem(self, image_key=None, stamp=None, image=None, operation=None, space=None):
+    def addNewItem(self, image_key=None, stamp=None, image=None, orientation=None, operation=None, space=None):
         # Generate the image key
         current_time = dt.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
         self.image_key = f"{current_time} - {stamp}"
@@ -556,6 +561,7 @@ class HistoryListControllerPos(HistoryListWidget):
 
         # Update the history dictionary with the new main matrix
         self.image_hist[self.image_key] = image
+        self.image_orientation[self.image_key] = orientation
 
         # Update the operations history
         if len(self.operations_hist) == 0 or image_key is None:
@@ -587,6 +593,7 @@ class HistoryListControllerPos(HistoryListWidget):
         if image_key in self.image_hist.keys():
             self.main.image_view_widget.main_matrix = self.image_hist[image_key]
             self.main.image_view_widget.image_key = image_key
+            orientation = self.image_orientation[image_key]
             if self.space[image_key] == 'k':
                 image = np.log10(np.abs(self.main.image_view_widget.main_matrix))
                 image[image == -np.inf] = np.inf
@@ -606,7 +613,7 @@ class HistoryListControllerPos(HistoryListWidget):
             label.setText(image_key)
 
             # Create image_widget
-            image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(image)
+            image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(image, orientation=orientation)
             image = Spectrum3DPlot(main=self.main,
                                    data=image2show,
                                    x_label=x_label,

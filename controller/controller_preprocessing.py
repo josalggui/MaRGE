@@ -87,6 +87,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="Cosbell",
                                           image=self.main.image_view_widget.main_matrix,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
                                           operation=text + " Order: " + str(cosbell_order),
                                           space="k",
                                           image_key=self.main.image_view_widget.image_key)
@@ -154,6 +155,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="Zero Padding",
                                           image=self.main.image_view_widget.main_matrix,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
                                           operation="Zero Padding - RD: " + str(rd_order) + ", PH: "
                                                     + str(ph_order) + ", SL: " + str(sl_order),
                                           space="k",
@@ -215,6 +217,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="Partial Reconstruction",
                                           image=self.main.image_view_widget.main_matrix,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
                                           operation="Partial Reconstruction - " + str(percentage),
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
@@ -271,6 +274,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="Phase center",
                                           image=self.main.image_view_widget.main_matrix,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
                                           operation="Phase center",
                                           space="k",
                                           image_key=self.main.image_view_widget.image_key)

@@ -118,6 +118,7 @@ class PostProcessingTabController(PostProcessingTabWidget):
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="BM4D",
                                           image=self.main.image_view_widget.main_matrix,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
                                           operation="BM4D - Standard deviation: %0.2f" % std,
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
@@ -169,6 +170,7 @@ class PostProcessingTabController(PostProcessingTabWidget):
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="Gaussian",
                                           image=self.main.image_view_widget.main_matrix,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
                                           operation="Gaussian - Standard deviation: " + str(sigma),
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)

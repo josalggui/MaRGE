@@ -57,6 +57,8 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         self.nPoints = np.reshape(self.mat_data['nPoints'], -1)
 
         if self.mat_data['seqName'] == 'PETRA':
+            print("\nExecuting regridding...")
+
             kCartesian = self.mat_data['kCartesian']
             self.k_space_raw = self.mat_data['kSpaceRaw']
 
@@ -93,7 +95,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             image = np.abs(self.main.image_view_widget.main_matrix)
 
         # Create figure widget
-        image2show, x_label, y_label, title = self.fixImage(image)
+        image2show, x_label, y_label, title = self.fixImage(image, orientation=self.mat_data['axesOrientation'][0])
         image = Spectrum3DPlot(main=self.main,
                                data=image2show,
                                x_label=x_label,
@@ -120,6 +122,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="KSpace",
                                           image=self.main.image_view_widget.main_matrix,
+                                          orientation=self.mat_data['axesOrientation'][0],
                                           operation="KSpace",
                                           space="k")
 
@@ -140,9 +143,9 @@ class ToolBarControllerPost(ToolBarWidgetPost):
 
         return file_name
 
-    def fixImage(self, matrix3d):
+    def fixImage(self, matrix3d, orientation=None):
         matrix = copy.copy(matrix3d)
-        axes = self.mat_data['axesOrientation'][0]
+        axes = orientation
         if axes[2] == 2:  # Sagittal
             title = "Sagittal"
             if axes[0] == 0 and axes[1] == 1:  # OK
