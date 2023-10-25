@@ -955,8 +955,8 @@ class MRIBLANKSEQ:
         #self.meta_data["WindowWidth"] = 26373
         #self.meta_data["WindowCenter"] = 13194
 
-
-        dicom_image.meta_data = dicom_image.meta_data | self.meta_data
+        # Update the dicom metadata
+        dicom_image.meta_data.update(self.meta_data)
 
         # Save meta_data dictionary into dicom object metadata (Standard DICOM 3.0)
         dicom_image.image2Dicom()
