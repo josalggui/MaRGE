@@ -5,25 +5,11 @@ Created on Thu June 2 2022
 @Summary: rare sequence class
 """
 
-import os
-import sys
-import time
 import numpy as np
 import controller.experiment_gui as ex
-import matplotlib.pyplot as plt
-import scipy
-import scipy.signal as sig
-import pdb
 import torch
 import configs.hw_config as hw # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import pyqtgraph as pg              # To plot nice 3d images
-import copy
-import tkinter as tk
-from tkinter import messagebox
-from tkinter import ttk
-from tkinter import Menu
-from sys import exit
 from scipy.interpolate import griddata
 
 
@@ -381,12 +367,8 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                 # Warnings before run sequence
                 if axes[0] == axes[1] or axes[0] == axes[2] or axes[2] == axes[1]:
                     print("Two different gradient coils has been introduced as the same")
-                # if gradientAmplitudes[0] * 1e3 > 30 or gradientAmplitudes[1] * 1e3 > 30 or gradientAmplitudes[2] * 1e3 > 30:
-                #     print("So demanding current for gradient coils")
-                #     messagebox.showinfo(message="So demanding current for gradient coils", title="Warning high currents")
                 if gradRiseTime + gapGtoRF + rfExTime + deadTime + acqTimeSeq*1e-6 >= repetitionTime:
                     print("So short TR")
-                    messagebox.showinfo(message="So short TR. Enlarge it!", title="Warning TR short")
 
                 # Run all scans
                 for ii in range(nScans):
