@@ -209,7 +209,6 @@ import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
-from tkinter import messagebox
 
 class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
     def __init__(self):
@@ -293,7 +292,6 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
 
             if TR < delayGtoRF_F + rfExTime + deadTime + acqTimeReal:
                 print("TR so short")
-                messagebox.showinfo(message=" TR so short ", title="TR so short")
 
             for scan in range(nScans):
                 # Gradient pulse

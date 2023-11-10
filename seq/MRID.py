@@ -5,27 +5,11 @@ Created on Thu June 2 2022
 @Summary: rare sequence class
 """
 
-import os
-import sys
-import time
 import numpy as np
 import controller.experiment_gui as ex
-import matplotlib.pyplot as plt
-import scipy
-import scipy.signal as sig
-import pdb
 import torch
 import configs.hw_config as hw  # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import pyqtgraph as pg  # To plot nice 3d images
-import copy
-import tkinter as tk
-from tkinter import messagebox
-from tkinter import ttk
-from tkinter import Menu
-from sys import exit
-from scipy.interpolate import griddata
-from scipy.optimize import curve_fit
 
 
 # *********************************************************************************
