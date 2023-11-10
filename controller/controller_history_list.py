@@ -498,8 +498,8 @@ class HistoryListControllerPos(HistoryListWidget):
 
         """
         self.main.image_view_widget.clearFiguresLayout()
-        if len(self.figures) > 3:
-            print("You can add only 4 figures to the layout")
+        if len(self.figures) > 7:
+            print("You can add only 8 figures to the layout")
             return
 
         # Get clicked item self.current_output
@@ -528,13 +528,14 @@ class HistoryListControllerPos(HistoryListWidget):
         sub_label = QLabel('Multiplot')
         sub_label.setAlignment(QtCore.Qt.AlignCenter)
         sub_label.setStyleSheet("background-color: black;color: white")
-        for col in range(4):
+        ncol = 0
+        for idx in range(8):
             try:
                 # Label
                 label = QLabel(self.labels[n])
                 label.setAlignment(QtCore.Qt.AlignCenter)
                 label.setStyleSheet("background-color: black;color: white")
-                self.main.image_view_widget.addWidget(label, row=1, col=col)
+                self.main.image_view_widget.addWidget(label, row=2*(idx//4)+1, col=idx%4)
 
                 # Figure
                 image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(self.figures[n],
@@ -544,9 +545,10 @@ class HistoryListControllerPos(HistoryListWidget):
                                        x_label=x_label,
                                        y_label=y_label,
                                        title=title)
-                self.main.image_view_widget.addWidget(image, row=2, col=col)
+                self.main.image_view_widget.addWidget(image, row=2*(idx//4)+2, col=idx%4)
 
-                self.main.image_view_widget.addWidget(sub_label, row=0, col=0, colspan=col+1)
+                ncol = np.max([ncol, idx%4+1])
+                self.main.image_view_widget.addWidget(sub_label, row=0, col=0, colspan=ncol)
             except:
                 pass
             n += 1
