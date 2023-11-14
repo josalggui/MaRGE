@@ -63,7 +63,20 @@ class ReconstructionTabWidget(QWidget):
         self.fft_group = QGroupBox('FFT')
         self.fft_group.setLayout(self.fft_layout)
 
+        # *****************
         # POCS
+        # *****************
+        # Partial fourier factor
+        self.partial_reconstruction_label = QLabel('Factor')
+        self.partial_reconstruction_factor = QLineEdit()
+        self.partial_reconstruction_factor.setPlaceholderText("Readout, Phase, Slice")
+        self.partial_reconstruction_factor.setStatusTip('To apply partial acquisition use numbers between'
+                                                        '0.5 and 1, otherwise use 0')
+
+        self.factor_layout = QHBoxLayout()
+        self.factor_layout.addWidget(self.partial_reconstruction_label)
+        self.factor_layout.addWidget(self.partial_reconstruction_factor)
+
         self.nb_points_label = QLabel('Number of points')
         self.nb_points_text_field = QLineEdit()
         self.nb_points_text_field.setText('2')
@@ -74,20 +87,23 @@ class ReconstructionTabWidget(QWidget):
 
         self.threshold_label = QLabel('Correlation threshold')
         self.threshold_text_field = QLineEdit()
-        self.threshold_text_field.setText('1')
+        self.threshold_text_field.setText('1e-6')
 
         self.threshold_layout = QHBoxLayout()
         self.threshold_layout.addWidget(self.threshold_label)
         self.threshold_layout.addWidget(self.threshold_text_field)
 
         self.pocs_button = QPushButton('Run POCS')
+        self.zero_button = QPushButton('Run iFFT with zero padding')
 
         self.pocs_layout = QVBoxLayout()
+        self.pocs_layout.addLayout(self.factor_layout)
         self.pocs_layout.addLayout(self.nb_points_layout)
         self.pocs_layout.addLayout(self.threshold_layout)
         self.pocs_layout.addWidget(self.pocs_button)
+        self.pocs_layout.addWidget(self.zero_button)
 
-        self.pocs_group = QGroupBox("POCS")
+        self.pocs_group = QGroupBox("Partial Reconstruction")
         self.pocs_group.setLayout(self.pocs_layout)
 
         # Main layout

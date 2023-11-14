@@ -71,7 +71,7 @@ def hanningFilter(kSpace, n, m, nb_point):
         ndarray: K-space data with the Hanning filter applied.
     """
     kSpace_hanning = np.copy(kSpace)
-    kSpace_hanning[:, :, n + m::] = 0.0
+    kSpace_hanning[n + m::, :, :] = 0.0
 
     # Calculate the Hanning window
     hanning_window = np.hanning(nb_point * 2)
@@ -82,7 +82,7 @@ def hanningFilter(kSpace, n, m, nb_point):
 
     for i in range(start_point, end_point):
         window_index = i - (n + m - nb_point)
-        kSpace_hanning[:, :, i] *= hanning_window[window_index]
+        kSpace_hanning[i, :, :] *= hanning_window[window_index]
 
     return kSpace_hanning
 
@@ -111,6 +111,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         # Connect the image_fft_button clicked signal to the fftReconstruction method
         self.pocs_button.clicked.connect(self.pocsReconstruction)
+        self.zero_button.clicked.connect(self.zeroReconstruction)
         self.ifft_button.clicked.connect(self.ifft)
         self.dfft_button.clicked.connect(self.dfft)
         self.image_art_button.clicked.connect(self.artReconstruction)
@@ -321,6 +322,57 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         return
 
+    def zeroReconstruction(self):
+        # Prints in current console
+        self.main.console.setup_console()
+
+        thread = threading.Thread(target=self.runZeroReconstruction)
+        thread.start()
+
+    def runZeroReconstruction(self):
+        """
+                Run the partial reconstruction operation.
+
+                Retrieves the necessary parameters and performs the partial reconstruction on the loaded image.
+                Updates the main matrix of the image view widget with the partially reconstructed image, adds the operation to
+                the history widget, and updates the operations history.
+                """
+        # Get the k_space data and its shape
+        k_space = self.main.toolbar_image.k_space_raw.copy()
+        nPoints = self.main.toolbar_image.nPoints
+
+        # Percentage for partial reconstruction from the text field
+        factors = self.partial_reconstruction_factor.text().split(',')
+        factors = [float(num) for num in factors]
+
+        # Set to zero the corresponding values
+        for ii in range(3):
+            if factors[ii] > 0.5:
+                # Calculate the threshold k0 based on the percentage
+                k_min = np.min(np.real(k_space[:, ii]))
+                k_max = np.max(np.real(k_space[:, ii]))
+                k0 = factors[ii] * (k_max - k_min) + k_min
+
+                # Apply partial reconstruction by setting values to 0 for k > k0
+                for jj in range(np.size(k_space, 0)):
+                    if np.real(k_space[jj, ii]) > k0:
+                        k_space[jj, 3] = 0
+        signal = np.reshape(k_space[:, 3], nPoints[-1::-1])
+
+        # Calculate logarithmic scale
+        image = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal))))
+
+        # Update the main matrix of the image view widget with the k-space data
+        self.main.image_view_widget.main_matrix = image
+
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="Partial Zero Reconstruction",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
+                                          operation="Partial Reconstruction - " + str(factors),
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
+
     def pocsReconstruction(self):
         """
         Perform POCS reconstruction in a separate thread.
@@ -344,30 +396,40 @@ class ReconstructionTabController(ReconstructionTabWidget):
         Updates the main matrix of the image view widget with the interpolated image.
         Adds the "POCS" operation to the history widget and updates the history dictionary and operations history.
         """
+        mat_data = self.main.toolbar_image.mat_data
+        nPoints = mat_data['nPoints']
+
+        # Number of extra lines which has been taken past the center of k-space
+        factors = self.partial_reconstruction_factor.text().split(',')
+        factors = [float(num) for num in factors]
+        m = int(nPoints[0, 2] * factors[2])
+
+        nPoints_divide = nPoints / 2.0  # Divide the data per 2
+        middle = nPoints_divide[len(nPoints_divide) // 2]  # calculate n
+        n = int(middle[2])
+        m = 2 * n - m
+
+        # Get the k_space data
+        kSpace_ref = self.main.image_view_widget.main_matrix
+
+        # Create a copy with the center of k-space
+        kSpace_center = kSpace_ref.copy()
+        kSpace_center[0:n - m, :, :] = 0.0
+        kSpace_center[n + m::, :, :] = 0.0
+
         # Number of points before m+n where we begin to go to zero
         nb_point = int(self.nb_points_text_field.text())
 
         # Set the correlation threshold for stopping the iterations
-        correlation_threshold = int(self.threshold_text_field.text())
+        threshold = float(self.threshold_text_field.text())
 
-        m = self.main.preprocessing_controller.m
-        n = self.main.preprocessing_controller.n
-        kSpace_center = self.main.preprocessing_controller.kSpace_center
-        kSpace_ref = self.main.preprocessing_controller.kSpace_ref
-        img_ref = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(10 ** self.main.image_view_widget.main_matrix)))
-
+        # Get partial k-space
         kSpace_partial = np.copy(kSpace_ref)
-        kSpace_partial[:, :, n + m::] = 0.0
-        img_partial = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(kSpace_partial))))
+        kSpace_partial[n + m::, :, :] = 0.0
 
-        img_full = np.concatenate((np.abs(img_ref), img_partial), axis=2)
-
+        # Get image phase
         img_center = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(kSpace_center)))
         phase = img_center / abs(img_center)
-
-        # Generate the corresponding image with a ramp filter
-        kSpace_ramp = ramp(kSpace_ref, n, m, nb_point)
-        img_ramp = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(kSpace_ramp))))
 
         # Generate the corresponding image with the Hanning filter
         kSpace_hanning = hanningFilter(kSpace_ref, n, m, nb_point)
@@ -391,10 +453,10 @@ class ReconstructionTabController(ReconstructionTabWidget):
             correlation = np.corrcoef(previous_img.flatten(), img_reconstructed.flatten())[0, 1]
 
             # Display correlation and current iteration number
-            print(f"Iteration: {num_iterations}, Correlation: {correlation}")
+            print("Iteration: %i, Convergence: %0.2e" % (num_iterations, (1-correlation)))
 
             # Check if correlation reaches the desired threshold
-            if correlation >= correlation_threshold:
+            if (1-correlation) <= threshold or num_iterations >= 100:
                 break
 
             # Update previous_img for the next iteration
@@ -403,20 +465,15 @@ class ReconstructionTabController(ReconstructionTabWidget):
             # Increment the iteration counter
             num_iterations += 1
 
-        # Display the final reconstructed image
-        img_reconstructed = np.abs(img_reconstructed)
-
-        img_full = np.concatenate((img_full, img_reconstructed), axis=2)
-
         # Update the main matrix of the image view widget with the interpolated image
-        self.main.image_view_widget.main_matrix = img_full
+        self.main.image_view_widget.main_matrix = img_reconstructed
 
-        figure = img_full / np.max(np.abs(img_full)) * 100
+        figure = img_reconstructed / np.max(np.abs(img_reconstructed)) * 100
 
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="POCS",
                                           image=figure,
                                           orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
-                                          operation="POCS",
+                                          operation="POCS - " + str(factors),
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
