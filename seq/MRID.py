@@ -471,9 +471,6 @@ class MRID(blankSeq.MRIBLANKSEQ):
 
         self.mapVals['norm_echos_max'] = [n_echos, norm_echo_max]
 
-        # Save results
-        self.saveRawData()
-
         print("Stationnary experimental amplitude:", norm_echo_max[-1] )
         print("Stationnary synthetic value:", norm_echo_val[-1])
 
@@ -498,12 +495,12 @@ class MRID(blankSeq.MRIBLANKSEQ):
                    'col': 0}
 
         # Add results into the output attribute (result must be the image to save in dicom)
-        self.out = [result1,result2]
+        self.output = [result1,result2]
 
+        # Save results
+        self.saveRawData()
 
-
-
-        return self.out
+        return self.output
 
 
 
