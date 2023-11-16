@@ -374,8 +374,6 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         delayGtoRF_M = self.mapVals['tDelayMiddle']
         delayGtoRF_F =self.mapVals['tDelayFinal']
 
-        self.saveRawData()
-
         # Add time signal to the layout
         result1 = {'widget': 'curve',
                    'xData': ReadoutVector,
@@ -398,4 +396,8 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
                    'row': 1,
                    'col': 0}
 
-        return [result1, result2]
+        self.output = [result1, result2]
+
+        self.saveRawData()
+
+        return self.output

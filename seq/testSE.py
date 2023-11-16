@@ -145,7 +145,6 @@ class testSE(blankSeq.MRIBLANKSEQ):
         return True
 
     def sequenceAnalysis(self, obj=''):
-        self.saveRawData()
         data = self.mapVals['data']
         spectrum = self.mapVals['spectrum']
         bw = self.mapVals['bw']
@@ -226,4 +225,8 @@ class testSE(blankSeq.MRIBLANKSEQ):
                    'row': 1,
                    'col': 1}
 
-        return [result1, result2, result3, result4]
+        self.output = [result1, result2, result3, result4]
+
+        self.saveRawData()
+
+        return self.output
