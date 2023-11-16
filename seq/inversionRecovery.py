@@ -188,7 +188,6 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         return True
 
     def sequenceAnalysis(self, obj=''):
-        self.saveRawData()
 
         # Signal vs inverion time
         result1 = {'widget': 'curve',
@@ -202,8 +201,10 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
                    'col': 0}
 
         # create self.out to run in iterative mode
-        self.out = [result1]
+        self.output = [result1]
 
-        return self.out
+        self.saveRawData()
+
+        return self.output
 
 

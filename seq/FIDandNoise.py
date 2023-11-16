@@ -154,7 +154,6 @@ class FIDandNoise(blankSeq.MRIBLANKSEQ):
         self.mapVals['sampledPoint'] = noiserms  # for sweep method
         print('rms noise: %0.5f uV' % noiserms)
         print('Expected by Johnson: %0.5f uV' % johnson)
-        self.saveRawData()
 
         # Add time signal to the layout
         FIDsignalPlotWidget = SpectrumPlot(xData=tVector,
@@ -192,8 +191,11 @@ class FIDandNoise(blankSeq.MRIBLANKSEQ):
 
 
         # create self.out to run in iterative mode
-        self.out = [FIDsignalPlotWidget, NOISEfreqPlotWidget]
-        return(self.out)
+        self.output = [FIDsignalPlotWidget, NOISEfreqPlotWidget]
+
+        self.saveRawData()
+
+        return self.output
 
 
 

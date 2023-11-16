@@ -219,11 +219,13 @@ class TSE(blankSeq.MRIBLANKSEQ):
         data = np.reshape(data, (-1, 1))
         self.mapVals['echo_amplitude_vs_time'] = np.concatenate((t2_vector, data), axis=1)
 
+        # Create self.output to run in iterative mode
+        self.output = [result1, result2]
+
+        # Save rawData
         self.saveRawData()
 
-        # create self.out to run in iterative mode
-        self.out = [result1, result2]
-        return self.out
+        return self.output
 
     def mySignal(self):
         # Get inputs
