@@ -57,7 +57,7 @@ def ramp(kSpace, n, m, nb_point):
     return kSpace_ramp
 
 
-def hanningFilter(kSpace, n, m, nb_point):
+def hanningFilter(kSpace, mm, nb_point):
     """
     Apply a Hanning filter to the k-space data.
 
@@ -71,18 +71,23 @@ def hanningFilter(kSpace, n, m, nb_point):
         ndarray: K-space data with the Hanning filter applied.
     """
     kSpace_hanning = np.copy(kSpace)
-    kSpace_hanning[n + m::, :, :] = 0.0
+    kSpace_hanning[mm[0]::, :, :] = 0.0
+    kSpace_hanning[:, mm[1]::, :] = 0.0
+    kSpace_hanning[:, :, mm[2]::] = 0.0
 
     # Calculate the Hanning window
     hanning_window = np.hanning(nb_point * 2)
+    hanning_window = hanning_window[int(len(hanning_window)/2)::]
 
-    # Apply the Hanning filter to the k-space
-    start_point = n + m - nb_point
-    end_point = n + m
-
-    for i in range(start_point, end_point):
-        window_index = i - (n + m - nb_point)
-        kSpace_hanning[i, :, :] *= hanning_window[window_index]
+    if not mm[0] == np.size(kSpace, 0):
+        for ii in range(nb_point):
+            kSpace_hanning[mm[0]-nb_point+ii+1, :, :] *= hanning_window[ii]
+    if not mm[1] == np.size(kSpace, 1):
+        for ii in range(nb_point):
+            kSpace_hanning[:, mm[1]-nb_point+ii+1, :] *= hanning_window[ii]
+    if not mm[2] == np.size(kSpace, 2):
+        for ii in range(nb_point):
+            kSpace_hanning[:, :, mm[2]-nb_point+ii+1] *= hanning_window[ii]
 
     return kSpace_hanning
 
@@ -338,38 +343,36 @@ class ReconstructionTabController(ReconstructionTabWidget):
                 the history widget, and updates the operations history.
                 """
         # Get the k_space data and its shape
-        k_space = self.main.toolbar_image.k_space_raw.copy()
-        nPoints = self.main.toolbar_image.nPoints
+        k_space = self.main.image_view_widget.main_matrix.copy()
+        img_ref = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(k_space))))
+        nPoints = self.main.toolbar_image.nPoints[-1::-1]
 
         # Percentage for partial reconstruction from the text field
         factors = self.partial_reconstruction_factor.text().split(',')
-        factors = [float(num) for num in factors]
+        factors = [float(num) for num in factors][-1::-1]
+        mm = np.array([round(num) for num in (nPoints * factors)])
 
         # Set to zero the corresponding values
-        for ii in range(3):
-            if factors[ii] > 0.5:
-                # Calculate the threshold k0 based on the percentage
-                k_min = np.min(np.real(k_space[:, ii]))
-                k_max = np.max(np.real(k_space[:, ii]))
-                k0 = factors[ii] * (k_max - k_min) + k_min
-
-                # Apply partial reconstruction by setting values to 0 for k > k0
-                for jj in range(np.size(k_space, 0)):
-                    if np.real(k_space[jj, ii]) > k0:
-                        k_space[jj, 3] = 0
-        signal = np.reshape(k_space[:, 3], nPoints[-1::-1])
+        k_space[mm[0]::, :, :] = 0.0
+        k_space[:, mm[1]::, :] = 0.0
+        k_space[:, :, mm[2]::] = 0.0
 
         # Calculate logarithmic scale
-        image = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal))))
+        image = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(k_space))))
+
+        # Get correlation with reference image
+        correlation = np.corrcoef(img_ref.flatten(), image.flatten())[0, 1]
+        print("\nRespect the reference image:")
+        print("Convergence: %0.2e" % (1 - correlation))
 
         # Update the main matrix of the image view widget with the k-space data
         self.main.image_view_widget.main_matrix = image
 
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="Partial Zero Reconstruction",
-                                          image=self.main.image_view_widget.main_matrix,
+                                          image=image,
                                           orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
-                                          operation="Partial Reconstruction - " + str(factors),
+                                          operation="Partial Reconstruction - " + str(factors[-1::-1]),
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
 
@@ -396,26 +399,40 @@ class ReconstructionTabController(ReconstructionTabWidget):
         Updates the main matrix of the image view widget with the interpolated image.
         Adds the "POCS" operation to the history widget and updates the history dictionary and operations history.
         """
+
+        def getCenterKSpace(k_space, n, m_vec):
+            # fix n_vec
+            output = k_space.copy()
+            n_vec = np.array([0, 0, 0])
+            for ii in range(3):
+                if m_vec[ii] == 0:
+                    n_vec[ii] = np.size(k_space, ii)
+                else:
+                    n_vec[ii] = n[ii]
+
+            # fill with zeros
+            output[0:n_vec[0] - m_vec[0], 0:n_vec[1] - m_vec[1], 0:n_vec[2] - m_vec[2]] = 0.0
+            output[n_vec[0] + m_vec[0]::, n_vec[1] + m_vec[1]::, n_vec[2] + m_vec[2]::] = 0.0
+
+            return output
+
         mat_data = self.main.toolbar_image.mat_data
-        nPoints = mat_data['nPoints']
+        nPoints = mat_data['nPoints'][0][-1::-1]
 
         # Number of extra lines which has been taken past the center of k-space
         factors = self.partial_reconstruction_factor.text().split(',')
-        factors = [float(num) for num in factors]
-        m = int(nPoints[0, 2] * factors[2])
+        factors = [float(num) for num in factors][-1::-1]
+        mm = np.array([round(num) for num in (nPoints * factors)])
 
-        nPoints_divide = nPoints / 2.0  # Divide the data per 2
-        middle = nPoints_divide[len(nPoints_divide) // 2]  # calculate n
-        n = int(middle[2])
-        m = 2 * n - m
+        n = np.array([int(num) for num in (nPoints / 2.0)])  # Divide the data per 2
+        m = 2 * n - mm
 
         # Get the k_space data
-        kSpace_ref = self.main.image_view_widget.main_matrix
+        kSpace_ref = self.main.image_view_widget.main_matrix.copy()
+        img_ref = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(kSpace_ref))))
 
         # Create a copy with the center of k-space
-        kSpace_center = kSpace_ref.copy()
-        kSpace_center[0:n - m, :, :] = 0.0
-        kSpace_center[n + m::, :, :] = 0.0
+        kSpace_center = getCenterKSpace(kSpace_ref, n, m)
 
         # Number of points before m+n where we begin to go to zero
         nb_point = int(self.nb_points_text_field.text())
@@ -423,28 +440,27 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Set the correlation threshold for stopping the iterations
         threshold = float(self.threshold_text_field.text())
 
-        # Get partial k-space
-        kSpace_partial = np.copy(kSpace_ref)
-        kSpace_partial[n + m::, :, :] = 0.0
-
         # Get image phase
         img_center = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(kSpace_center)))
         phase = img_center / abs(img_center)
 
         # Generate the corresponding image with the Hanning filter
-        kSpace_hanning = hanningFilter(kSpace_ref, n, m, nb_point)
+        kSpace_hanning = hanningFilter(kSpace_ref, mm, nb_point)
         img_hanning = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(kSpace_hanning))))
 
         num_iterations = 0  # Initialize the iteration counter
         previous_img = img_hanning  # you have the choice between img_hanning or img_ramp
 
+        img_stack = np.zeros((100, 120, 120))
+
         while True:
             # Iterative reconstruction
+            img_stack[num_iterations, :, :] = previous_img[9, :, :]
             img_iterative = previous_img * phase
             kSpace_new = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(img_iterative)))
 
             # Apply constraint: Keep the region of k-space from n+m onwards and restore the rest
-            kSpace_new[:, :, 0:n + m] = kSpace_ref[:, :, 0:n + m]
+            kSpace_new[0:mm[0], 0:mm[1], 0:mm[2]] = kSpace_ref[0:mm[0], 0:mm[1], 0:mm[2]]
 
             # Reconstruct the image from the modified k-space
             img_reconstructed = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(kSpace_new))))
@@ -470,10 +486,15 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         figure = img_reconstructed / np.max(np.abs(img_reconstructed)) * 100
 
+        # Get correlation with reference image
+        correlation = np.corrcoef(img_ref.flatten(), img_reconstructed.flatten())[0, 1]
+        print("\nRespect the reference image:")
+        print("Convergence: %0.2e" % (1 - correlation))
+
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="POCS",
                                           image=figure,
                                           orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
-                                          operation="POCS - " + str(factors),
+                                          operation="POCS - " + str(factors[-1::-1]),
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
