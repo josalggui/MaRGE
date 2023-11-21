@@ -66,7 +66,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime'] * 1e-3
         return (repetitionTime * nScans / 60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0, demo=False):
+    def sequenceRun(self, plotSeq=0, demo=False, standalone=False):
         init_gpa = False  # Starts the gpa
         self.demo = demo
 
@@ -146,8 +146,8 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         # Run the experiment
         data_over = []  # To save oversampled data
-        for scan in range(self.nScans):
-            if not plotSeq:
+        if not plotSeq:
+            for scan in range(self.nScans):
                 print("\nScan %i running..." % (scan + 1))
                 if not self.demo:
                     rxd, msgs = self.expt.run()
@@ -158,6 +158,8 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                 print("Acquired points = %i" % np.size([rxd['rx0']]))
                 print("Expected points = %i" % ((acq_points + 2 * hw.addRdPoints) * hw.oversamplingFactor))
                 print("Scan %i ready!" % (scan + 1))
+        elif plotSeq and standalone:
+            self.plotSequence()
 
         # Close the experiment
         if not self.demo:
@@ -239,5 +241,5 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__':
     seq = Larmor()
     seq.sequenceAtributes()
-    seq.sequenceRun(demo=True)
-    seq.sequenceAnalysis(mode='Standalone')
+    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
+    # seq.sequenceAnalysis(mode='Standalone')

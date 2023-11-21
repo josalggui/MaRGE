@@ -46,13 +46,13 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 1, 1], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM', tip="0=x, 1=y, 2=z")
-        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 0, 0], field='IM', tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
+        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 0], field='IM', tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
         self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, units=units.ms, field='OTH')
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
@@ -108,7 +108,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.dfovs.append(self.dfov.tolist())
         self.fovs.append(self.fov.tolist())
 
-    def sequenceRun(self, plotSeq=0, demo=False):
+    def sequenceRun(self, plotSeq=False, demo=False):
         init_gpa=False # Starts the gpa
         self.demo = demo
 
@@ -418,8 +418,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
             repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
             acqPointsPerBatch.append(aa)
 
-            for ii in range(self.nScans):
-                if not plotSeq:
+            if not plotSeq:
+                for ii in range(self.nScans):
                     print("\nBatch %i, scan %i running..." % (nBatches, ii+1))
                     if not self.demo:
                         acq_points = 0
@@ -443,6 +443,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
                         overData = np.concatenate((overData, rxd['rx0'][nRD*self.etl*hw.oversamplingFactor::]), axis = 0)
                     else:
                         overData = np.concatenate((overData, rxd['rx0']), axis = 0)
+            # elif plotSeq and standalone:
+            #     self.plotSequence()
 
             if not self.demo: self.expt.__del__()
         del aa
@@ -835,5 +837,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
 if __name__=="__main__":
     seq = RARE()
     seq.sequenceAtributes()
-    seq.sequenceRun(demo=True)
+
+    # A
+    seq.sequenceRun(demo=True, plotSeq=True)
+    seq.sequencePlot(standalone=True)
+
+    # B
+    seq.sequenceRun(demo=True, plotSeq=False)
     seq.sequenceAnalysis(mode='Standalone')

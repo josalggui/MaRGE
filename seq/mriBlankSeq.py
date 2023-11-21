@@ -295,13 +295,9 @@ class MRIBLANKSEQ:
             mapVals2[key] = self.mapVals[key]
         self.mapVals = mapVals2
 
-    def sequencePlot(self):
+    def sequencePlot(self, standalone=False):
         """ axes: 4-element tuple of axes upon which the TX, gradients, RX and digital I/O plots will be drawn.
         If not provided, plot_sequence() will create its own. """
-        # if axes is None:
-        #     _, axes = plt.subplots(4, 1, figsize=(12,8), sharex='col')
-
-        # (txs, grads, rxs, ios) = axes
 
         def getStepData(data):
             t = data[0]
@@ -419,7 +415,7 @@ class MRIBLANKSEQ:
 
             plotRx = [xData, yData, legend, 'Rx gate']
 
-            return ([plotTx, plotGrad, plotRx])
+            outputs = [plotTx, plotGrad, plotRx]
         else:
             # Get instructions from experiment object
             fd = self.expt.get_flodict()
@@ -480,7 +476,28 @@ class MRIBLANKSEQ:
                     continue
             plotDigital = [xData, yData, legend, 'Digital']
 
-            return ([plotTx, plotGrad, plotRx, plotDigital])
+            outputs = [plotTx, plotGrad, plotRx, plotDigital]
+
+        if standalone:
+            # Create plot window
+            fig, axes = plt.subplots(3, 1, figsize=(10, 5))
+
+            # Insert plots
+            plot = 0
+            for item in outputs:
+                plt.subplot(3, 1, plot + 1)
+                for ii in range(len(item[0])):
+                    plt.plot(item[0][ii], item[1][ii], label=item[2][ii])
+                plt.title(item[3])
+                plt.xlabel('Time (ms)')
+                plt.ylabel('Amplitude (a.u.)')
+                plot += 1
+
+            plt.tight_layout()
+            plt.show()
+
+        return outputs
+
 
     def getIndex(self, etl=1, nPH=1, sweepMode=1):
         """"
@@ -1050,6 +1067,9 @@ class MRIBLANKSEQ:
             x = 0
 
     def plotResults(self):
+        """
+        Method to plot results in standalone
+        """
         # Get number of collumns and rows
         cols = 1
         rows = 1
