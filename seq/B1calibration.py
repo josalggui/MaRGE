@@ -203,9 +203,8 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
 
     def sequenceAnalysis(self, obj=''):
 
-        self.saveRawData()
         result1 = {'widget': 'image',
-                   'data': np.squeeze(np.abs(self.matrix[ self.mapVals['RFampSteps']-1, :, :])),
+                   'data': np.squeeze(np.abs(self.matrix[self.mapVals['RFampSteps']-1, :, :])),
                    'xLabel': "tRF (us)",
                    'yLabel': "Npoint",
                    'title': "FID maps",
@@ -213,4 +212,8 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
                    'col': 0
                    }
 
-        return [result1]
+        self.output = [result1]
+
+        self.saveRawData()
+
+        return self.output
