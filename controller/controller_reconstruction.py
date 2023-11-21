@@ -451,11 +451,8 @@ class ReconstructionTabController(ReconstructionTabWidget):
         num_iterations = 0  # Initialize the iteration counter
         previous_img = img_hanning  # you have the choice between img_hanning or img_ramp
 
-        img_stack = np.zeros((100, 120, 120))
-
         while True:
             # Iterative reconstruction
-            img_stack[num_iterations, :, :] = previous_img[9, :, :]
             img_iterative = previous_img * phase
             kSpace_new = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(img_iterative)))
 
