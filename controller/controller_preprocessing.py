@@ -57,6 +57,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         # Get the mat data from the loaded .mat file in the main toolbar controller
         mat_data = self.main.toolbar_image.mat_data
         sampled = self.main.toolbar_image.k_space_raw
+        data = self.main.image_view_widget.main_matrix.copy()
         nPoints = np.reshape(mat_data['nPoints'], -1)
 
         # Check which checkboxes are selected
@@ -67,25 +68,25 @@ class PreProcessingTabController(PreProcessingTabWidget):
             kmax = np.max(np.abs(k[:]))
             text += ' RD,'
             theta = k / kmax
-            self.main.image_view_widget.main_matrix *= (np.cos(theta * (np.pi / 2)) ** cosbell_order)
+            data *= (np.cos(theta * (np.pi / 2)) ** cosbell_order)
         if self.phase_checkbox.isChecked():
             k = np.reshape(sampled[:, 1], nPoints[-1::-1])
             kmax = np.max(np.abs(k[:]))
             text += ' PH,'
             theta = k / kmax
-            self.main.image_view_widget.main_matrix *= (np.cos(theta * (np.pi / 2)) ** cosbell_order)
+            data *= (np.cos(theta * (np.pi / 2)) ** cosbell_order)
         if self.slice_checkbox.isChecked():
             k = np.reshape(sampled[:, 2], nPoints[-1::-1])
             kmax = np.max(np.abs(k[:]))
             text += ' SL,'
             theta = k / kmax
-            self.main.image_view_widget.main_matrix *= (np.cos(theta * (np.pi / 2)) ** cosbell_order)
+            data *= (np.cos(theta * (np.pi / 2)) ** cosbell_order)
 
         # Update the main matrix of the image view widget with the cosbell data
 
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="Cosbell",
-                                          image=self.main.image_view_widget.main_matrix,
+                                          image=data,
                                           orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
                                           operation=text + " Order: " + str(cosbell_order),
                                           space="k",

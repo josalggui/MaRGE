@@ -94,7 +94,7 @@ class PostProcessingTabController(PostProcessingTabWidget):
             max_entropy_index = np.unravel_index(np.argmax(block_entropies), block_entropies.shape)
 
             # Extract the block with the highest entropy from the block_std_devs array
-            std = 3 * block_std_devs[max_entropy_index]
+            std = 4.5 * block_std_devs[max_entropy_index]
             print("Standard deviation for BM4D: %0.2f" % std)
 
         else:
