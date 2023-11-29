@@ -897,6 +897,7 @@ class MRIBLANKSEQ:
         if hasattr(self, 'raw_data_name'):
             file_name = "%s.%s" % (self.raw_data_name, name_string)
         else:
+            self.raw_data_name = self.mapVals['seqName']
             file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
         self.mapVals['fileName'] = "%s.mat" % file_name
 
