@@ -94,10 +94,10 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
             # Initialize data and image variables as zeros
             nPoints = np.array(self.seq.mapVals['nPoints'])
             dataSteps = np.zeros((nSteps[0] * nSteps[1], nPoints[1], nPoints[0]), dtype=complex)
-            imageSteps = dataSteps
+            imageSteps = dataSteps.copy()
 
             # Get axes in strings
-            axes = self.seq.mapVals['axes']
+            axes = self.seq.mapVals['axesOrientation']
             axesDict = {'x': 0, 'y': 1, 'z': 2}
             axesKeys = list(axesDict.keys())
             axesVals = list(axesDict.values())
@@ -135,8 +135,8 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                        'xLabel': axesStr[0],
                        'yLabel': axesStr[1],
                        'title': "%s sweep k-spaces" % self.mapVals['seqNameSweep'],
-                       'row': 1,
-                       'col': 0}
+                       'row': 0,
+                       'col': 1}
 
             self.output = [result1, result2]
 
@@ -178,7 +178,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
 
                 self.saveRawData()
 
-            return self.output
+        return self.output
 
 if __name__=='__main__':
     seq = SweepImage()
