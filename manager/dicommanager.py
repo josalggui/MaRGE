@@ -10,7 +10,10 @@ class DICOMImage:
         self.meta_data = {}
         if path is None:
             path = get_testdata_file("MR_small.dcm")
-        self.ds = dcmread(path)
+        try:
+            self.ds = dcmread(path)
+        except:
+            self.ds = dcmread(get_testdata_file("MR_small.dcm"))
 
     def image2Dicom(self):
         for key in self.meta_data.keys():
