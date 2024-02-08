@@ -1,4 +1,4 @@
-# MaRCoS Graphical User Interface
+# MaRGE (MaRCoS Graphical Environment)
 
 This repository contains the Python code for the Graphical User Interface (GUI) of MaRCoS, a system for magnetic resonance imaging research. The GUI provides a user-friendly interface to interact with the MaRCoS system.
 
