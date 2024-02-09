@@ -30,6 +30,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         # Connect the button click signal to the corresponding methods
         self.image_cosbell_button.clicked.connect(self.cosbellFilter)
         self.image_padding_button.clicked.connect(self.zeroPadding)
+        self.new_fov_button.clicked.connect(self.fovShifting)
 
     def cosbellFilter(self):
         """
@@ -158,5 +159,53 @@ class PreProcessingTabController(PreProcessingTabWidget):
                                           orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
                                           operation="Zero Padding - RD: " + str(rd_order) + ", PH: "
                                                     + str(ph_order) + ", SL: " + str(sl_order),
+                                          space="k",
+                                          image_key=self.main.image_view_widget.image_key)
+
+    def fovShifting(self):
+        """
+        Perform the FOV change operation using threading.
+
+        Starts a new thread to execute the runFovShifting method.
+        """
+        thread = threading.Thread(target=self.runFovShifting)
+        thread.start()
+
+    def runFovShifting(self):
+        """
+        Run the FOV change operation.
+
+        Retrieves the necessary parameters and performs the FOV change on the loaded image.
+        Updates the main matrix of the image view widget with the new FOV image, adds the operation to the history
+        widget, and updates the operations history.
+        """
+        # Get the k_space data and its shape
+        k = self.main.toolbar_image.k_space_raw.copy()
+        nPoints = self.main.toolbar_image.nPoints
+
+        # Factors for FOV change from the text field
+        factors = self.change_fov_field.text().split(',')
+
+        # Extract the k_space components
+        krd = k[:, 0]
+        kph = k[:, 1]
+        ksl = k[:, 2]
+        k = np.column_stack((krd, kph, ksl))
+
+        # Convert factors to spatial shifts
+        delta_rd = (float(factors[0])) * 1e-3
+        delta_ph = (float(factors[1])) * 1e-3
+        delta_sl = (float(factors[2])) * 1e-3
+        delta_r = np.array([delta_rd, delta_ph, delta_sl])
+
+        # Calculate the phase shift using the spatial shifts
+        phi = np.exp(-1j * 2 * np.pi * k @ np.reshape(delta_r, (3, 1)))
+        self.main.image_view_widget.main_matrix *= np.reshape(phi, nPoints[-1::-1])
+
+        # Add the "New FOV" operation to the history widget with a timestamp
+        self.main.history_list.addNewItem(stamp="FOV shift",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
+                                          operation="Fov shift",
                                           space="k",
                                           image_key=self.main.image_view_widget.image_key)

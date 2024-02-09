@@ -77,9 +77,30 @@ class PreProcessingTabWidget(QWidget):
         self.zero_padding_group = QGroupBox("Zero Padding")
         self.zero_padding_group.setLayout(self.zero_padding_layout)
 
+        # ***********************
+        # FOV change
+        # ***********************
+        self.change_fov_label = QLabel('Shift (mm)')
+        self.change_fov_field = QLineEdit()
+        self.change_fov_field.setPlaceholderText("Readout, Phase, Slice")
+
+        self.change_fov_layout = QHBoxLayout()
+        self.change_fov_layout.addWidget(self.change_fov_label)
+        self.change_fov_layout.addWidget(self.change_fov_field)
+
+        self.new_fov_button = QPushButton('Shift FOV')
+
+        self.new_fov_layout = QVBoxLayout()
+        self.new_fov_layout.addLayout(self.change_fov_layout)
+        self.new_fov_layout.addWidget(self.new_fov_button)
+
+        self.new_fov_group = QGroupBox("FOV Shift")
+        self.new_fov_group.setLayout(self.new_fov_layout)
+
         # Main layout
         self.preprocessing_layout = QVBoxLayout()
         self.preprocessing_layout.addWidget(self.zero_padding_group)
         self.preprocessing_layout.addWidget(self.cosbell_group)
+        self.preprocessing_layout.addWidget(self.new_fov_group)
         self.preprocessing_layout.addStretch()
         self.setLayout(self.preprocessing_layout)
