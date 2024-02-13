@@ -67,7 +67,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                           tip='Choose one option: auto, manual')
 
         # Connect to Arduino and set the initial state
-        self.arduino = autotuning.Arduino()
+        self.arduino = autotuning.Arduino(name="auto-tuning", serial_number=hw.ard_sn_autotuning)
         self.arduino.connect()
         self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "1")
 

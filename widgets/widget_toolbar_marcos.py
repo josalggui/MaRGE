@@ -28,7 +28,7 @@ class MarcosToolBar(QToolBar):
         self.addAction(self.action_server)
 
         # Setup GPA board
-        self.action_gpa_init = QAction(QIcon("resources/icons/gpa.png"), "Init GPA board", self)
+        self.action_gpa_init = QAction(QIcon("resources/icons/gpa.png"), "Init power modules", self)
         self.action_gpa_init.setStatusTip("Init GPA board")
         self.addAction(self.action_gpa_init)
         

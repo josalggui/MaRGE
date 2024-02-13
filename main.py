@@ -47,7 +47,7 @@ from controller.controller_session import SessionController
 cgitb.enable(format='text')
 
 # Run the gui
-demo = True
+demo = False
 app = QApplication(sys.argv)
 gui = SessionController(demo)
 sys.exit(app.exec_())

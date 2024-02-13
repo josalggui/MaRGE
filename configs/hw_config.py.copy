@@ -35,3 +35,6 @@ lnaGain = 50 # dB
 temperature = 293 # k
 shimming_factor = 1e-5
 
+# Arduinos
+ard_sn_autotuning = '242353133363518050E0'
+ard_sn_interlock = '242353133363518050E1'
