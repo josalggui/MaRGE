@@ -1,4 +1,4 @@
-PhysioMRI_GUI
+MaRGE
 =============
 
 .. toctree::

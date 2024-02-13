@@ -38,7 +38,7 @@ class FiguresLayoutController(FiguresLayoutWidget):
         print("J.M. Algarín, PhD")
         print("josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Valencia, Spain")
-        print("https://github.com/yvives/PhysioMRI_GUI\n")
+        print("https://github.com/mriLab-i3M/MaRGE\n")
 
     def firstPlot(self):
         """
