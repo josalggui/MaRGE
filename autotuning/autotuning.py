@@ -94,6 +94,8 @@ class Arduino:
             while self.device.in_waiting == 0:
                 pass
             return self.device.readline()
+        else:
+            return "False".encode('utf-8')
 
 
 class VNA:
