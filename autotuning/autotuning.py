@@ -81,7 +81,7 @@ class Arduino:
         """
         if self.device is not None:
             self.device.write(data.encode())
-        self.receive()
+        return self.receive()
 
     def receive(self):
         """
