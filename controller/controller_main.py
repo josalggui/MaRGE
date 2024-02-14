@@ -48,6 +48,12 @@ class MainController(MainWindow):
         # Return stdout to defaults.
         sys.stdout = sys.__stdout__
         if not self.demo:
+            # Close server
             subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+
+            # Disable power modules
+            self.toolbar_marcos.arduino.send("GPA_ON 0;")
+            self.toolbar_marcos.arduino.send("RFPA_ON 0;")
+            
         print('\nGUI closed successfully!')
         super().closeEvent(event)

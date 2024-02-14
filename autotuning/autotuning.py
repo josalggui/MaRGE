@@ -82,7 +82,7 @@ class Arduino:
         """
         if self.device is not None:
             self.device.write(data.encode())
-        self.receive()
+        return self.receive()
 
     def receive(self):
         """
@@ -94,6 +94,8 @@ class Arduino:
             while self.device.in_waiting == 0:
                 pass
             return self.device.readline()
+        else:
+            return "False".encode('utf-8')
 
 
 class VNA:

@@ -54,24 +54,6 @@ class MarcosController(MarcosToolBar):
         self.arduino = autotuning.Arduino(baudrate=19200, name="interlock", serial_number=hw.ard_sn_interlock)
         self.arduino.connect()
 
-        # Enable remote communication with power modules
-        if self.arduino:
-            # Remote communication with GPA
-            self.arduino.send("GPA_SPC:CTL 1;")  # Activate remote control
-            received_string = self.arduino.receive()  # Wait to arduino response
-            if received_string != ">OK;":  # If wrong response
-                print("Error enabling GPA remote control.")
-            else:  # If good response
-                print("GPA remote communication succeed.")
-
-            # Remote communication with RFPA
-            self.arduino.send("RFPA_SPC:CTL 1;")
-            received_string = self.arduino.receive()
-            if received_string != ">OK;":
-                print("Error enabling RFPA remote control.")
-            else:
-                print("RFPA remote communication succeed.")
-
     def startMaRCoS(self):
         """
         Starts the MaRCoS system.
@@ -133,11 +115,37 @@ class MarcosController(MarcosToolBar):
                 link = False
                 while link==False:
                     try:
+                        # Check if GPA available
+                        received_string = self.arduino.send("GPA_VERB 1;").decode()
+                        if received_string[0:4] != ">OK;":
+                            print("GPA not available.")
+                        else:
+                            print("GPA available.")
+
+                        # Remote communication with GPA
+                        received_string = self.arduino.send("GPA_SPC:CTL 1;").decode()  # Activate remote control
+                        if received_string[0:4] != ">OK;":  # If wrong response
+                            print("Error enabling GPA remote control.")
+                        else:  # If good response
+                            print("GPA remote communication succeed.")
+
+                        # Check if GPA available
+                        received_string = self.arduino.send("RFPA_VERB 1;").decode()
+                        if received_string[0:4] != ">OK;":
+                            print("RFPA not available.")
+                        else:
+                            print("RFPA available.")
+
+                        # Remote communication with RFPA
+                        received_string = self.arduino.send("RFPA_SPC:CTL 1;").decode()
+                        if received_string[0:4] != ">OK;":
+                            print("Error enabling RFPA remote control.")
+                        else:
+                            print("RFPA remote communication succeed.")
+
                         # Disable power module
                         self.arduino.send("GPA_ON 0;")
-                        self.arduino.receive()
                         self.arduino.send("RFPA_ON 0;")
-                        self.arduino.receive()
 
                         # Run init_gpa sequence
                         expt = ex.Experiment(init_gpa=True)
@@ -151,17 +159,15 @@ class MarcosController(MarcosToolBar):
 
                         # Enable power modules
                         # Enable GPA module
-                        self.arduino.send("GPA_ON 1;")  # Enable power module
-                        received_string = self.arduino.receive()
-                        if received_string != ">OK;":  # If wrong response
+                        received_string = self.arduino.send("GPA_ON 1;").decode()  # Enable power module
+                        if received_string[0:4] != ">OK;":  # If wrong response
                             print("Error activating GPA power module.")
                         else:  # If good reponse
                             print("GPA power enabled.")
 
                         # Enable RFPA module
-                        self.arduino.send("RPFA_ON 1;")
-                        received_string = self.arduino.receive()
-                        if received_string != ">OK;":
+                        received_string = self.arduino.send("RFPA_ON 1;").decode()
+                        if received_string[0:4] != ">OK;":
                             print("Error activating RFPA power module.")
                         else:
                             print("RFPA power enabled.")
