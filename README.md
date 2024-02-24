@@ -1,3 +1,7 @@
+[![](https://img.shields.io/badge/marcos__client-blue)](https://github.com/vnegnev/marcos_client)
+[![](https://img.shields.io/badge/marcos__server-blue)](https://github.com/vnegnev/marcos_server)
+[![](https://img.shields.io/badge/marcos__extras-blue)](https://github.com/vnegnev/marcos_extras)
+
 # MaRGE (MaRCoS Graphical Environment)
 
 This repository contains the Python code for the MaRCoS Graphical Environment (MaRGE), a system for magnetic resonance imaging research. The GUI provides a user-friendly interface to interact with the MaRCoS system.
