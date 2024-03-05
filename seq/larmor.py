@@ -7,6 +7,10 @@ MRILAB @ I3M
 import os
 import sys
 
+# To work with pypulseq
+import pypulseq as pp
+from flocra_pulseq.interpreter import PSInterpreter
+
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))
@@ -19,12 +23,13 @@ for subdir in subdirs:
     full_path = os.path.join(main_directory, subdir)
     sys.path.append(full_path)
 #******************************************************************************
-import controller.experiment_gui as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
 import configs.hw_config as hw
 import configs.units as units
+import controller.experiment_gui as ex
+
 
 
 class Larmor(blankSeq.MRIBLANKSEQ):
@@ -57,7 +62,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
     def sequenceInfo(self):
         print(" ")
         print("Larmor")
-        print("Author: Dr. J.M. Algarín")
+        print("Author: PhD. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
         print("This sequence runs a single spin echo to find larmor")
@@ -76,10 +81,6 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         if self.rfReTime == 0:
             self.rfReTime = 2 * self.rfExTime
 
-        # Calculate the excitation amplitude
-        rf_ex_amp = self.rfExFA * np.pi / 180 / (self.rfExTime * 1e6 * hw.b1Efficiency)
-        rf_re_amp = self.rfReFA * np.pi / 180 / (self.rfReTime * 1e6 * hw.b1Efficiency)
-
         # Calculate acq_time and echo_time
         n_points = int(self.bw / self.dF)
         acq_time = 1 / self.dF  # s
@@ -88,38 +89,56 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.mapVals['acqTime'] = acq_time
         self.mapVals['echoTime'] = echo_time
 
-        def createSequence():
+        # Create excitation rf event
+        delay_rf_ex = self.repetitionTime-acq_time/2-echo_time-self.rfExTime/2-hw.blkTime*1e-6
+        event_rf_ex = pp.make_block_pulse(flip_angle=self.rfExFA * np.pi / 180,
+                                          duration=self.rfExTime,
+                                          delay=delay_rf_ex,
+                                          system=self.system,
+                                          use="excitation",)
+
+        # Create refocusing rf event
+        delay_rf_re = echo_time/2-self.rfExTime/2-self.rfReTime/2-hw.blkTime*1e-6
+        event_rf_re = pp.make_block_pulse(flip_angle=self.rfReFA * np.pi / 180,
+                                          duration=self.rfReTime,
+                                          delay=delay_rf_re,
+                                          system=self.system,
+                                          use="refocusing")
+
+        # Create ADC event
+        delay_adc = echo_time/2-self.rfReTime/2-acq_time/2
+        event_adc = pp.make_adc(num_samples=n_points*hw.oversamplingFactor,
+                                duration=acq_time,
+                                delay=delay_adc,
+                                system=self.system)
+
+        # Create the sequence here
+        def createSequence(): # Here I will test pypulseq
             rd_points = 0
-            # Initialize time
-            t0 = 20
-            t_ex = 20e3
 
-            # Shimming
-            self.iniSequence(t0, self.shimming)
+            # # Shimming
+            # self.iniSequence(t0, self.shimming)
 
-            # Excitation pulse
-            t0 = t_ex - hw.blkTime - self.rfExTime / 2
-            self.rfRecPulse(t0, self.rfExTime, rf_ex_amp, 0)
+            # Add excitatoin
+            self.seq.add_block(event_rf_ex)
 
-            # Refocusing pulse
-            t0 = t_ex + echo_time / 2 - hw.blkTime - self.rfReTime / 2
-            self.rfRecPulse(t0, self.rfReTime, rf_re_amp, np.pi / 2)
+            # Add refocusing
+            self.seq.add_block(event_rf_re)
 
-            # Rx gate
-            t0 = t_ex + echo_time - acq_time / 2
-            self.rxGateSync(t0, acq_time)
+            # Add ADC
+            self.seq.add_block(event_adc)
             rd_points += n_points
 
-            self.endSequence(t_ex + self.repetitionTime)
+            # Create the sequence file
+            self.seq.write('sequence.seq')
+
+            # Run the interpreter to get the waveforms
+            waveforms, param_dict = self.flo_interpreter.interpret('sequence.seq')
+
+            # Convert waveform to mriBlankSeq tools (just do it)
+            self.pypulseq2mriblankseq(waveforms=waveforms, shimming=self.shimming)
 
             return rd_points
-
-        # Time parameters to us
-        self.rfExTime *= 1e6
-        self.rfReTime *= 1e6
-        self.repetitionTime *= 1e6
-        acq_time *= 1e6
-        echo_time *= 1e6
 
         # Initialize the experiment
         self.bw = n_points / acq_time  # MHz

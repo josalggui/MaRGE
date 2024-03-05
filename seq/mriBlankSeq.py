@@ -14,6 +14,8 @@ import experiment as ex
 import scipy.signal as sig
 import csv
 import matplotlib.pyplot as plt
+import pypulseq as pp
+from flocra_pulseq.interpreter import PSInterpreter
 
 # Import dicom saver
 from manager.dicommanager import DICOMImage
@@ -53,6 +55,30 @@ class MRIBLANKSEQ:
                          'tx1': [[],[]],
                          'ttl0': [[],[]],
                          'ttl1': [[],[]],}
+
+        # Initialize the sequence
+        self.seq = pp.Sequence()
+
+        # Define system properties according to hw_config file
+        self.system = pp.Opts(
+            rf_dead_time=hw.blkTime*1e-6,   # s
+            max_grad=hw.max_grad,   # mT/m
+            grad_unit='mT/m',
+            max_slew=hw.max_slew_rate,  # mT/m/ms
+            slew_unit='mT/m/ms',
+            grad_raster_time=hw.grad_raster_time,   # s
+            rise_time=hw.grad_rise_time,    # s
+        )
+
+        # Define the interpreter. It should be updated on calibration
+        self.flo_interpreter = PSInterpreter(tx_warmup=hw.blkTime*1e-6, # s
+                                             rf_center=hw.larmorFreq * 1e6,  # Hz
+                                             rf_amp_max=hw.b1Efficiency/(2*np.pi)*1e6,  # Hz
+                                             gx_max=hw.gFactor[0]*hw.gammaB,    # Hz/m
+                                             gy_max=hw.gFactor[1]*hw.gammaB,    # Hz/m
+                                             gz_max=hw.gFactor[2]*hw.gammaB,    # Hz/m
+                                             grad_max=np.max(hw.gFactor)*hw.gammaB, # Hz/m
+                                             )
 
 
 
@@ -105,6 +131,64 @@ class MRIBLANKSEQ:
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
                 tips[self.mapNmspc[key]] = [self.mapTips[key]]
         return out, tips
+
+    def pypulseq2mriblankseq(self, waveforms=None, shimming=np.array([0.0, 0.0, 0.0])):
+        """
+        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
+        @email: josalggui@i3m.upv.es
+        Translates the waveform to mriBlankSeq dictionaries. While waveform may be input to flocra directly, mriBlankSeq
+        dictionaries has interesting functions into the GUI.
+        """
+
+        # Fill dictionary
+        for key in waveforms.keys():
+            if key == 'tx0':
+                self.flo_dict['tx0'][0] = np.concatenate((self.flo_dict['tx0'][0], waveforms['tx0'][0]), axis=0)
+                self.flo_dict['tx0'][1] = np.concatenate((self.flo_dict['tx0'][1], waveforms['tx0'][1]), axis=0)
+            elif key == 'tx1':
+                self.flo_dict['tx1'][0] = np.concatenate((self.flo_dict['tx1'][0], waveforms['tx1'][0]), axis=0)
+                self.flo_dict['tx1'][1] = np.concatenate((self.flo_dict['tx1'][1], waveforms['tx1'][1]), axis=0)
+            elif key == 'rx0_en':
+                self.flo_dict['rx0'][0] = np.concatenate((self.flo_dict['rx0'][0], waveforms['rx0_en'][0]), axis=0)
+                self.flo_dict['rx0'][1] = np.concatenate((self.flo_dict['rx0'][1], waveforms['rx0_en'][1]), axis=0)
+            elif key == 'rx1_en':
+                self.flo_dict['rx1'][0] = np.concatenate((self.flo_dict['rx1'][0], waveforms['rx1_en'][0]), axis=0)
+                self.flo_dict['rx1'][1] = np.concatenate((self.flo_dict['rx1'][1], waveforms['rx1_en'][1]), axis=0)
+            elif key == 'tx_gate':
+                self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], waveforms['tx_gate'][0]), axis=0)
+                self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], waveforms['tx_gate'][1]), axis=0)
+            elif key == 'rx_gate':
+                self.flo_dict['ttl1'][0] = np.concatenate((self.flo_dict['ttl1'][0], waveforms['rx_gate'][0]), axis=0)
+                self.flo_dict['ttl1'][1] = np.concatenate((self.flo_dict['ttl1'][1], waveforms['rx_gate'][1]), axis=0)
+            elif key == 'grad_vx':
+                self.flo_dict['g0'][0] = np.concatenate((self.flo_dict['g0'][0], waveforms['grad_vx'][0]), axis=0)
+                self.flo_dict['g0'][1] = np.concatenate((self.flo_dict['g0'][1], waveforms['grad_vx'][1]), axis=0)
+            elif key == 'grad_vy':
+                self.flo_dict['g1'][0] = np.concatenate((self.flo_dict['g1'][0], waveforms['grad_vy'][0]), axis=0)
+                self.flo_dict['g1'][1] = np.concatenate((self.flo_dict['g1'][1], waveforms['grad_vy'][1]), axis=0)
+            elif key == 'grad_vy':
+                self.flo_dict['g2'][0] = np.concatenate((self.flo_dict['g2'][0], waveforms['grad_vz'][0]), axis=0)
+                self.flo_dict['g2'][1] = np.concatenate((self.flo_dict['g2'][1], waveforms['grad_vz'][1]), axis=0)
+
+        # Fill missing keys
+        for key in self.flo_dict.keys():
+            try:
+                is_unfilled = all(not sublist for sublist in self.flo_dict[key])
+            except:
+                is_unfilled = False
+            if is_unfilled:
+                self.flo_dict[key] = [np.array([0]), np.array([0])]
+
+        # Add shimming
+        self.flo_dict['g0'][1] = self.flo_dict['g0'][1] + shimming[0]
+        self.flo_dict['g1'][1] = self.flo_dict['g1'][1] + shimming[1]
+        self.flo_dict['g2'][1] = self.flo_dict['g2'][1] + shimming[2]
+
+        last_times = np.array([value[0][-1] for value in self.flo_dict.values()])
+        last_time = np.max(last_times)
+        self.endSequence(last_time+1)
+
+        return True
 
     def getFovDisplacement(self):
         """"

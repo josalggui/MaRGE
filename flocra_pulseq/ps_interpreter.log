@@ -1,0 +1,3 @@
+WARNING:root:tx_t (1.0009765625) isn't a multiple of clk_t (0.008138020833333334)
+WARNING:root:grad_t (1) isn't multiple of clk_t (0.008138020833333334)
+INFO:root:Interpreting ../mgh-flocra/test_sequences/tabletop_radial_v2_2d_pulseq.seq
