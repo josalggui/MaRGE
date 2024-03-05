@@ -402,19 +402,30 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         def getCenterKSpace(k_space, n, m_vec):
             # fix n_vec
-            output = k_space.copy()
-            n_vec = np.array([0, 0, 0])
-            for ii in range(3):
-                if m_vec[ii] == 0:
-                    n_vec[ii] = np.size(k_space, ii)
-                else:
-                    n_vec[ii] = n[ii]
+            output = np.zeros(np.shape(k_space), dtype=complex)
+            n_vec = np.array(np.shape(k_space))
 
             # fill with zeros
-            output[0:n_vec[0] - m_vec[0], 0:n_vec[1] - m_vec[1], 0:n_vec[2] - m_vec[2]] = 0.0
-            output[n_vec[0] + m_vec[0]::, n_vec[1] + m_vec[1]::, n_vec[2] + m_vec[2]::] = 0.0
+            idx0 = n_vec // 2 - m_vec
+            idx1 = n_vec // 2 + m_vec
+            output[idx0[0]:idx1[0], idx0[1]:idx1[1], idx0[2]:idx1[2]] = \
+                k_space[idx0[0]:idx1[0], idx0[1]:idx1[1], idx0[2]:idx1[2]]
 
             return output
+            # # fix n_vec
+            # output = k_space.copy()
+            # n_vec = np.array([0, 0, 0])
+            # for ii in range(3):
+            #     if m_vec[ii] == n[ii]:
+            #         n_vec[ii] = np.size(k_space, ii)
+            #     else:
+            #         n_vec[ii] = n[ii]
+            #
+            # # fill with zeros
+            # output[0:n_vec[0] - m_vec[0], 0:n_vec[1] - m_vec[1], 0:n_vec[2] - m_vec[2]] = 0.0
+            # output[n_vec[0] + m_vec[0]::, n_vec[1] + m_vec[1]::, n_vec[2] + m_vec[2]::] = 0.0
+            #
+            # return output
 
         mat_data = self.main.toolbar_image.mat_data
         nPoints = mat_data['nPoints'][0][-1::-1]
@@ -422,10 +433,11 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Number of extra lines which has been taken past the center of k-space
         factors = self.partial_reconstruction_factor.text().split(',')
         factors = [float(num) for num in factors][-1::-1]
-        mm = np.array([round(num) for num in (nPoints * factors)])
+        mm = np.array([int(num) for num in (nPoints * factors)])
 
         n = np.array([int(num) for num in (nPoints / 2.0)])  # Divide the data per 2
-        m = 2 * n - mm
+        m = np.array([int(num) for num in (nPoints * factors - nPoints / 2)])
+
 
         # Get the k_space data
         kSpace_ref = self.main.image_view_widget.main_matrix.copy()
@@ -449,7 +461,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
         img_hanning = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(kSpace_hanning))))
 
         num_iterations = 0  # Initialize the iteration counter
-        previous_img = img_hanning  # you have the choice between img_hanning or img_ramp
+        previous_img = img_hanning.copy()  # you have the choice between img_hanning or img_ramp
 
         while True:
             # Iterative reconstruction
