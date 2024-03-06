@@ -84,6 +84,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
             data *= (np.cos(theta * (np.pi / 2)) ** cosbell_order)
 
         # Update the main matrix of the image view widget with the cosbell data
+        self.main.image_view_widget.main_matrix = data.copy()
 
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="Cosbell",
@@ -120,7 +121,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         sl_order = int(zero_padding_order[2])
 
         # Get the k_space data and its shape
-        k_space = self.main.image_view_widget.main_matrix
+        k_space = self.main.image_view_widget.main_matrix.copy()
         current_shape = k_space.shape
 
         # Determine the new shape after zero-padding
@@ -151,7 +152,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         image_matrix[col_start:col_end, row_start:row_end, depth_start:depth_end] = k_space
 
         # Update the main matrix of the image view widget with the padded image
-        self.main.image_view_widget.main_matrix = image_matrix
+        self.main.image_view_widget.main_matrix = image_matrix.copy()
 
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="Zero Padding",

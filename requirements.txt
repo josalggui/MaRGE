@@ -11,3 +11,4 @@ bm4d>=4.2.3
 phantominator>=0.7.0
 pyserial>=3.5
 torch>=2.2.1
+cupy-cuda12x>=13.0.0
