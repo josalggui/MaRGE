@@ -21,7 +21,6 @@ for subdir in subdirs:
 #******************************************************************************
 import controller.experiment_gui as ex
 import numpy as np
-import matplotlib.pyplot as plt
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import configs.hw_config as hw
 import configs.units as units

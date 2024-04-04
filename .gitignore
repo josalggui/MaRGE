@@ -16,3 +16,5 @@ marcos_fpga_rp-122.bit.bin
 marcos_fpga_rp-122.dtbo
 readme.org
 autotuning/autotuning_arduino/autotuning_arduino.ino
+ps_interpreter.log
+sequence.seq
