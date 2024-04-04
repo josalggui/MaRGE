@@ -14,8 +14,9 @@ class FiguresLayoutController(FiguresLayoutWidget):
     """
     Controller for figures layout
     """
-    def __init__(self, *args, **kwargs):
-        super(FiguresLayoutController, self).__init__(*args, **kwargs)
+    def __init__(self, main):
+        super().__init__()
+        self.main = main
 
         # Show the initial plot
         self.firstPlot()
@@ -37,7 +38,7 @@ class FiguresLayoutController(FiguresLayoutWidget):
         print("J.M. Algarín, PhD")
         print("josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Valencia, Spain")
-        print("https://github.com/yvives/PhysioMRI_GUI\n")
+        print("https://github.com/mriLab-i3M/MaRGE\n")
 
     def firstPlot(self):
         """

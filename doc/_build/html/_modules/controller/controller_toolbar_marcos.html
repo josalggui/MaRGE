@@ -69,11 +69,11 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">MarcosController</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Copy relevant files from marcos_extras</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;../marcos_extras/copy_bitstream.sh&quot;</span><span class="p">,</span> <span class="s2">&quot;../PhysioMRI_GUI&quot;</span><span class="p">)</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;../marcos_extras/marcos_fpga_rp-122.bit&quot;</span><span class="p">,</span> <span class="s2">&quot;../PhysioMRI_GUI&quot;</span><span class="p">)</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;../marcos_extras/marcos_fpga_rp-122.bit.bin&quot;</span><span class="p">,</span> <span class="s2">&quot;../PhysioMRI_GUI&quot;</span><span class="p">)</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;../marcos_extras/marcos_fpga_rp-122.dtbo&quot;</span><span class="p">,</span> <span class="s2">&quot;../PhysioMRI_GUI&quot;</span><span class="p">)</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;../marcos_extras/readme.org&quot;</span><span class="p">,</span> <span class="s2">&quot;../PhysioMRI_GUI&quot;</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;../marcos_extras/copy_bitstream.sh&quot;</span><span class="p">,</span> <span class="s2">&quot;../MaRGE&quot;</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;../marcos_extras/marcos_fpga_rp-122.bit&quot;</span><span class="p">,</span> <span class="s2">&quot;../MaRGE&quot;</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;../marcos_extras/marcos_fpga_rp-122.bit.bin&quot;</span><span class="p">,</span> <span class="s2">&quot;../MaRGE&quot;</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;../marcos_extras/marcos_fpga_rp-122.dtbo&quot;</span><span class="p">,</span> <span class="s2">&quot;../MaRGE&quot;</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;../marcos_extras/readme.org&quot;</span><span class="p">,</span> <span class="s2">&quot;../MaRGE&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">action_server</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">action_start</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">startMaRCoS</span><span class="p">)</span>
@@ -176,7 +176,7 @@
 <h3>Navigation</h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../modules.html">PhysioMRI_GUI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">MaRGE</a></li>
 </ul>
 
 <div class="relations">

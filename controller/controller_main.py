@@ -26,6 +26,10 @@ class MainController(MainWindow):
         thread = threading.Thread(target=self.history_list.waitingForRun)
         thread.start()
 
+    def mousePressEvent(self, event):
+        # Send self.main.post_gui.console.setup_console()prints to current window console
+        self.console.setup_console()
+
     def closeEvent(self, event):
         """
         Shuts down the application on close.
@@ -44,6 +48,12 @@ class MainController(MainWindow):
         # Return stdout to defaults.
         sys.stdout = sys.__stdout__
         if not self.demo:
+            # Close server
             subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+
+            # Disable power modules
+            self.toolbar_marcos.arduino.send("GPA_ON 0;")
+            self.toolbar_marcos.arduino.send("RFPA_ON 0;")
+            
         print('\nGUI closed successfully!')
         super().closeEvent(event)

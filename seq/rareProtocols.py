@@ -7,14 +7,18 @@ Created on Thu June 2 2022
 import os
 import sys
 #*****************************************************************************
-# Add path to the working directory
-path = os.path.realpath(__file__)
-ii = 0
-for char in path:
-    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
-        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
-        sys.path.append(path[0:ii+1]+'marcos_client')
-    ii += 1
+# Get the directory of the current script
+main_directory = os.path.dirname(os.path.realpath(__file__))
+parent_directory = os.path.dirname(main_directory)
+parent_directory = os.path.dirname(parent_directory)
+
+# Define the subdirectories you want to add to sys.path
+subdirs = ['MaRGE', 'marcos_client']
+
+# Add the subdirectories to sys.path
+for subdir in subdirs:
+    full_path = os.path.join(parent_directory, subdir)
+    sys.path.append(full_path)
 #******************************************************************************
 import numpy as np
 import experiment as ex
@@ -752,6 +756,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             resolution = self.mapVals['resolution']*1e3
             self.meta_data["PixelSpacing"] = [resolution[0], resolution[1]]
             self.meta_data["SliceThickness"] = resolution[2]
+            self.meta_data["SpacingBetweenSlices"] = resolution[2]
             # Sequence parameters
             self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
             self.meta_data["EchoTime"] = self.mapVals['echoSpacing']

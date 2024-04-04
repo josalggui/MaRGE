@@ -12,6 +12,7 @@ import experiment as ex
 import numpy as np
 import shutil
 import configs.hw_config as hw
+import autotuning.autotuning as autotuning # Just to use an arduino
 
 
 class MarcosController(MarcosToolBar):
@@ -37,17 +38,21 @@ class MarcosController(MarcosToolBar):
         super(MarcosController, self).__init__(*args, **kwargs)
 
         # Copy relevant files from marcos_extras
-        shutil.copy("../marcos_extras/copy_bitstream.sh", "../PhysioMRI_GUI")
-        shutil.copy("../marcos_extras/marcos_fpga_rp-122.bit", "../PhysioMRI_GUI")
-        shutil.copy("../marcos_extras/marcos_fpga_rp-122.bit.bin", "../PhysioMRI_GUI")
-        shutil.copy("../marcos_extras/marcos_fpga_rp-122.dtbo", "../PhysioMRI_GUI")
-        shutil.copy("../marcos_extras/readme.org", "../PhysioMRI_GUI")
+        shutil.copy("../marcos_extras/copy_bitstream.sh", "../MaRGE")
+        shutil.copy("../marcos_extras/marcos_fpga_rp-122.bit", "../MaRGE")
+        shutil.copy("../marcos_extras/marcos_fpga_rp-122.bit.bin", "../MaRGE")
+        shutil.copy("../marcos_extras/marcos_fpga_rp-122.dtbo", "../MaRGE")
+        shutil.copy("../marcos_extras/readme.org", "../MaRGE")
 
         self.action_server.setCheckable(True)
         self.action_start.triggered.connect(self.startMaRCoS)
         self.action_server.triggered.connect(self.controlMarcosServer)
         self.action_copybitstream.triggered.connect(self.copyBitStream)
         self.action_gpa_init.triggered.connect(self.initgpa)
+
+        # Arduino to control the interlock
+        self.arduino = autotuning.Arduino(baudrate=19200, name="interlock", serial_number=hw.ard_sn_interlock)
+        self.arduino.connect()
 
     def startMaRCoS(self):
         """
@@ -110,6 +115,39 @@ class MarcosController(MarcosToolBar):
                 link = False
                 while link==False:
                     try:
+                        # Check if GPA available
+                        received_string = self.arduino.send("GPA_VERB 1;").decode()
+                        if received_string[0:4] != ">OK;":
+                            print("GPA not available.")
+                        else:
+                            print("GPA available.")
+
+                        # Remote communication with GPA
+                        received_string = self.arduino.send("GPA_SPC:CTL 1;").decode()  # Activate remote control
+                        if received_string[0:4] != ">OK;":  # If wrong response
+                            print("Error enabling GPA remote control.")
+                        else:  # If good response
+                            print("GPA remote communication succeed.")
+
+                        # Check if GPA available
+                        received_string = self.arduino.send("RFPA_VERB 1;").decode()
+                        if received_string[0:4] != ">OK;":
+                            print("RFPA not available.")
+                        else:
+                            print("RFPA available.")
+
+                        # Remote communication with RFPA
+                        received_string = self.arduino.send("RFPA_SPC:CTL 1;").decode()
+                        if received_string[0:4] != ">OK;":
+                            print("Error enabling RFPA remote control.")
+                        else:
+                            print("RFPA remote communication succeed.")
+
+                        # Disable power module
+                        self.arduino.send("GPA_ON 0;")
+                        self.arduino.send("RFPA_ON 0;")
+
+                        # Run init_gpa sequence
                         expt = ex.Experiment(init_gpa=True)
                         expt.add_flodict({
                             'grad_vx': (np.array([100]), np.array([0])),
@@ -118,6 +156,22 @@ class MarcosController(MarcosToolBar):
                         expt.__del__()
                         link = True
                         print("\nGPA init done!")
+
+                        # Enable power modules
+                        # Enable GPA module
+                        received_string = self.arduino.send("GPA_ON 1;").decode()  # Enable power module
+                        if received_string[0:4] != ">OK;":  # If wrong response
+                            print("Error activating GPA power module.")
+                        else:  # If good reponse
+                            print("GPA power enabled.")
+
+                        # Enable RFPA module
+                        received_string = self.arduino.send("RFPA_ON 1;").decode()
+                        if received_string[0:4] != ">OK;":
+                            print("Error activating RFPA power module.")
+                        else:
+                            print("RFPA power enabled.")
+
                     except:
                         link = False
                         time.sleep(1)

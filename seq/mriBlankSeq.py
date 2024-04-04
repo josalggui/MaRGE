@@ -282,7 +282,6 @@ class MRIBLANKSEQ:
                         self.mapVals[key] = inputNum
         except:
             self.mapVals = self.mapVals
-            print("\n Warning: no loaded parameters")
 
     def resetMapVals(self):
         """"
@@ -915,7 +914,7 @@ class MRIBLANKSEQ:
             writer.writerows([self.mapNmspc, mapVals])
 
         # Save dcm with the final image
-        if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode==None):
+        if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode is None):
             self.image2Dicom(fileName = "%s/%s.dcm" % (directory_dcm, file_name))
 
     def image2Dicom(self, fileName):

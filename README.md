@@ -1,19 +1,23 @@
-# MaRCoS Graphical User Interface
+[![](https://img.shields.io/badge/marcos__client-blue)](https://github.com/vnegnev/marcos_client)
+[![](https://img.shields.io/badge/marcos__server-blue)](https://github.com/vnegnev/marcos_server)
+[![](https://img.shields.io/badge/marcos__extras-blue)](https://github.com/vnegnev/marcos_extras)
 
-This repository contains the Python code for the Graphical User Interface (GUI) of MaRCoS, a system for magnetic resonance imaging research. The GUI provides a user-friendly interface to interact with the MaRCoS system.
+# MaRGE (MaRCoS Graphical Environment)
+
+This repository contains the Python code for the MaRCoS Graphical Environment (MaRGE), a system for magnetic resonance imaging research. The GUI provides a user-friendly interface to interact with the MaRCoS system.
 
 ## Installation
 
-To run the MaRCoS GUI, you will need to have Python 3 installed on your computer. If you don't have it installed, you can download it from [python.org](https://www.python.org/downloads/).
+To run MaRGE, you will need to have Python 3 installed on your computer. If you don't have it installed, you can download it from [python.org](https://www.python.org/downloads/).
 
-Next, follow these steps to set up the MaRCoS GUI:
+Next, follow these steps to set up MaRGE:
 
 1. Clone the following repositories into the same folder on your computer:
 
    - [marcos_client](https://github.com/vnegnev/marcos_client)
    - [marcos_server](https://github.com/vnegnev/marcos_server)
    - [marcos_extras](https://github.com/vnegnev/marcos_extras)
-   - [PhysioMRI_GUI](https://github.com/yvives/PhysioMRI_GUI)
+   - [MaRGE](https://github.com/mriLab-i3M/MaRGE)
 
    Your folder structure should resemble the following:
 
@@ -25,9 +29,8 @@ Next, follow these steps to set up the MaRCoS GUI:
 2. Modify the following configuration files as needed:
 
 - `local_config.py` in the `marcos_client` folder: This file contains information about the version of the Red Pitaya, its IP address, and the GPA board used in conjunction with the Red Pitaya.
-- `hw_config.py` in the `PhysioMRI_GUI/configs` folder: This file contains information about the scanner hardware.
-- `sys_config.py` in the `PhysioMRI_GUI/configs` folder: This file contains settings for displaying the session windows in the GUI.
-- `autotuning.py` in the `PhysioMRI_GUI/configs` folder: Modify this file if you are using an Arduino for automatic tuning and impedance matching of the RF coil.
+- `hw_config.py` in the `MaRGE/configs` folder: This file contains information about the scanner hardware.
+- `sys_config.py` in the `MaRGE/configs` folder: This file contains settings for displaying the session windows in the GUI.
 
 Note: These files may not initially exist in the cloned repositories, but you can find copies of them in its corresponding folder.
 
@@ -35,19 +38,45 @@ Note: These files may not initially exist in the cloned repositories, but you ca
    1. If running under Windows OS, you will need to install git_bash, and then set `bash_path = "directory/git_bash.exe"` in hw_config.py.
    2. If running under Ubuntu OS, set `bash_path = "gnome-terminal"` 
 
-3. After making the necessary modifications to the configuration files, you can run the `FirstMRI.py` file to launch the MaRCoS GUI.
+4. Install all the required modules to run MaRGE, listed in the `requirements.txt` file.
 
+5. After making the necessary modifications to the configuration files, you can run the `main.py` file to launch MaRGE.
 
-That's it! You should now have the MaRCoS GUI up and running on your computer. Enjoy using it for your MRI research.
+That's it! You should now have MaRGE up and running on your computer. Enjoy using it for your MRI research.
 
 If you encounter any issues or have questions, please refer to the documentation or feel free to open an issue on the respective GitHub repositories for assistance.
 
+
+## Issues
+
+I found some issues when runing under linux. Here are some of them
+
+**1. ERROR**
+
+Error: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
+This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+
+Available platform plugins are: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, xcb.
+
+**SOLUTION**
+
+Install `libxcb-xinerama0` with `sudo apt install libxcb-xinerama0`.
+
+**2. WARNING**
+
+Warning: Ignoring XDG_SESSION_TYPE=wayland on Gnome. Use QT_QPA_PLATFORM=wayland to run on Wayland anyway
+
+**SOLUTION**
+
+Disabled Wayland by uncommenting `WaylandEnable=false` in the `/etc/gdm3/custom.conf`
+
+Add `QT_QPA_PLATFORM=xcb` in `/etc/environment`
 
 ## Description of the GUI
 
 ### Session Window
 
-When you execute `FirstMRI.py`, the session window is displayed on the screen.
+When you execute `main.py`, the session window is displayed on the screen.
 
 ![Session Window](resources/images/session.png)
 
@@ -56,6 +85,7 @@ When you execute `FirstMRI.py`, the session window is displayed on the screen.
 The session window serves as an input interface for important information such as the patient's name and weight. It also automatically generates an ID number. Currently, this ID number is generated based on the date and time, but users have the flexibility to modify it as needed. Some information can only be selected from predefined options, which are determined by the settings in the `sys_config.py` file.
 
 Once you've filled in the necessary information, simply click the `Launch GUI` button to initiate the main window. At this point, a new folder is created in `experiments/acquisitions` based on the Project and Subject ID you specified.
+Images and raw data will be saved in this folder.
 
 ### Main Window
 
@@ -101,11 +131,17 @@ Before executing any sequence, the user must establish a connection between the 
 
 - `MaRCoS server`: Use this button to connect to or disconnect from the MaRCoS server.
 
-- `Init GPA`: Clicking this button triggers a code execution to initialize the GPA board. It's important to note that the GUI must be connected to the server before initializing the GPA board.
+- `Init GPA`: Clicking this button triggers a code execution to initialize the GPA board. 
+It's important to note that the GUI must be connected to the server before initializing the GPA board.
+In case an interlock (under development) is connected to GPA and RFPA from Barthel, it also enables the power modules
+remotely.
 
-Upon executing `MaRCoS server` button remains pressed, and the sequence buttons become enabled. It's worth mentioning that this state remains even if the connection to the server fails.
+Upon executing `MaRCoS server` button remains pressed, and the sequence buttons become enabled. It's worth mentioning that this state remains even if the connection to the server fails (under development).
+However, if connection is done, a terminal will show the information shown in Figure 4.
 
-***Poner figura de marcos server aquí***
+![MaRCoS Server](resources/images/server.png)
+
+**Figure 4: MaRCoS server connection information**
 
 #### Sequence Toolbar (3)
 
@@ -159,7 +195,7 @@ The Protocols toolbar streamlines the organization and customization of your wor
 
 #### GUI Menubar (1)
 
-The GUI menubar is a centralized hub for accessing various functions and features of the MaRCoS GUI. It is divided into several categories, each containing specific options:
+The GUI menubar is a centralized hub for accessing various functions and features of MaRGE. It is divided into several categories, each containing specific options:
 
 1. **Scanner**
    - `Setup MaRCoS`: Executes MaRCoS initialization, starts the MaRCoS server, and initializes the GPA board in sequence.
@@ -185,7 +221,7 @@ The GUI menubar is a centralized hub for accessing various functions and feature
 4. **Session**
    - `New session`: Initiates a new session, providing a fresh start for inputting essential information (comming soon).
 
-The GUI menubar serves as a user-friendly interface for navigating and accessing the various functionalities of the MaRCoS GUI.
+The GUI menubar serves as a user-friendly interface for navigating and accessing the various functionalities of MaRGE.
 
 
 ## Configure the System
@@ -209,6 +245,7 @@ However, to ensure that `Autocalibration` functions correctly, specific configur
 The `Save for Calibration` button generates a .csv file in the `calibration` folder for each sequence. After completing these steps for all five sequences, there should be five .csv files available in the folder, enabling the proper execution of Autocalibration.
 
 It's important to note that failing to configure these parameters will result in the GUI using the last-used parameters for each calibration sequence, which are saved in the `experiments\parameterization` folder. If this folder is empty (e.g., for first-time users), the GUI will employ default parameters defined in the API.
+It is really recommended to configure the autocalibration sequences and avoid using default parameters.
 
 ### Localizer
 
@@ -254,17 +291,18 @@ The parameters of the sequences are categorized into four different fields:
 Each time a sequence is run:
 1) It automatically saves a file in ***experiments/parameterization/SequenceName_last_parameters.csv***.
    - When you initialize the GUI, it loads the parameters from files with ***last_parameters*** in the name to continue the session from where it left off.
-2) It creates three files in ***experiments/acquisitions*** inside the session folder:
+2) It creates four files in ***experiments/acquisitions*** inside the session folder:
    1) A .mat raw data file with the name ***SequenceName.year.month.day.hour.minutes.seconds.milliseconds.mat***. This file contains inputs, outputs, and other useful variables.
    2) A .csv file with the input parameters, named ***SequenceNameInfo.year.month.day.hour.minutes.seconds.milliseconds.csv***. This .csv file is useful if you want to repeat a specific experiment by loading the parameters into the corresponding sequence using the ***Sequence/Load Parameters*** menu.
    3) A .dcm file in Dicom Standard 3.0 format.
+   4) A ismrmrd file (comming soon).
 
-These steps ensure a well-organized and efficient workflow when running custom sequences within the MaRCoS GUI.
+These steps ensure a well-organized and efficient workflow when running custom sequences within MaRGE.
 
 
 ## Create a Protocol
 
-The MaRCoS GUI offers the flexibility to run previously defined protocols, which are collections of different sequences with predefined parameters. These protocols are displayed in the Sequence area (6) and provide a convenient way to streamline your experimental workflows. When you first launch the GUI, the Protocols tab will be empty.
+MaRGE offers the flexibility to run previously defined protocols, which are collections of different sequences with predefined parameters. These protocols are displayed in the Sequence area (6) and provide a convenient way to streamline your experimental workflows. When you first launch the GUI, the Protocols tab will be empty.
 
 To create a new protocol, follow these steps:
 
@@ -288,12 +326,12 @@ After saving the sequence, it will appear within the specified protocol. To exec
 
 Sequences can be removed from protocols by right-clicking the sequence and selecting `Delete` or by clicking the `Delete Sequence` button. Similarly, protocols can be deleted by clicking the `Delete Protocol` button and selecting the protocol to delete from the dialog box.
 
-This flexible protocol management system makes it easy to organize and execute sequences according to your experimental needs within the MaRCoS GUI.
+This flexible protocol management system makes it easy to organize and execute sequences according to your experimental needs within MaRGE.
 
 
 ## Structure of Folders and Files in the GUI
 
-The internal architecture of the MaRCoS GUI is organized into distinct folders and files that define its functionality and user interface. Understanding this structure can be helpful for those interested in further customization or development.
+The internal architecture of MaRGE is organized into distinct folders and files that define its functionality and user interface. Understanding this structure can be helpful for those interested in further customization or development.
 
 ### `ui` Folder
 
@@ -315,7 +353,7 @@ Scripts in the `controller` folder play a crucial role in determining how the wi
 
 As the GUI evolves and additional features are developed, more scripts and files may be added to these folders, enhancing the functionality and usability of MaRCoS.
 
-Understanding this folder and file structure can provide a foundation for those interested in extending or customizing the MaRCoS GUI to suit their specific research needs.
+Understanding this folder and file structure can provide a foundation for those interested in extending or customizing MaRGE to suit their specific research needs.
 
 ### `seq` Folder
 
@@ -352,40 +390,40 @@ The `experiments` folder serves as the repository for storing the results of exp
 
 In the `resources` folder, you'll find various icons used in the main menu and other parts of the GUI, as well as the images used in this README.
 
-This structured organization of folders and files ensures that the MaRCoS GUI remains efficient and organized, allowing for effective experimentation and customization.
+This structured organization of folders and files ensures that MaRGE remains efficient and organized, allowing for effective experimentation and customization.
 
 # Adding a New Sequence to the GUI
 
-In this section, we'll guide you through the process of creating and adding a new sequence to the MaRCoS GUI. By following these steps, you'll be able to run simple sequences within the GUI. We'll use the example of creating a noise measurement sequence as a starting point.
+In this section, we'll guide you through the process of creating and adding a new sequence to MaRGE. By following these steps, you'll be able to run simple sequences within the GUI. We'll use the example of creating a noise measurement sequence as a starting point.
 
 ## Body of the Sequence
 
 1. **Create a New Sequence File**: Start by creating a new Python file for your sequence. In this example, we'll create a `noise.py` file inside the `seq` folder.
 
-2. **Import Required Modules**: In your sequence file, import the necessary modules. It's crucial to have access to the `experiment` class from the `marcos_client` repository. Additionally, ensure access to the `marcos_client` and `PhysioMRI_GUI` folders for execution in standalone mode. Also, import the `mriBlankSequence` class, which contains various methods commonly used in many sequences. New sequences should inherit from the mriBlankSequence class. We also include the `configs.hw_config` module to get access to hardware properties and `configs.hw.units` that will be used to set the units of input parameters.
+2. **Import Required Modules**: In your sequence file, import the necessary modules. It's crucial to have access to the `experiment` class from the `marcos_client` repository. Additionally, ensure access to the `marcos_client` and `MaRGE` folders for execution in standalone mode. Also, import the `mriBlankSequence` class, which contains various methods commonly used in many sequences. New sequences should inherit from the mriBlankSequence class. We also include the `configs.hw_config` module to get access to hardware properties and `configs.hw.units` that will be used to set the units of input parameters.
 
 ```python
 import os
 import sys
+#*****************************************************************************
+# Get the directory of the current script
+main_directory = os.path.dirname(os.path.realpath(__file__))
+parent_directory = os.path.dirname(main_directory)
+parent_directory = os.path.dirname(parent_directory)
 
-# Add path to the working directory
-path = os.path.realpath(__file__)
-ii = 0
-for char in path:
-    if (char == '\\' or char == '/') and path[ii + 1:ii + 14] == 'PhysioMRI_GUI':
-        sys.path.append(path[0:ii + 1] + 'PhysioMRI_GUI')
-        sys.path.append(path[0:ii + 1] + 'marcos_client')
-    ii += 1
+# Define the subdirectories you want to add to sys.path
+subdirs = ['MaRGE', 'marcos_client']
 
-# Add modules from gui
-import experiment as ex
-from seq.mriBlankSeq import mriBlankSequence
+# Add the subdirectories to sys.path
+for subdir in subdirs:
+    full_path = os.path.join(parent_directory, subdir)
+    sys.path.append(full_path)
+#******************************************************************************
+import controller.experiment_gui as ex
+import numpy as np
+import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import configs.hw_config as hw
 import configs.units as units
-
-# Add other modules
-import scipy.signal as sig
-import numpy as np
 
 ```
 
@@ -395,7 +433,7 @@ import numpy as np
 
     b) **`sequenceTime`**: Implement the `sequenceTime` method, which should return the time required by the sequence in minutes (it can returns 0).
 
-    c) **`sequenceRun`**: The `sequenceRun` method is responsible for inputting the instructions into the Red Pitaya. It includes a `plotSeq` keyword argument that should be set to `1` if you want to plot the sequence or `0` for running the experiment. Another keyword is `demo` that can be established to True or False in case user can run simulated signals.
+    c) **`sequenceRun`**: The `sequenceRun` method is responsible for inputting the instructions into the Red Pitaya. It includes a `plotSeq` keyword argument that should be set to `1` if you want to plot the sequence or `0` for running the experiment. Another keyword is `demo` that can be established to `True` or `False` in case user can run simulated signals.
 
     d) **`sequenceAnalysis`**: Lastly, the `sequenceAnalysis` method is used to analyze the data acquired during the experiment. It includes a `mode` keyword that I use to plot call `plotResults` method from `mriBlankSeq` in case this parameter is set to `'standalone'`, but it can be used at convenience.
 
@@ -421,7 +459,7 @@ class Noise(mriBlankSeq.MRIBLANKSEQ):
         
         # Use the plotSeq argument to control plotting versus running.
         
-        # Use the demo argument to control if you want to simlate signals.
+        # Use the demo argument to control if you want to simulate signals.
 
     def sequenceAnalysis(self, mode=None):
         self.mode = mode
@@ -451,7 +489,7 @@ def __init__(self):
     self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
 ```
 
-In this section, we'll walk you through the process of adding input parameters to your sequence. This step is essential for configuring and customizing your sequence within the MaRCoS GUI.
+In this section, we'll walk you through the process of adding input parameters to your sequence. This step is essential for configuring and customizing your sequence within MaRGE.
 
 To add new input parameters, we'll utilize the `addParameter` method available in the `mriBlankSequence` class. This method should be executed in the constructor of your sequence class and has keyword arguments:
 
@@ -466,7 +504,7 @@ To add new input parameters, we'll utilize the `addParameter` method available i
 
 In this example, the `Noise` sequence is configured with several input parameters, each associated with a key, a user-friendly label, a default value, and categorized under the 'RF' field. The 'seqName' parameter, however, doesn't include the field keyword, making it informational but not displayed as a user-configurable input.
 
-By following this approach, you can seamlessly add and customize input parameters for your sequence, allowing users to tailor the sequence parameters to their specific needs within the MaRCoS GUI.
+By following this approach, you can seamlessly add and customize input parameters for your sequence, allowing users to tailor the sequence parameters to their specific needs within MaRGE.
 
 ## Defining the `sequenceInfo` Method
 
@@ -660,7 +698,7 @@ if __name__=='__main__':
 
 It's crucial to be aware of a systematic delay that occurs as a result of the CIC filter applied to the acquired data in the Red Pitaya. This delay consists of 3 data points and should be taken into account when processing and analyzing acquired data.
 
-The CIC filter's delay impacts the alignment of acquired data and can influence the timing of various sequence operations. This means that the timestamp associated with a data point may not reflect its true acquisition time accurately. Understanding and accommodating this delay is essential for accurate data processing and interpretation within the MaRCoS GUI.
+The CIC filter's delay impacts the alignment of acquired data and can influence the timing of various sequence operations. This means that the timestamp associated with a data point may not reflect its true acquisition time accurately. Understanding and accommodating this delay is essential for accurate data processing and interpretation within MaRGE.
 
 To mitigate potential issues related to the CIC filter's delay, it is also recommended to discard the first five to ten data points during data processing. This practice helps in stabilizing the data and removing any transient effects caused by the filter's delay. Additionally, consider adjusting timestamps or applying correction factors to accurately account for the delay when conducting precise time-sensitive analyses.
 
@@ -668,7 +706,7 @@ The `mriBlankSeq` module already includes methods for rx gating that account for
 
 ## The `mapVals` Variable
 
-The `mapVals` variable is a crucial element within the sequences of the MaRCoS GUI. It serves as a dictionary inherited from the `mriBlankSeq` class, playing a vital role in managing and preserving information throughout the sequence execution. Below, we explore the significance and usage of the `mapVals` variable:
+The `mapVals` variable is a crucial element within the sequences of MaRGE. It serves as a dictionary inherited from the `mriBlankSeq` class, playing a vital role in managing and preserving information throughout the sequence execution. Below, we explore the significance and usage of the `mapVals` variable:
 
 - **Initialization and Structure**:
   - The `mapVals` dictionary is initialized with predefined key-value pairs.

@@ -8,14 +8,18 @@ Created on Thu June 2 2022
 import os
 import sys
 #*****************************************************************************
-# Add path to the working directory
-path = os.path.realpath(__file__)
-ii = 0
-for char in path:
-    if (char=='\\' or char=='/') and path[ii+1:ii+14]=='PhysioMRI_GUI':
-        sys.path.append(path[0:ii+1]+'PhysioMRI_GUI')
-        sys.path.append(path[0:ii+1]+'marcos_client')
-    ii += 1
+# Get the directory of the current script
+main_directory = os.path.dirname(os.path.realpath(__file__))
+parent_directory = os.path.dirname(main_directory)
+parent_directory = os.path.dirname(parent_directory)
+
+# Define the subdirectories you want to add to sys.path
+subdirs = ['MaRGE', 'marcos_client']
+
+# Add the subdirectories to sys.path
+for subdir in subdirs:
+    full_path = os.path.join(parent_directory, subdir)
+    sys.path.append(full_path)
 #******************************************************************************
 import numpy as np
 import experiment as ex
@@ -547,7 +551,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             kRD = np.reshape(kRD, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
             kPH = np.reshape(kPH, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
             kSL = np.reshape(kSL, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
-            dPhase = np.exp(-2*np.pi*1j*(self.dfov[0]*kRD-self.dfov[1]*kPH+self.dfov[2]*kSL))
+            dPhase = np.exp(-2*np.pi*1j*(self.dfov[0]*kRD+self.dfov[1]*kPH+self.dfov[2]*kSL))
             data = np.reshape(data*dPhase, (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
             self.mapVals['kSpace3D'] = data
             img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))

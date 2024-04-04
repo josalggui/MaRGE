@@ -11,14 +11,13 @@ import serial.tools.list_ports
 import serial
 from scipy.interpolate import interp1d
 
-import configs.autotuning as autotuning
 import time
 
 from vna import Hardware
 
 
 class Arduino:
-    def __init__(self, baudrate=115200, timeout=0.1):
+    def __init__(self, baudrate=115200, timeout=0.1, name='test', serial_number=None):
         """
         Initialize an Arduino object.
 
@@ -30,6 +29,8 @@ class Arduino:
         self.port = None
         self.baudrate = baudrate
         self.timeout = timeout
+        self.serial_number = serial_number
+        self.name = name
 
     def findPort(self):
         """
@@ -40,11 +41,11 @@ class Arduino:
         arduino_port = None
         ports = serial.tools.list_ports.comports()
         for port in ports:
-            if port.serial_number == autotuning.serial_number:
+            if port.serial_number == self.serial_number:
                 arduino_port = port.device
 
         if arduino_port is None:
-            print("\nNo Arduino found for auto-tuning.")
+            print("\nNo Arduino found for " + self.name)
             return False
         else:
             return arduino_port
@@ -61,7 +62,7 @@ class Arduino:
                 return False
             else:
                 self.device = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout)
-                print("\nConnected to Arduino for auto-tuning")
+                print("\nConnected to Arduino for " + self.name)
                 time.sleep(1.0)
 
     def disconnect(self):
@@ -70,7 +71,7 @@ class Arduino:
         """
         if self.device is not None:
             self.device.close()
-            print("\nDisconnected from Arduino for auto-tuning")
+            print("\nDisconnected from Arduino for " + self.name)
             self.device = None
 
     def send(self, data):
@@ -81,7 +82,7 @@ class Arduino:
         """
         if self.device is not None:
             self.device.write(data.encode())
-        self.receive()
+        return self.receive()
 
     def receive(self):
         """
@@ -93,6 +94,8 @@ class Arduino:
             while self.device.in_waiting == 0:
                 pass
             return self.device.readline()
+        else:
+            return "False".encode('utf-8')
 
 
 class VNA:

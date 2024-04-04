@@ -28,6 +28,7 @@ class ConsoleController(ConsoleWidget):
     def __init__(self):
         super().__init__()
 
+    def setup_console(self):
         # Redirect the output of print to the console widget
         sys.stdout = EmittingStream(textWritten=self.write_console)
 
@@ -37,7 +38,6 @@ class ConsoleController(ConsoleWidget):
         cursor.insertText(text)
         self.console.setTextCursor(cursor)
         self.console.ensureCursorVisible()
-
 
 class EmittingStream(QObject):
     """

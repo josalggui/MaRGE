@@ -20,6 +20,7 @@ from controller.controller_toolbar_sequences import SequenceController
 from controller.controller_sequence_list import SequenceListController
 from controller.controller_sequence_inputs import SequenceInputsController
 from widgets.widget_custom_and_protocol import CustomAndProtocolWidget
+from ui.window_postprocessing import MainWindow as PostWindow
 
 
 class MainWindow(QMainWindow):
@@ -31,7 +32,8 @@ class MainWindow(QMainWindow):
         self.session = session
         self.demo = demo
         self.setWindowTitle(session['directory'])
-        self.resize(QSize(1680, 720))
+        self.setGeometry(20, 40, 1680, 720)
+        # self.resize(QSize(1680, 720))
 
         # Threadpool for parallel running
         self.threadpool = QThreadPool()
@@ -39,6 +41,10 @@ class MainWindow(QMainWindow):
         # Set stylesheet
         self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
         self.setStyleSheet(self.styleSheet)
+
+        # Create console
+        self.console = ConsoleController()
+        self.console.setup_console()
 
         # Add marcos toolbar
         self.toolbar_marcos = MarcosController(self, "MaRCoS toolbar")
@@ -100,11 +106,10 @@ class MainWindow(QMainWindow):
         self.custom_and_protocol.protocol_layout.addWidget(self.protocol_inputs)
 
         # Add console
-        self.console = ConsoleController()
         self.input_layout.addWidget(self.console)
 
         # Add layout to show the figures
-        self.figures_layout = FiguresLayoutController()
+        self.figures_layout = FiguresLayoutController(self)
         self.figures_layout.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.output_layout.addWidget(self.figures_layout)
 
@@ -123,3 +128,9 @@ class MainWindow(QMainWindow):
         self.input_table.setMaximumHeight(200)
         self.input_table.setMinimumHeight(200)
         self.output_layout_h.addWidget(self.input_table)
+
+        # Create the post-processing toolbox
+        self.post_gui = PostWindow(self.session)
+
+        # Send prints to current window console
+        self.console.setup_console()

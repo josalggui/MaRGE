@@ -5,7 +5,9 @@
 
 """
 import copy
+import os
 import time
+import datetime as dt
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
@@ -16,12 +18,15 @@ from controller.controller_plot1d import Plot1DController as SpectrumPlot
 from controller.controller_smith_chart import PlotSmithChartController as SmithChart
 from seq.sequences import defaultsequences
 from widgets.widget_history_list import HistoryListWidget
+from manager.dicommanager import DICOMImage
+import numpy as np
 
 
 class HistoryListController(HistoryListWidget):
     """
     Controller for the history list.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Controller for the history list.
@@ -54,6 +59,9 @@ class HistoryListController(HistoryListWidget):
 
         :param point: The position where the context menu should be displayed.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         self.clicked_item = self.itemAt(point)
         if self.clicked_item is not None:
             menu = QMenu(self)
@@ -66,8 +74,18 @@ class HistoryListController(HistoryListWidget):
             action3 = QAction("Delete task", self)
             action3.triggered.connect(self.deleteTask)
             menu.addAction(action3)
+            action4 = QAction("Post-processing", self)
+            action4.triggered.connect(self.openPostGui)
+            menu.addAction(action4)
 
             menu.exec_(self.mapToGlobal(point))
+
+    def openPostGui(self):
+        # Get the corresponding key to get access to the history dictionary
+        item_name = self.clicked_item.text().split(' | ')[1]
+        path = self.main.session['directory']
+        self.main.post_gui.showMaximized()
+        self.main.post_gui.toolbar_image.rawDataLoading(file_path=path + "/mat/", file_name=item_name)
 
     def deleteTask(self):
         """
@@ -178,6 +196,9 @@ class HistoryListController(HistoryListWidget):
 
         :param item: The selected item from which to retrieve the corresponding input data.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         # Get the corresponding key to get access to the history dictionary
         item_time = item.text().split(' | ')[0]
         item_name = item.text().split(' | ')[1].split('.')[0]
@@ -216,6 +237,9 @@ class HistoryListController(HistoryListWidget):
 
         :param item: The selected item from which to retrieve the corresponding output information.
         """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
         # Get the corresponding key to get access to the history dictionary
         item_time = item.text().split(' | ')[0]
         item_name = item.text().split(' | ')[1].split('.')[0]
@@ -250,8 +274,8 @@ class HistoryListController(HistoryListWidget):
         # Add plots to the plotview_layout
         n_columns = 1
         for item in output:
-            if item['col']+1 > n_columns:
-                n_columns = item['col']+1
+            if item['col'] + 1 > n_columns:
+                n_columns = item['col'] + 1
             if item['widget'] == 'image':
                 image = Spectrum3DPlot(main=self.main,
                                        data=item['data'],
@@ -292,8 +316,8 @@ class HistoryListController(HistoryListWidget):
         """
         while self.main.app_open:
             if self.main.toolbar_marcos.action_server.isChecked():
-                pending_keys = list(self.pending_inputs.keys())     # List of elements in the pending sequence list
-                keys = list(self.inputs.keys())                     # List of elements in the sequence history list
+                pending_keys = list(self.pending_inputs.keys())  # List of elements in the pending sequence list
+                keys = list(self.inputs.keys())  # List of elements in the sequence history list
                 for key in pending_keys:
                     # Disable acquire button
                     self.main.toolbar_sequences.action_acquire.setEnabled(False)
@@ -315,7 +339,7 @@ class HistoryListController(HistoryListWidget):
                     if output == 0:
                         # There is an error
                         del self.pending_inputs[key]
-                        print("\n"+key+" sequence finished abruptly with error.")
+                        print("\n" + key + " sequence finished abruptly with error.")
                     else:
                         # Add item to the history list
                         file_name = sequence.mapVals['fileName']
@@ -372,3 +396,346 @@ class HistoryListController(HistoryListWidget):
 
         # Do sequence analysis and get results
         return sequence.sequenceAnalysis()
+
+
+class HistoryListControllerPos(HistoryListWidget):
+    """
+    @AUTHOR: D. Comlan, MRILab, CSIC.
+    @AUTHOR: J.M. Algarín, MRILab, CSIC
+
+    Controller class for the history list widget.
+
+    Inherits from HistoryListWidget.
+
+    Attributes:
+        image_hist: Dictionary to store images.
+        operations_hist: Dictionary to store operations' history.
+        image_key: Information about the matrix.
+        image_view: Reference to the ImageViewWidget.
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the HistoryListController.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
+
+        super(HistoryListControllerPos, self).__init__(*args, **kwargs)
+        self.labels = None
+        self.figures = None
+        self.orientations = None
+        self.image_hist = {}  # Dictionary to store historical images
+        self.image_orientation = {}
+        self.operations_hist = {}  # Dictionary to store operations history
+        self.space = {}  # Dictionary to retrieve if matrix is in k-space or image-space
+        self.image_key = None
+        self.image_view = None
+
+        # Connect methods to item click
+        self.itemDoubleClicked.connect(self.updateHistoryFigure)
+        self.itemClicked.connect(self.updateHistoryTable)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.showContextMenu)
+
+    def showContextMenu(self, point):
+        """
+        Displays a context menu at the given point.
+
+        :param point: The position where the context menu should be displayed.
+        """
+        self.clicked_item = self.itemAt(point)
+        if self.clicked_item is not None:
+            menu = QMenu(self)
+            action1 = QAction("Add new image", self)
+            action1.triggered.connect(self.addNewFigure)
+            menu.addAction(action1)
+            action2 = QAction("Add another image", self)
+            action2.triggered.connect(self.addFigure)
+            menu.addAction(action2)
+            action3 = QAction("Delete image", self)
+            action3.triggered.connect(self.deleteSelectedItem)
+            menu.addAction(action3)
+            action4 = QAction("Save figure", self)
+            action4.triggered.connect(self.saveImage)
+            menu.addAction(action4)
+
+            menu.exec_(self.mapToGlobal(point))
+
+    def addNewFigure(self):
+        """
+        Adds a new figure and initializes the figures and labels lists.
+
+        This method adds a new figure and initializes the `figures` and `labels` lists to empty lists.
+        It then calls the `addFigure` method to add the new figure to the list.
+        """
+        self.figures = []
+        self.orientations = []
+        self.labels = []
+        self.addFigure()
+
+    def addFigure(self):
+        """
+        Adds a figure to the layout and updates the figures and labels lists.
+
+        This method clears the figures layout, checks the number of existing figures, and returns early if the maximum
+        limit of 4 figures is reached.
+        It retrieves information from the clicked item, such as the time and name, and assigns it to
+        `self.current_output`.
+        The method then fetches the relevant data and configurations from the history based on `self.current_output`.
+        It creates the label and figure for the image widget, adds them to the figures layout, and updates the figures
+        and labels lists.
+
+        Note: The figures layout is assumed to be available as `self.main.figures_layout`.
+
+        If the selected raw data does not contain an image, a message is printed.
+
+        Raises:
+            - Exception: An exception may be raised if there is an error creating a Spectrum3DPlot.
+
+        """
+        self.main.image_view_widget.clearFiguresLayout()
+        if len(self.figures) > 7:
+            print("You can add only 8 figures to the layout")
+            return
+
+        # Get clicked item self.current_output
+        selected_items = self.selectedItems()
+        if selected_items:
+            selected_item = selected_items[0]
+            image_key = selected_item.text()
+            if image_key in self.image_hist:
+                self.orientations.append(self.image_orientation.get(image_key))
+                if self.space[image_key] == 'k':
+                    image = np.log10(np.abs(self.image_hist.get(image_key)))
+                    image[image == -np.inf] = np.inf
+                    val = np.min(image[:])
+                    image[image == np.inf] = val
+                else:
+                    image = np.abs(self.image_hist[image_key])
+
+                # Add image and label to the list
+                self.figures.append(image)
+                self.labels.append(image_key)
+
+                # self.main.image_view_widget.addWidget(image, row=0, col=0)
+
+        # Create the new layout
+        n = 0
+        sub_label = QLabel('Multiplot')
+        sub_label.setAlignment(QtCore.Qt.AlignCenter)
+        sub_label.setStyleSheet("background-color: black;color: white")
+        ncol = 0
+        for idx in range(8):
+            try:
+                # Label
+                label = QLabel(self.labels[n])
+                label.setAlignment(QtCore.Qt.AlignCenter)
+                label.setStyleSheet("background-color: black;color: white")
+                self.main.image_view_widget.addWidget(label, row=2*(idx//4)+1, col=idx%4)
+
+                # Figure
+                image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(self.figures[n],
+                                                                                       orientation=self.orientations[n])
+                image = Spectrum3DPlot(main=self.main,
+                                       data=image2show,
+                                       x_label=x_label,
+                                       y_label=y_label,
+                                       title=title)
+                self.main.image_view_widget.addWidget(image, row=2*(idx//4)+2, col=idx%4)
+
+                ncol = np.max([ncol, idx%4+1])
+                self.main.image_view_widget.addWidget(sub_label, row=0, col=0, colspan=ncol)
+            except:
+                pass
+            n += 1
+
+    def addNewItem(self, image_key=None, stamp=None, image=None, orientation=None, operation=None, space=None):
+        # Generate the image key
+        current_time = dt.datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        self.image_key = f"{current_time} - {stamp}"
+
+        # Add the item to the history list
+        self.addItem(self.image_key)
+
+        # Update the history dictionary with the new main matrix
+        self.image_hist[self.image_key] = image
+        self.image_orientation[self.image_key] = orientation
+
+        # Update the operations history
+        if len(self.operations_hist) == 0 or image_key is None:
+            self.operations_hist[self.image_key] = [operation]
+        else:
+            operations = self.operations_hist[image_key]
+            operations = operations.copy()
+            operations.append(operation)
+            self.operations_hist[self.image_key] = operations
+        self.main.image_view_widget.image_key = self.image_key
+
+
+        # Update the space dictionary
+        self.space[self.image_key] = space
+
+        return 0
+
+    def updateHistoryFigure(self, item):
+        """
+        Update the displayed image based on the selected item in the history list.
+
+        Args:
+            item (QListWidgetItem): The selected item in the history list.
+        """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
+        image_key = item.text()
+        if image_key in self.image_hist.keys():
+            self.main.image_view_widget.main_matrix = self.image_hist[image_key]
+            self.main.image_view_widget.image_key = image_key
+            orientation = self.image_orientation[image_key]
+            if self.space[image_key] == 'k':
+                image = np.log10(np.abs(self.main.image_view_widget.main_matrix))
+                image[image == -np.inf] = np.inf
+                val = np.min(image[:])
+                image[image == np.inf] = val
+            else:
+                image = np.abs(self.main.image_view_widget.main_matrix)
+
+            # Delete all widgets from image_view_widget
+            self.main.image_view_widget.clearFiguresLayout()
+
+            # Create label widget
+            label = QLabel()
+            label.setAlignment(QtCore.Qt.AlignCenter)
+            label.setStyleSheet("background-color: black;color: white")
+            self.main.image_view_widget.addWidget(label, row=0, col=0, colspan=2)
+            label.setText(image_key)
+
+            # Create image_widget
+            image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(image, orientation=orientation)
+            image = Spectrum3DPlot(main=self.main,
+                                   data=image2show,
+                                   x_label=x_label,
+                                   y_label=y_label,
+                                   title=title)
+
+            # Add widgets to the figure layout
+            self.main.image_view_widget.addWidget(label, row=0, col=0)
+            self.main.image_view_widget.addWidget(image, row=1, col=0)
+
+    def updateOperationsHist(self, image_key, text, new=False):
+        """
+        Update the operations history dictionary with the given information.
+
+        Args:
+            image_key (str): Information for the operations' history.
+            text (str): Text to be added to the operations' history.
+            new (bool): True is new loaded image
+        """
+        if len(self.operations_hist) == 0 or new is True:
+            self.operations_hist[image_key] = [text]
+        else:
+            list1 = list(self.operations_hist.values())
+            new_value = list1[-1].copy()
+            new_value.append(text)
+            self.operations_hist[image_key] = new_value
+
+    def updateHistoryTable(self, item):
+        """
+        Update the operations history table based on the selected item in the history list.
+
+        Args:
+            item (QListWidgetItem): The selected item in the history list.
+        """
+        # Send printed text to the corresponding console
+        self.main.console.setup_console()
+
+        # Clear the methods_list table
+        self.main.methods_list.setText('')
+
+        # Get the values to show in the methods_list table
+        selected_text = item.text()
+        values = self.operations_hist.get(selected_text, [])
+
+        # Print the methods
+        for value in values:
+            self.main.methods_list.append(value)
+
+    def moveKeyAndValuesToEnd(self, dictionary, key):
+        """
+        Move the given key and its associated values to the end of the dictionary.
+
+        Args:
+            dictionary (dict): The dictionary containing the key and values.
+            key (str): The key to be moved to the end of the dictionary.
+        """
+        if key in dictionary:
+            values = dictionary[key]
+            del dictionary[key]
+            dictionary[key] = values
+
+    def saveImage(self):
+        # Path to the DICOM file
+        path = self.main.session['directory'] + "/dcm/" + self.main.file_name[0:-4]
+        if not os.path.exists(self.main.session['directory'] + "/dcm/"):
+            os.makedirs(self.main.session['directory'] + "/dcm/")
+
+        # Load the DICOM file
+        dicom_image = DICOMImage(path=path + ".dcm")
+
+        # Get image to save into dicom
+        image = self.main.image_view_widget.main_matrix
+        imageDICOM = np.transpose(image, (0, 2, 1))
+        slices, rows, columns = imageDICOM.shape
+        dicom_image.meta_data["Columns"] = columns
+        dicom_image.meta_data["Rows"] = rows
+        dicom_image.meta_data["NumberOfSlices"] = slices
+        dicom_image.meta_data["NumberOfFrames"] = slices
+        imgFullAbs = np.abs(imageDICOM) * (2 ** 15 - 1) / np.amax(np.abs(imageDICOM))
+        imgFullInt = np.int16(np.abs(imgFullAbs))
+        imgFullInt = np.reshape(imgFullInt, (slices, rows, columns))
+        dicom_image.meta_data["PixelData"] = imgFullInt.tobytes()
+
+        # Save meta_data dictionary into dicom object metadata (Standard DICOM 3.0)
+        dicom_image.image2Dicom()
+
+        # Generate date to add to the name
+        name = dt.datetime.now()
+        name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
+
+        # Save dicom file
+        dicom_image.save(path + "_" + name_string + ".dcm")
+
+        print('Image saved into dicom format')
+
+        return 0
+
+    def deleteSelectedItem(self):
+        """
+        Delete the selected item from the history list.
+        """
+        selected_items = self.selectedItems()
+        if selected_items:
+            selected_item = selected_items[0]
+            self.takeItem(self.row(selected_item))
+
+        if selected_item.text() in self.image_hist:
+            del self.image_hist[selected_item.text()]
+            
+        if selected_item.text() in self.operations_hist:
+            del self.operations_hist[selected_item.text()]
+
+    # def plotPhase(self):
+    #     selected_items = self.selectedItems()
+    #     if selected_items:
+    #         selected_item = selected_items[0]
+    #         text = selected_item.text()
+    #         if text in self.image_hist:
+    #             image = self.image_hist.get(text)
+    #             if self.image_view is None:
+    #                 self.image_view = ImageViewWidget(parent=self.main)
+    #                 self.main.image_view_splitter.addWidget(self.image_view)
+    #         self.image_view.setImage(np.angle(image))

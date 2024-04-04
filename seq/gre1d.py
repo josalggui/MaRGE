@@ -7,16 +7,20 @@ MRILAB @ I3M
 import os
 import sys
 
-# *****************************************************************************
-# Add path to the working directory
-path = os.path.realpath(__file__)
-ii = 0
-for char in path:
-    if (char == '\\' or char == '/') and path[ii + 1:ii + 14] == 'PhysioMRI_GUI':
-        sys.path.append(path[0:ii + 1] + 'PhysioMRI_GUI')
-        sys.path.append(path[0:ii + 1] + 'marcos_client')
-    ii += 1
-# ******************************************************************************
+#*****************************************************************************
+# Get the directory of the current script
+main_directory = os.path.dirname(os.path.realpath(__file__))
+parent_directory = os.path.dirname(main_directory)
+parent_directory = os.path.dirname(parent_directory)
+
+# Define the subdirectories you want to add to sys.path
+subdirs = ['MaRGE', 'marcos_client']
+
+# Add the subdirectories to sys.path
+for subdir in subdirs:
+    full_path = os.path.join(parent_directory, subdir)
+    sys.path.append(full_path)
+#******************************************************************************
 import controller.experiment_gui as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
