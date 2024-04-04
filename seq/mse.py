@@ -37,7 +37,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(MSE, self).__init__()
         # Input the parameters
-        self.addParameter(key='seqName', string='RAREInfo', val='RARE')
+        self.addParameter(key='seqName', string='MSEInfo', val='MSE')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
@@ -49,7 +49,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
-        # self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
+        self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 2], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
@@ -70,12 +70,14 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
 
     def sequenceInfo(self):
-        print("\n3D RARE sequence")
+        print("\n3D MSE sequence")
         print("Author: Dr. J.M. Algarín")
-        print("Contact: josalggui@i3m.upv.es")
+        print("Author: Teresa Guallart Naval")
+        print("Contact: tguanav@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain \n")
 
     def sequenceTime(self):
+        print('MSE time')
         nScans = self.mapVals['nScans']
         nPoints = np.array(self.mapVals['nPoints'])
         etl = self.mapVals['etl']
@@ -95,7 +97,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
 
         seqTime = nPoints[1]/etl*nPoints[2]*repetitionTime*1e-3*nScans*parFourierFraction/60
         seqTime = np.round(seqTime, decimals=1)
-        return(seqTime)  # minutes, scanTime
+        return(seqTime*etl)  # minutes, scanTime
 
         # TODO: check for min and max values for all fields
 
@@ -113,6 +115,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plotSeq=False, demo=False):
+        print('MSE run')
         init_gpa=False # Starts the gpa
         self.demo = demo
 
@@ -201,16 +204,12 @@ class MSE(blankSeq.MRIBLANKSEQ):
         ind = self.getIndex(self.etl, nPH, self.sweepMode)
         self.mapVals['sweepOrder'] = ind
         phGradients = phGradients[ind]
-        print(phGradients.shape)
         # Get the rotation matrix
         rot = self.getRotationMatrix()
         gradAmp = np.array([0.0, 0.0, 0.0])
         gradAmp[self.axesOrientation[0]] = 1
         gradAmp = np.reshape(gradAmp, (3, 1))
         result = np.dot(rot, gradAmp)
-
-        print("Readout direction:")
-        print(np.reshape(result, (1, 3)))
 
         # Initialize k-vectors
         k_ph_sl_xyz = np.ones((3, self.nPoints[0]*self.nPoints[1]*nSL))*hw.gammaB*(self.phGradTime+hw.grad_rise_time)
@@ -344,7 +343,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[1], gSteps, 1, self.shimming)
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[2], gSteps, 2, self.shimming)
                         orders = orders+gSteps*6
-                    print(phIndex)
                     # Update the phase and slice gradient
                     if repeIndex>=self.dummyPulses:
                         lnIndex +=1
@@ -414,7 +412,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
                                                                             slIndex=slIndex,
                                                                             lnIndex=lnIndex,
                                                                             repeIndexGlobal=repeIndexGlobal)
-            print(phIndex, slIndex, lnIndex, repeIndexGlobal, aa)
+            
             # Save instructions into MaRCoS if not a demo
             if not self.demo:
                 if self.floDict2Exp(rewrite=nBatches==1):
@@ -438,11 +436,11 @@ class MSE(blankSeq.MRIBLANKSEQ):
                             acq_points = np.size(rxd['rx0'])
                             print("Acquired points = %i" % acq_points)
                             print("Expected points = %i" % (aa * hw.oversamplingFactor))
-                        print("Batch %i, scan %i ready!")
+                        # print("Batch %i, scan %i ready!")
                     else:
                         rxd = {}
                         rxd['rx0'] = np.random.randn(aa*hw.oversamplingFactor) + 1j * np.random.randn(aa*hw.oversamplingFactor)
-                        print("Batch %i, scan %i ready!" % (nBatches, ii+1))
+                        # print("Batch %i, scan %i ready!" % (nBatches, ii+1))
                     # Get noise data
                     noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
                     rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
