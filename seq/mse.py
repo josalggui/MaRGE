@@ -50,7 +50,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 2], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 10], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
@@ -65,7 +65,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
-        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
+        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.8, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
 
@@ -299,10 +299,11 @@ class MSE(blankSeq.MRIBLANKSEQ):
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[1], gSteps, 1, self.shimming)
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[2], gSteps, 2, self.shimming)
                         orders = orders+gSteps*6
+                        if echoIndex == 0:
                         # get k-point
-                        k_ph_sl_xyz[:, self.nPoints[0]*lnIndex:self.nPoints[0]*(lnIndex+1)] = \
-                            np.diag(np.reshape(gradAmp, -1)) @ \
-                            k_ph_sl_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)]
+                            k_ph_sl_xyz[:, self.nPoints[0]*lnIndex:self.nPoints[0]*(lnIndex+1)] = \
+                                np.diag(np.reshape(gradAmp, -1)) @ \
+                                k_ph_sl_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)]
 
                     # Readout gradient
                     gradAmp = np.array([0.0, 0.0, 0.0])
@@ -321,11 +322,11 @@ class MSE(blankSeq.MRIBLANKSEQ):
                         self.rxGate(t0, self.acqTime+2*addRdPoints/BW)
                         acqPoints += nRD
 
-                    # if repeIndex>=self.dummyPulses:
-                    #     k_rd_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)] = \
-                    #         np.diag(np.reshape(gradAmp, -1)) @ \
-                    #         k_rd_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)]  @ \
-                    #         np.diag(self.time_vector)
+                    if repeIndex>=self.dummyPulses and echoIndex == 0:
+                        k_rd_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)] = \
+                            np.diag(np.reshape(gradAmp, -1)) @ \
+                            k_rd_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)]  @ \
+                            np.diag(self.time_vector)
 
                     # Rephasing phase and slice gradients
                     gradAmp = np.array([0.0, 0.0, 0.0])
@@ -345,14 +346,15 @@ class MSE(blankSeq.MRIBLANKSEQ):
                         orders = orders+gSteps*6
                     # Update the phase and slice gradient
                     if repeIndex>=self.dummyPulses:
-                        lnIndex +=1
+                        # lnIndex +=1
                         if echoIndex == self.etl-1:
                             if phIndex == nPH-1:
                                 phIndex = 0
                                 slIndex += 1
                             else:
                                 phIndex += 1
-                    
+                        elif echoIndex == 0:
+                            lnIndex +=1
                 if repeIndex>=self.dummyPulses: 
                     repeIndexGlobal += 1 # Update the global repeIndex
                 repeIndex+=1 # Update the repeIndex after the ETL
@@ -534,58 +536,66 @@ class MSE(blankSeq.MRIBLANKSEQ):
                 imgMSE[:,:,jj,:]=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataMSE[:,:,jj,:])))
             
             self.mapVals['image3D_MSE'] = imgMSE
-            img = np.transpose(imgMSE, (0,2,1,3))
-            img = np.reshape(img, (nSL*nETL, nPH, self.nPoints[0]))
-            self.mapVals['image3D'] = img
-            data = np.transpose(dataMSE, (0,2,1,3))
-            data = np.reshape(data, (nSL*nETL, nPH, self.nPoints[0]))
-            self.mapVals['kSpace3D'] = data
+           
 
-            # # Concatenate with k_xyz
-            # for ii in range(3):
-            #     k_prov = np.reshape(k_ph_sl_xyz[ii, :], (nSL, nPH, self.nPoints[0]))
-            #     k_temp = k_prov * 0
-            #     for jj in range(nPH):
-            #         k_temp[:, ind[jj], :] = k_prov[:, jj, :]
-            #     k_ph_sl_xyz[ii, :] = np.reshape(k_temp, -1)
-            # k_xyz = k_ph_sl_xyz + k_rd_xyz
-            # self.mapVals['sampled_xyz'] = np.concatenate((k_xyz.T, np.reshape(data, (nSL*nPH*self.nPoints[0], 1))), axis=1)
-            # data = np.reshape(data, (nSL, nPH, self.nPoints[0]))
+            # Concatenate with k_xyz
+            for ii in range(3):
+                k_prov = np.reshape(k_ph_sl_xyz[ii, :], (nSL, nPH, self.nPoints[0]))
+                k_temp = k_prov * 0
+                for jj in range(nPH):
+                    k_temp[:, ind[jj], :] = k_prov[:, jj, :]
+                k_ph_sl_xyz[ii, :] = np.reshape(k_temp, -1)
+            k_xyz = k_ph_sl_xyz + k_rd_xyz
+            data_sampled = np.transpose(dataMSE, (0,1,3,2))
+            sampled_xyz = np.concatenate((k_xyz.T, np.reshape(data_sampled, (nSL*nPH*self.nPoints[0], nETL))), axis=1)
+            self.mapVals['sampled_xyz'] = sampled_xyz
+            print(sampled_xyz.shape)
 
-            # # Do zero padding
-            # for jj in range(nETL):
-            #     dataTemp = np.zeros((self.nPoints[2], self.nPoints[1], self.nPoints[0]))
-            #     dataTemp = dataTemp+1j*dataTemp
-            #     dataTemp[0:nSL, :, jj, :] = data
-            # data = np.reshape(dataTemp, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2], nETL))
+            # Do zero padding
+            dataAllAcq= np.zeros((nETL,self.nPoints[0]*self.nPoints[1]*self.nPoints[2]), dtype=complex)
+            for jj in range(nETL):
+                dataTemp = np.zeros((self.nPoints[2], self.nPoints[1],self.nPoints[0]))
+                dataTemp = dataTemp+1j*dataTemp
+                dataTemp[0:nSL, :, :] = dataMSE[:,:,jj,:]
+                dataTemp = np.reshape(dataTemp, (1,self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
+                dataAllAcq[jj,:] = dataTemp
+            print(dataAllAcq.shape)
 
             # # if self.demo:
             # #     data = self.myPhantom()
 
-            # # Fix the position of the sample according to dfov
-            # kMax = np.array(self.nPoints)/(2*np.array(self.fov))*np.array(self.axesEnable)
-            # kRD = self.time_vector*hw.gammaB*rdGradAmplitude
-            # kSL = np.linspace(-kMax[2],kMax[2],num=self.nPoints[2],endpoint=False)
-            # kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
-            # kRD = np.reshape(kRD, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
-            # kPH = np.reshape(kPH, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
-            # kSL = np.reshape(kSL, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
-            # dPhase = np.exp(-2*np.pi*1j*(self.dfov[0]*kRD+self.dfov[1]*kPH+self.dfov[2]*kSL))
-            # data = np.reshape(data*dPhase, (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
-            # self.mapVals['kSpace3D'] = data
-            # img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
-            # self.mapVals['image3D'] = img
-            # data = np.reshape(data, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
+            # Fix the position of the sample according to dfov
+            kMax = np.array(self.nPoints)/(2*np.array(self.fov))*np.array(self.axesEnable)
+            kRD = self.time_vector*hw.gammaB*rdGradAmplitude
+            kSL = np.linspace(-kMax[2],kMax[2],num=self.nPoints[2],endpoint=False)
+            kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
+            kRD = np.reshape(kRD, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
+            kPH = np.reshape(kPH, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
+            kSL = np.reshape(kSL, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
+            dPhase = np.exp(-2*np.pi*1j*(self.dfov[0]*kRD+self.dfov[1]*kPH+self.dfov[2]*kSL))
+            kSpaceAll = np.zeros((self.nPoints[2], self.nPoints[1], nETL, self.nPoints[0]),dtype=complex)
+            imageAll = np.zeros((self.nPoints[2], self.nPoints[1], nETL, self.nPoints[0]),dtype=complex)
+            for jj in range(nETL):
+                dataAllAcq[jj,:] = dataAllAcq[jj,:]*dPhase
+                dataAux = np.reshape(dataAllAcq[jj,:], (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
+                kSpaceAll[:,:,jj,:] = dataAux
+                imageAll[:,:,jj,:] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataAux)))
+            
+            img = np.transpose(imageAll, (0,2,1,3))
+            img = np.reshape(img, (self.nPoints[2]*nETL, self.nPoints[1], self.nPoints[0]))
+            self.mapVals['image3D'] = img
+            data = np.transpose(kSpaceAll, (0,2,1,3))
+            data = np.reshape(data, (self.nPoints[2]*nETL, self.nPoints[1], self.nPoints[0]))
+            self.mapVals['kSpace3D'] = data
 
-            # # Create sampled data
-            # kRD = np.reshape(kRD, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
-            # kPH = np.reshape(kPH, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
-            # kSL = np.reshape(kSL, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
-            # data = np.reshape(data, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
-            # self.mapVals['kMax'] = kMax
-            # self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
-            # self.mapVals['sampledCartesian'] = self.mapVals['sampled']  # To sweep
-            # data = np.reshape(data, (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
+            # Create sampled data
+            kRD = np.reshape(kRD, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
+            kPH = np.reshape(kPH, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
+            kSL = np.reshape(kSL, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
+            dataAll_sampled = dataAllAcq.T
+            self.mapVals['kMax'] = kMax
+            self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, dataAll_sampled), axis=1)
+            self.mapVals['sampledCartesian'] = self.mapVals['sampled']  # To sweep
 
         return True
 
@@ -720,6 +730,17 @@ class MSE(blankSeq.MRIBLANKSEQ):
             result2['row'] = 0
             result2['col'] = 1
 
+            # t2Map = self.mapVals['t2Map']
+            t2Map = image
+            result3 = {}
+            result3['widget'] = 'image'
+            result3['data'] = t2Map
+            result3['xLabel'] = xLabel
+            result3['yLabel'] = yLabel
+            result3['title'] = 'T2 Map'
+            result3['row'] = 0
+            result3['col'] = 2
+
             # Reset rotation angle and dfov to zero
             self.mapVals['angle'] = 0.0
             self.mapVals['dfov'] = [0.0, 0.0, 0.0]
@@ -764,7 +785,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             self.meta_data["EchoTrainLength"] = self.mapVals['etl']
 
             # Add results into the output attribute (result1 must be the image to save in dicom)
-            self.output = [result1, result2]
+            self.output = [result1, result2,result3]
 
         # Save results
         self.saveRawData()
