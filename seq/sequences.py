@@ -31,6 +31,7 @@ import seq.localizer as localizer
 import seq.MRID as mrid
 import seq.tsePrescan as tsePrescan
 import seq.PETRAphysio as PETRAphysio
+import seq.larmor_raw as larmor_raw
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
@@ -139,5 +140,5 @@ defaultsequences = {
     'SWEEP': SWEEP(),
     'testSE': testSE(),
     'PETRAphysio': PETRAphysio(),
-
+    'LarmorRaw': larmor_raw.LarmorRaw(),
 }
