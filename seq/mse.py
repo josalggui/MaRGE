@@ -96,9 +96,9 @@ class MSE(blankSeq.MRIBLANKSEQ):
             print("RF amplitude is too high, try with longer RF pulse time.")
             return(0)
 
-        seqTime = nPoints[1]/etl*nPoints[2]*repetitionTime*1e-3*nScans*parFourierFraction/60
+        seqTime = nPoints[1]*nPoints[2]*repetitionTime*1e-3*nScans*parFourierFraction/60
         seqTime = np.round(seqTime, decimals=1)
-        return(seqTime*etl)  # minutes, scanTime
+        return(seqTime)  # minutes, scanTime
 
         # TODO: check for min and max values for all fields
 
