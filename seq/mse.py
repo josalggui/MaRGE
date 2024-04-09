@@ -28,6 +28,7 @@ from scipy.stats import linregress
 import configs.hw_config as hw # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+from scipy.optimize import curve_fit
 
 #*********************************************************************************
 #*********************************************************************************
@@ -68,7 +69,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.8, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
-
+        self.addParameter(key='calculateMap', string='Calculate T2 Map', val=1, field='OTH', tip='0: Do not calculate. 1: Calculate')
     def sequenceInfo(self):
         print("\n3D MSE sequence")
         print("Author: Dr. J.M. Algarín")
@@ -529,13 +530,13 @@ class MSE(blankSeq.MRIBLANKSEQ):
 
             # Average data
             dataMSE = np.average(dataFull, axis=0)
-            self.mapVals['kSpace3D_MSE'] = dataMSE
+            # self.mapVals['kSpace3D_MSE'] = dataMSE
 
             imgMSE = dataMSE*0
             for jj in range(nETL):
                 imgMSE[:,:,jj,:]=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataMSE[:,:,jj,:])))
             
-            self.mapVals['image3D_MSE'] = imgMSE
+            # self.mapVals['image3D_MSE'] = imgMSE
            
 
             # Concatenate with k_xyz
@@ -580,7 +581,9 @@ class MSE(blankSeq.MRIBLANKSEQ):
                 dataAux = np.reshape(dataAllAcq[jj,:], (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
                 kSpaceAll[:,:,jj,:] = dataAux
                 imageAll[:,:,jj,:] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataAux)))
-            
+
+            self.mapVals['kSpace3D_MSE'] = kSpaceAll
+            self.mapVals['image3D_MSE'] = imageAll
             img = np.transpose(imageAll, (0,2,1,3))
             img = np.reshape(img, (self.nPoints[2]*nETL, self.nPoints[1], self.nPoints[0]))
             self.mapVals['image3D'] = img
@@ -597,6 +600,21 @@ class MSE(blankSeq.MRIBLANKSEQ):
             self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, dataAll_sampled), axis=1)
             self.mapVals['sampledCartesian'] = self.mapVals['sampled']  # To sweep
 
+            if self.calculateMap == 1:
+                print('Obtaining T2 Map...')
+                def func1(x, m, t2):
+                    return m*np.exp(-x/t2)
+                t2Map = np.zeros((self.nPoints[2], self.nPoints[1], self.nPoints[0],))
+                t2_vector = np.linspace(self.echoSpacing, self.echoSpacing * self.etl, num=self.etl, endpoint=True) # s
+                for kk in range(self.nPoints[2]):
+                    for jj in range(self.nPoints[1]):
+                        for ii in range(self.nPoints[0]):
+                            # Fitting to functions
+                            fitData, xxx = curve_fit(func1, t2_vector,  np.abs(imageAll[kk,jj,:,ii]),
+                                            p0=[np.abs(imageAll[kk,jj,0,ii]), 10])
+                            t2Map[kk,jj,ii] = fitData[1]
+                self.mapVals['t2Map'] = t2Map
+        
         return True
 
     def sequenceAnalysis(self, mode=None):
@@ -730,16 +748,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
             result2['row'] = 0
             result2['col'] = 1
 
-            # t2Map = self.mapVals['t2Map']
-            t2Map = image
-            result3 = {}
-            result3['widget'] = 'image'
-            result3['data'] = t2Map
-            result3['xLabel'] = xLabel
-            result3['yLabel'] = yLabel
-            result3['title'] = 'T2 Map'
-            result3['row'] = 0
-            result3['col'] = 2
 
             # Reset rotation angle and dfov to zero
             self.mapVals['angle'] = 0.0
@@ -783,9 +791,22 @@ class MSE(blankSeq.MRIBLANKSEQ):
             self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
             self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
             self.meta_data["EchoTrainLength"] = self.mapVals['etl']
-
-            # Add results into the output attribute (result1 must be the image to save in dicom)
-            self.output = [result1, result2,result3]
+            if self.calculateMap == 0:
+                # Add results into the output attribute (result1 must be the image to save in dicom)
+                self.output = [result1, result2]
+            elif self.calculateMap == 1:
+                # t2Map = self.mapVals['t2Map']
+                t2Map = image
+                result3 = {}
+                result3['widget'] = 'image'
+                result3['data'] = self.mapVals['t2Map']
+                result3['xLabel'] = xLabel
+                result3['yLabel'] = yLabel
+                result3['title'] = 'T2 Map'
+                result3['row'] = 0
+                result3['col'] = 2
+                # Add results into the output attribute (result1 must be the image to save in dicom)
+                self.output = [result1, result2,result3]
 
         # Save results
         self.saveRawData()
