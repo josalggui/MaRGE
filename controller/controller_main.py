@@ -53,7 +53,7 @@ class MainController(MainWindow):
 
             # Disable power modules
             self.toolbar_marcos.arduino.send("GPA_ON 0;")
-            self.toolbar_marcos.arduino.send("RFPA_ON 0;")
+            self.toolbar_marcos.arduino.send("RFPA_RF 0;")
             
         print('\nGUI closed successfully!')
         super().closeEvent(event)

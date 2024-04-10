@@ -129,7 +129,7 @@ class MarcosController(MarcosToolBar):
                         else:  # If good response
                             print("GPA remote communication succeed.")
 
-                        # Check if GPA available
+                        # Check if RFPA available
                         received_string = self.arduino.send("RFPA_VERB 1;").decode()
                         if received_string[0:4] != ">OK;":
                             print("RFPA not available.")
@@ -145,7 +145,7 @@ class MarcosController(MarcosToolBar):
 
                         # Disable power module
                         self.arduino.send("GPA_ON 0;")
-                        self.arduino.send("RFPA_ON 0;")
+                        self.arduino.send("RFPA_RF 0;")
 
                         # Run init_gpa sequence
                         expt = ex.Experiment(init_gpa=True)
@@ -156,7 +156,7 @@ class MarcosController(MarcosToolBar):
                         expt.__del__()
                         link = True
                         print("\nGPA init done!")
-
+                        
                         # Enable power modules
                         # Enable GPA module
                         received_string = self.arduino.send("GPA_ON 1;").decode()  # Enable power module
@@ -166,7 +166,7 @@ class MarcosController(MarcosToolBar):
                             print("GPA power enabled.")
 
                         # Enable RFPA module
-                        received_string = self.arduino.send("RFPA_ON 1;").decode()
+                        received_string = self.arduino.send("RFPA_RF 1;").decode()
                         if received_string[0:4] != ">OK;":
                             print("Error activating RFPA power module.")
                         else:
