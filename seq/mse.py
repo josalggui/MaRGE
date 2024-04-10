@@ -1,8 +1,9 @@
 """
-Created on Thu June 2 2022
+Created on Wen April 10 2024
 @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-@email: josalggui@i3m.upv.es
-@Summary: rare sequence class
+@author: T. Guallart Naval, MRILab, i3M, CSIC, Valencia
+@email: tguanav@i3m.upv.es
+@Summary: mse sequence class (from rare sequence class)
 """
 
 import os
@@ -51,13 +52,13 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 10], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM', tip="0=x, 1=y, 2=z")
-        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 1], field='IM', tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
+        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 0], field='IM', tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
         self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, units=units.ms, field='OTH')
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
@@ -69,7 +70,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.8, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
-        self.addParameter(key='calculateMap', string='Calculate T2 Map', val=1, field='OTH', tip='0: Do not calculate. 1: Calculate')
+        # self.addParameter(key='calculateMap', string='Calculate T2 Map', val=1, field='OTH', tip='0: Do not calculate. 1: Calculate')
     def sequenceInfo(self):
         print("\n3D MSE sequence")
         print("Author: Dr. J.M. Algarín")
@@ -78,7 +79,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         print("mriLab @ i3M, CSIC, Spain \n")
 
     def sequenceTime(self):
-        print('MSE time')
         nScans = self.mapVals['nScans']
         nPoints = np.array(self.mapVals['nPoints'])
         etl = self.mapVals['etl']
@@ -439,11 +439,9 @@ class MSE(blankSeq.MRIBLANKSEQ):
                             acq_points = np.size(rxd['rx0'])
                             print("Acquired points = %i" % acq_points)
                             print("Expected points = %i" % (aa * hw.oversamplingFactor))
-                        # print("Batch %i, scan %i ready!")
                     else:
                         rxd = {}
                         rxd['rx0'] = np.random.randn(aa*hw.oversamplingFactor) + 1j * np.random.randn(aa*hw.oversamplingFactor)
-                        # print("Batch %i, scan %i ready!" % (nBatches, ii+1))
                     # Get noise data
                     noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
                     rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
@@ -535,7 +533,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
             imgMSE = dataMSE*0
             for jj in range(nETL):
                 imgMSE[:,:,jj,:]=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataMSE[:,:,jj,:])))
-            
             # self.mapVals['image3D_MSE'] = imgMSE
            
 
@@ -550,7 +547,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             data_sampled = np.transpose(dataMSE, (0,1,3,2))
             sampled_xyz = np.concatenate((k_xyz.T, np.reshape(data_sampled, (nSL*nPH*self.nPoints[0], nETL))), axis=1)
             self.mapVals['sampled_xyz'] = sampled_xyz
-            print(sampled_xyz.shape)
+            # print(sampled_xyz.shape)
 
             # Do zero padding
             dataAllAcq= np.zeros((nETL,self.nPoints[0]*self.nPoints[1]*self.nPoints[2]), dtype=complex)
@@ -560,10 +557,10 @@ class MSE(blankSeq.MRIBLANKSEQ):
                 dataTemp[0:nSL, :, :] = dataMSE[:,:,jj,:]
                 dataTemp = np.reshape(dataTemp, (1,self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
                 dataAllAcq[jj,:] = dataTemp
-            print(dataAllAcq.shape)
+            # print(dataAllAcq.shape)
 
-            # # if self.demo:
-            # #     data = self.myPhantom()
+            if self.demo:
+                data = self.myPhantom()
 
             # Fix the position of the sample according to dfov
             kMax = np.array(self.nPoints)/(2*np.array(self.fov))*np.array(self.axesEnable)
@@ -600,20 +597,22 @@ class MSE(blankSeq.MRIBLANKSEQ):
             self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, dataAll_sampled), axis=1)
             self.mapVals['sampledCartesian'] = self.mapVals['sampled']  # To sweep
 
-            if self.calculateMap == 1:
-                print('Obtaining T2 Map...')
-                def func1(x, m, t2):
-                    return m*np.exp(-x/t2)
-                t2Map = np.zeros((self.nPoints[2], self.nPoints[1], self.nPoints[0],))
-                t2_vector = np.linspace(self.echoSpacing, self.echoSpacing * self.etl, num=self.etl, endpoint=True) # s
-                for kk in range(self.nPoints[2]):
-                    for jj in range(self.nPoints[1]):
-                        for ii in range(self.nPoints[0]):
-                            # Fitting to functions
-                            fitData, xxx = curve_fit(func1, t2_vector,  np.abs(imageAll[kk,jj,:,ii]),
-                                            p0=[np.abs(imageAll[kk,jj,0,ii]), 10])
-                            t2Map[kk,jj,ii] = fitData[1]
-                self.mapVals['t2Map'] = t2Map
+            # if self.calculateMap == 1:
+            #     print('Obtaining T2 Map...')
+            #     def func1(x, m, t2):
+            #         return m*np.exp(-x/t2)
+            #     t2Map = np.zeros((self.nPoints[2], self.nPoints[1], self.nPoints[0],))
+            #     t2_vector = np.linspace(self.echoSpacing, self.echoSpacing * self.etl, num=self.etl, endpoint=True)*1e3 # s
+            #     for kk in range(self.nPoints[2]):
+            #         for jj in range(self.nPoints[1]):
+            #             for ii in range(self.nPoints[0]):
+            #                 # Fitting to functions
+            #                 fitData, xxx = curve_fit(func1, t2_vector,  np.abs(imageAll[kk,jj,:,ii]),
+            #                                 p0=[np.abs(imageAll[kk,jj,0,ii]), 10])
+            #                 t2Map[kk,jj,ii] = fitData[1]
+            #     print(np.min(t2Map))
+            #     print(np.max(t2Map))
+            #     self.mapVals['t2Map'] = t2Map
         
         return True
 
@@ -791,22 +790,23 @@ class MSE(blankSeq.MRIBLANKSEQ):
             self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
             self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
             self.meta_data["EchoTrainLength"] = self.mapVals['etl']
-            if self.calculateMap == 0:
-                # Add results into the output attribute (result1 must be the image to save in dicom)
-                self.output = [result1, result2]
-            elif self.calculateMap == 1:
-                # t2Map = self.mapVals['t2Map']
-                t2Map = image
-                result3 = {}
-                result3['widget'] = 'image'
-                result3['data'] = self.mapVals['t2Map']
-                result3['xLabel'] = xLabel
-                result3['yLabel'] = yLabel
-                result3['title'] = 'T2 Map'
-                result3['row'] = 0
-                result3['col'] = 2
-                # Add results into the output attribute (result1 must be the image to save in dicom)
-                self.output = [result1, result2,result3]
+
+            self.output = [result1, result2]
+            # if self.calculateMap == 0:
+            #     # Add results into the output attribute (result1 must be the image to save in dicom)
+            #     self.output = [result1, result2]
+            # elif self.calculateMap == 1:
+            #     t2Map = self.mapVals['t2Map']
+            #     result3 = {}
+            #     result3['widget'] = 'image'
+            #     result3['data'] = t2Map
+            #     result3['xLabel'] = xLabel
+            #     result3['yLabel'] = yLabel
+            #     result3['title'] = 'T2 Map'
+            #     result3['row'] = 0
+            #     result3['col'] = 2
+            #     # Add results into the output attribute (result1 must be the image to save in dicom)
+            #     self.output = [result1, result2,result3]
 
         # Save results
         self.saveRawData()
