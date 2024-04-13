@@ -61,10 +61,13 @@ class MarcosController(MarcosToolBar):
         Executes startRP.sh: copy_bitstream.sh & marcos_server.
         """
         if not self.demo:
-            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-            subprocess.run([hw.bash_path, "--", "./startRP.sh", hw.rp_ip_address, hw.rp_version])
-            self.initgpa()
-            print("\nMaRCoS updated, server connected, gpa initialized.")
+            try:
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                subprocess.run([hw.bash_path, "--", "./startRP.sh", hw.rp_ip_address, hw.rp_version])
+                self.initgpa()
+                print("\nMaRCoS updated, server connected, gpa initialized.")
+            except:
+                print("\nERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
         else:
             print("\nThis is a demo")
         self.action_server.setChecked(True)
@@ -78,16 +81,24 @@ class MarcosController(MarcosToolBar):
         """
         if not self.demo:
             if not self.action_server.isChecked():
-                self.action_server.setStatusTip('Connect to marcos server')
-                self.action_server.setToolTip('Connect to marcos server')
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                print("\nServer disconnected")
+                try:
+                    subprocess.run(
+                        [hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                    self.action_server.setStatusTip('Connect to marcos server')
+                    self.action_server.setToolTip('Connect to marcos server')
+                    print("\nServer disconnected")
+                except:
+                    print("\nERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
             else:
-                self.action_server.setStatusTip('Kill marcos server')
-                self.action_server.setToolTip('Kill marcos server')
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
-                print("\nServer connected")
+                try:
+                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
+                    self.action_server.setStatusTip('Kill marcos server')
+                    self.action_server.setToolTip('Kill marcos server')
+                    print("\nServer connected")
+                except:
+                    print("\nERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
+                    self.action_server.setChecked(False)
         else:
             print("\nThis is a demo")
 
@@ -98,9 +109,12 @@ class MarcosController(MarcosToolBar):
         Executes copy_bitstream.sh.
         """
         if not self.demo:
-            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-            subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', '192.168.1.101', 'rp-122'])
-            print("\nMaRCoS updated")
+            try:
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', '192.168.1.101', 'rp-122'])
+                print("\nMaRCoS updated")
+            except:
+                print("\nERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
         else:
             print("\nThis is a demo.")
         self.action_server.setChecked(False)
