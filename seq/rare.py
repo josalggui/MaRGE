@@ -68,6 +68,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
+        self.addParameter(key='rfMode', string='RF mode', val=3, field='OTH', tip='0: CPMG. 1: APCP. 2:APCPMG. 3:CP')
 
     def sequenceInfo(self):
         print("\n3D RARE sequence")
@@ -286,7 +287,20 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
                     # Refocusing pulse
                     t0 = tEcho-self.echoSpacing/2-self.rfReTime/2-hw.blkTime
-                    self.rfRecPulse(t0, self.rfReTime, rfReAmp, np.pi/2+self.rfPhase*np.pi/180)
+                    if self.rfMode == 0: # CPMG
+                        self.rfRecPulse(t0, self.rfReTime, rfReAmp, np.pi/2+self.rfPhase*np.pi/180)
+                    elif self.rfMode == 1: # 
+                        if echoIndex%2 == 0:
+                            self.rfRecPulse(t0, self.rfReTime, rfReAmp*1j, np.pi/2+self.rfPhase*np.pi/180)
+                        else:
+                            self.rfRecPulse(t0, self.rfReTime, -rfReAmp*1j, np.pi/2+self.rfPhase*np.pi/180)
+                    elif self.rfMode == 2:
+                        if echoIndex%2 == 0:
+                            self.rfRecPulse(t0, self.rfReTime, rfReAmp, np.pi/2+self.rfPhase*np.pi/180)
+                        else:
+                            self.rfRecPulse(t0, self.rfReTime, -rfReAmp, np.pi/2+self.rfPhase*np.pi/180)
+                    elif self.rfMode == 3:
+                        self.rfRecPulse(t0, self.rfReTime, -rfReAmp*1j, np.pi/2+self.rfPhase*np.pi/180)
 
                     # Dephasing phase and slice gradients
                     gradAmp = np.array([0.0, 0.0, 0.0])
