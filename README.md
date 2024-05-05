@@ -19,7 +19,7 @@ Next, follow these steps to set up MaRGE:
    - [marcos_extras](https://github.com/vnegnev/marcos_extras)
    - [MaRGE](https://github.com/mriLab-i3M/MaRGE)
 
-   Your folder structure should resemble the following:
+Your folder structure should resemble the following:
 
 <img src="resources/images/folder_example.png" alt="alt text">
 
@@ -32,7 +32,9 @@ Next, follow these steps to set up MaRGE:
 - `hw_config.py` in the `MaRGE/configs` folder: This file contains information about the scanner hardware.
 - `sys_config.py` in the `MaRGE/configs` folder: This file contains settings for displaying the session windows in the GUI.
 
-Note: These files may not initially exist in the cloned repositories, but you can find copies of them in its corresponding folder.
+**NOTE 1**: These files may not initially exist in the cloned repositories, but you can find copies of them in its corresponding folder.
+
+**NOTE 2**: currently, MaRGE requires a Red Pitaya configured with a fixed IP. Dinamic IP address will be included in near future.
 
 3. Set up bash: to do communication with server from the GUI, you need to set up the bash_path variable in the hw_config.py file.
    1. If running under Windows OS, you will need to install git_bash, and then set `bash_path = "directory/git_bash.exe"` in hw_config.py.
