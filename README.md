@@ -20,7 +20,9 @@ iface eth0 inet static
    netmask 255.255.255.0
    gateway 192.168.1.1
 ```
-   NOTE: eth0 should be the name of your ethernet interface. You can check the name by using `ifconfig`
+NOTE: eth0 should be the name of your ethernet interface. You can check the name by using `ifconfig`. The file should look like this:
+
+<img src="resources/images/interfaces.png" alt="alt text">
 
 **Setup MaRCoS client with a static IP (Ubuntu)**
 
@@ -46,6 +48,10 @@ To setup the IP as static using Windows as the client, you have to modify your e
 
 <img src="resources/images/static_ip_windows.png" alt="alt text">
 
+## Issues related to installing MaRCoS from scrach
+
+I realized that, at least in my case, when installing MaRCoS from scrach I can only run `./marcos_setup.sh 192.168.1.101 rp-122` and turn the blue led on (indicating bitstream is running) using an old version of the marcos_extras repository. In particular, when installing MaRCoS from scrach I use the commit `433936c` to run `./marcos_setup.sh 192.168.1.101 rp-122`, then I go back to the last commit of MaRCoS master branch to run MaRGE.
+
 ## Installation
 
 To run MaRGE, you will need to have Python 3 installed on your computer. If you don't have it installed, you can download it from [python.org](https://www.python.org/downloads/).
@@ -68,8 +74,8 @@ Your folder structure should resemble the following:
 
 2. Modify the following configuration files as needed:
 
-- `local_config.py` in the `marcos_client` folder: This file contains information about the version of the Red Pitaya, its IP address, and the GPA board used in conjunction with the Red Pitaya.
-- `hw_config.py` in the `MaRGE/configs` folder: This file contains information about the scanner hardware.
+- `local_config.py` in the `marcos_client` folder: This file contains information about the version of the Red Pitaya, its IP address (use asigned static IP), and the GPA board used in conjunction with the Red Pitaya.
+- `hw_config.py` in the `MaRGE/configs` folder: This file contains information about the scanner hardware. Also the IP address (use asigned static IP).
 - `sys_config.py` in the `MaRGE/configs` folder: This file contains settings for displaying the session windows in the GUI.
 
 **NOTE 1**: These files may not initially exist in the cloned repositories, but you can find copies of them in its corresponding folder.
