@@ -6,6 +6,46 @@
 
 This repository contains the Python code for the MaRCoS Graphical Environment (MaRGE), a system for magnetic resonance imaging research. The GUI provides a user-friendly interface to interact with the MaRCoS system.
 
+## Issues related to the IP of the MaRCoS client and MaRCoS server.
+In order to provide an efficient communication between the client (your PC) and the server (the Red Pitaya) while using MaRGE, the IP of both must be properly configured. I found easier to set the IPs as static in both the client and the server, so here I will explain how to do it.
+
+**Setup MaRCoS server with a static IP**
+
+Once Yocto is installed in your SD card (see Section 1.2 on [marcos_wiki](https://github.com/vnegnev/marcos_extras/wiki/guide_setting_marcos_up)), get access to the SD card by introducing the SD card into the SD card slot of your computer. Then modify the file /etc/network/interfaces. Search for the `# wired or wireless interfaces` and replace the content by:
+```Python
+# Wired or wireless interfaces
+autho eth0
+iface eth0 inet static
+   address 192.168.1.101
+   netmask 255.255.255.0
+   gateway 192.168.1.1
+```
+   NOTE: eth0 should be the name of your ethernet interface. You can check the name by using `ifconfig`
+
+**Setup MaRCoS client with a static IP (Ubuntu)**
+
+In new Ubuntu distros, this can be done by typing:`sudo nano /etc/netplan/01-network-manager-all.yaml`. Then write in the file:
+```Python
+network:
+  version: 2
+  renderer: NetworkManager
+  ethernets:
+    dhcp4: no
+    addresses:[192.168.1.100/24]
+    gateway4: 192.168.1.1
+    nameservers:
+      addresses: [8.8.8.8,8.8.4.4]
+```
+Save and exit, then type in the terminal `sudo netplan try` and press enter when waiting. If you restart the computer and type `ifconfig`, you should see the IP 192.168.1.100 on your etherent interface.
+
+Right now, if you introduce your SD card into the Red Pitaya and connect the Red Piataya to the computer through Ethernet, you should be abble to access to the red pitaya by `ssh root@192.168.1.101`
+
+**Setup MaRCoS client with a static IP (Windows)**
+
+To setup the IP as static using Windows as the client, you have to modify your ethernet proerties as indicated in the figure
+
+<img src="resources/images/static_ip_windows.png" alt="alt text">
+
 ## Installation
 
 To run MaRGE, you will need to have Python 3 installed on your computer. If you don't have it installed, you can download it from [python.org](https://www.python.org/downloads/).
