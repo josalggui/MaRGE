@@ -336,12 +336,12 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
     def runZeroReconstruction(self):
         """
-                Run the partial reconstruction operation.
+        Run the partial reconstruction operation.
 
-                Retrieves the necessary parameters and performs the partial reconstruction on the loaded image.
-                Updates the main matrix of the image view widget with the partially reconstructed image, adds the operation to
-                the history widget, and updates the operations history.
-                """
+        Retrieves the necessary parameters and performs the partial reconstruction on the loaded image.
+        Updates the main matrix of the image view widget with the partially reconstructed image, adds the operation to
+        the history widget, and updates the operations history.
+        """
         # Get the k_space data and its shape
         k_space = self.main.image_view_widget.main_matrix.copy()
         img_ref = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(k_space))))

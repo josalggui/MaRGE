@@ -12,7 +12,7 @@ import experiment as ex
 import numpy as np
 import shutil
 import configs.hw_config as hw
-import autotuning.autotuning as autotuning # Just to use an arduino
+import autotuning.autotuning as autotuning  # Just to use an arduino
 
 
 class MarcosController(MarcosToolBar):
@@ -27,6 +27,7 @@ class MarcosController(MarcosToolBar):
     Inherits:
         MarcosToolBar: Base class for the MaRCoS toolbar.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initializes the MarcosController.
@@ -113,7 +114,7 @@ class MarcosController(MarcosToolBar):
         if self.action_server.isChecked():
             if not self.demo:
                 link = False
-                while link==False:
+                while link == False:
                     try:
                         # Check if GPA available
                         received_string = self.arduino.send("GPA_VERB 1;").decode()
@@ -145,7 +146,7 @@ class MarcosController(MarcosToolBar):
 
                         # Disable power module
                         self.arduino.send("GPA_ON 0;")
-                        self.arduino.send("RFPA_ON 0;")
+                        self.arduino.send("RFPA_RF 0;")
 
                         # Run init_gpa sequence
                         expt = ex.Experiment(init_gpa=True)
@@ -166,7 +167,7 @@ class MarcosController(MarcosToolBar):
                             print("GPA power enabled.")
 
                         # Enable RFPA module
-                        received_string = self.arduino.send("RFPA_ON 1;").decode()
+                        received_string = self.arduino.send("RFPA_RF 1;").decode()
                         if received_string[0:4] != ">OK;":
                             print("Error activating RFPA power module.")
                         else:
