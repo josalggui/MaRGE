@@ -14,7 +14,7 @@ In order to provide an efficient communication between the client (your PC) and 
 Once Yocto is installed in your SD card (see Section 1.2 on [marcos_wiki](https://github.com/vnegnev/marcos_extras/wiki/guide_setting_marcos_up)), get access to the SD card by introducing the SD card into the SD card slot of your computer. Then modify the file /etc/network/interfaces. Search for the `# wired or wireless interfaces` and replace the content by:
 ```Python
 # Wired or wireless interfaces
-autho eth0
+auto eth0
 iface eth0 inet static
    address 192.168.1.101
    netmask 255.255.255.0
