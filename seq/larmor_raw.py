@@ -7,10 +7,6 @@ MRILAB @ I3M
 import os
 import sys
 
-# To work with pypulseq
-import pypulseq as pp
-from flocra_pulseq.interpreter import PSInterpreter
-
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))
@@ -25,18 +21,15 @@ for subdir in subdirs:
     full_path = os.path.join(parent_directory, subdir)
     sys.path.append(full_path)
 #******************************************************************************
+import controller.experiment_gui as ex
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import scipy.signal as sig
 import configs.hw_config as hw
 import configs.units as units
-import controller.experiment_gui as ex
 
-
-
-class Larmor(blankSeq.MRIBLANKSEQ):
+class LarmorRaw(blankSeq.MRIBLANKSEQ):
     def __init__(self):
-        super(Larmor, self).__init__()
+        super(LarmorRaw, self).__init__()
         # Input the parameters
         self.dF = None
         self.bw = None
@@ -45,29 +38,31 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.larmorFreq = None
         self.repetitionTime = None
         self.rfReTime = None
-        self.rfReFA = None
-        self.rfExFA = None
+        self.rfReAmplitude = None
+        self.rfExAmplitude = None
         self.rfExTime = None
         self.nScans = None
-        self.addParameter(key='seqName', string='LarmorInfo', val='Larmor')
+        self.addParameter(key='seqName', string='LarmorInfo', val='Larmor Raw')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.066, units=units.MHz, field='RF')
-        self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90.0, field='RF')
-        self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180.0, field='RF')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.0, units=units.MHz, field='RF')
+        self.addParameter(key='rfExAmplitude', string='Excitation amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfReAmplitude', string='Refocusing amplitude (a.u.)', val=0.3, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF', units=units.us)
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='RF', units=units.us)
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ', units=units.ms)
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., field='SEQ', units=units.ms)
         self.addParameter(key='bw', string='Bandwidth (kHz)', val=50, field='RF', units=units.kHz)
         self.addParameter(key='dF', string='Frequency resolution (Hz)', val=100, field='RF')
-        self.addParameter(key='shimming', string='Shimming', val=[-12.5, -12.5, 7.5], field='OTH', units=units.sh)
+        self.addParameter(key='shimming', string='Shimming', val=[0.0, 0.0, 0.0], field='OTH', units=units.sh)
 
     def sequenceInfo(self):
         print(" ")
-        print("Larmor")
-        print("Author: PhD. J.M. Algarín")
+        print("Larmor raw")
+        print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("This sequence runs a single spin echo to find larmor")
+        print("This sequence runs a single spin echo to find larmor.")
+        print("The RF amplitude is in arbitrary units here, and it is recommended to use it with SWEEP to locate an echo"
+              " the first time the scanner is operated.")
         print(" ")
 
     def sequenceTime(self):
@@ -91,56 +86,38 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.mapVals['acqTime'] = acq_time
         self.mapVals['echoTime'] = echo_time
 
-        # Create excitation rf event
-        delay_rf_ex = self.repetitionTime-acq_time/2-echo_time-self.rfExTime/2-hw.blkTime*1e-6
-        event_rf_ex = pp.make_block_pulse(flip_angle=self.rfExFA * np.pi / 180,
-                                          duration=self.rfExTime,
-                                          delay=delay_rf_ex,
-                                          system=self.system,
-                                          use="excitation",)
-
-        # Create refocusing rf event
-        delay_rf_re = echo_time/2-self.rfExTime/2-self.rfReTime/2-hw.blkTime*1e-6
-        event_rf_re = pp.make_block_pulse(flip_angle=self.rfReFA * np.pi / 180,
-                                          duration=self.rfReTime,
-                                          delay=delay_rf_re,
-                                          system=self.system,
-                                          use="refocusing")
-
-        # Create ADC event
-        delay_adc = echo_time/2-self.rfReTime/2-acq_time/2
-        event_adc = pp.make_adc(num_samples=n_points*hw.oversamplingFactor,
-                                duration=acq_time,
-                                delay=delay_adc,
-                                system=self.system)
-
-        # Create the sequence here
-        def createSequence(): # Here I will test pypulseq
+        def createSequence():
             rd_points = 0
+            # Initialize time
+            t0 = 20
+            t_ex = 20e3
 
-            # # Shimming
-            # self.iniSequence(t0, self.shimming)
+            # Shimming
+            self.iniSequence(t0, self.shimming)
 
-            # Add excitatoin
-            self.seq.add_block(event_rf_ex)
+            # Excitation pulse
+            t0 = t_ex - hw.blkTime - self.rfExTime / 2
+            self.rfRecPulse(t0, self.rfExTime, self.rfExAmplitude, 0)
 
-            # Add refocusing
-            self.seq.add_block(event_rf_re)
+            # Refocusing pulse
+            t0 = t_ex + echo_time / 2 - hw.blkTime - self.rfReTime / 2
+            self.rfRecPulse(t0, self.rfReTime, self.rfReAmplitude, np.pi / 2)
 
-            # Add ADC
-            self.seq.add_block(event_adc)
+            # Rx gate
+            t0 = t_ex + echo_time - acq_time / 2
+            self.rxGateSync(t0, acq_time)
             rd_points += n_points
 
-            # Create the sequence file
-            self.seq.write('sequence.seq')
-
-            # Run the interpreter to get the waveforms
-            waveforms, param_dict = self.flo_interpreter.interpret('sequence.seq')
-
-            # Convert waveform to mriBlankSeq tools (just do it)
-            self.pypulseq2mriblankseq(waveforms=waveforms, shimming=self.shimming)
+            self.endSequence(t_ex + self.repetitionTime)
 
             return rd_points
+
+        # Time parameters to us
+        self.rfExTime *= 1e6
+        self.rfReTime *= 1e6
+        self.repetitionTime *= 1e6
+        acq_time *= 1e6
+        echo_time *= 1e6
 
         # Initialize the experiment
         self.bw = n_points / acq_time  # MHz

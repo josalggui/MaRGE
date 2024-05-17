@@ -1,8 +1,9 @@
 """
-Created on Thu June 2 2022
+Created on Wen April 10 2024
 @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
-@email: josalggui@i3m.upv.es
-@Summary: rare sequence class
+@author: T. Guallart Naval, MRILab, i3M, CSIC, Valencia
+@email: tguanav@i3m.upv.es
+@Summary: mse sequence class (from rare sequence class)
 """
 
 import os
@@ -28,16 +29,17 @@ from scipy.stats import linregress
 import configs.hw_config as hw # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+from scipy.optimize import curve_fit
 
 #*********************************************************************************
 #*********************************************************************************
 #*********************************************************************************
 
-class RARE(blankSeq.MRIBLANKSEQ):
+class MSE(blankSeq.MRIBLANKSEQ):
     def __init__(self):
-        super(RARE, self).__init__()
+        super(MSE, self).__init__()
         # Input the parameters
-        self.addParameter(key='seqName', string='RAREInfo', val='RARE')
+        self.addParameter(key='seqName', string='MSEInfo', val='MSE')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
@@ -50,30 +52,32 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 40], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM', tip="0=x, 1=y, 2=z")
-        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 0], field='IM', tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
+        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 1], field='IM', tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
         self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, units=units.ms, field='OTH')
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
-        self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
+        self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
-        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
+        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.8, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
+        # self.addParameter(key='calculateMap', string='Calculate T2 Map', val=1, field='OTH', tip='0: Do not calculate. 1: Calculate')
         self.addParameter(key='rfMode', string='RF mode', val=3, field='OTH', tip='0: CPMG. 1: APCP. 2:APCPMG. 3:CP')
 
     def sequenceInfo(self):
-        print("\n3D RARE sequence")
+        print("\n3D MSE sequence")
         print("Author: Dr. J.M. Algarín")
-        print("Contact: josalggui@i3m.upv.es")
+        print("Author: Teresa Guallart Naval")
+        print("Contact: tguanav@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain \n")
 
     def sequenceTime(self):
@@ -94,7 +98,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             print("RF amplitude is too high, try with longer RF pulse time.")
             return(0)
 
-        seqTime = nPoints[1]/etl*nPoints[2]*repetitionTime*1e-3*nScans*parFourierFraction/60
+        seqTime = nPoints[1]*nPoints[2]*repetitionTime*1e-3*nScans*parFourierFraction/60
         seqTime = np.round(seqTime, decimals=1)
         return(seqTime)  # minutes, scanTime
 
@@ -110,10 +114,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.rotation = self.rotationAxis.tolist()
         self.rotation.append(self.angle)
         self.rotations.append(self.rotation)
-        self.dfovs.append(self.dfov.tolist())
+        # self.dfovs.append(self.dfov.tolist())
         self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plotSeq=False, demo=False):
+        print('MSE run')
         init_gpa=False # Starts the gpa
         self.demo = demo
 
@@ -202,16 +207,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
         ind = self.getIndex(self.etl, nPH, self.sweepMode)
         self.mapVals['sweepOrder'] = ind
         phGradients = phGradients[ind]
-
         # Get the rotation matrix
         rot = self.getRotationMatrix()
         gradAmp = np.array([0.0, 0.0, 0.0])
         gradAmp[self.axesOrientation[0]] = 1
         gradAmp = np.reshape(gradAmp, (3, 1))
         result = np.dot(rot, gradAmp)
-
-        print("Readout direction:")
-        print(np.reshape(result, (1, 3)))
 
         # Initialize k-vectors
         k_ph_sl_xyz = np.ones((3, self.nPoints[0]*self.nPoints[1]*nSL))*hw.gammaB*(self.phGradTime+hw.grad_rise_time)
@@ -230,6 +231,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             # Set shimming
             self.iniSequence(20, self.shimming)
             while acqPoints+self.etl*nRD<=hw.maxRdPoints and orders<=hw.maxOrders and repeIndexGlobal<nRepetitions:
+            # while repeIndexGlobal<nRepetitions:
                 # Initialize time
                 tEx = 20e3+self.repetitionTime*repeIndex+self.inversionTime+self.preExTime
 
@@ -313,10 +315,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[1], gSteps, 1, self.shimming)
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[2], gSteps, 2, self.shimming)
                         orders = orders+gSteps*6
+                        if echoIndex == 0:
                         # get k-point
-                        k_ph_sl_xyz[:, self.nPoints[0]*lnIndex:self.nPoints[0]*(lnIndex+1)] = \
-                            np.diag(np.reshape(gradAmp, -1)) @ \
-                            k_ph_sl_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)]
+                            k_ph_sl_xyz[:, self.nPoints[0]*lnIndex:self.nPoints[0]*(lnIndex+1)] = \
+                                np.diag(np.reshape(gradAmp, -1)) @ \
+                                k_ph_sl_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)]
 
                     # Readout gradient
                     gradAmp = np.array([0.0, 0.0, 0.0])
@@ -335,7 +338,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                         self.rxGate(t0, self.acqTime+2*addRdPoints/BW)
                         acqPoints += nRD
 
-                    if repeIndex>=self.dummyPulses:
+                    if repeIndex>=self.dummyPulses and echoIndex == 0:
                         k_rd_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)] = \
                             np.diag(np.reshape(gradAmp, -1)) @ \
                             k_rd_xyz[:, self.nPoints[0] * lnIndex:self.nPoints[0] * (lnIndex + 1)]  @ \
@@ -357,15 +360,17 @@ class RARE(blankSeq.MRIBLANKSEQ):
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[1], gSteps, 1, self.shimming)
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[2], gSteps, 2, self.shimming)
                         orders = orders+gSteps*6
-
                     # Update the phase and slice gradient
                     if repeIndex>=self.dummyPulses:
-                        lnIndex +=1
-                        if phIndex == nPH-1:
-                            phIndex = 0
-                            slIndex += 1
-                        else:
-                            phIndex += 1
+                        # lnIndex +=1
+                        if echoIndex == self.etl-1:
+                            if phIndex == nPH-1:
+                                phIndex = 0
+                                slIndex += 1
+                            else:
+                                phIndex += 1
+                        elif echoIndex == 0:
+                            lnIndex +=1
                 if repeIndex>=self.dummyPulses: 
                     repeIndexGlobal += 1 # Update the global repeIndex
                 repeIndex+=1 # Update the repeIndex after the ETL
@@ -388,9 +393,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.inversionTime = self.inversionTime*1e6
         self.preExTime = self.preExTime*1e6
         self.echo_shift = self.echo_shift*1e6
-        nRepetitions = int(nSL*nPH/self.etl)
+        nRepetitions = int(nSL*nPH)
         scanTime = nRepetitions*self.repetitionTime
         self.mapVals['scanTime'] = scanTime*nSL*1e-6
+        nETL = self.etl
 
         # Create full sequence
         # Run the experiment
@@ -424,6 +430,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                                                             slIndex=slIndex,
                                                                             lnIndex=lnIndex,
                                                                             repeIndexGlobal=repeIndexGlobal)
+            
             # Save instructions into MaRCoS if not a demo
             if not self.demo:
                 if self.floDict2Exp(rewrite=nBatches==1):
@@ -447,11 +454,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
                             acq_points = np.size(rxd['rx0'])
                             print("Acquired points = %i" % acq_points)
                             print("Expected points = %i" % (aa * hw.oversamplingFactor))
-                        print("Batch %i, scan %i ready!")
                     else:
                         rxd = {}
                         rxd['rx0'] = np.random.randn(aa*hw.oversamplingFactor) + 1j * np.random.randn(aa*hw.oversamplingFactor)
-                        print("Batch %i, scan %i ready!" % (nBatches, ii+1))
                     # Get noise data
                     noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
                     rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
@@ -491,13 +496,13 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 dataFullB = dataFull[sum(acqPointsPerBatch[0:-1])::]
 
             # Reorganize dataFull
-            dataProv = np.zeros([self.nScans,nSL*nPH*nRD])
+            dataProv = np.zeros([self.nScans,nSL*nPH*nRD*nETL])
             dataProv = dataProv+1j*dataProv
             if nBatches>1:
-                dataFullA = np.reshape(dataFullA, (nBatches-1, self.nScans, -1, nRD))
-                dataFullB = np.reshape(dataFullB, (1, self.nScans, -1, nRD))
+                dataFullA = np.reshape(dataFullA, (nBatches-1, self.nScans, -1, nRD*nETL))
+                dataFullB = np.reshape(dataFullB, (1, self.nScans, -1, nRD*nETL))
             else:
-                dataFull = np.reshape(dataFull, (nBatches, self.nScans, -1, nRD))
+                dataFull = np.reshape(dataFull, (nBatches, self.nScans, -1, nRD*nETL))
             for scan in range(self.nScans):
                 if nBatches>1:
                     dataProv[scan, :] = np.concatenate((np.reshape(dataFullA[:,scan,:,:],-1), np.reshape(dataFullB[:,scan,:,:],-1)), axis=0)
@@ -507,35 +512,44 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
             # Get index for krd = 0
             # Average data
-            dataProv = np.reshape(dataFull, (self.nScans, nRD*nPH*nSL))
+            dataProv = np.reshape(dataFull, (self.nScans, nRD*nETL*nPH*nSL))
             dataProv = np.average(dataProv, axis=0)
             # Reorganize the data acording to sweep mode
-            dataProv = np.reshape(dataProv, (nSL, nPH, nRD))
+            dataProv = np.reshape(dataProv, (nSL, nPH, nETL, nRD))
             dataTemp = dataProv*0
-            for ii in range(nPH):
-                dataTemp[:, ind[ii], :] = dataProv[:,  ii, :]
+            for jj in range(nETL):
+                for ii in range(nPH):
+                    dataTemp[:, ind[ii], jj, :] = dataProv[:,  ii, jj, :]
             dataProv = dataTemp
             # Check where is krd = 0
-            dataProv = dataProv[int(self.nPoints[2]/2), int(nPH/2), :]
+            dataProv = dataProv[int(self.nPoints[2]/2), int(nPH/2), 0, :]
             indkrd0 = np.argmax(np.abs(dataProv))
             if indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
                 indkrd0 = int(nRD/2)
 
             # Get individual images
-            dataFull = np.reshape(dataFull, (self.nScans, nSL, nPH, nRD))
-            dataFull = dataFull[:, :, :, indkrd0-int(self.nPoints[0]/2):indkrd0+int(self.nPoints[0]/2)]
+            dataFull = np.reshape(dataFull, (self.nScans, nSL, nPH, nETL, nRD))
+            dataFull = dataFull[:, :, :, :, indkrd0-int(self.nPoints[0]/2):indkrd0+int(self.nPoints[0]/2)]
             dataTemp = dataFull*0
             for ii in range(nPH):
-                dataTemp[:, :, ind[ii], :] = dataFull[:, :,  ii, :]
+                dataTemp[:, :, ind[ii], :, :] = dataFull[:, :,  ii, :, :]
             dataFull = dataTemp
             imgFull = dataFull*0
-            for ii in range(self.nScans):
-                imgFull[ii, :, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[ii, :, :, :])))
+            for jj in range(nETL):
+                for ii in range(self.nScans):
+                    imgFull[ii, :, :, jj, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[ii, :, :, jj, :])))
             self.mapVals['dataFull'] = dataFull
             self.mapVals['imgFull'] = imgFull
 
             # Average data
-            data = np.average(dataFull, axis=0)
+            dataMSE = np.average(dataFull, axis=0)
+            # self.mapVals['kSpace3D_MSE'] = dataMSE
+
+            imgMSE = dataMSE*0
+            for jj in range(nETL):
+                imgMSE[:,:,jj,:]=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataMSE[:,:,jj,:])))
+            # self.mapVals['image3D_MSE'] = imgMSE
+           
 
             # Concatenate with k_xyz
             for ii in range(3):
@@ -545,17 +559,23 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     k_temp[:, ind[jj], :] = k_prov[:, jj, :]
                 k_ph_sl_xyz[ii, :] = np.reshape(k_temp, -1)
             k_xyz = k_ph_sl_xyz + k_rd_xyz
-            self.mapVals['sampled_xyz'] = np.concatenate((k_xyz.T, np.reshape(data, (nSL*nPH*self.nPoints[0], 1))), axis=1)
-            data = np.reshape(data, (nSL, nPH, self.nPoints[0]))
+            data_sampled = np.transpose(dataMSE, (0,1,3,2))
+            sampled_xyz = np.concatenate((k_xyz.T, np.reshape(data_sampled, (nSL*nPH*self.nPoints[0], nETL))), axis=1)
+            self.mapVals['sampled_xyz'] = sampled_xyz
+            # print(sampled_xyz.shape)
 
             # Do zero padding
-            dataTemp = np.zeros((self.nPoints[2], self.nPoints[1], self.nPoints[0]))
-            dataTemp = dataTemp+1j*dataTemp
-            dataTemp[0:nSL, :, :] = data
-            data = np.reshape(dataTemp, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
+            dataAllAcq= np.zeros((nETL,self.nPoints[0]*self.nPoints[1]*self.nPoints[2]), dtype=complex)
+            for jj in range(nETL):
+                dataTemp = np.zeros((self.nPoints[2], self.nPoints[1],self.nPoints[0]))
+                dataTemp = dataTemp+1j*dataTemp
+                dataTemp[0:nSL, :, :] = dataMSE[:,:,jj,:]
+                dataTemp = np.reshape(dataTemp, (1,self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
+                dataAllAcq[jj,:] = dataTemp
+            # print(dataAllAcq.shape)
 
-            # if self.demo:
-            #     data = self.myPhantom()
+            if self.demo:
+                data = self.myPhantom()
 
             # Fix the position of the sample according to dfov
             kMax = np.array(self.nPoints)/(2*np.array(self.fov))*np.array(self.axesEnable)
@@ -566,22 +586,49 @@ class RARE(blankSeq.MRIBLANKSEQ):
             kPH = np.reshape(kPH, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
             kSL = np.reshape(kSL, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
             dPhase = np.exp(-2*np.pi*1j*(self.dfov[0]*kRD+self.dfov[1]*kPH+self.dfov[2]*kSL))
-            data = np.reshape(data*dPhase, (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
-            self.mapVals['kSpace3D'] = data
-            img=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
+            kSpaceAll = np.zeros((self.nPoints[2], self.nPoints[1], nETL, self.nPoints[0]),dtype=complex)
+            imageAll = np.zeros((self.nPoints[2], self.nPoints[1], nETL, self.nPoints[0]),dtype=complex)
+            for jj in range(nETL):
+                dataAllAcq[jj,:] = dataAllAcq[jj,:]*dPhase
+                dataAux = np.reshape(dataAllAcq[jj,:], (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
+                kSpaceAll[:,:,jj,:] = dataAux
+                imageAll[:,:,jj,:] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataAux)))
+
+            self.mapVals['kSpace3D_MSE'] = kSpaceAll
+            self.mapVals['image3D_MSE'] = imageAll
+            img = np.transpose(imageAll, (0,2,1,3))
+            img = np.reshape(img, (self.nPoints[2]*nETL, self.nPoints[1], self.nPoints[0]))
             self.mapVals['image3D'] = img
-            data = np.reshape(data, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
+            data = np.transpose(kSpaceAll, (0,2,1,3))
+            data = np.reshape(data, (self.nPoints[2]*nETL, self.nPoints[1], self.nPoints[0]))
+            self.mapVals['kSpace3D'] = data
 
             # Create sampled data
             kRD = np.reshape(kRD, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
             kPH = np.reshape(kPH, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
             kSL = np.reshape(kSL, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
-            data = np.reshape(data, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
+            dataAll_sampled = dataAllAcq.T
             self.mapVals['kMax'] = kMax
-            self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
+            self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, dataAll_sampled), axis=1)
             self.mapVals['sampledCartesian'] = self.mapVals['sampled']  # To sweep
-            data = np.reshape(data, (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
 
+            # if self.calculateMap == 1:
+            #     print('Obtaining T2 Map...')
+            #     def func1(x, m, t2):
+            #         return m*np.exp(-x/t2)
+            #     t2Map = np.zeros((self.nPoints[2], self.nPoints[1], self.nPoints[0],))
+            #     t2_vector = np.linspace(self.echoSpacing, self.echoSpacing * self.etl, num=self.etl, endpoint=True)*1e3 # s
+            #     for kk in range(self.nPoints[2]):
+            #         for jj in range(self.nPoints[1]):
+            #             for ii in range(self.nPoints[0]):
+            #                 # Fitting to functions
+            #                 fitData, xxx = curve_fit(func1, t2_vector,  np.abs(imageAll[kk,jj,:,ii]),
+            #                                 p0=[np.abs(imageAll[kk,jj,0,ii]), 10])
+            #                 t2Map[kk,jj,ii] = fitData[1]
+            #     print(np.min(t2Map))
+            #     print(np.max(t2Map))
+            #     self.mapVals['t2Map'] = t2Map
+        
         return True
 
     def sequenceAnalysis(self, mode=None):
@@ -715,6 +762,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             result2['row'] = 0
             result2['col'] = 1
 
+
             # Reset rotation angle and dfov to zero
             self.mapVals['angle'] = 0.0
             self.mapVals['dfov'] = [0.0, 0.0, 0.0]
@@ -758,8 +806,22 @@ class RARE(blankSeq.MRIBLANKSEQ):
             self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
             self.meta_data["EchoTrainLength"] = self.mapVals['etl']
 
-            # Add results into the output attribute (result1 must be the image to save in dicom)
             self.output = [result1, result2]
+            # if self.calculateMap == 0:
+            #     # Add results into the output attribute (result1 must be the image to save in dicom)
+            #     self.output = [result1, result2]
+            # elif self.calculateMap == 1:
+            #     t2Map = self.mapVals['t2Map']
+            #     result3 = {}
+            #     result3['widget'] = 'image'
+            #     result3['data'] = t2Map
+            #     result3['xLabel'] = xLabel
+            #     result3['yLabel'] = yLabel
+            #     result3['title'] = 'T2 Map'
+            #     result3['row'] = 0
+            #     result3['col'] = 2
+            #     # Add results into the output attribute (result1 must be the image to save in dicom)
+            #     self.output = [result1, result2,result3]
 
         # Save results
         self.saveRawData()
@@ -853,7 +915,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         
 
 if __name__=="__main__":
-    seq = RARE()
+    seq = MSE()
     seq.sequenceAtributes()
 
     # A

@@ -6,6 +6,52 @@
 
 This repository contains the Python code for the MaRCoS Graphical Environment (MaRGE), a system for magnetic resonance imaging research. The GUI provides a user-friendly interface to interact with the MaRCoS system.
 
+## Issues related to the IP of the MaRCoS client and MaRCoS server.
+In order to provide an efficient communication between the client (your PC) and the server (the Red Pitaya) while using MaRGE, the IP of both must be properly configured. I found easier to set the IPs as static in both the client and the server, so here I will explain how to do it.
+
+**Setup MaRCoS server with a static IP**
+
+Once Yocto is installed in your SD card (see Section 1.2 on [marcos_wiki](https://github.com/vnegnev/marcos_extras/wiki/guide_setting_marcos_up)), get access to the SD card by introducing the SD card into the SD card slot of your computer. Then modify the file /etc/network/interfaces. Search for the `# wired or wireless interfaces` and replace the content by:
+```Python
+# Wired or wireless interfaces
+auto eth0
+iface eth0 inet static
+   address 192.168.1.101
+   netmask 255.255.255.0
+   gateway 192.168.1.1
+```
+NOTE: eth0 should be the name of your ethernet interface. You can check the name by using `ifconfig`. The file should look like this:
+
+<img src="resources/images/interfaces.png" alt="alt text">
+
+**Setup MaRCoS client with a static IP (Ubuntu)**
+
+In new Ubuntu distros, this can be done by typing:`sudo nano /etc/netplan/01-network-manager-all.yaml`. Then write in the file:
+```Python
+network:
+  version: 2
+  renderer: NetworkManager
+  ethernets:
+    dhcp4: no
+    addresses:[192.168.1.100/24]
+    gateway4: 192.168.1.1
+    nameservers:
+      addresses: [8.8.8.8,8.8.4.4]
+```
+Save and exit, then type in the terminal `sudo netplan try` and press enter when waiting. If you restart the computer and type `ifconfig`, you should see the IP 192.168.1.100 on your etherent interface.
+
+Right now, if you introduce your SD card into the Red Pitaya and connect the Red Piataya to the computer through Ethernet, you should be abble to access to the red pitaya by `ssh root@192.168.1.101`
+
+**Setup MaRCoS client with a static IP (Windows)**
+
+To setup the IP as static using Windows as the client, you have to modify your ethernet proerties as indicated in the figure
+
+<img src="resources/images/static_ip_windows.png" alt="alt text">
+
+## Issues related to installing MaRCoS from scrach
+
+I realized that, at least in my case, when installing MaRCoS from scrach I can only run `./marcos_setup.sh 192.168.1.101 rp-122` and turn the blue led on (indicating bitstream is running) using an old version of the marcos_extras repository. In particular, when installing MaRCoS from scrach I use the commit `433936c` to run `./marcos_setup.sh 192.168.1.101 rp-122`, then I go back to the last commit of MaRCoS master branch to run MaRGE.
+
 ## Installation
 
 To run MaRGE, you will need to have Python 3 installed on your computer. If you don't have it installed, you can download it from [python.org](https://www.python.org/downloads/).
@@ -19,7 +65,7 @@ Next, follow these steps to set up MaRGE:
    - [marcos_extras](https://github.com/vnegnev/marcos_extras)
    - [MaRGE](https://github.com/mriLab-i3M/MaRGE)
 
-   Your folder structure should resemble the following:
+Your folder structure should resemble the following:
 
 <img src="resources/images/folder_example.png" alt="alt text">
 
@@ -28,30 +74,57 @@ Next, follow these steps to set up MaRGE:
 
 2. Modify the following configuration files as needed:
 
-- `local_config.py` in the `marcos_client` folder: This file contains information about the version of the Red Pitaya, its IP address, and the GPA board used in conjunction with the Red Pitaya.
-- `hw_config.py` in the `MaRGE/configs` folder: This file contains information about the scanner hardware.
+- `local_config.py` in the `marcos_client` folder: This file contains information about the version of the Red Pitaya, its IP address (use asigned static IP), and the GPA board used in conjunction with the Red Pitaya.
+- `hw_config.py` in the `MaRGE/configs` folder: This file contains information about the scanner hardware. Also the IP address (use asigned static IP).
 - `sys_config.py` in the `MaRGE/configs` folder: This file contains settings for displaying the session windows in the GUI.
-- `autotuning.py` in the `MaRGE/configs` folder: Modify this file if you are using an Arduino for automatic tuning and impedance matching of the RF coil.
 
-Note: These files may not initially exist in the cloned repositories, but you can find copies of them in its corresponding folder.
+**NOTE 1**: These files may not initially exist in the cloned repositories, but you can find copies of them in its corresponding folder.
+
+**NOTE 2**: currently, MaRGE requires a Red Pitaya configured with a fixed IP. Dinamic IP address will be included in near future.
 
 3. Set up bash: to do communication with server from the GUI, you need to set up the bash_path variable in the hw_config.py file.
    1. If running under Windows OS, you will need to install git_bash, and then set `bash_path = "directory/git_bash.exe"` in hw_config.py.
    2. If running under Ubuntu OS, set `bash_path = "gnome-terminal"` 
 
-3. After making the necessary modifications to the configuration files, you can run the `main.py` file to launch MaRGE.
+4. Install all the required modules to run MaRGE, listed in the `requirements.txt` file.
 
+5. After making the necessary modifications to the configuration files, you can run the `main.py` file to launch MaRGE.
 
 That's it! You should now have MaRGE up and running on your computer. Enjoy using it for your MRI research.
 
 If you encounter any issues or have questions, please refer to the documentation or feel free to open an issue on the respective GitHub repositories for assistance.
 
 
+## Issues
+
+I found some issues when runing under linux. Here are some of them
+
+**1. ERROR**
+
+Error: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
+This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+
+Available platform plugins are: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, xcb.
+
+**SOLUTION**
+
+Install `libxcb-xinerama0` with `sudo apt install libxcb-xinerama0`.
+
+**2. WARNING**
+
+Warning: Ignoring XDG_SESSION_TYPE=wayland on Gnome. Use QT_QPA_PLATFORM=wayland to run on Wayland anyway
+
+**SOLUTION**
+
+Disabled Wayland by uncommenting `WaylandEnable=false` in the `/etc/gdm3/custom.conf`
+
+Add `QT_QPA_PLATFORM=xcb` in `/etc/environment`
+
 ## Description of the GUI
 
 ### Session Window
 
-When you execute `FirstMRI.py`, the session window is displayed on the screen.
+When you execute `main.py`, the session window is displayed on the screen.
 
 ![Session Window](resources/images/session.png)
 
@@ -60,6 +133,7 @@ When you execute `FirstMRI.py`, the session window is displayed on the screen.
 The session window serves as an input interface for important information such as the patient's name and weight. It also automatically generates an ID number. Currently, this ID number is generated based on the date and time, but users have the flexibility to modify it as needed. Some information can only be selected from predefined options, which are determined by the settings in the `sys_config.py` file.
 
 Once you've filled in the necessary information, simply click the `Launch GUI` button to initiate the main window. At this point, a new folder is created in `experiments/acquisitions` based on the Project and Subject ID you specified.
+Images and raw data will be saved in this folder.
 
 ### Main Window
 
@@ -105,11 +179,17 @@ Before executing any sequence, the user must establish a connection between the 
 
 - `MaRCoS server`: Use this button to connect to or disconnect from the MaRCoS server.
 
-- `Init GPA`: Clicking this button triggers a code execution to initialize the GPA board. It's important to note that the GUI must be connected to the server before initializing the GPA board.
+- `Init GPA`: Clicking this button triggers a code execution to initialize the GPA board. 
+It's important to note that the GUI must be connected to the server before initializing the GPA board.
+In case an interlock (under development) is connected to GPA and RFPA from Barthel, it also enables the power modules
+remotely.
 
-Upon executing `MaRCoS server` button remains pressed, and the sequence buttons become enabled. It's worth mentioning that this state remains even if the connection to the server fails.
+Upon executing `MaRCoS server` button remains pressed, and the sequence buttons become enabled. It's worth mentioning that this state remains even if the connection to the server fails (under development).
+However, if connection is done, a terminal will show the information shown in Figure 4.
 
-***Poner figura de marcos server aquí***
+![MaRCoS Server](resources/images/server.png)
+
+**Figure 4: MaRCoS server connection information**
 
 #### Sequence Toolbar (3)
 
@@ -213,6 +293,7 @@ However, to ensure that `Autocalibration` functions correctly, specific configur
 The `Save for Calibration` button generates a .csv file in the `calibration` folder for each sequence. After completing these steps for all five sequences, there should be five .csv files available in the folder, enabling the proper execution of Autocalibration.
 
 It's important to note that failing to configure these parameters will result in the GUI using the last-used parameters for each calibration sequence, which are saved in the `experiments\parameterization` folder. If this folder is empty (e.g., for first-time users), the GUI will employ default parameters defined in the API.
+It is really recommended to configure the autocalibration sequences and avoid using default parameters.
 
 ### Localizer
 
@@ -258,10 +339,11 @@ The parameters of the sequences are categorized into four different fields:
 Each time a sequence is run:
 1) It automatically saves a file in ***experiments/parameterization/SequenceName_last_parameters.csv***.
    - When you initialize the GUI, it loads the parameters from files with ***last_parameters*** in the name to continue the session from where it left off.
-2) It creates three files in ***experiments/acquisitions*** inside the session folder:
+2) It creates four files in ***experiments/acquisitions*** inside the session folder:
    1) A .mat raw data file with the name ***SequenceName.year.month.day.hour.minutes.seconds.milliseconds.mat***. This file contains inputs, outputs, and other useful variables.
    2) A .csv file with the input parameters, named ***SequenceNameInfo.year.month.day.hour.minutes.seconds.milliseconds.csv***. This .csv file is useful if you want to repeat a specific experiment by loading the parameters into the corresponding sequence using the ***Sequence/Load Parameters*** menu.
    3) A .dcm file in Dicom Standard 3.0 format.
+   4) A ismrmrd file (comming soon).
 
 These steps ensure a well-organized and efficient workflow when running custom sequences within MaRGE.
 
@@ -371,25 +453,25 @@ In this section, we'll guide you through the process of creating and adding a ne
 ```python
 import os
 import sys
+#*****************************************************************************
+# Get the directory of the current script
+main_directory = os.path.dirname(os.path.realpath(__file__))
+parent_directory = os.path.dirname(main_directory)
+parent_directory = os.path.dirname(parent_directory)
 
-# Add path to the working directory
-path = os.path.realpath(__file__)
-ii = 0
-for char in path:
-    if (char == '\\' or char == '/') and path[ii + 1:ii + 14] == 'MaRGE':
-        sys.path.append(path[0:ii + 1] + 'MaRGE')
-        sys.path.append(path[0:ii + 1] + 'marcos_client')
-    ii += 1
+# Define the subdirectories you want to add to sys.path
+subdirs = ['MaRGE', 'marcos_client']
 
-# Add modules from gui
-import experiment as ex
-from seq.mriBlankSeq import mriBlankSequence
+# Add the subdirectories to sys.path
+for subdir in subdirs:
+    full_path = os.path.join(parent_directory, subdir)
+    sys.path.append(full_path)
+#******************************************************************************
+import controller.experiment_gui as ex
+import numpy as np
+import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import configs.hw_config as hw
 import configs.units as units
-
-# Add other modules
-import scipy.signal as sig
-import numpy as np
 
 ```
 
@@ -399,7 +481,7 @@ import numpy as np
 
     b) **`sequenceTime`**: Implement the `sequenceTime` method, which should return the time required by the sequence in minutes (it can returns 0).
 
-    c) **`sequenceRun`**: The `sequenceRun` method is responsible for inputting the instructions into the Red Pitaya. It includes a `plotSeq` keyword argument that should be set to `1` if you want to plot the sequence or `0` for running the experiment. Another keyword is `demo` that can be established to True or False in case user can run simulated signals.
+    c) **`sequenceRun`**: The `sequenceRun` method is responsible for inputting the instructions into the Red Pitaya. It includes a `plotSeq` keyword argument that should be set to `1` if you want to plot the sequence or `0` for running the experiment. Another keyword is `demo` that can be established to `True` or `False` in case user can run simulated signals.
 
     d) **`sequenceAnalysis`**: Lastly, the `sequenceAnalysis` method is used to analyze the data acquired during the experiment. It includes a `mode` keyword that I use to plot call `plotResults` method from `mriBlankSeq` in case this parameter is set to `'standalone'`, but it can be used at convenience.
 
@@ -425,7 +507,7 @@ class Noise(mriBlankSeq.MRIBLANKSEQ):
         
         # Use the plotSeq argument to control plotting versus running.
         
-        # Use the demo argument to control if you want to simlate signals.
+        # Use the demo argument to control if you want to simulate signals.
 
     def sequenceAnalysis(self, mode=None):
         self.mode = mode

@@ -4,7 +4,6 @@ Startup Code
 import os
 import sys
 from PyQt5.QtWidgets import QApplication
-import cgitb
 from configs import sys_config
 
 # *****************************************************************************
@@ -43,8 +42,6 @@ if not os.path.exists(sys_config.screenshot_folder):
     os.makedirs(sys_config.screenshot_folder)
 
 from controller.controller_session import SessionController
-
-cgitb.enable(format='text')
 
 # Run the gui
 demo = False

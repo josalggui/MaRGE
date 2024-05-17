@@ -18,3 +18,5 @@ readme.org
 autotuning/autotuning_arduino/autotuning_arduino.ino
 *.seq
 *.log
+ps_interpreter.log
+sequence.seq
