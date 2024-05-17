@@ -12,7 +12,7 @@ import experiment as ex
 import numpy as np
 import shutil
 import configs.hw_config as hw
-import autotuning.autotuning as autotuning # Just to use an arduino
+import autotuning.autotuning as autotuning  # Just to use an arduino
 
 
 class MarcosController(MarcosToolBar):
@@ -27,6 +27,7 @@ class MarcosController(MarcosToolBar):
     Inherits:
         MarcosToolBar: Base class for the MaRCoS toolbar.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Initializes the MarcosController.
@@ -113,7 +114,7 @@ class MarcosController(MarcosToolBar):
         if self.action_server.isChecked():
             if not self.demo:
                 link = False
-                while link==False:
+                while link == False:
                     try:
                         # Check if GPA available
                         received_string = self.arduino.send("GPA_VERB 1;").decode()

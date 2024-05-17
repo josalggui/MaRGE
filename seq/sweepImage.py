@@ -33,6 +33,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parameter0', string='Parameter 0 X-axis', val='bw', field='OTH')
         self.addParameter(key='start0', string='Start point 0', val=30.0, field='OTH')
         self.addParameter(key='end0', string='End point 0', val=50.0, field='OTH')
+        self.addParameter(key='logScale', string='Log scale', val=0, field='OTH')
         self.addParameter(key='nSteps0', string='Number of steps 0', val=5, field='OTH')
         self.addParameter(key='parameter1', string='Parameter 1 Y-axis', val='larmorFreq', field='OTH')
         self.addParameter(key='start1', string='Start point 1', val=3.0, field='OTH')
@@ -60,6 +61,8 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         # Sweep
         sampled = []
         parVector0 = np.linspace(start[0], end[0], nSteps[0]) # Create vector with parameters to sweep
+        if self.mapVals['logScale'] == 1:
+            parVector0 = np.geomspace(start[0], end[0], nSteps[0])
         parVector1 = np.linspace(start[1], end[1], nSteps[1])
         seq = self.sequenceList[seqName] # Select the sequence that we want to sweep with modified parameters
         parMatrix = np.zeros((nSteps[0]*nSteps[1], 2))

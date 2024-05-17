@@ -6,6 +6,8 @@ Created on Thu June 2 2022
 """
 
 import os
+
+import bm4d
 import numpy as np
 import configs.hw_config as hw
 from datetime import date, datetime
@@ -14,6 +16,8 @@ import experiment as ex
 import scipy.signal as sig
 import csv
 import matplotlib.pyplot as plt
+from skimage.util import view_as_blocks
+from skimage.measure import shannon_entropy
 
 # Import dicom saver
 from manager.dicommanager import DICOMImage
@@ -1119,3 +1123,162 @@ class MRIBLANKSEQ:
     def setParameter(self, key, val, unit):
         self.mapVals[key] = val
         self.mapUnits[key] = unit
+
+    @staticmethod
+    def runIFFT(k_space):
+        """
+        Perform FFT reconstruction.
+
+        Performs inverse FFT shift, inverse FFT, and inverse FFT shift to reconstruct the image in the spatial domain.
+        """
+        # Perform inverse FFT shift, inverse FFT, and inverse FFT shift to reconstruct the image in the spatial domain
+        image = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(k_space)))
+
+        return image
+
+    @staticmethod
+    def runDFFT(image):
+        # Perform direct FFT shift, inverse FFT, and inverse FFT shift to reconstruct the image in the spatial domain
+        k_space = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(image)))
+
+        return k_space
+
+    @staticmethod
+    def runBm4dFilter(image_data):
+        """
+        Run the BM4D filter operation.
+
+        Retrieves the image data, performs rescaling, computes median and median absolute deviation (MAD),
+        applies the BM4D filter to the rescaled image, restores the denoised image to its original dimensions,
+        updates the main matrix of the image view widget, adds the operation to the history widget,
+        and updates the operations history.
+        """
+
+        reference = np.max(image_data)
+        image_rescaled = image_data/reference*100
+
+        # Calculate the standard deviation (sigma_psd) for BM4D filter
+        # Quantize image
+        num_bins = 1000
+        image_quantized = np.digitize(image_rescaled, bins=np.linspace(0, 1, num_bins + 1)) - 1
+
+        # Divide the image into blocks
+        n_multi = (np.array(image_quantized.shape) / 5).astype(int) * 5
+        blocks_q = view_as_blocks(image_quantized[0:n_multi[0], 0:n_multi[1], 0:n_multi[2]], block_shape=(5, 5, 5))
+        blocks_r = view_as_blocks(image_rescaled[0:n_multi[0], 0:n_multi[1], 0:n_multi[2]], block_shape=(5, 5, 5))
+
+        # Calculate the standard deviation for each block
+        block_std_devs = np.std(blocks_r, axis=(3, 4, 5))
+
+        # Calculate entropy for each block
+        block_entropies = np.zeros_like(blocks_q[:, :, :, 0, 0, 0], dtype=np.float32)
+        for ii in range(blocks_q.shape[0]):
+            for jj in range(blocks_q.shape[1]):
+                for kk in range(blocks_q.shape[2]):
+                    block = blocks_q[ii, jj, kk, :, :, :]
+                    entropy = shannon_entropy(block)
+                    block_entropies[ii, jj, kk] = entropy
+
+        # Find the indices of the block with the highest entropy
+        max_entropy_index = np.unravel_index(np.argmax(block_entropies), block_entropies.shape)
+
+        # Extract the block with the highest entropy from the block_std_devs array
+        std = 4.5 * block_std_devs[max_entropy_index]
+        print("Standard deviation for BM4D: %0.2f" % std)
+
+        # Create a BM4D profile and set the stage argument and blockmatches options
+        profile = bm4d.BM4DProfile()
+        stage_arg = bm4d.BM4DStages.ALL_STAGES
+        blockmatches = (False, False)
+
+        # Apply the BM4D filter to the rescaled image
+        denoised_rescaled = bm4d.bm4d(image_rescaled, sigma_psd=std, profile=profile, stage_arg=stage_arg,
+                                      blockmatches=blockmatches)
+
+        # Rescale the denoised image back to its original dimensions
+        denoised_image = denoised_rescaled/100*reference
+
+        return denoised_image
+
+    @staticmethod
+    def runCosbellFilter(sampled, data, cosbell_order):
+        """
+        Run the Cosbell filter operation to k_space in three directions.
+        """
+        nPoints = data.shape
+
+        # Along readout
+        k = np.reshape(sampled[:, 0], nPoints)
+        kmax = np.max(np.abs(k[:]))
+        theta = k / kmax
+        data *= (np.cos(theta * (np.pi / 2)) ** cosbell_order)
+
+        # Along phase
+        k = np.reshape(sampled[:, 1], nPoints)
+        kmax = np.max(np.abs(k[:]))
+        theta = k / kmax
+        data *= (np.cos(theta * (np.pi / 2)) ** cosbell_order)
+
+        # Along slice
+        k = np.reshape(sampled[:, 2], nPoints)
+        kmax = np.max(np.abs(k[:]))
+        theta = k / kmax
+        data *= (np.cos(theta * (np.pi / 2)) ** cosbell_order)
+
+        return data
+
+    @staticmethod
+    def runZeroPadding(k_space, zero_padding_order):
+        """
+        Run the zero-padding operation.
+
+        Retrieves the necessary parameters and performs the zero-padding on the loaded image.
+        Updates the main matrix of the image view widget with the padded image, adds the operation to the history
+        widget, and updates the operations history.
+        """
+        # Zero-padding order for each dimension from the text field
+        rd_order = int(zero_padding_order[0])
+        ph_order = int(zero_padding_order[1])
+        sl_order = int(zero_padding_order[2])
+
+        # Get the k_space data and its shape
+        current_shape = k_space.shape
+
+        # Determine the new shape after zero-padding
+        new_shape = current_shape[0] * sl_order, current_shape[1] * ph_order, current_shape[2] * rd_order
+
+        # Create an image matrix filled with zeros
+        image_matrix = np.zeros(new_shape, dtype=complex)
+
+        # Get the dimensions of the current image
+        image_height = current_shape[0]
+        image_width = current_shape[1]
+        image_depth = current_shape[2]
+
+        # Calculate the centering offsets for each dimension
+        col_offset = (new_shape[0] - image_height) // 2
+        row_offset = (new_shape[1] - image_width) // 2
+        depth_offset = (new_shape[2] - image_depth) // 2
+
+        # Calculate the start and end indices to center the k_space within the image_matrix
+        col_start = col_offset
+        col_end = col_start + image_height
+        row_start = row_offset
+        row_end = row_start + image_width
+        depth_start = depth_offset
+        depth_end = depth_start + image_depth
+
+        # Copy the k_space into the image_matrix at the center
+        image_matrix[col_start:col_end, row_start:row_end, depth_start:depth_end] = k_space
+
+        return image_matrix
+
+    def autoProcessing(self, sampled, k_space):
+        image = self.runIFFT(k_space)
+        image = self.runBm4dFilter(np.abs(image))
+        k_sp = self.runDFFT(image)
+        k_sp_cb = self.runCosbellFilter(sampled, k_sp, 0.5)
+        k_sp_zp = self.runZeroPadding(k_sp_cb, np.array([2, 2, 2]))
+        image = self.runIFFT(k_sp_zp)
+
+        return image
