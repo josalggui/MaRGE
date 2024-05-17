@@ -8,11 +8,13 @@ import time
 
 from widgets.widget_toolbar_marcos import MarcosToolBar
 import subprocess
+import platform
 import experiment as ex
 import numpy as np
 import shutil
 import configs.hw_config as hw
 import autotuning.autotuning as autotuning # Just to use an arduino
+import threading
 
 
 class MarcosController(MarcosToolBar):
@@ -50,9 +52,53 @@ class MarcosController(MarcosToolBar):
         self.action_copybitstream.triggered.connect(self.copyBitStream)
         self.action_gpa_init.triggered.connect(self.initgpa)
 
+        thread = threading.Thread(target=self.search_sdrlab)
+        thread.start()
+
         # Arduino to control the interlock
         self.arduino = autotuning.Arduino(baudrate=19200, name="interlock", serial_number=hw.ard_sn_interlock)
         self.arduino.connect()
+
+    def search_sdrlab(self):
+        # Get the IP of the SDRLab
+        if not self.demo:
+            try:
+                hw.rp_ip_address = self.get_sdrlab_ip()[0]
+            except:
+                print("No SDRLab found.")
+                try:
+                    hw.rp_ip_address = self.get_sdrlab_ip()[0]
+                except:
+                    print("No communication with SDRLab.")
+                    print("Try manually.")
+
+
+
+    @staticmethod
+    def get_sdrlab_ip():
+        print("\nSearching for SDRLabs...")
+
+        ip_addresses = []
+        subnet = '192.168.1.'
+        timeout = 0.1  # Adjust timeout value as needed
+
+        for i in range(101, 132):  # Scan IP range 192.168.1.101 to 192.168.1.132
+            ip = subnet + str(i)
+            try:
+                if platform.system() == 'Linux':
+                    subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                   timeout=timeout)
+                elif platform.system() == 'Windows':
+                    subprocess.run(['ping', '-n', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                   timeout=timeout)
+                ip_addresses.append(ip)
+            except:
+                pass
+
+        for ip in ip_addresses:
+            print("SDRLab found at IP " + ip)
+
+        return ip_addresses
 
     def startMaRCoS(self):
         """
@@ -61,6 +107,7 @@ class MarcosController(MarcosToolBar):
         Executes startRP.sh: copy_bitstream.sh & marcos_server.
         """
         if not self.demo:
+
             try:
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 subprocess.run([hw.bash_path, "--", "./startRP.sh", hw.rp_ip_address, hw.rp_version])
@@ -81,24 +128,31 @@ class MarcosController(MarcosToolBar):
         """
         if not self.demo:
             if not self.action_server.isChecked():
-                try:
-                    subprocess.run(
-                        [hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                    self.action_server.setStatusTip('Connect to marcos server')
-                    self.action_server.setToolTip('Connect to marcos server')
-                    print("\nServer disconnected")
-                except:
-                    print("\nERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                self.action_server.setStatusTip('Connect to marcos server')
+                self.action_server.setToolTip('Connect to marcos server')
+                print("\nServer disconnected")
             else:
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                time.sleep(1.5)
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
+                time.sleep(1.5)
+                self.action_server.setStatusTip('Kill marcos server')
+                self.action_server.setToolTip('Kill marcos server')
+
+                # Run tiny sequence to check connection to the server
                 try:
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
-                    self.action_server.setStatusTip('Kill marcos server')
-                    self.action_server.setToolTip('Kill marcos server')
-                    print("\nServer connected")
-                except:
-                    print("\nERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
-                    self.action_server.setChecked(False)
+                    expt = ex.Experiment(init_gpa=False)
+                    expt.add_flodict({
+                        'grad_vx': (np.array([100]), np.array([0])),
+                    })
+                    expt.run()
+                    expt.__del__()
+                    print("\nServer connected!")
+                except Exception as e:
+                    print("\nServer not connected!")
+                    print("Try to connect to the server again.")
+                    print("Error details:", e)
         else:
             print("\nThis is a demo")
 
@@ -111,10 +165,11 @@ class MarcosController(MarcosToolBar):
         if not self.demo:
             try:
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', '192.168.1.101', 'rp-122'])
+                subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', hw.rp_ip_address, 'rp-122'], timeout=10)
                 print("\nMaRCoS updated")
-            except:
-                print("\nERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
+            except subprocess.TimeoutExpired as e:
+                print("\nTimeout error.")
+                print("Error details:", e)
         else:
             print("\nThis is a demo.")
         self.action_server.setChecked(False)
@@ -127,7 +182,7 @@ class MarcosController(MarcosToolBar):
         if self.action_server.isChecked():
             if not self.demo:
                 link = False
-                while link==False:
+                while not link:
                     try:
                         # Check if GPA available
                         received_string = self.arduino.send("GPA_VERB 1;").decode()
@@ -170,7 +225,7 @@ class MarcosController(MarcosToolBar):
                         expt.__del__()
                         link = True
                         print("\nGPA init done!")
-                        
+
                         # Enable power modules
                         # Enable GPA module
                         received_string = self.arduino.send("GPA_ON 1;").decode()  # Enable power module
