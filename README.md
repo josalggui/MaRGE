@@ -20,7 +20,6 @@ iface eth0 inet static
    netmask 255.255.255.0
    gateway 192.168.1.1
 ```
-NOTE: eth0 should be the name of your ethernet interface. You can check the name by using `ifconfig`. The file should look like this:
 
 <img src="resources/images/interfaces.png" alt="alt text">
 
@@ -32,12 +31,15 @@ network:
   version: 2
   renderer: NetworkManager
   ethernets:
-    dhcp4: no
-    addresses:[192.168.1.100/24]
-    gateway4: 192.168.1.1
-    nameservers:
-      addresses: [8.8.8.8,8.8.4.4]
+    eth0:
+       dhcp4: no
+       addresses:[192.168.1.100/24]
+       gateway4: 192.168.1.1
+       nameservers:
+         addresses: [8.8.8.8,8.8.4.4]
 ```
+NOTE: eth0 should be the name of your ethernet interface. You can check the name by using `ifconfig`. The file should look like this:
+
 Save and exit, then type in the terminal `sudo netplan try` and press enter when waiting. If you restart the computer and type `ifconfig`, you should see the IP 192.168.1.100 on your etherent interface.
 
 Right now, if you introduce your SD card into the Red Pitaya and connect the Red Piataya to the computer through Ethernet, you should be abble to access to the red pitaya by `ssh root@192.168.1.101`
@@ -50,7 +52,7 @@ To setup the IP as static using Windows as the client, you have to modify your e
 
 ## Issues related to installing MaRCoS from scrach
 
-I realized that, at least in my case, when installing MaRCoS from scrach I can only run `./marcos_setup.sh 192.168.1.101 rp-122` and turn the blue led on (indicating bitstream is running) using an old version of the marcos_extras repository. In particular, when installing MaRCoS from scrach I use the commit `433936c` to run `./marcos_setup.sh 192.168.1.101 rp-122`, then I go back to the last commit of MaRCoS master branch to run MaRGE.
+I realized that, at least in my case, when installing MaRCoS from scrach I can only run `./marcos_setup.sh 192.168.1.101 rp-122` and turn the blue led on (indicating bitstream is running) using an old version of the marcos_extras repository. In particular, when installing MaRCoS from scrach I use the commit `433936c` from `marcos_extras` to run `./marcos_setup.sh 192.168.1.101 rp-122`, then I go back to the last commit of MaRCoS master branch to run MaRGE.
 
 ## Installation
 
@@ -80,7 +82,7 @@ Your folder structure should resemble the following:
 
 **NOTE 1**: These files may not initially exist in the cloned repositories, but you can find copies of them in its corresponding folder.
 
-**NOTE 2**: currently, MaRGE requires a Red Pitaya configured with a fixed IP. Dinamic IP address will be included in near future.
+**NOTE 2**: currently, MaRGE requires a Red Pitaya configured with a fixed IP in the range 192.168.1.101/132. Dinamic IP address has been successfully tested under linux, and under Windows with some bugs.
 
 3. Set up bash: to do communication with server from the GUI, you need to set up the bash_path variable in the hw_config.py file.
    1. If running under Windows OS, you will need to install git_bash, and then set `bash_path = "directory/git_bash.exe"` in hw_config.py.
