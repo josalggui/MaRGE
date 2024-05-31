@@ -52,7 +52,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nReadouts', string='Number of points', val=600, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=3.0, units=units.ms, field='SEQ')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=20, units=units.ms, field='SEQ')
-        self.addParameter(key='shimming', string='Shimming', val=[0, 0, 0], field='SEQ')
+        self.addParameter(key='shimming', string='Shimming', val=[0, 0, 0], units=units.sh, field='SEQ')
         self.addParameter(key='gAxis', string='G axis', val='x', tip="'x', 'y' or 'z'", field='SEQ')
         self.addParameter(key='gSteps', string='G steps', val=0, field='SEQ',
                           tip="0 if you want to use the default value in the hw_config.py file")
@@ -62,7 +62,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='gDuration', string='G duration (ms)', val=10, units=units.ms, field='SEQ')
         self.addParameter(key='tDelayMin', string='Min delay G2RF (ms)', val=1, units=units.ms, field='SEQ')
         self.addParameter(key='tDelayMax', string='Max delay G2RF (ms)', val=10, units=units.ms, field='SEQ')
-        self.addParameter(key='nDelays', string='Number of delays', val=20, field='SEQ')
+        self.addParameter(key='nDelays', string='Number of delays', val=2, field='SEQ')
 
     def sequenceInfo(self):
         print("\nEDDYCURRENTS")
@@ -108,42 +108,45 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
             for delay in delays:
                 # Gradient pulse 0
                 t0 = t_ini
+                t0 += 20
                 self.gradTrap(t0, self.gRiseTime, self.gDuration, 0, self.gSteps, self.gAxis, self.shimming)
                 # Tx RF pulse
                 t0 = t0 + self.gDuration + 2*self.gRiseTime + delay - hw.blkTime
                 self.rfRecPulse(t0, rfTime=self.rfExTime, rfAmplitude=self.rfExAmp, rfPhase=0)
                 # Rx gate
                 t0 = t0 + hw.blkTime + self.rfExTime + self.deadTime
-                self.rxGate(t0, self.acqTime)
-                rd_points += self.nReadouts
+                self.rxGateSync(t0, self.acqTime)
+                rd_points += self.nReadouts + 2 * hw.addRdPoints
                 # **********************************************
 
                 # Gradient pulse +
                 t0 = t_ini + self.repetitionTime
+                t0 += 20
                 self.gradTrap(t0, self.gRiseTime, self.gDuration, self.gAmplitude, self.gSteps, self.gAxis, self.shimming)
                 # Tx RF pulse
                 t0 = t0 + self.gDuration + 2 * self.gRiseTime + delay - hw.blkTime
                 self.rfRecPulse(t0, rfTime=self.rfExTime, rfAmplitude=self.rfExAmp, rfPhase=0)
                 # Rx gate
                 t0 = t0 + hw.blkTime + self.rfExTime + self.deadTime
-                self.rxGate(t0, self.acqTime)
-                rd_points += self.nReadouts
+                self.rxGateSync(t0, self.acqTime)
+                rd_points += self.nReadouts + 2 * hw.addRdPoints
                 # **********************************************
 
                 # Gradient pulse -
                 t0 = t_ini + 2 * self.repetitionTime
+                t0 += 20
                 self.gradTrap(t0, self.gRiseTime, self.gDuration, -self.gAmplitude, self.gSteps, self.gAxis, self.shimming)
                 # Tx RF pulse
                 t0 = t0 + self.gDuration + 2 * self.gRiseTime + delay - hw.blkTime
                 self.rfRecPulse(t0, rfTime=self.rfExTime, rfAmplitude=self.rfExAmp, rfPhase=0)
                 # Rx gate
                 t0 = t0 + hw.blkTime + self.rfExTime + self.deadTime
-                self.rxGate(t0, self.acqTime)
-                rd_points += self.nReadouts
+                self.rxGateSync(t0, self.acqTime)
+                rd_points += self.nReadouts + 2 * hw.addRdPoints
                 # **********************************************
 
                 # Update t_ini
-                t_ini += + 3 * self.repetitionTime
+                t_ini += 3 * self.repetitionTime
 
             self.endSequence(self.repetitionTime*3*self.nDelays*self.nScans)
 
@@ -174,7 +177,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         self.mapVals['bw'] = bw * 1e6
 
         # Create the sequence and add instructions to the experiment
-        acq_points = createSequence()
+        points_to_measure = createSequence()
         if not self.demo:
             if self.floDict2Exp():
                 print("\nSequence waveforms loaded successfully")
@@ -189,15 +192,22 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
             for scan in range(self.nScans):
                 print("\nScan %i running..." % (scan + 1))
                 if not self.demo:
-                    rxd, msgs = self.expt.run()
+                    points_measured = 0
+                    while points_measured != (points_to_measure * hw.oversamplingFactor):
+                        rxd, msgs = self.expt.run()
+                        points_measured = np.size(rxd['rx0'])
+                        print("Acquired points = %i" % points_measured)
+                        print("Expected points = %i" % (points_to_measure * hw.oversamplingFactor))
                 else:
-                    rxd = {'rx0': np.random.randn((acq_points + 2 * hw.addRdPoints) * hw.oversamplingFactor) +
+                    rxd = {'rx0': np.random.randn(points_to_measure * hw.oversamplingFactor) +
                                   1j * np.random.randn(
-                        (acq_points + 2 * hw.addRdPoints) * hw.oversamplingFactor)}
+                        points_to_measure * hw.oversamplingFactor)}
+                    points_measured = np.size(rxd['rx0'])
+                    print("Acquired points = %i" % points_measured)
+                    print("Expected points = %i" % (points_to_measure * hw.oversamplingFactor))
                 data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
-                print("Acquired points = %i" % np.size([rxd['rx0']]))
-                print("Expected points = %i" % ((acq_points + 2 * hw.addRdPoints) * hw.oversamplingFactor))
                 print("Scan %i ready!" % (scan + 1))
+
             self.mapVals['data_oversampled'] = data_over
         elif plotSeq and standalone:
             self.sequencePlot(standalone=standalone)
@@ -209,7 +219,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
 
         # Process data to be plotted
         if not plotSeq:
-            data_full = self.decimate(data_over, self.nScans, option='Normal')
+            data_full = self.decimate(data_over, 3*self.nScans*self.nDelays, option='Normal')
             self.mapVals['data_full'] = data_full
             data = np.average(np.reshape(data_full, (self.nScans, self.nDelays, 3, -1)), axis=0)
             self.mapVals['data'] = data
@@ -240,7 +250,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         gZero = np.max(np.abs(gradZero), axis=1)
         gPositive = np.max(np.abs(gradPositive), axis=1)
         gNegative = np.max(np.abs(gradNegative), axis=1)
-        t_vector = np.linspace(self.tDelayMax, self.tDelayMin, self.nDelays)
+        t_vector = np.linspace(self.tDelayMin, self.tDelayMax, self.nDelays)*1e3 # ms
         
         
         # Spectrum maps
@@ -267,8 +277,8 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
                    'xLabel': 'Frequency (a.u.)',
                    'yLabel': 'Delay (a.u.)',
                    'title': 'Negative gradient',
-                   'row': 0,
-                   'col': 2}
+                   'row': 1,
+                   'col': 0}
         
         # Plot 4
         result4 = {'widget': 'curve',
@@ -279,10 +289,10 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
                 'title': 'Echo',
                 'legend': ['No gradient', 'Positive gradient', 'Negative Gradient'],
                 'row': 1,
-                'col': 0
+                'col': 1
                 }
         
-        self.output = [result1, result2, result3, result4]
+        self.output = [result4]
 
         # save data once self.output is created
         self.saveRawData()
