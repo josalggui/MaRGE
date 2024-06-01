@@ -91,6 +91,21 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.mapVals['acqTime'] = acq_time
         self.mapVals['echoTime'] = echo_time
 
+        # Initialize the experiment
+        self.bw = n_points / acq_time  # Hz
+        sampling_period = 1 / self.bw  # s
+        self.mapVals['samplingPeriod'] = sampling_period
+        if not self.demo:
+            self.expt = ex.Experiment(lo_freq=self.larmorFreq * 1e-6,  # MHz
+                                      rx_t=sampling_period * 1e-6,  # us
+                                      init_gpa=init_gpa,
+                                      gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                                      )
+            sampling_period = self.expt.getSamplingRate()
+        self.bw = 1 / sampling_period  # Hz
+        acq_time = n_points / self.bw  # us
+        self.mapVals['bw_true'] = self.bw
+
         # Create excitation rf event
         delay_rf_ex = self.repetitionTime-acq_time/2-echo_time-self.rfExTime/2-hw.blkTime*1e-6
         event_rf_ex = pp.make_block_pulse(flip_angle=self.rfExFA * np.pi / 180,
@@ -115,7 +130,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                                 system=self.system)
 
         # Create the sequence here
-        def createSequence(): # Here I will test pypulseq
+        def createSequence():  # Here I will test pypulseq
             rd_points = 0
 
             # # Shimming
@@ -142,21 +157,6 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
             return rd_points
 
-        # Initialize the experiment
-        self.bw = n_points / acq_time  # MHz
-        sampling_period = 1 / self.bw  # us
-        self.mapVals['samplingPeriod'] = sampling_period
-        if not self.demo:
-            self.expt = ex.Experiment(lo_freq=self.larmorFreq * 1e-6,
-                                      rx_t=sampling_period,
-                                      init_gpa=init_gpa,
-                                      gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                      )
-            sampling_period = self.expt.getSamplingRate()
-        self.bw = 1 / sampling_period  # MHz
-        acq_time = n_points / self.bw  # us
-        self.mapVals['bw_true'] = self.bw * 1e6
-
         # Create the sequence and add instructions to the experiment
         acq_points = createSequence()
         if not self.demo:
@@ -182,7 +182,8 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                 print("Expected points = %i" % ((acq_points + 2 * hw.addRdPoints) * hw.oversamplingFactor))
                 print("Scan %i ready!" % (scan + 1))
         elif plotSeq and standalone:
-            self.plotSequence()
+            self.sequencePlot()
+            return True
 
         # Close the experiment
         if not self.demo:
@@ -264,5 +265,6 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__':
     seq = Larmor()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
+    seq.sequenceRun(plotSeq=True, demo=True, standalone=False)
+    seq.sequencePlot(standalone=True)
     # seq.sequenceAnalysis(mode='Standalone')
