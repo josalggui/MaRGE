@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>controller.controller_reconstruction module &mdash; MaRGE v0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=1812e922"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="controller.controller_sequence_inputs module" href="controller.controller_sequence_inputs.html" />
+    <link rel="prev" title="controller.controller_protocol_list module" href="controller.controller_protocol_list.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MaRGE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">MaRGE</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="autotuning.html">autotuning package</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="controller.html">controller package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="controller.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_console.html">controller.controller_console module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_figures.html">controller.controller_figures module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_history_list.html">controller.controller_history_list module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_imageview.html">controller.controller_imageview module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_main.html">controller.controller_main module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_menu.html">controller.controller_menu module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_plot1d.html">controller.controller_plot1d module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_plot3d.html">controller.controller_plot3d module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_postpocessing.html">controller.controller_postpocessing module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_preprocessing.html">controller.controller_preprocessing module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_processing.html">controller.controller_processing module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_protocol_inputs.html">controller.controller_protocol_inputs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_protocol_list.html">controller.controller_protocol_list module</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">controller.controller_reconstruction module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_sequence_inputs.html">controller.controller_sequence_inputs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_sequence_list.html">controller.controller_sequence_list module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_session.html">controller.controller_session module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_smith_chart.html">controller.controller_smith_chart module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_figures.html">controller.controller_toolbar_figures module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_marcos.html">controller.controller_toolbar_marcos module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_post.html">controller.controller_toolbar_post module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_protocols.html">controller.controller_toolbar_protocols module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_toolbar_sequences.html">controller.controller_toolbar_sequences module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.controller_visualisation.html">controller.controller_visualisation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="controller.experiment_gui.html">controller.experiment_gui module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="controller.html#module-controller">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="main.html">main module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.html">seq package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MaRGE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">MaRGE</a></li>
+          <li class="breadcrumb-item"><a href="controller.html">controller package</a></li>
+      <li class="breadcrumb-item active">controller.controller_reconstruction module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/controller.controller_reconstruction.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-controller.controller_reconstruction">
+<span id="controller-controller-reconstruction-module"></span><h1>controller.controller_reconstruction module<a class="headerlink" href="#module-controller.controller_reconstruction" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">controller.controller_reconstruction.</span></span><span class="sig-name descname"><span class="pre">ReconstructionTabController</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#ReconstructionTabController"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ReconstructionTabWidget</span></code></p>
+<p>Controller class for the ReconstructionTabWidget.</p>
+<p>Inherits from ReconstructionTabWidget to provide additional functionality for image reconstruction.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.pocs_button">
+<span class="sig-name descname"><span class="pre">pocs_button</span></span><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.pocs_button" title="Link to this definition"></a></dt>
+<dd><p>QPushButton for performing POCS.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.image_fft_button">
+<span class="sig-name descname"><span class="pre">image_fft_button</span></span><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.image_fft_button" title="Link to this definition"></a></dt>
+<dd><p>QPushButton for performing FFT reconstruction.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.image_art_button">
+<span class="sig-name descname"><span class="pre">image_art_button</span></span><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.image_art_button" title="Link to this definition"></a></dt>
+<dd><p>QPushButton for performing ART reconstruction.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.artReconstruction">
+<span class="sig-name descname"><span class="pre">artReconstruction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#ReconstructionTabController.artReconstruction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.artReconstruction" title="Link to this definition"></a></dt>
+<dd><p>Perform ART reconstruction in a separate thread.</p>
+<p>Creates a new thread and runs the runArtReconstruction method in that thread.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.dfft">
+<span class="sig-name descname"><span class="pre">dfft</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#ReconstructionTabController.dfft"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.dfft" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.ifft">
+<span class="sig-name descname"><span class="pre">ifft</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#ReconstructionTabController.ifft"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.ifft" title="Link to this definition"></a></dt>
+<dd><p>Perform FFT reconstruction in a separate thread.</p>
+<p>Creates a new thread and runs the runFftReconstruction method in that thread.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.pocsReconstruction">
+<span class="sig-name descname"><span class="pre">pocsReconstruction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#ReconstructionTabController.pocsReconstruction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.pocsReconstruction" title="Link to this definition"></a></dt>
+<dd><p>Perform POCS reconstruction in a separate thread.</p>
+<p>Creates a new thread and runs the runPocsReconstruction method in that thread.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.runArtReconstruction">
+<span class="sig-name descname"><span class="pre">runArtReconstruction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#ReconstructionTabController.runArtReconstruction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.runArtReconstruction" title="Link to this definition"></a></dt>
+<dd><p>Perform ART reconstruction.</p>
+<p>Retrieves the mat data from the loaded .mat file in the main toolbar controller.
+Extracts the necessary data from the mat file.
+Performs the ART reconstruction algorithm.
+Updates the main matrix of the image view widget with the reconstructed image.
+Adds the “ART” operation to the history widget and updates the history dictionary and operations history.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.runDFFT">
+<span class="sig-name descname"><span class="pre">runDFFT</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#ReconstructionTabController.runDFFT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.runDFFT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.runIFFT">
+<span class="sig-name descname"><span class="pre">runIFFT</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#ReconstructionTabController.runIFFT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.runIFFT" title="Link to this definition"></a></dt>
+<dd><p>Perform FFT reconstruction.</p>
+<p>Retrieves the k-space data from the main matrix of the image view widget.
+Performs inverse FFT shift, inverse FFT, and inverse FFT shift to reconstruct the image in the spatial domain.
+Updates the main matrix of the image view widget with the reconstructed image.
+Adds the “FFT” operation to the history widget and updates the history dictionary and operations history.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.runPocsReconstruction">
+<span class="sig-name descname"><span class="pre">runPocsReconstruction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#ReconstructionTabController.runPocsReconstruction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.runPocsReconstruction" title="Link to this definition"></a></dt>
+<dd><p>Perform POCS reconstruction.</p>
+<p>Retrieves the number of points before m+n where reconstruction begins to go to zero.
+Retrieves the correlation threshold for stopping the iterations.
+Computes the partial image and full image for POCS reconstruction.
+Applies the iterative reconstruction with phase correction.
+Updates the main matrix of the image view widget with the interpolated image.
+Adds the “POCS” operation to the history widget and updates the history dictionary and operations history.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.runZeroReconstruction">
+<span class="sig-name descname"><span class="pre">runZeroReconstruction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#ReconstructionTabController.runZeroReconstruction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.runZeroReconstruction" title="Link to this definition"></a></dt>
+<dd><p>Run the partial reconstruction operation.</p>
+<p>Retrieves the necessary parameters and performs the partial reconstruction on the loaded image.
+Updates the main matrix of the image view widget with the partially reconstructed image, adds the operation to
+the history widget, and updates the operations history.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ReconstructionTabController.zeroReconstruction">
+<span class="sig-name descname"><span class="pre">zeroReconstruction</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#ReconstructionTabController.zeroReconstruction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.ReconstructionTabController.zeroReconstruction" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.getPath">
+<span class="sig-prename descclassname"><span class="pre">controller.controller_reconstruction.</span></span><span class="sig-name descname"><span class="pre">getPath</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#getPath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.getPath" title="Link to this definition"></a></dt>
+<dd><p>Get the absolute path to the MATLAB script file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Absolute path to the MATLAB script file.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.hanningFilter">
+<span class="sig-prename descclassname"><span class="pre">controller.controller_reconstruction.</span></span><span class="sig-name descname"><span class="pre">hanningFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kSpace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#hanningFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.hanningFilter" title="Link to this definition"></a></dt>
+<dd><p>Apply a Hanning filter to the k-space data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kSpace</strong> (<em>ndarray</em>) – K-space data.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – Number of zero-filled points in k-space.</p></li>
+<li><p><strong>m</strong> (<em>int</em>) – Number of acquired points in k-space.</p></li>
+<li><p><strong>nb_point</strong> (<em>int</em>) – Number of points before m+n where reconstruction begins to go to zero.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>K-space data with the Hanning filter applied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="controller.controller_reconstruction.ramp">
+<span class="sig-prename descclassname"><span class="pre">controller.controller_reconstruction.</span></span><span class="sig-name descname"><span class="pre">ramp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kSpace</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/controller/controller_reconstruction.html#ramp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#controller.controller_reconstruction.ramp" title="Link to this definition"></a></dt>
+<dd><p>Apply a ramp filter to the k-space data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kSpace</strong> (<em>ndarray</em>) – K-space data.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – Number of zero-filled points in k-space.</p></li>
+<li><p><strong>m</strong> (<em>int</em>) – Number of acquired points in k-space.</p></li>
+<li><p><strong>nb_point</strong> (<em>int</em>) – Number of points before m+n where reconstruction begins to go to zero.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>K-space data with the ramp filter applied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="controller.controller_protocol_list.html" class="btn btn-neutral float-left" title="controller.controller_protocol_list module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="controller.controller_sequence_inputs.html" class="btn btn-neutral float-right" title="controller.controller_sequence_inputs module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright GPL-3.0 license.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

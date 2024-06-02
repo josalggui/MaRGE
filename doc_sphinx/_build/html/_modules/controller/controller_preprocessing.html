@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>controller.controller_preprocessing &mdash; MaRGE v0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=1812e922"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MaRGE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">MaRGE</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MaRGE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">controller.controller_preprocessing</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for controller.controller_preprocessing</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">widgets.widget_preprocessing</span> <span class="kn">import</span> <span class="n">PreProcessingTabWidget</span>
+
+
+<div class="viewcode-block" id="PreProcessingTabController">
+<a class="viewcode-back" href="../../controller.controller_preprocessing.html#controller.controller_preprocessing.PreProcessingTabController">[docs]</a>
+<span class="k">class</span> <span class="nc">PreProcessingTabController</span><span class="p">(</span><span class="n">PreProcessingTabWidget</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Controller class for the pre-processing tab widget.</span>
+
+<span class="sd">    Inherits from PreProcessingTabWidget.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        partial_reconstruction_button (QPushButton): QPushButton for applying partial reconstruction.</span>
+<span class="sd">        image_cosbell_button (QPushButton): QPushButton for applying Cosbell filter.</span>
+<span class="sd">        phase_center_button (QPushButton): QPushButton for getting the phase center.</span>
+<span class="sd">        image_padding_button (QPushButton): QPushButton for applying zero padding.</span>
+<span class="sd">        new_fov_button (QPushButton): QPushButton for changing the field of view.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the PreProcessingTabController.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *args: Variable length argument list.</span>
+<span class="sd">            **kwargs: Arbitrary keyword arguments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PreProcessingTabController</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Connect the button click signal to the corresponding methods</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_cosbell_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cosbellFilter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_padding_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zeroPadding</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_fov_button</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fovShifting</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PreProcessingTabController.cosbellFilter">
+<a class="viewcode-back" href="../../controller.controller_preprocessing.html#controller.controller_preprocessing.PreProcessingTabController.cosbellFilter">[docs]</a>
+    <span class="k">def</span> <span class="nf">cosbellFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply the Cosbell filter operation using threading.</span>
+
+<span class="sd">        Starts a new thread to execute the runCosbellFilter method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Send printed text to the corresponding console</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">setup_console</span><span class="p">()</span>
+
+        <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runCosbellFilter</span><span class="p">)</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="PreProcessingTabController.runCosbellFilter">
+<a class="viewcode-back" href="../../controller.controller_preprocessing.html#controller.controller_preprocessing.PreProcessingTabController.runCosbellFilter">[docs]</a>
+    <span class="k">def</span> <span class="nf">runCosbellFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the Cosbell filter operation.</span>
+
+<span class="sd">        Retrieves the necessary parameters and performs the Cosbell filtering on the loaded image.</span>
+<span class="sd">        Updates the main matrix of the image view widget with the filtered data, adds the operation to the history widget,</span>
+<span class="sd">        and updates the operations history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Cosbell filter order from the text field</span>
+        <span class="n">cosbell_order</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cosbell_order_field</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+
+        <span class="c1"># Get the mat data from the loaded .mat file in the main toolbar controller</span>
+        <span class="n">mat_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">toolbar_image</span><span class="o">.</span><span class="n">mat_data</span>
+        <span class="n">sampled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">toolbar_image</span><span class="o">.</span><span class="n">k_space_raw</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">image_view_widget</span><span class="o">.</span><span class="n">main_matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">nPoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">mat_data</span><span class="p">[</span><span class="s1">&#39;nPoints&#39;</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Check which checkboxes are selected</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Cosbell -&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">readout_checkbox</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sampled</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">nPoints</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">kmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">k</span><span class="p">[:]))</span>
+            <span class="n">text</span> <span class="o">+=</span> <span class="s1">&#39; RD,&#39;</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">k</span> <span class="o">/</span> <span class="n">kmax</span>
+            <span class="n">data</span> <span class="o">*=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span> <span class="o">**</span> <span class="n">cosbell_order</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_checkbox</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sampled</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">nPoints</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">kmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">k</span><span class="p">[:]))</span>
+            <span class="n">text</span> <span class="o">+=</span> <span class="s1">&#39; PH,&#39;</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">k</span> <span class="o">/</span> <span class="n">kmax</span>
+            <span class="n">data</span> <span class="o">*=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span> <span class="o">**</span> <span class="n">cosbell_order</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">slice_checkbox</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sampled</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">nPoints</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">kmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">k</span><span class="p">[:]))</span>
+            <span class="n">text</span> <span class="o">+=</span> <span class="s1">&#39; SL,&#39;</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="n">k</span> <span class="o">/</span> <span class="n">kmax</span>
+            <span class="n">data</span> <span class="o">*=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span> <span class="o">**</span> <span class="n">cosbell_order</span><span class="p">)</span>
+
+        <span class="c1"># Update the main matrix of the image view widget with the cosbell data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">image_view_widget</span><span class="o">.</span><span class="n">main_matrix</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Add new item to the history list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">history_list</span><span class="o">.</span><span class="n">addNewItem</span><span class="p">(</span><span class="n">stamp</span><span class="o">=</span><span class="s2">&quot;Cosbell&quot;</span><span class="p">,</span>
+                                          <span class="n">image</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                                          <span class="n">orientation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">toolbar_image</span><span class="o">.</span><span class="n">mat_data</span><span class="p">[</span><span class="s1">&#39;axesOrientation&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                          <span class="n">operation</span><span class="o">=</span><span class="n">text</span> <span class="o">+</span> <span class="s2">&quot; Order: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">cosbell_order</span><span class="p">),</span>
+                                          <span class="n">space</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+                                          <span class="n">image_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">image_view_widget</span><span class="o">.</span><span class="n">image_key</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PreProcessingTabController.zeroPadding">
+<a class="viewcode-back" href="../../controller.controller_preprocessing.html#controller.controller_preprocessing.PreProcessingTabController.zeroPadding">[docs]</a>
+    <span class="k">def</span> <span class="nf">zeroPadding</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply the zero-padding operation using threading.</span>
+
+<span class="sd">        Starts a new thread to execute the runZeroPadding method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Send printed text to the corresponding console</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">setup_console</span><span class="p">()</span>
+
+        <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runZeroPadding</span><span class="p">)</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="PreProcessingTabController.runZeroPadding">
+<a class="viewcode-back" href="../../controller.controller_preprocessing.html#controller.controller_preprocessing.PreProcessingTabController.runZeroPadding">[docs]</a>
+    <span class="k">def</span> <span class="nf">runZeroPadding</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the zero-padding operation.</span>
+
+<span class="sd">        Retrieves the necessary parameters and performs the zero-padding on the loaded image.</span>
+<span class="sd">        Updates the main matrix of the image view widget with the padded image, adds the operation to the history</span>
+<span class="sd">        widget, and updates the operations history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Zero-padding order for each dimension from the text field</span>
+        <span class="n">zero_padding_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_padding_order_field</span><span class="o">.</span><span class="n">text</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+        <span class="n">rd_order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">zero_padding_order</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">ph_order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">zero_padding_order</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">sl_order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">zero_padding_order</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="c1"># Get the k_space data and its shape</span>
+        <span class="n">k_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">image_view_widget</span><span class="o">.</span><span class="n">main_matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">current_shape</span> <span class="o">=</span> <span class="n">k_space</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="c1"># Determine the new shape after zero-padding</span>
+        <span class="n">new_shape</span> <span class="o">=</span> <span class="n">current_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">sl_order</span><span class="p">,</span> <span class="n">current_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">ph_order</span><span class="p">,</span> <span class="n">current_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">rd_order</span>
+
+        <span class="c1"># Create an image matrix filled with zeros</span>
+        <span class="n">image_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">new_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+
+        <span class="c1"># Get the dimensions of the current image</span>
+        <span class="n">image_height</span> <span class="o">=</span> <span class="n">current_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">image_width</span> <span class="o">=</span> <span class="n">current_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">image_depth</span> <span class="o">=</span> <span class="n">current_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="c1"># Calculate the centering offsets for each dimension</span>
+        <span class="n">col_offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">new_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">image_height</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">row_offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">new_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">image_width</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">depth_offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">new_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">image_depth</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+
+        <span class="c1"># Calculate the start and end indices to center the k_space within the image_matrix</span>
+        <span class="n">col_start</span> <span class="o">=</span> <span class="n">col_offset</span>
+        <span class="n">col_end</span> <span class="o">=</span> <span class="n">col_start</span> <span class="o">+</span> <span class="n">image_height</span>
+        <span class="n">row_start</span> <span class="o">=</span> <span class="n">row_offset</span>
+        <span class="n">row_end</span> <span class="o">=</span> <span class="n">row_start</span> <span class="o">+</span> <span class="n">image_width</span>
+        <span class="n">depth_start</span> <span class="o">=</span> <span class="n">depth_offset</span>
+        <span class="n">depth_end</span> <span class="o">=</span> <span class="n">depth_start</span> <span class="o">+</span> <span class="n">image_depth</span>
+
+        <span class="c1"># Copy the k_space into the image_matrix at the center</span>
+        <span class="n">image_matrix</span><span class="p">[</span><span class="n">col_start</span><span class="p">:</span><span class="n">col_end</span><span class="p">,</span> <span class="n">row_start</span><span class="p">:</span><span class="n">row_end</span><span class="p">,</span> <span class="n">depth_start</span><span class="p">:</span><span class="n">depth_end</span><span class="p">]</span> <span class="o">=</span> <span class="n">k_space</span>
+
+        <span class="c1"># Update the main matrix of the image view widget with the padded image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">image_view_widget</span><span class="o">.</span><span class="n">main_matrix</span> <span class="o">=</span> <span class="n">image_matrix</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Add new item to the history list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">history_list</span><span class="o">.</span><span class="n">addNewItem</span><span class="p">(</span><span class="n">stamp</span><span class="o">=</span><span class="s2">&quot;Zero Padding&quot;</span><span class="p">,</span>
+                                          <span class="n">image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">image_view_widget</span><span class="o">.</span><span class="n">main_matrix</span><span class="p">,</span>
+                                          <span class="n">orientation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">toolbar_image</span><span class="o">.</span><span class="n">mat_data</span><span class="p">[</span><span class="s1">&#39;axesOrientation&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                          <span class="n">operation</span><span class="o">=</span><span class="s2">&quot;Zero Padding - RD: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">rd_order</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;, PH: &quot;</span>
+                                                    <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ph_order</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;, SL: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">sl_order</span><span class="p">),</span>
+                                          <span class="n">space</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+                                          <span class="n">image_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">image_view_widget</span><span class="o">.</span><span class="n">image_key</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PreProcessingTabController.fovShifting">
+<a class="viewcode-back" href="../../controller.controller_preprocessing.html#controller.controller_preprocessing.PreProcessingTabController.fovShifting">[docs]</a>
+    <span class="k">def</span> <span class="nf">fovShifting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform the FOV change operation using threading.</span>
+
+<span class="sd">        Starts a new thread to execute the runFovShifting method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">runFovShifting</span><span class="p">)</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="PreProcessingTabController.runFovShifting">
+<a class="viewcode-back" href="../../controller.controller_preprocessing.html#controller.controller_preprocessing.PreProcessingTabController.runFovShifting">[docs]</a>
+    <span class="k">def</span> <span class="nf">runFovShifting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the FOV change operation.</span>
+
+<span class="sd">        Retrieves the necessary parameters and performs the FOV change on the loaded image.</span>
+<span class="sd">        Updates the main matrix of the image view widget with the new FOV image, adds the operation to the history</span>
+<span class="sd">        widget, and updates the operations history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get the k_space data and its shape</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">toolbar_image</span><span class="o">.</span><span class="n">k_space_raw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">nPoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">toolbar_image</span><span class="o">.</span><span class="n">nPoints</span>
+
+        <span class="c1"># Factors for FOV change from the text field</span>
+        <span class="n">factors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">change_fov_field</span><span class="o">.</span><span class="n">text</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Extract the k_space components</span>
+        <span class="n">krd</span> <span class="o">=</span> <span class="n">k</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">kph</span> <span class="o">=</span> <span class="n">k</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">ksl</span> <span class="o">=</span> <span class="n">k</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">krd</span><span class="p">,</span> <span class="n">kph</span><span class="p">,</span> <span class="n">ksl</span><span class="p">))</span>
+
+        <span class="c1"># Convert factors to spatial shifts</span>
+        <span class="n">delta_rd</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">factors</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">*</span> <span class="mf">1e-3</span>
+        <span class="n">delta_ph</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">factors</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">*</span> <span class="mf">1e-3</span>
+        <span class="n">delta_sl</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">factors</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span> <span class="o">*</span> <span class="mf">1e-3</span>
+        <span class="n">delta_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">delta_rd</span><span class="p">,</span> <span class="n">delta_ph</span><span class="p">,</span> <span class="n">delta_sl</span><span class="p">])</span>
+
+        <span class="c1"># Calculate the phase shift using the spatial shifts</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">k</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">delta_r</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">image_view_widget</span><span class="o">.</span><span class="n">main_matrix</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">nPoints</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1"># Add the &quot;New FOV&quot; operation to the history widget with a timestamp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">history_list</span><span class="o">.</span><span class="n">addNewItem</span><span class="p">(</span><span class="n">stamp</span><span class="o">=</span><span class="s2">&quot;FOV shift&quot;</span><span class="p">,</span>
+                                          <span class="n">image</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">image_view_widget</span><span class="o">.</span><span class="n">main_matrix</span><span class="p">,</span>
+                                          <span class="n">orientation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">toolbar_image</span><span class="o">.</span><span class="n">mat_data</span><span class="p">[</span><span class="s1">&#39;axesOrientation&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                          <span class="n">operation</span><span class="o">=</span><span class="s2">&quot;Fov shift&quot;</span><span class="p">,</span>
+                                          <span class="n">space</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+                                          <span class="n">image_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">main</span><span class="o">.</span><span class="n">image_view_widget</span><span class="o">.</span><span class="n">image_key</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright GPL-3.0 license.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

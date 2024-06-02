@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>seq package &mdash; MaRGE v0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=1812e922"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="seq.ADCdelayTest module" href="seq.ADCdelayTest.html" />
+    <link rel="prev" title="main module" href="main.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MaRGE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">MaRGE</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="autotuning.html">autotuning package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="controller.html">controller package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="main.html">main module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">seq package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="seq.ADCdelayTest.html">seq.ADCdelayTest module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.B1calibration.html">seq.B1calibration module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.FIDandNoise.html">seq.FIDandNoise module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.MRID.html">seq.MRID module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.PETRAphysio.html">seq.PETRAphysio module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.autoTuning.html">seq.autoTuning module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.cpmg.html">seq.cpmg module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.eddycurrents.html">seq.eddycurrents module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.fid.html">seq.fid module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.gre1d.html">seq.gre1d module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.gre3d.html">seq.gre3d module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.haste.html">seq.haste module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.inversionRecovery.html">seq.inversionRecovery module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.irtse.html">seq.irtse module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.larmor.html">seq.larmor module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.localizer.html">seq.localizer module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.mriBlankSeq.html">seq.mriBlankSeq module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.mse.html">seq.mse module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.noise.html">seq.noise module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.petra.html">seq.petra module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.rabiFlops.html">seq.rabiFlops module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.rare.html">seq.rare module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.rareProtocols.html">seq.rareProtocols module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.rareProtocolsTest.html">seq.rareProtocolsTest module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.sequences.html">seq.sequences module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.sequencesCalibration.html">seq.sequencesCalibration module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.shimmingSweep.html">seq.shimmingSweep module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.sliceSelection.html">seq.sliceSelection module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.sweepImage.html">seq.sweepImage module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.testSE.html">seq.testSE module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="seq.tsePrescan.html">seq.tsePrescan module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-seq">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MaRGE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">MaRGE</a></li>
+      <li class="breadcrumb-item active">seq package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/seq.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="seq-package">
+<h1>seq package<a class="headerlink" href="#seq-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="seq.ADCdelayTest.html">seq.ADCdelayTest module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.ADCdelayTest.html#seq.ADCdelayTest.ADCdelayTest"><code class="docutils literal notranslate"><span class="pre">ADCdelayTest</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.ADCdelayTest.html#seq.ADCdelayTest.ADCdelayTest.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">ADCdelayTest.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.ADCdelayTest.html#seq.ADCdelayTest.ADCdelayTest.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">ADCdelayTest.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.ADCdelayTest.html#seq.ADCdelayTest.ADCdelayTest.sequenceRun"><code class="docutils literal notranslate"><span class="pre">ADCdelayTest.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.ADCdelayTest.html#seq.ADCdelayTest.ADCdelayTest.sequenceTime"><code class="docutils literal notranslate"><span class="pre">ADCdelayTest.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.B1calibration.html">seq.B1calibration module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.B1calibration.html#seq.B1calibration.B1calibration"><code class="docutils literal notranslate"><span class="pre">B1calibration</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.B1calibration.html#seq.B1calibration.B1calibration.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">B1calibration.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.B1calibration.html#seq.B1calibration.B1calibration.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">B1calibration.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.B1calibration.html#seq.B1calibration.B1calibration.sequenceRun"><code class="docutils literal notranslate"><span class="pre">B1calibration.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.B1calibration.html#seq.B1calibration.B1calibration.sequenceTime"><code class="docutils literal notranslate"><span class="pre">B1calibration.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.FIDandNoise.html">seq.FIDandNoise module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.FIDandNoise.html#seq.FIDandNoise.FIDandNoise"><code class="docutils literal notranslate"><span class="pre">FIDandNoise</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.FIDandNoise.html#seq.FIDandNoise.FIDandNoise.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">FIDandNoise.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.FIDandNoise.html#seq.FIDandNoise.FIDandNoise.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">FIDandNoise.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.FIDandNoise.html#seq.FIDandNoise.FIDandNoise.sequenceRun"><code class="docutils literal notranslate"><span class="pre">FIDandNoise.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.FIDandNoise.html#seq.FIDandNoise.FIDandNoise.sequenceTime"><code class="docutils literal notranslate"><span class="pre">FIDandNoise.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.MRID.html">seq.MRID module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.MRID.html#seq.MRID.MRID"><code class="docutils literal notranslate"><span class="pre">MRID</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.MRID.html#seq.MRID.MRID.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">MRID.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.MRID.html#seq.MRID.MRID.sequenceAtributes"><code class="docutils literal notranslate"><span class="pre">MRID.sequenceAtributes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.MRID.html#seq.MRID.MRID.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">MRID.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.MRID.html#seq.MRID.MRID.sequenceRun"><code class="docutils literal notranslate"><span class="pre">MRID.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.MRID.html#seq.MRID.MRID.sequenceTime"><code class="docutils literal notranslate"><span class="pre">MRID.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.PETRAphysio.html">seq.PETRAphysio module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.PETRAphysio.html#seq.PETRAphysio.PETRAphysio"><code class="docutils literal notranslate"><span class="pre">PETRAphysio</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.PETRAphysio.html#seq.PETRAphysio.PETRAphysio.createKCartesian"><code class="docutils literal notranslate"><span class="pre">PETRAphysio.createKCartesian()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.PETRAphysio.html#seq.PETRAphysio.PETRAphysio.createSinglePoints"><code class="docutils literal notranslate"><span class="pre">PETRAphysio.createSinglePoints()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.PETRAphysio.html#seq.PETRAphysio.PETRAphysio.golden3D"><code class="docutils literal notranslate"><span class="pre">PETRAphysio.golden3D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.PETRAphysio.html#seq.PETRAphysio.PETRAphysio.plot_kSpace"><code class="docutils literal notranslate"><span class="pre">PETRAphysio.plot_kSpace()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.PETRAphysio.html#seq.PETRAphysio.PETRAphysio.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">PETRAphysio.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.PETRAphysio.html#seq.PETRAphysio.PETRAphysio.sequenceAtributes"><code class="docutils literal notranslate"><span class="pre">PETRAphysio.sequenceAtributes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.PETRAphysio.html#seq.PETRAphysio.PETRAphysio.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">PETRAphysio.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.PETRAphysio.html#seq.PETRAphysio.PETRAphysio.sequenceParameters"><code class="docutils literal notranslate"><span class="pre">PETRAphysio.sequenceParameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.PETRAphysio.html#seq.PETRAphysio.PETRAphysio.sequenceRun"><code class="docutils literal notranslate"><span class="pre">PETRAphysio.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.PETRAphysio.html#seq.PETRAphysio.PETRAphysio.sequenceTime"><code class="docutils literal notranslate"><span class="pre">PETRAphysio.sequenceTime()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.PETRAphysio.html#seq.PETRAphysio.PETRAphysio.sequenceTimeParameters"><code class="docutils literal notranslate"><span class="pre">PETRAphysio.sequenceTimeParameters()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.autoTuning.html">seq.autoTuning module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning"><code class="docutils literal notranslate"><span class="pre">AutoTuning</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning.addValues"><code class="docutils literal notranslate"><span class="pre">AutoTuning.addValues()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning.finalOptimization2D"><code class="docutils literal notranslate"><span class="pre">AutoTuning.finalOptimization2D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning.finalOptimization3D"><code class="docutils literal notranslate"><span class="pre">AutoTuning.finalOptimization3D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning.getCmZ"><code class="docutils literal notranslate"><span class="pre">AutoTuning.getCmZ()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning.getCsZ"><code class="docutils literal notranslate"><span class="pre">AutoTuning.getCsZ()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning.getCtZ"><code class="docutils literal notranslate"><span class="pre">AutoTuning.getCtZ()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning.runAutoTuning"><code class="docutils literal notranslate"><span class="pre">AutoTuning.runAutoTuning()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning.runManual"><code class="docutils literal notranslate"><span class="pre">AutoTuning.runManual()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">AutoTuning.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">AutoTuning.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning.sequenceRun"><code class="docutils literal notranslate"><span class="pre">AutoTuning.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.autoTuning.html#seq.autoTuning.AutoTuning.sequenceTime"><code class="docutils literal notranslate"><span class="pre">AutoTuning.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.cpmg.html">seq.cpmg module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.cpmg.html#seq.cpmg.TSE"><code class="docutils literal notranslate"><span class="pre">TSE</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.cpmg.html#seq.cpmg.TSE.mySignal"><code class="docutils literal notranslate"><span class="pre">TSE.mySignal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.cpmg.html#seq.cpmg.TSE.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">TSE.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.cpmg.html#seq.cpmg.TSE.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">TSE.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.cpmg.html#seq.cpmg.TSE.sequenceRun"><code class="docutils literal notranslate"><span class="pre">TSE.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.cpmg.html#seq.cpmg.TSE.sequenceTime"><code class="docutils literal notranslate"><span class="pre">TSE.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.eddycurrents.html">seq.eddycurrents module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.eddycurrents.html#seq.eddycurrents.EDDYCURRENTS"><code class="docutils literal notranslate"><span class="pre">EDDYCURRENTS</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.eddycurrents.html#seq.eddycurrents.EDDYCURRENTS.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">EDDYCURRENTS.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.eddycurrents.html#seq.eddycurrents.EDDYCURRENTS.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">EDDYCURRENTS.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.eddycurrents.html#seq.eddycurrents.EDDYCURRENTS.sequenceRun"><code class="docutils literal notranslate"><span class="pre">EDDYCURRENTS.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.eddycurrents.html#seq.eddycurrents.EDDYCURRENTS.sequenceTime"><code class="docutils literal notranslate"><span class="pre">EDDYCURRENTS.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.fid.html">seq.fid module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.fid.html#seq.fid.FID"><code class="docutils literal notranslate"><span class="pre">FID</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.fid.html#seq.fid.FID.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">FID.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.fid.html#seq.fid.FID.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">FID.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.fid.html#seq.fid.FID.sequenceRun"><code class="docutils literal notranslate"><span class="pre">FID.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.fid.html#seq.fid.FID.sequenceTime"><code class="docutils literal notranslate"><span class="pre">FID.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.gre1d.html">seq.gre1d module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.gre1d.html#seq.gre1d.GRE1D"><code class="docutils literal notranslate"><span class="pre">GRE1D</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.gre1d.html#seq.gre1d.GRE1D.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">GRE1D.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.gre1d.html#seq.gre1d.GRE1D.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">GRE1D.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.gre1d.html#seq.gre1d.GRE1D.sequenceRun"><code class="docutils literal notranslate"><span class="pre">GRE1D.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.gre1d.html#seq.gre1d.GRE1D.sequenceTime"><code class="docutils literal notranslate"><span class="pre">GRE1D.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.gre3d.html">seq.gre3d module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.gre3d.html#seq.gre3d.GRE3D"><code class="docutils literal notranslate"><span class="pre">GRE3D</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.gre3d.html#seq.gre3d.GRE3D.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">GRE3D.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.gre3d.html#seq.gre3d.GRE3D.sequenceAtributes"><code class="docutils literal notranslate"><span class="pre">GRE3D.sequenceAtributes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.gre3d.html#seq.gre3d.GRE3D.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">GRE3D.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.gre3d.html#seq.gre3d.GRE3D.sequenceRun"><code class="docutils literal notranslate"><span class="pre">GRE3D.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.gre3d.html#seq.gre3d.GRE3D.sequenceTime"><code class="docutils literal notranslate"><span class="pre">GRE3D.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.haste.html">seq.haste module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="seq.inversionRecovery.html">seq.inversionRecovery module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.inversionRecovery.html#seq.inversionRecovery.InversionRecovery"><code class="docutils literal notranslate"><span class="pre">InversionRecovery</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.inversionRecovery.html#seq.inversionRecovery.InversionRecovery.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">InversionRecovery.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.inversionRecovery.html#seq.inversionRecovery.InversionRecovery.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">InversionRecovery.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.inversionRecovery.html#seq.inversionRecovery.InversionRecovery.sequenceRun"><code class="docutils literal notranslate"><span class="pre">InversionRecovery.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.inversionRecovery.html#seq.inversionRecovery.InversionRecovery.sequenceTime"><code class="docutils literal notranslate"><span class="pre">InversionRecovery.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.irtse.html">seq.irtse module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="seq.larmor.html">seq.larmor module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.larmor.html#seq.larmor.Larmor"><code class="docutils literal notranslate"><span class="pre">Larmor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.larmor.html#seq.larmor.Larmor.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">Larmor.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.larmor.html#seq.larmor.Larmor.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">Larmor.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.larmor.html#seq.larmor.Larmor.sequenceRun"><code class="docutils literal notranslate"><span class="pre">Larmor.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.larmor.html#seq.larmor.Larmor.sequenceTime"><code class="docutils literal notranslate"><span class="pre">Larmor.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.localizer.html">seq.localizer module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.localizer.html#seq.localizer.Localizer"><code class="docutils literal notranslate"><span class="pre">Localizer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.mriBlankSeq.html">seq.mriBlankSeq module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.mapKeys"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mapKeys</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.mapNmspc"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mapNmspc</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.mapVals"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mapVals</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.mapFields"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mapFields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.mapLen"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mapLen</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.mapTips"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mapTips</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.map_units"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.map_units</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.meta_data"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.meta_data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.rotations"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.rotations</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.dfovs"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.dfovs</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.fovs"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.fovs</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.session"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.session</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.demo"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.demo</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.mode"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.flo_dict"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.flo_dict</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.IMproperties"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.IMproperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.OTHproperties"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.OTHproperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.RFproperties"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.RFproperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.SEQproperties"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.SEQproperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.addParameter"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.addParameter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.autoProcessing"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.autoProcessing()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.decimate"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.decimate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.deleteOutput"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.deleteOutput()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.endSequence"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.endSequence()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.fixEchoPosition"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.fixEchoPosition()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.floDict2Exp"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.floDict2Exp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.getFovDisplacement"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.getFovDisplacement()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.getIndex"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.getIndex()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.getParameter"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.getParameter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.getRotationMatrix"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.getRotationMatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.gradTrap"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.gradTrap()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.gradTrapAmplitude"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.gradTrapAmplitude()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.gradTrapMomentum"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.gradTrapMomentum()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.image2Dicom"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.image2Dicom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.iniSequence"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.iniSequence()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.loadParams"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.loadParams()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.plotResults"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.plotResults()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.resetMapVals"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.resetMapVals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.rfRawPulse"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.rfRawPulse()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.rfRecPulse"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.rfRecPulse()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.rfSincPulse"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.rfSincPulse()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.runBm4dFilter"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.runBm4dFilter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.runCosbellFilter"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.runCosbellFilter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.runDFFT"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.runDFFT()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.runIFFT"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.runIFFT()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.runZeroPadding"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.runZeroPadding()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.rxGate"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.rxGate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.rxGateSync"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.rxGateSync()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.saveParams"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.saveParams()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.saveRawData"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.saveRawData()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.sequenceAtributes"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.sequenceAtributes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.sequencePlot"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.sequencePlot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.setGradient"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.setGradient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.setGradientRamp"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.setGradientRamp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.setParameter"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.setParameter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mriBlankSeq.html#seq.mriBlankSeq.MRIBLANKSEQ.ttl"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.ttl()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.mse.html">seq.mse module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.mse.html#seq.mse.MSE"><code class="docutils literal notranslate"><span class="pre">MSE</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.mse.html#seq.mse.MSE.dummyAnalysis"><code class="docutils literal notranslate"><span class="pre">MSE.dummyAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mse.html#seq.mse.MSE.myPhantom"><code class="docutils literal notranslate"><span class="pre">MSE.myPhantom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mse.html#seq.mse.MSE.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">MSE.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mse.html#seq.mse.MSE.sequenceAtributes"><code class="docutils literal notranslate"><span class="pre">MSE.sequenceAtributes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mse.html#seq.mse.MSE.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">MSE.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mse.html#seq.mse.MSE.sequenceRun"><code class="docutils literal notranslate"><span class="pre">MSE.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.mse.html#seq.mse.MSE.sequenceTime"><code class="docutils literal notranslate"><span class="pre">MSE.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.noise.html">seq.noise module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.noise.html#seq.noise.Noise"><code class="docutils literal notranslate"><span class="pre">Noise</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.noise.html#seq.noise.Noise.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">Noise.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.noise.html#seq.noise.Noise.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">Noise.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.noise.html#seq.noise.Noise.sequenceRun"><code class="docutils literal notranslate"><span class="pre">Noise.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.noise.html#seq.noise.Noise.sequenceTime"><code class="docutils literal notranslate"><span class="pre">Noise.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.petra.html">seq.petra module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.petra.html#seq.petra.PETRA"><code class="docutils literal notranslate"><span class="pre">PETRA</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.petra.html#seq.petra.PETRA.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">PETRA.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.petra.html#seq.petra.PETRA.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">PETRA.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.petra.html#seq.petra.PETRA.sequenceRun"><code class="docutils literal notranslate"><span class="pre">PETRA.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.petra.html#seq.petra.PETRA.sequenceTime"><code class="docutils literal notranslate"><span class="pre">PETRA.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.rabiFlops.html">seq.rabiFlops module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.rabiFlops.html#seq.rabiFlops.RabiFlops"><code class="docutils literal notranslate"><span class="pre">RabiFlops</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.rabiFlops.html#seq.rabiFlops.RabiFlops.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">RabiFlops.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rabiFlops.html#seq.rabiFlops.RabiFlops.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">RabiFlops.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rabiFlops.html#seq.rabiFlops.RabiFlops.sequenceRun"><code class="docutils literal notranslate"><span class="pre">RabiFlops.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rabiFlops.html#seq.rabiFlops.RabiFlops.sequenceTime"><code class="docutils literal notranslate"><span class="pre">RabiFlops.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.rare.html">seq.rare module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.rare.html#seq.rare.RARE"><code class="docutils literal notranslate"><span class="pre">RARE</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.rare.html#seq.rare.RARE.dummyAnalysis"><code class="docutils literal notranslate"><span class="pre">RARE.dummyAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rare.html#seq.rare.RARE.myPhantom"><code class="docutils literal notranslate"><span class="pre">RARE.myPhantom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rare.html#seq.rare.RARE.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">RARE.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rare.html#seq.rare.RARE.sequenceAtributes"><code class="docutils literal notranslate"><span class="pre">RARE.sequenceAtributes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rare.html#seq.rare.RARE.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">RARE.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rare.html#seq.rare.RARE.sequenceRun"><code class="docutils literal notranslate"><span class="pre">RARE.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rare.html#seq.rare.RARE.sequenceTime"><code class="docutils literal notranslate"><span class="pre">RARE.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.rareProtocols.html">seq.rareProtocols module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.rareProtocols.html#seq.rareProtocols.RAREProtocols"><code class="docutils literal notranslate"><span class="pre">RAREProtocols</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.rareProtocols.html#seq.rareProtocols.RAREProtocols.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">RAREProtocols.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rareProtocols.html#seq.rareProtocols.RAREProtocols.sequenceAtributes"><code class="docutils literal notranslate"><span class="pre">RAREProtocols.sequenceAtributes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rareProtocols.html#seq.rareProtocols.RAREProtocols.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">RAREProtocols.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rareProtocols.html#seq.rareProtocols.RAREProtocols.sequenceRun"><code class="docutils literal notranslate"><span class="pre">RAREProtocols.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rareProtocols.html#seq.rareProtocols.RAREProtocols.sequenceTime"><code class="docutils literal notranslate"><span class="pre">RAREProtocols.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.rareProtocolsTest.html">seq.rareProtocolsTest module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.rareProtocolsTest.html#seq.rareProtocolsTest.RAREProtocolsTest"><code class="docutils literal notranslate"><span class="pre">RAREProtocolsTest</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.rareProtocolsTest.html#seq.rareProtocolsTest.RAREProtocolsTest.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">RAREProtocolsTest.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rareProtocolsTest.html#seq.rareProtocolsTest.RAREProtocolsTest.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">RAREProtocolsTest.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rareProtocolsTest.html#seq.rareProtocolsTest.RAREProtocolsTest.sequenceRun"><code class="docutils literal notranslate"><span class="pre">RAREProtocolsTest.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.rareProtocolsTest.html#seq.rareProtocolsTest.RAREProtocolsTest.sequenceTime"><code class="docutils literal notranslate"><span class="pre">RAREProtocolsTest.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.sequences.html">seq.sequences module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.AutoTuning"><code class="docutils literal notranslate"><span class="pre">AutoTuning</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.B1calibration"><code class="docutils literal notranslate"><span class="pre">B1calibration</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.EDDYCURRENTS"><code class="docutils literal notranslate"><span class="pre">EDDYCURRENTS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.FID"><code class="docutils literal notranslate"><span class="pre">FID</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.FIDandNoise"><code class="docutils literal notranslate"><span class="pre">FIDandNoise</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.GRE1D"><code class="docutils literal notranslate"><span class="pre">GRE1D</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.GRE3D"><code class="docutils literal notranslate"><span class="pre">GRE3D</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.IR"><code class="docutils literal notranslate"><span class="pre">IR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.Larmor"><code class="docutils literal notranslate"><span class="pre">Larmor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.Localizer"><code class="docutils literal notranslate"><span class="pre">Localizer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.MRID"><code class="docutils literal notranslate"><span class="pre">MRID</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.MSE"><code class="docutils literal notranslate"><span class="pre">MSE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.Noise"><code class="docutils literal notranslate"><span class="pre">Noise</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.PETRA"><code class="docutils literal notranslate"><span class="pre">PETRA</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.PETRAphysio"><code class="docutils literal notranslate"><span class="pre">PETRAphysio</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.RARE"><code class="docutils literal notranslate"><span class="pre">RARE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.RAREProtocols"><code class="docutils literal notranslate"><span class="pre">RAREProtocols</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.RAREProtocolsTest"><code class="docutils literal notranslate"><span class="pre">RAREProtocolsTest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.RabiFlops"><code class="docutils literal notranslate"><span class="pre">RabiFlops</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.SWEEP"><code class="docutils literal notranslate"><span class="pre">SWEEP</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.Shimming"><code class="docutils literal notranslate"><span class="pre">Shimming</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.TSE"><code class="docutils literal notranslate"><span class="pre">TSE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.TSEPrescan"><code class="docutils literal notranslate"><span class="pre">TSEPrescan</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="seq.sequences.html#seq.sequences.testSE"><code class="docutils literal notranslate"><span class="pre">testSE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.sequencesCalibration.html">seq.sequencesCalibration module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="seq.shimmingSweep.html">seq.shimmingSweep module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.shimmingSweep.html#seq.shimmingSweep.ShimmingSweep"><code class="docutils literal notranslate"><span class="pre">ShimmingSweep</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.shimmingSweep.html#seq.shimmingSweep.ShimmingSweep.createSequence"><code class="docutils literal notranslate"><span class="pre">ShimmingSweep.createSequence()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.shimmingSweep.html#seq.shimmingSweep.ShimmingSweep.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">ShimmingSweep.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.shimmingSweep.html#seq.shimmingSweep.ShimmingSweep.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">ShimmingSweep.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.shimmingSweep.html#seq.shimmingSweep.ShimmingSweep.sequenceRun"><code class="docutils literal notranslate"><span class="pre">ShimmingSweep.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.shimmingSweep.html#seq.shimmingSweep.ShimmingSweep.sequenceTime"><code class="docutils literal notranslate"><span class="pre">ShimmingSweep.sequenceTime()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.shimmingSweep.html#seq.shimmingSweep.ShimmingSweep.shimming"><code class="docutils literal notranslate"><span class="pre">ShimmingSweep.shimming()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.sliceSelection.html">seq.sliceSelection module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="seq.sweepImage.html">seq.sweepImage module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.sweepImage.html#seq.sweepImage.SweepImage"><code class="docutils literal notranslate"><span class="pre">SweepImage</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.sweepImage.html#seq.sweepImage.SweepImage.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">SweepImage.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.sweepImage.html#seq.sweepImage.SweepImage.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">SweepImage.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.sweepImage.html#seq.sweepImage.SweepImage.sequenceRun"><code class="docutils literal notranslate"><span class="pre">SweepImage.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.sweepImage.html#seq.sweepImage.SweepImage.sequenceTime"><code class="docutils literal notranslate"><span class="pre">SweepImage.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.testSE.html">seq.testSE module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.testSE.html#seq.testSE.testSE"><code class="docutils literal notranslate"><span class="pre">testSE</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.testSE.html#seq.testSE.testSE.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">testSE.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.testSE.html#seq.testSE.testSE.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">testSE.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.testSE.html#seq.testSE.testSE.sequenceRun"><code class="docutils literal notranslate"><span class="pre">testSE.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.testSE.html#seq.testSE.testSE.sequenceTime"><code class="docutils literal notranslate"><span class="pre">testSE.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="seq.tsePrescan.html">seq.tsePrescan module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="seq.tsePrescan.html#seq.tsePrescan.TSEPRE"><code class="docutils literal notranslate"><span class="pre">TSEPRE</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="seq.tsePrescan.html#seq.tsePrescan.TSEPRE.sequenceAnalysis"><code class="docutils literal notranslate"><span class="pre">TSEPRE.sequenceAnalysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.tsePrescan.html#seq.tsePrescan.TSEPRE.sequenceInfo"><code class="docutils literal notranslate"><span class="pre">TSEPRE.sequenceInfo()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.tsePrescan.html#seq.tsePrescan.TSEPRE.sequenceRun"><code class="docutils literal notranslate"><span class="pre">TSEPRE.sequenceRun()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="seq.tsePrescan.html#seq.tsePrescan.TSEPRE.sequenceTime"><code class="docutils literal notranslate"><span class="pre">TSEPRE.sequenceTime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="module-seq">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-seq" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="main.html" class="btn btn-neutral float-left" title="main module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="seq.ADCdelayTest.html" class="btn btn-neutral float-right" title="seq.ADCdelayTest module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright GPL-3.0 license.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

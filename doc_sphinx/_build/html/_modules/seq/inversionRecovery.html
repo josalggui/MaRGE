@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>seq.inversionRecovery &mdash; MaRGE v0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=1812e922"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MaRGE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">MaRGE</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MaRGE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">seq.inversionRecovery</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for seq.inversionRecovery</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">@author: T. Guallart Naval, november 2021</span>
+<span class="sd">@modifield: J.M. Algarín, february 25th 2022</span>
+<span class="sd">@modified: J.M. Algarín, june 8th 2022, adapted to new gui structure</span>
+<span class="sd">MRILAB @ I3M</span>
+<span class="sd">@summary: spin echo with inversion recovery where we sweep the time between the IR pulse and the excitation pulse.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">experiment</span> <span class="k">as</span> <span class="nn">ex</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">seq.mriBlankSeq</span> <span class="k">as</span> <span class="nn">blankSeq</span>  <span class="c1"># Import the mriBlankSequence for any new sequence.</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span> <span class="k">as</span> <span class="nn">sig</span>
+<span class="kn">import</span> <span class="nn">configs.hw_config</span> <span class="k">as</span> <span class="nn">hw</span>
+
+<div class="viewcode-block" id="InversionRecovery">
+<a class="viewcode-back" href="../../seq.inversionRecovery.html#seq.inversionRecovery.InversionRecovery">[docs]</a>
+<span class="k">class</span> <span class="nc">InversionRecovery</span><span class="p">(</span><span class="n">blankSeq</span><span class="o">.</span><span class="n">MRIBLANKSEQ</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">InversionRecovery</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="c1"># Input the parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;seqName&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;InverionRecoveryInfo&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="s1">&#39;InversionRecovery&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nScans&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Number of scans&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;larmorFreq&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Larmor frequency (MHz)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">3.08</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfExAmp&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF excitation amplitude (a.u.)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfReAmp&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF refocusing amplitude (a.u.)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfExTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF excitation time (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfReTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF refocusing time (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;echoTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Echo time (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;repetitionTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Repetition time (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">2000.</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nPoints&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;nPoints&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;IM&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;acqTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Acquisition time (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;shimming&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Shimming (*1e4)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">70</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;OTH&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;crusherAmp&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Crusher grad amp (mT/m)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;OTH&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;crusherTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Crusher grad time (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;OTH&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;crusherDelay&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Crusher grad delay (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;OTH&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;tInv0&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Inversion time, Start (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">50.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;tInv1&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Inversion time, End (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nSteps&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Number of steps&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InversionRecovery.sequenceInfo">
+<a class="viewcode-back" href="../../seq.inversionRecovery.html#seq.inversionRecovery.InversionRecovery.sequenceInfo">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Inversion Recovery&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Author: Dr. J.M. Algarín&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Contact: josalggui@i3m.upv.es&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mriLab @ i3M, CSIC, Spain&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;This sequence runs Inversion Recovery and sweep the inversion time&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="InversionRecovery.sequenceTime">
+<a class="viewcode-back" href="../../seq.inversionRecovery.html#seq.inversionRecovery.InversionRecovery.sequenceTime">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceTime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">nScans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nScans&#39;</span><span class="p">]</span>
+        <span class="n">repetitionTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;repetitionTime&#39;</span><span class="p">]</span><span class="o">*</span><span class="mf">1e-3</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">repetitionTime</span><span class="o">*</span><span class="n">nScans</span><span class="o">/</span><span class="mi">60</span><span class="p">)</span>  <span class="c1"># minutes, scanTime</span></div>
+
+
+<div class="viewcode-block" id="InversionRecovery.sequenceRun">
+<a class="viewcode-back" href="../../seq.inversionRecovery.html#seq.inversionRecovery.InversionRecovery.sequenceRun">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceRun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plotSeq</span><span class="p">,</span> <span class="n">demo</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">init_gpa</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Starts the gpa</span>
+
+        <span class="c1"># Create the inputs automatically. For some reason it only works if there is a few code later...</span>
+        <span class="c1"># for key in self.mapKeys:</span>
+        <span class="c1">#     locals()[key] = self.mapVals[key]</span>
+        <span class="c1">#     if not key in locals():</span>
+        <span class="c1">#         print(&#39;Error&#39;)</span>
+        <span class="c1">#         locals()[key] = self.mapVals[key]</span>
+
+        <span class="c1"># Create the inputs manually, pufff</span>
+        <span class="n">seqName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;seqName&#39;</span><span class="p">]</span>
+        <span class="n">nScans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nScans&#39;</span><span class="p">]</span>
+        <span class="n">larmorFreq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;larmorFreq&#39;</span><span class="p">]</span>  <span class="c1"># MHz</span>
+        <span class="n">rfExAmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfExAmp&#39;</span><span class="p">]</span>
+        <span class="n">rfReAmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfReAmp&#39;</span><span class="p">]</span>
+        <span class="n">rfExTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfExTime&#39;</span><span class="p">]</span>  <span class="c1"># us</span>
+        <span class="n">rfReTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfReTime&#39;</span><span class="p">]</span>  <span class="c1"># us</span>
+        <span class="n">acqTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;acqTime&#39;</span><span class="p">]</span>  <span class="c1"># ms</span>
+        <span class="n">echoTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;echoTime&#39;</span><span class="p">]</span>  <span class="c1"># ms</span>
+        <span class="n">repetitionTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;repetitionTime&#39;</span><span class="p">]</span>  <span class="c1"># ms</span>
+        <span class="n">tInv0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;tInv0&#39;</span><span class="p">]</span>  <span class="c1"># ms</span>
+        <span class="n">tInv1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;tInv1&#39;</span><span class="p">]</span>  <span class="c1"># ms</span>
+        <span class="n">nSteps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nSteps&#39;</span><span class="p">]</span>  <span class="c1"># number of samples</span>
+        <span class="n">nPoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nPoints&#39;</span><span class="p">]</span> <span class="c1"># number of readout points</span>
+        <span class="n">shimming</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;shimming&#39;</span><span class="p">]</span>
+        <span class="n">crusherAmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;crusherAmp&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e-3</span>
+        <span class="n">crusherTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;crusherTime&#39;</span><span class="p">]</span>
+        <span class="n">crusherDelay</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;crusherDelay&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Parameters in fundamental units</span>
+        <span class="n">rfExTime</span> <span class="o">=</span> <span class="n">rfExTime</span> <span class="o">*</span> <span class="mf">1e-6</span>
+        <span class="n">rfReTime</span> <span class="o">=</span> <span class="n">rfReTime</span> <span class="o">*</span> <span class="mf">1e-6</span>
+        <span class="n">acqTime</span> <span class="o">=</span> <span class="n">acqTime</span> <span class="o">*</span> <span class="mf">1e-3</span>
+        <span class="n">echoTime</span> <span class="o">=</span> <span class="n">echoTime</span> <span class="o">*</span> <span class="mf">1e-3</span>
+        <span class="n">repetitionTime</span> <span class="o">=</span> <span class="n">repetitionTime</span><span class="o">*</span><span class="mf">1e-3</span>
+        <span class="n">shimming</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shimming</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-4</span>
+        <span class="n">crusherTime</span> <span class="o">=</span> <span class="n">crusherTime</span><span class="o">*</span><span class="mf">1e-6</span>
+        <span class="n">crusherDelay</span> <span class="o">=</span> <span class="n">crusherDelay</span><span class="o">*</span><span class="mf">1e-6</span>
+        <span class="n">tInv0</span> <span class="o">=</span> <span class="n">tInv0</span><span class="o">*</span><span class="mf">1e-3</span>
+        <span class="n">tInv1</span> <span class="o">=</span> <span class="n">tInv1</span><span class="o">*</span><span class="mf">1e-3</span>
+
+        <span class="c1"># Miscellaneous</span>
+        <span class="n">gradRiseTime</span> <span class="o">=</span> <span class="mi">200</span>  <span class="c1"># us</span>
+        <span class="n">gSteps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">gradRiseTime</span> <span class="o">/</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;gradRiseTime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gradRiseTime</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;gSteps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gSteps</span>
+
+        <span class="c1"># Inversion time vector</span>
+        <span class="n">irTimeVector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">geomspace</span><span class="p">(</span><span class="n">tInv0</span><span class="p">,</span> <span class="n">tInv1</span><span class="p">,</span> <span class="n">nSteps</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;irTimeVector&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">irTimeVector</span>
+
+        <span class="k">def</span> <span class="nf">createSequence</span><span class="p">():</span>
+            <span class="c1"># Set shimming</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iniSequence</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">shimming</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">repeIndex</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nSteps</span><span class="p">):</span>
+                <span class="c1"># Inversion time for current iteration</span>
+                <span class="n">inversionTime</span> <span class="o">=</span> <span class="n">irTimeVector</span><span class="p">[</span><span class="n">repeIndex</span><span class="p">]</span>
+
+                <span class="c1"># Initialize time</span>
+                <span class="n">tEx</span> <span class="o">=</span> <span class="mf">20e3</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">irTimeVector</span><span class="p">)</span> <span class="o">+</span> <span class="n">repetitionTime</span> <span class="o">*</span> <span class="n">repeIndex</span>
+
+                <span class="c1"># Inversion pulse</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span><span class="o">-</span><span class="n">inversionTime</span><span class="o">-</span><span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span><span class="o">-</span><span class="n">rfReTime</span><span class="o">/</span><span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rfRecPulse</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">rfReTime</span><span class="p">,</span> <span class="n">rfReAmp</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+                <span class="c1"># Spoiler gradients to destroy residual transversal signal detected for ultrashort inversion times</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span><span class="o">-</span><span class="n">inversionTime</span><span class="o">+</span><span class="n">rfReTime</span><span class="o">/</span><span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gradTrap</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">gradRiseTime</span><span class="p">,</span> <span class="n">inversionTime</span><span class="o">*</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">crusherAmp</span><span class="p">,</span> <span class="n">gSteps</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shimming</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gradTrap</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">gradRiseTime</span><span class="p">,</span> <span class="n">inversionTime</span><span class="o">*</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">crusherAmp</span><span class="p">,</span> <span class="n">gSteps</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">shimming</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gradTrap</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">gradRiseTime</span><span class="p">,</span> <span class="n">inversionTime</span><span class="o">*</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">crusherAmp</span><span class="p">,</span> <span class="n">gSteps</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">shimming</span><span class="p">)</span>
+
+                <span class="c1"># Excitation pulse</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span><span class="o">-</span><span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span><span class="o">-</span><span class="n">rfExTime</span><span class="o">/</span><span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rfRecPulse</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">rfExTime</span><span class="p">,</span> <span class="n">rfExAmp</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+                <span class="c1"># Crusher gradient</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span> <span class="o">+</span> <span class="n">echoTime</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">crusherTime</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">gradRiseTime</span> <span class="o">-</span> <span class="n">hw</span><span class="o">.</span><span class="n">gradDelay</span> <span class="o">-</span> <span class="n">crusherDelay</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gradTrap</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">gradRiseTime</span><span class="p">,</span> <span class="n">crusherTime</span><span class="p">,</span> <span class="n">crusherAmp</span><span class="p">,</span> <span class="n">gSteps</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shimming</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gradTrap</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">gradRiseTime</span><span class="p">,</span> <span class="n">crusherTime</span><span class="p">,</span> <span class="n">crusherAmp</span><span class="p">,</span> <span class="n">gSteps</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">shimming</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gradTrap</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">gradRiseTime</span><span class="p">,</span> <span class="n">crusherTime</span><span class="p">,</span> <span class="n">crusherAmp</span><span class="p">,</span> <span class="n">gSteps</span><span class="p">,</span> <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">shimming</span><span class="p">)</span>
+
+                <span class="c1"># Refocusing pulse</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span> <span class="o">+</span> <span class="n">echoTime</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">rfReTime</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rfRecPulse</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">rfReTime</span><span class="p">,</span> <span class="n">rfReAmp</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+                <span class="c1"># Rx gating</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span> <span class="o">+</span> <span class="n">echoTime</span> <span class="o">-</span> <span class="n">acqTime</span> <span class="o">/</span> <span class="mi">2</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rxGate</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">acqTime</span><span class="p">)</span>
+
+            <span class="c1"># End sequence</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">endSequence</span><span class="p">(</span><span class="n">scanTime</span><span class="p">)</span>
+
+        <span class="c1"># Time variables in us</span>
+        <span class="n">rfExTime</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="n">rfReTime</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="n">repetitionTime</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="n">echoTime</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="n">irTimeVector</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="n">scanTime</span> <span class="o">=</span> <span class="n">nSteps</span><span class="o">*</span><span class="n">repetitionTime</span>  <span class="c1"># us</span>
+        <span class="n">crusherDelay</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="n">crusherTime</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="n">acqTime</span> <span class="o">*=</span> <span class="mf">1e6</span>
+
+        <span class="c1"># Bandwidth and sampling rate</span>
+        <span class="n">bw</span> <span class="o">=</span> <span class="n">nPoints</span> <span class="o">/</span> <span class="n">acqTime</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span> <span class="c1"># MHz</span>
+        <span class="n">samplingPeriod</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">bw</span> <span class="c1"># us</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expt</span> <span class="o">=</span> <span class="n">ex</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="n">lo_freq</span><span class="o">=</span><span class="n">larmorFreq</span><span class="p">,</span> <span class="n">rx_t</span><span class="o">=</span><span class="n">samplingPeriod</span><span class="p">,</span> <span class="n">init_gpa</span><span class="o">=</span><span class="n">init_gpa</span><span class="p">,</span> <span class="n">gpa_fhdo_offset_time</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">0.2</span> <span class="o">/</span> <span class="mf">3.1</span><span class="p">))</span>
+        <span class="n">samplingPeriod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="n">get_rx_ts</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># us</span>
+        <span class="n">bw</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">samplingPeriod</span> <span class="o">/</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span>  <span class="c1"># MHz</span>
+        <span class="n">acqTime</span> <span class="o">=</span> <span class="n">nPoints</span> <span class="o">/</span> <span class="n">bw</span>  <span class="c1"># us</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;samplingPeriod&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">samplingPeriod</span> <span class="o">*</span> <span class="mf">1e-6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;bw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bw</span> <span class="o">*</span> <span class="mf">1e6</span>
+        <span class="n">createSequence</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">floDict2Exp</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Sequence waveforms loaded successfully&quot;</span><span class="p">)</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">ERROR: sequence waveforms out of hardware bounds&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">plotSeq</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="fm">__del__</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rxd</span><span class="p">,</span> <span class="n">msgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">msgs</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">decimate</span><span class="p">(</span><span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx0&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">hw</span><span class="o">.</span><span class="n">adcFactor</span><span class="p">,</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">,</span> <span class="n">ftype</span><span class="o">=</span><span class="s1">&#39;fir&#39;</span><span class="p">,</span> <span class="n">zero_phase</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="fm">__del__</span><span class="p">()</span>
+
+            <span class="c1"># Process data to be plotted</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">nSteps</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="nb">int</span><span class="p">(</span><span class="n">nPoints</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="n">irTimeVector</span><span class="o">*</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">data</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;sampledPoint&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="InversionRecovery.sequenceAnalysis">
+<a class="viewcode-back" href="../../seq.inversionRecovery.html#seq.inversionRecovery.InversionRecovery.sequenceAnalysis">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+
+        <span class="c1"># Signal vs inverion time</span>
+        <span class="n">result1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="s1">&#39;curve&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;xData&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                   <span class="s1">&#39;yData&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">])],</span>
+                   <span class="s1">&#39;xLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Time (ms)&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;yLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Signal amplitude (mV)&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;legend&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">],</span>
+                   <span class="s1">&#39;row&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                   <span class="s1">&#39;col&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+
+        <span class="c1"># create self.out to run in iterative mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="n">result1</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveRawData</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span></div>
+</div>
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright GPL-3.0 license.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

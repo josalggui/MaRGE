@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>controller.experiment_gui &mdash; MaRGE v0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=1812e922"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MaRGE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">MaRGE</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MaRGE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">controller.experiment_gui</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for controller.experiment_gui</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">@author: J.M. Algarín, february 03th 2022</span>
+<span class="sd">MRILAB @ I3M</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="c1">#*****************************************************************************</span>
+<span class="c1"># Get the directory of the current script</span>
+<span class="n">main_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+
+<span class="c1"># Get the parent directory (one level up)</span>
+<span class="n">parent_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">main_directory</span><span class="p">)</span>
+
+<span class="c1"># Define the subdirectories you want to add to sys.path</span>
+<span class="n">subdirs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;marcos_client&#39;</span><span class="p">]</span>
+
+<span class="c1"># Add the subdirectories to sys.path</span>
+<span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="n">subdirs</span><span class="p">:</span>
+    <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parent_directory</span><span class="p">,</span> <span class="n">subdir</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+<span class="c1">#******************************************************************************</span>
+<span class="kn">import</span> <span class="nn">experiment</span> <span class="k">as</span> <span class="nn">ex</span>
+<span class="kn">import</span> <span class="nn">server_comms</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">import</span> <span class="nn">configs.hw_config</span> <span class="k">as</span> <span class="nn">hw</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="Experiment">
+<a class="viewcode-back" href="../../controller.experiment_gui.html#controller.experiment_gui.Experiment">[docs]</a>
+<span class="k">class</span> <span class="nc">Experiment</span><span class="p">(</span><span class="n">ex</span><span class="o">.</span><span class="n">Experiment</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom experiment class that extends the base Experiment class from the &#39;ex&#39; module.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lo_freq (float): Frequency of the LO (Local Oscillator) in MHz.</span>
+<span class="sd">        rx_t (float): RX (Receiver) time in microseconds. Should be multiples of 1/122.88, where some values like 3.125 are exact.</span>
+<span class="sd">        seq_dict (dict): Dictionary containing the sequence information.</span>
+<span class="sd">        seq_csv (str): Path to a CSV file containing the sequence information.</span>
+<span class="sd">        rx_lo (int): Specifies which internal NCO (Numerically Controlled Oscillator) local oscillator to use for each channel.</span>
+<span class="sd">        grad_max_update_rate (float): Maximum update rate of the gradient in MSPS (Mega Samples Per Second) across all channels in parallel.</span>
+<span class="sd">        gpa_fhdo_offset_time (int): Offset time used when GPA-FHDO (Gradient Pulse Amplitude - Fractional High Dynamic Range Output) is used.</span>
+<span class="sd">        print_infos (bool): Flag to control the display of server info messages.</span>
+<span class="sd">        assert_errors (bool): Flag to control whether to halt on server errors.</span>
+<span class="sd">        init_gpa (bool): Flag to initialize the GPA (Gradient Pulse Amplitude) when the Experiment object is created.</span>
+<span class="sd">        initial_wait (float): Initial pause before the experiment begins, in microseconds. Required to configure the LOs (Local Oscillators) and RX rate.</span>
+<span class="sd">        auto_leds (bool): Flag to automatically scan the LED (Light-Emitting Diode) pattern from 0 to 255 as the sequence runs.</span>
+<span class="sd">        prev_socket (socket): Previously-opened socket to maintain status.</span>
+<span class="sd">        fix_cic_scale (bool): Flag to scale the RX (Receiver) data precisely based on the rate being used.</span>
+<span class="sd">        set_cic_shift (bool): Flag to program the CIC (Cascaded Integrator-Comb) internal bit shift to maintain the gain within a factor of 2 independent of the rate.</span>
+<span class="sd">        allow_user_init_cfg (bool): Flag to allow user-defined alteration of flocra (Field-Programmable Logic Controller for Real-Time Acquisition) configuration set by init.</span>
+<span class="sd">        halt_and_reset (bool): Flag to halt any existing sequences that may be running upon connecting to the server.</span>
+<span class="sd">        flush_old_rx (bool): Flag to read out and clear the old RX (Receiver) FIFOs before running a sequence.</span>
+
+<span class="sd">    Summary:</span>
+<span class="sd">        The Experiment class extends the base Experiment class from the &#39;ex&#39; module and provides additional functionality and customization for experiments.</span>
+<span class="sd">        It inherits all the attributes and methods from the base class and overrides the __init__() and run() methods.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">lo_freq</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># MHz</span>
+                 <span class="n">rx_t</span><span class="o">=</span><span class="mf">3.125</span><span class="p">,</span> <span class="c1"># us; multiples of 1/122.88, such as 3.125, are exact, others will be rounded to the nearest multiple of the 122.88 MHz clock</span>
+                 <span class="n">seq_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">seq_csv</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">rx_lo</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>  <span class="c1"># which of internal NCO local oscillators (LOs), out of 0, 1, 2, to use for each channel</span>
+                 <span class="n">grad_max_update_rate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>  <span class="c1"># MSPS, across all channels in parallel, best-effort</span>
+                 <span class="n">gpa_fhdo_offset_time</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="c1"># when GPA-FHDO is used, offset the Y, Z and Z2 gradient times by 1x, 2x and 3x this value to emulate &#39;simultaneous&#39; updates</span>
+                 <span class="n">print_infos</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># show server info messages</span>
+                 <span class="n">assert_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># halt on server errors</span>
+                 <span class="n">init_gpa</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># initialise the GPA (will reset its outputs when the Experiment object is created)</span>
+                 <span class="n">initial_wait</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="c1"># initial pause before experiment begins - required to configure the LOs and RX rate; must be at least a few us. Is suitably set based on grad_max_update_rate by default.</span>
+                 <span class="n">auto_leds</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1"># automatically scan the LED pattern from 0 to 255 as the sequence runs (set to off if you wish to manually control the LEDs)</span>
+                 <span class="n">prev_socket</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># previously-opened socket, if want to maintain status etc</span>
+                 <span class="n">fix_cic_scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1"># scale the RX data precisely based on the rate being used; otherwise a 2x variation possible in data amplitude based on rate</span>
+                 <span class="n">set_cic_shift</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># program the CIC internal bit shift to maintain the gain within a factor of 2 independent of rate; required if the open-source CIC is used in the design</span>
+                 <span class="n">allow_user_init_cfg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># allow user-defined alteration of flocra configuration set by init, namely RX rate, LO properties etc; see the compile() method for details</span>
+                 <span class="n">halt_and_reset</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># upon connecting to the server, halt any existing sequences that may be running</span>
+                 <span class="n">flush_old_rx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1"># when debugging or developing new code, you may accidentally fill up the RX FIFOs - they will not automatically be cleared in case there is important data inside. Setting this true will always read them out and clear them before running a sequence. More advanced manual code can read RX from existing sequences.</span>
+                 <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the Experiment object with the specified parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Experiment</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">lo_freq</span><span class="p">,</span>
+                                         <span class="n">rx_t</span> <span class="o">/</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">,</span>
+                                         <span class="n">seq_dict</span><span class="p">,</span>
+                                         <span class="n">seq_csv</span><span class="p">,</span>
+                                         <span class="n">rx_lo</span><span class="p">,</span>
+                                         <span class="n">grad_max_update_rate</span><span class="p">,</span>
+                                         <span class="n">gpa_fhdo_offset_time</span><span class="p">,</span>
+                                         <span class="n">print_infos</span><span class="p">,</span>
+                                         <span class="n">assert_errors</span><span class="p">,</span>
+                                         <span class="n">init_gpa</span><span class="p">,</span>
+                                         <span class="n">initial_wait</span><span class="p">,</span>
+                                         <span class="n">auto_leds</span><span class="p">,</span>
+                                         <span class="n">prev_socket</span><span class="p">,</span>
+                                         <span class="n">fix_cic_scale</span><span class="p">,</span>
+                                         <span class="n">set_cic_shift</span><span class="p">,</span>
+                                         <span class="n">allow_user_init_cfg</span><span class="p">,</span>
+                                         <span class="n">halt_and_reset</span><span class="p">,</span>
+                                         <span class="n">flush_old_rx</span><span class="p">,)</span>
+
+<div class="viewcode-block" id="Experiment.getSamplingRate">
+<a class="viewcode-back" href="../../controller.experiment_gui.html#controller.experiment_gui.Experiment.getSamplingRate">[docs]</a>
+    <span class="k">def</span> <span class="nf">getSamplingRate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the sampling rate of the experiment in the sequence sampling rate.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The sampling rate in samples per second.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rx_ts</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span></div>
+
+
+<div class="viewcode-block" id="Experiment.run">
+<a class="viewcode-back" href="../../controller.experiment_gui.html#controller.experiment_gui.Experiment.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compile the TX and gradient data and send everything over to the server.</span>
+<span class="sd">        Returns the resultant data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: A tuple containing the resultant data and messages.</span>
+<span class="sd">                   The resultant data is a dictionary containing the received IQ signals for each channel in mV.</span>
+<span class="sd">                   The messages are server messages.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seq_compiled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flush_old_rx</span><span class="p">:</span>
+            <span class="n">rx_data_old</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">command</span><span class="p">({</span><span class="s1">&#39;read_rx&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span> <span class="bp">self</span><span class="o">.</span><span class="n">_s</span><span class="p">)</span>
+            <span class="c1"># TODO: do something with RX data previously collected by the server</span>
+
+        <span class="n">rx_data</span><span class="p">,</span> <span class="n">msgs</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">command</span><span class="p">({</span><span class="s1">&#39;run_seq&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_machine_code</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()},</span> <span class="bp">self</span><span class="o">.</span><span class="n">_s</span><span class="p">)</span>
+
+        <span class="n">rxd</span> <span class="o">=</span> <span class="n">rx_data</span><span class="p">[</span><span class="mi">4</span><span class="p">][</span><span class="s1">&#39;run_seq&#39;</span><span class="p">]</span>
+        <span class="n">rxd_iq</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># (1 &lt;&lt; 24) just for the int-&gt;float conversion to be reasonable - exact value doesn&#39;t matter for now</span>
+        <span class="n">rx0_norm_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rx0_cic_factor</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span><span class="p">)</span>
+        <span class="n">rx1_norm_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rx0_cic_factor</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span> <span class="c1"># Signal in millivolts with phase as it should be</span>
+            <span class="n">rxd_iq</span><span class="p">[</span><span class="s1">&#39;rx0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">adcFactor</span> <span class="o">*</span> <span class="n">rx0_norm_factor</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx0_i&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">-</span>
+                                               <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx0_q&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+        <span class="k">try</span><span class="p">:</span> <span class="c1"># Signal in millivolts with phase as it should be</span>
+            <span class="n">rxd_iq</span><span class="p">[</span><span class="s1">&#39;rx1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">adcFactor</span> <span class="o">*</span> <span class="n">rx1_norm_factor</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx1_i&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">-</span>
+                                               <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx1_q&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">rxd_iq</span><span class="p">,</span> <span class="n">msgs</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright GPL-3.0 license.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

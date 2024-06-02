@@ -31,90 +31,23 @@ class MRIBLANKSEQ:
     parameters, generating sequences, processing data, and plotting results.
 
     Attributes:
-    - mapKeys (list): Keys for the maps.
-    - mapNmspc (dict): Name to show in the GUI.
-    - mapVals (dict): Values to show in the GUI.
-    - mapFields (dict): Fields to classify the input parameters.
-    - mapLen (dict): Length of the input values.
-    - mapTips (dict): Tips for the input parameters.
-    - map_units (dict): Units for the input parameters.
-    - meta_data (dict): Dictionary to save meta data for DICOM files.
-    - rotations (list): List of rotation matrices.
-    - dfovs (list): List of displacement field of views.
-    - fovs (list): List of field of views.
-    - session (dict): Session information.
-    - demo (bool): Demo information.
-    - mode (string): Mode information for 'Standalone' execution.
-    - flo_dict (dict): Dictionary containing sequence waveforms.
-
-    Methods:
-    - __init__: Constructor method.
-    - floDict2Exp: Check for errors and add instructions to the Red Pitaya if no errors are found.
-    - saveRawData: Save the raw data.
-    - image2Dicom: Save the DICOM.
-    - addParameter: Add a parameter to the sequence.
-    - sequenceAttributes: Add input parameters to the self.
-    - plotResults: Plot results in standalone.
-    - getParameter: Get the value of a parameter.
-    - setParameter: Set the value of a parameter.
-    - saveParams: Save the parameters in mapVals.
-    - loadParams: Load the parameters to mapVals.
-    - resetMapVals: Reset the mapVals to default keys.
-    - sequencePlot: Plot the sequence.
-    - getIndex: Generate array with indexes for TSE phase sweep.
-    - fixEchoPosition: Adjust the position of k=0.
-    - decimate: decimate oversampled data
-    - rfSincPulse: generate an RF pulse with sinc shape.
-    - rfRecPulse: generate an RF pulse with rectangular shape.
-    - rfRawPulse: generate an RF pulse with rectangular shape.
-    - rxGate: open the acquistion window.
-    - ttl: generate a ttl signal
-    - gradTrap: generate a gradient pulse with trapezoidal shape.
-    - gradTrapMomentum: UNDER DEVELOPMENT
-    - setGradientRamp: generate a gradient ramp
-    - gradTrapAmplitude: OUT OF DATE
-    - setGradient: Set the one gradient to a given value.
-    - endSequence: finalize the sequence
-    - iniSequence: initialize the sequence
-    - runIFFT: Perform FFT reconstruction.
-    - runDFFT: Perform direct FFT reconstruction.
-    - runBm4dFilter: Run the BM4D filter operation.
-    - runCosbellFilter: Run the Cosbell filter operation.
-    - runZeroPadding: Run the zero-padding operation.
-    - autoProcessing: Perform automatic image processing.
-    - RFproperties: Get properties related to RF fields.
-    - IMproperties: Get properties related to IM fields.
-    - SEQproperties: Get properties related to SEQ fields.
-    - OTHproperties: Get properties related to OTH fields.
-    - getFovDisplacement: Get the displacement to apply in the FFT reconstruction.
-    - getRotationMatrix: Get the rotation matrix.
-    - deleteOutput: Delete the output attribute if it exists.
+        mapKeys (list): Keys for the maps.
+        mapNmspc (dict): Name to show in the GUI.
+        mapVals (dict): Values to show in the GUI.
+        mapFields (dict): Fields to classify the input parameters.
+        mapLen (dict): Length of the input values.
+        mapTips (dict): Tips for the input parameters.
+        map_units (dict): Units for the input parameters.
+        meta_data (dict): Dictionary to save meta data for DICOM files.
+        rotations (list): List of rotation matrices.
+        dfovs (list): List of displacement field of views.
+        fovs (list): List of field of views.
+        session (dict): Session information.
+        demo (bool): Demo information.
+        mode (string): Mode information for 'Standalone' execution.
+        flo_dict (dict): Dictionary containing sequence waveforms.
 
     """
-
-    mapKeys = []  # keys for the maps
-    mapNmspc = {}  # name to show in the gui
-    mapVals = {}  # values to show in the gui
-    mapFields = {}  # fields to classify the input parameter
-    mapLen = {}
-    mapTips = {}  # tips for the input parameter
-    map_units = {}  # units for the input parameters
-    meta_data = {}  # Dictionary to save meta data for dicom file
-    rotations = []
-    dfovs = []
-    fovs = []
-    session = {}
-    demo = None
-    mode = None
-    flo_dict = {'g0': [[], []],
-                'g1': [[], []],
-                'g2': [[], []],
-                'rx0': [[], []],
-                'rx1': [[], []],
-                'tx0': [[], []],
-                'tx1': [[], []],
-                'ttl0': [[], []],
-                'ttl1': [[], []]}
 
     def __init__(self):
         """
@@ -297,26 +230,17 @@ class MRIBLANKSEQ:
         Save the parameters in mapVals variable to a CSV file.
 
         This method performs the following steps:
-        1. Resets the `mapVals` variable by calling the `resetMapVals` method. Then only input parameters are
-           accessible.
-        2. Ensures that the directory 'experiments/parameterization' exists, creating it if necessary.
-        3. Writes the current parameter values stored in `mapVals` to a CSV file named '<seqName>_last_parameters.csv',
-           where <seqName> is the value of the 'seqName' key in `mapVals`.
+            1. Resets the `mapVals` variable by calling the `resetMapVals` method. Then only input parameters are accessible.
+            2. Ensures that the directory 'experiments/parameterization' exists, creating it if necessary.
+            3. Writes the current parameter values stored in `mapVals` to a CSV file named '<seqName>_last_parameters.csv', where <seqName> is the value of the 'seqName' key in `mapVals`.
 
-        The CSV file is saved in the 'experiments/parameterization' directory, and contains the header specified by
-        `mapKeys`.
+        The CSV file is saved in the 'experiments/parameterization' directory, and contains the header specified by `mapKeys`.
 
         Potential exceptions:
             KeyError: If 'seqName' is not a key in `mapVals`.
 
         Example:
             self.saveParams()
-
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
 
         """
         # Reset the mapVals variable
@@ -343,28 +267,21 @@ class MRIBLANKSEQ:
 
         Args:
             directory (str): The directory where the CSV file is located. Defaults to 'experiments/parameterization'.
-            file (str, optional): The specific CSV file to load. If not provided, the method loads the last saved
-            parameters based on `seqName` in `mapVals`.
+            file (str, optional): The specific CSV file to load. If not provided, the method loads the last saved parameters based on `seqName` in `mapVals`.
 
         Raises:
             KeyError: If 'seqName' is not found in `mapVals` when attempting to load the last parameters.
             FileNotFoundError: If the specified file does not exist in the given directory.
 
         Example:
-            self.loadParams()
-            self.loadParams(directory='calibration', file='calibration_parameters.csv')
+            - self.loadParams()
+            - self.loadParams(directory='calibration', file='calibration_parameters.csv')
 
         Notes:
             - This method updates the `mapVals` attribute with the new parameter values from the CSV file.
             - The method handles different data types (str, int, float) for each parameter key and ensures the correct
               type is maintained.
             - If a key is missing in the new parameter values, the old value is retained.
-
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
 
         """
         mapValsOld = self.mapVals
@@ -452,16 +369,10 @@ class MRIBLANKSEQ:
         initial state defined by `mapKeys`, discarding any additional keys that may have been added during execution.
 
         Example:
-            self.resetMapVals()
+            - self.resetMapVals()
 
         Notes:
             - Any additional keys in `mapVals` that are not present in `mapKeys` will be removed.
-
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
 
         """
         mapVals2 = {}
@@ -489,8 +400,8 @@ class MRIBLANKSEQ:
                 - title: Title of the plot.
 
         Example:
-            self.sequencePlot()
-            self.sequencePlot(standalone=True)
+            - self.sequencePlot()
+            - self.sequencePlot(standalone=True)
 
         Notes:
             - The method uses a nested function `getStepData` to generate step data for plotting.
@@ -500,11 +411,6 @@ class MRIBLANKSEQ:
             - If `demo` is False, it plots the channels using data from an experiment object.
             - The method formats the time data in milliseconds (ms) for plotting.
 
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
         """
 
         def getStepData(data):
@@ -717,19 +623,13 @@ class MRIBLANKSEQ:
             etl (int): Echo train length. Default is 1.
             nPH (int): Number of phase encoding steps. Default is 1.
             sweepMode (int): Sweep mode for k-space traversal. Default is 1.
-                0: Sequential from -kMax to kMax (for T2 contrast).
-                1: Center-out from 0 to kMax (for T1 or proton density contrast).
-                2: Out-to-center from kMax to 0 (for T2 contrast).
-                3: Niquist modulated method to reduce ghosting artifact (To be tested).
+                - 0: Sequential from -kMax to kMax (for T2 contrast).
+                - 1: Center-out from 0 to kMax (for T1 or proton density contrast).
+                - 2: Out-to-center from kMax to 0 (for T2 contrast).
+                - 3: Niquist modulated method to reduce ghosting artifact (To be tested).
 
         Returns:
             numpy.ndarray: An array of indices representing the k-space phase line traversal order.
-
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
 
         """
         n2ETL = int(nPH / 2 / etl)
@@ -791,12 +691,6 @@ class MRIBLANKSEQ:
         Returns:
             numpy.ndarray: The adjusted data array with k=0 positioned at the center of each acquisition window.
 
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
-
         """
         etl = np.size(echoes, axis=0)
         n = np.size(echoes, axis=1)
@@ -821,7 +715,7 @@ class MRIBLANKSEQ:
         Args:
             dataOver (numpy.ndarray): The oversampled data array.
             nRdLines (int): The number of readout lines.
-            option (str): The preprocessing option, default is 'PETRA'.
+            option (str): Default is 'PETRA'.
                 - 'PETRA': Preprocesses the initial signal to avoid oscillations due to decimation coming from
                   ring-down.
                 - 'Normal': No preprocessing is applied.
@@ -829,11 +723,6 @@ class MRIBLANKSEQ:
         Returns:
             numpy.ndarray: The decimated data array.
 
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
         """
         # Preprocess the signal to avoid oscillations due to decimation
         if option == 'PETRA':
@@ -872,11 +761,6 @@ class MRIBLANKSEQ:
             channel (int): Channel index for the RF pulse. Default is 0.
             rewrite (bool): Whether to rewrite the existing RF pulse. Default is True.
 
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
         """
         txTime = np.linspace(tStart, tStart + rfTime, num=100, endpoint=True) + hw.blkTime
         nZeros = (nLobes + 1)
@@ -901,11 +785,6 @@ class MRIBLANKSEQ:
             rfPhase (float): Phase of the RF pulse in radians. Default is 0.
             channel (int): Channel index for the RF pulse. Default is 0.
 
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
         """
         txTime = np.array([tStart + hw.blkTime, tStart + hw.blkTime + rfTime])
         txAmp = np.array([rfAmplitude * np.exp(1j * rfPhase), 0.])
@@ -927,11 +806,6 @@ class MRIBLANKSEQ:
             rfPhase (float): Phase of the RF pulse in radians. Default is 0.
             channel (int): Channel index for the RF pulse. Default is 0.
 
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
         """
         txTime = np.array([tStart, tStart + rfTime])
         txAmp = np.array([rfAmplitude * np.exp(1j * rfPhase), 0.])
@@ -947,11 +821,6 @@ class MRIBLANKSEQ:
             gateTime (float): Duration of the receiver gate.
             channel (int): Channel index for the receiver gate. Default is 0.
 
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
         """
         self.flo_dict['rx%i' % channel][0] = \
             np.concatenate((self.flo_dict['rx%i' % channel][0], np.array([tStart, tStart + gateTime])), axis=0)
@@ -969,14 +838,8 @@ class MRIBLANKSEQ:
             channel (int): Channel index for the receiver gate. Default is 0.
 
         Notes:
-            This method is designed to work with the Experiment class in the controller, which inherits from Experiment
-            in marcos_client.
+            - This method is designed to work with the Experiment class in the controller, which inherits from Experiment in marcos_client.
 
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
         """
         # Generate instructions taking into account the cic filter delay and addRdPoints
         try:
@@ -999,11 +862,6 @@ class MRIBLANKSEQ:
             ttlTime (float): Duration of the TTL signal.
             channel (int): Channel index for the TTL signal. Default is 0.
 
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
         """
         self.flo_dict['ttl%i' % channel][0] = \
             np.concatenate((self.flo_dict['ttl%i' % channel][0], np.array([tStart, tStart + ttlTime])), axis=0)
@@ -1031,11 +889,6 @@ class MRIBLANKSEQ:
             - Amplitude inputs are in T/m.
             - shimming is in arbitrary units
 
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
         """
         tUp = np.linspace(tStart, tStart + gRiseTime, num=gSteps, endpoint=False)
         tDown = tUp + gRiseTime + gFlattopTime
@@ -1070,11 +923,6 @@ class MRIBLANKSEQ:
             - shimming is in arbitrary units
             - NOT FULLY TESTED
 
-        Author:
-            T. Guallart-Naval, MRILab, CSIC, Valencia, Spain
-
-        Email:
-            tguanav@i3m.upv.es
         """
         kMax = kMax / hw.gammaB * 1e6
 
@@ -1125,11 +973,6 @@ class MRIBLANKSEQ:
             - Amplitude inputs are in T/m.
             - shimming is in arbitrary units
 
-        Author:
-            J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-
-        Email:
-            josalggui@i3m.upv.es
         """
         for kk in range(nStepsGradRise):
             tRamp = tStart + gradRiseTime * kk / nStepsGradRise
@@ -1161,11 +1004,6 @@ class MRIBLANKSEQ:
             - shimming is in arbitrary units
             - OUT OF DATE
 
-        Author:
-            T. Guallart-Naval, MRILab, CSIC, Valencia, Spain
-
-        Email:
-            tguanav@i3m.upv.es
         """
         # Changing from Ocra1 units
         slewRate = hw.slewRate / hw.gFactor[gAxis]  # Convert to units [s*m/T]
@@ -1438,8 +1276,7 @@ class MRIBLANKSEQ:
             key (str): The key of the parameter.
             string (str): The description string of the parameter.
             val (int/float/str/list): The value of the parameter. It can be an integer, a float, a string, or a list.
-            units (bool): Indicates the units of the parameter (e.g. cm -> 1e-2, or you can use the config/units.py
-            module).
+            units (bool): Indicates the units of the parameter (e.g. cm -> 1e-2, or you can use the config/units.py module).
             field (str): The field of the parameter: 'RF', 'IMG', 'SEQ', 'OTH'.
             tip (str): Additional information or tip about the parameter.
 
@@ -1641,8 +1478,7 @@ class MRIBLANKSEQ:
         ('sl') directions. It modifies the input k-space data in-place.
 
         Args:
-            sampled (ndarray): The sampled k-space coordinates in a nx3 matrix, where n is the number of points in
-                k-space. The three columns correspond to the readout, phase, and slice directions.
+            sampled (ndarray): The sampled k-space coordinates in a nx3 matrix, where n is the number of points in k-space. The three columns correspond to the readout, phase, and slice directions.
             data (ndarray): The 3D matrix representing the k-space data to be filtered (sl, ph, rd).
             cosbell_order (int): The order of the Cosbell filter.
 
