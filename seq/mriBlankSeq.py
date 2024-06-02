@@ -715,10 +715,7 @@ class MRIBLANKSEQ:
         Args:
             dataOver (numpy.ndarray): The oversampled data array.
             nRdLines (int): The number of readout lines.
-            option (str): Default is 'PETRA'.
-                - 'PETRA': Preprocesses the initial signal to avoid oscillations due to decimation coming from
-                  ring-down.
-                - 'Normal': No preprocessing is applied.
+            option (str): Default is 'PETRA'. 'PETRA': Preprocesses the initial signal to avoid oscillations due to decimation coming from ring-down. 'Normal': No preprocessing is applied.
 
         Returns:
             numpy.ndarray: The decimated data array.

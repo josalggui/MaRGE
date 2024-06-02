@@ -1,5 +1,5 @@
-"""FirstMRI.pFirstMRI.pyy
-Startup Code
+"""
+Main file to run MaRGE
 """
 import os
 import sys
@@ -44,7 +44,8 @@ if not os.path.exists(sys_config.screenshot_folder):
 from controller.controller_session import SessionController
 
 # Run the gui
-demo = False
-app = QApplication(sys.argv)
-gui = SessionController(demo)
-sys.exit(app.exec_())
+demo = True
+# app = QApplication(sys.argv)
+# gui = SessionController(demo)
+# sys.exit(app.exec_())
+
