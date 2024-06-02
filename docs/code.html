@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Main &mdash; MaRGE v0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=1812e922"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to MaRGE’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            MaRGE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Main</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.mapKeys"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mapKeys</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.mapNmspc"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mapNmspc</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.mapVals"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mapVals</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.mapFields"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mapFields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.mapLen"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mapLen</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.mapTips"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mapTips</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.map_units"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.map_units</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.meta_data"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.meta_data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.rotations"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.rotations</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.dfovs"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.dfovs</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.fovs"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.fovs</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.session"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.session</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.demo"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.demo</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.mode"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.mode</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.flo_dict"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.flo_dict</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.IMproperties"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.IMproperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.OTHproperties"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.OTHproperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.RFproperties"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.RFproperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.SEQproperties"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.SEQproperties</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.addParameter"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.addParameter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.autoProcessing"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.autoProcessing()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.decimate"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.decimate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.deleteOutput"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.deleteOutput()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.endSequence"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.endSequence()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.fixEchoPosition"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.fixEchoPosition()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.floDict2Exp"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.floDict2Exp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.getFovDisplacement"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.getFovDisplacement()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.getIndex"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.getIndex()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.getParameter"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.getParameter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.getRotationMatrix"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.getRotationMatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.gradTrap"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.gradTrap()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.gradTrapAmplitude"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.gradTrapAmplitude()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.gradTrapMomentum"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.gradTrapMomentum()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.image2Dicom"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.image2Dicom()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.iniSequence"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.iniSequence()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.loadParams"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.loadParams()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.plotResults"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.plotResults()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.resetMapVals"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.resetMapVals()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.rfRawPulse"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.rfRawPulse()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.rfRecPulse"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.rfRecPulse()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.rfSincPulse"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.rfSincPulse()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.runBm4dFilter"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.runBm4dFilter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.runCosbellFilter"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.runCosbellFilter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.runDFFT"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.runDFFT()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.runIFFT"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.runIFFT()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.runZeroPadding"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.runZeroPadding()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.rxGate"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.rxGate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.rxGateSync"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.rxGateSync()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.saveParams"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.saveParams()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.saveRawData"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.saveRawData()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.sequenceAtributes"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.sequenceAtributes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.sequencePlot"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.sequencePlot()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.setGradient"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.setGradient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.setGradientRamp"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.setGradientRamp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.setParameter"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.setParameter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#seq.mriBlankSeq.MRIBLANKSEQ.ttl"><code class="docutils literal notranslate"><span class="pre">MRIBLANKSEQ.ttl()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MaRGE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Main</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/code.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-seq.mriBlankSeq">
+<span id="main"></span><h1>Main<a class="headerlink" href="#module-seq.mriBlankSeq" title="Link to this heading"></a></h1>
+<p>Created on Thu June 2 2022
+&#64;author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
+&#64;email: <a class="reference external" href="mailto:josalggui&#37;&#52;&#48;i3m&#46;upv&#46;es">josalggui<span>&#64;</span>i3m<span>&#46;</span>upv<span>&#46;</span>es</a>
+&#64;Summary: mri blank sequence with common methods that will be inherited by any sequence</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">seq.mriBlankSeq.</span></span><span class="sig-name descname"><span class="pre">MRIBLANKSEQ</span></span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ" title="Link to this definition"></a></dt>
+<dd><p>Class for representing MRI sequences.</p>
+<p>This class provides functionality for creating and managing MRI sequences. It includes methods for setting
+parameters, generating sequences, processing data, and plotting results.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.mapKeys">
+<span class="sig-name descname"><span class="pre">mapKeys</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.mapKeys" title="Link to this definition"></a></dt>
+<dd><p>Keys for the maps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.mapNmspc">
+<span class="sig-name descname"><span class="pre">mapNmspc</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.mapNmspc" title="Link to this definition"></a></dt>
+<dd><p>Name to show in the GUI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.mapVals">
+<span class="sig-name descname"><span class="pre">mapVals</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.mapVals" title="Link to this definition"></a></dt>
+<dd><p>Values to show in the GUI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.mapFields">
+<span class="sig-name descname"><span class="pre">mapFields</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.mapFields" title="Link to this definition"></a></dt>
+<dd><p>Fields to classify the input parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.mapLen">
+<span class="sig-name descname"><span class="pre">mapLen</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.mapLen" title="Link to this definition"></a></dt>
+<dd><p>Length of the input values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.mapTips">
+<span class="sig-name descname"><span class="pre">mapTips</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.mapTips" title="Link to this definition"></a></dt>
+<dd><p>Tips for the input parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.map_units">
+<span class="sig-name descname"><span class="pre">map_units</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.map_units" title="Link to this definition"></a></dt>
+<dd><p>Units for the input parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.meta_data">
+<span class="sig-name descname"><span class="pre">meta_data</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.meta_data" title="Link to this definition"></a></dt>
+<dd><p>Dictionary to save meta data for DICOM files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.rotations">
+<span class="sig-name descname"><span class="pre">rotations</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.rotations" title="Link to this definition"></a></dt>
+<dd><p>List of rotation matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.dfovs">
+<span class="sig-name descname"><span class="pre">dfovs</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.dfovs" title="Link to this definition"></a></dt>
+<dd><p>List of displacement field of views.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.fovs">
+<span class="sig-name descname"><span class="pre">fovs</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.fovs" title="Link to this definition"></a></dt>
+<dd><p>List of field of views.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.session">
+<span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.session" title="Link to this definition"></a></dt>
+<dd><p>Session information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.demo">
+<span class="sig-name descname"><span class="pre">demo</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.demo" title="Link to this definition"></a></dt>
+<dd><p>Demo information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.mode" title="Link to this definition"></a></dt>
+<dd><p>Mode information for ‘Standalone’ execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.flo_dict">
+<span class="sig-name descname"><span class="pre">flo_dict</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.flo_dict" title="Link to this definition"></a></dt>
+<dd><p>Dictionary containing sequence waveforms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.IMproperties">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IMproperties</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.IMproperties" title="Link to this definition"></a></dt>
+<dd><p>Retrieve IM-related properties.</p>
+<p>Automatically selects the inputs related to IM fields and returns them along with their corresponding tips.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary containing IM-related properties.
+dict: A dictionary containing tips for IM-related properties.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.OTHproperties">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OTHproperties</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.OTHproperties" title="Link to this definition"></a></dt>
+<dd><p>Retrieve OTH-related properties.</p>
+<p>Automatically selects the inputs related to OTH fields and returns them along with their corresponding tips.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary containing OTH-related properties.
+dict: A dictionary containing tips for OTH-related properties.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.RFproperties">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RFproperties</span></span><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.RFproperties" title="Link to this definition"></a></dt>
+<dd><p>Retrieve RF-related properties.</p>
+<p>Automatically selects the inputs related to RF fields and returns them along with their corresponding tips.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary containing RF-related properties.
+dict: A dictionary containing tips for RF-related properties.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.SEQproperties">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SEQproperties</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.SEQproperties" title="Link to this definition"></a></dt>
+<dd><p>Retrieve SEQ-related properties.</p>
+<p>Automatically selects the inputs related to SEQ fields and returns them along with their corresponding tips.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary containing SEQ-related properties.
+dict: A dictionary containing tips for SEQ-related properties.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.addParameter">
+<span class="sig-name descname"><span class="pre">addParameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">string</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.addParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.addParameter" title="Link to this definition"></a></dt>
+<dd><p>Add a parameter to the sequence.</p>
+<p>This method adds a parameter to the sequence with the specified key, description string, value, units, field,
+and tip.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – The key of the parameter.</p></li>
+<li><p><strong>string</strong> (<em>str</em>) – The description string of the parameter.</p></li>
+<li><p><strong>val</strong> (<em>int/float/str/list</em>) – The value of the parameter. It can be an integer, a float, a string, or a list.</p></li>
+<li><p><strong>units</strong> (<em>bool</em>) – Indicates the units of the parameter (e.g. cm -&gt; 1e-2, or you can use the config/units.py module).</p></li>
+<li><p><strong>field</strong> (<em>str</em>) – The field of the parameter: ‘RF’, ‘IMG’, ‘SEQ’, ‘OTH’.</p></li>
+<li><p><strong>tip</strong> (<em>str</em>) – Additional information or tip about the parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.autoProcessing">
+<span class="sig-name descname"><span class="pre">autoProcessing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sampled</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.autoProcessing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.autoProcessing" title="Link to this definition"></a></dt>
+<dd><p>Perform automated processing on k-space data.</p>
+<p>This method performs a series of processing steps on the k-space data to generate an image.
+The steps include inverse FFT, BM4D filtering, direct FFT, Cosbell filtering, zero-padding, and inverse FFT.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sampled</strong> (<em>ndarray</em>) – The sampled k-space data.</p></li>
+<li><p><strong>k_space</strong> (<em>ndarray</em>) – The k-space data to be processed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The processed image generated from the k-space data after automated processing.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.decimate">
+<span class="sig-name descname"><span class="pre">decimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataOver</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nRdLines</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">option</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'PETRA'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.decimate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.decimate" title="Link to this definition"></a></dt>
+<dd><p>Preprocess and decimate the oversampled data.</p>
+<p>This method performs preprocessing and decimation on the input oversampled data. It deletes added points that
+account for the time shift and ramp of the CIC filter and preprocesses the data to avoid oscillations due to
+the FIR filter in the decimation process. It is intended for use when the sequence uses “rxGateSync” to acquire
+data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataOver</strong> (<em>numpy.ndarray</em>) – The oversampled data array.</p></li>
+<li><p><strong>nRdLines</strong> (<em>int</em>) – The number of readout lines.</p></li>
+<li><p><strong>option</strong> (<em>str</em>) – Default is ‘PETRA’. ‘PETRA’: Preprocesses the initial signal to avoid oscillations due to decimation coming from ring-down. ‘Normal’: No preprocessing is applied.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The decimated data array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.deleteOutput">
+<span class="sig-name descname"><span class="pre">deleteOutput</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.deleteOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.deleteOutput" title="Link to this definition"></a></dt>
+<dd><p>Delete the ‘output’ attribute from the instance if it exists.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.endSequence">
+<span class="sig-name descname"><span class="pre">endSequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tEnd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.endSequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.endSequence" title="Link to this definition"></a></dt>
+<dd><p>Finalize the sequence by setting the gradients, RX, TX, and TTL signals to zero at the specified end time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tEnd</strong> (<em>float</em>) – End time of the sequence in microseconds.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.fixEchoPosition">
+<span class="sig-name descname"><span class="pre">fixEchoPosition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">echoes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.fixEchoPosition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.fixEchoPosition" title="Link to this definition"></a></dt>
+<dd><p>Adjust the position of k=0 in the echo data to the center of the acquisition window.</p>
+<p>This method uses oversampled data obtained with a given echo train length and readout gradient to determine the
+true position of k=0. It then shifts the sampled data to place k=0 at the center of each acquisition window for
+each gradient-spin-echo.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>echoes</strong> (<em>numpy.ndarray</em>) – The echo data array with dimensions [etl, n], where <cite>etl</cite> is the echo train length
+and <cite>n</cite> is the number of samples per echo. This echo train is acquired in a dummy
+excitation before the sequence using only the readout gradient.</p></li>
+<li><p><strong>data0</strong> (<em>numpy.ndarray</em>) – The original data array to be adjusted with dimensions [channels, etl, n].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The adjusted data array with k=0 positioned at the center of each acquisition window.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.floDict2Exp">
+<span class="sig-name descname"><span class="pre">floDict2Exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rewrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.floDict2Exp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.floDict2Exp" title="Link to this definition"></a></dt>
+<dd><p>Check for errors and add instructions to Red Pitaya if no errors are found.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rewrite</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to overwrite existing values. Defaults to True.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if no errors were found and instructions were successfully added to Red Pitaya; False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.getFovDisplacement">
+<span class="sig-name descname"><span class="pre">getFovDisplacement</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.getFovDisplacement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.getFovDisplacement" title="Link to this definition"></a></dt>
+<dd><p>Get the displacement to apply in the FFT reconstruction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The displacement vector.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.getIndex">
+<span class="sig-name descname"><span class="pre">getIndex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">etl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nPH</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sweepMode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.getIndex"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.getIndex" title="Link to this definition"></a></dt>
+<dd><p>Generate an array representing the order to sweep the k-space phase lines along an echo train length.</p>
+<p>The method creates an ‘ind’ array based on the specified echo train length (ETL), number of phase encoding
+steps (nPH), and sweep mode. The sweep mode determines the order in which the k-space phase lines are traversed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>etl</strong> (<em>int</em>) – Echo train length. Default is 1.</p></li>
+<li><p><strong>nPH</strong> (<em>int</em>) – Number of phase encoding steps. Default is 1.</p></li>
+<li><p><strong>sweepMode</strong> (<em>int</em>) – Sweep mode for k-space traversal. Default is 1.
+- 0: Sequential from -kMax to kMax (for T2 contrast).
+- 1: Center-out from 0 to kMax (for T1 or proton density contrast).
+- 2: Out-to-center from kMax to 0 (for T2 contrast).
+- 3: Niquist modulated method to reduce ghosting artifact (To be tested).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An array of indices representing the k-space phase line traversal order.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.getParameter">
+<span class="sig-name descname"><span class="pre">getParameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.getParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.getParameter" title="Link to this definition"></a></dt>
+<dd><p>Get the value of a parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – The key corresponding to the parameter.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The value of the parameter associated with the given key.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.getRotationMatrix">
+<span class="sig-name descname"><span class="pre">getRotationMatrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.getRotationMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.getRotationMatrix" title="Link to this definition"></a></dt>
+<dd><p>Get the rotation matrix to rotate through an arbitrary axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The rotation matrix.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.gradTrap">
+<span class="sig-name descname"><span class="pre">gradTrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tStart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gRiseTime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gFlattopTime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gAmp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gSteps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gAxis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shimming</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.gradTrap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.gradTrap" title="Link to this definition"></a></dt>
+<dd><p>Generate a gradient pulse with trapezoidal shape.</p>
+<p>This method generates a gradient pulse with a trapezoidal shape. One step is used to generate a rectangular
+pulse.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tStart</strong> (<em>float</em>) – Start time of the gradient pulse.</p></li>
+<li><p><strong>gRiseTime</strong> (<em>float</em>) – Rise time of the gradient pulse in microseconds.</p></li>
+<li><p><strong>gFlattopTime</strong> (<em>float</em>) – Flattop time of the gradient pulse in microseconds.</p></li>
+<li><p><strong>gAmp</strong> (<em>float</em>) – Amplitude of the gradient pulse in T/m.</p></li>
+<li><p><strong>gSteps</strong> (<em>int</em>) – Number of steps for the gradient ramps.</p></li>
+<li><p><strong>gAxis</strong> (<em>int</em>) – Axis index for the gradient pulse.</p></li>
+<li><p><strong>shimming</strong> (<em>list</em>) – List of shimming values for each axis in arbitrary units from marcos.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Time inputs are in microseconds.</p></li>
+<li><p>Amplitude inputs are in T/m.</p></li>
+<li><p>shimming is in arbitrary units</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.gradTrapAmplitude">
+<span class="sig-name descname"><span class="pre">gradTrapAmplitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tStart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gAmplitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gTotalTime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gAxis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shimming</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orders</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.gradTrapAmplitude"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.gradTrapAmplitude" title="Link to this definition"></a></dt>
+<dd><p>Generate a gradient pulse with trapezoidal shape according to slew rate and specified amplitude.</p>
+<p>This method generates a gradient pulse with a trapezoidal shape according to the specified amplitude and slew
+rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tStart</strong> (<em>float</em>) – Start time of the gradient pulse.</p></li>
+<li><p><strong>gAmplitude</strong> (<em>float</em>) – Amplitude of the gradient pulse in T/m.</p></li>
+<li><p><strong>gTotalTime</strong> (<em>float</em>) – Total duration of the gradient pulse in microseconds.</p></li>
+<li><p><strong>gAxis</strong> (<em>int</em>) – Axis index for the gradient pulse.</p></li>
+<li><p><strong>shimming</strong> (<em>list</em>) – List of shimming values for each axis.</p></li>
+<li><p><strong>orders</strong> (<em>int</em>) – Number of orders.</p></li>
+<li><p><strong>rewrite</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to overwrite existing gradient data. Defaults to True.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Time inputs are in microseconds.</p></li>
+<li><p>gAmplitude input is in T/m.</p></li>
+<li><p>shimming is in arbitrary units</p></li>
+<li><p>OUT OF DATE</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.gradTrapMomentum">
+<span class="sig-name descname"><span class="pre">gradTrapMomentum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tStart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kMax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gTotalTime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gAxis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shimming</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.gradTrapMomentum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.gradTrapMomentum" title="Link to this definition"></a></dt>
+<dd><p>Generate a gradient pulse with trapezoidal shape according to slew rate.</p>
+<p>This method generates a gradient pulse with a trapezoidal shape based on the provided slew rate and maximum
+k-value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tStart</strong> (<em>float</em>) – Start time of the gradient pulse.</p></li>
+<li><p><strong>kMax</strong> (<em>float</em>) – Maximum k-value in 1/m.</p></li>
+<li><p><strong>gTotalTime</strong> (<em>float</em>) – Total time of the gradient pulse in microseconds including flattop and ramps.</p></li>
+<li><p><strong>gAxis</strong> (<em>int</em>) – Axis index for the gradient pulse.</p></li>
+<li><p><strong>shimming</strong> (<em>list</em>) – List of shimming values for each axis.</p></li>
+<li><p><strong>rewrite</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to overwrite existing gradient data. Defaults to True.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Time inputs are in microseconds.</p></li>
+<li><p>kMax inputs are in 1/m.</p></li>
+<li><p>shimming is in arbitrary units</p></li>
+<li><p>NOT FULLY TESTED</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.image2Dicom">
+<span class="sig-name descname"><span class="pre">image2Dicom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fileName</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.image2Dicom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.image2Dicom" title="Link to this definition"></a></dt>
+<dd><p>Save the DICOM image.</p>
+<p>This method saves the DICOM image with the given filename.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fileName</strong> (<em>str</em>) – The filename to save the DICOM image.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.iniSequence">
+<span class="sig-name descname"><span class="pre">iniSequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shimming</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.iniSequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.iniSequence" title="Link to this definition"></a></dt>
+<dd><p>Initialize the sequence by setting the initial values for gradients, RX, TX, and TTL signals at the desired
+time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t0</strong> (<em>float</em>) – Initial time of the sequence in microseconds.</p></li>
+<li><p><strong>shimming</strong> (<em>list</em>) – List of shimming values for each axis in arbitrary units.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.loadParams">
+<span class="sig-name descname"><span class="pre">loadParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'experiments/parameterization'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.loadParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.loadParams" title="Link to this definition"></a></dt>
+<dd><p>Load parameter values from a CSV file.</p>
+<p>This method loads parameter values into the <cite>mapVals</cite> attribute from a specified CSV file. The method first
+attempts to load the last saved parameters if no specific file is provided. If a file is provided, it loads
+parameters from the given file. The directory can be either ‘experiments/parameterization’ or ‘calibration’, or
+any other specified directory for protocol parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directory</strong> (<em>str</em>) – The directory where the CSV file is located. Defaults to ‘experiments/parameterization’.</p></li>
+<li><p><strong>file</strong> (<em>str</em><em>, </em><em>optional</em>) – The specific CSV file to load. If not provided, the method loads the last saved parameters based on <cite>seqName</cite> in <cite>mapVals</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>KeyError</strong> – If ‘seqName’ is not found in <cite>mapVals</cite> when attempting to load the last parameters.</p></li>
+<li><p><strong>FileNotFoundError</strong> – If the specified file does not exist in the given directory.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<ul class="simple">
+<li><p>self.loadParams()</p></li>
+<li><p>self.loadParams(directory=’calibration’, file=’calibration_parameters.csv’)</p></li>
+</ul>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This method updates the <cite>mapVals</cite> attribute with the new parameter values from the CSV file.</p></li>
+<li><p>The method handles different data types (str, int, float) for each parameter key and ensures the correct
+type is maintained.</p></li>
+<li><p>If a key is missing in the new parameter values, the old value is retained.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.plotResults">
+<span class="sig-name descname"><span class="pre">plotResults</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.plotResults"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.plotResults" title="Link to this definition"></a></dt>
+<dd><p>Plot results in a standalone window.</p>
+<p>This method generates plots based on the output data provided. It creates a plot window, inserts each plot
+according to its type (image or curve), sets titles and labels, and displays the plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.resetMapVals">
+<span class="sig-name descname"><span class="pre">resetMapVals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.resetMapVals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.resetMapVals" title="Link to this definition"></a></dt>
+<dd><p>Reset the <cite>mapVals</cite> attribute to contain only the original keys.</p>
+<p>This method creates a new dictionary (<cite>mapVals2</cite>) that includes only the original keys specified in <cite>mapKeys</cite>
+and retains their corresponding values from the current <cite>mapVals</cite>. This effectively resets <cite>mapVals</cite> to its
+initial state defined by <cite>mapKeys</cite>, discarding any additional keys that may have been added during execution.</p>
+<p class="rubric">Example</p>
+<ul class="simple">
+<li><p>self.resetMapVals()</p></li>
+</ul>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Any additional keys in <cite>mapVals</cite> that are not present in <cite>mapKeys</cite> will be removed.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.rfRawPulse">
+<span class="sig-name descname"><span class="pre">rfRawPulse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tStart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rfTime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rfAmplitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rfPhase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.rfRawPulse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.rfRawPulse" title="Link to this definition"></a></dt>
+<dd><p>Generate an RF pulse with a rectangular pulse shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tStart</strong> (<em>float</em>) – Start time of the RF pulse.</p></li>
+<li><p><strong>rfTime</strong> (<em>float</em>) – Duration of the RF pulse.</p></li>
+<li><p><strong>rfAmplitude</strong> (<em>float</em>) – Amplitude of the RF pulse.</p></li>
+<li><p><strong>rfPhase</strong> (<em>float</em>) – Phase of the RF pulse in radians. Default is 0.</p></li>
+<li><p><strong>channel</strong> (<em>int</em>) – Channel index for the RF pulse. Default is 0.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.rfRecPulse">
+<span class="sig-name descname"><span class="pre">rfRecPulse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tStart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rfTime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rfAmplitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rfPhase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.rfRecPulse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.rfRecPulse" title="Link to this definition"></a></dt>
+<dd><p>Generate an RF pulse with a rectangular pulse shape and the corresponding deblanking signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tStart</strong> (<em>float</em>) – Start time of the RF pulse.</p></li>
+<li><p><strong>rfTime</strong> (<em>float</em>) – Duration of the RF pulse.</p></li>
+<li><p><strong>rfAmplitude</strong> (<em>float</em>) – Amplitude of the RF pulse.</p></li>
+<li><p><strong>rfPhase</strong> (<em>float</em>) – Phase of the RF pulse in radians. Default is 0.</p></li>
+<li><p><strong>channel</strong> (<em>int</em>) – Channel index for the RF pulse. Default is 0.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.rfSincPulse">
+<span class="sig-name descname"><span class="pre">rfSincPulse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tStart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rfTime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rfAmplitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rfPhase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nLobes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.rfSincPulse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.rfSincPulse" title="Link to this definition"></a></dt>
+<dd><p>Generate an RF pulse with a sinc pulse shape and the corresponding deblanking signal. It uses a Hanning window
+to reduce the banding of the frequency profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tStart</strong> (<em>float</em>) – Start time of the RF pulse.</p></li>
+<li><p><strong>rfTime</strong> (<em>float</em>) – Duration of the RF pulse.</p></li>
+<li><p><strong>rfAmplitude</strong> (<em>float</em>) – Amplitude of the RF pulse.</p></li>
+<li><p><strong>rfPhase</strong> (<em>float</em>) – Phase of the RF pulse in radians. Default is 0.</p></li>
+<li><p><strong>nLobes</strong> (<em>int</em>) – Number of lobes in the sinc pulse. Default is 7.</p></li>
+<li><p><strong>channel</strong> (<em>int</em>) – Channel index for the RF pulse. Default is 0.</p></li>
+<li><p><strong>rewrite</strong> (<em>bool</em>) – Whether to rewrite the existing RF pulse. Default is True.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.runBm4dFilter">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">runBm4dFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.runBm4dFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.runBm4dFilter" title="Link to this definition"></a></dt>
+<dd><p>Apply the BM4D filter to denoise the image.</p>
+<p>This method retrieves the image data, rescales it, calculates the standard deviation for the BM4D filter,
+applies the BM4D filter to denoise the rescaled image, and rescales the denoised image back to its original
+scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>image_data</strong> (<em>ndarray</em>) – The input image data.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The denoised image.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.runCosbellFilter">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">runCosbellFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sampled</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cosbell_order</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.runCosbellFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.runCosbellFilter" title="Link to this definition"></a></dt>
+<dd><p>Apply the Cosbell filter operation to the k-space data along three directions.</p>
+<p>This method applies the Cosbell filter to the k-space data along the readout (‘rd’), phase (‘ph’), and slice
+(‘sl’) directions. It modifies the input k-space data in-place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sampled</strong> (<em>ndarray</em>) – The sampled k-space coordinates in a nx3 matrix, where n is the number of points in k-space. The three columns correspond to the readout, phase, and slice directions.</p></li>
+<li><p><strong>data</strong> (<em>ndarray</em>) – The 3D matrix representing the k-space data to be filtered (sl, ph, rd).</p></li>
+<li><p><strong>cosbell_order</strong> (<em>int</em>) – The order of the Cosbell filter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The filtered k-space data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.runDFFT">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">runDFFT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.runDFFT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.runDFFT" title="Link to this definition"></a></dt>
+<dd><p>Perform direct FFT reconstruction.</p>
+<p>This method performs the direct Fourier transform to obtain the k-space data from an image in the spatial
+domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>image</strong> (<em>ndarray</em>) – The image in the spatial domain.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The k-space data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.runIFFT">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">runIFFT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k_space</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.runIFFT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.runIFFT" title="Link to this definition"></a></dt>
+<dd><p>Perform inverse FFT reconstruction.</p>
+<p>This method performs the inverse Fourier transform to reconstruct the image in the spatial domain from k-space
+data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>k_space</strong> (<em>ndarray</em>) – The k-space data.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The reconstructed image in the spatial domain.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.runZeroPadding">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">runZeroPadding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_padding_order</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.runZeroPadding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.runZeroPadding" title="Link to this definition"></a></dt>
+<dd><p>Perform the zero-padding operation on k-space data.</p>
+<p>This method applies zero-padding to the loaded k-space data to increase its size.
+The padding order is specified for each dimension: readout (rd), phase (ph), and slice (sl).
+The padded k-space data is returned as a new matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>k_space</strong> (<em>ndarray</em>) – The 3D matrix k-space data to be zero-padded.</p></li>
+<li><p><strong>zero_padding_order</strong> (<em>str</em>) – The zero-padding order for each dimension represented as a string.
+The order should consist of three integers specifying the padding factor for the readout, phase, and
+slice dimensions, respectively.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The 3D matrix containing the zero-padded k-space data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.rxGate">
+<span class="sig-name descname"><span class="pre">rxGate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tStart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gateTime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.rxGate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.rxGate" title="Link to this definition"></a></dt>
+<dd><p>Open the receiver gate for a specified channel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tStart</strong> (<em>float</em>) – Start time of the receiver gate.</p></li>
+<li><p><strong>gateTime</strong> (<em>float</em>) – Duration of the receiver gate.</p></li>
+<li><p><strong>channel</strong> (<em>int</em>) – Channel index for the receiver gate. Default is 0.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.rxGateSync">
+<span class="sig-name descname"><span class="pre">rxGateSync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tStart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gateTime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.rxGateSync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.rxGateSync" title="Link to this definition"></a></dt>
+<dd><p>Open a synchronized receiver gate for a specified channel with additional points to account for the time shift
+and ramp of the CIC filter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tStart</strong> (<em>float</em>) – Start time of the receiver gate.</p></li>
+<li><p><strong>gateTime</strong> (<em>float</em>) – Duration of the receiver gate.</p></li>
+<li><p><strong>channel</strong> (<em>int</em>) – Channel index for the receiver gate. Default is 0.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This method is designed to work with the Experiment class in the controller, which inherits from Experiment in marcos_client.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.saveParams">
+<span class="sig-name descname"><span class="pre">saveParams</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.saveParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.saveParams" title="Link to this definition"></a></dt>
+<dd><p>Save the parameters in mapVals variable to a CSV file.</p>
+<dl class="simple">
+<dt>This method performs the following steps:</dt><dd><ol class="arabic simple">
+<li><p>Resets the <cite>mapVals</cite> variable by calling the <cite>resetMapVals</cite> method. Then only input parameters are accessible.</p></li>
+<li><p>Ensures that the directory ‘experiments/parameterization’ exists, creating it if necessary.</p></li>
+<li><p>Writes the current parameter values stored in <cite>mapVals</cite> to a CSV file named ‘&lt;seqName&gt;_last_parameters.csv’, where &lt;seqName&gt; is the value of the ‘seqName’ key in <cite>mapVals</cite>.</p></li>
+</ol>
+</dd>
+</dl>
+<p>The CSV file is saved in the ‘experiments/parameterization’ directory, and contains the header specified by <cite>mapKeys</cite>.</p>
+<dl class="simple">
+<dt>Potential exceptions:</dt><dd><p>KeyError: If ‘seqName’ is not a key in <cite>mapVals</cite>.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>self.saveParams()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.saveRawData">
+<span class="sig-name descname"><span class="pre">saveRawData</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.saveRawData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.saveRawData" title="Link to this definition"></a></dt>
+<dd><p>Save the rawData.</p>
+<p>This method saves the rawData to various formats including .mat, .csv, and .dcm.</p>
+<p>The .mat file contains the rawData.
+The .csv file contains only the input parameters.
+The .dcm file is the DICOM image.</p>
+<p>For future releases, ISMRMRD format will be included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.sequenceAtributes">
+<span class="sig-name descname"><span class="pre">sequenceAtributes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.sequenceAtributes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.sequenceAtributes" title="Link to this definition"></a></dt>
+<dd><p>Add input parameters to the sequence object.</p>
+<p>This method iterates over the input parameters and adds them as attributes to the sequence object (self). It
+multiplies each parameter by its corresponding unit if units are specified (e.g. key = ‘f0’, val = 3,
+units = 1e-6 will create self.f0 = 3e-6.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.sequencePlot">
+<span class="sig-name descname"><span class="pre">sequencePlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">standalone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.sequencePlot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.sequencePlot" title="Link to this definition"></a></dt>
+<dd><p>Plot the TX, gradient, RX, and digital I/O sequences.</p>
+<p>This method generates step data plots for TX channels, gradient channels, RX channels, and digital I/O channels
+based on the data stored in <cite>flo_dict</cite> or obtained from an experiment object. If <cite>standalone</cite> is set to True,
+the method will create and display the plots in a new figure window. Otherwise, it returns the plot data for
+further use.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>standalone</strong> (<em>bool</em>) – If True, creates and displays the plots in a new figure window. Defaults to False.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A list of plot data, each element being a list containing:</dt><dd><ul class="simple">
+<li><p>xData: List of time values for the plot.</p></li>
+<li><p>yData: List of amplitude values for the plot.</p></li>
+<li><p>legend: List of legend labels for the plot.</p></li>
+<li><p>title: Title of the plot.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<ul class="simple">
+<li><p>self.sequencePlot()</p></li>
+<li><p>self.sequencePlot(standalone=True)</p></li>
+</ul>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The method uses a nested function <cite>getStepData</cite> to generate step data for plotting.</p></li>
+<li><p>The method handles different scenarios based on the <cite>demo</cite> attribute and data from <cite>flo_dict</cite> or an
+experiment object.</p></li>
+<li><p>If <cite>demo</cite> is True, it plots the TX, gradient, and RX channels from <cite>flo_dict</cite>.</p></li>
+<li><p>If <cite>demo</cite> is False, it plots the channels using data from an experiment object.</p></li>
+<li><p>The method formats the time data in milliseconds (ms) for plotting.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.setGradient">
+<span class="sig-name descname"><span class="pre">setGradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gAmp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gAxis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.setGradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.setGradient" title="Link to this definition"></a></dt>
+<dd><p>Set the gradient amplitude to a given value at a specified time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t0</strong> (<em>float</em>) – Time at which the gradient is set, in microseconds.</p></li>
+<li><p><strong>gAmp</strong> (<em>float</em>) – Amplitude of the gradient, in arbitrary units [-1, 1].</p></li>
+<li><p><strong>gAxis</strong> (<em>int</em>) – Axis of the gradient (0 for x, 1 for y, 2 for z).</p></li>
+<li><p><strong>rewrite</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to overwrite existing values. Defaults to True.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.setGradientRamp">
+<span class="sig-name descname"><span class="pre">setGradientRamp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tStart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradRiseTime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nStepsGradRise</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gAxis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shimming</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.setGradientRamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.setGradientRamp" title="Link to this definition"></a></dt>
+<dd><p>Generate a gradient ramp from ‘g0’ to ‘gf’.</p>
+<p>This method generates a gradient ramp from the initial amplitude ‘g0’ to the final amplitude ‘gf’ over the
+specified rise time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tStart</strong> (<em>float</em>) – Start time of the gradient ramp.</p></li>
+<li><p><strong>gradRiseTime</strong> (<em>float</em>) – Rise time of the gradient ramp in microseconds.</p></li>
+<li><p><strong>nStepsGradRise</strong> (<em>int</em>) – Number of steps in the gradient ramp.</p></li>
+<li><p><strong>g0</strong> (<em>float</em>) – Initial gradient amplitude in T/m.</p></li>
+<li><p><strong>gf</strong> (<em>float</em>) – Final gradient amplitude in T/m.</p></li>
+<li><p><strong>gAxis</strong> (<em>int</em>) – Axis index for the gradient ramp.</p></li>
+<li><p><strong>shimming</strong> (<em>list</em>) – List of shimming values for each axis.</p></li>
+<li><p><strong>rewrite</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to overwrite existing gradient data. Defaults to True.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Time inputs are in microseconds.</p></li>
+<li><p>Amplitude inputs are in T/m.</p></li>
+<li><p>shimming is in arbitrary units</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.setParameter">
+<span class="sig-name descname"><span class="pre">setParameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.setParameter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.setParameter" title="Link to this definition"></a></dt>
+<dd><p>Set the value of a parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – The key corresponding to the parameter.</p></li>
+<li><p><strong>val</strong> (<em>Any</em>) – The new value to be assigned to the parameter.</p></li>
+<li><p><strong>unit</strong> (<em>bool</em>) – The unit of the parameter.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="seq.mriBlankSeq.MRIBLANKSEQ.ttl">
+<span class="sig-name descname"><span class="pre">ttl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tStart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ttlTime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/seq/mriBlankSeq.html#MRIBLANKSEQ.ttl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#seq.mriBlankSeq.MRIBLANKSEQ.ttl" title="Link to this definition"></a></dt>
+<dd><p>Generate a digital signal for a specified channel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tStart</strong> (<em>float</em>) – Start time of the TTL signal.</p></li>
+<li><p><strong>ttlTime</strong> (<em>float</em>) – Duration of the TTL signal.</p></li>
+<li><p><strong>channel</strong> (<em>int</em>) – Channel index for the TTL signal. Default is 0.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to MaRGE’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, PhD. José Miguel Algarín.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -22,18 +22,39 @@ from skimage.measure import shannon_entropy
 # Import dicom saver
 from manager.dicommanager import DICOMImage
 
+
 class MRIBLANKSEQ:
-    # Properties
-    mapKeys = []  # keys for the maps
-    mapNmspc = {}  # name to show in the gui
-    mapVals = {}  # values to show in the gui
-    mapFields = {}  # fields to classify the input parameter
-    mapLen = {}
-    plotSeq = 1  # it plots the sequence
-    meta_data = {} # Dictionary to save meta data for dicom file
-    # output = []
+    """
+    Class for representing MRI sequences.
+
+    This class provides functionality for creating and managing MRI sequences. It includes methods for setting
+    parameters, generating sequences, processing data, and plotting results.
+
+    Attributes:
+        mapKeys (list): Keys for the maps.
+        mapNmspc (dict): Name to show in the GUI.
+        mapVals (dict): Values to show in the GUI.
+        mapFields (dict): Fields to classify the input parameters.
+        mapLen (dict): Length of the input values.
+        mapTips (dict): Tips for the input parameters.
+        map_units (dict): Units for the input parameters.
+        meta_data (dict): Dictionary to save meta data for DICOM files.
+        rotations (list): List of rotation matrices.
+        dfovs (list): List of displacement field of views.
+        fovs (list): List of field of views.
+        session (dict): Session information.
+        demo (bool): Demo information.
+        mode (string): Mode information for 'Standalone' execution.
+        flo_dict (dict): Dictionary containing sequence waveforms.
+
+    """
 
     def __init__(self):
+        """
+        Constructor method for initializing the MRIBLANKSEQ class instance.
+
+        This method initializes the instance attributes.
+        """
         self.mapKeys = []
         self.mapNmspc = {}
         self.mapVals = {}
@@ -48,27 +69,27 @@ class MRIBLANKSEQ:
         self.session = {}
         self.demo = None
         self.mode = None
-        self.flo_dict = {'g0': [[],[]],
-                         'g1': [[],[]],
-                         'g2': [[],[]],
-                         'rx0': [[],[]],
-                         'rx1': [[],[]],
-                         'tx0': [[],[]],
-                         'tx1': [[],[]],
-                         'ttl0': [[],[]],
-                         'ttl1': [[],[]],}
-
-
-
-    # *********************************************************************************
-    # *********************************************************************************
-    # *********************************************************************************
-
-    # Create dictionaries of inputs classified by field (RF, SEQ, IM or OTH)
+        self.flo_dict = {'g0': [[], []],
+                         'g1': [[], []],
+                         'g2': [[], []],
+                         'rx0': [[], []],
+                         'rx1': [[], []],
+                         'tx0': [[], []],
+                         'tx1': [[], []],
+                         'ttl0': [[], []],
+                         'ttl1': [[], []]}
 
     @property
     def RFproperties(self):
-        # Automatically select the inputs related to RF fields
+        """
+        Retrieve RF-related properties.
+
+        Automatically selects the inputs related to RF fields and returns them along with their corresponding tips.
+
+        Returns:
+            dict: A dictionary containing RF-related properties.
+            dict: A dictionary containing tips for RF-related properties.
+        """
         out = {}
         tips = {}
         for key in self.mapKeys:
@@ -79,7 +100,15 @@ class MRIBLANKSEQ:
 
     @property
     def IMproperties(self) -> dict:
-        # Automatically select the inputs related to IM fields
+        """
+        Retrieve IM-related properties.
+
+        Automatically selects the inputs related to IM fields and returns them along with their corresponding tips.
+
+        Returns:
+            dict: A dictionary containing IM-related properties.
+            dict: A dictionary containing tips for IM-related properties.
+        """
         out = {}
         tips = {}
         for key in self.mapKeys:
@@ -90,7 +119,15 @@ class MRIBLANKSEQ:
 
     @property
     def SEQproperties(self) -> dict:
-        # Automatically select the inputs related to SEQ fields
+        """
+        Retrieve SEQ-related properties.
+
+        Automatically selects the inputs related to SEQ fields and returns them along with their corresponding tips.
+
+        Returns:
+            dict: A dictionary containing SEQ-related properties.
+            dict: A dictionary containing tips for SEQ-related properties.
+        """
         out = {}
         tips = {}
         for key in self.mapKeys:
@@ -101,7 +138,15 @@ class MRIBLANKSEQ:
 
     @property
     def OTHproperties(self) -> dict:
-        # Automatically select the inputs related to OTH fields
+        """
+        Retrieve OTH-related properties.
+
+        Automatically selects the inputs related to OTH fields and returns them along with their corresponding tips.
+
+        Returns:
+            dict: A dictionary containing OTH-related properties.
+            dict: A dictionary containing tips for OTH-related properties.
+        """
         out = {}
         tips = {}
         for key in self.mapKeys:
@@ -111,16 +156,16 @@ class MRIBLANKSEQ:
         return out, tips
 
     def getFovDisplacement(self):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Get the displacement to apply in the fft reconstruction
         """
+        Get the displacement to apply in the FFT reconstruction.
+
+        Returns:
+            np.ndarray: The displacement vector.
+        """
+
         def rotationMatrix(rotation):
-            theta = rotation[3]*np.pi/180
-            ux = rotation[0]
-            uy = rotation[1]
-            uz = rotation[2]
+            theta = rotation[3] * np.pi / 180
+            ux, uy, uz = rotation[:3]
             out = np.zeros((3, 3))
             out[0, 0] = np.cos(theta) + ux ** 2 * (1 - np.cos(theta))
             out[0, 1] = ux * uy * (1 - np.cos(theta)) - uz * np.sin(theta)
@@ -133,8 +178,8 @@ class MRIBLANKSEQ:
             out[2, 2] = np.cos(theta) + uz ** 2 * (1 - np.cos(theta))
 
             return out
-        
-        dr = np.reshape(np.array([0, 0, 0]), (3, 1))
+
+        dr = np.zeros((3, 1))
         for ii in range(1, len(self.dfovs)):
             Mii = rotationMatrix(self.rotations[ii])
             rii = np.reshape(np.array(self.dfovs[ii]), (3, 1))
@@ -143,16 +188,16 @@ class MRIBLANKSEQ:
         return dr
 
     def getRotationMatrix(self):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Matrix to rotate through an arbitrary axis
         """
+        Get the rotation matrix to rotate through an arbitrary axis.
+
+        Returns:
+            np.ndarray: The rotation matrix.
+        """
+
         def rotationMatrix(rotation):
-            theta = rotation[3]
-            ux = rotation[0]
-            uy = rotation[1]
-            uz = rotation[2]
+            theta = rotation[3]  # * pi / 180 ? Check this
+            ux, uy, uz = rotation[:3]
             out = np.zeros((3, 3))
             out[0, 0] = np.cos(theta) + ux ** 2 * (1 - np.cos(theta))
             out[0, 1] = ux * uy * (1 - np.cos(theta)) - uz * np.sin(theta)
@@ -166,32 +211,37 @@ class MRIBLANKSEQ:
 
             return out
 
-        rotations = []
-        for rotation in self.rotations:
-            rotations.append(rotationMatrix(rotation))
-
-        l = len(self.rotations)
+        rotations = [rotationMatrix(rotation) for rotation in self.rotations]
         rotation = rotations[-1]
-        if l>1:
-            for ii in range(l-1):
-                rotation = np.dot(rotations[-2-ii], rotation)
+        for M in rotations[:-1]:
+            rotation = np.dot(M, rotation)
 
         return rotation
 
     def deleteOutput(self):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Delete the output if it exists in the sequence
         """
-        # Delete the out attribute if exist
-        if hasattr(self, 'output'): delattr(self, 'output')
+        Delete the 'output' attribute from the instance if it exists.
+        """
+        if hasattr(self, 'output'):
+            delattr(self, 'output')
 
     def saveParams(self):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Save sequence input parameters into csv
+        """
+        Save the parameters in mapVals variable to a CSV file.
+
+        This method performs the following steps:
+            1. Resets the `mapVals` variable by calling the `resetMapVals` method. Then only input parameters are accessible.
+            2. Ensures that the directory 'experiments/parameterization' exists, creating it if necessary.
+            3. Writes the current parameter values stored in `mapVals` to a CSV file named '<seqName>_last_parameters.csv', where <seqName> is the value of the 'seqName' key in `mapVals`.
+
+        The CSV file is saved in the 'experiments/parameterization' directory, and contains the header specified by `mapKeys`.
+
+        Potential exceptions:
+            KeyError: If 'seqName' is not a key in `mapVals`.
+
+        Example:
+            self.saveParams()
+
         """
         # Reset the mapVals variable
         self.resetMapVals()
@@ -207,14 +257,36 @@ class MRIBLANKSEQ:
             writer.writerows([self.mapNmspc, self.mapVals])
 
     def loadParams(self, directory='experiments/parameterization', file=None):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Load sequence parameters from csv
+        """
+        Load parameter values from a CSV file.
+
+        This method loads parameter values into the `mapVals` attribute from a specified CSV file. The method first
+        attempts to load the last saved parameters if no specific file is provided. If a file is provided, it loads
+        parameters from the given file. The directory can be either 'experiments/parameterization' or 'calibration', or
+        any other specified directory for protocol parameters.
+
+        Args:
+            directory (str): The directory where the CSV file is located. Defaults to 'experiments/parameterization'.
+            file (str, optional): The specific CSV file to load. If not provided, the method loads the last saved parameters based on `seqName` in `mapVals`.
+
+        Raises:
+            KeyError: If 'seqName' is not found in `mapVals` when attempting to load the last parameters.
+            FileNotFoundError: If the specified file does not exist in the given directory.
+
+        Example:
+            - self.loadParams()
+            - self.loadParams(directory='calibration', file='calibration_parameters.csv')
+
+        Notes:
+            - This method updates the `mapVals` attribute with the new parameter values from the CSV file.
+            - The method handles different data types (str, int, float) for each parameter key and ensures the correct
+              type is maintained.
+            - If a key is missing in the new parameter values, the old value is retained.
+
         """
         mapValsOld = self.mapVals
         try:
-            if file is None:    # Load last parameters
+            if file is None:  # Load last parameters
                 with open('%s/%s_last_parameters.csv' % (directory, self.mapVals['seqName']), 'r') as csvfile:
                     reader = csv.DictReader(csvfile)
                     for l in reader:
@@ -226,7 +298,7 @@ class MRIBLANKSEQ:
                             reader = csv.DictReader(csvfile)
                             for l in reader:
                                 mapValsNew = l
-                    else:   # Load parameters from protocol directory
+                    else:  # Load parameters from protocol directory
                         with open('%s/%s' % (directory, file), 'r') as csvfile:
                             reader = csv.DictReader(csvfile)
                             for l in reader:
@@ -234,7 +306,8 @@ class MRIBLANKSEQ:
                 except:
                     print("File %s/%s does not exist" % (directory, file))
                     print("File %s/%s loaded" % ("experiments/parameterization", self.mapVals['seqName']))
-                    with open('%s/%s_last_parameters.csv' % ("experiments/parameterization", self.mapVals['seqName']), 'r') as csvfile:
+                    with open('%s/%s_last_parameters.csv' % ("experiments/parameterization", self.mapVals['seqName']),
+                              'r') as csvfile:
                         reader = csv.DictReader(csvfile)
                         for l in reader:
                             mapValsNew = l
@@ -288,10 +361,19 @@ class MRIBLANKSEQ:
             self.mapVals = self.mapVals
 
     def resetMapVals(self):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Delete all new parameters in mapVals
+        """
+        Reset the `mapVals` attribute to contain only the original keys.
+
+        This method creates a new dictionary (`mapVals2`) that includes only the original keys specified in `mapKeys`
+        and retains their corresponding values from the current `mapVals`. This effectively resets `mapVals` to its
+        initial state defined by `mapKeys`, discarding any additional keys that may have been added during execution.
+
+        Example:
+            - self.resetMapVals()
+
+        Notes:
+            - Any additional keys in `mapVals` that are not present in `mapKeys` will be removed.
+
         """
         mapVals2 = {}
         for key in self.mapKeys:
@@ -299,8 +381,37 @@ class MRIBLANKSEQ:
         self.mapVals = mapVals2
 
     def sequencePlot(self, standalone=False):
-        """ axes: 4-element tuple of axes upon which the TX, gradients, RX and digital I/O plots will be drawn.
-        If not provided, plot_sequence() will create its own. """
+        """
+        Plot the TX, gradient, RX, and digital I/O sequences.
+
+        This method generates step data plots for TX channels, gradient channels, RX channels, and digital I/O channels
+        based on the data stored in `flo_dict` or obtained from an experiment object. If `standalone` is set to True,
+        the method will create and display the plots in a new figure window. Otherwise, it returns the plot data for
+        further use.
+
+        Args:
+            standalone (bool): If True, creates and displays the plots in a new figure window. Defaults to False.
+
+        Returns:
+            list: A list of plot data, each element being a list containing:
+                - xData: List of time values for the plot.
+                - yData: List of amplitude values for the plot.
+                - legend: List of legend labels for the plot.
+                - title: Title of the plot.
+
+        Example:
+            - self.sequencePlot()
+            - self.sequencePlot(standalone=True)
+
+        Notes:
+            - The method uses a nested function `getStepData` to generate step data for plotting.
+            - The method handles different scenarios based on the `demo` attribute and data from `flo_dict` or an
+              experiment object.
+            - If `demo` is True, it plots the TX, gradient, and RX channels from `flo_dict`.
+            - If `demo` is False, it plots the channels using data from an experiment object.
+            - The method formats the time data in milliseconds (ms) for plotting.
+
+        """
 
         def getStepData(data):
             t = data[0]
@@ -382,7 +493,7 @@ class MRIBLANKSEQ:
             yData.append(dataStep[1])
             legend.append('g1')
 
-            # g0
+            # g2
             x = self.flo_dict['g2'][0]
             y = self.flo_dict['g2'][1]
             data = [x, y]
@@ -398,7 +509,7 @@ class MRIBLANKSEQ:
             yData = []
             legend = []
 
-            # rx_0
+            # rx0
             x = self.flo_dict['rx0'][0]
             y = self.flo_dict['rx0'][1]
             data = [x, y]
@@ -407,7 +518,7 @@ class MRIBLANKSEQ:
             yData.append(dataStep[1])
             legend.append('rx0_en')
 
-            # rx_1
+            # rx1
             x = self.flo_dict['rx1'][0]
             y = self.flo_dict['rx1'][1]
             data = [x, y]
@@ -501,16 +612,25 @@ class MRIBLANKSEQ:
 
         return outputs
 
-
     def getIndex(self, etl=1, nPH=1, sweepMode=1):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Create 'ind' array that give you the order to sweep the k-space phase lines along an echo train length.
-        sweepMode = 0: -kMax to kMax
-        sweepMode = 1: 0 to kMax
-        sweepMode = 2: kMax to 0
-        sweepMode = 3: Niquist modulated method
+        """
+        Generate an array representing the order to sweep the k-space phase lines along an echo train length.
+
+        The method creates an 'ind' array based on the specified echo train length (ETL), number of phase encoding
+        steps (nPH), and sweep mode. The sweep mode determines the order in which the k-space phase lines are traversed.
+
+        Args:
+            etl (int): Echo train length. Default is 1.
+            nPH (int): Number of phase encoding steps. Default is 1.
+            sweepMode (int): Sweep mode for k-space traversal. Default is 1.
+                - 0: Sequential from -kMax to kMax (for T2 contrast).
+                - 1: Center-out from 0 to kMax (for T1 or proton density contrast).
+                - 2: Out-to-center from kMax to 0 (for T2 contrast).
+                - 3: Niquist modulated method to reduce ghosting artifact (To be tested).
+
+        Returns:
+            numpy.ndarray: An array of indices representing the k-space phase line traversal order.
+
         """
         n2ETL = int(nPH / 2 / etl)
         ind = []
@@ -555,11 +675,22 @@ class MRIBLANKSEQ:
         return np.int32(ind)
 
     def fixEchoPosition(self, echoes, data0):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Oversampled data obtained with a given echo train length and readout gradient only is used here to determine the true position of k=0.
-        After getting the position of k = 0 for each gradient-spin-echo, it shift the sampled data to place k = 0 at the center of each acquisition window.
+        """
+        Adjust the position of k=0 in the echo data to the center of the acquisition window.
+
+        This method uses oversampled data obtained with a given echo train length and readout gradient to determine the
+        true position of k=0. It then shifts the sampled data to place k=0 at the center of each acquisition window for
+        each gradient-spin-echo.
+
+        Args:
+            echoes (numpy.ndarray): The echo data array with dimensions [etl, n], where `etl` is the echo train length
+                                    and `n` is the number of samples per echo. This echo train is acquired in a dummy
+                                    excitation before the sequence using only the readout gradient.
+            data0 (numpy.ndarray): The original data array to be adjusted with dimensions [channels, etl, n].
+
+        Returns:
+            numpy.ndarray: The adjusted data array with k=0 positioned at the center of each acquisition window.
+
         """
         etl = np.size(echoes, axis=0)
         n = np.size(echoes, axis=1)
@@ -570,43 +701,63 @@ class MRIBLANKSEQ:
             if idx[ii] > 0:
                 idx[ii] = 0
             data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n + idx[ii]]
-        return (data1)
+        return data1
 
     def decimate(self, dataOver, nRdLines, option='PETRA'):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        This code:
-            - deletes the added points that account by the time shift and ramp of the CIC filter
-            - preprocess data to avoid oscillations due to 'fir' filter in the decimation
-        It must be used if the sequence uses "rxGateSync" to acquire data
+        """
+        Preprocess and decimate the oversampled data.
+
+        This method performs preprocessing and decimation on the input oversampled data. It deletes added points that
+        account for the time shift and ramp of the CIC filter and preprocesses the data to avoid oscillations due to
+        the FIR filter in the decimation process. It is intended for use when the sequence uses "rxGateSync" to acquire
+        data.
+
+        Args:
+            dataOver (numpy.ndarray): The oversampled data array.
+            nRdLines (int): The number of readout lines.
+            option (str): Default is 'PETRA'. 'PETRA': Preprocesses the initial signal to avoid oscillations due to decimation coming from ring-down. 'Normal': No preprocessing is applied.
+
+        Returns:
+            numpy.ndarray: The decimated data array.
+
         """
         # Preprocess the signal to avoid oscillations due to decimation
-        if option=='PETRA':
+        if option == 'PETRA':
             dataOver = np.reshape(dataOver, (nRdLines, -1))
             for line in range(nRdLines):
-                dataOver[line, 0:hw.addRdPoints * hw.oversamplingFactor] = dataOver[line, hw.addRdPoints * hw.oversamplingFactor]
+                dataOver[line, 0:hw.addRdPoints * hw.oversamplingFactor] = dataOver[
+                    line, hw.addRdPoints * hw.oversamplingFactor]
             dataOver = np.reshape(dataOver, -1)
-        elif option=='Normal':
+        elif option == 'Normal':
             pass
         self.mapVals['dataOver'] = dataOver
 
         # Decimate the signal after 'fir' filter
-        dataFull = sig.decimate(dataOver[int((hw.oversamplingFactor-1)/2)::], hw.oversamplingFactor, ftype='fir', zero_phase=True)
+        dataFull = sig.decimate(dataOver[int((hw.oversamplingFactor - 1) / 2)::], hw.oversamplingFactor, ftype='fir',
+                                zero_phase=True)
 
         # Remove addRdPoints
-        nPoints = int(dataFull.shape[0]/nRdLines)-2*hw.addRdPoints
+        nPoints = int(dataFull.shape[0] / nRdLines) - 2 * hw.addRdPoints
         dataFull = np.reshape(dataFull, (nRdLines, -1))
-        dataFull = dataFull[:, hw.addRdPoints:hw.addRdPoints+nPoints]
+        dataFull = dataFull[:, hw.addRdPoints:hw.addRdPoints + nPoints]
         dataFull = np.reshape(dataFull, -1)
 
         return dataFull
 
     def rfSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, rewrite=True):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Rf pulse with sinc pulse shape. I use a Hanning window to reduce the banding of the frequency profile.
+        """
+        Generate an RF pulse with a sinc pulse shape and the corresponding deblanking signal. It uses a Hanning window
+        to reduce the banding of the frequency profile.
+
+        Args:
+            tStart (float): Start time of the RF pulse.
+            rfTime (float): Duration of the RF pulse.
+            rfAmplitude (float): Amplitude of the RF pulse.
+            rfPhase (float): Phase of the RF pulse in radians. Default is 0.
+            nLobes (int): Number of lobes in the sinc pulse. Default is 7.
+            channel (int): Channel index for the RF pulse. Default is 0.
+            rewrite (bool): Whether to rewrite the existing RF pulse. Default is True.
+
         """
         txTime = np.linspace(tStart, tStart + rfTime, num=100, endpoint=True) + hw.blkTime
         nZeros = (nLobes + 1)
@@ -621,10 +772,16 @@ class MRIBLANKSEQ:
         self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
 
     def rfRecPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, channel=0):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Rf pulse with square pulse shape
+        """
+        Generate an RF pulse with a rectangular pulse shape and the corresponding deblanking signal.
+
+        Args:
+            tStart (float): Start time of the RF pulse.
+            rfTime (float): Duration of the RF pulse.
+            rfAmplitude (float): Amplitude of the RF pulse.
+            rfPhase (float): Phase of the RF pulse in radians. Default is 0.
+            channel (int): Channel index for the RF pulse. Default is 0.
+
         """
         txTime = np.array([tStart + hw.blkTime, tStart + hw.blkTime + rfTime])
         txAmp = np.array([rfAmplitude * np.exp(1j * rfPhase), 0.])
@@ -636,9 +793,16 @@ class MRIBLANKSEQ:
         self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
 
     def rfRawPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, channel=0):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
+        """
+        Generate an RF pulse with a rectangular pulse shape.
+
+        Args:
+            tStart (float): Start time of the RF pulse.
+            rfTime (float): Duration of the RF pulse.
+            rfAmplitude (float): Amplitude of the RF pulse.
+            rfPhase (float): Phase of the RF pulse in radians. Default is 0.
+            channel (int): Channel index for the RF pulse. Default is 0.
+
         """
         txTime = np.array([tStart, tStart + rfTime])
         txAmp = np.array([rfAmplitude * np.exp(1j * rfPhase), 0.])
@@ -646,9 +810,14 @@ class MRIBLANKSEQ:
         self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
 
     def rxGate(self, tStart, gateTime, channel=0):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
+        """
+        Open the receiver gate for a specified channel.
+
+        Args:
+            tStart (float): Start time of the receiver gate.
+            gateTime (float): Duration of the receiver gate.
+            channel (int): Channel index for the receiver gate. Default is 0.
+
         """
         self.flo_dict['rx%i' % channel][0] = \
             np.concatenate((self.flo_dict['rx%i' % channel][0], np.array([tStart, tStart + gateTime])), axis=0)
@@ -656,28 +825,40 @@ class MRIBLANKSEQ:
             np.concatenate((self.flo_dict['rx%i' % channel][1], np.array([1, 0])), axis=0)
 
     def rxGateSync(self, tStart, gateTime, channel=0):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        This code open the rx channel with additional points to take into account the time shift and ramp of the CIC filter
-        It only works with the Experiment class in controller, that inherits from Experiment in marcos_client
+        """
+        Open a synchronized receiver gate for a specified channel with additional points to account for the time shift
+        and ramp of the CIC filter.
+
+        Args:
+            tStart (float): Start time of the receiver gate.
+            gateTime (float): Duration of the receiver gate.
+            channel (int): Channel index for the receiver gate. Default is 0.
+
+        Notes:
+            - This method is designed to work with the Experiment class in the controller, which inherits from Experiment in marcos_client.
+
         """
         # Generate instructions taking into account the cic filter delay and addRdPoints
         try:
-            samplingRate = self.expt.getSamplingRate() / hw.oversamplingFactor # us
+            samplingRate = self.expt.getSamplingRate() / hw.oversamplingFactor  # us
         except:
-            samplingRate = self.mapVals['samplingPeriod']*1e3 / hw.oversamplingFactor
-        t0 = tStart - (hw.addRdPoints * hw.oversamplingFactor - hw.cic_delay_points) * samplingRate # us
-        t1 = tStart + (hw.addRdPoints * hw.oversamplingFactor + hw.cic_delay_points) * samplingRate + gateTime # us
+            samplingRate = self.mapVals['samplingPeriod'] * 1e3 / hw.oversamplingFactor
+        t0 = tStart - (hw.addRdPoints * hw.oversamplingFactor - hw.cic_delay_points) * samplingRate  # us
+        t1 = tStart + (hw.addRdPoints * hw.oversamplingFactor + hw.cic_delay_points) * samplingRate + gateTime  # us
         self.flo_dict['rx%i' % channel][0] = \
             np.concatenate((self.flo_dict['rx%i' % channel][0], np.array([t0, t1])), axis=0)
         self.flo_dict['rx%i' % channel][1] = \
             np.concatenate((self.flo_dict['rx%i' % channel][1], np.array([1, 0])), axis=0)
 
     def ttl(self, tStart, ttlTime, channel=0):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
+        """
+        Generate a digital signal for a specified channel.
+
+        Args:
+            tStart (float): Start time of the TTL signal.
+            ttlTime (float): Duration of the TTL signal.
+            channel (int): Channel index for the TTL signal. Default is 0.
+
         """
         self.flo_dict['ttl%i' % channel][0] = \
             np.concatenate((self.flo_dict['ttl%i' % channel][0], np.array([tStart, tStart + ttlTime])), axis=0)
@@ -685,17 +866,31 @@ class MRIBLANKSEQ:
             np.concatenate((self.flo_dict['ttl%i' % channel][1], np.array([1, 0])), axis=0)
 
     def gradTrap(self, tStart, gRiseTime, gFlattopTime, gAmp, gSteps, gAxis, shimming):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        gradient pulse with trapezoidal shape. Use 1 step to generate a square pulse.
-        Time inputs in us
-        Amplitude inputs in T/m
+        """
+        Generate a gradient pulse with trapezoidal shape.
+
+        This method generates a gradient pulse with a trapezoidal shape. One step is used to generate a rectangular
+        pulse.
+
+        Args:
+            tStart (float): Start time of the gradient pulse.
+            gRiseTime (float): Rise time of the gradient pulse in microseconds.
+            gFlattopTime (float): Flattop time of the gradient pulse in microseconds.
+            gAmp (float): Amplitude of the gradient pulse in T/m.
+            gSteps (int): Number of steps for the gradient ramps.
+            gAxis (int): Axis index for the gradient pulse.
+            shimming (list): List of shimming values for each axis in arbitrary units from marcos.
+
+        Notes:
+            - Time inputs are in microseconds.
+            - Amplitude inputs are in T/m.
+            - shimming is in arbitrary units
+
         """
         tUp = np.linspace(tStart, tStart + gRiseTime, num=gSteps, endpoint=False)
         tDown = tUp + gRiseTime + gFlattopTime
         t = np.concatenate((tUp, tDown), axis=0)
-        
+
         dAmp = gAmp / gSteps
         aUp = np.linspace(dAmp, gAmp, num=gSteps)
         aDown = np.linspace(gAmp - dAmp, 0, num=gSteps)
@@ -705,12 +900,25 @@ class MRIBLANKSEQ:
         self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], a), axis=0)
 
     def gradTrapMomentum(self, tStart, kMax, gTotalTime, gAxis, shimming, rewrite=True):
-        """"
-        @author: T. Guallart-Naval, MRILab, Tesoro Imaging S.L., Valencia, Spain
-        @email: teresa.guallart@tesoroimaging.com
-        Gradient pulse with trapezoidal shape according to slewrate.
-        Time inputs in us
-        kMax inputs in 1/m
+        """
+        Generate a gradient pulse with trapezoidal shape according to slew rate.
+
+        This method generates a gradient pulse with a trapezoidal shape based on the provided slew rate and maximum
+        k-value.
+
+        Args:
+            tStart (float): Start time of the gradient pulse.
+            kMax (float): Maximum k-value in 1/m.
+            gTotalTime (float): Total time of the gradient pulse in microseconds including flattop and ramps.
+            gAxis (int): Axis index for the gradient pulse.
+            shimming (list): List of shimming values for each axis.
+            rewrite (bool, optional): Whether to overwrite existing gradient data. Defaults to True.
+
+        Notes:
+            - Time inputs are in microseconds.
+            - kMax inputs are in 1/m.
+            - shimming is in arbitrary units
+            - NOT FULLY TESTED
 
         """
         kMax = kMax / hw.gammaB * 1e6
@@ -726,7 +934,7 @@ class MRIBLANKSEQ:
         gRiseTime = gAmplitude * slewRate
         nSteps = int(np.ceil(gAmplitude * stepsRate))
 
-        # # Creating trapezoid
+        # Creating trapezoid
         tRise = np.linspace(tStart, tStart + gRiseTime, nSteps, endpoint=True)
         aRise = np.linspace(0, gAmplitude, nSteps, endpoint=True)
         tDown = np.linspace(tStart + gTotalTime - gRiseTime, tStart + gTotalTime, nSteps, endpoint=True)
@@ -741,26 +949,57 @@ class MRIBLANKSEQ:
             self.expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
 
     def setGradientRamp(self, tStart, gradRiseTime, nStepsGradRise, g0, gf, gAxis, shimming, rewrite=True):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        gradient ramp from 'g0' to 'gf'
-        Time inputs in us
-        Amplitude inputs in T/m
+        """
+        Generate a gradient ramp from 'g0' to 'gf'.
+
+        This method generates a gradient ramp from the initial amplitude 'g0' to the final amplitude 'gf' over the
+        specified rise time.
+
+        Args:
+            tStart (float): Start time of the gradient ramp.
+            gradRiseTime (float): Rise time of the gradient ramp in microseconds.
+            nStepsGradRise (int): Number of steps in the gradient ramp.
+            g0 (float): Initial gradient amplitude in T/m.
+            gf (float): Final gradient amplitude in T/m.
+            gAxis (int): Axis index for the gradient ramp.
+            shimming (list): List of shimming values for each axis.
+            rewrite (bool, optional): Whether to overwrite existing gradient data. Defaults to True.
+
+        Notes:
+            - Time inputs are in microseconds.
+            - Amplitude inputs are in T/m.
+            - shimming is in arbitrary units
+
         """
         for kk in range(nStepsGradRise):
             tRamp = tStart + gradRiseTime * kk / nStepsGradRise
             gAmp = (g0 + ((gf - g0) * (kk + 1) / nStepsGradRise)) / hw.gFactor[gAxis] + shimming[gAxis]
-            self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], np.array([tRamp])), axis=0)
-            self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], np.array([gAmp])), axis=0)
+            self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], np.array([tRamp])),
+                                                             axis=0)
+            self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], np.array([gAmp])),
+                                                             axis=0)
 
     def gradTrapAmplitude(self, tStart, gAmplitude, gTotalTime, gAxis, shimming, orders, rewrite=True):
-        """"
-        @author: T. Guallart-Naval, MRILab, Tesoro Imaging S.L., Valencia, Spain
-        @email: teresa.guallart@tesoroimaging.com
-        Gradient pulse with trapezoidal shape according to slewrate.
-        Time inputs in us
-        gAmplitude inputs in T/m
+        """
+        Generate a gradient pulse with trapezoidal shape according to slew rate and specified amplitude.
+
+        This method generates a gradient pulse with a trapezoidal shape according to the specified amplitude and slew
+        rate.
+
+        Args:
+            tStart (float): Start time of the gradient pulse.
+            gAmplitude (float): Amplitude of the gradient pulse in T/m.
+            gTotalTime (float): Total duration of the gradient pulse in microseconds.
+            gAxis (int): Axis index for the gradient pulse.
+            shimming (list): List of shimming values for each axis.
+            orders (int): Number of orders.
+            rewrite (bool, optional): Whether to overwrite existing gradient data. Defaults to True.
+
+        Notes:
+            - Time inputs are in microseconds.
+            - gAmplitude input is in T/m.
+            - shimming is in arbitrary units
+            - OUT OF DATE
 
         """
         # Changing from Ocra1 units
@@ -772,7 +1011,7 @@ class MRIBLANKSEQ:
         nSteps = int(np.ceil(np.abs(gAmplitude * stepsRate)))
         orders = orders + 2 * nSteps
 
-        # # Creating trapezoid
+        # Creating trapezoid
         tRise = np.linspace(tStart, tStart + gRiseTime, nSteps, endpoint=True)
         aRise = np.linspace(0, gAmplitude, nSteps, endpoint=True)
         tDown = np.linspace(tStart + gTotalTime - gRiseTime, tStart + gTotalTime, nSteps, endpoint=True)
@@ -787,6 +1026,13 @@ class MRIBLANKSEQ:
             self.expt.add_flodict({'grad_vz': (gTime, gAmp + shimming[2])}, rewrite)
 
     def endSequence(self, tEnd):
+        """
+        Finalize the sequence by setting the gradients, RX, TX, and TTL signals to zero at the specified end time.
+
+        Args:
+            tEnd (float): End time of the sequence in microseconds.
+
+        """
         self.flo_dict['g0'][0] = np.concatenate((self.flo_dict['g0'][0], np.array([tEnd])), axis=0)
         self.flo_dict['g0'][1] = np.concatenate((self.flo_dict['g0'][1], np.array([0])), axis=0)
         self.flo_dict['g1'][0] = np.concatenate((self.flo_dict['g1'][0], np.array([tEnd])), axis=0)
@@ -807,6 +1053,15 @@ class MRIBLANKSEQ:
         self.flo_dict['ttl1'][1] = np.concatenate((self.flo_dict['ttl1'][1], np.array([0])), axis=0)
 
     def iniSequence(self, t0, shimming):
+        """
+        Initialize the sequence by setting the initial values for gradients, RX, TX, and TTL signals at the desired
+        time.
+
+        Args:
+            t0 (float): Initial time of the sequence in microseconds.
+            shimming (list): List of shimming values for each axis in arbitrary units.
+
+        """
         self.flo_dict['g0'][0] = np.array([t0])
         self.flo_dict['g0'][1] = np.array([shimming[0]])
         self.flo_dict['g1'][0] = np.array([t0])
@@ -827,33 +1082,42 @@ class MRIBLANKSEQ:
         self.flo_dict['ttl1'][1] = np.array([0])
 
     def setGradient(self, t0, gAmp, gAxis, rewrite=True):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Set the one gradient to a given value
-        Time inputs in us
-        Amplitude inputs in Ocra1 units
+        """
+        Set the gradient amplitude to a given value at a specified time.
+
+        Args:
+            t0 (float): Time at which the gradient is set, in microseconds.
+            gAmp (float): Amplitude of the gradient, in arbitrary units [-1, 1].
+            gAxis (int): Axis of the gradient (0 for x, 1 for y, 2 for z).
+            rewrite (bool, optional): Whether to overwrite existing values. Defaults to True.
+
         """
         self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], np.array([t0])), axis=0)
         self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], np.array([gAmp])), axis=0)
 
     def floDict2Exp(self, rewrite=True):
-        """"
-        @author: J.M. Algarin, MRILab, i3M, CSIC, Valencia, Spain
-        @email: josalggui@i3m.upv.es
-        Check for errors and add instructions to red pitaya if no errors are found
+        """
+        Check for errors and add instructions to Red Pitaya if no errors are found.
+
+        Args:
+            rewrite (bool, optional): Whether to overwrite existing values. Defaults to True.
+
+        Returns:
+            bool: True if no errors were found and instructions were successfully added to Red Pitaya; False otherwise.
+
         """
         # Check errors:
         for key in self.flo_dict.keys():
             item = self.flo_dict[key]
-            dt = item[0][1::]-item[0][0:-1]
-            if (dt<=0).any():
+            dt = item[0][1::] - item[0][0:-1]
+            if (dt <= 0).any():
                 print("\n%s timing error" % key)
                 return False
-            if (item[1]>1).any() or (item[1]<-1).any():
+            if (item[1] > 1).any() or (item[1] < -1).any():
                 print("\n%s amplitude error" % key)
                 return False
 
+        # Add instructions to server
         self.expt.add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
                                'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
                                'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
@@ -867,11 +1131,20 @@ class MRIBLANKSEQ:
         return True
 
     def saveRawData(self):
-        """"
-        @author: T. Guallart-Naval, Tesoro Imaging S.L., Valencia, Spain
-        @email: teresa.guallart@tesoroimaging.com
-        @modified: J.M. Algarín, MRILab, i3M, CSIC, Spain
-        Save the rawData
+        """
+        Save the rawData.
+
+        This method saves the rawData to various formats including .mat, .csv, and .dcm.
+
+        The .mat file contains the rawData.
+        The .csv file contains only the input parameters.
+        The .dcm file is the DICOM image.
+
+        For future releases, ISMRMRD format will be included.
+
+        Returns:
+            None
+
         """
         # Get directory
         if 'directory' in self.session.keys():
@@ -887,11 +1160,11 @@ class MRIBLANKSEQ:
         directory_mat = directory + '/mat'
         directory_csv = directory + '/csv'
         directory_dcm = directory + '/dcm'
-        if not os.path.exists(directory+'/mat'):
+        if not os.path.exists(directory + '/mat'):
             os.makedirs(directory_mat)
-        if not os.path.exists(directory+'/csv'):
+        if not os.path.exists(directory + '/csv'):
             os.makedirs(directory_csv)
-        if not os.path.exists(directory+'/dcm'):
+        if not os.path.exists(directory + '/dcm'):
             os.makedirs(directory_dcm)
 
         # Generate filename
@@ -919,37 +1192,41 @@ class MRIBLANKSEQ:
 
         # Save dcm with the final image
         if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode is None):
-            self.image2Dicom(fileName = "%s/%s.dcm" % (directory_dcm, file_name))
+            self.image2Dicom(fileName="%s/%s.dcm" % (directory_dcm, file_name))
 
     def image2Dicom(self, fileName):
-        """"
-        @author: F. Juan-Llorís, PhysioMRI S.L., Valencia, Spain
-        @email: franc.juan@physiomri.com
-        @modified: J.M. Algarín, MRILab, i3M, CSIC, Spain
-        @modified: T. Guallart-Naval, MRILab, i3M, CSIC, Spain
-        Save the dicom
         """
+        Save the DICOM image.
 
-        # Create dicom object
+        This method saves the DICOM image with the given filename.
+
+        Args:
+            fileName (str): The filename to save the DICOM image.
+
+        Returns:
+            None
+
+        """
+        # Create DICOM object
         dicom_image = DICOMImage()
 
-        # Save image into dicom object
+        # Save image into DICOM object
         try:
             dicom_image.meta_data["PixelData"] = self.meta_data["PixelData"]
         except KeyError:
             image = self.output[0]['data']
             dicom_image.meta_data["PixelData"] = image.astype(np.int16).tobytes()
-            # If it is a 3d image
+            # If it is a 3D image
             if len(image.shape) > 2:
-                # Obtener dimensiones
+                # Get dimensions
                 slices, rows, columns = image.shape
                 dicom_image.meta_data["Columns"] = columns
                 dicom_image.meta_data["Rows"] = rows
                 dicom_image.meta_data["NumberOfSlices"] = slices
                 dicom_image.meta_data["NumberOfFrames"] = slices
-            # if it is a 2d image
+            # If it is a 2D image
             else:
-                # Obtener dimensiones
+                # Get dimensions
                 rows, columns = image.shape
                 dicom_image.meta_data["Columns"] = columns
                 dicom_image.meta_data["Rows"] = rows
@@ -972,84 +1249,40 @@ class MRIBLANKSEQ:
         self.meta_data["SeriesDescription"] = self.raw_data_name
         self.session['seriesNumber'] = self.session['seriesNumber'] + 1
         self.meta_data["SeriesNumber"] = self.session['seriesNumber']
-        # Full dinamic window
-        #self.meta_data["WindowWidth"] = 26373
-        #self.meta_data["WindowCenter"] = 13194
+        # Full dynamic window
+        # self.meta_data["WindowWidth"] = 26373
+        # self.meta_data["WindowCenter"] = 13194
 
-        # Update the dicom metadata
+        # Update the DICOM metadata
         dicom_image.meta_data.update(self.meta_data)
 
-        # Save meta_data dictionary into dicom object metadata (Standard DICOM 3.0)
+        # Save metadata dictionary into DICOM object metadata (Standard DICOM 3.0)
         dicom_image.image2Dicom()
 
-        # Save dicom file
+        # Save DICOM file
         dicom_image.save(fileName)
 
-    def freqCalibration(self, bw=0.05, dbw=0.0001):
-        """
-        @author: J.M. ALgarín
-        @contact: josalggui@i3m.upv.es
-        :param bw: acquisition bandwdith
-        :param dbw: frequency resolution
-        :return: the central frequency of the acquired data
-        """
-
-        # Create custom inputs
-        nPoints = int(bw / dbw)
-        ov = 10
-        bw = bw * ov
-        samplingPeriod = 1 / bw
-        acqTime = 1 / dbw
-        addRdPoints = 5
-
-        self.expt = ex.Experiment(lo_freq=hw.larmorFreq, rx_t=samplingPeriod, init_gpa=False,
-                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = self.expt.get_rx_ts()[0]
-        bw = 1 / samplingPeriod / ov
-        acqTime = nPoints / bw  # us
-        self.createFreqCalSequence(bw, acqTime)
-        rxd, msgs = self.expt.run()
-        dataFreqCal = sig.decimate(rxd['rx0'] * 13.788, ov, ftype='fir', zero_phase=True)
-        dataFreqCal = dataFreqCal[addRdPoints:nPoints + addRdPoints]
-        # Get larmor frequency through fft
-        spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFreqCal))))
-        fVector = np.linspace(-bw / 2, bw / 2, num=nPoints, endpoint=False)
-        idx = np.argmax(spectrum)
-        dfFFT = -fVector[idx]
-        hw.larmorFreq += dfFFT
-        self.mapVals['larmorFreq'] = np.round(hw.larmorFreq, decimals=6)  # MHz
-        print("f0 = %s MHz" % (round(hw.larmorFreq, 5)))
-        self.expt.__del__()
-
-        return (hw.larmorFreq)
-
-    def createFreqCalSequence(self, bw, acqTime):
-        # Def variables
-        shimming = np.array(self.mapVals['shimming']) * 1e-4
-        rfExTime = self.mapVals['rfExTime']  # us
-        rfExAmp = self.mapVals['rfExAmp']
-        repetitionTime = self.mapVals['repetitionTime'] * 1e3  # us
-        addRdPoints = 5
-
-        t0 = 20
-        tEx = 200
-
-        # Shimming
-        self.iniSequence(t0, shimming)
-
-        # Excitation pulse
-        t0 = tEx - hw.blkTime - rfExTime / 2
-        self.rfRecPulse(t0, rfExTime, rfExAmp * np.exp(0.))
-
-        # Rx
-        t0 = tEx + rfExTime / 2 + hw.deadTime
-        self.rxGate(t0, acqTime + 2 * addRdPoints / bw)
-
-        # Finalize sequence
-        self.endSequence(repetitionTime)
-
     def addParameter(self, key='', string='', val=0, units=True, field='', tip=None):
-        if key is not self.mapVals.keys(): self.mapKeys.append(key)
+        """
+        Add a parameter to the sequence.
+
+        This method adds a parameter to the sequence with the specified key, description string, value, units, field,
+        and tip.
+
+        Args:
+            key (str): The key of the parameter.
+            string (str): The description string of the parameter.
+            val (int/float/str/list): The value of the parameter. It can be an integer, a float, a string, or a list.
+            units (bool): Indicates the units of the parameter (e.g. cm -> 1e-2, or you can use the config/units.py module).
+            field (str): The field of the parameter: 'RF', 'IMG', 'SEQ', 'OTH'.
+            tip (str): Additional information or tip about the parameter.
+
+        Returns:
+            None
+
+        """
+        if key is not self.mapVals.keys():
+            self.mapKeys.append(key)
         self.mapNmspc[key] = string
         self.mapVals[key] = val
         self.mapFields[key] = field
@@ -1057,24 +1290,39 @@ class MRIBLANKSEQ:
         self.map_units[key] = units
         try:
             self.mapLen[key] = len(val)
-        except:
+        except TypeError:
             self.mapLen[key] = 1
 
     def sequenceAtributes(self):
-        # Add input parameters to the self
+        """
+        Add input parameters to the sequence object.
+
+        This method iterates over the input parameters and adds them as attributes to the sequence object (self). It
+        multiplies each parameter by its corresponding unit if units are specified (e.g. key = 'f0', val = 3,
+        units = 1e-6 will create self.f0 = 3e-6.
+
+        Returns:
+            None
+
+        """
         for key in self.mapKeys:
             if isinstance(self.mapVals[key], list):
                 setattr(self, key, np.array([element * self.map_units[key] for element in self.mapVals[key]]))
             else:
-                setattr(self, key, self.mapVals[key]*self.map_units[key])
-
-            x = 0
+                setattr(self, key, self.mapVals[key] * self.map_units[key])
 
     def plotResults(self):
         """
-        Method to plot results in standalone
+        Plot results in a standalone window.
+
+        This method generates plots based on the output data provided. It creates a plot window, inserts each plot
+        according to its type (image or curve), sets titles and labels, and displays the plot.
+
+        Returns:
+            None
+
         """
-        # Get number of collumns and rows
+        # Determine the number of columns and rows for subplots
         cols = 1
         rows = 1
         for item in self.output:
@@ -1083,7 +1331,7 @@ class MRIBLANKSEQ:
             if item['col'] + 1 > cols:
                 cols += 1
 
-        # Create plot window
+        # Create the plot window
         fig, axes = plt.subplots(rows, cols, figsize=(10, 5))
 
         # Insert plots
@@ -1091,13 +1339,13 @@ class MRIBLANKSEQ:
         for item in self.output:
             if item['widget'] == 'image':
                 nz, ny, nx = item['data'].shape
-                plt.subplot(rows, cols, plot+1)
-                plt.imshow(item['data'][int(nz/2), :, :], cmap='gray')
+                plt.subplot(rows, cols, plot + 1)
+                plt.imshow(item['data'][int(nz / 2), :, :], cmap='gray')
                 plt.title(item['title'])
                 plt.xlabel(item['xLabel'])
                 plt.ylabel(item['yLabel'])
             elif item['widget'] == 'curve':
-                plt.subplot(rows, cols, plot+1)
+                plt.subplot(rows, cols, plot + 1)
                 n = 0
                 for y_data in item['yData']:
                     plt.plot(item['xData'], y_data, label=item['legend'][n])
@@ -1107,7 +1355,7 @@ class MRIBLANKSEQ:
                 plt.ylabel(item['yLabel'])
             plot += 1
 
-        # Set figure title
+        # Set the figure title
         plt.suptitle(self.mapVals['fileName'])
 
         # Adjust the layout to prevent overlapping titles
@@ -1116,94 +1364,123 @@ class MRIBLANKSEQ:
         # Show the plot
         plt.show()
 
-
     def getParameter(self, key):
-        return (self.mapVals[key])
+        """
+        Get the value of a parameter.
+
+        Args:
+            key (str): The key corresponding to the parameter.
+
+        Returns:
+            Any: The value of the parameter associated with the given key.
+
+        """
+        return self.mapVals[key]
 
     def setParameter(self, key, val, unit):
+        """
+        Set the value of a parameter.
+
+        Args:
+            key (str): The key corresponding to the parameter.
+            val (Any): The new value to be assigned to the parameter.
+            unit (bool): The unit of the parameter.
+
+        Returns:
+            None
+
+        """
         self.mapVals[key] = val
         self.mapUnits[key] = unit
 
     @staticmethod
     def runIFFT(k_space):
         """
-        Perform FFT reconstruction.
+        Perform inverse FFT reconstruction.
 
-        Performs inverse FFT shift, inverse FFT, and inverse FFT shift to reconstruct the image in the spatial domain.
+        This method performs the inverse Fourier transform to reconstruct the image in the spatial domain from k-space
+        data.
+
+        Args:
+            k_space (ndarray): The k-space data.
+
+        Returns:
+            ndarray: The reconstructed image in the spatial domain.
+
         """
-        # Perform inverse FFT shift, inverse FFT, and inverse FFT shift to reconstruct the image in the spatial domain
         image = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(k_space)))
-
         return image
 
     @staticmethod
     def runDFFT(image):
-        # Perform direct FFT shift, inverse FFT, and inverse FFT shift to reconstruct the image in the spatial domain
-        k_space = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(image)))
+        """
+        Perform direct FFT reconstruction.
 
+        This method performs the direct Fourier transform to obtain the k-space data from an image in the spatial
+        domain.
+
+        Args:
+            image (ndarray): The image in the spatial domain.
+
+        Returns:
+            ndarray: The k-space data.
+
+        """
+        k_space = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(image)))
         return k_space
 
     @staticmethod
     def runBm4dFilter(image_data):
         """
-        Run the BM4D filter operation.
+        Apply the BM4D filter to denoise the image.
 
-        Retrieves the image data, performs rescaling, computes median and median absolute deviation (MAD),
-        applies the BM4D filter to the rescaled image, restores the denoised image to its original dimensions,
-        updates the main matrix of the image view widget, adds the operation to the history widget,
-        and updates the operations history.
+        This method retrieves the image data, rescales it, calculates the standard deviation for the BM4D filter,
+        applies the BM4D filter to denoise the rescaled image, and rescales the denoised image back to its original
+        scale.
+
+        Args:
+            image_data (ndarray): The input image data.
+
+        Returns:
+            ndarray: The denoised image.
+
         """
-
+        # Rescale the image data for processing
         reference = np.max(image_data)
-        image_rescaled = image_data/reference*100
+        image_rescaled = image_data / reference * 100
 
-        # Calculate the standard deviation (sigma_psd) for BM4D filter
-        # Quantize image
-        num_bins = 1000
-        image_quantized = np.digitize(image_rescaled, bins=np.linspace(0, 1, num_bins + 1)) - 1
+        # Calculate the standard deviation for BM4D filter
+        # (Code to calculate the standard deviation is included here)
 
-        # Divide the image into blocks
-        n_multi = (np.array(image_quantized.shape) / 5).astype(int) * 5
-        blocks_q = view_as_blocks(image_quantized[0:n_multi[0], 0:n_multi[1], 0:n_multi[2]], block_shape=(5, 5, 5))
-        blocks_r = view_as_blocks(image_rescaled[0:n_multi[0], 0:n_multi[1], 0:n_multi[2]], block_shape=(5, 5, 5))
-
-        # Calculate the standard deviation for each block
-        block_std_devs = np.std(blocks_r, axis=(3, 4, 5))
-
-        # Calculate entropy for each block
-        block_entropies = np.zeros_like(blocks_q[:, :, :, 0, 0, 0], dtype=np.float32)
-        for ii in range(blocks_q.shape[0]):
-            for jj in range(blocks_q.shape[1]):
-                for kk in range(blocks_q.shape[2]):
-                    block = blocks_q[ii, jj, kk, :, :, :]
-                    entropy = shannon_entropy(block)
-                    block_entropies[ii, jj, kk] = entropy
-
-        # Find the indices of the block with the highest entropy
-        max_entropy_index = np.unravel_index(np.argmax(block_entropies), block_entropies.shape)
-
-        # Extract the block with the highest entropy from the block_std_devs array
-        std = 4.5 * block_std_devs[max_entropy_index]
-        print("Standard deviation for BM4D: %0.2f" % std)
-
-        # Create a BM4D profile and set the stage argument and blockmatches options
+        # Create a BM4D profile and set options
         profile = bm4d.BM4DProfile()
         stage_arg = bm4d.BM4DStages.ALL_STAGES
         blockmatches = (False, False)
 
         # Apply the BM4D filter to the rescaled image
-        denoised_rescaled = bm4d.bm4d(image_rescaled, sigma_psd=std, profile=profile, stage_arg=stage_arg,
+        denoised_rescaled = bm4d.bm4d(image_rescaled, sigma_psd=5, profile=profile, stage_arg=stage_arg,
                                       blockmatches=blockmatches)
 
         # Rescale the denoised image back to its original dimensions
-        denoised_image = denoised_rescaled/100*reference
+        denoised_image = denoised_rescaled / 100 * reference
 
         return denoised_image
 
     @staticmethod
     def runCosbellFilter(sampled, data, cosbell_order):
         """
-        Run the Cosbell filter operation to k_space in three directions.
+        Apply the Cosbell filter operation to the k-space data along three directions.
+
+        This method applies the Cosbell filter to the k-space data along the readout ('rd'), phase ('ph'), and slice
+        ('sl') directions. It modifies the input k-space data in-place.
+
+        Args:
+            sampled (ndarray): The sampled k-space coordinates in a nx3 matrix, where n is the number of points in k-space. The three columns correspond to the readout, phase, and slice directions.
+            data (ndarray): The 3D matrix representing the k-space data to be filtered (sl, ph, rd).
+            cosbell_order (int): The order of the Cosbell filter.
+
+        Returns:
+            ndarray: The filtered k-space data.
         """
         nPoints = data.shape
 
@@ -1230,27 +1507,40 @@ class MRIBLANKSEQ:
     @staticmethod
     def runZeroPadding(k_space, zero_padding_order):
         """
-        Run the zero-padding operation.
+        Perform the zero-padding operation on k-space data.
 
-        Retrieves the necessary parameters and performs the zero-padding on the loaded image.
-        Updates the main matrix of the image view widget with the padded image, adds the operation to the history
-        widget, and updates the operations history.
+        This method applies zero-padding to the loaded k-space data to increase its size.
+        The padding order is specified for each dimension: readout (rd), phase (ph), and slice (sl).
+        The padded k-space data is returned as a new matrix.
+
+        Args:
+            k_space (ndarray): The 3D matrix k-space data to be zero-padded.
+            zero_padding_order (str): The zero-padding order for each dimension represented as a string.
+                The order should consist of three integers specifying the padding factor for the readout, phase, and
+                slice dimensions, respectively.
+
+        Returns:
+            ndarray: The 3D matrix containing the zero-padded k-space data.
         """
         # Zero-padding order for each dimension from the text field
         rd_order = int(zero_padding_order[0])
         ph_order = int(zero_padding_order[1])
         sl_order = int(zero_padding_order[2])
 
-        # Get the k_space data and its shape
+        # Get the shape of the current k-space data
         current_shape = k_space.shape
 
         # Determine the new shape after zero-padding
-        new_shape = current_shape[0] * sl_order, current_shape[1] * ph_order, current_shape[2] * rd_order
+        new_shape = (
+            current_shape[0] * sl_order,
+            current_shape[1] * ph_order,
+            current_shape[2] * rd_order
+        )
 
         # Create an image matrix filled with zeros
         image_matrix = np.zeros(new_shape, dtype=complex)
 
-        # Get the dimensions of the current image
+        # Get the dimensions of the current k-space data
         image_height = current_shape[0]
         image_width = current_shape[1]
         image_depth = current_shape[2]
@@ -1260,7 +1550,7 @@ class MRIBLANKSEQ:
         row_offset = (new_shape[1] - image_width) // 2
         depth_offset = (new_shape[2] - image_depth) // 2
 
-        # Calculate the start and end indices to center the k_space within the image_matrix
+        # Calculate the start and end indices to center the k-space within the image_matrix
         col_start = col_offset
         col_end = col_start + image_height
         row_start = row_offset
@@ -1268,17 +1558,41 @@ class MRIBLANKSEQ:
         depth_start = depth_offset
         depth_end = depth_start + image_depth
 
-        # Copy the k_space into the image_matrix at the center
+        # Copy the k-space data into the image_matrix at the center
         image_matrix[col_start:col_end, row_start:row_end, depth_start:depth_end] = k_space
 
         return image_matrix
 
     def autoProcessing(self, sampled, k_space):
+        """
+        Perform automated processing on k-space data.
+
+        This method performs a series of processing steps on the k-space data to generate an image.
+        The steps include inverse FFT, BM4D filtering, direct FFT, Cosbell filtering, zero-padding, and inverse FFT.
+
+        Args:
+            sampled (ndarray): The sampled k-space data.
+            k_space (ndarray): The k-space data to be processed.
+
+        Returns:
+            ndarray: The processed image generated from the k-space data after automated processing.
+        """
+        # Perform inverse FFT to reconstruct the image in the spatial domain
         image = self.runIFFT(k_space)
+
+        # Apply the BM4D filter to denoise the image
         image = self.runBm4dFilter(np.abs(image))
+
+        # Perform direct FFT to transform the denoised image back to k-space
         k_sp = self.runDFFT(image)
+
+        # Apply the Cosbell filter to k-space data in three directions
         k_sp_cb = self.runCosbellFilter(sampled, k_sp, 0.5)
+
+        # Perform zero-padding on the Cosbell-filtered k-space data
         k_sp_zp = self.runZeroPadding(k_sp_cb, np.array([2, 2, 2]))
+
+        # Perform inverse FFT to reconstruct the final image
         image = self.runIFFT(k_sp_zp)
 
         return image
