@@ -6,6 +6,10 @@
 
 This repository contains the Python code for the MaRCoS Graphical Environment (MaRGE), a system for magnetic resonance imaging research. The GUI provides a user-friendly interface to interact with the MaRCoS system.
 
+Take a look at the MaRGE [Wiki](https://github.com/josalggui/MaRGE/wiki)! (under development)
+
+Take a look at the MaRGE [Documentation](https://josalggui.github.io/MaRGE/)! (under development)
+
 ## Issues related to the IP of the MaRCoS client and MaRCoS server.
 In order to provide an efficient communication between the client (your PC) and the server (the Red Pitaya) while using MaRGE, the IP of both must be properly configured. I found easier to set the IPs as static in both the client and the server, so here I will explain how to do it.
 
