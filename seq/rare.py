@@ -117,9 +117,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.demo = demo
 
         # Set the fov
-        self.dfov = self.getFovDisplacement()
-        self.dfov = self.dfov[self.axesOrientation]
+        # self.dfov = self.getFovDisplacement()
+        # self.dfov = self.dfov[self.axesOrientation]
+        # self.fov = self.fov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
+        self.dfov = self.dfov[self.axesOrientation]
+
 
         # Miscellaneous
         self.freqOffset = self.freqOffset*1e6 # MHz
