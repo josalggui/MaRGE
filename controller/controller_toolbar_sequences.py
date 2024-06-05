@@ -74,6 +74,7 @@ class SequenceController(SequenceToolBar):
         items = [self.main.protocol_inputs.item(index) for index in range(self.main.protocol_inputs.count())]
         for item in items:
             self.main.protocol_inputs.sequenceDoubleClicked(item)
+            hw.dfov = [0.0, 0.0, 0.0]
             time.sleep(0.1)
 
     def autocalibration(self):
@@ -285,11 +286,11 @@ class SequenceController(SequenceToolBar):
         self.main.history_list.pending_inputs[name] = [map_nmspc, map_vals]
 
         # Set to zero the dfov and angle for next figures
-        # for sequence in defaultsequences.values():
-        #     if 'dfov' in sequence.mapKeys:
-        #         sequence.mapVals['dfov'] = [0.0, 0.0, 0.0]   # mm
-        #     if 'angle' in sequence.mapKeys:
-        #         sequence.mapVals['angle'] = 0.0
+        for sequence in defaultsequences.values():
+            if 'dfov' in sequence.mapKeys:
+                sequence.mapVals['dfov'] = [0.0, 0.0, 0.0]   # mm
+            if 'angle' in sequence.mapKeys:
+                sequence.mapVals['angle'] = 0.0
 
         self.main.sequence_list.updateSequence()
 
