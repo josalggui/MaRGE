@@ -701,11 +701,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
             result2['row'] = 0
             result2['col'] = 1
 
-            # Reset rotation angle and dfov to zero
-            self.mapVals['angle'] = 0.0
-            self.mapVals['dfov'] = [0.0, 0.0, 0.0]
-            hw.dfov = [0.0, 0.0, 0.0]
-
             # DICOM TAGS
             # Image
             imageDICOM = np.transpose(image, (0, 2, 1))
@@ -747,8 +742,20 @@ class RARE(blankSeq.MRIBLANKSEQ):
             # Add results into the output attribute (result1 must be the image to save in dicom)
             self.output = [result1, result2]
 
+        # Reset rotation angle and dfov to zero
+        self.mapVals['angle'] = self.angle
+        self.mapVals['dfov'] = np.array(self.mapVals['dfov'])
+        self.mapVals['dfov'][self.axesOrientation] = self.dfov.reshape(-1)
+        self.mapVals['dfov'] = list(self.mapVals['dfov'])
+
         # Save results
         self.saveRawData()
+
+        self.mapVals['angle'] = 0.0
+        self.sequenceList['RARE'].mapVals['angle'] = 0.0
+        self.mapVals['dfov'] = [0.0, 0.0, 0.0]
+        self.sequenceList['RARE'].mapVals['dfov'] = [0.0, 0.0, 0.0]
+        hw.dfov = [0.0, 0.0, 0.0]
 
         if self.mode == 'Standalone':
             self.plotResults()

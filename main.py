@@ -45,7 +45,7 @@ from controller.controller_session import SessionController
 
 # Run the gui
 demo = True
-# app = QApplication(sys.argv)
-# gui = SessionController(demo)
-# sys.exit(app.exec_())
+app = QApplication(sys.argv)
+gui = SessionController(demo)
+sys.exit(app.exec_())
 

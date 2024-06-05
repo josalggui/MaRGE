@@ -180,7 +180,7 @@ class MRIBLANKSEQ:
             return out
 
         dr = np.zeros((3, 1))
-        for ii in range(1, len(self.dfovs)):
+        for ii in range(len(self.dfovs)):
             Mii = rotationMatrix(self.rotations[ii])
             rii = np.reshape(np.array(self.dfovs[ii]), (3, 1))
             dr = np.dot(Mii, (dr + rii))
