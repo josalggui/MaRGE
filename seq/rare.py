@@ -117,12 +117,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.demo = demo
 
         # Set the fov
-        # self.dfov = self.getFovDisplacement()
-        # self.dfov = self.dfov[self.axesOrientation]
-        # self.fov = self.fov[self.axesOrientation]
-        self.fov = self.fov[self.axesOrientation]
+        self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
-
+        self.fov = self.fov[self.axesOrientation]
 
         # Miscellaneous
         self.freqOffset = self.freqOffset*1e6 # MHz
@@ -750,6 +747,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['dfov'] = np.array(self.mapVals['dfov'])
         self.mapVals['dfov'][self.axesOrientation] = self.dfov.reshape(-1)
         self.mapVals['dfov'] = list(self.mapVals['dfov'])
+        print("\nSaved dfov:")
+        print(self.mapVals['dfov'])
 
         # Save results
         self.saveRawData()
