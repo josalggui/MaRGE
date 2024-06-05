@@ -5,3 +5,4 @@ MHz = 1e6
 us = 1e-6
 ms = 1e-3
 sh = 1e-4 # shimming factor
+mTm = 1e-3

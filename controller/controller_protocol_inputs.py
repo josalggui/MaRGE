@@ -109,6 +109,7 @@ class ProtocolInputsController(ProtocolInputsWidget):
         sequence.mapVals['larmorFreq'] = hw.larmorFreq
         sequence.mapVals['fov'] = hw.fov
         sequence.mapVals['dfov'] = hw.dfov
+        hw.dfov = [0.0, 0.0, 0.0]
 
         # Run the sequence
         map_nmspc = list(sequence.mapNmspc.values())

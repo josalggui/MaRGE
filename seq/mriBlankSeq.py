@@ -768,8 +768,8 @@ class MRIBLANKSEQ:
         txGateAmp = np.array([1, 0])
         self.flo_dict['tx0'][0] = np.concatenate((self.flo_dict['tx0'][0], txTime), axis=0)
         self.flo_dict['tx0'][1] = np.concatenate((self.flo_dict['tx0'][1], txAmp), axis=0)
-        self.flo_dict['ttl0' % rxChannel][0] = np.concatenate((self.flo_dict['ttl0' % rxChannel][0], txGateTime), axis=0)
-        self.flo_dict['ttl0' % rxCannel][1] = np.concatenate((self.flo_dict['ttl0' % rxChannel][1], txGateAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
 
     def rfRecPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, channel=0):
         """

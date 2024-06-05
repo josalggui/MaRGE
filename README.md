@@ -6,71 +6,13 @@
 
 This repository contains the Python code for the MaRCoS Graphical Environment (MaRGE), a system for magnetic resonance imaging research. The GUI provides a user-friendly interface to interact with the MaRCoS system.
 
-## Installation
+Take a look at the MaRGE [Wiki](https://github.com/josalggui/MaRGE/wiki)! (under development)
 
-To run MaRGE, you will need to have Python 3 installed on your computer. If you don't have it installed, you can download it from [python.org](https://www.python.org/downloads/).
+Take a look at the MaRGE [Documentation](https://josalggui.github.io/MaRGE/)! (under development)
 
-Next, follow these steps to set up MaRGE:
+### [Setting up a Red Pitaya](https://github.com/josalggui/MaRGE/wiki/Setting-up-Red-Pitaya)
 
-1. Clone the following repositories into the same folder on your computer:
-
-   - [marcos_client](https://github.com/vnegnev/marcos_client)
-   - [marcos_server](https://github.com/vnegnev/marcos_server)
-   - [marcos_extras](https://github.com/vnegnev/marcos_extras)
-   - [MaRGE](https://github.com/mriLab-i3M/MaRGE)
-
-   Your folder structure should resemble the following:
-
-<img src="resources/images/folder_example.png" alt="alt text">
-
-
-**Figure 1: Example of folder structure**
-
-2. Modify the following configuration files as needed:
-
-- `local_config.py` in the `marcos_client` folder: This file contains information about the version of the Red Pitaya, its IP address, and the GPA board used in conjunction with the Red Pitaya.
-- `hw_config.py` in the `MaRGE/configs` folder: This file contains information about the scanner hardware.
-- `sys_config.py` in the `MaRGE/configs` folder: This file contains settings for displaying the session windows in the GUI.
-
-Note: These files may not initially exist in the cloned repositories, but you can find copies of them in its corresponding folder.
-
-3. Set up bash: to do communication with server from the GUI, you need to set up the bash_path variable in the hw_config.py file.
-   1. If running under Windows OS, you will need to install git_bash, and then set `bash_path = "directory/git_bash.exe"` in hw_config.py.
-   2. If running under Ubuntu OS, set `bash_path = "gnome-terminal"` 
-
-4. Install all the required modules to run MaRGE, listed in the `requirements.txt` file.
-
-5. After making the necessary modifications to the configuration files, you can run the `main.py` file to launch MaRGE.
-
-That's it! You should now have MaRGE up and running on your computer. Enjoy using it for your MRI research.
-
-If you encounter any issues or have questions, please refer to the documentation or feel free to open an issue on the respective GitHub repositories for assistance.
-
-
-## Issues
-
-I found some issues when runing under linux. Here are some of them
-
-**1. ERROR**
-
-Error: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
-This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
-
-Available platform plugins are: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, xcb.
-
-**SOLUTION**
-
-Install `libxcb-xinerama0` with `sudo apt install libxcb-xinerama0`.
-
-**2. WARNING**
-
-Warning: Ignoring XDG_SESSION_TYPE=wayland on Gnome. Use QT_QPA_PLATFORM=wayland to run on Wayland anyway
-
-**SOLUTION**
-
-Disabled Wayland by uncommenting `WaylandEnable=false` in the `/etc/gdm3/custom.conf`
-
-Add `QT_QPA_PLATFORM=xcb` in `/etc/environment`
+### [Setting up MaRGE](https://github.com/josalggui/MaRGE/wiki/Setting-up-MaRGE)
 
 ## Description of the GUI
 
@@ -223,111 +165,13 @@ The GUI menubar is a centralized hub for accessing various functions and feature
 
 The GUI menubar serves as a user-friendly interface for navigating and accessing the various functionalities of MaRGE.
 
+### [Setting up the autocalibration](https://github.com/josalggui/MaRGE/wiki/Setting-up-autocalibration)
 
-## Configure the System
+### [Setting up the localizer](https://github.com/josalggui/MaRGE/wiki/Setting-up-localizer)
 
-### Autocalibration
+### [Run custom sequences](https://github.com/josalggui/MaRGE/wiki/Run-custom-sequences)
 
-The `Autocalibration` feature is a vital component of the GUI, as it runs a series of five sequences to provide essential information to the GUI for system calibration. These sequences include:
-
-- `Larmor`
-- `Autotuning`
-- `Noise`
-- `Rabi flops`
-- `Shimming`
-
-However, to ensure that `Autocalibration` functions correctly, specific configuration steps are required. These steps must be followed for each sequence utilized by `Autocalibration`:
-
-1. Select one of the five mentioned sequences from the sequence list in the `Custom` tab.
-2. Configure the desired input parameters for the selected sequence.
-3. Save the configuration by clicking the `Save for Calibration` button in the Sequence toolbar (3).
-
-The `Save for Calibration` button generates a .csv file in the `calibration` folder for each sequence. After completing these steps for all five sequences, there should be five .csv files available in the folder, enabling the proper execution of Autocalibration.
-
-It's important to note that failing to configure these parameters will result in the GUI using the last-used parameters for each calibration sequence, which are saved in the `experiments\parameterization` folder. If this folder is empty (e.g., for first-time users), the GUI will employ default parameters defined in the API.
-It is really recommended to configure the autocalibration sequences and avoid using default parameters.
-
-### Localizer
-
-The Localizer sequence is typically a fast sequence with low resolution, designed to provide information about the field of view (FOV). Similar to Autocalibration, the Localizer sequence also requires specific parameters to be configured before use. Follow these steps to create the necessary file for the Localizer sequence:
-
-1. Select the `Localizer` sequence from the sequence list in the `Custom` tab.
-
-2. Configure the Localizer sequence with the desired parameters, taking into account your FOV requirements.
-
-3. In the `Others` tab, set the `Planes` inputs. This parameter is a list of three elements, each of which can be set to 0 or 1. Use 1 to indicate that you want to acquire the corresponding plane and 0 to indicate that you do not want to acquire it. For example, setting `Planes` to [1, 1, 0] means that only sagittal and coronal planes will be acquired when the Localizer button is clicked.
-
-4. Save the Localizer sequence configuration by clicking the `Save for Calibration` button in the Sequence toolbar (3).
-
-After saving the configuration, clicking the `Localizer` button will place one Localizer sequence into the history list for each selected plane in the `Others` tab. This allows you to efficiently acquire the required Localizer data for your specific FOV needs.
-
-
-
-## Run a Custom Sequence
-
-Running a custom sequence within the GUI involves several steps to ensure a smooth workflow and accurate data acquisition:
-
-1. **Prerequisite: Autocalibration and Localizer**
-   - Before running a custom sequence, it is essential to perform the `Autocalibration` and `Localizer` processes.
-
-2. **Localizer Completion**
-   - Upon completion of the Localizer sequence, a message will be displayed in the console (7), and the item in the waiting list will be updated with its full name.
-   - To view the image, you can left double-click on the corresponding item in the waiting list or view multiple images through the right-click menu.
-   - In the image widget, you can click the FOV button to display a square representing the FOV that will be used for the next image. You can adjust the size, position, and angle (under development) of the FOV using the mouse. The corresponding values in the sequence list will be automatically updated. It's recommended to modify the FOV using this method, as it updates the FOV for all sequences. Typing the FOV values directly in the text box of the sequence list will only affect the selected sequence.
-
-3. **Sequence Selection and Modification**
-   - After selecting the desired FOV, choose an image sequence (RARE, GRE, or PETRA) and modify its parameters as needed.
-
-4. **Running the Sequence**
-   - Run the sequence by clicking the `Acquire` button (please note that this will freeze the GUI until the sequence completes) or place the sequence in the waiting list using the `Sequence to List` button. It is recommended to use the `Sequence to List` button to add the sequence to the waiting list, allowing you to continue programming the next image while others are acquired.
-   - When the sequence is finished, a message will appear in the console, indicating the completion of the sequence. You can then view the results in the image area.
-
-The parameters of the sequences are categorized into four different fields:
-1) ***RF***: Contains parameters related to the RF signal, such as pulse amplitude, frequency, or duration.
-2) ***Image***: Includes parameters related to the image, like the field of view or matrix size.
-3) ***Sequence***: Encompasses parameters related to contrast, such as echo time or repetition time.
-4) ***Others***: This field is for including other relevant parameters, such as gradient rise time or dummy pulses.
-
-Each time a sequence is run:
-1) It automatically saves a file in ***experiments/parameterization/SequenceName_last_parameters.csv***.
-   - When you initialize the GUI, it loads the parameters from files with ***last_parameters*** in the name to continue the session from where it left off.
-2) It creates four files in ***experiments/acquisitions*** inside the session folder:
-   1) A .mat raw data file with the name ***SequenceName.year.month.day.hour.minutes.seconds.milliseconds.mat***. This file contains inputs, outputs, and other useful variables.
-   2) A .csv file with the input parameters, named ***SequenceNameInfo.year.month.day.hour.minutes.seconds.milliseconds.csv***. This .csv file is useful if you want to repeat a specific experiment by loading the parameters into the corresponding sequence using the ***Sequence/Load Parameters*** menu.
-   3) A .dcm file in Dicom Standard 3.0 format.
-   4) A ismrmrd file (comming soon).
-
-These steps ensure a well-organized and efficient workflow when running custom sequences within MaRGE.
-
-
-## Create a Protocol
-
-MaRGE offers the flexibility to run previously defined protocols, which are collections of different sequences with predefined parameters. These protocols are displayed in the Sequence area (6) and provide a convenient way to streamline your experimental workflows. When you first launch the GUI, the Protocols tab will be empty.
-
-To create a new protocol, follow these steps:
-
-1. Click the `New Protocol` button. This action opens a dialog box where you can enter the name of the new protocol.
-
-2. The protocols must be created in the ***protocols*** folder. Once created, the protocol will appear in the protocol list.
-
-With the protocol created, you can start adding sequences to it:
-
-1. Select a sequence from the sequence list in the `Custom` tab.
-
-2. Customize the sequence parameters as desired for the protocol.
-
-3. Switch to the `Protocol` tab and select the desired protocol.
-
-4. Click the `Add Sequence` button.
-
-5. In the dialog box that appears, enter the name of the sequence as you'd like it to be displayed in the `Protocol` tab.
-
-After saving the sequence, it will appear within the specified protocol. To execute sequences from the protocol, simply double-click on the desired sequence to add it to the waiting list.
-
-Sequences can be removed from protocols by right-clicking the sequence and selecting `Delete` or by clicking the `Delete Sequence` button. Similarly, protocols can be deleted by clicking the `Delete Protocol` button and selecting the protocol to delete from the dialog box.
-
-This flexible protocol management system makes it easy to organize and execute sequences according to your experimental needs within MaRGE.
-
+### [Protocols](https://github.com/josalggui/MaRGE/wiki/Protocols)
 
 ## Structure of Folders and Files in the GUI
 
