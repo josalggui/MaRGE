@@ -33,6 +33,7 @@ import seq.tsePrescan as tsePrescan
 import seq.PETRAphysio as PETRAphysio
 import seq.larmor_raw as larmor_raw
 import seq.mse as mse
+import seq.pulseq_reader as pulseq_reader
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
@@ -122,6 +123,7 @@ defaultsequences = {
     'RAREprotocols': RAREProtocols(),
     'RAREprotocolsTest': RAREProtocolsTest(),
     'RARE': RARE(),
+    'PulseqReader': pulseq_reader.PulseqReader(),
     'MRID': MRID(),
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),
