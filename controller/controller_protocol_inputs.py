@@ -126,11 +126,17 @@ class ProtocolInputsController(ProtocolInputsWidget):
         # Get predefined sequences for each protocol
         self.sequences = {}
         for protocol in self.main.protocol_list.protocols:
-            prov = []
-            for path in os.listdir(os.path.join("protocols", protocol)):
-                if path.split('.')[-1] == 'csv':
-                    prov.append(path.split('.')[0])
-            self.sequences[protocol] = prov.copy()
+            # Construct the path
+            path = os.path.join("protocols", protocol)
+
+            # List all files in the specified directory
+            files = [file for file in os.listdir(path) if file.endswith('.csv') and os.path.isfile(os.path.join(path, file))]
+
+            # Sort the list of files based on their creation date
+            files.sort(key=lambda x: os.path.getctime(os.path.join(path, x)))
+
+            # Add files to the protocol variable
+            self.sequences[protocol] = files.copy()
 
         # Add the predefined sequences of the first protocol to the protocol_input list
         protocol = self.main.protocol_list.getCurrentProtocol()

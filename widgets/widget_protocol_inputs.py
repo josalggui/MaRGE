@@ -13,11 +13,3 @@ class ProtocolInputsWidget(QListWidget):
         super().__init__()
         self.main = main
 
-        # Get predefined sequences for each protocol
-        self.sequences = {}
-        for protocol in self.main.protocol_list.protocols:
-            prov = []
-            for path in os.listdir(os.path.join("protocols", protocol)):
-                if os.path.isfile(os.path.join("protocols", path)):
-                    prov.append(path)
-            self.sequences[protocol] = prov.copy()
