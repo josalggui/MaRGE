@@ -79,6 +79,9 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         init_gpa = False  # Starts the gpa
         self.demo = demo
 
+        # Initialize the sequence
+        self.seq = pp.Sequence()
+
         # Define the interpreter. It should be updated on calibration
         self.flo_interpreter = PSInterpreter(tx_warmup=hw.blkTime,  # us
                                              rf_center=self.larmorFreq,  # Hz
