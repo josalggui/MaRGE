@@ -96,7 +96,7 @@ class MRIBLANKSEQ:
         )
 
         # Define the interpreter. It should be updated on calibration
-        self.flo_interpreter = PSInterpreter(tx_warmup=hw.blkTime*1e-6, # s
+        self.flo_interpreter = PSInterpreter(tx_warmup=hw.blkTime, # s
                                              rf_center=hw.larmorFreq * 1e6,  # Hz
                                              rf_amp_max=hw.b1Efficiency/(2*np.pi)*1e6,  # Hz
                                              gx_max=hw.gFactor[0]*hw.gammaB,    # Hz/m
@@ -212,6 +212,17 @@ class MRIBLANKSEQ:
 
         """
 
+        # Reset flo dictionary
+        self.flo_dict = {'g0': [[], []],
+                         'g1': [[], []],
+                         'g2': [[], []],
+                         'rx0': [[], []],
+                         'rx1': [[], []],
+                         'tx0': [[], []],
+                         'tx1': [[], []],
+                         'ttl0': [[], []],
+                         'ttl1': [[], []], }
+
         # Fill dictionary
         for key in waveforms.keys():
             if key == 'tx0':
@@ -238,7 +249,7 @@ class MRIBLANKSEQ:
             elif key == 'grad_vy':
                 self.flo_dict['g1'][0] = np.concatenate((self.flo_dict['g1'][0], waveforms['grad_vy'][0]), axis=0)
                 self.flo_dict['g1'][1] = np.concatenate((self.flo_dict['g1'][1], waveforms['grad_vy'][1]), axis=0)
-            elif key == 'grad_vy':
+            elif key == 'grad_vz':
                 self.flo_dict['g2'][0] = np.concatenate((self.flo_dict['g2'][0], waveforms['grad_vz'][0]), axis=0)
                 self.flo_dict['g2'][1] = np.concatenate((self.flo_dict['g2'][1], waveforms['grad_vz'][1]), axis=0)
 

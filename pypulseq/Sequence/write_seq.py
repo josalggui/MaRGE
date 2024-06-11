@@ -78,8 +78,8 @@ def write(self, file_name: str) -> None:
         output_file.write('\n')
 
     grad_lib_values = np.array(list(self.grad_library.type.values()))
-    arb_grad_mask = grad_lib_values == 'g'
-    trap_grad_mask = grad_lib_values == 't'
+    arb_grad_mask = [value == 'g' for value in grad_lib_values]
+    trap_grad_mask = [value == 't' for value in grad_lib_values]
 
     if any(arb_grad_mask):
         output_file.write('# Format of arbitrary gradients:\n')
