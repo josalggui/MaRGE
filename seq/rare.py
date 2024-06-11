@@ -518,7 +518,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
             for ii in range(self.nScans):
                 imgFull[ii, :, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[ii, :, :, :])))
             self.mapVals['dataFull'] = dataFull
-            self.mapVals['imgFull'] = imgFull
 
             # Average data
             data = np.average(dataFull, axis=0)

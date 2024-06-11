@@ -29,7 +29,7 @@ import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import configs.units as units
 import scipy.signal as sig
-import controller.experiment_gui as ex
+import experiment as ex
 import configs.hw_config as hw
 
 
@@ -80,7 +80,7 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
 
                     if adc_section:
                         # If we reach another section, stop processing ADC section
-                        if line.startswith('['):
+                        if line.startswith('\n'):
                             break
 
                         # Split the line into components
@@ -103,7 +103,7 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
                                       init_gpa=init_gpa,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
                                       )
-            dwell = self.expt.getSamplingRate()
+            dwell = self.expt.get_rx_ts()[0]
         bw = 1/dwell * 1e9  # Hz
         self.mapVals['samplingPeriod'] = dwell * 1e-9  # s
         self.mapVals['bw'] = bw  # Hz
@@ -114,13 +114,16 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
         # Get number of Rx windows
         n_rx_windows = int(np.sum(waveforms['rx0_en'][1][:]))
 
-        # Fix the shimming into the gradients
-        waveforms['grad_vx'][1][:] = waveforms['grad_vx'][1][:] + self.shimming[0]
-        waveforms['grad_vy'][1][:] = waveforms['grad_vy'][1][:] + self.shimming[1]
-        waveforms['grad_vz'][1][:] = waveforms['grad_vz'][1][:] + self.shimming[2]
-
         # Convert waveform to mriBlankSeq tools (just do it)
         self.pypulseq2mriblankseq(waveforms=waveforms, shimming=self.shimming)
+
+        if not self.demo:
+            if self.floDict2Exp():
+                print("\nSequence waveforms loaded successfully")
+                pass
+            else:
+                print("\nERROR: sequence waveforms out of hardware bounds")
+                return False
 
         # Run the experiment
         data_over = []  # To save oversampled data
@@ -129,6 +132,7 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
                 print("\nScan %i running..." % (scan + 1))
                 if not self.demo:
                     rxd, msgs = self.expt.run()
+                    rxd['rx0'] = hw.adcFactor * (np.real(rxd['rx0']) - 1j * np.imag(rxd['rx0']))
                 else:
                     rxd = {'rx0': np.random.randn(n_readouts * n_rx_windows) +
                                   1j * np.random.randn(n_readouts * n_rx_windows)}
