@@ -135,6 +135,9 @@ class ProtocolInputsController(ProtocolInputsWidget):
             # Sort the list of files based on their creation date
             files.sort(key=lambda x: os.path.getctime(os.path.join(path, x)))
 
+            # Remove extensions
+            files = [file.split('.')[0] for file in files]
+
             # Add files to the protocol variable
             self.sequences[protocol] = files.copy()
 

@@ -279,8 +279,8 @@ class SequenceController(SequenceToolBar):
 
         sequence = copy.copy(defaultsequences[seq_name])
         sequence.mapVals['larmorFreq'] = hw.larmorFreq
-        sequence.mapVals['fov'] = hw.fov
-        sequence.mapVals['dfov'] = hw.dfov
+        # sequence.mapVals['fov'] = hw.fov
+        # sequence.mapVals['dfov'] = hw.dfov
         if map_nmspc is None and map_vals is None:
             map_nmspc = list(sequence.mapNmspc.values())
             map_vals = list(sequence.mapVals.values())
