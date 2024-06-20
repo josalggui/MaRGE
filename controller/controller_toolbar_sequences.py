@@ -278,7 +278,7 @@ class SequenceController(SequenceToolBar):
         self.main.history_list.addItem(name)
 
         sequence = copy.copy(defaultsequences[seq_name])
-        sequence.mapVals['larmorFreq'] = hw.larmorFreq
+        # sequence.mapVals['larmorFreq'] = hw.larmorFreq
         # sequence.mapVals['fov'] = hw.fov
         # sequence.mapVals['dfov'] = hw.dfov
         if map_nmspc is None and map_vals is None:
