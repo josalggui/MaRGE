@@ -102,6 +102,12 @@ class ProtocolInputsController(ProtocolInputsWidget):
 
         sequence = copy.copy(defaultsequences[seq_name])
 
+        # Pick the shimming from sequence, as it was set up by autocalibration
+        try:
+            shimming = copy.copy(sequence.mapVals['shimming'])
+        except:
+            pass
+
         # Load parameters
         sequence.loadParams("protocols/"+protocol, file)
 
@@ -109,6 +115,7 @@ class ProtocolInputsController(ProtocolInputsWidget):
         sequence.mapVals['larmorFreq'] = hw.larmorFreq
         sequence.mapVals['fov'] = hw.fov
         sequence.mapVals['dfov'] = hw.dfov
+        sequence.mapVals['shimming'] = shimming
         hw.dfov = [0.0, 0.0, 0.0]
 
         # Run the sequence

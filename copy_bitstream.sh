@@ -12,7 +12,12 @@ if [[ "$#" -ne 2 || ($2 != "rp-125" && $2 != "rp-122" ) ]]; then
     exit
 fi
 
-echo "Copying FPGA bitstream..."
+# Check if SSH connection works okay
+ssh root@$1 "uname -n" > /dev/null
+if [ "$?" -ne "0" ]; then
+    echo "SSH command has failed; please check IP address and try to connect manually."
+    exit 1
+fi
 
 # Decide which scp command to use (depending on host + SDRLab's OpenSSH versions)
 scp readme.org root@$1:/tmp/readme.org >/dev/null 2>/dev/null
@@ -21,8 +26,9 @@ if [ "$?" -ne "0" ]; then
 else
     scp_="scp"
 fi
+
 # check the command runs
-$scp_ readme.org root@$1:/tmp/readme.org >/dev/null 2>/dev/null
+$scp_ readme.org root@$1:/tmp/readme.org >/dev/null
 if [ "$?" -ne "0" ]; then
     echo "SCP command does not run; please investigate manually."
     exit 1
@@ -31,6 +37,8 @@ fi
 # Decide whether the target is running the Ocra Linux image, or the
 # standard Red Pitaya one
 rp_uname=$(ssh root@$1 "uname -n")
+echo "Copying FPGA bitstream..."
+
 if [[ $rp_uname == "redpitaya" ]]; then
 
     $scp_ marcos_fpga_$2.bit.bin root@$1:/lib/firmware/marcos_fpga.bit.bin
