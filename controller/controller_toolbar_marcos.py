@@ -87,12 +87,22 @@ class MarcosController(MarcosToolBar):
             ip = subnet + str(i)
             try:
                 if platform.system() == 'Linux':
-                    subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                    result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                    timeout=timeout)
                 elif platform.system() == 'Windows':
-                    subprocess.run(['ping', '-n', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                    result = subprocess.run(['ping', '-n', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                    timeout=timeout)
-                ip_addresses.append(ip)
+                if result.returncode == 0:
+                    print(f"Checking ip {ip}...")
+                    # Attempt SSH connection without authentication
+                    ssh_command = ['ssh', '-o', 'BatchMode=yes', '-o', f'ConnectTimeout={5}',
+                                   f'{"root"}@{ip}', 'exit']
+                    ssh_result = subprocess.run(ssh_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+                    if ssh_result.returncode == 0:  # SSH was successful
+                        ip_addresses.append(ip)
+                    else:
+                        print(f"No SDRLab found at ip {ip}.")
             except:
                 pass
 
