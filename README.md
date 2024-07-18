@@ -10,58 +10,13 @@ Take a look at the MaRGE [Wiki](https://github.com/josalggui/MaRGE/wiki)! (under
 
 Take a look at the MaRGE [Documentation](https://josalggui.github.io/MaRGE/)! (under development)
 
-### [Setting up a Red Pitaya](https://github.com/josalggui/MaRGE/wiki/Setting-up-Red-Pitaya)
+## [Setting up a Red Pitaya](https://github.com/josalggui/MaRGE/wiki/Setting-up-Red-Pitaya)
 
-### [Setting up MaRGE](https://github.com/josalggui/MaRGE/wiki/Setting-up-MaRGE)
+## [Setting up MaRGE](https://github.com/josalggui/MaRGE/wiki/Setting-up-MaRGE)
 
 ## Description of the GUI
 
-### Session Window
-
-When you execute `main.py`, the session window is displayed on the screen.
-
-![Session Window](resources/images/session.png)
-
-**Figure 2: Session Window**
-
-The session window serves as an input interface for important information such as the patient's name and weight. It also automatically generates an ID number. Currently, this ID number is generated based on the date and time, but users have the flexibility to modify it as needed. Some information can only be selected from predefined options, which are determined by the settings in the `sys_config.py` file.
-
-Once you've filled in the necessary information, simply click the `Launch GUI` button to initiate the main window. At this point, a new folder is created in `experiments/acquisitions` based on the Project and Subject ID you specified.
-Images and raw data will be saved in this folder.
-
-### Main Window
-
-The main window becomes accessible after clicking the `Launch GUI` button in the session window. This is where most of the essential tasks are performed, including system calibration, configuration of sequence parameters, visualization of results, and more.
-
-![Main Window](resources/images/main.png)
-
-**Figure 3: Main Window**
-
-The main window is comprised of various components:
-
-1. **Menubar:** This section offers different options related to setting up the Red Pitaya, configuring sequences, and other functionalities.
-
-2. **MaRCoS Toolbar:** Here, you'll find tools specific to the MaRCoS system.
-
-3. **Sequence Toolbar:** This toolbar is dedicated to sequence-related settings.
-
-4. **Image Toolbar:** It provides options for image-related operations.
-
-5. **Protocol Toolbar:** This toolbar allows you to manage protocols.
-
-6. **Sequence Area:** This area enables custom modification of protocols or the execution of predefined parameters through the Protocoles tab.
-
-7. **Console:** The console provides real-time feedback and information about ongoing processes.
-
-8. **History List Table:** This table keeps a record of historical data.
-
-9. **Info Table:** It displays essential information.
-
-10. **Image Area:** This section is reserved for visualizing images and results.
-
-Next, we'll explain how to use the GUI effectively, focusing on the most relevant controls and features.
-
-### Toolbars
+## Toolbars
 
 #### MaRCoS Toolbar (2)
 
