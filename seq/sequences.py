@@ -146,6 +146,6 @@ defaultsequences = {
     'SWEEP': SWEEP(),
     'testSE': testSE(),
     'PETRAphysio': PETRAphysio(),
-    'LarmorRaw': larmor_raw.LarmorRaw(),
+    'Larmor Raw': larmor_raw.LarmorRaw(),
     'MSE': MSE(),
 }
