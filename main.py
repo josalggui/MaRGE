@@ -44,8 +44,7 @@ if not os.path.exists(sys_config.screenshot_folder):
 from controller.controller_session import SessionController
 
 # Run the gui
-demo = False
 app = QApplication(sys.argv)
-gui = SessionController(demo)
+gui = SessionController()
 sys.exit(app.exec_())
 
