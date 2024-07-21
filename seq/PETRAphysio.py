@@ -343,8 +343,6 @@ class PETRAphysio(blankSeq.MRIBLANKSEQ):
 
     def sequenceAnalysis(self, mode=None):
         self.mode = mode
-        # Save results
-        self.saveRawData()
 
         # REGRIDDING
         print('\nRegridding...')
@@ -394,6 +392,9 @@ class PETRAphysio(blankSeq.MRIBLANKSEQ):
         result2['col'] = 1
 
         self.output = [result1, result2]
+
+        # Save results
+        self.saveRawData()
 
         if mode == 'Standalone':
             self.plotResults()
