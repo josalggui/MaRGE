@@ -235,11 +235,11 @@ class GRE1D(blankSeq.MRIBLANKSEQ):
                    'row': 1,
                    'col': 0}
 
-        # Save results
-        self.saveRawData()
-
         # create self.out to run in iterative mode
         self.output = [result1, result2]
+
+        # Save results
+        self.saveRawData()
 
         if self.mode == 'Standalone':
             self.plotResults()
