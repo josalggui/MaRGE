@@ -10,7 +10,6 @@ from datetime import datetime
 from PyQt5.QtGui import QPixmap
 
 from widgets.widget_toolbar_figures import FiguresToolBar
-from configs.sys_config import screenshot_folder
 
 
 class FiguresController(FiguresToolBar):
@@ -33,9 +32,6 @@ class FiguresController(FiguresToolBar):
             **kwargs: Arbitrary keyword arguments.
         """
         super(FiguresController, self).__init__(*args, **kwargs)
-
-        if not os.path.exists(screenshot_folder):
-            os.makedirs(screenshot_folder)
 
         self.action_full_screen.setCheckable(True)
         self.action_full_screen.triggered.connect(self.doFullScreen)
@@ -78,7 +74,15 @@ class FiguresController(FiguresToolBar):
         file_name = name_string+".png"
         screenshot = QPixmap(self.main.size())
         self.main.render(screenshot)
+
+        # Create screenshot folder
+        screenshot_folder = self.main.session['directory'] + "/screenshots"
+        if not os.path.exists(screenshot_folder):
+            os.makedirs(screenshot_folder)
+
+        # Save screenshot and print message
         screenshot.save(screenshot_folder+"/"+file_name)
+        print("\nScreenshot saved in " + screenshot_folder+"/"+file_name)
 
 class FiguresControllerPos(FiguresToolBar):
     """
@@ -100,9 +104,6 @@ class FiguresControllerPos(FiguresToolBar):
             **kwargs: Arbitrary keyword arguments.
         """
         super(FiguresControllerPos, self).__init__(*args, **kwargs)
-
-        if not os.path.exists(screenshot_folder):
-            os.makedirs(screenshot_folder)
 
         # Hide post button:
         self.action_postprocessing.setVisible(False)
@@ -139,4 +140,12 @@ class FiguresControllerPos(FiguresToolBar):
         file_name = name_string+".png"
         screenshot = QPixmap(self.main.size())
         self.main.render(screenshot)
+
+        # Create screenshot folder
+        screenshot_folder = self.main.session['directory'] + "/screenshots"
+        if not os.path.exists(screenshot_folder):
+            os.makedirs(screenshot_folder)
+
+        # Save screenshot and print message
         screenshot.save(screenshot_folder+"/"+file_name)
+        print("\nScreenshot saved in " + screenshot_folder+"/"+file_name)
