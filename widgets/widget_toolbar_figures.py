@@ -5,8 +5,6 @@
 """
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QToolBar, QAction
-from configs.sys_config import screenshot_folder
-
 
 class FiguresToolBar(QToolBar):
     def __init__(self, main, *args, **kwargs):
@@ -20,7 +18,7 @@ class FiguresToolBar(QToolBar):
 
         # Action button to do a screenshot
         self.action_screenshot = QAction(QIcon("resources/icons/screenshot.png"), "Screenshot", self)
-        self.action_screenshot.setStatusTip("Save screenshot in %s" % screenshot_folder)
+        self.action_screenshot.setStatusTip("Save screenshot in the session folder")
         self.addAction(self.action_screenshot)
 
         # Action button to open postprocessing gui
