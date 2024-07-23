@@ -50,7 +50,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='acq_time', string='Acquisition time (ms)', val=1.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM',
                           tip="0=x, 1=y, 2=z")
-        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 0], field='IM',
+        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 0],
                           tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='dephGradTime', string='Rd dephasing time (ms)', val=1.0, units = units.ms, field='OTH')
@@ -105,12 +105,21 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
+
+        # Check for used axes
+        axesEnable = []
+        for ii in range(3):
+            if self.nPoints[ii] == 1:
+                axesEnable.append(0)
+            else:
+                axesEnable.append(1)
+        self.mapVals['axesEnable'] = axesEnable
         
         # Miscellaneous
         resolution = self.fov/self.nPoints
         rfExAmp = self.rfExFA / (self.rfExTime * 1e6 * hw.b1Efficiency) * np.pi / 180
         for ii in range(3):
-            if self.nPoints[ii]==1: self.axesEnable[ii] = 0
+            if self.nPoints[ii]==1: axesEnable[ii] = 0
         self.mapVals['resolution'] = resolution
         self.mapVals['grad_rise_time'] = hw.grad_rise_time
         self.mapVals['addRdPoints'] = hw.addRdPoints
@@ -137,8 +146,8 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         # Max gradient amplitude
         rd_grad_amplitude = self.nPoints[0]/(hw.gammaB*self.fov[0]*self.acq_time)
         rd_deph_amplitude = -rd_grad_amplitude*(self.rdGradTime+hw.grad_rise_time)/(2*(self.dephGradTime+hw.grad_rise_time))
-        ph_grad_amplitude = n_ph/(2*hw.gammaB*self.fov[1]*(self.dephGradTime+hw.grad_rise_time))*self.axesEnable[1]
-        sl_grad_amplitude = n_sl/(2*hw.gammaB*self.fov[2]*(self.dephGradTime+hw.grad_rise_time))*self.axesEnable[2]
+        ph_grad_amplitude = n_ph/(2*hw.gammaB*self.fov[1]*(self.dephGradTime+hw.grad_rise_time))*axesEnable[1]
+        sl_grad_amplitude = n_sl/(2*hw.gammaB*self.fov[2]*(self.dephGradTime+hw.grad_rise_time))*axesEnable[2]
         self.mapVals['rd_grad_amplitude'] = rd_grad_amplitude
         self.mapVals['rd_deph_amplitude'] = rd_deph_amplitude
         self.mapVals['ph_grad_amplitude'] = ph_grad_amplitude
@@ -462,7 +471,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             data = np.reshape(dataTemp, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
 
             # Fix the position of the sample according to dfov
-            kMax = np.array(self.nPoints)/(2*np.array(self.fov))*np.array(self.axesEnable)
+            kMax = np.array(self.nPoints)/(2*np.array(self.fov))*np.array(axesEnable)
             k_rd = self.time_vector*hw.gammaB*rd_grad_amplitude
             k_ph = np.linspace(-kMax[1],kMax[1],num=self.nPoints[1],endpoint=False)
             k_sl = np.linspace(-kMax[2],kMax[2],num=self.nPoints[2],endpoint=False)
@@ -491,6 +500,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
 
     def sequenceAnalysis(self, mode=None):
         self.mode = mode
+        axesEnable = self.mapVals['axesEnable']
         # Get axes in strings
         axes_dict = {'x': 0, 'y': 1, 'z': 2}
         axes_keys = list(axes_dict.keys())
@@ -502,7 +512,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             axes_str[n] = axes_keys[index]
             n += 1
 
-        if (self.axesEnable[1] == 0 and self.axesEnable[2] == 0):
+        if (axesEnable[1] == 0 and axesEnable[2] == 0):
             bw = self.mapVals['bw']*1e-3 # kHz
             t_vector = np.linspace(-self.acq_time/2, self.acq_time/2, self.nPoints[0])*1e-3 # ms
             s_vector = self.mapVals['sampled'][:, 3]

@@ -56,7 +56,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM', tip="0=x, 1=y, 2=z")
-        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 0], field='IM', tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
+        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 0], tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
         self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, units=units.ms, field='OTH')
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
@@ -121,6 +121,15 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
 
+        # Check for used axes
+        axesEnable = []
+        for ii in range(3):
+            if self.nPoints[ii] == 1:
+                axesEnable.append(0)
+            else:
+                axesEnable.append(1)
+        self.mapVals['axesEnable'] = axesEnable
+
         # Miscellaneous
         self.freqOffset = self.freqOffset*1e6 # MHz
         gradRiseTime = hw.grad_rise_time
@@ -171,9 +180,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['phGradTime'] = self.phGradTime*1e3 # ms
 
         # Max gradient amplitude
-        rdGradAmplitude = self.nPoints[0]/(hw.gammaB*self.fov[0]*self.acqTime)*self.axesEnable[0]
-        phGradAmplitude = nPH/(2*hw.gammaB*self.fov[1]*(self.phGradTime+gradRiseTime))*self.axesEnable[1]
-        slGradAmplitude = nSL/(2*hw.gammaB*self.fov[2]*(self.phGradTime+gradRiseTime))*self.axesEnable[2]
+        rdGradAmplitude = self.nPoints[0]/(hw.gammaB*self.fov[0]*self.acqTime)*axesEnable[0]
+        phGradAmplitude = nPH/(2*hw.gammaB*self.fov[1]*(self.phGradTime+gradRiseTime))*axesEnable[1]
+        slGradAmplitude = nSL/(2*hw.gammaB*self.fov[2]*(self.phGradTime+gradRiseTime))*axesEnable[2]
         self.mapVals['rdGradAmplitude'] = rdGradAmplitude
         self.mapVals['phGradAmplitude'] = phGradAmplitude
         self.mapVals['slGradAmplitude'] = slGradAmplitude
@@ -187,7 +196,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         slGradients = np.linspace(-slGradAmplitude,slGradAmplitude,num=nSL,endpoint=False)
 
         # Now fix the number of slices to partailly acquired k-space
-        nSL = (int(self.nPoints[2]/2)+parAcqLines)*self.axesEnable[2]+(1-self.axesEnable[2])
+        nSL = (int(self.nPoints[2]/2)+parAcqLines)*axesEnable[2]+(1-axesEnable[2])
 
         # Add random displacemnt to phase encoding lines
         for ii in range(nPH):
@@ -543,7 +552,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             #     data = self.myPhantom()
 
             # Fix the position of the sample according to dfov
-            kMax = np.array(self.nPoints)/(2*np.array(self.fov))*np.array(self.axesEnable)
+            kMax = np.array(self.nPoints)/(2*np.array(self.fov))*np.array(axesEnable)
             kRD = self.time_vector*hw.gammaB*rdGradAmplitude
             kSL = np.linspace(-kMax[2],kMax[2],num=self.nPoints[2],endpoint=False)
             kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
