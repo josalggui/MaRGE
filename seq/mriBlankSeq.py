@@ -23,6 +23,7 @@ from skimage.measure import shannon_entropy
 from manager.dicommanager import DICOMImage
 
 
+
 class MRIBLANKSEQ:
     """
     Class for representing MRI sequences.
@@ -1130,22 +1131,24 @@ class MRIBLANKSEQ:
                                }, rewrite)
         return True
 
-    def saveRawData(self):
+     def saveRawData(self):
         """
         Save the rawData.
 
-        This method saves the rawData to various formats including .mat, .csv, and .dcm.
+        This method saves the rawData to various formats including .mat, .csv, .dcm and .h5.
 
         The .mat file contains the rawData.
         The .csv file contains only the input parameters.
         The .dcm file is the DICOM image.
-
-        For future releases, ISMRMRD format will be included.
+        The .h5 file is the ISMRMRD format.
+        
 
         Returns:
             None
 
         """
+        
+        
         # Get directory
         if 'directory' in self.session.keys():
             directory = self.session['directory']
@@ -1160,13 +1163,21 @@ class MRIBLANKSEQ:
         directory_mat = directory + '/mat'
         directory_csv = directory + '/csv'
         directory_dcm = directory + '/dcm'
+        directory_ismrmrd = directory + '/ismrmrd'
+        
+        
         if not os.path.exists(directory + '/mat'):
             os.makedirs(directory_mat)
         if not os.path.exists(directory + '/csv'):
             os.makedirs(directory_csv)
         if not os.path.exists(directory + '/dcm'):
             os.makedirs(directory_dcm)
+        if not os.path.exists(directory + '/ismrmrd'):
+            os.makedirs(directory_ismrmrd)
 
+
+        self.directory_rmd=directory_ismrmrd 
+        
         # Generate filename
         name = datetime.now()
         name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
@@ -1177,22 +1188,26 @@ class MRIBLANKSEQ:
             self.raw_data_name = self.mapVals['seqName']
             file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
         self.mapVals['fileName'] = "%s.mat" % file_name
-
+        # Generate filename for ismrmrd
+        self.mapVals['fileNameIsmrmrd'] = "%s.h5" % file_name
+        
         # Save mat file with the outputs
-        savemat("%s/%s.mat" % (directory_mat, file_name), self.mapVals)
-
+        savemat("%s/%s.mat" % (directory_mat, file_name), self.mapVals) 
+         
         # Save csv with input parameters
-        with open('%s/%s.csv' % (directory_csv, file_name), 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys)
-            writer.writeheader()
-            mapVals = {}
-            for key in self.mapKeys:  # take only the inputs from mapVals
-                mapVals[key] = self.mapVals[key]
-            writer.writerows([self.mapNmspc, mapVals])
+        with open('%s/%s.csv' % (directory_csv, file_name), 'w') as csvfile: 
+            writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys)  
+            writer.writeheader() 
+            mapVals = {} 
+            for key in self.mapKeys:  
+                mapVals[key] = self.mapVals[key] 
+            writer.writerows([self.mapNmspc, mapVals]) 
 
         # Save dcm with the final image
         if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode is None):
             self.image2Dicom(fileName="%s/%s.dcm" % (directory_dcm, file_name))
+            
+       
 
     def image2Dicom(self, fileName):
         """
