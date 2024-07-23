@@ -1188,8 +1188,6 @@ class MRIBLANKSEQ:
             self.raw_data_name = self.mapVals['seqName']
             file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
         self.mapVals['fileName'] = "%s.mat" % file_name
-        # Generate filename for ismrmrd
-        self.mapVals['fileNameIsmrmrd'] = "%s.h5" % file_name
         
         # Save mat file with the outputs
         savemat("%s/%s.mat" % (directory_mat, file_name), self.mapVals) 
