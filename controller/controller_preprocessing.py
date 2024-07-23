@@ -28,9 +28,64 @@ class PreProcessingTabController(PreProcessingTabWidget):
         super(PreProcessingTabController, self).__init__(*args, **kwargs)
 
         # Connect the button click signal to the corresponding methods
+        self.scan_button.clicked.connect(self.selectScans)
         self.image_cosbell_button.clicked.connect(self.cosbellFilter)
         self.image_padding_button.clicked.connect(self.zeroPadding)
         self.new_fov_button.clicked.connect(self.fovShifting)
+
+    def selectScans(self):
+        # Define method to get the indexes
+        def parse_indexes(index_string, max_index):
+            if index_string.strip().lower() == "all":
+                return list(range(max_index))
+
+            indexes = []
+
+            for part in index_string.split(','):
+                part = part.strip()
+                if ':' in part:
+                    start, end = part.split(':')
+                    start = int(start.strip())
+                    end = int(end.strip())
+                    indexes.extend(range(start, end))
+                else:
+                    indexes.append(int(part))
+
+            return indexes
+
+        # Get the mat data
+        mat_data = self.main.toolbar_image.mat_data
+
+        # Get the desired scans
+        n_scans = mat_data['nScans'][0][0]
+        scans = self.scan_field.text()
+        print("\n Selected scans: " + str(scans))
+        scans = parse_indexes(scans, n_scans)
+
+        # Get the selected scans from dataFull and average
+        data_full = mat_data['dataFull'][scans, :, :, :]
+        s_scans, n_sl, n_ph, n_rd = np.shape(data_full)
+        n_points = np.reshape(mat_data['nPoints'], -1)
+        data_temp = np.zeros((len(scans), n_points[2], n_points[1], n_points[0]), dtype=complex)
+        data_temp[:, 0:n_sl, :, :] = data_full
+        data_temp = np.average(data_temp, axis=0)
+        data = np.reshape(data_temp, (1, n_points[0] * n_points[1] * n_points[2]))
+
+        # Input the resulting data into the k-space
+        self.main.toolbar_image.k_space_raw[:, 3] = np.reshape(data, -1)
+        self.main.toolbar_image.k_space = np.reshape(self.main.toolbar_image.k_space_raw[:, 3], n_points[-1::-1])
+
+        # Update the main matrix of the image view widget with the cosbell data
+        self.main.image_view_widget.main_matrix = self.main.toolbar_image.k_space.copy()
+
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="Selected scans",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
+                                          operation="Scans: " + str(scans),
+                                          space="k",
+                                          image_key=self.main.image_view_widget.image_key)
+
 
     def cosbellFilter(self):
         """

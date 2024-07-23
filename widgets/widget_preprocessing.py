@@ -26,6 +26,26 @@ class PreProcessingTabWidget(QWidget):
         self.main = parent
 
         #***********************
+        # Get single image
+        #***********************
+        self.scan_field = QLineEdit()
+        self.scan_field.setText("All")
+        self.scan_field.setStatusTip("'All' or integer number")
+        self.scan_label = QLabel("scans")
+        self.scan_button = QPushButton("Select")
+
+        scan_layout_1 = QHBoxLayout()
+        scan_layout_1.addWidget(self.scan_label)
+        scan_layout_1.addWidget(self.scan_field)
+
+        scan_layout = QVBoxLayout()
+        scan_layout.addLayout(scan_layout_1)
+        scan_layout.addWidget(self.scan_button)
+
+        self.scan_group = QGroupBox("scan selection")
+        self.scan_group.setLayout(scan_layout)
+
+        #***********************
         # Cosbell
         #***********************
         #Checkboxes
@@ -99,6 +119,7 @@ class PreProcessingTabWidget(QWidget):
 
         # Main layout
         self.preprocessing_layout = QVBoxLayout()
+        self.preprocessing_layout.addWidget(self.scan_group)
         self.preprocessing_layout.addWidget(self.zero_padding_group)
         self.preprocessing_layout.addWidget(self.cosbell_group)
         self.preprocessing_layout.addWidget(self.new_fov_group)
