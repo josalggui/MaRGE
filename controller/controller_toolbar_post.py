@@ -34,7 +34,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         image_loading_button: QPushButton for loading the file and getting the k-space.
     """
 
-    def __init__(self, main_window, kspace, *args, **kwargs):
+    def __init__(self, main_window, *args, **kwargs):
         """
         Initialize the ToolBarController.
 
@@ -47,7 +47,6 @@ class ToolBarControllerPost(ToolBarWidgetPost):
 
         # Connect the image_loading_button clicked signal to the rawDataLoading method
         self.main_window = main_window
-        self.kspace_class = kspace
         self.k_space_raw = None
         self.mat_data = None
         self.nPoints = None
