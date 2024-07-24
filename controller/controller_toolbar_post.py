@@ -768,50 +768,6 @@ class MainWindow_toolbar(QMainWindow):
             self.annotationLabel.setText(f'Slice {row + 1}')
     
 ######################################################################################################
-    
-
-class Show_kspace(QWidget):
-    def __init__(self):
-        
-        super().__init__()
-        self.setWindowTitle('K-Space Image Viewer')
-        self.setGeometry(100, 100, 800, 600)
-
-        self.image_label = QLabel(self)
-        self.image_label.setAlignment(Qt.AlignCenter)
-
-        self.slice_slider = QSlider(Qt.Horizontal, self)
-        self.slice_slider.valueChanged.connect(self.update_kspace)
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.image_label)
-        layout.addWidget(self.slice_slider)
-        self.setLayout(layout)
-
-        self.data3d = None
-        self.nSlices = 0
-        
-    def initialize_data(self, data_from_other_class, main, fixImage):
-        self.data3d = data_from_other_class
-        self.main=main
-        self.fixImage=fixImage
-        self.nSlices = self.data3d.shape[0]
-        self.slice_slider.setMaximum(self.nSlices - 1)
-        self.update_kspace()
-    
-
-    def update_kspace(self):
-        if self.data3d is None:
-            return
-        
-        self.current_slice = self.slice_slider.value()
-
-        image_data = self.data3d[self.current_slice, :, :]
-        image_data_normalized = (255 * (image_data - image_data.min()) / (image_data.max() - image_data.min())).astype(np.uint8)
-        q_image = QImage(image_data_normalized.data, image_data_normalized.shape[1], image_data_normalized.shape[0], QImage.Format_Grayscale8)
-        q_image = q_image.scaled(self.image_label.width(), self.image_label.height(), Qt.KeepAspectRatio)
-        self.image_label.setPixmap(QPixmap.fromImage(q_image))
-        
         
     
 if __name__ == "__main__":
