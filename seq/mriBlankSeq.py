@@ -882,7 +882,7 @@ class MRIBLANKSEQ:
         tx = np.linspace(-nZeros / 2, nZeros / 2, num=100, endpoint=True)
         hanning = 0.5 * (1 + np.cos(2 * np.pi * tx / nZeros))
         txAmp = rfAmplitude * np.exp(1j * rfPhase) * hanning * np.abs(np.sinc(tx))
-        txGateTime = np.array(tStart, tStart + hw.blkTime + rfTime)
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
         txGateAmp = np.array([1, 0])
         self.flo_dict['tx0'][0] = np.concatenate((self.flo_dict['tx0'][0], txTime), axis=0)
         self.flo_dict['tx0'][1] = np.concatenate((self.flo_dict['tx0'][1], txAmp), axis=0)
