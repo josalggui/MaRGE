@@ -96,7 +96,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
 
         else:  # Cartesian
             # Extract the k-space data from the loaded .mat file
-            self.k_space_raw = self.mat_data['sampled']
+            self.k_space_raw = self.mat_data['sampled'] ## on recupere pas kspace3d ni dataFull mais sampled
             self.k_space = np.reshape(self.k_space_raw[:, 3], self.nPoints[-1::-1])
 
             # Clear the console, history widget, history controller, and history dictionaries
@@ -185,8 +185,10 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         return file_name
     
     def mrdDataShow(self, file_path_rmd=None, file_name_rmd=None):
+        """
+        Load all data from a .h5 file and show the information about k_space and image.
+        """
         
-        print("Show ISMRMRD data")
         if not file_path_rmd:
             file_path_rmd = self.loadrmdFile()
             file_name_rmd = os.path.basename(file_path_rmd)
@@ -202,7 +204,9 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         self.main_window.tableWidget2.cellClicked.connect(self.main_window.display_image)
          
     def mrdDataLoading(self, file_path_rmd=None, file_name_rmd=None):
-        # self.clearCurrentImage()
+        """
+        Load raw data from a .h5 file and update the image view widget.
+        """
         
         if not file_path_rmd:
             file_path_rmd = self.loadrmdFile()
@@ -211,47 +215,81 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             file_path_rmd = file_path_rmd+file_name_rmd
         self.main.file_name_rmd = file_name_rmd
         
-        self.load_data(file_path_rmd) #load data_rearranged
-        data=self.data
-        # header=self.header_data
-        nPhases=self.ntotPhases
-        nSlices=self.ntotSlices
-        nScans=self.ntotScans
         
-        data4d=np.zeros((nScans, nSlices, nPhases, data[0].shape[0]))
-        count=0
-        while count<data.shape[0]:
-            for scan in range (nScans):
+        ## faire la disjonction de cas dans load data avant 
+        self.load_data(file_path_rmd) #load data_rearranged
+        data=self.data #put data_rearanged into data
+        
+        if "from_mat" in file_name_rmd :
+            nPhases=self.ntotPhases
+            nSlices=self.ntotSlices
+            data3d=np.zeros((nSlices, nPhases, data[0].shape[0]))
+            count=0
+            while count<data.shape[0]:
                 for slice in range(nSlices):
                     for phase in range(nPhases):
-                        data4d[scan, slice, phase, :]=data[count]
+                        data3d[slice, phase, :]=data[count]
                         count+=1
-                        
-        self.data4d=data4d
-        nReadout = data4d.shape[3]
-        complex_data4d=np.zeros((nScans, nSlices, nPhases, nReadout//2), dtype=complex)
-        
-        for scan in range(nScans):
+                            
+            self.data3draw=data3d
+            nReadout = data3d.shape[2]
+            complex_data3d=np.zeros((nSlices, nPhases, nReadout//2), dtype=complex)
+            
             for slice in range(nSlices):
                 for phase in range(nPhases):
                     for readout in range(nReadout // 2):
-                        real_part = data4d[scan, slice, phase, 2 * readout]
-                        imag_part = data4d[scan, slice, phase, 2 * readout + 1]
-                        complex_data4d[scan, slice, phase, readout] = complex(real_part, imag_part)
+                        real_part = data3d[slice, phase, 2 * readout]
+                        imag_part = data3d[slice, phase, 2 * readout + 1]
+                        complex_data3d[slice, phase, readout] = complex(real_part, imag_part)
+            self.data3d = complex_data3d             
+            self.data3dabs = np.abs(complex_data3d)    
+                       
+                            
+        else : 
+            nPhases=self.ntotPhases
+            nSlices=self.ntotSlices
+            nScans=self.ntotScans
+            
+            data4d=np.zeros((nScans, nSlices, nPhases, data[0].shape[0]))
+            count=0
+            while count<data.shape[0]:
+                for scan in range (nScans):
+                    for slice in range(nSlices):
+                        for phase in range(nPhases):
+                            data4d[scan, slice, phase, :]=data[count]
+                            count+=1
+                            
+            self.data4d=data4d
+            nReadout = data4d.shape[3]
+            addRdPoints = hw.addRdPoints
+            complex_data4d=np.zeros((nScans, nSlices, nPhases, (nReadout-2*addRdPoints)//2), dtype=complex)
+            
+            for scan in range(nScans):
+                for slice in range(nSlices):
+                    for phase in range(nPhases):
+                        for readout in range((nReadout-2*addRdPoints) // 2):
+                            real_part = data4d[scan, slice, phase, 2 * (readout + addRdPoints)]
+                            imag_part = data4d[scan, slice, phase, 2 * (readout + addRdPoints) + 1]
+                            complex_data4d[scan, slice, phase, readout] = complex(real_part, imag_part)
+            
+            self.complex_data4d=complex_data4d
+            self.data3d=np.mean(complex_data4d, axis=0) #mean over scans
+            self.data3dabs = np.abs(self.data3d) #abs value
+            
+            
+            
+            
+            
+        self.main.image_view_widget.main_matrix = self.data3d ## not abs
         
-        self.complex_data4d=complex_data4d
-        data3d=np.mean(complex_data4d, axis=0) #mean over scans
-        self.data3d = np.abs(data3d) #abs value
         
-        # self.kspace_class.initialize_data(self.data3d, self.main, self.fixImage)
-        # self.kspace_class.show()
-        self.main.image_view_widget.main_matrix = data3d ## not abs
-        image2show, x_label, y_label, title = self.fixImage(self.data3d) #abs
+        
+        image2show, x_label, y_label, title = self.fixImage(self.data3dabs) #abs
         image = Spectrum3DPlot(main=self.main,
-                           data=image2show,
-                           x_label=x_label,
-                           y_label=y_label,
-                           title=title)
+                        data=image2show,
+                        x_label=x_label,
+                        y_label=y_label,
+                        title=title)
         self.main.setWindowTitle("ISMRMRD data")
 
         # Delete all widgets from image_view_widget
@@ -268,11 +306,11 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         self.main.image_view_widget.addWidget(label, row=0, col=0)
         self.main.image_view_widget.addWidget(image, row=1, col=0)
         self.main.history_list.addNewItem(stamp="KSpace .h5",
-                                      image=self.main.image_view_widget.main_matrix,
+                                        image=self.main.image_view_widget.main_matrix,
                                         orientation=None,
-                                      operation="KSpace",
-                                      space="k")
-        # PB VA AFFICHER UNE MATRICE 40*60 PAR 40*40 CAR ON A L OVERSAMPLING
+                                        operation="KSpace",
+                                        space="k")
+    # PB VA AFFICHER UNE MATRICE 40*60 PAR 40*40 CAR ON A L OVERSAMPLING
        
     def load_data(self, file_name): 
         f = h5py.File(file_name, 'r')
@@ -281,57 +319,93 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         header_data = group['data']['head'][()]
         data = group['data']['data'][()]
         
-        phase_ind = np.zeros(len(header_data), dtype=int)
-        nSlices = np.zeros(len(header_data), dtype=int)
-        nScans = np.zeros(len(header_data), dtype=int)
-        for i in range(len(header_data)):
-            phase_ind[i] = header_data[i][21][0]
-            nSlices[i] = header_data[i][21][3]
-            nScans[i] = header_data[i][21][2]
         
-        ntotSlices = max(nSlices)
-        ntotScans = max(nScans)
-        ntotPhases = max(phase_ind) 
-        
-        self.ntotSlices = ntotSlices
-        self.ntotScans = ntotScans
-        self.ntotPhases = ntotPhases
-        
-        # Rearrange data if necessary
-        
-        data_rearranged = np.zeros_like(data)
-        header_rearranged = np.zeros_like(header_data)
-        phase_counters = [0] * ntotPhases*ntotSlices*ntotScans
-        
-        for scan in range(ntotScans):
-            for slice in range(ntotSlices):
-                for phase in range(ntotPhases):
-                    index = phase + ntotPhases * (slice + ntotSlices * scan)
-                    phase_index = phase_ind[phase]-1
-                    position = phase_index + ntotPhases * (slice + ntotSlices * scan)
-                    data_rearranged[position] = data[index]
-                    header_rearranged[position] = header_data[index]
-                    phase_counters[position] += 1
+        if "from_mat" in file_name : 
+            phase_ind = np.zeros(len(header_data), dtype=int)
+            nSlices = np.zeros(len(header_data), dtype=int)
+            for i in range(len(header_data)):
+                phase_ind[i] = header_data[i][21][0]
+                nSlices[i] = header_data[i][21][3]
+            
+            ntotSlices = max(nSlices)
+            ntotPhases = max(phase_ind) 
+            
+            self.ntotSlices = ntotSlices
+            self.ntotPhases = ntotPhases
+            
+            # data_mat = np.zeros_like(data)
+            # count=0
+            # for slice in range(ntotSlices):
+            #     for phase in range(ntotPhases):
+            #         data_rearranged[position] = data[index]
+            #         header_rearranged[position] = header_data[index]
+            #         phase_counters[position] += 1
+            
+            
+            self.data = data
+            self.header_data = header_data
+            
+            
+            # No need to rearrange data because kSpace3D is already rearranged
+            
+        else : 
+            phase_ind = np.zeros(len(header_data), dtype=int)
+            nSlices = np.zeros(len(header_data), dtype=int)
+            nScans = np.zeros(len(header_data), dtype=int)
+            for i in range(len(header_data)):
+                phase_ind[i] = header_data[i][21][0]
+                nSlices[i] = header_data[i][21][3]
+                nScans[i] = header_data[i][21][2]
+            
+            ntotSlices = max(nSlices)
+            ntotScans = max(nScans)
+            ntotPhases = max(phase_ind) 
+            
+            self.ntotSlices = ntotSlices
+            self.ntotScans = ntotScans
+            self.ntotPhases = ntotPhases
+            
+            # Rearrange data if necessary
+            
+            data_rearranged = np.zeros_like(data)
+            header_rearranged = np.zeros_like(header_data)
+            phase_counters = [0] * ntotPhases*ntotSlices*ntotScans
+            
+            for scan in range(ntotScans):
+                for slice in range(ntotSlices):
+                    for phase in range(ntotPhases):
+                        ## suppr les addrdpoints premiers et derniers
+                        index = phase + ntotPhases * (slice + ntotSlices * scan)
+                        phase_index = phase_ind[phase]-1
+                        position = phase_index + ntotPhases * (slice + ntotSlices * scan)
+                        data_rearranged[position] = data[index]
+                        header_rearranged[position] = header_data[index]
+                        phase_counters[position] += 1
+            
+            
+            self.data = data_rearranged
+            self.header_data = header_rearranged
+            
         
         fields = [field[0] for field in ismrmrd.AcquisitionHeader._fields_]
         
-        self.data = data_rearranged
-        self.header_data = header_rearranged
-        
         f.close()
         
-        self.populate_table(self.main_window.tableWidget1, header_rearranged, data_rearranged, fields)
+        self.populate_table(self.main_window.tableWidget1, self.header_data, self.data, fields)
         
     def load_image_data(self, file_name): 
         f = h5py.File(file_name, 'r')
-        group = f['dataset']  # Remplacez 'dataset' par le nom correct du groupe dans votre fichier HDF5
+        group = f['dataset']  
         header_image = group['image_raw']['header'][()]
         image = group['image_raw']['data'][()]
         
+        
+        
         ntotSlices = image.shape[0]
         ntotPhases = image.shape[3]
+        ntotReadouts = image.shape[4]
         
-        image_reshaped = np.reshape(image, (ntotSlices, ntotPhases, ntotPhases))
+        image_reshaped = np.reshape(image, (ntotSlices, ntotPhases, ntotReadouts))
         image_data = np.zeros_like(image_reshaped)
         
         for slice in range(ntotSlices):
@@ -413,18 +487,15 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         
         return matrix, x_label, y_label, title
     
-    # def clearCurrentImage(self):
-    #     """
-    #     Clear the current image from the image view widget.
-    #     """
-    #     # Clear the image view widget
-    #     self.main.image_view_widget.clearFiguresLayout()
-
-    #     # Optionally, clear other related data or widgets
-    #     self.main.image_view_widget.main_matrix = None
    
     def convert (self, file_path = None, file_name =None):
         
+        
+        """
+        Convert .mat to .h5
+        WARNING : h5 file will contain less information than if it were created during acquisition (kSpace3D instead of dataFull)
+         
+        """
         if not file_path:
             file_path = self.loadmatFile()
             file_name = os.path.basename(file_path)
@@ -436,9 +507,14 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         
         mat_dir = os.path.dirname(file_path)
         base_name = os.path.splitext(os.path.basename(file_path))[0]
+        file_parts = file_name.split('.')
+        file_parts.insert(1, 'from_mat')
+        file_parts.remove('mat')
+        new_file_name = '.'.join(file_parts)
         
+
         # Chemin du fichier HDF5 à créer
-        h5_file_path = os.path.join(mat_dir, base_name + '.h5')
+        h5_file_path = os.path.join(mat_dir, new_file_name + '.h5')
         # Créer le répertoire ../ismrmrd s'il n'existe pas
         sequence_type = file_name.split('.')[0]
         
@@ -489,124 +565,115 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         addRdPoints = int(mat['addRdPoints'])       
         
         if sequence_type == 'RARE':
-            new_data = np.zeros((nPH * nSL * nScans, nRD)) ##ici je dois enlever +2*addrdpoints car CE datafull est pas le meme il est en 40*40
-            new_data = np.reshape(mat['dataFull'], (nScans, nSL, nPH, nRD))
+            new_data = np.zeros((nPH * nSL, nRD)) 
+            new_data = np.reshape(mat['kSpace3D'], (nSL, nPH, nRD))
         
             counter=0  
-            for scan in range(nScans):
-                for slice_idx in range(nSL):
-                    for phase_idx in range(nPH):
+            
+            for slice_idx in range(nSL):
+                for phase_idx in range(nPH):
+                    
+                    line = new_data[slice_idx, phase_idx, :]
+                    line2d = np.reshape(line, (1, nRD))
+                    acq = ismrmrd.Acquisition.from_array(line2d, None)
+                    
+                    index_in_repetition = phase_idx % etl
+                    current_repetition = (phase_idx // etl) + (slice_idx * (nPH // etl))
+                    
+                    acq.clearAllFlags()
+                    
+                    if index_in_repetition == 0: 
+                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_CONTRAST)
+                    elif index_in_repetition == etl - 1:
+                        acq.setFlag(ismrmrd.ACQ_LAST_IN_CONTRAST)
+                    
+                    if phase_idx== 0:
+                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_PHASE)
+                    elif phase_idx == nPH - 1:
+                        acq.setFlag(ismrmrd.ACQ_LAST_IN_PHASE)
+                    
+                    if slice_idx == 0:
+                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_SLICE)
+                    elif slice_idx == nSL - 1:
+                        acq.setFlag(ismrmrd.ACQ_LAST_IN_SLICE)
                         
-                        line = new_data[scan, slice_idx, phase_idx, :]
+                    if int(current_repetition) == 0:
+                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_REPETITION)
+                    elif int(current_repetition) == nRep - 1:
+                        acq.setFlag(ismrmrd.ACQ_LAST_IN_REPETITION)
+                    
+                    
+                    counter += 1 
+                    
+                    # +1 to start at 1 instead of 0
+                    acq.idx.repetition = int(current_repetition + 1)
+                    acq.idx.kspace_encode_step_1 = phase_idx+1 # phase
+                    acq.idx.slice = slice_idx + 1
+                    acq.idx.contrast = index_in_repetition + 1
+                    
+                    acq.scan_counter = counter
+                    # acq.discard_pre = addRdPoints
+                    # acq.discard_post = addRdPoints #######""
+                    acq.sample_time_us = 1/bw
+                    acq.position=(ctypes.c_float * 3)(*mat['dfov']) 
+                    
+                    acq.read_dir = (ctypes.c_float * 3)(*read_dir)
+                    acq.phase_dir = (ctypes.c_float * 3)(*phase_dir)
+                    acq.slice_dir = (ctypes.c_float * 3)(*slice_dir)
+                    
+                    dset.append_acquisition(acq) # Append the acquisition to the dataset   
+                
+        elif sequence_type == 'GRE3D':
+            new_data = np.reshape(mat['kSpace3D'], (nSL, nPH, nRD)) 
+            counter = 0
+        
+            for slice_idx in range(nSL):
+                for phase_idx in range(nPH):
+                        # Extraire la ligne correspondante
+                        line = new_data[slice_idx, phase_idx, :]
+                                                
+                        # Préparer les données complexes
                         line2d = np.reshape(line, (1, nRD))
                         acq = ismrmrd.Acquisition.from_array(line2d, None)
                         
-                        index_in_repetition = phase_idx % etl
-                        current_repetition = (phase_idx // etl) + (slice_idx * (nPH // etl))
+                        counter += 1
+                    
+                        acq.idx.repetition = counter
+                        acq.idx.kspace_encode_step_1 = phase_idx + 1
+                        acq.idx.slice = slice_idx + 1
+                
                         
                         acq.clearAllFlags()
                         
-                        if index_in_repetition == 0: 
-                            acq.setFlag(ismrmrd.ACQ_FIRST_IN_CONTRAST)
-                        elif index_in_repetition == etl - 1:
-                            acq.setFlag(ismrmrd.ACQ_LAST_IN_CONTRAST)
-                        
-                        if ind[phase_idx]== 0:
+                        if phase_idx == 0:
                             acq.setFlag(ismrmrd.ACQ_FIRST_IN_PHASE)
-                        elif ind[phase_idx] == nPH - 1:
+                        elif phase_idx == nPH - 1:
                             acq.setFlag(ismrmrd.ACQ_LAST_IN_PHASE)
                         
                         if slice_idx == 0:
                             acq.setFlag(ismrmrd.ACQ_FIRST_IN_SLICE)
                         elif slice_idx == nSL - 1:
                             acq.setFlag(ismrmrd.ACQ_LAST_IN_SLICE)
-                            
-                        if int(current_repetition) == 0:
-                            acq.setFlag(ismrmrd.ACQ_FIRST_IN_REPETITION)
-                        elif int(current_repetition) == nRep - 1:
-                            acq.setFlag(ismrmrd.ACQ_LAST_IN_REPETITION)
-                            
-                        if scan == 0:
+                        
+                        if counter == 1:
                             acq.setFlag(ismrmrd.ACQ_FIRST_IN_AVERAGE)
-                        elif scan == nScans-1:
+                        elif counter == nPH*nSL:
                             acq.setFlag(ismrmrd.ACQ_LAST_IN_AVERAGE)
                         
                         
-                        counter += 1 
-                        
-                        # +1 to start at 1 instead of 0
-                        acq.idx.repetition = int(current_repetition + 1)
-                        acq.idx.kspace_encode_step_1 = ind[phase_idx]+1 # phase
-                        acq.idx.slice = slice_idx + 1
-                        acq.idx.contrast = index_in_repetition + 1
-                        acq.idx.average = scan + 1 # scan
-                        
                         acq.scan_counter = counter
-                        acq.discard_pre = addRdPoints
-                        acq.discard_post = addRdPoints #######""
+                        # acq.discard_pre = hw.addRdPoints
+                        # acq.discard_post = hw.addRdPoints
                         acq.sample_time_us = 1/bw
-                        acq.position=(ctypes.c_float * 3)(*mat['dfov']) 
-                        
-                        acq.read_dir = (ctypes.c_float * 3)(*read_dir)
+                        acq.position=(ctypes.c_float * 3)(*mat['dfov'])  
+                        acq.read_dir = (ctypes.c_float * 3)(*read_dir) 
                         acq.phase_dir = (ctypes.c_float * 3)(*phase_dir)
                         acq.slice_dir = (ctypes.c_float * 3)(*slice_dir)
                         
-                        dset.append_acquisition(acq) # Append the acquisition to the dataset
-                            
-                
-        elif sequence_type == 'GRE3D':
-            new_data = np.reshape(mat['data_full'], (nScans, nSL, nPH, nRD)) #idem ici j ai du enleve 2*addrdpoint
-            counter = 0
-            for average in range(nScans):
-                repetition=0  
-                for slice_idx in range(nSL):
-                    for phase_idx in range(nPH):
-                            # Extraire la ligne correspondante
-                            line = self.data_full_mat[average, slice_idx, phase_idx, :]
-                                                    
-                            # Préparer les données complexes
-                            line2d = np.reshape(line, (1, nRD))
-                            acq = ismrmrd.Acquisition.from_array(line2d, None)
-                            
-                            counter += 1
-                            repetition += 1 ##verifier
                         
-                            acq.idx.repetition = repetition
-                            acq.idx.kspace_encode_step_1 = phase_idx + 1
-                            acq.idx.slice = slice_idx + 1
-                            acq.idx.average = average + 1
-                            
-                            acq.clearAllFlags()
-                            
-                            if phase_idx == 0:
-                                acq.setFlag(ismrmrd.ACQ_FIRST_IN_PHASE)
-                            elif phase_idx == nPH - 1:
-                                acq.setFlag(ismrmrd.ACQ_LAST_IN_PHASE)
-                            
-                            if slice_idx == 0:
-                                acq.setFlag(ismrmrd.ACQ_FIRST_IN_SLICE)
-                            elif slice_idx == nSL - 1:
-                                acq.setFlag(ismrmrd.ACQ_LAST_IN_SLICE)
-                            
-                            if repetition == 1:
-                                acq.setFlag(ismrmrd.ACQ_FIRST_IN_AVERAGE)
-                            elif repetition == nPH*nSL:
-                                acq.setFlag(ismrmrd.ACQ_LAST_IN_AVERAGE)
-                            
-                            
-                            acq.scan_counter = counter
-                            acq.discard_pre = hw.addRdPoints
-                            acq.discard_post = hw.addRdPoints
-                            acq.sample_time_us = 1/bw
-                            acq.position=(ctypes.c_float * 3)(*mat['dfov'])  
-                            acq.read_dir = (ctypes.c_float * 3)(*read_dir) 
-                            acq.phase_dir = (ctypes.c_float * 3)(*phase_dir)
-                            acq.slice_dir = (ctypes.c_float * 3)(*slice_dir)
-                            
-                            
-                            # Ajouter l'acquisition au dataset
-                            dset.append_acquisition(acq)
-            
+                        # Ajouter l'acquisition au dataset
+                        dset.append_acquisition(acq)
+        
         image=mat['image3D']
         image_reshaped = np.reshape(image, (nSL, nPH, nRD))
         
@@ -767,7 +834,7 @@ class MainWindow_toolbar(QMainWindow):
             self.annotationLabel.setText(f'Slice {row + 1}')
     
 ######################################################################################################
-        
+   
     
 if __name__ == "__main__":
     app = QApplication(sys.argv)
