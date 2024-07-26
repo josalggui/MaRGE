@@ -509,7 +509,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     dataProv[scan, :] = np.reshape(dataFull[:,scan,:,:],-1)
             dataFull = np.reshape(dataProv,-1)
             
-            # Save dataFull to save it in .h5
+            # Save dataFull to save it in .h5 ########################################################""
             self.dataFullmat = dataFull
 
             # Get index for krd = 0
@@ -540,7 +540,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             imgFull = dataFull*0
             for ii in range(self.nScans):
                 imgFull[ii, :, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[ii, :, :, :])))
-            self.mapVals['dataFull'] = dataFull
+            self.mapVals['dataFull'] = dataFull ## if i convert .mat to .h5 if have this dataFull (40*40) not dataFullmat (40*60)
             self.mapVals['imgFull'] = imgFull 
 
             # Average data
@@ -587,7 +587,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             kSL = np.reshape(kSL, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
             data = np.reshape(data, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
             self.mapVals['kMax'] = kMax
-            self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
+            self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1) ## this is what is taken from .mat to show the image
             self.mapVals['sampledCartesian'] = self.mapVals['sampled']  # To sweep
             data = np.reshape(data, (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
 
