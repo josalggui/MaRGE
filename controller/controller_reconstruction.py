@@ -139,11 +139,13 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         # Update the main matrix of the image view widget with the image fft data
         self.main.image_view_widget.main_matrix = k_space
-
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="dFFT",
                                           image=self.main.image_view_widget.main_matrix,
-                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
+                                          orientation=orientation,
                                           operation="dFFT",
                                           space="k",
                                           image_key=self.main.image_view_widget.image_key)
@@ -179,11 +181,15 @@ class ReconstructionTabController(ReconstructionTabWidget):
         self.main.image_view_widget.main_matrix = image
 
         figure = image / np.max(np.abs(image)) * 100
+        
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
 
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="iFFT",
                                           image=figure,
-                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
+                                          orientation=orientation,
                                           operation="iFFT",
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
@@ -316,11 +322,13 @@ class ReconstructionTabController(ReconstructionTabWidget):
         self.main.image_view_widget.main_matrix = rho
 
         figure = rho/np.max(np.abs(rho))*100
-
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="ART",
                                           image=figure,
-                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
+                                          orientation=orientation,
                                           operation="ART n = %i, lambda = %0.3f" % (n_iter, lbda),
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
@@ -367,11 +375,13 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         # Update the main matrix of the image view widget with the k-space data
         self.main.image_view_widget.main_matrix = image
-
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="Partial Zero Reconstruction",
                                           image=image,
-                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
+                                          orientation=orientation,
                                           operation="Partial Reconstruction - " + str(factors[-1::-1]),
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
@@ -499,11 +509,13 @@ class ReconstructionTabController(ReconstructionTabWidget):
         correlation = np.corrcoef(img_ref.flatten(), img_reconstructed.flatten())[0, 1]
         print("\nRespect the reference image:")
         print("Convergence: %0.2e" % (1 - correlation))
-
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="POCS",
                                           image=figure,
-                                          orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
+                                          orientation=orientation,
                                           operation="POCS - " + str(factors[-1::-1]),
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
