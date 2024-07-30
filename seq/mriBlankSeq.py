@@ -22,7 +22,6 @@ from skimage.measure import shannon_entropy
 
 # Import dicom saver
 from manager.dicommanager import DICOMImage
-from manager.ismrmrdmanager import ISMRMRDImage
 
 class MRIBLANKSEQ:
     """
@@ -1221,20 +1220,7 @@ class MRIBLANKSEQ:
             self.image2Dicom(fileName="%s/%s.dcm" % (directory_dcm, file_name))
             
        
-        #self.saveIsmrmrdData("%s/%s.h5" % (directory_ismrmrd, file_name), "%s/%s.mat" % (directory_mat, file_name))
-
-
-    # def saveIsmrmrdData(self, fileName, matFilePath):
-    #     ismrmrd_image = ISMRMRDImage()
-    #     path=fileName
-    #     mat = loadmat(matFilePath)
-    #     kspace_data = mat['kSpace3D'] ## WORKS ONLY FOR RARE
-    #     image_data = mat['image3D'] 
         
-    #     ismrmrd_image.update_acq(path, kspace_data)
-    #     ismrmrd_image.update_img(path, image_data)
-    #     ismrmrd_image.setheader(path, kspace_data) ## maybe add different values to fill the header (freq, etc...)
-    
     def image2Dicom(self, fileName): 
         """
         Save the DICOM image.
