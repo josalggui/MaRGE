@@ -84,7 +84,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.img = ismrmrd.Image()
         self.header= ismrmrd.xsd.ismrmrdHeader() 
         
-        
+       
     def sequenceInfo(self):
         print("\n3D RARE sequence")
         print("Author: Dr. J.M. Algarín")
@@ -1041,7 +1041,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
                     acq.discard_pre = self.addRdPoints
                     acq.discard_post = self.addRdPoints
                     acq.sample_time_us = 1/bw
-                    acq.position=(ctypes.c_float * 3)(*self.dfov) 
+                    self.dfov = np.array(self.dfov)
+                    acq.position = (ctypes.c_float * 3)(*self.dfov.flatten())
+
                     
                     acq.read_dir = (ctypes.c_float * 3)(*read_dir)
                     acq.phase_dir = (ctypes.c_float * 3)(*phase_dir)
@@ -1057,11 +1059,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
             
             image_slice = image_reshaped[slice_idx, :, :]
             img = ismrmrd.Image.from_array(image_slice)
-            
+            img.transpose = False
             img.field_of_view = (ctypes.c_float * 3)(*(self.fov)*10) # mm
+           
             img.position = (ctypes.c_float * 3)(*self.dfov)
             
-            img.data_type= 8 ## COMPLEX FLOAT
+            # img.data_type= 8 ## COMPLEX FLOAT
             img.image_type = 5 ## COMPLEX
             
             
