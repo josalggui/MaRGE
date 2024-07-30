@@ -839,8 +839,8 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
                         acq.discard_pre = hw.addRdPoints
                         acq.discard_post = hw.addRdPoints
                         acq.sample_time_us = 1/bw
-                        acq.position=(ctypes.c_float * 3)(*self.dfov)  ## or acq.position = (ctypes.c_float * 3)(*map(float, dfov)) to avoid the warning 
-                        
+                        self.dfov = np.array(self.dfov)
+                        acq.position = (ctypes.c_float * 3)(*self.dfov.flatten())
                         acq.read_dir = (ctypes.c_float * 3)(*read_dir) 
                         acq.phase_dir = (ctypes.c_float * 3)(*phase_dir)
                         acq.slice_dir = (ctypes.c_float * 3)(*slice_dir)
