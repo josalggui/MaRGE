@@ -154,6 +154,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         print("Shimming Z = %0.1f" % (sz / units.sh))
         print("FHWM = %0.0f Hz" % (fwhm*1e3))
         print("Homogeneity = %0.0f ppm" % (fwhm*1e3/hw.larmorFreq))
+        print("Shimming loaded into the sequences.")
 
         # Shimming plot
         result1 = {'widget': 'curve',
@@ -261,14 +262,15 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         bw = 1 / samplingPeriod / hw.oversamplingFactor  # MHz
         self.mapVals['bw'] = bw * 1e6  # Hz
         self.acqTime = self.nPoints / bw  # us
+
+        # Create sequence and load it to red pitaya
         self.createSequence()
-        if not self.demo:
-            if self.floDict2Exp():
-                print("\nSequence waveforms loaded successfully")
-                pass
-            else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
-                return False
+        if self.floDict2Exp(demo=self.demo):
+            print("\nSequence waveforms loaded successfully")
+            pass
+        else:
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
 
         # Run experiment and get best shimming for current axis
         if not self.plot_seq:
