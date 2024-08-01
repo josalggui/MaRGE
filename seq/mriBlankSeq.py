@@ -1219,6 +1219,7 @@ class MRIBLANKSEQ:
 
         Args:
             rewrite (bool, optional): Whether to overwrite existing values. Defaults to True.
+            demo: If demo is True it just check for errors. Defaults to False.
 
         Returns:
             bool: True if no errors were found and instructions were successfully added to Red Pitaya; False otherwise.
