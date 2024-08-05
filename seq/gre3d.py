@@ -686,7 +686,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         1. Generate a timestamp-based filename and directory path for the output file.
         2. Initialize the ISMRMRD dataset with the generated path.
         3. Populate the header and write the XML header to the dataset. Informations can be added.
-        4. Reshape the raw data matrix and iterate over scans, slices, and phases to write each acquisition. WARNING : RARE sequence follows ind order to fill the k-space.
+        4. Reshape the raw data matrix and iterate over scans, slices, and phases to write each acquisition. 
         5. Set acquisition flags and properties.
         6. Append the acquisition data to the dataset.
         7. Reshape and save the reconstructed images.
