@@ -389,13 +389,21 @@ class HistoryListController(HistoryListWidget):
         self.fovs[key] = sequence.fovs.copy()
 
         # Create and execute selected sequence
-        if sequence.sequenceRun(0, self.main.demo):
-            pass
-        else:
+        try:
+            if sequence.sequenceRun(0, self.main.demo):
+                pass
+            else:
+                return 0
+        except Exception as e:
+            print(f"An error occurred in sequenceRun method: {e}")
             return 0
 
         # Do sequence analysis and get results
-        return sequence.sequenceAnalysis()
+        try:
+            return sequence.sequenceAnalysis()
+        except Exception as e:
+            print(f"An erro ocurred in sequenceAnalysis method: {e}")
+            return 0
 
 
 class HistoryListControllerPos(HistoryListWidget):
