@@ -187,6 +187,9 @@ class ToolBarControllerPost(ToolBarWidgetPost):
     def mrdDataShow(self, file_path_rmd=None, file_name_rmd=None):
         """
         Load all data from a .h5 file and show the information about k_space and image.
+
+        Returns : 
+        None
         """
         
         if not file_path_rmd:
@@ -206,6 +209,9 @@ class ToolBarControllerPost(ToolBarWidgetPost):
     def mrdDataLoading(self, file_path_rmd=None, file_name_rmd=None):
         """
         Load raw data from a .h5 file and update the image view widget.
+
+        Note : 
+        This code will verify if the .h5 file is from a conversion (.mat to .h5) or directly from an acquisition because both contains different information and data.
         """
         
         if not file_path_rmd:
@@ -215,12 +221,10 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             file_path_rmd = file_path_rmd+file_name_rmd
         self.main.file_name_rmd = file_name_rmd
         
-        
-        ## faire la disjonction de cas dans load data avant 
         self.load_data(file_path_rmd) #load data_rearranged
         data=self.data #put data_rearanged into data
         
-        if "from_mat" in file_name_rmd :
+        if "from_mat" in file_name_rmd : # file created after a conversion
             nPhases=self.ntotPhases
             nSlices=self.ntotSlices
             data3d=np.zeros((nSlices, nPhases, data[0].shape[0]))
@@ -245,7 +249,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             self.data3dabs = np.abs(complex_data3d)    
                        
                             
-        else : 
+        else : #file created after an acquisition
             nPhases=self.ntotPhases
             nSlices=self.ntotSlices
             nScans=self.ntotScans
@@ -263,7 +267,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             nReadout = data4d.shape[3]
             addRdPoints = hw.addRdPoints
             complex_data4d=np.zeros((nScans, nSlices, nPhases, (nReadout-2*addRdPoints)//2), dtype=complex)
-            
+            ## Delete addRdPoints before and after
             for scan in range(nScans):
                 for slice in range(nSlices):
                     for phase in range(nPhases):
@@ -277,12 +281,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             self.data3dabs = np.abs(self.data3d) #abs value
             
             
-            
-            
-            
         self.main.image_view_widget.main_matrix = self.data3d ## not abs
-        
-        
         
         image2show, x_label, y_label, title = self.fixImage(self.data3dabs) #abs
         image = Spectrum3DPlot(main=self.main,
@@ -310,9 +309,17 @@ class ToolBarControllerPost(ToolBarWidgetPost):
                                         orientation=None,
                                         operation="KSpace",
                                         space="k")
-    # PB VA AFFICHER UNE MATRICE 40*60 PAR 40*40 CAR ON A L OVERSAMPLING
        
     def load_data(self, file_name): 
+
+        """
+        Load MRI data and header information from the specified HDF5 file,
+        rearranges the data if necessary, and populates a table in the main window with the loaded data.
+    
+        Returns:
+        None
+        """
+        
         f = h5py.File(file_name, 'r')
         group = f['dataset']  
         
@@ -333,21 +340,12 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             self.ntotSlices = ntotSlices
             self.ntotPhases = ntotPhases
             
-            # data_mat = np.zeros_like(data)
-            # count=0
-            # for slice in range(ntotSlices):
-            #     for phase in range(ntotPhases):
-            #         data_rearranged[position] = data[index]
-            #         header_rearranged[position] = header_data[index]
-            #         phase_counters[position] += 1
-            
-            
             self.data = data
             self.header_data = header_data
-            
-            
+              
             # No need to rearrange data because kSpace3D is already rearranged
-            
+
+        
         else : 
             phase_ind = np.zeros(len(header_data), dtype=int)
             nSlices = np.zeros(len(header_data), dtype=int)
@@ -394,6 +392,15 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         self.populate_table(self.main_window.tableWidget1, self.header_data, self.data, fields)
         
     def load_image_data(self, file_name): 
+
+        """
+        Load MRI image data and header information from the specified HDF5 file,
+        and populates a table in the main window with the loaded data.
+    
+        Returns:
+        None
+        """
+        
         f = h5py.File(file_name, 'r')
         group = f['dataset']  
         header_image = group['image_raw']['header'][()]
@@ -421,7 +428,21 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         self.populate_table(self.main_window.tableWidget2, header_image, image_data, fields)
     
     def populate_table(self, tableWidget, headers, data, fields):
-       
+        """
+        Populate a QTableWidget with MRI header and data information.
+    
+        This method sets up the table widget to display MRI header information and corresponding data.
+        Each row represents a header entry and its associated data.
+    
+        Parameters:
+        - headers (array-like): The header information to display.
+        - data (array-like): The data corresponding to the headers (data from k-space and from image)
+        - fields (list): List of field names for the headers.
+    
+        Returns:
+        None
+        """
+        
         tableWidget.setRowCount(len(headers))
         tableWidget.setColumnCount(len(headers[0]) + 1)  # +1 for data
     
@@ -493,9 +514,14 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         
         """
         Convert .mat to .h5
-        WARNING : h5 file will contain less information than if it were created during acquisition (kSpace3D instead of dataFull)
-         
+        WARNING : 
+        - h5 file will contain less information than if it were created during acquisition (kSpace3D instead of dataFull)
+        - Different cases for RARE and GRE3D, if a new seq is added, please update this code with an elif case.
+
+        Returns : 
+        None. An .h5 file is created 
         """
+        
         if not file_path:
             file_path = self.loadmatFile()
             file_name = os.path.basename(file_path)
@@ -785,9 +811,6 @@ class MainWindow_toolbar(QMainWindow):
         self.tabWidget.addTab(self.tableWidget2, "Données images")
                 
         
-        # self.tableWidget2.cellClicked.connect(self.display_image) ## if we click on a cell, we display the image of the corresponding row
-        
-    
         self.rawPlot = pg.PlotWidget()
         self.rawPlot.hide()
         self.trajPlot = pg.PlotWidget()
@@ -810,6 +833,13 @@ class MainWindow_toolbar(QMainWindow):
         self.image_data = data_from_other_class
         
     def display_image(self, row, column):
+
+            """
+            Display the MRI image data for a specific slice selected by clicking in the array.
+        
+            Returns:
+            None. It displays an image of the slice selected in an oter tab.
+            """
             
             data= self.image_data[row]
             nReadout = data.shape[1]
