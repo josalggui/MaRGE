@@ -419,14 +419,14 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                                                             slIndex=slIndex,
                                                                             lnIndex=lnIndex,
                                                                             repeIndexGlobal=repeIndexGlobal)
+
             # Save instructions into MaRCoS if not a demo
-            if not self.demo:
-                if self.floDict2Exp(rewrite=nBatches==1):
-                    print("\nSequence waveforms loaded successfully")
-                    pass
-                else:
-                    print("\nERROR: sequence waveforms out of hardware bounds")
-                    return False
+            if self.floDict2Exp(rewrite=nBatches==1, demo=self.demo):
+                print("\nSequence waveforms loaded successfully")
+                pass
+            else:
+                print("\nERROR: sequence waveforms out of hardware bounds")
+                return False
 
             repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
             acqPointsPerBatch.append(aa)

@@ -1213,12 +1213,13 @@ class MRIBLANKSEQ:
         self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], np.array([t0])), axis=0)
         self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], np.array([gAmp])), axis=0)
 
-    def floDict2Exp(self, rewrite=True):
+    def floDict2Exp(self, rewrite=True, demo=False):
         """
         Check for errors and add instructions to Red Pitaya if no errors are found.
 
         Args:
             rewrite (bool, optional): Whether to overwrite existing values. Defaults to True.
+            demo: If demo is True it just check for errors. Defaults to False.
 
         Returns:
             bool: True if no errors were found and instructions were successfully added to Red Pitaya; False otherwise.
@@ -1236,16 +1237,17 @@ class MRIBLANKSEQ:
                 return False
 
         # Add instructions to server
-        self.expt.add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
-                               'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
-                               'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
-                               'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
-                               'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
-                               'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
-                               'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
-                               'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
-                               'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
-                               }, rewrite)
+        if not self.demo:
+            self.expt.add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
+                                   'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
+                                   'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
+                                   'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
+                                   'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
+                                   'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
+                                   'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
+                                   'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
+                                   'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
+                                   }, rewrite)
         return True
 
     def saveRawData(self):
