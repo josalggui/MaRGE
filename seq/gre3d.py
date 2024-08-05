@@ -676,6 +676,28 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
        
        
     def save_ismrmrd(self):
+        """
+        Save the current instance's data in ISMRMRD format.
+
+        This method saves the raw data, header information, and reconstructed images to an HDF5 file
+        using the ISMRMRD (Image Storage and Reconstruction format for MR Data) format.
+
+        Steps performed:
+        1. Generate a timestamp-based filename and directory path for the output file.
+        2. Initialize the ISMRMRD dataset with the generated path.
+        3. Populate the header and write the XML header to the dataset. Informations can be added.
+        4. Reshape the raw data matrix and iterate over scans, slices, and phases to write each acquisition. WARNING : RARE sequence follows ind order to fill the k-space.
+        5. Set acquisition flags and properties.
+        6. Append the acquisition data to the dataset.
+        7. Reshape and save the reconstructed images.
+        8. Close the dataset.
+
+        Attribute:
+        - self.data_full_mat (numpy.array): Full matrix of raw data to be reshaped and saved.
+
+        Returns:
+        None. It creates an HDF5 file with the ISMRMRD format.
+        """
         
         directory_rmd = self.directory_rmd
         name = datetime.datetime.now()
