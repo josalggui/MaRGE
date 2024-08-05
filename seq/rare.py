@@ -540,7 +540,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             imgFull = dataFull*0
             for ii in range(self.nScans):
                 imgFull[ii, :, :, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[ii, :, :, :])))
-            self.mapVals['dataFull'] = dataFull ## if i convert .mat to .h5 if have this dataFull (40*40) not dataFullmat (40*60)
+            self.mapVals['dataFull'] = dataFull 
             self.mapVals['imgFull'] = imgFull 
 
             # Average data
