@@ -29,6 +29,7 @@ addRdPoints = 10 # to account for wrong first points after decimation
 adcFactor = 13.788 # mV/adcUnit
 scanner_name = "Physio V1.01"
 antenna_dict = {"RF01": np.pi/(0.3*70), "RF02": np.pi/(0.3*70)}
+reference_time = 70  # us, reference excitation time to get the amplitude for rabi
 fov = [20.0, 20.0, 20.0]
 dfov = [0.0, 0.0, 0.0]
 bash_path = "D:\Archivos de Programa\Git\git-bash.exe" # use "gnome-terminal" for genome linux
