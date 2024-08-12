@@ -538,10 +538,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         file_parts.remove('mat')
         new_file_name = '.'.join(file_parts)
         
-
-        # Chemin du fichier HDF5 à créer
         h5_file_path = os.path.join(mat_dir, new_file_name + '.h5')
-        # Créer le répertoire ../ismrmrd s'il n'existe pas
         sequence_type = file_name.split('.')[0]
         
         if os.path.exists(h5_file_path):
@@ -655,10 +652,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         
             for slice_idx in range(nSL):
                 for phase_idx in range(nPH):
-                        # Extraire la ligne correspondante
                         line = new_data[slice_idx, phase_idx, :]
-                                                
-                        # Préparer les données complexes
                         line2d = np.reshape(line, (1, nRD))
                         acq = ismrmrd.Acquisition.from_array(line2d, None)
                         
@@ -797,7 +791,6 @@ class ToolBarControllerPost(ToolBarWidgetPost):
 class MainWindow_toolbar(QMainWindow):
     def __init__(self):
         super().__init__()    
-        # self.toolbar_image = ToolBarControllerPost(self, self, "Image toolbar")
         self.setWindowTitle("Affichage des données ISMRMRD")
         self.setGeometry(100, 100, 800, 600)
         
@@ -849,7 +842,7 @@ class MainWindow_toolbar(QMainWindow):
             imag_parts = np.zeros((ntotPhases, nReadout))
             image = np.zeros((ntotPhases, nReadout))
             
-             # Extraction des parties réelles et imaginaires
+            # Re and Im parts
             for i in range(ntotPhases):
                 for j in range(nReadout):
                     real_parts[i, j] = data[i, j][0]
