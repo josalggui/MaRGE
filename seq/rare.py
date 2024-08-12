@@ -36,8 +36,6 @@ import ismrmrd.xsd
 import datetime
 import ctypes
 import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
 import xml.etree.ElementTree as ET
 from scipy.io import loadmat
 
