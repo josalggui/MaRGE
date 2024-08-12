@@ -791,7 +791,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
 class MainWindow_toolbar(QMainWindow):
     def __init__(self):
         super().__init__()    
-        self.setWindowTitle("Affichage des données ISMRMRD")
+        self.setWindowTitle("Show ISMRMRD data")
         self.setGeometry(100, 100, 800, 600)
         
         self.tabWidget = QTabWidget()
@@ -800,8 +800,8 @@ class MainWindow_toolbar(QMainWindow):
         self.tableWidget1 = QTableWidget()
         self.tableWidget2 = QTableWidget()
         
-        self.tabWidget.addTab(self.tableWidget1, "Données k-space")
-        self.tabWidget.addTab(self.tableWidget2, "Données images")
+        self.tabWidget.addTab(self.tableWidget1, "k-Space data")
+        self.tabWidget.addTab(self.tableWidget2, "Image data")
                 
         
         self.rawPlot = pg.PlotWidget()
