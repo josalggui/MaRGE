@@ -25,6 +25,19 @@ class ToolBarWidgetPost(QToolBar):
         self.main = parent
 
         # Load data
-        self.action_load = QAction(QIcon("resources/icons/addSequence.png"), "Load raw-data", self)
-        self.action_load.setStatusTip("Open new raw-data")
+        self.action_load = QAction(QIcon("resources/icons/addSequence.png"), "Load raw-data .mat", self)
+        self.action_load.setStatusTip("Open new raw-data .mat")
         self.addAction(self.action_load)
+
+        self.action_loadrmd = QAction(QIcon("resources/icons/addSequence.png"), "Load raw-data .h5", self)
+        self.action_loadrmd.setStatusTip("Open new raw-data .h5")
+        self.addAction(self.action_loadrmd)
+       
+        self.action_printrmd = QAction(QIcon("resources/icons/tableau_rmd.png"), "Show ISMRMRD data", self)
+        self.action_printrmd.setStatusTip("Show ISMRMRD data")
+        self.addAction(self.action_printrmd)
+        
+        self.action_convert = QAction(QIcon("resources/icons/convert.png"), "Converter .mat to .h5", self)
+        self.action_convert.setStatusTip("Converter .mat to .h5")
+        self.addAction(self.action_convert)
+        
