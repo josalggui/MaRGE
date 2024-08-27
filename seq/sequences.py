@@ -28,16 +28,18 @@ import seq.testSE as testSE
 import seq.sweepImage as sweep
 import seq.autoTuning as autoTuning
 import seq.localizer as localizer
-import seq.MRID as mrid
+# import seq.MRID as mrid
 import seq.tsePrescan as tsePrescan
-import seq.PETRAphysio as PETRAphysio
+# import seq.PETRAphysio as PETRAphysio
 import seq.larmor_raw as larmor_raw
 import seq.mse as mse
+import seq.pulseq_reader as pulseq_reader
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
-class PETRAphysio(PETRAphysio.PETRAphysio):
-    def __init__(self): super(PETRAphysio, self).__init__()
+
+# class PETRAphysio(PETRAphysio.PETRAphysio):
+#     def __init__(self): super(PETRAphysio, self).__init__()
 
 class TSEPrescan(tsePrescan.TSEPRE):
     def __init__(self): super(TSEPrescan, self).__init__()
@@ -66,8 +68,8 @@ class PETRA(petra.PETRA):
 class FID(fid.FID):
     def __init__(self): super(FID, self).__init__()
 
-class MRID(mrid.MRID):
-    def __init__(self): super(MRID, self).__init__()
+# class MRID(mrid.MRID):
+#     def __init__(self): super(MRID, self).__init__()
 
 class FIDandNoise(FIDandNoise.FIDandNoise):
     def __init__(self): super(FIDandNoise, self).__init__()
@@ -122,7 +124,8 @@ defaultsequences = {
     'RAREprotocols': RAREProtocols(),
     'RAREprotocolsTest': RAREProtocolsTest(),
     'RARE': RARE(),
-    'MRID': MRID(),
+    'PulseqReader': pulseq_reader.PulseqReader(),
+    # 'MRID': MRID(),
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),
     'Shimming': Shimming(),
@@ -143,7 +146,7 @@ defaultsequences = {
     # 'ADCtest': ADCtest(),
     'SWEEP': SWEEP(),
     'testSE': testSE(),
-    'PETRAphysio': PETRAphysio(),
-    'LarmorRaw': larmor_raw.LarmorRaw(),
+    # 'PETRAphysio': PETRAphysio(),
+    'Larmor Raw': larmor_raw.LarmorRaw(),
     'MSE': MSE(),
 }

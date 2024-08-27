@@ -15,25 +15,19 @@ class SessionController(SessionWindow):
     """
     Controller class for managing the session.
 
-    Args:
-        demo (bool): Indicates whether the session is a demo or not.
-
     Inherits:
         SessionWindow: Base class for the session window.
     """
-    def __init__(self, demo):
+    def __init__(self):
         """
         Initializes the SessionController.
-
-        Args:
-            demo (bool): Indicates whether the session is a demo or not.
         """
         super(SessionController, self).__init__()
         self.main_gui = None
-        self.demo = demo
 
         # Set slots for toolbar actions
         self.launch_gui_action.triggered.connect(self.runMainGui)
+        self.demo_gui_action.triggered.connect(self.runDemoGui)
         self.close_action.triggered.connect(self.close)
 
     def runMainGui(self):
@@ -51,7 +45,26 @@ class SessionController(SessionWindow):
             os.makedirs(self.session['directory'])
 
         # Open the main gui
-        self.main_gui = MainController(self.session, self.demo)
+        self.main_gui = MainController(self.session, demo=False)
+        self.hide()
+        self.main_gui.show()
+
+    def runDemoGui(self):
+        """
+        Runs the main GUI in DEMO mode and sets up the session.
+
+        Creates a folder for the session and opens the main GUI.
+        """
+        self.updateSessionDict()
+
+        # Create folder
+        self.session['directory'] = 'experiments/acquisitions/%s/%s/%s/%s' % (
+            self.session['project'], self.session['subject_id'], self.session['study'], self.session['side'])
+        if not os.path.exists(self.session['directory']):
+            os.makedirs(self.session['directory'])
+
+        # Open the main gui
+        self.main_gui = MainController(self.session, demo=True)
         self.hide()
         self.main_gui.show()
 

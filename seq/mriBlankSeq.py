@@ -17,6 +17,8 @@ import scipy.signal as sig
 import csv
 import ismrmrd
 import matplotlib.pyplot as plt
+import pypulseq as pp
+from flocra_pulseq.interpreter import PSInterpreter
 from skimage.util import view_as_blocks
 from skimage.measure import shannon_entropy
 
@@ -69,19 +71,51 @@ class MRIBLANKSEQ:
         self.session = {}
         self.demo = None
         self.mode = None
-        self.flo_dict = {'g0': [[], []],
-                         'g1': [[], []],
-                         'g2': [[], []],
-                         'rx0': [[], []],
-                         'rx1': [[], []],
-                         'tx0': [[], []],
-                         'tx1': [[], []],
-                         'ttl0': [[], []],
-                         'ttl1': [[], []]}
+        self.flo_dict = {'g0': [[],[]],
+                         'g1': [[],[]],
+                         'g2': [[],[]],
+                         'rx0': [[],[]],
+                         'rx1': [[],[]],
+                         'tx0': [[],[]],
+                         'tx1': [[],[]],
+                         'ttl0': [[],[]],
+                         'ttl1': [[],[]],}
+
+        # Initialize the sequence
+        self.seq = pp.Sequence()
+
+        # Define system properties according to hw_config file
+        self.system = pp.Opts(
+            rf_dead_time=hw.blkTime*1e-6,   # s
+            max_grad=hw.max_grad,   # mT/m
+            grad_unit='mT/m',
+            max_slew=hw.max_slew_rate,  # mT/m/ms
+            slew_unit='mT/m/ms',
+            grad_raster_time=hw.grad_raster_time,   # s
+            rise_time=hw.grad_rise_time,    # s
+        )
+
+        # Define the interpreter. It should be updated on calibration
+        self.flo_interpreter = PSInterpreter(tx_warmup=hw.blkTime, # us
+                                             rf_center=hw.larmorFreq * 1e6,  # Hz
+                                             rf_amp_max=hw.b1Efficiency/(2*np.pi)*1e6,  # Hz
+                                             gx_max=hw.gFactor[0]*hw.gammaB,    # Hz/m
+                                             gy_max=hw.gFactor[1]*hw.gammaB,    # Hz/m
+                                             gz_max=hw.gFactor[2]*hw.gammaB,    # Hz/m
+                                             grad_max=np.max(hw.gFactor)*hw.gammaB, # Hz/m
+                                             )
+        
         self.output=[]
         self.raw_data_name="raw_data"
-        
-        
+
+
+
+    # *********************************************************************************
+    # *********************************************************************************
+    # *********************************************************************************
+
+    # Create dictionaries of inputs classified by field (RF, SEQ, IM or OTH)
+
     @property
     def RFproperties(self):
         """
@@ -158,6 +192,90 @@ class MRIBLANKSEQ:
                 tips[self.mapNmspc[key]] = [self.mapTips[key]]
         return out, tips
 
+    def pypulseq2mriblankseq(self, waveforms=None, shimming=np.array([0.0, 0.0, 0.0])):
+        """
+        Translates PyPulseq waveforms into mriBlankSeq dictionary format for use in the GUI.
+
+        Args:
+            waveforms (dict, optional):
+                A dictionary containing waveform data for different channels. The keys represent channel names
+                ('tx0', 'tx1', 'rx0_en', 'rx1_en', 'tx_gate', 'rx_gate', 'grad_vx', 'grad_vy', 'grad_vz') and
+                the values are lists of numpy arrays representing the waveform data for each channel.
+            shimming (numpy.ndarray, optional):
+                A 1D numpy array of length 3 containing shimming values for the gradient channels
+                (default is [0.0, 0.0, 0.0]).
+
+        Returns:
+            bool: Returns True when the conversion and sequence update are completed successfully.
+
+        Notes:
+            The function translates the waveform data to the mriBlankSeq dictionary format which is compatible with
+            the GUI functionalities. If certain waveform keys are not provided in the input, the function initializes
+            them with default values. Additionally, shimming values are added to the gradient channels.
+
+        """
+
+        # Reset flo dictionary
+        self.flo_dict = {'g0': [[], []],
+                         'g1': [[], []],
+                         'g2': [[], []],
+                         'rx0': [[], []],
+                         'rx1': [[], []],
+                         'tx0': [[], []],
+                         'tx1': [[], []],
+                         'ttl0': [[], []],
+                         'ttl1': [[], []], }
+
+        # Fill dictionary
+        for key in waveforms.keys():
+            if key == 'tx0':
+                self.flo_dict['tx0'][0] = np.concatenate((self.flo_dict['tx0'][0], waveforms['tx0'][0]), axis=0)
+                self.flo_dict['tx0'][1] = np.concatenate((self.flo_dict['tx0'][1], waveforms['tx0'][1]), axis=0)
+            elif key == 'tx1':
+                self.flo_dict['tx1'][0] = np.concatenate((self.flo_dict['tx1'][0], waveforms['tx1'][0]), axis=0)
+                self.flo_dict['tx1'][1] = np.concatenate((self.flo_dict['tx1'][1], waveforms['tx1'][1]), axis=0)
+            elif key == 'rx0_en':
+                self.flo_dict['rx0'][0] = np.concatenate((self.flo_dict['rx0'][0], waveforms['rx0_en'][0]), axis=0)
+                self.flo_dict['rx0'][1] = np.concatenate((self.flo_dict['rx0'][1], waveforms['rx0_en'][1]), axis=0)
+            elif key == 'rx1_en':
+                self.flo_dict['rx1'][0] = np.concatenate((self.flo_dict['rx1'][0], waveforms['rx1_en'][0]), axis=0)
+                self.flo_dict['rx1'][1] = np.concatenate((self.flo_dict['rx1'][1], waveforms['rx1_en'][1]), axis=0)
+            elif key == 'tx_gate':
+                self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], waveforms['tx_gate'][0]), axis=0)
+                self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], waveforms['tx_gate'][1]), axis=0)
+            elif key == 'rx_gate':
+                self.flo_dict['ttl1'][0] = np.concatenate((self.flo_dict['ttl1'][0], waveforms['rx_gate'][0]), axis=0)
+                self.flo_dict['ttl1'][1] = np.concatenate((self.flo_dict['ttl1'][1], waveforms['rx_gate'][1]), axis=0)
+            elif key == 'grad_vx':
+                self.flo_dict['g0'][0] = np.concatenate((self.flo_dict['g0'][0], waveforms['grad_vx'][0]), axis=0)
+                self.flo_dict['g0'][1] = np.concatenate((self.flo_dict['g0'][1], waveforms['grad_vx'][1]), axis=0)
+            elif key == 'grad_vy':
+                self.flo_dict['g1'][0] = np.concatenate((self.flo_dict['g1'][0], waveforms['grad_vy'][0]), axis=0)
+                self.flo_dict['g1'][1] = np.concatenate((self.flo_dict['g1'][1], waveforms['grad_vy'][1]), axis=0)
+            elif key == 'grad_vz':
+                self.flo_dict['g2'][0] = np.concatenate((self.flo_dict['g2'][0], waveforms['grad_vz'][0]), axis=0)
+                self.flo_dict['g2'][1] = np.concatenate((self.flo_dict['g2'][1], waveforms['grad_vz'][1]), axis=0)
+
+        # Fill missing keys
+        for key in self.flo_dict.keys():
+            try:
+                is_unfilled = all(not sublist for sublist in self.flo_dict[key])
+            except:
+                is_unfilled = False
+            if is_unfilled:
+                self.flo_dict[key] = [np.array([0]), np.array([0])]
+
+        # Add shimming
+        self.flo_dict['g0'][1] = self.flo_dict['g0'][1] + shimming[0]
+        self.flo_dict['g1'][1] = self.flo_dict['g1'][1] + shimming[1]
+        self.flo_dict['g2'][1] = self.flo_dict['g2'][1] + shimming[2]
+
+        last_times = np.array([value[0][-1] for value in self.flo_dict.values()])
+        last_time = np.max(last_times)
+        self.endSequence(last_time+1)
+
+        return True
+
     def getFovDisplacement(self):
         """
         Get the displacement to apply in the FFT reconstruction.
@@ -183,7 +301,7 @@ class MRIBLANKSEQ:
             return out
 
         dr = np.zeros((3, 1))
-        for ii in range(1, len(self.dfovs)):
+        for ii in range(len(self.dfovs)):
             Mii = rotationMatrix(self.rotations[ii])
             rii = np.reshape(np.array(self.dfovs[ii]), (3, 1))
             dr = np.dot(Mii, (dr + rii))
@@ -767,7 +885,7 @@ class MRIBLANKSEQ:
         tx = np.linspace(-nZeros / 2, nZeros / 2, num=100, endpoint=True)
         hanning = 0.5 * (1 + np.cos(2 * np.pi * tx / nZeros))
         txAmp = rfAmplitude * np.exp(1j * rfPhase) * hanning * np.abs(np.sinc(tx))
-        txGateTime = np.array(tStart, tStart + hw.blkTime + rfTime)
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
         txGateAmp = np.array([1, 0])
         self.flo_dict['tx0'][0] = np.concatenate((self.flo_dict['tx0'][0], txTime), axis=0)
         self.flo_dict['tx0'][1] = np.concatenate((self.flo_dict['tx0'][1], txAmp), axis=0)
@@ -1098,12 +1216,13 @@ class MRIBLANKSEQ:
         self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], np.array([t0])), axis=0)
         self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], np.array([gAmp])), axis=0)
 
-    def floDict2Exp(self, rewrite=True):
+    def floDict2Exp(self, rewrite=True, demo=False):
         """
         Check for errors and add instructions to Red Pitaya if no errors are found.
 
         Args:
             rewrite (bool, optional): Whether to overwrite existing values. Defaults to True.
+            demo: If demo is True it just check for errors. Defaults to False.
 
         Returns:
             bool: True if no errors were found and instructions were successfully added to Red Pitaya; False otherwise.
@@ -1121,16 +1240,17 @@ class MRIBLANKSEQ:
                 return False
 
         # Add instructions to server
-        self.expt.add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
-                               'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
-                               'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
-                               'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
-                               'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
-                               'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
-                               'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
-                               'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
-                               'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
-                               }, rewrite)
+        if not self.demo:
+            self.expt.add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
+                                   'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
+                                   'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
+                                   'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
+                                   'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
+                                   'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
+                                   'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
+                                   'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
+                                   'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
+                                   }, rewrite)
         return True
 
 
