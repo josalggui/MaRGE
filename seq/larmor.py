@@ -140,13 +140,12 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         # Create the sequence and add instructions to the experiment
         acq_points = createSequence()
-        if not self.demo:
-            if self.floDict2Exp():
-                print("\nSequence waveforms loaded successfully")
-                pass
-            else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
-                return False
+        if self.floDict2Exp(demo=self.demo):
+            print("\nSequence waveforms loaded successfully")
+            pass
+        else:
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
 
         # Run the experiment
         data_over = []  # To save oversampled data

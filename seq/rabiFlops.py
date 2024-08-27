@@ -173,13 +173,12 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
         # Execute the experiment
         createSequence()
-        if not self.demo:
-            if self.floDict2Exp():
-                print("\nSequence waveforms loaded successfully")
-                pass
-            else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
-                return False
+        if self.floDict2Exp(demo=self.demo):
+            print("\nSequence waveforms loaded successfully")
+            pass
+        else:
+            print("\nERROR: sequence waveforms out of hardware bounds")
+            return False
         if not plotSeq:
             if not self.demo:
                 rxd, msgs = self.expt.run()

@@ -3,12 +3,11 @@ nibabel>=2.4.0
 pydicom>=1.2.2
 scipy>=1.2.1
 msgpack~=1.0.5
-numpy>=1.25
+numpy==1.26.4
 PyQt5~=5.15.10
 pyqtgraph~=0.13.3
 QDarkStyle>=3.2.3
 bm4d>=4.2.3
 phantominator>=0.7.0
 pyserial>=3.5
-torch>=2.2.1
 cupy-cuda12x>=13.0.0
