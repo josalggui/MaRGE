@@ -96,7 +96,7 @@ class MRIBLANKSEQ:
         )
 
         # Define the interpreter. It should be updated on calibration
-        self.flo_interpreter = PSInterpreter(tx_warmup=hw.blkTime, # s
+        self.flo_interpreter = PSInterpreter(tx_warmup=hw.blkTime, # us
                                              rf_center=hw.larmorFreq * 1e6,  # Hz
                                              rf_amp_max=hw.b1Efficiency/(2*np.pi)*1e6,  # Hz
                                              gx_max=hw.gFactor[0]*hw.gammaB,    # Hz/m

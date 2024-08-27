@@ -7,7 +7,6 @@ Created on Thu June 2 2022
 
 import numpy as np
 import controller.experiment_gui as ex
-import torch
 import configs.hw_config as hw # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 from scipy.interpolate import griddata
@@ -214,12 +213,10 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         kz = np.linspace(-kMax[2] * (nPoints[2] != 1), kMax[2] * (nPoints[2] != 1), nPoints[2])
 
         kx, ky, kz = np.meshgrid(kx, ky, kz)
-        kx = torch.from_numpy(kx)
-        kx = kx.permute(2, 0, 1)
-        ky = torch.from_numpy(ky)
-        ky = ky.permute(2, 0, 1)
-        kz = torch.from_numpy(kz)
-        kz = kz.permute(2, 0, 1)
+
+        kx = np.transpose(kx, (2, 0, 1))
+        ky = np.transpose(ky, (2, 0, 1))
+        kz = np.transpose(kz, (2, 0, 1))
 
         kCartesian = np.zeros(shape=(kx.shape[0] * kx.shape[1] * kx.shape[2], 3))
         kCartesian[:, 0] = np.reshape(kx, [kx.shape[0] * kx.shape[1] * kx.shape[2]])
@@ -281,6 +278,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         print("Max grad transitions are  ", MaxGradTransitions * 1e3, " mT/m")
 
         self.mapVals['SequenceGradients'] = gSeq
+        self.mapVals['nSPReadouts'] = gradientVectors2.shape[0]
 
         def createSequence():
             nRep = gSeq.shape[0]
@@ -353,8 +351,8 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             samplingPeriod = self.expt.getSamplingRate()
             BWreal = 1 / samplingPeriod
             acqTimeSeq = nPPL / BWreal  # us
-            self.mapVals['BW-real'] = BWreal
-            self.mapVals['acqTimeSeq'] = acqTimeSeq
+            self.mapVals['BWSeq'] = BWreal * 1e6  # Hz
+            self.mapVals['acqTimeSeq'] = acqTimeSeq * 1e-6  # s
             createSequence()
             if self.floDict2Exp():
                 print("\nSequence waveforms loaded successfully")
@@ -362,6 +360,20 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             else:
                 print("\nERROR: sequence waveforms out of hardware bounds")
                 return False
+
+            tRadio = np.linspace(deadTime + 0.5 / (self.mapVals['BWSeq']),
+                                 deadTime + 0.5 / (self.mapVals['BWSeq']) + self.mapVals['acqTimeSeq'], nPPL)
+            tVectorRadial2 = []
+            for pp in range(0, self.mapVals['nRadialReadouts']):
+                tVectorRadial2 = np.concatenate((tVectorRadial2, tRadio), axis=0)
+            self.mapVals['tVectorRadial2'] = tVectorRadial2
+
+            tPoint = np.linspace(deadTime + 0.5 / (self.mapVals['BWSeq']), deadTime + 0.5 / (self.mapVals['BWSeq']), 1)
+            tVectorSP = []
+            for pp in range(0, self.mapVals['nSPReadouts']):
+                tVectorSP = np.concatenate((tVectorSP, tPoint), axis=0)
+            self.mapVals['tVectorSP'] = tVectorSP
+
 
             if plotSeq == 0:
                 # Warnings before run sequence
