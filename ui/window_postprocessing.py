@@ -14,7 +14,7 @@ from controller.controller_history_list import HistoryListControllerPos
 from controller.controller_imageview import ImageViewController
 from controller.controller_figures import FiguresLayoutController
 from controller.controller_console import ConsoleController
-from controller.controller_toolbar_post import ToolBarControllerPost
+from controller.controller_toolbar_post import ToolBarControllerPost, MainWindow_toolbar
 from controller.controller_processing import ProcessingController
 
 
@@ -66,7 +66,8 @@ class MainWindow(QMainWindow):
         self.threadpool = QThreadPool()
 
         # Toolbar addition
-        self.toolbar_image = ToolBarControllerPost(self, "Image toolbar")
+        self.main_window= MainWindow_toolbar()
+        self.toolbar_image = ToolBarControllerPost(self.main_window, self, "Image toolbar")
         self.addToolBar(self.toolbar_image)
 
         # Image toolbar

@@ -15,6 +15,7 @@ from scipy.io import savemat, loadmat
 import experiment as ex
 import scipy.signal as sig
 import csv
+import ismrmrd
 import matplotlib.pyplot as plt
 import pypulseq as pp
 from flocra_pulseq.interpreter import PSInterpreter
@@ -23,7 +24,6 @@ from skimage.measure import shannon_entropy
 
 # Import dicom saver
 from manager.dicommanager import DICOMImage
-
 
 class MRIBLANKSEQ:
     """
@@ -71,6 +71,8 @@ class MRIBLANKSEQ:
         self.session = {}
         self.demo = None
         self.mode = None
+        self.output=[]
+        self.raw_data_name="raw_data"
         self.flo_dict = {'g0': [[],[]],
                          'g1': [[],[]],
                          'g2': [[],[]],
@@ -374,7 +376,7 @@ class MRIBLANKSEQ:
             writer.writeheader()
             writer.writerows([self.mapNmspc, self.mapVals])
 
-    def loadParams(self, directory='experiments/parameterization', file=None):
+    def loadParams(self, directory='experiments/parameterization', file=None): ## ca vient d un fichier ou directement de mon action ???
         """
         Load parameter values from a CSV file.
 
@@ -1250,22 +1252,33 @@ class MRIBLANKSEQ:
                                    }, rewrite)
         return True
 
+
+
+
+
+
+
+
+
     def saveRawData(self):
+        
         """
         Save the rawData.
 
-        This method saves the rawData to various formats including .mat, .csv, and .dcm.
+        This method saves the rawData to various formats including .mat, .csv, .dcm and .h5.
 
         The .mat file contains the rawData.
         The .csv file contains only the input parameters.
         The .dcm file is the DICOM image.
-
-        For future releases, ISMRMRD format will be included.
+        The .h5 file is the ISMRMRD format.
+        
 
         Returns:
             None
 
         """
+        
+        
         # Get directory
         if 'directory' in self.session.keys():
             directory = self.session['directory']
@@ -1280,13 +1293,22 @@ class MRIBLANKSEQ:
         directory_mat = directory + '/mat'
         directory_csv = directory + '/csv'
         directory_dcm = directory + '/dcm'
+        directory_ismrmrd = directory + '/ismrmrd'
+        
+        
+        
         if not os.path.exists(directory + '/mat'):
             os.makedirs(directory_mat)
         if not os.path.exists(directory + '/csv'):
             os.makedirs(directory_csv)
         if not os.path.exists(directory + '/dcm'):
             os.makedirs(directory_dcm)
+        if not os.path.exists(directory + '/ismrmrd'):
+            os.makedirs(directory_ismrmrd)
 
+
+        self.directory_rmd=directory_ismrmrd 
+        
         # Generate filename
         name = datetime.now()
         name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
@@ -1297,24 +1319,28 @@ class MRIBLANKSEQ:
             self.raw_data_name = self.mapVals['seqName']
             file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
         self.mapVals['fileName'] = "%s.mat" % file_name
-
+        # Generate filename for ismrmrd
+        self.mapVals['fileNameIsmrmrd'] = "%s.h5" % file_name
+        
         # Save mat file with the outputs
-        savemat("%s/%s.mat" % (directory_mat, file_name), self.mapVals)
+        savemat("%s/%s.mat" % (directory_mat, file_name), self.mapVals) # au format savemat(chemin_fichier_mat, {"data" : data}), avec data contient les données brute à sauvegarder
 
         # Save csv with input parameters
-        with open('%s/%s.csv' % (directory_csv, file_name), 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys)
-            writer.writeheader()
-            mapVals = {}
+        with open('%s/%s.csv' % (directory_csv, file_name), 'w') as csvfile: # ouvrir le fichier csv en mode écriture au format with open(chemin_fichier_csv, 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys) # mapKeys contient les noms des colonnes du fichier csv que l'on veut sauvegarder 
+            writer.writeheader() # écrire l'entete du csv les noms des colonnes dans le fichier csv
+            mapVals = {} # stockage de valeurs de données à écrire
             for key in self.mapKeys:  # take only the inputs from mapVals
-                mapVals[key] = self.mapVals[key]
-            writer.writerows([self.mapNmspc, mapVals])
+                mapVals[key] = self.mapVals[key] # copie les donnée de l'acquisition stockées dans self.mapVals dans mapVals
+            writer.writerows([self.mapNmspc, mapVals]) # écrire les données dans le fichier csv
 
         # Save dcm with the final image
-        if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode is None):
+        if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode is None): ##verify if output is an image
             self.image2Dicom(fileName="%s/%s.dcm" % (directory_dcm, file_name))
-
-    def image2Dicom(self, fileName):
+            
+       
+        
+    def image2Dicom(self, fileName): 
         """
         Save the DICOM image.
 
@@ -1377,10 +1403,15 @@ class MRIBLANKSEQ:
         dicom_image.meta_data.update(self.meta_data)
 
         # Save metadata dictionary into DICOM object metadata (Standard DICOM 3.0)
-        dicom_image.image2Dicom()
+        dicom_image.image2Dicom() 
 
         # Save DICOM file
         dicom_image.save(fileName)
+        
+        
+        
+        
+        
 
     def addParameter(self, key='', string='', val=0, units=True, field='', tip=None):
         """
@@ -1425,9 +1456,9 @@ class MRIBLANKSEQ:
             None
 
         """
-        for key in self.mapKeys:
-            if isinstance(self.mapVals[key], list):
-                setattr(self, key, np.array([element * self.map_units[key] for element in self.mapVals[key]]))
+        for key in self.mapKeys: 
+            if isinstance(self.mapVals[key], list): 
+                setattr(self, key, np.array([element * self.map_units[key] for element in self.mapVals[key]])) 
             else:
                 setattr(self, key, self.mapVals[key] * self.map_units[key])
 
@@ -1639,7 +1670,7 @@ class MRIBLANKSEQ:
                 The order should consist of three integers specifying the padding factor for the readout, phase, and
                 slice dimensions, respectively.
 
-        Returns:
+        Returns:sa
             ndarray: The 3D matrix containing the zero-padded k-space data.
         """
         # Zero-padding order for each dimension from the text field
@@ -1716,3 +1747,5 @@ class MRIBLANKSEQ:
         image = self.runIFFT(k_sp_zp)
 
         return image
+
+
