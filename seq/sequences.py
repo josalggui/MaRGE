@@ -30,15 +30,16 @@ import seq.autoTuning as autoTuning
 import seq.localizer as localizer
 import seq.MRID as mrid
 import seq.tsePrescan as tsePrescan
-import seq.PETRAphysio as PETRAphysio
+# import seq.PETRAphysio as PETRAphysio
 import seq.larmor_raw as larmor_raw
 import seq.mse as mse
 import seq.pulseq_reader as pulseq_reader
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
-class PETRAphysio(PETRAphysio.PETRAphysio):
-    def __init__(self): super(PETRAphysio, self).__init__()
+
+# class PETRAphysio(PETRAphysio.PETRAphysio):
+#     def __init__(self): super(PETRAphysio, self).__init__()
 
 class TSEPrescan(tsePrescan.TSEPRE):
     def __init__(self): super(TSEPrescan, self).__init__()
@@ -145,7 +146,7 @@ defaultsequences = {
     # 'ADCtest': ADCtest(),
     'SWEEP': SWEEP(),
     'testSE': testSE(),
-    'PETRAphysio': PETRAphysio(),
+    # 'PETRAphysio': PETRAphysio(),
     'Larmor Raw': larmor_raw.LarmorRaw(),
     'MSE': MSE(),
 }
