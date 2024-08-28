@@ -19,6 +19,7 @@ import seq.B1calibration as B1calibration
 import seq.cpmg as tse
 import seq.eddycurrents as eddycurrents
 import seq.larmor as larmor
+import seq.larmor_pypulseq as larmor_pypulseq
 import seq.inversionRecovery as inversionRecovery
 # import seq.ADCdelayTest as ADCdelayTest
 import seq.noise as noise
@@ -149,4 +150,5 @@ defaultsequences = {
     # 'PETRAphysio': PETRAphysio(),
     'Larmor Raw': larmor_raw.LarmorRaw(),
     'MSE': MSE(),
+    'Larmor PyPulseq': larmor_pypulseq.LarmorPyPulseq(),
 }
