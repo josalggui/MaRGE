@@ -35,6 +35,7 @@ import seq.tsePrescan as tsePrescan
 import seq.larmor_raw as larmor_raw
 import seq.mse as mse
 import seq.pulseq_reader as pulseq_reader
+import seq.fix_gain as fix_gain
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
@@ -126,11 +127,11 @@ defaultsequences = {
     'RAREprotocolsTest': RAREProtocolsTest(),
     'RARE': RARE(),
     'PulseqReader': pulseq_reader.PulseqReader(),
-    # 'MRID': MRID(),
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),
     'Shimming': Shimming(),
     'AutoTuning': AutoTuning(),
+    'FixGain': fix_gain.FixGain(),
     'TSE_prescan': TSEPrescan(),
     'Localizer': Localizer(),
     'GRE3D': GRE3D(),

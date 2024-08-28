@@ -786,9 +786,12 @@ class RARE(blankSeq.MRIBLANKSEQ):
         
 
         self.mapVals['angle'] = 0.0
-        self.sequenceList['RARE'].mapVals['angle'] = 0.0
         self.mapVals['dfov'] = [0.0, 0.0, 0.0]
-        self.sequenceList['RARE'].mapVals['dfov'] = [0.0, 0.0, 0.0]
+        try:
+            self.sequenceList['RARE'].mapVals['angle'] = 0.0
+            self.sequenceList['RARE'].mapVals['dfov'] = [0.0, 0.0, 0.0]
+        except:
+            pass
         hw.dfov = [0.0, 0.0, 0.0]
 
         if self.mode == 'Standalone':
@@ -1123,7 +1126,7 @@ if __name__ == '__main__':
     seq.sequenceAtributes()
 
     # A
-    seq.sequenceRun(demo=True, plotSeq=False)
+    seq.sequenceRun(plotSeq=False, demo=True)
     # seq.sequencePlot(standalone=True)
 
     # # B

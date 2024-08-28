@@ -162,7 +162,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
                 print("Expected points = %i" % ((acq_points + 2 * hw.addRdPoints) * hw.oversamplingFactor))
                 print("Scan %i ready!" % (scan + 1))
         elif plotSeq and standalone:
-            self.plotSequence()
+            self.sequencePlot(standalone=standalone)
 
         # Close the experiment
         if not self.demo:
@@ -180,7 +180,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         return True
 
-    def sequenceAnalysis(self, mode=None):
+    def sequenceAnalysis(self, mode=None, save=True):
         self.mode = mode
         # Load data
         signal = self.mapVals['data']
@@ -232,11 +232,12 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.output = [result1, result2]
 
         # save data once self.output is created
-        self.saveRawData()
+        if save:
+            self.saveRawData()
 
-        # Plot result in standalone execution
-        if self.mode == 'Standalone':
-            self.plotResults()
+            # Plot result in standalone execution
+            if self.mode == 'Standalone':
+                self.plotResults()
 
         return self.output
 
@@ -244,5 +245,5 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__':
     seq = Larmor()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
-    # seq.sequenceAnalysis(mode='Standalone')
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
+    seq.sequenceAnalysis(mode='Standalone')
