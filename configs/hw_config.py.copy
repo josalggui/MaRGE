@@ -35,10 +35,14 @@ dfov = [0.0, 0.0, 0.0]
 bash_path = "D:\Archivos de Programa\Git\git-bash.exe" # use "gnome-terminal" for genome linux
 rp_ip_address = "192.168.1.101"
 rp_version = "rp-122"
+rp_max_input_voltage = 225  # mV
 lnaGain = 50 # dB
+rf_min_gain = 50  # dB  if your rf chain uses a fix gain, set this number equal to lnaGain
+rf_max_gain = 76  # dB, if your rf chain uses a fix gain, set this number equal to lnaGain
 temperature = 293 # k
 shimming_factor = 1e-5
 
 # Arduinos
 ard_sn_autotuning = '242353133363518050E0'
 ard_sn_interlock = '242353133363518050E1'
+ard_sn_attenuator = '242353133363518050E2'

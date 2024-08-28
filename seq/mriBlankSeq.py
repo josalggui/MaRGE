@@ -971,7 +971,7 @@ class MRIBLANKSEQ:
         try:
             samplingRate = self.expt.getSamplingRate() / hw.oversamplingFactor  # us
         except:
-            samplingRate = self.mapVals['samplingPeriod'] * 1e3 / hw.oversamplingFactor
+            samplingRate = self.mapVals['samplingPeriod'] / hw.oversamplingFactor
         t0 = tStart - (hw.addRdPoints * hw.oversamplingFactor - hw.cic_delay_points) * samplingRate  # us
         t1 = tStart + (hw.addRdPoints * hw.oversamplingFactor + hw.cic_delay_points) * samplingRate + gateTime  # us
         self.flo_dict['rx%i' % channel][0] = \
@@ -1467,7 +1467,7 @@ class MRIBLANKSEQ:
         """
         for key in self.mapKeys: 
             if isinstance(self.mapVals[key], list): 
-                setattr(self, key, np.array([element * self.map_units[key] for element in self.mapVals[key]])) 
+                setattr(self, key, np.array([element * self.map_units[key] for element in self.mapVals[key]]))
             else:
                 setattr(self, key, self.mapVals[key] * self.map_units[key])
 
@@ -1537,12 +1537,13 @@ class MRIBLANKSEQ:
         """
         return self.mapVals[key]
 
-    def setParameter(self, key, val, unit):
+    def setParameter(self, key=True, string=True, val=True, unit=True):
         """
         Set the value of a parameter.
 
         Args:
             key (str): The key corresponding to the parameter.
+            string (str): String that will be shown in the GUI
             val (Any): The new value to be assigned to the parameter.
             unit (bool): The unit of the parameter.
 
@@ -1551,7 +1552,8 @@ class MRIBLANKSEQ:
 
         """
         self.mapVals[key] = val
-        self.mapUnits[key] = unit
+        self.mapNmspc[key] = string
+        self.map_units[key] = unit
 
     @staticmethod
     def runIFFT(k_space):
