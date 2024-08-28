@@ -191,6 +191,15 @@ class MRIBLANKSEQ:
                 tips[self.mapNmspc[key]] = [self.mapTips[key]]
         return out, tips
 
+    def sequenceInfo(self):
+        print("\nsequenceInfo method is empty."
+              "It is recommended to overide this method into your sequence.")
+
+    def sequenceTime(self):
+        rint("\nsequenceTime method is empty."
+             "It is recommended to overide this method into your sequence.")
+        return 0
+
     def pypulseq2mriblankseq(self, waveforms=None, shimming=np.array([0.0, 0.0, 0.0])):
         """
         Translates PyPulseq waveforms into mriBlankSeq dictionary format for use in the GUI.
@@ -228,32 +237,32 @@ class MRIBLANKSEQ:
         # Fill dictionary
         for key in waveforms.keys():
             if key == 'tx0':
-                self.flo_dict['tx0'][0] = np.concatenate((self.flo_dict['tx0'][0], waveforms['tx0'][0]), axis=0)
-                self.flo_dict['tx0'][1] = np.concatenate((self.flo_dict['tx0'][1], waveforms['tx0'][1]), axis=0)
+                self.flo_dict['tx0'][0] = np.concatenate((self.flo_dict['tx0'][0], waveforms['tx0'][0][0:-1]), axis=0)
+                self.flo_dict['tx0'][1] = np.concatenate((self.flo_dict['tx0'][1], waveforms['tx0'][1][0:-1]), axis=0)
             elif key == 'tx1':
-                self.flo_dict['tx1'][0] = np.concatenate((self.flo_dict['tx1'][0], waveforms['tx1'][0]), axis=0)
-                self.flo_dict['tx1'][1] = np.concatenate((self.flo_dict['tx1'][1], waveforms['tx1'][1]), axis=0)
+                self.flo_dict['tx1'][0] = np.concatenate((self.flo_dict['tx1'][0], waveforms['tx1'][0][0:-1]), axis=0)
+                self.flo_dict['tx1'][1] = np.concatenate((self.flo_dict['tx1'][1], waveforms['tx1'][1][0:-1]), axis=0)
             elif key == 'rx0_en':
-                self.flo_dict['rx0'][0] = np.concatenate((self.flo_dict['rx0'][0], waveforms['rx0_en'][0]), axis=0)
-                self.flo_dict['rx0'][1] = np.concatenate((self.flo_dict['rx0'][1], waveforms['rx0_en'][1]), axis=0)
+                self.flo_dict['rx0'][0] = np.concatenate((self.flo_dict['rx0'][0], waveforms['rx0_en'][0][0:-1]), axis=0)
+                self.flo_dict['rx0'][1] = np.concatenate((self.flo_dict['rx0'][1], waveforms['rx0_en'][1][0:-1]), axis=0)
             elif key == 'rx1_en':
-                self.flo_dict['rx1'][0] = np.concatenate((self.flo_dict['rx1'][0], waveforms['rx1_en'][0]), axis=0)
-                self.flo_dict['rx1'][1] = np.concatenate((self.flo_dict['rx1'][1], waveforms['rx1_en'][1]), axis=0)
+                self.flo_dict['rx1'][0] = np.concatenate((self.flo_dict['rx1'][0], waveforms['rx1_en'][0][0:-1]), axis=0)
+                self.flo_dict['rx1'][1] = np.concatenate((self.flo_dict['rx1'][1], waveforms['rx1_en'][1][0:-1]), axis=0)
             elif key == 'tx_gate':
-                self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], waveforms['tx_gate'][0]), axis=0)
-                self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], waveforms['tx_gate'][1]), axis=0)
+                self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], waveforms['tx_gate'][0][0:-1]), axis=0)
+                self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], waveforms['tx_gate'][1][0:-1]), axis=0)
             elif key == 'rx_gate':
-                self.flo_dict['ttl1'][0] = np.concatenate((self.flo_dict['ttl1'][0], waveforms['rx_gate'][0]), axis=0)
-                self.flo_dict['ttl1'][1] = np.concatenate((self.flo_dict['ttl1'][1], waveforms['rx_gate'][1]), axis=0)
+                self.flo_dict['ttl1'][0] = np.concatenate((self.flo_dict['ttl1'][0], waveforms['rx_gate'][0][0:-1]), axis=0)
+                self.flo_dict['ttl1'][1] = np.concatenate((self.flo_dict['ttl1'][1], waveforms['rx_gate'][1][0:-1]), axis=0)
             elif key == 'grad_vx':
-                self.flo_dict['g0'][0] = np.concatenate((self.flo_dict['g0'][0], waveforms['grad_vx'][0]), axis=0)
-                self.flo_dict['g0'][1] = np.concatenate((self.flo_dict['g0'][1], waveforms['grad_vx'][1]), axis=0)
+                self.flo_dict['g0'][0] = np.concatenate((self.flo_dict['g0'][0], waveforms['grad_vx'][0][0:-1]), axis=0)
+                self.flo_dict['g0'][1] = np.concatenate((self.flo_dict['g0'][1], waveforms['grad_vx'][1][0:-1]), axis=0)
             elif key == 'grad_vy':
-                self.flo_dict['g1'][0] = np.concatenate((self.flo_dict['g1'][0], waveforms['grad_vy'][0]), axis=0)
-                self.flo_dict['g1'][1] = np.concatenate((self.flo_dict['g1'][1], waveforms['grad_vy'][1]), axis=0)
+                self.flo_dict['g1'][0] = np.concatenate((self.flo_dict['g1'][0], waveforms['grad_vy'][0][0:-1]), axis=0)
+                self.flo_dict['g1'][1] = np.concatenate((self.flo_dict['g1'][1], waveforms['grad_vy'][1][0:-1]), axis=0)
             elif key == 'grad_vz':
-                self.flo_dict['g2'][0] = np.concatenate((self.flo_dict['g2'][0], waveforms['grad_vz'][0]), axis=0)
-                self.flo_dict['g2'][1] = np.concatenate((self.flo_dict['g2'][1], waveforms['grad_vz'][1]), axis=0)
+                self.flo_dict['g2'][0] = np.concatenate((self.flo_dict['g2'][0], waveforms['grad_vz'][0][0:-1]), axis=0)
+                self.flo_dict['g2'][1] = np.concatenate((self.flo_dict['g2'][1], waveforms['grad_vz'][1][0:-1]), axis=0)
 
         # Fill missing keys
         for key in self.flo_dict.keys():
@@ -718,7 +727,7 @@ class MRIBLANKSEQ:
 
             # Insert plots
             plot = 0
-            for item in outputs:
+            for item in outputs[0:3]:
                 plt.subplot(3, 1, plot + 1)
                 for ii in range(len(item[0])):
                     plt.plot(item[0][ii], item[1][ii], label=item[2][ii])
