@@ -433,8 +433,8 @@ class MRIBLANKSEQ:
                             for l in reader:
                                 mapValsNew = l
                 except:
-                    print("File %s/%s does not exist" % (directory, file))
-                    print("File %s/%s loaded" % ("experiments/parameterization", self.mapVals['seqName']))
+                    print("WARNING: File %s/%s does not exist" % (directory, file))
+                    print("WARNING: File %s/%s loaded" % ("experiments/parameterization", self.mapVals['seqName']))
                     with open('%s/%s_last_parameters.csv' % ("experiments/parameterization", self.mapVals['seqName']),
                               'r') as csvfile:
                         reader = csv.DictReader(csvfile)
@@ -1241,10 +1241,10 @@ class MRIBLANKSEQ:
             item = self.flo_dict[key]
             dt = item[0][1::] - item[0][0:-1]
             if (dt <= 0).any():
-                print("%s timing error" % key)
+                print("ERROR: %s timing error" % key)
                 return False
             if (item[1] > 1).any() or (item[1] < -1).any():
-                print("%s amplitude error" % key)
+                print("ERROR: %s amplitude error" % key)
                 return False
 
         # Add instructions to server

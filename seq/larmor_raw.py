@@ -62,7 +62,7 @@ class LarmorRaw(blankSeq.MRIBLANKSEQ):
         print("mriLab @ i3M, CSIC, Spain")
         print("This sequence runs a single spin echo to find larmor.")
         print("The RF amplitude is in arbitrary units here, and it is recommended to use it with SWEEP to locate an echo"
-              " the first time the scanner is operated.")
+              " the first time the scanner is operated.\n")
         
 
     def sequenceTime(self):

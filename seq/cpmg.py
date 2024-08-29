@@ -39,7 +39,7 @@ class TSE(blankSeq.MRIBLANKSEQ):
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("This sequence runs an echo train with CPMG")
+        print("This sequence runs an echo train with CPMG\n")
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
@@ -53,9 +53,9 @@ class TSE(blankSeq.MRIBLANKSEQ):
         # Check that self.phase_mode is once of the good values
         phase_modes = ['CP', 'CPMG', 'APCP', 'APCPMG']
         if not self.phase_mode in phase_modes:
-            print('\nError: unexpected phase mode.')
-            print('Please select one of possible modes:')
-            print('CP\nCPMG\nAPCP\nAPCPMG')
+            print('ERROR: unexpected phase mode.')
+            print('ERROR: Please select one of possible modes:')
+            print('ERROR: CP\nCPMG\nAPCP\nAPCPMG')
             return False
 
         # I do not understand why I cannot create the input parameters automatically

@@ -53,7 +53,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         print("3D PETRA sequence")
         print("Author: Jose Borreguero")
         print("Contact: pepe.morata@i3m.upv.es")
-        print("mriLab @ i3M, CSIC, Spain")
+        print("mriLab @ i3M, CSIC, Spain\n")
 
 
     def sequenceTime(self):

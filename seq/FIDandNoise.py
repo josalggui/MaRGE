@@ -35,7 +35,7 @@ class FIDandNoise(blankSeq.MRIBLANKSEQ):
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("This sequence runs a single FID")
+        print("This sequence runs a single FID\n")
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']

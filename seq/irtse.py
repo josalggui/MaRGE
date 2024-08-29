@@ -39,7 +39,7 @@ class IRTSE(blankSeq.MRIBLANKSEQ):
         print("Turbo Spin Echo with Inversion Recovery")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
-        print("mriLab @ i3M, CSIC, Spain")
+        print("mriLab @ i3M, CSIC, Spain\n")
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']

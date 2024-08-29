@@ -126,7 +126,7 @@ class VNA:
                 print("Connected to nanoVNA for auto-tuning")
                 return True
             except:
-                print("No nanoVNA detected for auto-tuning")
+                print("WARNING: No nanoVNA detected for auto-tuning")
                 return False
 
     def getFrequency(self):

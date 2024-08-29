@@ -66,7 +66,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         print("Set RF refocusing amplitude to 0.0 to get single excitation behavior")
         print("Set RF refocusing time to 0.0 to auto set the RF refocusing time:")
         print("-If Rephasing method = 0, refocusing amplitude is twice the excitation amplitude")
-        print("-If Rephasing method = 1, refocusing time is twice the excitation time")
+        print("-If Rephasing method = 1, refocusing time is twice the excitation time\n")
         
 
     def sequenceTime(self):

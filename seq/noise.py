@@ -49,7 +49,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("Get a noise measurement")
+        print("Get a noise measurement\n")
         
 
     def sequenceTime(self):

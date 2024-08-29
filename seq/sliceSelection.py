@@ -38,7 +38,7 @@ class SliceSelection(blankSeq.MRIBLANKSEQ):
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("Sweep parameters related to slice selection")
+        print("Sweep parameters related to slice selection\n")
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']

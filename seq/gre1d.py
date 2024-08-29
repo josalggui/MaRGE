@@ -72,7 +72,7 @@ class GRE1D(blankSeq.MRIBLANKSEQ):
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("This sequence runs a 1d gradient echo")
+        print("This sequence runs a 1d gradient echo\n")
         
 
     def sequenceTime(self):

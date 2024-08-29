@@ -35,7 +35,7 @@ class testSE(blankSeq.MRIBLANKSEQ):
         print("Testing SE")
         print("Author: T. Guallart Naval")
         print("mriLab @ i3M, CSIC, Spain")
-        print("This sequence runs a spin echo without gradients")
+        print("This sequence runs a spin echo without gradients\n")
 
     def sequenceTime(self):
         repetitionTime = self.mapVals['repetitionTime']*1e-3

@@ -53,7 +53,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("This sequence sweep the shimming in the three axis")
+        print("This sequence sweep the shimming in the three axis\n")
 
     def sequenceTime(self):
         repetitionTime = self.mapVals['repetitionTime'] * 1e-3

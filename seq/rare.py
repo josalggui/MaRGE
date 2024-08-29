@@ -104,7 +104,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         rfExAmp = rfExFA / (rfExTime * hw.b1Efficiency)
         rfReAmp = rfReFA / (rfReTime * hw.b1Efficiency)
         if rfExAmp>1 or rfReAmp>1:
-            print("RF amplitude is too high, try with longer RF pulse time.")
+            print("ERROR: RF amplitude is too high, try with longer RF pulse time.")
             return(0)
 
         seqTime = nPoints[1]/etl*nPoints[2]*repetitionTime*1e-3*nScans*parFourierFraction/60
@@ -162,7 +162,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['larmorFreq'] = hw.larmorFreq + self.freqOffset
         self.addRdPoints = addRdPoints
         if rfExAmp>1 or rfReAmp>1:
-            print("RF amplitude is too high, try with longer RF pulse time.")
+            print("ERROR: RF amplitude is too high, try with longer RF pulse time.")
             return(0)
 
         # Matrix size
@@ -456,7 +456,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
                             acq_points = np.size(rxd['rx0'])
                             print("Acquired points = %i" % acq_points)
                             print("Expected points = %i" % (aa * hw.oversamplingFactor))
-                        print("Batch %i, scan %i ready!")
+                            if acq_points != (aa * hw.oversamplingFactor):
+                                print("WARNING: missed points. Repeating batch...")
+                        print("Batch %i, scan %i ready!" % (nBatches, ii+1))
                     else:
                         rxd = {}
                         rxd['rx0'] = np.random.randn(aa*hw.oversamplingFactor) + 1j * np.random.randn(aa*hw.oversamplingFactor)
@@ -777,8 +779,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['dfov'] = np.array(self.mapVals['dfov'])
         self.mapVals['dfov'][self.axesOrientation] = self.dfov.reshape(-1)
         self.mapVals['dfov'] = list(self.mapVals['dfov'])
-        print("Saved dfov:")
-        print(self.mapVals['dfov'])
 
         # Save results
         self.saveRawData()
@@ -877,7 +877,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         res2 = linregress(rd_2, phase2)
 
         # Print info
-        print('\nInfo from dummy pulses')
+        print('Info from dummy pulses:')
         print('Phase difference at iso-center: %0.1f º' % ((res2.intercept - res1.intercept) * 180 / np.pi))
         print('Phase slope difference %0.3f rads/m' % (res2.slope - res1.slope))
         

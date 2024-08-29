@@ -69,7 +69,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("Sequence to characterize the eddy currents.")
+        print("Sequence to characterize the eddy currents.\n")
 
     def sequenceTime(self):
         n_delays = self.mapVals['nDelays']

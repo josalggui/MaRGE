@@ -338,7 +338,7 @@ class HistoryListController(HistoryListWidget):
                     if output == 0:
                         # There is an error
                         del self.pending_inputs[key]
-                        print("" + key + " sequence finished abruptly with error.")
+                        print("ERROR: " + key + " sequence finished abruptly with error.")
                     else:
                         # Add item to the history list
                         file_name = sequence.mapVals['fileName']
@@ -350,7 +350,7 @@ class HistoryListController(HistoryListWidget):
                         # Delete outputs from the sequence
                         sequence.resetMapVals()
                         # self.main.sequence_list.updateSequence()
-                        print("" + key + " ready!")
+                        print("READY: " + key)
                     time.sleep(0.1)
                 # Enable acquire button
                 if self.main.toolbar_marcos.action_server.isChecked():

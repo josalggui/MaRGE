@@ -75,7 +75,7 @@ class RAREProtocolsTest(blankSeq.MRIBLANKSEQ):
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain \n")
         print("Sweep modes: 0:k20, 1:02k, 2:k2k")
-        print("Axes: 0:x, 1:y, 2:z")
+        print("Axes: 0:x, 1:y, 2:z\n")
 
     # def floDict2Exp(self, rewrite=True):
     #     result = self.floDict2Exp(rewrite)

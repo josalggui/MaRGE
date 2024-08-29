@@ -56,7 +56,7 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
         print("Author: PhD. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("Read a .seq file and run the sequence")
+        print("Read a .seq file and run the sequence\n")
         
 
     def sequenceTime(self):

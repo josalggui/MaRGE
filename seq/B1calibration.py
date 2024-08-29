@@ -34,7 +34,7 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
 
     def sequenceInfo(self):
         
-        print("B1calibration")
+        print("B1calibration\n")
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']

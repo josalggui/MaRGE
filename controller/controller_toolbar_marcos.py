@@ -66,12 +66,12 @@ class MarcosController(MarcosToolBar):
             try:
                 hw.rp_ip_address = self.get_sdrlab_ip()[0]
             except:
-                print("No SDRLab found.")
+                print("ERROR: No SDRLab found.")
                 try:
                     hw.rp_ip_address = self.get_sdrlab_ip()[0]
                 except:
-                    print("No communication with SDRLab.")
-                    print("Try manually.")
+                    print("ERROR: No communication with SDRLab.")
+                    print("ERROR: Try manually.")
 
 
 

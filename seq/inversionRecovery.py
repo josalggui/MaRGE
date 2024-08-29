@@ -42,7 +42,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("This sequence runs Inversion Recovery and sweep the inversion time")
+        print("This sequence runs Inversion Recovery and sweep the inversion time\n")
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']

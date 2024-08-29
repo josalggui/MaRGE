@@ -45,13 +45,17 @@ class ConsoleController(ConsoleWidget):
             text = f'<span style="color:red;"><b>ERROR</b></span>{text[5:]}'
 
         if "WARNING" in text:
-            text = f'<span style="color:orange;"><b>ERROR</b></span>{text[7:]}'
+            text = f'<span style="color:orange;"><b>WARNING</b></span>{text[7:]}'
+
+        if "READY" in text:
+            text = f'<span style="color:green;"><b>READY</b></span>{text[5:]}'
 
         # Prepend the time to the text
-        if text == "\n":
+        if text == "\n" or text == " ":
             formatted_text = text
         else:
             formatted_text = f"{current_time} - {text}"
+            formatted_text = formatted_text.replace("\n", "<br>")
 
         # Check if the text contains a marker for bold formatting
         if "<b>" in formatted_text and "</b>" in formatted_text:
