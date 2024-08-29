@@ -82,7 +82,7 @@ class FiguresController(FiguresToolBar):
 
         # Save screenshot and print message
         screenshot.save(screenshot_folder+"/"+file_name)
-        print("\nScreenshot saved in " + screenshot_folder+"/"+file_name)
+        print("Screenshot saved in " + screenshot_folder+"/"+file_name)
 
 class FiguresControllerPos(FiguresToolBar):
     """
@@ -148,4 +148,4 @@ class FiguresControllerPos(FiguresToolBar):
 
         # Save screenshot and print message
         screenshot.save(screenshot_folder+"/"+file_name)
-        print("\nScreenshot saved in " + screenshot_folder+"/"+file_name)
+        print("Screenshot saved in " + screenshot_folder+"/"+file_name)

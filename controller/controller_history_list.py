@@ -257,7 +257,6 @@ class HistoryListController(HistoryListWidget):
                 sequence.rotations = rotations.copy()
                 sequence.dfovs = shifts.copy()
                 sequence.fovs = fovs.copy()
-            print("\nReference system fixed to image %s" % self.current_output)
         except:
             pass
 
@@ -339,7 +338,7 @@ class HistoryListController(HistoryListWidget):
                     if output == 0:
                         # There is an error
                         del self.pending_inputs[key]
-                        print("\n" + key + " sequence finished abruptly with error.")
+                        print("" + key + " sequence finished abruptly with error.")
                     else:
                         # Add item to the history list
                         file_name = sequence.mapVals['fileName']
@@ -351,7 +350,7 @@ class HistoryListController(HistoryListWidget):
                         # Delete outputs from the sequence
                         sequence.resetMapVals()
                         # self.main.sequence_list.updateSequence()
-                        print("\n" + key + " ready!")
+                        print("" + key + " ready!")
                     time.sleep(0.1)
                 # Enable acquire button
                 if self.main.toolbar_marcos.action_server.isChecked():

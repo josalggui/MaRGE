@@ -227,7 +227,7 @@ class Plot3DController(Plot3DWidget):
                 widget.menuClicked()
                 if widget.title == 'Sagittal' or widget.title == 'Coronal' or widget.title == 'Transversal':
                     if roi_angle != 0:
-                        print("\nWarning: it is not recommended to angle the figure with multiplot.")
+                        print("Warning: it is not recommended to angle the figure with multiplot.")
 
         self.main.sequence_list.updateSequence()
 

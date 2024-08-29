@@ -77,7 +77,7 @@ class MarcosController(MarcosToolBar):
 
     @staticmethod
     def get_sdrlab_ip():
-        print("\nSearching for SDRLabs...")
+        print("Searching for SDRLabs...")
 
         ip_addresses = []
         subnet = '192.168.1.'
@@ -123,11 +123,11 @@ class MarcosController(MarcosToolBar):
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 subprocess.run([hw.bash_path, "--", "./startRP.sh", hw.rp_ip_address, hw.rp_version])
                 self.initgpa()
-                print("\nMaRCoS updated, server connected, gpa initialized.")
+                print("MaRCoS updated, server connected, gpa initialized.")
             except:
-                print("\nERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
+                print("ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
         else:
-            print("\nThis is a demo")
+            print("This is a demo\n")
         self.action_server.setChecked(True)
         self.main.toolbar_sequences.serverConnected()
 
@@ -142,7 +142,7 @@ class MarcosController(MarcosToolBar):
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 self.action_server.setStatusTip('Connect to marcos server')
                 self.action_server.setToolTip('Connect to marcos server')
-                print("\nServer disconnected")
+                print("Server disconnected")
             else:
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 time.sleep(1.5)
@@ -159,13 +159,13 @@ class MarcosController(MarcosToolBar):
                     })
                     expt.run()
                     expt.__del__()
-                    print("\nServer connected!")
+                    print("Server connected!")
                 except Exception as e:
-                    print("\nServer not connected!")
+                    print("Server not connected!")
                     print("Try to connect to the server again.")
                     print("Error details:", e)
         else:
-            print("\nThis is a demo")
+            print("This is a demo\n")
 
     def copyBitStream(self):
         """
@@ -177,12 +177,12 @@ class MarcosController(MarcosToolBar):
             try:
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', hw.rp_ip_address, 'rp-122'], timeout=10)
-                print("\nMaRCoS updated")
+                print("MaRCoS updated")
             except subprocess.TimeoutExpired as e:
-                print("\nTimeout error.")
+                print("Timeout error.")
                 print("Error details:", e)
         else:
-            print("\nThis is a demo.")
+            print("This is a demo\n.")
         self.action_server.setChecked(False)
         self.main.toolbar_sequences.serverConnected()
 
@@ -235,7 +235,7 @@ class MarcosController(MarcosToolBar):
                         expt.run()
                         expt.__del__()
                         link = True
-                        print("\nGPA init done!")
+                        print("GPA init done!")
 
                         # Enable power modules
                         # Enable GPA module
@@ -256,5 +256,5 @@ class MarcosController(MarcosToolBar):
                         link = False
                         time.sleep(1)
         else:
-            print("\nNo connection to the server")
+            print("No connection to the server")
             print("Please, connect to MaRCoS server first")

@@ -34,7 +34,7 @@ class TSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='phase_mode', string='Phase mode', val='CPMG', tip='CP, CPMG, APCP, APCPMG', field='SEQ')
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("CPMG")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
@@ -121,15 +121,15 @@ class TSE(blankSeq.MRIBLANKSEQ):
         # Run the createSequence method
         acq_points = createSequence()
         self.mapVals['bw'] = bw
-        print("\nAcquisition bandwidth = %0.1f kHz"%(bw*1e3))
+        print("Acquisition bandwidth = %0.1f kHz"%(bw*1e3))
 
         # Save instructions into MaRCoS if not a demo
         if not self.demo:
             if self.floDict2Exp():
-                print("\nSequence waveforms loaded successfully")
+                print("Sequence waveforms loaded successfully")
                 pass
             else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
+                print("ERROR: sequence waveforms out of hardware bounds")
                 return False
 
         # Execute the experiment if not plot

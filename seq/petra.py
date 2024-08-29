@@ -49,7 +49,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("3D PETRA sequence")
         print("Author: Jose Borreguero")
         print("Contact: pepe.morata@i3m.upv.es")
@@ -355,10 +355,10 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             self.mapVals['acqTimeSeq'] = acqTimeSeq * 1e-6  # s
             createSequence()
             if self.floDict2Exp():
-                print("\nSequence waveforms loaded successfully")
+                print("Sequence waveforms loaded successfully")
                 pass
             else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
+                print("ERROR: sequence waveforms out of hardware bounds")
                 return False
 
             tRadio = np.linspace(deadTime + 0.5 / (self.mapVals['BWSeq']),

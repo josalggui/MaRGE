@@ -33,7 +33,7 @@ class SliceSelection(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='shimming', string='Shimming', val=[-70, -90, 10], field='OTH')
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("Slice selection")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")

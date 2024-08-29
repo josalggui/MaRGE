@@ -51,13 +51,13 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='file_path', string='File Path', val="sequence.seq", field='IM', tip='Write the path to your .seq file')
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("Pulseq Reader")
         print("Author: PhD. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
         print("Read a .seq file and run the sequence")
-        print(" ")
+        
 
     def sequenceTime(self):
         return 0  # minutes, scanTime
@@ -119,17 +119,17 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
 
         if not self.demo:
             if self.floDict2Exp():
-                print("\nSequence waveforms loaded successfully")
+                print("Sequence waveforms loaded successfully")
                 pass
             else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
+                print("ERROR: sequence waveforms out of hardware bounds")
                 return False
 
         # Run the experiment
         data_over = []  # To save oversampled data
         if not plotSeq:
             for scan in range(self.nScans):
-                print("\nScan %i running..." % (scan + 1))
+                print("Scan %i running..." % (scan + 1))
                 if not self.demo:
                     rxd, msgs = self.expt.run()
                     rxd['rx0'] = hw.adcFactor * (np.real(rxd['rx0']) - 1j * np.imag(rxd['rx0']))
@@ -152,10 +152,10 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
         # Add waveforms to the experiment
         if not self.demo:
             if self.floDict2Exp():
-                print("\nSequence waveforms loaded successfully")
+                print("Sequence waveforms loaded successfully")
                 pass
             else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
+                print("ERROR: sequence waveforms out of hardware bounds")
                 return False
 
         return True

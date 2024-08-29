@@ -84,7 +84,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         
        
     def sequenceInfo(self):
-        print("\n3D RARE sequence")
+        print("3D RARE sequence")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain \n")
@@ -436,10 +436,10 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
             # Save instructions into MaRCoS if not a demo
             if self.floDict2Exp(rewrite=nBatches==1, demo=self.demo):
-                print("\nSequence waveforms loaded successfully")
+                print("Sequence waveforms loaded successfully")
                 pass
             else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
+                print("ERROR: sequence waveforms out of hardware bounds")
                 return False
 
             repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
@@ -447,7 +447,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
             if not plotSeq:
                 for ii in range(self.nScans):
-                    print("\nBatch %i, scan %i running..." % (nBatches, ii+1))
+                    print("Batch %i, scan %i running..." % (nBatches, ii+1))
                     if not self.demo:
                         acq_points = 0
                         while acq_points != (aa * hw.oversamplingFactor):
@@ -478,7 +478,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         if not plotSeq:
             acqPointsPerBatch= (np.array(acqPointsPerBatch)-self.etl*nRD*(self.dummyPulses>0)-nRD)*self.nScans
-            print('\nScans ready!')
+            print('Scans ready!')
             self.mapVals['noiseData'] = noise
             self.mapVals['overData'] = overData
 
@@ -777,7 +777,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['dfov'] = np.array(self.mapVals['dfov'])
         self.mapVals['dfov'][self.axesOrientation] = self.dfov.reshape(-1)
         self.mapVals['dfov'] = list(self.mapVals['dfov'])
-        print("\nSaved dfov:")
+        print("Saved dfov:")
         print(self.mapVals['dfov'])
 
         # Save results

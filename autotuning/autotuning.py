@@ -45,7 +45,7 @@ class Arduino:
                 arduino_port = port.device
 
         if arduino_port is None:
-            print("\nNo Arduino found for " + self.name)
+            print("No Arduino found for " + self.name)
             return False
         else:
             return arduino_port
@@ -62,7 +62,7 @@ class Arduino:
                 return False
             else:
                 self.device = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout)
-                print("\nConnected to Arduino for " + self.name)
+                print("Connected to Arduino for " + self.name)
                 time.sleep(1.0)
 
     def disconnect(self):
@@ -71,7 +71,7 @@ class Arduino:
         """
         if self.device is not None:
             self.device.close()
-            print("\nDisconnected from Arduino for " + self.name)
+            print("Disconnected from Arduino for " + self.name)
             self.device = None
 
     def send(self, data):
@@ -123,10 +123,10 @@ class VNA:
                 time.sleep(0.1)
                 self.device = Hardware.get_VNA(self.interface)
                 self.frequencies = np.array(self.device.readFrequencies()) * 1e-6  # MHz
-                print("\nConnected to nanoVNA for auto-tuning")
+                print("Connected to nanoVNA for auto-tuning")
                 return True
             except:
-                print("\nNo nanoVNA detected for auto-tuning")
+                print("No nanoVNA detected for auto-tuning")
                 return False
 
     def getFrequency(self):

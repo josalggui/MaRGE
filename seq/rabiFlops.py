@@ -56,7 +56,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='cal_method', string='Calibration method', val='FID', tip='FID or ECHO', field='OTH')
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("Rabi Flops")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
@@ -67,7 +67,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         print("Set RF refocusing time to 0.0 to auto set the RF refocusing time:")
         print("-If Rephasing method = 0, refocusing amplitude is twice the excitation amplitude")
         print("-If Rephasing method = 1, refocusing time is twice the excitation time")
-        print(" ")
+        
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
@@ -174,10 +174,10 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # Execute the experiment
         createSequence()
         if self.floDict2Exp(demo=self.demo):
-            print("\nSequence waveforms loaded successfully")
+            print("Sequence waveforms loaded successfully")
             pass
         else:
-            print("\nERROR: sequence waveforms out of hardware bounds")
+            print("ERROR: sequence waveforms out of hardware bounds")
             return False
         if not plotSeq:
             if not self.demo:
@@ -234,7 +234,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                 test = False
         piHalfTime = timeVector[n - 2] * 1e6  # us
         self.mapVals['piHalfTime'] = piHalfTime
-        print("\npi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us" % (self.mapVals['rfExAmp'],
+        print("pi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us" % (self.mapVals['rfExAmp'],
                                                                                    self.mapVals['piHalfTime']))
         hw.b1Efficiency = np.pi / 2 / (self.mapVals['rfExAmp'] * piHalfTime)
 

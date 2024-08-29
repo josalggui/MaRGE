@@ -41,7 +41,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nSteps1', string='Number of steps 1', val=5, field='OTH')
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("Genera sweep sequence")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")

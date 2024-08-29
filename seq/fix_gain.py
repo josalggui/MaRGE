@@ -38,10 +38,10 @@ class FixGain(larmor.Larmor):
         self.arduino.connect()
         gain_binary = bin(self.mapVals['gain']-hw.rf_min_gain)[2:].zfill(5)
         self.arduino.send("1" + gain_binary)
-        print("\nRF gain: %i dB" % self.mapVals['gain'])
+        print("RF gain: %i dB" % self.mapVals['gain'])
 
     def sequenceInfo(self):
-        print("\nSet RF gain of the scanner")
+        print("Set RF gain of the scanner")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
@@ -56,21 +56,21 @@ class FixGain(larmor.Larmor):
     def sequenceRun(self, plotSeq=0, demo=False, standalone=False):
         if self.mode == 'MANUAL':
             if hw.rf_min_gain > self.mapVals['gain'] or hw.rf_max_gain < self.mapVals['gain']:
-                print("\nERROR: Gain must be between %i and %i dB" % (hw.rf_min_gain, hw.rf_max_gain))
+                print("ERROR: Gain must be between %i and %i dB" % (hw.rf_min_gain, hw.rf_max_gain))
                 return False
             else:
                 return True
         elif self.mode == 'AUTO':
             return super().sequenceRun(plotSeq=plotSeq, demo=demo, standalone=standalone)
         else:
-            print("\nERROR: Mode must be AUTO or MANUAL")
+            print("ERROR: Mode must be AUTO or MANUAL")
             return False
 
     def sequenceAnalysis(self, mode=None, save=True):
         if self.mode == 'MANUAL':
             gain_binary = bin(self.mapVals['gain'] - hw.rf_min_gain)[2:].zfill(5)
             self.arduino.send("1" + gain_binary)
-            print("\nRF gain: %i dB" % self.mapVals['gain'])
+            print("RF gain: %i dB" % self.mapVals['gain'])
 
             # save data once self.output is created
             self.saveRawData()
@@ -89,18 +89,18 @@ class FixGain(larmor.Larmor):
             desired_gain = int(20 * np.log10(desired_gain))
             self.mapVals['gain'] += desired_gain
             if self.mapVals['gain'] > hw.rf_max_gain:
-                print("\nWARNING: Required gain larger than maximum gain.")
-                print("\nGain will be set to maximum gain.")
+                print("WARNING: Required gain larger than maximum gain.")
+                print("Gain will be set to maximum gain.")
                 self.mapVals['gain'] = hw.rf_max_gain
             elif self.mapVals['gain'] < hw.rf_min_gain:
-                print("\nWARNING: Required gain smaller than minimum gain.")
-                print("\nGain will be set to minimum gain.")
+                print("WARNING: Required gain smaller than minimum gain.")
+                print("Gain will be set to minimum gain.")
                 self.mapVals['gain'] = hw.rf_min_gain
 
             # Set gain
             gain_binary = bin(self.mapVals['gain'] - hw.rf_min_gain)[2:].zfill(5)
             self.arduino.send("1" + gain_binary)
-            print("\nRF gain: %i dB" % self.mapVals['gain'])
+            print("RF gain: %i dB" % self.mapVals['gain'])
             hw.lnaGain = self.mapVals['gain']
 
             # save data once self.output is created

@@ -78,7 +78,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         self.nPoints = np.reshape(self.mat_data['nPoints'], -1)
 
         if self.mat_data['seqName'] == 'PETRA':
-            print("\nExecuting regridding...")
+            print("Executing regridding...")
 
             kCartesian = self.mat_data['kCartesian']
             self.k_space_raw = self.mat_data['kSpaceRaw']

@@ -45,7 +45,7 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=50.0, field='SEQ')
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("ADCdelayTest")
         print("Connect Tx to Rx.")
 
@@ -94,10 +94,10 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
         self.mapVals['bw'] = bw*1e3 # kHz
         createSequence()
         if self.floDict2Exp():
-            print("\nSequence waveforms loaded successfully")
+            print("Sequence waveforms loaded successfully")
             pass
         else:
-            print("\nERROR: sequence waveforms out of hardware bounds")
+            print("ERROR: sequence waveforms out of hardware bounds")
             return False
 
         if plotSeq == 0:

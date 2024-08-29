@@ -34,7 +34,7 @@ class FiguresLayoutController(FiguresLayoutWidget):
         Note:
             The method does not return any value.
         """
-        print("\nGraphical User Interface for MaRCoS")
+        print("Graphical User Interface for MaRCoS")
         print("J.M. Algarín, PhD")
         print("josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Valencia, Spain")

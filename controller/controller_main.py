@@ -52,7 +52,7 @@ class MainController(MainWindow):
             try:
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
             except:
-                print("\nERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
+                print("ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
 
             # Disable power modules
             self.toolbar_marcos.arduino.send("GPA_ON 0;")

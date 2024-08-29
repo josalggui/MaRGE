@@ -26,10 +26,10 @@ class EventLibrary:
 
     def __str__(self):
         s = "EventLibrary:"
-        s += "\nkeys: " + str(len(self.keys))
-        s += "\ndata: " + str(len(self.data))
-        s += "\nlengths: " + str(len(self.lengths))
-        s += "\ntype: " + str(len(self.type))
+        s += "keys: " + str(len(self.keys))
+        s += "data: " + str(len(self.data))
+        s += "lengths: " + str(len(self.lengths))
+        s += "type: " + str(len(self.type))
         return s
 
     def find(self, new_data: np.ndarray) -> Tuple[int, bool]:

@@ -59,7 +59,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         # Get the desired scans
         n_scans = mat_data['nScans'][0][0]
         scans = self.scan_field.text()
-        print("\n Selected scans: " + str(scans))
+        print(" Selected scans: " + str(scans))
         scans = parse_indexes(scans, n_scans)
 
         # Get the selected scans from dataFull and average

@@ -197,4 +197,4 @@ def get_info(serial_port: serial.Serial) -> str:
                 break
             lines.append(line)
         logger.debug("Info output: %s", lines)
-        return "\n".join(lines)
+        return "".join(lines)

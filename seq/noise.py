@@ -44,13 +44,13 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500.0, field='RF', units=units.ms)
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("Noise")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
         print("Get a noise measurement")
-        print(" ")
+        
 
     def sequenceTime(self):
         return(0)  # minutes, scanTime
@@ -99,10 +99,10 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
             # Load sequence to red pitaya
             if self.floDict2Exp():
-                print("\nSequence waveforms loaded successfully")
+                print("Sequence waveforms loaded successfully")
                 pass
             else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
+                print("ERROR: sequence waveforms out of hardware bounds")
                 return False
 
             if plotSeq == 0:

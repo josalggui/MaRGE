@@ -31,7 +31,7 @@ class testSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='ttlExtra', string='TTL (1-pi/2 pulse; 2-pi pulse) (ms)', val=2, field='SEQ')
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("Testing SE")
         print("Author: T. Guallart Naval")
         print("mriLab @ i3M, CSIC, Spain")
@@ -112,10 +112,10 @@ class testSE(blankSeq.MRIBLANKSEQ):
         self.mapVals['bw'] = bw
         createSequence()
         if self.floDict2Exp():
-            print("\nSequence waveforms loaded successfully")
+            print("Sequence waveforms loaded successfully")
             pass
         else:
-            print("\nERROR: sequence waveforms out of hardware bounds")
+            print("ERROR: sequence waveforms out of hardware bounds")
             return False
 
         if plotSeq == 0:

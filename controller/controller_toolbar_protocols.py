@@ -53,7 +53,7 @@ class ProtocolsController(ProtocolsToolBar):
 
         if folder_name:
             shutil.rmtree(folder_name)
-            print("\nProtocol removed")
+            print("Protocol removed")
             self.main.protocol_list.updateProtocolList()
 
     def delSequence(self):
@@ -138,4 +138,4 @@ class ProtocolsController(ProtocolsToolBar):
 
             self.main.protocol_inputs.updateProtocolInputs()
 
-            print("\n%s sequence added to the %s protocol" % (file_name.split('.')[0], protocol))
+            print("%s sequence added to the %s protocol" % (file_name.split('.')[0], protocol))

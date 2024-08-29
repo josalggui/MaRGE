@@ -69,7 +69,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='gRiseTime', string='Gradient Rise Time (us)', val=500, field='OTH')
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("3D RARE sequence")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
@@ -428,16 +428,16 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                                                                    repeIndexGlobal=repeIndexGlobal,
                                                                    rewrite=nBatches==1)
                 expected_points = aa*hw.oversamplingFactor
-                print("\nAcquired Points Theo. %i" % expected_points)
+                print("Acquired Points Theo. %i" % expected_points)
                 # if self.floDict2Exp(rewrite=nBatches==1):
                 #     pass
                 # else:
                 #     return 0
                 if self.floDict2Exp(rewrite=nBatches==1):
-                    print("\nSequence waveforms loaded successfully")
+                    print("Sequence waveforms loaded successfully")
                     pass
                 else:
-                    print("\nERROR: sequence waveforms out of hardware bounds")
+                    print("ERROR: sequence waveforms out of hardware bounds")
                     return False
                 repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
                 acqPointsPerBatch.append(aa)
@@ -458,11 +458,11 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                         while check:
                             rxd, msgs = self.expt.run()
                             rxd['rx0'] = rxd['rx0']*13.788   # Here I normalize to get the result in mV
-                            print("\nAcquired Points in RP %i" % np.size(rxd['rx0']))
+                            print("Acquired Points in RP %i" % np.size(rxd['rx0']))
                             if np.size(rxd['rx0']) == expected_points:
                                 check = False
                             else:
-                                print("\nRepeating current batch")
+                                print("Repeating current batch")
                         # Get noise data
                         noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
                         rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]

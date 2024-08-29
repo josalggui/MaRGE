@@ -35,7 +35,7 @@ class IRTSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[-70, -90, 10], field='OTH')
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("Turbo Spin Echo with Inversion Recovery")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
@@ -145,10 +145,10 @@ class IRTSE(blankSeq.MRIBLANKSEQ):
         self.mapVals['bw'] = bw * 1e6
         createSequence()
         if self.floDict2Exp():
-            print("\nSequence waveforms loaded successfully")
+            print("Sequence waveforms loaded successfully")
             pass
         else:
-            print("\nERROR: sequence waveforms out of hardware bounds")
+            print("ERROR: sequence waveforms out of hardware bounds")
             return False
         if plotSeq:
             self.expt.__del__()

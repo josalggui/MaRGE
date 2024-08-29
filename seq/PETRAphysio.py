@@ -57,7 +57,7 @@ class PETRAphysio(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='enableRadial', string='enableRadial', val=1, field='OTH')
         self.addParameter(key='enableSinglePoints', string='enableSinglePoints', val=1, field='OTH')
     def sequenceInfo(self):
-            print(" ")
+            
             print("PETRA sequence")
             print("Author: Teresa Guallart-Naval")
             print("Contact: tguanav@i3m.upv.es")
@@ -275,7 +275,7 @@ class PETRAphysio(blankSeq.MRIBLANKSEQ):
                 print("Sequence waveforms loaded successfully")
                 pass
             else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
+                print("ERROR: sequence waveforms out of hardware bounds")
                 return False
             if plotSeq == 0:
                 for i in range(self.nScans):
@@ -309,7 +309,7 @@ class PETRAphysio(blankSeq.MRIBLANKSEQ):
                 print("Sequence waveforms loaded successfully")
                 pass
             else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
+                print("ERROR: sequence waveforms out of hardware bounds")
                 return False
             if plotSeq == 0:
                 for i in range(self.nScans):

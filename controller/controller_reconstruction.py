@@ -5,7 +5,7 @@ import numpy as np
 from widgets.widget_reconstruction import ReconstructionTabWidget
 try:
     import cupy as cp
-    print("\nGPU will be used for ART reconstruction")
+    print("GPU will be used for ART reconstruction")
 except ImportError:
     pass
 
@@ -370,7 +370,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         # Get correlation with reference image
         correlation = np.corrcoef(img_ref.flatten(), image.flatten())[0, 1]
-        print("\nRespect the reference image:")
+        print("Respect the reference image:")
         print("Convergence: %0.2e" % (1 - correlation))
 
         # Update the main matrix of the image view widget with the k-space data
@@ -507,7 +507,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         # Get correlation with reference image
         correlation = np.corrcoef(img_ref.flatten(), img_reconstructed.flatten())[0, 1]
-        print("\nRespect the reference image:")
+        print("Respect the reference image:")
         print("Convergence: %0.2e" % (1 - correlation))
         orientation=None
         if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:

@@ -553,7 +553,7 @@ class SequenceController(SequenceToolBar):
                     seq.mapVals[key] = inputNum
 
         self.main.sequence_list.updateSequence()
-        print("\nParameters of %s sequence loaded" % (self.main.sequence_list.getCurrentSequence()))
+        print("Parameters of %s sequence loaded" % (self.main.sequence_list.getCurrentSequence()))
 
     def saveParameters(self):
         """
@@ -579,7 +579,7 @@ class SequenceController(SequenceToolBar):
             writer.writerows([seq.mapNmspc, map_vals])
 
         # self.messages("Parameters of %s sequence saved" %(self.sequence))
-        print("\nParameters of %s sequence saved in 'experiments/parameterization'" %(self.main.sequence_list.getCurrentSequence()))
+        print("Parameters of %s sequence saved in 'experiments/parameterization'" %(self.main.sequence_list.getCurrentSequence()))
 
     def saveParametersCalibration(self):
         """
@@ -602,7 +602,7 @@ class SequenceController(SequenceToolBar):
                 map_vals[key] = seq.mapVals[key]
             writer.writerows([seq.mapNmspc, map_vals])
 
-        print("\nParameters of %s sequence saved in 'calibration'" % (self.main.sequence_list.getCurrentSequence()))
+        print("Parameters of %s sequence saved in 'calibration'" % (self.main.sequence_list.getCurrentSequence()))
 
     def serverConnected(self):
         """

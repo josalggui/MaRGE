@@ -55,7 +55,7 @@ class LarmorRaw(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='shimming', string='Shimming', val=[0.0, 0.0, 0.0], field='OTH', units=units.sh)
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("Larmor raw")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
@@ -63,7 +63,7 @@ class LarmorRaw(blankSeq.MRIBLANKSEQ):
         print("This sequence runs a single spin echo to find larmor.")
         print("The RF amplitude is in arbitrary units here, and it is recommended to use it with SWEEP to locate an echo"
               " the first time the scanner is operated.")
-        print(" ")
+        
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
@@ -138,17 +138,17 @@ class LarmorRaw(blankSeq.MRIBLANKSEQ):
         acq_points = createSequence()
         if not self.demo:
             if self.floDict2Exp():
-                print("\nSequence waveforms loaded successfully")
+                print("Sequence waveforms loaded successfully")
                 pass
             else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
+                print("ERROR: sequence waveforms out of hardware bounds")
                 return False
 
         # Run the experiment
         data_over = []  # To save oversampled data
         if not plotSeq:
             for scan in range(self.nScans):
-                print("\nScan %i running..." % (scan + 1))
+                print("Scan %i running..." % (scan + 1))
                 if not self.demo:
                     rxd, msgs = self.expt.run()
                 else:

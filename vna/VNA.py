@@ -184,7 +184,7 @@ class VNA:
             sleep(0.1)
 
     def readFirmware(self) -> str:
-        result = "\n".join(list(self.exec_command("info")))
+        result = "".join(list(self.exec_command("info")))
         logger.debug("result:\n%s", result)
         return result
 

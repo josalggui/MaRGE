@@ -65,7 +65,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nDelays', string='Number of delays', val=2, field='SEQ')
 
     def sequenceInfo(self):
-        print("\nEDDYCURRENTS")
+        print("EDDYCURRENTS")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
@@ -180,17 +180,17 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         points_to_measure = createSequence()
         if not self.demo:
             if self.floDict2Exp():
-                print("\nSequence waveforms loaded successfully")
+                print("Sequence waveforms loaded successfully")
                 pass
             else:
-                print("\nERROR: sequence waveforms out of hardware bounds")
+                print("ERROR: sequence waveforms out of hardware bounds")
                 return False
 
         # Run the experiment
         data_over = []  # To save oversampled data
         if not plotSeq:
             for scan in range(self.nScans):
-                print("\nScan %i running..." % (scan + 1))
+                print("Scan %i running..." % (scan + 1))
                 if not self.demo:
                     points_measured = 0
                     while points_measured != (points_to_measure * hw.oversamplingFactor):
@@ -340,7 +340,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
 #         self.addParameter(key='addRdPoints', string='addRdPoints', val=10, field='SEQ')
 #
 #     def sequenceInfo(self):
-#         print(" ")
+#         
 #         print("EDDYCURRENTS")
 #         print("Author: Dr. J.M. Algarín")
 #         print("Contact: josalggui@i3m.upv.es")
@@ -436,10 +436,10 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
 #         acqTimeReal = nReadout / BWreal  # us
 #         createSequence()
 #         if self.floDict2Exp():
-#             print("\nSequence waveforms loaded successfully")
+#             print("Sequence waveforms loaded successfully")
 #             pass
 #         else:
-#             print("\nERROR: sequence waveforms out of hardware bounds")
+#             print("ERROR: sequence waveforms out of hardware bounds")
 #             return False
 #
 #         if plotSeq == 0:

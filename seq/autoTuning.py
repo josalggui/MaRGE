@@ -78,7 +78,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.vna.connect()
 
     def sequenceInfo(self):
-        print("\nRF automatic impedance matching")
+        print("RF automatic impedance matching")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
@@ -97,11 +97,11 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.frequency = hw.larmorFreq+self.freqOffset*1e-6
 
         if self.arduino.device is None:
-            print("\nNo Arduino found for auto-tuning.")
+            print("No Arduino found for auto-tuning.")
             return False
 
         if self.vna.device is None:
-            print("\nNo nanoVNA found for auto-tuning.")
+            print("No nanoVNA found for auto-tuning. \n")
             print("Only test mode.")
             return False
 
@@ -110,7 +110,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         elif self.test == 'manual':
             return self.runManual()
         else:
-            print("\nIncorrect test mode.")
+            print("Incorrect test mode.")
             return False
 
     def sequenceAnalysis(self, mode=None):
@@ -278,7 +278,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.addValues(s11, self.series, self.tuning, self.matching, stateCs, stateCt, stateCm)
 
         # Print results
-        print("\nS11 = %0.1f dB" % s11_db)
+        print("S11 = %0.1f dB" % s11_db)
 
         # Save parameters to source sequence
         try:
@@ -313,7 +313,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             s11dB = 20 * np.log10(np.abs(s11))
             r = impedance.real
             x = impedance.imag
-            print("\nS11 = %0.2f dB" % s11dB)
+            print("S11 = %0.2f dB" % s11dB)
             print("R = %0.2f Ohms" % r)
             print("X = %0.2f Ohms" % x)
             self.arduino.send(self.series + self.tuning + self.matching + "1")
@@ -332,7 +332,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.n_aux[2].append(nm)
 
     def getCsZ(self, n0, stateCt, stateCm):
-        print("\nSeries sweep...")
+        print("Series sweep...")
         n = [n0]
 
         # First measurement
@@ -382,7 +382,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
     def getCtZ(self, stateCs, n0, stateCm):
         # Sweep tuning capacitances until resistance goes higher than 50 Ohms
-        print("\nTuning sweep...")
+        print("Tuning sweep...")
         n = [n0]
 
         # First measurement
@@ -423,7 +423,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         return stateCt
 
     def getCmZ(self, stateCs, stateCt, n0):
-        print("\nMatching sweep...")
+        print("Matching sweep...")
         n = [n0]
 
         # First measurement
@@ -465,7 +465,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         return stateCm
 
     def finalOptimization2D(self, stateCs, stateCt, stateCm):
-        print("\nOptimizing...")
+        print("Optimizing...")
         cs = stateCs
         ct_old = copy.copy(stateCt)
         ct_new = copy.copy(stateCt)
@@ -509,7 +509,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         return ct_new, cm_new
 
     def finalOptimization3D(self, stateCs, stateCt, stateCm):
-        print("\nOptimizing...")
+        print("Optimizing...")
         cs_old = copy.copy(stateCs)
         cs_new = copy.copy(stateCs)
         ct_old = copy.copy(stateCt)

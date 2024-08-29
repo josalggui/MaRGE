@@ -62,15 +62,15 @@ class Sequence:
 
     def __str__(self):
         s = "Sequence:"
-        s += "\nshape_library: " + str(self.shape_library)
-        s += "\nrf_library: " + str(self.rf_library)
-        s += "\ngrad_library: " + str(self.grad_library)
-        s += "\nadc_library: " + str(self.adc_library)
-        s += "\ndelay_library: " + str(self.delay_library)
-        s += "\nextensions_library: " + str(self.extensions_library)  # inserted for trigger support by mveldmann
-        s += "\nrf_raster_time: " + str(self.rf_raster_time)
-        s += "\ngrad_raster_time: " + str(self.grad_raster_time)
-        s += "\ndict_block_events: " + str(len(self.dict_block_events))
+        s += "shape_library: " + str(self.shape_library)
+        s += "rf_library: " + str(self.rf_library)
+        s += "grad_library: " + str(self.grad_library)
+        s += "adc_library: " + str(self.adc_library)
+        s += "delay_library: " + str(self.delay_library)
+        s += "extensions_library: " + str(self.extensions_library)  # inserted for trigger support by mveldmann
+        s += "rf_raster_time: " + str(self.rf_raster_time)
+        s += "grad_raster_time: " + str(self.grad_raster_time)
+        s += "dict_block_events: " + str(len(self.dict_block_events))
         return s
 
     def add_block(self, *args: SimpleNamespace) -> None:

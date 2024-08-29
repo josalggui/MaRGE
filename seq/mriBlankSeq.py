@@ -192,11 +192,11 @@ class MRIBLANKSEQ:
         return out, tips
 
     def sequenceInfo(self):
-        print("\nsequenceInfo method is empty."
+        print("sequenceInfo method is empty."
               "It is recommended to overide this method into your sequence.")
 
     def sequenceTime(self):
-        rint("\nsequenceTime method is empty."
+        rint("sequenceTime method is empty."
              "It is recommended to overide this method into your sequence.")
         return 0
 
@@ -1241,10 +1241,10 @@ class MRIBLANKSEQ:
             item = self.flo_dict[key]
             dt = item[0][1::] - item[0][0:-1]
             if (dt <= 0).any():
-                print("\n%s timing error" % key)
+                print("%s timing error" % key)
                 return False
             if (item[1] > 1).any() or (item[1] < -1).any():
-                print("\n%s amplitude error" % key)
+                print("%s amplitude error" % key)
                 return False
 
         # Add instructions to server

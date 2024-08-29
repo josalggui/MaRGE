@@ -77,13 +77,13 @@ class Opts:
 
     def __str__(self):
         s = "System limits:"
-        s += "\nmax_grad: " + str(self.max_grad) + str(self.grad_unit)
-        s += "\nmax_slew: " + str(self.max_slew) + str(self.slew_unit)
-        s += "\nrise_time: " + str(self.rise_time)
-        s += "\nrf_dead_time: " + str(self.rf_dead_time)
-        s += "\nrf_ring_time: " + str(self.rf_ringdown_time)
-        s += "\nadc_dead_time: " + str(self.adc_dead_time)
-        s += "\nrf_raster_time: " + str(self.rf_raster_time)
-        s += "\ngrad_raster_time: " + str(self.grad_raster_time)
-        s += "\ngamma: " + str(self.gamma)
+        s += "max_grad: " + str(self.max_grad) + str(self.grad_unit)
+        s += "max_slew: " + str(self.max_slew) + str(self.slew_unit)
+        s += "rise_time: " + str(self.rise_time)
+        s += "rf_dead_time: " + str(self.rf_dead_time)
+        s += "rf_ring_time: " + str(self.rf_ringdown_time)
+        s += "adc_dead_time: " + str(self.adc_dead_time)
+        s += "rf_raster_time: " + str(self.rf_raster_time)
+        s += "grad_raster_time: " + str(self.grad_raster_time)
+        s += "gamma: " + str(self.gamma)
         return s

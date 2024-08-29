@@ -86,7 +86,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
 
 
     def sequenceInfo(self):
-        print("\n3D GRE sequence")
+        print("3D GRE sequence")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain \n")
@@ -357,10 +357,10 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             # Save instructions into MaRCoS if not a demo
             if not self.demo:
                 if self.floDict2Exp(rewrite=n_batches == 1):
-                    print("\nSequence waveforms loaded successfully")
+                    print("Sequence waveforms loaded successfully")
                     pass
                 else:
-                    print("\nERROR: sequence waveforms out of hardware bounds")
+                    print("ERROR: sequence waveforms out of hardware bounds")
                     return False
             
             repe_index_array = np.concatenate((repe_index_array, np.array([repe_index_global-1])), axis=0)
@@ -369,7 +369,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             # Execute current batch nScans times
             for ii in range(self.nScans):
                 if not plotSeq:
-                    print("\nBatch %i, scan %i running..." % (n_batches, ii+1))
+                    print("Batch %i, scan %i running..." % (n_batches, ii+1))
                     if not self.demo:
                         acq_points = 0
                         while acq_points != (aa * hw.oversamplingFactor):

@@ -74,7 +74,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfMode', string='RF mode', val=3, field='OTH', tip='0: CPMG. 1: APCP. 2:APCPMG. 3:CP')
 
     def sequenceInfo(self):
-        print("\n3D MSE sequence")
+        print("3D MSE sequence")
         print("Author: Dr. J.M. Algarín")
         print("Author: Teresa Guallart Naval")
         print("Contact: tguanav@i3m.upv.es")
@@ -434,10 +434,10 @@ class MSE(blankSeq.MRIBLANKSEQ):
             # Save instructions into MaRCoS if not a demo
             if not self.demo:
                 if self.floDict2Exp(rewrite=nBatches==1):
-                    print("\nSequence waveforms loaded successfully")
+                    print("Sequence waveforms loaded successfully")
                     pass
                 else:
-                    print("\nERROR: sequence waveforms out of hardware bounds")
+                    print("ERROR: sequence waveforms out of hardware bounds")
                     return False
 
             repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
@@ -445,7 +445,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
 
             if not plotSeq:
                 for ii in range(self.nScans):
-                    print("\nBatch %i, scan %i running..." % (nBatches, ii+1))
+                    print("Batch %i, scan %i running..." % (nBatches, ii+1))
                     if not self.demo:
                         acq_points = 0
                         while acq_points != (aa * hw.oversamplingFactor):

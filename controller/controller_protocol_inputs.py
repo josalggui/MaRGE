@@ -86,7 +86,7 @@ class ProtocolInputsController(ProtocolInputsWidget):
         path = "protocols/%s/%s" % (protocol, file)
         os.remove(path)
         self.updateProtocolInputs()
-        print("\nProtocol removed")
+        print("Protocol removed")
 
     def sequenceDoubleClicked(self, item):
         """
@@ -274,4 +274,4 @@ class ProtocolInputsController(ProtocolInputsWidget):
                     seq.mapVals[key] = inputNum
 
         self.main.sequence_list.updateSequence()
-        print("\nParameters of %s sequence loaded" % file_name)
+        print("Parameters of %s sequence loaded" % file_name)

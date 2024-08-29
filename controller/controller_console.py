@@ -4,7 +4,7 @@
 :affiliation: MRILab, i3M, CSIC, Valencia, Spain
 
 """
-
+import datetime
 import sys
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from widgets.widget_console import ConsoleWidget
@@ -35,7 +35,32 @@ class ConsoleController(ConsoleWidget):
     def write_console(self, text):
         cursor = self.console.textCursor()
         cursor.movePosition(cursor.End)
-        cursor.insertText(text)
+
+        # Get the current time and format it
+        current_time = datetime.datetime.now().strftime("%H:%M:%S")
+        current_time = "<b>" + current_time + "</b>"
+
+        # Give format to the text
+        if "ERROR" in text:
+            text = f'<span style="color:red;"><b>ERROR</b></span>{text[5:]}'
+
+        if "WARNING" in text:
+            text = f'<span style="color:orange;"><b>ERROR</b></span>{text[7:]}'
+
+        # Prepend the time to the text
+        if text == "\n":
+            formatted_text = text
+        else:
+            formatted_text = f"{current_time} - {text}"
+
+        # Check if the text contains a marker for bold formatting
+        if "<b>" in formatted_text and "</b>" in formatted_text:
+            # Insert the text as HTML to allow formatting
+            cursor.insertHtml(formatted_text)
+        else:
+            # Insert plain text
+            cursor.insertText(formatted_text)
+
         self.console.setTextCursor(cursor)
         self.console.ensureCursorVisible()
 

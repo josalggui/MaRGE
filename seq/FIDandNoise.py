@@ -30,7 +30,7 @@ class FIDandNoise(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='shimmingTime', string='Shimming time (ms)', val=1, field='OTH')
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("FIDandNoise")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
@@ -96,10 +96,10 @@ class FIDandNoise(blankSeq.MRIBLANKSEQ):
         self.mapVals['bw'] = bw # MHz
         createSequence()
         if self.floDict2Exp():
-            print("\nSequence waveforms loaded successfully")
+            print("Sequence waveforms loaded successfully")
             pass
         else:
-            print("\nERROR: sequence waveforms out of hardware bounds")
+            print("ERROR: sequence waveforms out of hardware bounds")
             return False
 
         if plotSeq == 0:

@@ -57,13 +57,13 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='shimming', string='Shimming', val=[-12.5, -12.5, 7.5], field='OTH', units=units.sh)
 
     def sequenceInfo(self):
-        print(" ")
+        
         print("Larmor")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
         print("This sequence runs a single spin echo to find larmor")
-        print(" ")
+        
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
@@ -141,17 +141,17 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         # Create the sequence and add instructions to the experiment
         acq_points = createSequence()
         if self.floDict2Exp(demo=self.demo):
-            print("\nSequence waveforms loaded successfully")
+            print("Sequence waveforms loaded successfully")
             pass
         else:
-            print("\nERROR: sequence waveforms out of hardware bounds")
+            print("ERROR: sequence waveforms out of hardware bounds")
             return False
 
         # Run the experiment
         data_over = []  # To save oversampled data
         if not plotSeq:
             for scan in range(self.nScans):
-                print("\nScan %i running..." % (scan + 1))
+                print("Scan %i running..." % (scan + 1))
                 if not self.demo:
                     rxd, msgs = self.expt.run()
                 else:
