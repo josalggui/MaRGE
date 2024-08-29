@@ -181,7 +181,7 @@ class TSE(blankSeq.MRIBLANKSEQ):
         fitting1 = func1(t2_vector,
                          fitData1[0], fitData1[1])
         corr_coef1 = np.corrcoef(np.abs(data), fitting1)
-        print('\nFor one component:')
+        print('For one component:')
         print('rho:', round(fitData1[0], 1))
         print('T2 (ms):', round(fitData1[1], 1), ' ms')
         print('Correlation: %0.3f' % corr_coef1[0, 1])

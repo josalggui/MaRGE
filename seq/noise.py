@@ -124,7 +124,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.mapVals['RMS noise'] = noiserms
         self.mapVals['sampledPoint'] = noiserms # for sweep method
         noiserms = noiserms*1e3
-        print('\nrms noise: %0.5f uV' % noiserms)
+        print('rms noise: %0.5f uV' % noiserms)
         bw = self.mapVals['bw']*1e3 # Hz
         johnson = np.sqrt(2 * 50 * hw.temperature * bw * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e6  # uV
         print('Expected by Johnson: %0.5f uV' % johnson)

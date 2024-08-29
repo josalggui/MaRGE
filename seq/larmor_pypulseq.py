@@ -221,7 +221,7 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         idf = np.argmax(np.abs(spectrum))
         fCentral = fVector[idf] * 1e-3  # MHz
         hw.larmorFreq = self.mapVals['larmorFreq'] + fCentral
-        print('\nLarmor frequency: %1.5f MHz' % hw.larmorFreq)
+        print('Larmor frequency: %1.5f MHz' % hw.larmorFreq)
         self.mapVals['larmorFreq'] = hw.larmorFreq
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]

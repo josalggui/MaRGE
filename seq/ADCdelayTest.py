@@ -131,7 +131,7 @@ class ADCdelayTest(blankSeq.MRIBLANKSEQ):
                     m = (y2-y1)/(x2-x1)
                     t0 = -y1/m+x1
                     self.mapVals['sampledPoint'] = t0
-                    print('\n0 mV crossing time: %0.0f ms' % (self.mapVals['sampledPoint']))
+                    print('0 mV crossing time: %0.0f ms' % (self.mapVals['sampledPoint']))
                 ii += 1
         self.expt.__del__()
 

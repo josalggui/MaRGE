@@ -474,7 +474,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
 
         if not plotSeq:
             acqPointsPerBatch= (np.array(acqPointsPerBatch)-self.etl*nRD*(self.dummyPulses>0)-nRD)*self.nScans
-            print('\nScans ready!')
+            print('Scans ready!')
             self.mapVals['noiseData'] = noise
             self.mapVals['overData'] = overData
 
@@ -909,7 +909,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         res2 = linregress(rd_2, phase2)
 
         # Print info
-        print('\nInfo from dummy pulses')
+        print('Info from dummy pulses')
         print('Phase difference at iso-center: %0.1f º' % ((res2.intercept - res1.intercept) * 180 / np.pi))
         print('Phase slope difference %0.3f rads/m' % (res2.slope - res1.slope))
         

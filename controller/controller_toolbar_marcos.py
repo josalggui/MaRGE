@@ -73,8 +73,6 @@ class MarcosController(MarcosToolBar):
                     print("ERROR: No communication with SDRLab.")
                     print("ERROR: Try manually.")
 
-
-
     @staticmethod
     def get_sdrlab_ip():
         print("Searching for SDRLabs...")

@@ -266,7 +266,7 @@ class PETRAphysio(blankSeq.MRIBLANKSEQ):
             return()
 
         # RADIAL ACQUISITION
-        print('\nRunning...')
+        print('Running...')
         if self.enableRadial == 1:
             self.expt = ex.Experiment(lo_freq=self.larmorFreq, rx_t=self.samplingPeriod, init_gpa=False)
             createSequence(self.radialGradients, 'Radial')
@@ -345,7 +345,7 @@ class PETRAphysio(blankSeq.MRIBLANKSEQ):
         self.mode = mode
 
         # REGRIDDING
-        print('\nRegridding...')
+        print('Regridding...')
         self.kAcquired4D = self.mapVals['kAcquired4D']
         kSpaceInterReal = griddata(self.kAcquired4D[:, 0:3], np.real(self.kAcquired4D[:, 3]), self.kCartesianFull,
                                    method='linear', fill_value=0, rescale=False)
