@@ -45,7 +45,7 @@ class Arduino:
                 arduino_port = port.device
 
         if arduino_port is None:
-            print("No Arduino found for " + self.name)
+            print("WARNING: No Arduino found for " + self.name)
             return False
         else:
             return arduino_port

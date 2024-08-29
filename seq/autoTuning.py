@@ -97,7 +97,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.frequency = hw.larmorFreq+self.freqOffset*1e-6
 
         if self.arduino.device is None:
-            print("No Arduino found for auto-tuning.")
+            print("WARNING: No Arduino found for auto-tuning.")
             return False
 
         if self.vna.device is None:

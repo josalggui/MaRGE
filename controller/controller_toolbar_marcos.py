@@ -100,12 +100,12 @@ class MarcosController(MarcosToolBar):
                     if ssh_result.returncode == 0:  # SSH was successful
                         ip_addresses.append(ip)
                     else:
-                        print(f"No SDRLab found at ip {ip}.")
+                        print(f"WARNING: No SDRLab found at ip {ip}.")
             except:
                 pass
 
         for ip in ip_addresses:
-            print("SDRLab found at IP " + ip)
+            print("READY: SDRLab found at IP " + ip)
 
         return ip_addresses
 
@@ -121,7 +121,7 @@ class MarcosController(MarcosToolBar):
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 subprocess.run([hw.bash_path, "--", "./startRP.sh", hw.rp_ip_address, hw.rp_version])
                 self.initgpa()
-                print("MaRCoS updated, server connected, gpa initialized.")
+                print("READY: MaRCoS updated, server connected, gpa initialized.")
             except:
                 print("ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
         else:
@@ -142,26 +142,26 @@ class MarcosController(MarcosToolBar):
                 self.action_server.setToolTip('Connect to marcos server')
                 print("Server disconnected")
             else:
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                time.sleep(1.5)
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
-                time.sleep(1.5)
-                self.action_server.setStatusTip('Kill marcos server')
-                self.action_server.setToolTip('Kill marcos server')
-
-                # Run tiny sequence to check connection to the server
                 try:
+                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                    time.sleep(1.5)
+                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
+                    time.sleep(1.5)
+                    self.action_server.setStatusTip('Kill marcos server')
+                    self.action_server.setToolTip('Kill marcos server')
+
                     expt = ex.Experiment(init_gpa=False)
                     expt.add_flodict({
                         'grad_vx': (np.array([100]), np.array([0])),
                     })
                     expt.run()
                     expt.__del__()
-                    print("Server connected!")
+                    print("READY: Server connected!")
+
                 except Exception as e:
-                    print("Server not connected!")
-                    print("Try to connect to the server again.")
-                    print("Error details:", e)
+                    print("ERROR: Server not connected!")
+                    print("ERROR: Try to connect to the server again.")
+                    print(e)
         else:
             print("This is a demo\n")
 
@@ -175,10 +175,10 @@ class MarcosController(MarcosToolBar):
             try:
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', hw.rp_ip_address, 'rp-122'], timeout=10)
-                print("MaRCoS updated")
+                print("READY: MaRCoS updated")
             except subprocess.TimeoutExpired as e:
-                print("Timeout error.")
-                print("Error details:", e)
+                print("ERROR: MaRCoS init timeout")
+                print(e)
         else:
             print("This is a demo\n.")
         self.action_server.setChecked(False)
@@ -196,30 +196,30 @@ class MarcosController(MarcosToolBar):
                         # Check if GPA available
                         received_string = self.arduino.send("GPA_VERB 1;").decode()
                         if received_string[0:4] != ">OK;":
-                            print("GPA not available.")
+                            print("WARNING: GPA not available.")
                         else:
-                            print("GPA available.")
+                            print("READY: GPA available.")
 
                         # Remote communication with GPA
                         received_string = self.arduino.send("GPA_SPC:CTL 1;").decode()  # Activate remote control
                         if received_string[0:4] != ">OK;":  # If wrong response
-                            print("Error enabling GPA remote control.")
+                            print("WARNING: Error enabling GPA remote control.")
                         else:  # If good response
-                            print("GPA remote communication succeed.")
+                            print("READY: GPA remote communication succeed.")
 
                         # Check if RFPA available
                         received_string = self.arduino.send("RFPA_VERB 1;").decode()
                         if received_string[0:4] != ">OK;":
-                            print("RFPA not available.")
+                            print("WARNING: RFPA not available.")
                         else:
-                            print("RFPA available.")
+                            print("READY: RFPA available.")
 
                         # Remote communication with RFPA
                         received_string = self.arduino.send("RFPA_SPC:CTL 1;").decode()
                         if received_string[0:4] != ">OK;":
-                            print("Error enabling RFPA remote control.")
+                            print("WARNING: Error enabling RFPA remote control.")
                         else:
-                            print("RFPA remote communication succeed.")
+                            print("READY: RFPA remote communication succeed.")
 
                         # Disable power module
                         self.arduino.send("GPA_ON 0;")
@@ -233,26 +233,26 @@ class MarcosController(MarcosToolBar):
                         expt.run()
                         expt.__del__()
                         link = True
-                        print("GPA init done!")
+                        print("READY: GPA init done!")
 
                         # Enable power modules
                         # Enable GPA module
                         received_string = self.arduino.send("GPA_ON 1;").decode()  # Enable power module
                         if received_string[0:4] != ">OK;":  # If wrong response
-                            print("Error activating GPA power module.")
+                            print("WARNING: Error activating GPA power module.")
                         else:  # If good reponse
-                            print("GPA power enabled.")
+                            print("READY: GPA power enabled.")
 
                         # Enable RFPA module
                         received_string = self.arduino.send("RFPA_RF 1;").decode()
                         if received_string[0:4] != ">OK;":
-                            print("Error activating RFPA power module.")
+                            print("WARNING: Error activating RFPA power module.")
                         else:
-                            print("RFPA power enabled.")
+                            print("READY: RFPA power enabled.")
 
                     except:
                         link = False
                         time.sleep(1)
         else:
-            print("No connection to the server")
+            print("ERROR: No connection to the server")
             print("Please, connect to MaRCoS server first")
