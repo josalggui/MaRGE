@@ -53,31 +53,69 @@ class FixGain(larmor.Larmor):
         repetitionTime = self.mapVals['repetitionTime'] * 1e-3
         return (repetitionTime * nScans / 60)  # minutes, scanTime
 
+    def sequenceRun(self, plotSeq=0, demo=False, standalone=False):
+        if self.mode == 'MANUAL':
+            if hw.rf_min_gain > self.mapVals['gain'] or hw.rf_max_gain < self.mapVals['gain']:
+                print("\nERROR: Gain must be between %i and %i dB" % (hw.rf_min_gain, hw.rf_max_gain))
+                return False
+            else:
+                return True
+        elif self.mode == 'AUTO':
+            return super().sequenceRun(plotSeq=plotSeq, demo=demo, standalone=standalone)
+        else:
+            print("\nERROR: Mode must be AUTO or MANUAL")
+            return False
+
     def sequenceAnalysis(self, mode=None, save=True):
-        super().sequenceAnalysis(mode=mode, save=False)
+        if self.mode == 'MANUAL':
+            gain_binary = bin(self.mapVals['gain'] - hw.rf_min_gain)[2:].zfill(5)
+            self.arduino.send("1" + gain_binary)
+            print("\nRF gain: %i dB" % self.mapVals['gain'])
 
-        # Get echo amplitude
-        data = self.mapVals['data']
-        echo_amplitude = np.max(np.abs(data))
+            # save data once self.output is created
+            self.saveRawData()
 
-        # Get desired amplification
-        desired_gain = 0.9 * hw.rp_max_input_voltage / echo_amplitude
-        desired_gain = int(20 * np.log10(desired_gain))
+            return []
 
-        # Set gain
-        self.mapVals['gain'] += desired_gain
-        gain_binary = bin(self.mapVals['gain'] - hw.rf_min_gain)[2:].zfill(5)
-        self.arduino.send("1" + gain_binary)
-        print("\nRF gain: %i dB" % self.mapVals['gain'])
-        hw.lnaGain = self.mapVals['gain']
+        elif self.mode == 'AUTO':
+            super().sequenceAnalysis(mode=mode, save=False)
 
-        # save data once self.output is created
-        self.saveRawData()
+            # Get echo amplitude
+            data = self.mapVals['data']
+            echo_amplitude = np.max(np.abs(data))
 
-        if self.mode == 'Standalone':
-            self.plotResults()
+            # Get desired gain
+            desired_gain = 0.9 * hw.rp_max_input_voltage / echo_amplitude
+            desired_gain = int(20 * np.log10(desired_gain))
+            self.mapVals['gain'] += desired_gain
+            if self.mapVals['gain'] > hw.rf_max_gain:
+                print("\nWARNING: Required gain larger than maximum gain.")
+                print("\nGain will be set to maximum gain.")
+                self.mapVals['gain'] = hw.rf_max_gain
+            elif self.mapVals['gain'] < hw.rf_min_gain:
+                print("\nWARNING: Required gain smaller than minimum gain.")
+                print("\nGain will be set to minimum gain.")
+                self.mapVals['gain'] = hw.rf_min_gain
 
-        return self.output
+            # Set gain
+            gain_binary = bin(self.mapVals['gain'] - hw.rf_min_gain)[2:].zfill(5)
+            self.arduino.send("1" + gain_binary)
+            print("\nRF gain: %i dB" % self.mapVals['gain'])
+            hw.lnaGain = self.mapVals['gain']
+
+            # save data once self.output is created
+            self.saveRawData()
+
+            if self.mode == 'Standalone':
+                self.plotResults()
+
+            return self.output
+
+        else:
+            # save data once self.output is created
+            self.saveRawData()
+
+            return []
 
 if __name__ == '__main__':
     seq = FixGain()
