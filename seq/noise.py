@@ -64,6 +64,8 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.bw *= 1e-6  # MHz
         self.repetitionTime *= 1e6  # us
 
+        self.mapVals['larmorFreq'] = hw.larmorFreq
+
         if self.demo:
             dataR = np.random.randn((self.nPoints + 2 * hw.addRdPoints) * hw.oversamplingFactor)
             dataC = np.random.randn((self.nPoints + 2 * hw.addRdPoints) * hw.oversamplingFactor)
