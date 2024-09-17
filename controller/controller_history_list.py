@@ -20,6 +20,7 @@ from seq.sequences import defaultsequences
 from widgets.widget_history_list import HistoryListWidget
 from manager.dicommanager import DICOMImage
 import numpy as np
+import configs.hw_config as hw
 
 
 class HistoryListController(HistoryListWidget):
@@ -177,7 +178,7 @@ class HistoryListController(HistoryListWidget):
                 label.setText(self.labels[n])
                 self.main.figures_layout.addWidget(label, row=1, col=col)
                 self.main.figures_layout.addWidget(image, row=2, col=col)
-                self.main.figures_layout.addWidget(sub_label, row=0, col=0, colspan=col+1)
+                self.main.figures_layout.addWidget(sub_label, row=0, col=0, colspan=col + 1)
             except:
                 pass
             n += 1
@@ -325,11 +326,19 @@ class HistoryListController(HistoryListWidget):
                     seq_name = self.pending_inputs[key][1][0]
                     sequence = copy.copy(defaultsequences[seq_name])
 
-                    # Modify input parameters of the sequence
+                    # Modify input parameters of the sequence according to current item
                     n = 0
                     for keyParam in sequence.mapKeys:
                         sequence.mapVals[keyParam] = self.pending_inputs[key][1][n]
                         n += 1
+
+                    # Specific tasks for calibration
+                    if "Calibration" in key:
+                        if seq_name == 'Larmor':
+                            sequence.mapVals['larmorFreq'] = hw.larmorFreq
+                            sequence.mapVals['shimming'] = defaultsequences['Shimming'].mapVals['shimming0']
+                        if seq_name == 'RabiFlops':
+                            sequence.mapVals['shimming'] = defaultsequences['Shimming'].mapVals['shimming0']
 
                     # Run the sequence
                     key_index = keys.index(key)
@@ -542,7 +551,7 @@ class HistoryListControllerPos(HistoryListWidget):
                 label = QLabel(self.labels[n])
                 label.setAlignment(QtCore.Qt.AlignCenter)
                 label.setStyleSheet("background-color: black;color: white")
-                self.main.image_view_widget.addWidget(label, row=2*(idx//4)+1, col=idx%4)
+                self.main.image_view_widget.addWidget(label, row=2 * (idx // 4) + 1, col=idx % 4)
 
                 # Figure
                 image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(self.figures[n],
@@ -552,9 +561,9 @@ class HistoryListControllerPos(HistoryListWidget):
                                        x_label=x_label,
                                        y_label=y_label,
                                        title=title)
-                self.main.image_view_widget.addWidget(image, row=2*(idx//4)+2, col=idx%4)
+                self.main.image_view_widget.addWidget(image, row=2 * (idx // 4) + 2, col=idx % 4)
 
-                ncol = np.max([ncol, idx%4+1])
+                ncol = np.max([ncol, idx % 4 + 1])
                 self.main.image_view_widget.addWidget(sub_label, row=0, col=0, colspan=ncol)
             except:
                 pass
@@ -581,7 +590,6 @@ class HistoryListControllerPos(HistoryListWidget):
             operations.append(operation)
             self.operations_hist[self.image_key] = operations
         self.main.image_view_widget.image_key = self.image_key
-
 
         # Update the space dictionary
         self.space[self.image_key] = space
@@ -731,7 +739,7 @@ class HistoryListControllerPos(HistoryListWidget):
 
         if selected_item.text() in self.image_hist:
             del self.image_hist[selected_item.text()]
-            
+
         if selected_item.text() in self.operations_hist:
             del self.operations_hist[selected_item.text()]
 
