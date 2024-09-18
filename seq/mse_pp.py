@@ -74,7 +74,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[25.6, 19.2, 12.8], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
                           tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 30, 20], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 30, 40], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=10, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM',
@@ -110,10 +110,12 @@ class MSE(blankSeq.MRIBLANKSEQ):
         init_gpa = False
         self.demo = demo
 
-        # Set the fov
+        # Get Parameters
         self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
+        resolution = self.fov / self.nPoints
+        self.mapVals['resolution'] = resolution
         fov_mm = self.fov * 1e3
         nRD, nPH, nSL = self.nPoints  # this is actually nRd, nPh and nSl, axes given by axesOrientation
         n_echo = self.etl
@@ -128,9 +130,10 @@ class MSE(blankSeq.MRIBLANKSEQ):
             return 0
         nRD_pre = hw.addRdPoints
         nRD_post = hw.addRdPoints
+        self.mapVals['addRdPoints'] = hw.addRdPoints
         n_rd_points_per_train = n_echo * (nRD + nRD_post + nRD_pre)
-        n_rd_points_total = nRD * nPH * nSL * n_echo
         os = hw.oversamplingFactor
+        self.mapVals['oversamplingFactor'] = os
         t_ex = self.rfExTime
         t_ref = self.rfReTime
         fsp_r = 1  # Not sure about what this parameter does.
@@ -373,6 +376,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
 
         # Create the sequences
         waveforms, n_readouts = createSequences()
+        self.mapVals['n_readouts'] = list(n_readouts.values())
+        self.mapVals['n_batches'] = len(n_readouts.values())
 
         # Execute the sequences
         data_over = []  # To save oversampled data
@@ -392,7 +397,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             # Run the experiment or plot the sequence
             if not plotSeq:
                 for scan in range(self.nScans):
-                    print("Scan %i running..." % (scan + 1))
+                    print("Scan %i, batch %s/%i running..." % ((scan + 1), seq_num[-1], len(n_readouts.values())))
                     acq_points = 0
                     while acq_points != n_readouts[seq_num] * hw.oversamplingFactor:
                         if not self.demo:
@@ -425,11 +430,104 @@ class MSE(blankSeq.MRIBLANKSEQ):
     def sequenceAnalysis(self, mode=None):
         self.mode = mode
 
-        self.output = []
-        self.saveRawData()
+        # Get data
+        data_full = self.mapVals['data_full']
+        nRD, nPH, nSL = self.nPoints
+        nRD = nRD + 2 * hw.addRdPoints
+        n_batches = self.mapVals['n_batches']
+
+        # Reorganize data_full
+        data_prov = np.zeros([self.nScans, nRD * nPH * nSL * self.etl], dtype=complex)
+        if n_batches > 1:
+            n_rds = self.mapVals['n_readouts']
+            data_full_a = data_full[0:sum(n_rds[0:-1])]
+            data_full_b = data_full[sum(n_rds[0:-1]):]
+            data_full_a = np.reshape(data_full_a, newshape=(n_batches - 1, self.nScans, -1, nRD))
+            data_full_b = np.reshape(data_full_b, newshape=(1, self.nScans, -1, nRD))
+            for scan in range(self.nScans):
+                data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
+                data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
+                data_prov[scan, :] = np.concatenate((data_scan_a, data_scan_b), axis=0)
+        else:
+            data_full = np.reshape(data_full, (1, self.nScans, -1, nRD))
+            for scan in range(self.nScans):
+                data_prov[scan, :] = np.reshape(data_full[:, scan, :, :], -1)
+        data_full = np.reshape(data_prov, -1)
+
+        # Average data
+        data_full = np.reshape(data_full, newshape=(self.nScans, -1))
+        data = np.average(data_full, axis=0)
+        self.mapVals['data'] = data
+
+        # Generate different k-space data
+        data_ind = np.zeros(shape=(self.etl, nSL, nPH, nRD), dtype=complex)
+        data = np.reshape(data, newshape=(nSL, nPH, self.etl, nRD))
+        for echo in range(self.etl):
+            data_ind[echo] = data[:, :, echo, :]
+
+        # Remove added data in readout direction
+        data_ind = data_ind[:, :, :, hw.addRdPoints: nRD - hw.addRdPoints]
+        self.mapVals['kSpace'] = data_ind
+
+        # Get images
+        image_ind = np.zeros_like(data_ind)
+        for echo in range(self.etl):
+            image_ind[echo] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data_ind[echo])))
+        self.mapVals['iSpace'] = image_ind
+
+        # Prepare data to plot (plot central slice)
+        axes_dict = {'x': 0, 'y': 1, 'z': 2}
+        axes_keys = list(axes_dict.keys())
+        axes_vals = list(axes_dict.values())
+        axes_str = ['', '', '']
+        n = 0
+        for val in self.axesOrientation:
+            index = axes_vals.index(val)
+            axes_str[n] = axes_keys[index]
+            n += 1
+
+        # Normalize image
+        image = np.abs(image_ind[:, int(nSL/2), :, :])
+        image = image / np.max(image) * 100
+
+        # Set labels
+        x_label = "%s axis" % axes_str[1]
+        y_label = "%s axis" % axes_str[0]
+        title = "Image"
+
+        result1 = {'widget': 'image',
+                   'data': image,
+                   'xLabel': x_label,
+                   'yLabel': y_label,
+                   'title': title,
+                   'row': 0,
+                   'col': 0}
+
+        # Dicom tags
+        image_DICOM = np.transpose(image, (0, 2, 1))
+        slices, rows, columns = image_DICOM.shape
+        self.meta_data["Columns"] = columns
+        self.meta_data["Rows"] = rows
+        self.meta_data["NumberOfSlices"] = slices
+        self.meta_data["NumberOfFrames"] = slices
+        img_full_abs = np.abs(image_DICOM) * (2 ** 15 - 1) / np.amax(np.abs(image_DICOM))
+        img_full_int = np.int16(np.abs(img_full_abs))
+        img_full_int = np.reshape(img_full_int, newshape=(slices, rows, columns))
+        arr = img_full_int
+        self.meta_data["PixelData"] = arr.tobytes()
+        self.meta_data["WindowWidth"] = 26373
+        self.meta_data["WindowCenter"] = 13194
+        self.meta_data["ImageOrientationPatient"] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+        resolution = self.mapVals['resolution'] * 1e3
+        self.meta_data["PixelSpacing"] = [resolution[0], resolution[1]]
+        self.meta_data["SliceThickness"] = resolution[2]
+        # Sequence parameters
+        self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
+        self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
+        self.meta_data["EchoTrainLength"] = self.mapVals['etl']
 
         # create self.out to run in iterative mode
-        self.output = []
+        self.output = [result1]
 
         # save data once self.output is created
         self.saveRawData()
@@ -447,6 +545,6 @@ if __name__ == "__main__":
 
     seq = MSE()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
     # seq.sequencePlot(standalone=True)
-    # seq.sequenceAnalysis(mode='Standalone')
+    seq.sequenceAnalysis(mode='Standalone')
