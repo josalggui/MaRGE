@@ -82,9 +82,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM',
                           tip="0=x, 1=y, 2=z")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=5.0, units=units.ms, field='OTH')
-        self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
-        self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
-        self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ',
                           tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
@@ -187,7 +184,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             ro_flattop_add = (self.rdGradTime - self.acqTime) / 2
         else:
             print("ERROR: readout gradient time must be longer than acquisition time.")
-            return 0
+            return False
         nRD_pre = hw.addRdPoints
         nRD_post = hw.addRdPoints
         self.mapVals['addRdPoints'] = hw.addRdPoints
@@ -649,10 +646,59 @@ class MSE(blankSeq.MRIBLANKSEQ):
         image = np.abs(image_ind[:, int(nSL / 2), :, :])
         image = image / np.max(image) * 100
 
-        # Set labels
-        x_label = "%s axis" % axes_str[1]
-        y_label = "%s axis" % axes_str[0]
-        title = "Image"
+        imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+        if not self.unlock_orientation:  # Image orientation
+            if self.axesOrientation[2] == 2:  # Sagittal
+                title = "Sagittal"
+                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  # OK
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    x_label = "(-Y) A | PHASE | P (+Y)"
+                    y_label = "(-X) I | READOUT | S (+X)"
+                    imageOrientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+                else:
+                    image = np.transpose(image, (0, 2, 1))
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    x_label = "(-Y) A | READOUT | P (+Y)"
+                    y_label = "(-X) I | PHASE | S (+X)"
+                    imageOrientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+            elif self.axesOrientation[2] == 1:  # Coronal
+                title = "Coronal"
+                if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2:  # OK
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    image = np.flip(image, axis=0)
+                    x_label = "(+Z) R | PHASE | L (-Z)"
+                    y_label = "(-X) I | READOUT | S (+X)"
+                    imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
+                else:
+                    image = np.transpose(image, (0, 2, 1))
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    image = np.flip(image, axis=0)
+                    x_label = "(+Z) R | READOUT | L (-Z)"
+                    y_label = "(-X) I | PHASE | S (+X)"
+                    imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
+            elif self.axesOrientation[2] == 0:  # Transversal
+                title = "Transversal"
+                if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    x_label = "(+Z) R | PHASE | L (-Z)"
+                    y_label = "(+Y) P | READOUT | A (-Y)"
+                    imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+                else:  # OK
+                    image = np.transpose(image, (0, 2, 1))
+                    image = np.flip(image, axis=2)
+                    image = np.flip(image, axis=1)
+                    x_label = "(+Z) R | READOUT | L (-Z)"
+                    y_label = "(+Y) P | PHASE | A (-Y)"
+                    imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+        else:
+            x_label = "%s axis" % axes_str[1]
+            y_label = "%s axis" % axes_str[0]
+            title = "Image"
 
         result1 = {'widget': 'image',
                    'data': image,
@@ -676,7 +722,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.meta_data["PixelData"] = arr.tobytes()
         self.meta_data["WindowWidth"] = 26373
         self.meta_data["WindowCenter"] = 13194
-        self.meta_data["ImageOrientationPatient"] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+        self.meta_data["ImageOrientationPatient"] = imageOrientation_dicom
         resolution = self.mapVals['resolution'] * 1e3
         self.meta_data["PixelSpacing"] = [resolution[0], resolution[1]]
         self.meta_data["SliceThickness"] = resolution[2]
