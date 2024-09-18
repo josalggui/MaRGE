@@ -108,6 +108,64 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plotSeq=0, demo=False, standalone=False):
+        """
+        Runs a multi-spin echo (MSE) sequence using PyPulseq to control the pulse sequence timing and hardware settings.
+
+        This method initiates the running of an MSE sequence, handling various hardware and sequence parameters such as
+        field of view (FOV), resolution, readout gradients, and timing. It prepares and configures the experiment for data
+        acquisition, creates pulse sequence batches, and can either run the experiment or plot the sequence.
+
+        Parameters
+        ----------
+        plotSeq : int, optional
+            If set to 1, the sequence will be plotted instead of executed. Defaults to 0.
+
+        demo : bool, optional
+            If True, the method will simulate the sequence execution in demo mode without actual hardware. Defaults to False.
+
+        standalone : bool, optional
+            If True, the method will run in standalone mode and plot the sequence. Defaults to False.
+
+        Key Parameters Used
+        -------------------
+        - `self.fov`: Field of view (FOV) for the imaging sequence (X, Y, Z).
+        - `self.nPoints`: Number of readout points in each direction (RD, PH, SL).
+        - `self.etl`: Echo train length (number of echoes in the sequence).
+        - `self.echoSpacing`: Time between echoes (TE).
+        - `self.repetitionTime`: Repetition time (TR) between sequences.
+        - `self.acqTime`: Acquisition time during readout.
+        - `self.rfExFA`: Flip angle for excitation pulse.
+        - `self.rfReFA`: Flip angle for refocusing pulse.
+        - `self.dummyPulses`: Number of dummy pulses to add before the actual acquisition starts.
+        - `self.shimming`: Shimming parameters for adjusting magnetic field homogeneity.
+
+        Key Process Steps
+        -----------------
+        1. Initializes the experiment and configures the system parameters, such as bandwidth and gradient times.
+        2. Defines the readout, phase, and slice gradients according to the `axesOrientation`.
+        3. Creates RF excitation and refocusing pulses.
+        4. Prepares and adds sequence blocks (RF pulses, gradients, and delays).
+        5. Creates and processes batches of the sequence, performing slice and phase encoding sweeps.
+        6. Executes the pulse sequence or plots it based on the provided arguments.
+        7. Handles data acquisition and decimation for oversampled data.
+
+        Returns
+        -------
+        bool
+            True if the sequence execution or plotting was successful, False if there were errors in configuration or timing.
+
+        Raises
+        ------
+        RuntimeError
+            Raised if the sequence timing is incorrect or the hardware configuration is out of bounds.
+
+        Notes
+        -----
+        - The method assumes access to global hardware settings (`hw`) and a `Experiment` object (`expt`).
+        - In case of sequence plotting, the `plotSeq` argument should be set, and the sequence will be visualized
+          instead of executed.
+        """
+
         print("Run MSE powered by PyPulseq")
         init_gpa = False
         self.demo = demo
