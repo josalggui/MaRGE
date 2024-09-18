@@ -18,10 +18,25 @@ class MainController(MainWindow):
     def __init__(self, *args, **kwargs):
         super(MainController, self).__init__(*args, **kwargs)
 
+        self.saveSessionToSequences(self.session)
+
+        self.initializeThread()
+
+        self.console.setup_console()
+
+        self.printSession(self.session)
+
+    def printSession(self, session):
+        print("Session info:")
+        for key in session.keys():
+            print(key + ": " + str(session[key]))
+
+    def saveSessionToSequences(self, session):
         # Add the session to all sequences
         for sequence in defaultsequences.values():
-            sequence.session = self.session
+            sequence.session = session
 
+    def initializeThread(self):
         # Start the sniffer
         thread = threading.Thread(target=self.history_list.waitingForRun)
         thread.start()
@@ -58,5 +73,8 @@ class MainController(MainWindow):
             self.toolbar_marcos.arduino.send("GPA_ON 0;")
             self.toolbar_marcos.arduino.send("RFPA_RF 0;")
             
-        print('GUI closed successfully!')
+        print('\nMain GUI closed successfully!')
+
+        self.parent.show()
+
         super().closeEvent(event)

@@ -25,12 +25,13 @@ from ui.window_postprocessing import MainWindow as PostWindow
 
 class MainWindow(QMainWindow):
     def __init__(self, session, demo=False, parent=None):
-        super(MainWindow, self).__init__(parent)
+        super(MainWindow, self).__init__()
         self.app_open = True
         self.toolbar_sequences = None
         self.toolbar_marcos = None
         self.session = session
         self.demo = demo
+        self.parent = parent
         self.setWindowTitle(session['directory'])
         self.setGeometry(20, 40, 1680, 720)
         # self.resize(QSize(1680, 720))

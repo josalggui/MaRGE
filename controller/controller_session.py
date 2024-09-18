@@ -44,8 +44,18 @@ class SessionController(SessionWindow):
         if not os.path.exists(self.session['directory']):
             os.makedirs(self.session['directory'])
 
-        # Open the main gui
-        self.main_gui = MainController(self.session, demo=False)
+            # Open the main gui
+            if self.main_gui is None:
+                self.main_gui = MainController(self.session, demo=False, parent=self)
+            else:
+                self.main_gui.app_open = True
+                self.main_gui.saveSessionToSequences(self.session)
+                self.main_gui.initializeThread()
+                self.main_gui.console.setup_console()
+                self.main_gui.history_list.clear()
+                self.main_gui.console.clear_console()
+                self.main_gui.printSession(self.session)
+
         self.hide()
         self.main_gui.show()
 
@@ -64,7 +74,17 @@ class SessionController(SessionWindow):
             os.makedirs(self.session['directory'])
 
         # Open the main gui
-        self.main_gui = MainController(self.session, demo=True)
+        if self.main_gui is None:
+            self.main_gui = MainController(self.session, demo=True, parent=self)
+        else:
+            self.main_gui.app_open = True
+            self.main_gui.saveSessionToSequences(self.session)
+            self.main_gui.initializeThread()
+            self.main_gui.console.setup_console()
+            self.main_gui.history_list.clear()
+            self.main_gui.console.clear_console()
+            self.main_gui.printSession(self.session)
+
         self.hide()
         self.main_gui.show()
 
