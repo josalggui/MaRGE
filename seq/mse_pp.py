@@ -1,12 +1,13 @@
 """
-Created on Tuesday September 177 2024
+Created on Tuesday, September 17th 2024
 @author: Prof. Dr. Maxim Zaitsev, Department of Diagnostic and Interventional Radiology, University of Freiburg, Germany
 @author: Dr. J.M. Algarín, MRILab, i3M, CSIC, Valencia, Spain
-@Summary: mse sequence class coded with pypulseq
+@Summary: mse sequence class coded with pypulseq compatible with MaRGE
 """
 
 import os
 import sys
+
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))
@@ -35,6 +36,7 @@ import experiment as ex
 import configs.hw_config as hw
 import configs.units as units
 import seq.mriBlankSeq as blankSeq
+
 
 #*********************************************************************************
 #*********************************************************************************
@@ -124,7 +126,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         dG = hw.grad_rise_time
         sampling_time = self.acqTime
         if self.rdGradTime >= self.acqTime:
-            ro_flattop_add = (self.rdGradTime-self.acqTime)/2
+            ro_flattop_add = (self.rdGradTime - self.acqTime) / 2
         else:
             print("ERROR: readout gradient time must be longer than acquisition time.")
             return 0
@@ -163,26 +165,25 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.mapVals['samplingTime'] = sampling_time
 
         # Derived and modified parameters
-        fov = np.array(fov_mm)*1e-3
-        TE = round(TE/self.system.grad_raster_time/2)*self.system.grad_raster_time*2 # TE (=ESP) should be divisible to a double gradient raster, which simplifies calcuations
-        ro_flattop_time = sampling_time+2*ro_flattop_add
+        fov = np.array(fov_mm) * 1e-3
+        TE = round(
+            TE / self.system.grad_raster_time / 2) * self.system.grad_raster_time * 2  # TE (=ESP) should be divisible to a double gradient raster, which simplifies calcuations
+        ro_flattop_time = sampling_time + 2 * ro_flattop_add
         rf_add = math.ceil(max(self.system.rf_dead_time,
                                self.system.rf_ringdown_time) / self.system.grad_raster_time) * self.system.grad_raster_time  # round up dead times to the gradient raster time to enable correct TE & ESP calculation
         t_sp = round(
-            (0.5 * (TE - ro_flattop_time - t_ref) - rf_add) / self.system.grad_raster_time) * self.system.grad_raster_time
+            (0.5 * (
+                        TE - ro_flattop_time - t_ref) - rf_add) / self.system.grad_raster_time) * self.system.grad_raster_time
         t_spex = round(
             (0.5 * (TE - t_ex - t_ref) - 2 * rf_add) / self.system.grad_raster_time) * self.system.grad_raster_time
         rf_ex_phase = np.pi / 2
         rf_ref_phase = 0
-        rd_channel = ("x" * (self.axesOrientation[0] == 0) +
-                      "y" * (self.axesOrientation[0] == 1) +
-                      "z" * (self.axesOrientation[0] == 2))
-        ph_channel = ("x" * (self.axesOrientation[1] == 0) +
-                      "y" * (self.axesOrientation[1] == 1) +
-                      "z" * (self.axesOrientation[1] == 2))
-        sl_channel = ("x" * (self.axesOrientation[2] == 0) +
-                      "y" * (self.axesOrientation[2] == 1) +
-                      "z" * (self.axesOrientation[2] == 2))
+
+        # Map the axis to "x", "y", and "z" according ot axesOrientation
+        axes_map = {0: "x", 1: "y", 2: "z"}
+        rd_channel = axes_map.get(self.axesOrientation[0], "")
+        ph_channel = axes_map.get(self.axesOrientation[1], "")
+        sl_channel = axes_map.get(self.axesOrientation[2], "")
 
         # ======
         # CREATE EVENTS
@@ -197,7 +198,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         )
         d_ex = pp.make_delay(t_ex + rf_add * 2)
 
-    
         flip_ref = self.rfReFA * np.pi / 180
         rf_ref = pp.make_block_pulse(
             flip_angle=flip_ref,
@@ -207,7 +207,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             phase_offset=rf_ref_phase,
             use="refocusing",
         )
-        d_ref=pp.make_delay(t_ref+rf_add*2)
+        d_ref = pp.make_delay(t_ref + rf_add * 2)
 
         delta_krd = 1 / fov[self.axesOrientation[0]]
         ro_amp = nRD * delta_krd / sampling_time
@@ -221,7 +221,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
             rise_time=dG,
         )
         adc = pp.make_adc(
-            num_samples=(nRD_pre+nRD+nRD_post)*os, dwell=sampling_time/nRD/os, delay=t_sp+dG-nRD_pre*sampling_time/nRD
+            num_samples=(nRD_pre + nRD + nRD_post) * os, dwell=sampling_time / nRD / os,
+            delay=t_sp + dG - nRD_pre * sampling_time / nRD
         )
         gr_spr = pp.make_trapezoid(
             channel=rd_channel,
@@ -239,20 +240,20 @@ class MSE(blankSeq.MRIBLANKSEQ):
         # Phase-encoding
         delta_kph = 1 / fov[self.axesOrientation[1]]
         gp_max = pp.make_trapezoid(
-                        channel=ph_channel,
-                        system=self.system,
-                        area=delta_kph*nPH/2,
-                        duration=t_sp,
-                        rise_time=dG,
-                    )
+            channel=ph_channel,
+            system=self.system,
+            area=delta_kph * nPH / 2,
+            duration=t_sp,
+            rise_time=dG,
+        )
         delta_ksl = 1 / fov[self.axesOrientation[2]]
         gs_max = pp.make_trapezoid(
-                        channel=sl_channel,
-                        system=self.system,
-                        area=delta_ksl*nSL/2,
-                        duration=t_sp,
-                        rise_time=dG,
-                    )
+            channel=sl_channel,
+            system=self.system,
+            area=delta_ksl * nSL / 2,
+            duration=t_sp,
+            rise_time=dG,
+        )
 
         # combine parts of the read gradient
         gc_times = np.array(
@@ -268,7 +269,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
             ])
         gc_times = np.cumsum(gc_times)
 
-        gr_amp = np.array([0, gr_spr.amplitude, gr_spr.amplitude, gr_acq.amplitude, gr_acq.amplitude, gr_spr.amplitude, gr_spr.amplitude, 0])
+        gr_amp = np.array([0, gr_spr.amplitude, gr_spr.amplitude, gr_acq.amplitude, gr_acq.amplitude, gr_spr.amplitude,
+                           gr_spr.amplitude, 0])
         gr = pp.make_extended_trapezoid(channel=rd_channel, times=gc_times, amplitudes=gr_amp)
 
         gp_amp = np.array([0, gp_max.amplitude, gp_max.amplitude, 0, 0, -gp_max.amplitude, -gp_max.amplitude, 0])
@@ -293,29 +295,128 @@ class MSE(blankSeq.MRIBLANKSEQ):
             print(f"TR fill: {1000 * TR_fill} ms")
         delay_TR = pp.make_delay(TR_fill)
 
-        sequences = {}
-        def initializeSequence(name="pp_1"):
-            sequences[name] = pp.Sequence()
+        # Initialize batches dictionary where batches will be saved
+        batches = {}
+
+        def initializeBatch(name="pp_1"):
+            """
+            Initialize a sequence with specified name and add predefined blocks for MRI pulse
+            sequence corresponding to dummy pulses.
+
+            This function initializes a new sequence with the given name (or "pp_1" by default)
+            and adds blocks for dummy pulses, RF excitation, pre-phasing gradients, echo cycles,
+            and TR delay. The slice and phase encoding gradients are set to zero, and multiple
+            dummy pulses and echo blocks are added to the sequence.
+
+            Parameters:
+            ----------
+            name : str, optional
+                The name of the sequence to initialize. Defaults to "pp_1".
+
+            Actions:
+            --------
+            1. Initializes a new sequence object.
+            2. Sets the slice and phase gradients to 0.
+            3. Adds dummy pulses followed by excitation, prephasing, echo, and TR blocks.
+
+            Notes:
+            ------
+            The function assumes that the following variables are defined globally or
+            accessible in the scope:
+
+            - `batches`: a dictionary to store the batches.
+            - `pp`: pypulseq class responsible for handling sequences and gradients.
+            - `gs_max`, `gp_max`: maximum values for slice and phase gradients.
+            - `rf_ex`, `d_ex`: RF excitation pulse and corresponding duration.
+            - `gr_preph`: pre-phasing gradient block.
+            - `n_echo`: number of echo cycles.
+            - `rf_ref`, `d_ref`: RF refocusing pulse and corresponding duration.
+            - `gs`, `gp`, `gr`: slice, phase, and readout gradients.
+            - `delay_TR`: delay block for the repetition time (TR).
+            """
+
+            # Instantiate pypulseq sequence object and save it into the batches dictionarly
+            batches[name] = pp.Sequence()
 
             # Set slice and phase gradients to 0
             gs = pp.scale_grad(gs_max, 0.0)
             gp = pp.scale_grad(gp_max, 0.0)
 
+            # Create dummy pulses
             for dummy in range(self.dummyPulses):
-                sequences[name].add_block(rf_ex, d_ex)
-                sequences[name].add_block(gr_preph)
+                # Add excitation and pre-phasing
+                batches[name].add_block(rf_ex, d_ex)
+                batches[name].add_block(gr_preph)
 
+                # Add echo train
                 for k_echo in range(n_echo):
-                    sequences[name].add_block(rf_ref, d_ref)
-                    sequences[name].add_block(gs, gp, gr)
+                    batches[name].add_block(rf_ref, d_ref)
+                    batches[name].add_block(gs, gp, gr)
 
-                sequences[name].add_block(delay_TR)
+                # Add repetition delay
+                batches[name].add_block(delay_TR)
 
-        def createSequences():
+        def createBatches():
+            """
+            Create MRI pulse sequence based on slice and phase sweeps, manage readout points,
+            and ensure timing correctness for each sequence.
+
+            This method generates multiple batches by sweeping across slice and phase encoding
+            gradients, adding excitation, refocusing pulses, and gradient blocks. It dynamically
+            divides the readout points between batches and ensures that no one exceeds
+            the maximum allowable readout points. The batches are checked for timing errors,
+            and the finalized batches are written to files.
+
+            Workflow:
+            ---------
+            1. Loop over slice positions (`Cz`) and phase positions (`Cy`) to generate batches.
+            2. Initialize a new sequence when needed based on the readout points limit.
+            3. Add excitation, refocusing pulses, gradients (slice, phase, readout), and ADC blocks.
+            4. Ensure correct timing of the final sequence and generate a timing error report if needed.
+            5. Write each sequence to a file and interpret the sequence to generate waveforms.
+
+            Returns:
+            --------
+            waveforms : dict
+                Dictionary containing waveforms for each sequence.
+
+            n_rd_points_dict : dict
+                Dictionary tracking the number of readout points for each sequence.
+
+            Notes:
+            ------
+            The function assumes that the following variables are defined globally or accessible
+            in the scope:
+
+            - `nSL`: number of slices.
+            - `nPH`: number of phase encoding steps.
+            - `n_rd_points_per_train`: number of readout points per echo train.
+            - `hw.maxRdPoints`: hardware maximum allowable readout points.
+            - `rf_ex`, `d_ex`: RF excitation pulse and corresponding duration.
+            - `rf_ref`, `d_ref`: RF refocusing pulse and corresponding duration.
+            - `gr_preph`: pre-phasing gradient block.
+            - `gs_max`, `gp_max`: maximum slice and phase gradient amplitudes.
+            - `n_echo`: number of echoes per sequence.
+            - `nRD`, `nRD_post`, `nRD_pre`: readout duration and pre/post readout periods.
+            - `adc`: analog-to-digital converter settings for readout.
+            - `delay_TR`: delay block for the repetition time (TR).
+            - `pp`: a module or class for gradient scaling and sequence management.
+
+            Timing Check:
+            -------------
+            The function performs a timing check after generating the batches. If the timing
+            is incorrect, an error report is printed with details.
+
+            File Output:
+            ------------
+            The sequence files are saved with the `.seq` extension, and the waveforms are
+            interpreted using the `flo_interpreter`.
+            """
+
             n_rd_points = 0
             n_rd_points_dict = {}
             seq_idx = 0
-            seq_num = "sequence_0"
+            seq_num = "batch_0"
 
             # Slice sweep
             for Cz in range(nSL):
@@ -329,8 +430,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     if seq_idx == 0 or n_rd_points + n_rd_points_per_train > hw.maxRdPoints:
                         seq_idx += 1
                         n_rd_points_dict[seq_num] = n_rd_points
-                        seq_num = "sequence_%i" % seq_idx
-                        initializeSequence(seq_num)
+                        seq_num = "batch_%i" % seq_idx
+                        initializeBatch(seq_num)
                         n_rd_points = 0
 
                     # Fix the phase and slice amplitude
@@ -340,26 +441,26 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     gp = pp.scale_grad(gp_max, pe_scale)
 
                     # Add excitation pulse and readout de-phasing gradient
-                    sequences[seq_num].add_block(rf_ex, d_ex)
-                    sequences[seq_num].add_block(gr_preph)
+                    batches[seq_num].add_block(rf_ex, d_ex)
+                    batches[seq_num].add_block(gr_preph)
 
                     # Add the echo train
                     for k_echo in range(n_echo):
                         # Add refocusing pulse
-                        sequences[seq_num].add_block(rf_ref, d_ref)
+                        batches[seq_num].add_block(rf_ref, d_ref)
                         # Add slice, phase and readout gradients
-                        sequences[seq_num].add_block(gs, gp, gr, adc)
+                        batches[seq_num].add_block(gs, gp, gr, adc)
                         n_rd_points += nRD + nRD_post + nRD_pre
 
                     # Add time delay to next repetition
-                    sequences[seq_num].add_block(delay_TR)
+                    batches[seq_num].add_block(delay_TR)
 
             # Get the rd point list
-            n_rd_points_dict.pop('sequence_0')
+            n_rd_points_dict.pop('batch_0')
             n_rd_points_dict[seq_num] = n_rd_points
 
             # Check whether the timing of the sequence is correct
-            (ok, error_report) = sequences[seq_num].check_timing()
+            (ok, error_report) = batches[seq_num].check_timing()
             if ok:
                 print("Timing check passed successfully")
             else:
@@ -368,18 +469,18 @@ class MSE(blankSeq.MRIBLANKSEQ):
 
             # Write the sequence files
             waveforms = {}
-            for seq_num in sequences.keys():
-                sequences[seq_num].write(seq_num+".seq")
-                waveforms[seq_num], param_dict = self.flo_interpreter.interpret(seq_num+".seq")
+            for seq_num in batches.keys():
+                batches[seq_num].write(seq_num + ".seq")
+                waveforms[seq_num], param_dict = self.flo_interpreter.interpret(seq_num + ".seq")
 
             return waveforms, n_rd_points_dict
 
-        # Create the sequences
-        waveforms, n_readouts = createSequences()
+        # Create the batches
+        waveforms, n_readouts = createBatches()
         self.mapVals['n_readouts'] = list(n_readouts.values())
         self.mapVals['n_batches'] = len(n_readouts.values())
 
-        # Execute the sequences
+        # Execute the batches
         data_over = []  # To save oversampled data
         for seq_num in waveforms.keys():
             # Save the waveforms into the mriBlankSeq dictionaries
@@ -487,7 +588,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             n += 1
 
         # Normalize image
-        image = np.abs(image_ind[:, int(nSL/2), :, :])
+        image = np.abs(image_ind[:, int(nSL / 2), :, :])
         image = image / np.max(image) * 100
 
         # Set labels
@@ -537,7 +638,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
             self.plotResults()
 
         return self.output
-
 
 
 if __name__ == "__main__":
