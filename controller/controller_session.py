@@ -77,7 +77,6 @@ class SessionController(SessionWindow):
         if self.main_gui is None:
             self.main_gui = MainController(self.session, demo=True, parent=self)
         else:
-            self.main_gui.app_open = True
             self.main_gui.saveSessionToSequences(self.session)
             self.main_gui.initializeThread()
             self.main_gui.console.setup_console()
@@ -95,6 +94,7 @@ class SessionController(SessionWindow):
         Args:
             event: The close event.
         """
+        self.main_gui.app_open = False
         print('GUI closed successfully!')
         super().closeEvent(event)
 
@@ -102,6 +102,7 @@ class SessionController(SessionWindow):
         """
         Closes the session and exits the program.
         """
+        self.main_gui.app_open = False
         print('GUI closed successfully!')
         sys.exit()
 

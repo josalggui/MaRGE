@@ -59,13 +59,14 @@ class MainController(MainWindow):
         Returns:
             None
         """
-        self.app_open = False
         # Return stdout to defaults.
         sys.stdout = sys.__stdout__
         if not self.demo:
             # Close server
             try:
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                self.toolbar_marcos.action_server.setChecked(False)
+                self.toolbar_marcos.controlMaRcosServer()
+                # subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
             except:
                 print("ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
 
