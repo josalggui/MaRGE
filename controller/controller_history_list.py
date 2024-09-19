@@ -54,6 +54,10 @@ class HistoryListController(HistoryListWidget):
         self.itemChanged.connect(self.main.sequence_list.updateSequence)
         self.itemEntered.connect(self.main.sequence_list.updateSequence)
 
+    def delete_items(self):
+        while self.count() > 0:
+            self.deleteTask(item_number=0)
+
     def showContextMenu(self, point):
         """
         Displays a context menu at the given point.
@@ -88,13 +92,24 @@ class HistoryListController(HistoryListWidget):
         self.main.post_gui.showMaximized()
         self.main.post_gui.toolbar_image.rawDataLoading(file_path=path + "/mat/", file_name=item_name)
 
-    def deleteTask(self):
+    def deleteTask(self, item_number=None):
         """
         Deletes the currently selected task from the list.
 
         This method removes the currently selected task item from the list widget.
         """
-        self.takeItem(self.row(self.currentItem()))
+        if item_number is None:
+            item = self.currentItem()
+        else:
+            item = self.item(item_number)
+        text = item.text()
+        text = text.split(".", maxsplit=2)
+        key = text[0] + "." + text[1]
+        self.takeItem(self.row(item))
+        if key in self.pending_inputs.keys():
+            self.pending_inputs.pop(text)
+        if key in self.inputs.keys():
+            self.inputs.pop(key)
 
     def addNewFigure(self):
         """

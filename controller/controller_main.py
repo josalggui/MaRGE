@@ -4,14 +4,11 @@
 :affiliation: MRILab, i3M, CSIC, Valencia, Spain
 
 """
-import subprocess
 import sys
 import threading
 
 from seq.sequences import defaultsequences
 from ui.window_main import MainWindow
-
-from configs import hw_config as hw
 
 
 class MainController(MainWindow):
@@ -24,13 +21,6 @@ class MainController(MainWindow):
 
         self.console.setup_console()
 
-        self.printSession(self.session)
-
-    def printSession(self, session):
-        print("Session info:")
-        for key in session.keys():
-            print(key + ": " + str(session[key]))
-
     def saveSessionToSequences(self, session):
         # Add the session to all sequences
         for sequence in defaultsequences.values():
@@ -40,6 +30,7 @@ class MainController(MainWindow):
         # Start the sniffer
         thread = threading.Thread(target=self.history_list.waitingForRun)
         thread.start()
+        print("Sniffer initialized.\n")
 
     def mousePressEvent(self, event):
         # Send self.main.post_gui.console.setup_console()prints to current window console
@@ -61,18 +52,6 @@ class MainController(MainWindow):
         """
         # Return stdout to defaults.
         sys.stdout = sys.__stdout__
-        if not self.demo:
-            # Close server
-            try:
-                self.toolbar_marcos.action_server.setChecked(False)
-                self.toolbar_marcos.controlMaRcosServer()
-                # subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-            except:
-                print("ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
-
-            # Disable power modules
-            self.toolbar_marcos.arduino.send("GPA_ON 0;")
-            self.toolbar_marcos.arduino.send("RFPA_RF 0;")
             
         print('\nMain GUI closed successfully!')
 
