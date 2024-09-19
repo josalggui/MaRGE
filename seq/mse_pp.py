@@ -218,6 +218,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             sampling_time = nRD / bw * 1e-6  # s
         self.mapVals['bw'] = bw * 1e6  # Hz
         self.mapVals['samplingTime'] = sampling_time
+        self.mapVals['larmorFreq'] = hw.larmorFreq
 
         # Derived and modified parameters
         fov = np.array(fov_mm) * 1e-3
