@@ -180,7 +180,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         return True
 
-    def sequenceAnalysis(self, mode=None, save=True):
+    def sequenceAnalysis(self, mode=None):
         self.mode = mode
         # Load data
         signal = self.mapVals['data']
@@ -197,7 +197,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         fCentral = fVector[idf] * 1e-3  # MHz
         hw.larmorFreq = self.mapVals['larmorFreq'] + fCentral
         print('Larmor frequency: %1.5f MHz' % hw.larmorFreq)
-        self.mapVals['larmorFreq'] = hw.larmorFreq
+        self.mapVals['larmorFreq0'] = hw.larmorFreq
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
 
@@ -232,12 +232,13 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.output = [result1, result2]
 
         # save data once self.output is created
-        if save:
-            self.saveRawData()
+        self.saveRawData()
 
-            # Plot result in standalone execution
-            if self.mode == 'Standalone':
-                self.plotResults()
+        # Plot result in standalone execution
+        if self.mode == 'Standalone':
+            self.plotResults()
+
+        self.mapVals['larmorFreq'] = hw.larmorFreq
 
         return self.output
 
