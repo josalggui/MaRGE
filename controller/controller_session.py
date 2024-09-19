@@ -9,6 +9,7 @@ from controller.controller_main import MainController
 import os
 import sys
 import configs.hw_config as hw
+import subprocess
 
 
 class SessionController(SessionWindow):
@@ -45,7 +46,15 @@ class SessionController(SessionWindow):
             os.makedirs(self.session['directory'])
 
         # Open the main gui
-        self.main_gui = MainController(self.session, demo=False)
+        if self.main_gui is None:
+            self.main_gui = MainController(self.session, demo=False, parent=self)
+        else:
+            self.main_gui.saveSessionToSequences(self.session)
+            self.main_gui.console.setup_console()
+            self.main_gui.history_list.delete_items()
+            self.main_gui.console.clear_console()
+            self.main_gui.setWindowTitle(self.session['directory'])
+
         self.hide()
         self.main_gui.show()
 
@@ -64,7 +73,15 @@ class SessionController(SessionWindow):
             os.makedirs(self.session['directory'])
 
         # Open the main gui
-        self.main_gui = MainController(self.session, demo=True)
+        if self.main_gui is None:
+            self.main_gui = MainController(self.session, demo=True, parent=self)
+        else:
+            self.main_gui.saveSessionToSequences(self.session)
+            self.main_gui.console.setup_console()
+            self.main_gui.history_list.delete_items()
+            self.main_gui.console.clear_console()
+            self.main_gui.setWindowTitle(self.session['directory'])
+
         self.hide()
         self.main_gui.show()
 
@@ -75,6 +92,19 @@ class SessionController(SessionWindow):
         Args:
             event: The close event.
         """
+        if self.main_gui is not None:
+            self.main_gui.app_open = False
+            if not self.main_gui.demo:
+                # Close server
+                try:
+                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                except:
+                    print(
+                        "ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
+
+                # Disable power modules
+                self.main_gui.toolbar_marcos.arduino.send("GPA_ON 0;")
+                self.main_gui.toolbar_marcos.arduino.send("RFPA_RF 0;")
         print('GUI closed successfully!')
         super().closeEvent(event)
 
@@ -82,6 +112,20 @@ class SessionController(SessionWindow):
         """
         Closes the session and exits the program.
         """
+        if self.main_gui is not None:
+            self.main_gui.app_open = False
+            if not self.main_gui.demo:
+                # Close server
+                try:
+                    subprocess.run(
+                        [hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                except:
+                    print(
+                        "ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
+
+                # Disable power modules
+                self.main_gui.toolbar_marcos.arduino.send("GPA_ON 0;")
+                self.main_gui.toolbar_marcos.arduino.send("RFPA_RF 0;")
         print('GUI closed successfully!')
         sys.exit()
 

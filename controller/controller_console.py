@@ -68,6 +68,12 @@ class ConsoleController(ConsoleWidget):
         self.console.setTextCursor(cursor)
         self.console.ensureCursorVisible()
 
+    def clear_console(self):
+        """
+        Clear the console widget by removing all its contents.
+        """
+        self.console.clear()  # Clears the console content
+
 class EmittingStream(QObject):
     """
     Emitting stream class.
