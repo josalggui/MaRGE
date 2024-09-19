@@ -54,6 +54,7 @@ class SessionController(SessionWindow):
             self.main_gui.history_list.delete_items()
             self.main_gui.console.clear_console()
             self.main_gui.setWindowTitle(self.session['directory'])
+            self.main_gui.setDemoMode(False)
 
         self.hide()
         self.main_gui.show()
@@ -81,6 +82,7 @@ class SessionController(SessionWindow):
             self.main_gui.history_list.delete_items()
             self.main_gui.console.clear_console()
             self.main_gui.setWindowTitle(self.session['directory'])
+            self.main_gui.setDemoMode(True)
 
         self.hide()
         self.main_gui.show()

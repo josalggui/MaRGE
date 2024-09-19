@@ -10,8 +10,7 @@ class SequenceToolBar(QToolBar):
     def __init__(self, parent, *args, **kwargs):
         super(SequenceToolBar, self).__init__(*args, **kwargs)
         self.main = parent
-        self.demo = self.main.demo
-        
+
         # Autocalibration
         self.action_autocalibration = QAction(QIcon("resources/icons/calibration-light.png"), "Autocalibration", self)
         self.action_autocalibration.setStatusTip("Run autocalibration")

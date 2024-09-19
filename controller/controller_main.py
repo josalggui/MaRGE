@@ -21,6 +21,9 @@ class MainController(MainWindow):
 
         self.console.setup_console()
 
+    def setDemoMode(self, demo):
+        self.demo = demo
+
     def saveSessionToSequences(self, session):
         # Add the session to all sequences
         for sequence in defaultsequences.values():
