@@ -351,9 +351,12 @@ class HistoryListController(HistoryListWidget):
                     if "Calibration" in key:
                         if seq_name == 'Larmor':
                             sequence.mapVals['larmorFreq'] = hw.larmorFreq
-                            sequence.mapVals['shimming'] = defaultsequences['Shimming'].mapVals['shimming0']
+                            try:
+                                sequence.mapVals['shimming'] = defaultsequences['Shimming'].mapVals['shimming']
+                            except:
+                                pass
                         if seq_name == 'RabiFlops':
-                            sequence.mapVals['shimming'] = defaultsequences['Shimming'].mapVals['shimming0']
+                            sequence.mapVals['shimming'] = defaultsequences['Shimming'].mapVals['shimming']
 
                     # Run the sequence
                     key_index = keys.index(key)
