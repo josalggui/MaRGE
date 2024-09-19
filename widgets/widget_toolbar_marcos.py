@@ -10,7 +10,6 @@ class MarcosToolBar(QToolBar):
     def __init__(self, main, *args, **kwargs):
         super(MarcosToolBar, self).__init__(*args, **kwargs)
         self.main = main
-        self.demo = self.main.demo
 
         # Setup all
         self.action_start = QAction(QIcon("resources/icons/initGPA.png"), "Setup MaRCoS", self)

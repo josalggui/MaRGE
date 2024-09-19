@@ -311,7 +311,7 @@ class SequenceController(SequenceToolBar):
         # Create sequence to plot
         print('Plot sequence')
         defaultsequences[self.seq_name].sequenceAtributes()
-        if defaultsequences[self.seq_name].sequenceRun(1, demo=self.demo):
+        if defaultsequences[self.seq_name].sequenceRun(1, demo=self.main.demo):
             # Delete previous plots
             self.main.figures_layout.clearFiguresLayout()
         else:

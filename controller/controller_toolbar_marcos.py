@@ -62,7 +62,7 @@ class MarcosController(MarcosToolBar):
 
     def search_sdrlab(self):
         # Get the IP of the SDRLab
-        if not self.demo:
+        if not self.main.demo:
             try:
                 hw.rp_ip_address = self.get_sdrlab_ip()[0]
             except:
@@ -115,7 +115,7 @@ class MarcosController(MarcosToolBar):
 
         Executes startRP.sh: copy_bitstream.sh & marcos_server.
         """
-        if not self.demo:
+        if not self.main.demo:
 
             try:
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
@@ -135,7 +135,7 @@ class MarcosController(MarcosToolBar):
 
         Connects or disconnects from the MaRCoS server.
         """
-        if not self.demo:
+        if not self.main.demo:
             if not self.action_server.isChecked():
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 self.action_server.setStatusTip('Connect to marcos server')
@@ -171,7 +171,7 @@ class MarcosController(MarcosToolBar):
 
         Executes copy_bitstream.sh.
         """
-        if not self.demo:
+        if not self.main.demo:
             try:
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', hw.rp_ip_address, 'rp-122'], timeout=10)
@@ -189,7 +189,7 @@ class MarcosController(MarcosToolBar):
         Initializes the GPA board.
         """
         if self.action_server.isChecked():
-            if not self.demo:
+            if not self.main.demo:
                 link = False
                 while not link:
                     try:
