@@ -24,11 +24,9 @@ for subdir in subdirs:
 #******************************************************************************
 
 import math
-import warnings
 
 import numpy as np
 import scipy.signal as sig
-from matplotlib import pyplot as plt
 
 import pypulseq as pp
 
@@ -82,8 +80,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM',
                           tip="0=x, 1=y, 2=z")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=5.0, units=units.ms, field='OTH')
-        self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ',
-                          tip="Use last dummy pulse to calibrate k = 0")
+        self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ')
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH',
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
