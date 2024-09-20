@@ -94,6 +94,12 @@ class MSE(blankSeq.MRIBLANKSEQ):
 
     def sequenceTime(self):
         print("Sequence time not calculated...")
+        nRD, nPH, nSL = np.array(self.mapVals["nPoints"])
+        repetition_time = self.mapVals["repetitionTime"] * 1e-3
+        nScans = self.mapVals["nScans"]
+        scan_time = nScans*nPH*nSL*repetition_time / 60  # minutes
+        scan_time = np.round(scan_time, decimals=1)
+        return scan_time  # minutes
 
     def sequenceAtributes(self):
         super().sequenceAtributes()
@@ -206,8 +212,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
                                       )
             sampling_period = self.expt.get_rx_ts()[0]  # us
             bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
-            sampling_time = nRD / bw * 1e-6  # s
-            print("Sampling time fixed to: %0.3f ms" % (sampling_time * 1e-3))
             print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
         else:
             sampling_period = sampling_period * 1e6  # us
@@ -532,6 +536,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
         waveforms, n_readouts = createBatches()
         self.mapVals['n_readouts'] = list(n_readouts.values())
         self.mapVals['n_batches'] = len(n_readouts.values())
+        scan_time = (nPH * nSL + self.mapVals['n_batches'] * self.dummyPulses) * self.repetitionTime * self.nScans
+        self.mapVals['Scan time (s)'] = scan_time
 
         # Execute the batches
         data_over = []  # To save oversampled data

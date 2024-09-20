@@ -399,7 +399,9 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.echo_shift = self.echo_shift*1e6
         nRepetitions = int(nSL*nPH/self.etl)
         scanTime = nRepetitions*self.repetitionTime
-        self.mapVals['scanTime'] = scanTime*nSL*1e-6
+        self.mapVals['Scan Time (s)'] = scanTime*self.nScans*1e-6
+
+        seqTime = nPoints[1] / etl * nPoints[2] * repetitionTime * 1e-3 * nScans * parFourierFraction
 
         # Create full sequence
         # Run the experiment
