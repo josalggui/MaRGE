@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QTabWidget, QWidget, QVBoxLayout
 
-from controller.controller_postpocessing import PostProcessingTabController
+from controller.controller_post import PostProcessingTabController
 from controller.controller_preprocessing import PreProcessingTabController
 from controller.controller_reconstruction import ReconstructionTabController
 from controller.controller_visualisation import VisualisationTabController

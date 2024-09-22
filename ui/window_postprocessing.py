@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApp
     QSplitter, QTextEdit, QSizePolicy
 
 from controller.controller_reconstruction import ReconstructionTabController
-from controller.controller_postpocessing import PostProcessingTabController
+from controller.controller_post import PostProcessingTabController
 from controller.controller_toolbar_figures import FiguresControllerPos
 from controller.controller_visualisation import VisualisationTabController
 from controller.controller_preprocessing import PreProcessingTabController
@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         console (ConsoleController): Controller for the console.
     """
 
-    def __init__(self, session):
+    def __init__(self, session, main):
         """
         Initialize the MainWindow.
 
@@ -54,19 +54,20 @@ class MainWindow(QMainWindow):
         """
         super().__init__()
         self.session = session
+        self.main = main
 
         # Set stylesheet
         self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
         self.setStyleSheet(self.styleSheet)
 
         # Set window parameters
-        self.setWindowTitle('Postprocessing')
+        self.setWindowTitle(session['directory'])
 
         # Threadpool for parallel running
         self.threadpool = QThreadPool()
 
         # Toolbar addition
-        self.main_window= MainWindow_toolbar()
+        self.main_window = MainWindow_toolbar()
         self.toolbar_image = ToolBarControllerPost(self.main_window, self, "Image toolbar")
         self.addToolBar(self.toolbar_image)
 
@@ -98,12 +99,6 @@ class MainWindow(QMainWindow):
         self.tab_controller = ProcessingController(parent=self)
         self.left_layout.addWidget(self.tab_controller)
 
-        # Console addition
-        self.console = ConsoleController()
-        self.console.setup_console()
-        self.left_layout.addWidget(self.console)
-        self.console.setMaximumHeight(200)
-
         # Image view addition
         self.image_view_widget = FiguresLayoutController(self)
         self.image_view_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -125,9 +120,6 @@ class MainWindow(QMainWindow):
         self.methods_list.setMinimumHeight(200)
         self.output_layout_h.addWidget(self.methods_list)
 
-    def mousePressEvent(self, event):
-        # Send prints to current window console
-        self.console.setup_console()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

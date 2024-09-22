@@ -64,8 +64,6 @@ class HistoryListController(HistoryListWidget):
 
         :param point: The position where the context menu should be displayed.
         """
-        # Send printed text to the corresponding console
-        self.main.console.setup_console()
 
         self.clicked_item = self.itemAt(point)
         if self.clicked_item is not None:
@@ -212,8 +210,6 @@ class HistoryListController(HistoryListWidget):
 
         :param item: The selected item from which to retrieve the corresponding input data.
         """
-        # Send printed text to the corresponding console
-        self.main.console.setup_console()
 
         # Get the corresponding key to get access to the history dictionary
         item_time = item.text().split(' | ')[0]
@@ -253,8 +249,6 @@ class HistoryListController(HistoryListWidget):
 
         :param item: The selected item from which to retrieve the corresponding output information.
         """
-        # Send printed text to the corresponding console
-        self.main.console.setup_console()
 
         # Get the corresponding key to get access to the history dictionary
         item_time = item.text().split(' | ')[0]
@@ -621,8 +615,6 @@ class HistoryListControllerPos(HistoryListWidget):
         Args:
             item (QListWidgetItem): The selected item in the history list.
         """
-        # Send printed text to the corresponding console
-        self.main.console.setup_console()
 
         image_key = item.text()
         if image_key in self.image_hist.keys():
@@ -683,8 +675,6 @@ class HistoryListControllerPos(HistoryListWidget):
         Args:
             item (QListWidgetItem): The selected item in the history list.
         """
-        # Send printed text to the corresponding console
-        self.main.console.setup_console()
 
         # Clear the methods_list table
         self.main.methods_list.setText('')

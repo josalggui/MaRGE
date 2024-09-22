@@ -122,8 +122,6 @@ class ReconstructionTabController(ReconstructionTabWidget):
         self.image_art_button.clicked.connect(self.artReconstruction)
 
     def dfft(self):
-        # Prints in current console
-        self.main.console.setup_console()
 
         thread = threading.Thread(target=self.runDFFT)
         thread.start()
@@ -156,8 +154,6 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         Creates a new thread and runs the runFftReconstruction method in that thread.
         """
-        # Prints in current console
-        self.main.console.setup_console()
 
         thread = threading.Thread(target=self.runIFFT)
         thread.start()
@@ -200,8 +196,6 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         Creates a new thread and runs the runArtReconstruction method in that thread.
         """
-        # Prints in current console
-        self.main.console.setup_console()
 
         thread = threading.Thread(target=self.runArtReconstruction)
         thread.start()
@@ -336,8 +330,6 @@ class ReconstructionTabController(ReconstructionTabWidget):
         return
 
     def zeroReconstruction(self):
-        # Prints in current console
-        self.main.console.setup_console()
 
         thread = threading.Thread(target=self.runZeroReconstruction)
         thread.start()
@@ -392,8 +384,6 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         Creates a new thread and runs the runPocsReconstruction method in that thread.
         """
-        # Prints in current console
-        self.main.console.setup_console()
 
         thread = threading.Thread(target=self.runPocsReconstruction)
         thread.start()

@@ -47,14 +47,12 @@ class SessionController(SessionWindow):
 
         # Open the main gui
         if self.main_gui is None:
-            self.main_gui = MainController(self.session, demo=False, parent=self)
+            self.main_gui = MainController(session=self.session, demo=False, parent=self)
         else:
-            self.main_gui.saveSessionToSequences(self.session)
-            self.main_gui.console.setup_console()
+            self.main_gui.set_session(self.session)
             self.main_gui.history_list.delete_items()
             self.main_gui.console.clear_console()
-            self.main_gui.setWindowTitle(self.session['directory'])
-            self.main_gui.setDemoMode(False)
+            self.main_gui.set_demo(False)
 
         self.hide()
         self.main_gui.show()
@@ -75,14 +73,12 @@ class SessionController(SessionWindow):
 
         # Open the main gui
         if self.main_gui is None:
-            self.main_gui = MainController(self.session, demo=True, parent=self)
+            self.main_gui = MainController(session=self.session, demo=True, parent=self)
         else:
-            self.main_gui.saveSessionToSequences(self.session)
-            self.main_gui.console.setup_console()
+            self.main_gui.set_session(self.session)
             self.main_gui.history_list.delete_items()
             self.main_gui.console.clear_console()
-            self.main_gui.setWindowTitle(self.session['directory'])
-            self.main_gui.setDemoMode(True)
+            self.main_gui.set_demo(True)
 
         self.hide()
         self.main_gui.show()

@@ -2,7 +2,7 @@ import bm4d
 import threading
 import numpy as np
 from scipy.ndimage import gaussian_filter
-from widgets.widget_postpocessing import PostProcessingTabWidget
+from widgets.widget_post import PostProcessingTabWidget
 from skimage.util import view_as_blocks
 from skimage.measure import shannon_entropy
 
@@ -43,8 +43,6 @@ class PostProcessingTabController(PostProcessingTabWidget):
 
         Starts a new thread to execute the runBm4dFilter method.
         """
-        # Send printed text to the corresponding console
-        self.main.console.setup_console()
 
         thread = threading.Thread(target=self.runBm4dFilter)
         thread.start()
@@ -134,8 +132,6 @@ class PostProcessingTabController(PostProcessingTabWidget):
 
         Starts a new thread to execute the runGaussianFilter method.
         """
-        # Send printed text to the corresponding console
-        self.main.console.setup_console()
 
         thread = threading.Thread(target=self.runGaussianFilter)
         thread.start()

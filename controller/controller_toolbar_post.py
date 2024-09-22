@@ -100,7 +100,6 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             self.k_space = np.reshape(self.k_space_raw[:, 3], self.nPoints[-1::-1])
 
             # Clear the console, history widget, history controller, and history dictionaries
-            self.main.console.console.clear()
             self.main.visualisation_controller.clear2DImage()
 
         # Update the main matrix of the image view widget with the k-space data

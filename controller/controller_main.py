@@ -7,6 +7,8 @@
 import sys
 import threading
 
+from PyQt5.QtCore import QEvent
+
 from seq.sequences import defaultsequences
 from ui.window_main import MainWindow
 
@@ -15,16 +17,17 @@ class MainController(MainWindow):
     def __init__(self, *args, **kwargs):
         super(MainController, self).__init__(*args, **kwargs)
 
-        self.saveSessionToSequences(self.session)
+        self.set_session(self.session)
 
         self.initializeThread()
 
-        self.console.setup_console()
-
-    def setDemoMode(self, demo):
+    def set_demo(self, demo):
         self.demo = demo
 
-    def saveSessionToSequences(self, session):
+    def set_session(self, session):
+        # Set window title
+        self.session = session
+        self.setWindowTitle(session['directory'])
         # Add the session to all sequences
         for sequence in defaultsequences.values():
             sequence.session = session
@@ -35,9 +38,14 @@ class MainController(MainWindow):
         thread.start()
         print("Sniffer initialized.\n")
 
-    def mousePressEvent(self, event):
-        # Send self.main.post_gui.console.setup_console()prints to current window console
-        self.console.setup_console()
+    def set_console(self):
+        self.layout_left.addWidget(self.console)
+
+    def changeEvent(self, event):
+        if event.type() == QEvent.ActivationChange:  # Event type 99
+            if self.isActiveWindow():
+                self.set_console()
+        super().changeEvent(event)
 
     def closeEvent(self, event):
         """
