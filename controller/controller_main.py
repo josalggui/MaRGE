@@ -4,6 +4,7 @@
 :affiliation: MRILab, i3M, CSIC, Valencia, Spain
 
 """
+import subprocess
 import sys
 import threading
 
@@ -25,9 +26,17 @@ class MainController(MainWindow):
         self.demo = demo
 
     def set_session(self, session):
+        # Get repo version
+        try:
+            tag = subprocess.check_output(['git', 'describe', '--tags'], stderr=subprocess.STDOUT).strip().decode(
+                'utf-8')
+        except subprocess.CalledProcessError as e:
+            print(f"Error getting Git tag: {e.output.decode('utf-8')}")
+            tag = ""
+
         # Set window title
         self.session = session
-        self.setWindowTitle(session['directory'])
+        self.setWindowTitle("MaRGE " + tag + ": " + session['directory'])
         # Add the session to all sequences
         for sequence in defaultsequences.values():
             sequence.session = session

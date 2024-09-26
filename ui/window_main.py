@@ -34,7 +34,6 @@ class MainWindow(QMainWindow):
         self.parent = parent
         self.setWindowTitle(session['directory'])
         self.setGeometry(20, 40, 1680, 720)
-        # self.resize(QSize(1680, 720))
 
         # Threadpool for parallel running
         self.threadpool = QThreadPool()
