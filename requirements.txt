@@ -12,3 +12,4 @@ phantominator>=0.7.0
 pyserial>=3.5
 ismrmrd==1.14.1
 cupy-cuda12x>=13.0.0
+pypulseq==1.4.2

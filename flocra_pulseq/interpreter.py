@@ -18,7 +18,7 @@ class PSInterpreter:
     def __init__(self, rf_center=3e+6, rf_amp_max=5e+3, grad_max=1e+7,
                  gx_max=None, gy_max=None, gz_max=None,
                  clk_t=1/122.88, tx_t=123/122.88, grad_t=1229/122.88,
-                 tx_warmup=500, tx_zero_end=True, grad_zero_end=True,
+                 tx_warmup=10, tx_zero_end=True, grad_zero_end=True,
                  log_file = 'ps_interpreter', log_level = 20):
         """
         Create PSInterpreter object for FLOCRA with system parameters.
@@ -43,6 +43,10 @@ class PSInterpreter:
         self._logger = logging.getLogger()
         logging.basicConfig(filename = log_file + '.log', filemode = 'w', level = log_level)
 
+        self._version_major = 0
+        self._version_minor = 0
+        self._version_revision = 0
+
         self._clk_t = clk_t # Instruction clock period in us
         self._tx_t = tx_t # Transmit sample period in us
         self._warning_if(int(tx_t / self._clk_t) * self._clk_t != tx_t,
@@ -61,9 +65,9 @@ class PSInterpreter:
         self._grad_max = {}
         if gx_max is None: self._grad_max['gx'] = grad_max
         else: self._grad_max['gx'] = gx_max
-        if gy_max is None: self._grad_max['gy'] = grad_max
+        if gx_max is None: self._grad_max['gy'] = grad_max
         else: self._grad_max['gy'] = gy_max
-        if gz_max is None: self._grad_max['gz'] = grad_max
+        if gx_max is None: self._grad_max['gz'] = grad_max
         else: self._grad_max['gz'] = gz_max    
 
         self._tx_warmup = tx_warmup # us
@@ -73,7 +77,7 @@ class PSInterpreter:
 
         # Interpreter for section names in .seq file
         self._pulseq_keys = {
-            '[VERSION]' : self._read_temp, # Unused
+            '[VERSION]' : self._read_version,
             '[DEFINITIONS]' : self._read_defs,
             '[BLOCKS]' : self._read_blocks,
             '[RF]' : self._read_rf_events,
@@ -138,6 +142,7 @@ class PSInterpreter:
             if key in param_dict:
                 self._logger.warning(f'Key conflict: overwriting key [{key}], value [{param_dict[key]}] with new value [{value}]')
             param_dict[key] = value
+        print(f'read {len(self._definitions)} definitions, {len(self._blocks)} blocks, {len(self._shapes)} shapes, {len(self._adc_events)} adc events, {len(self._rf_events)} rf events, {len(self._grad_events)} gradient shapes')
         return (self.out_data, param_dict)
 
     # Open file and read in all sections into class storage
@@ -167,29 +172,45 @@ class PSInterpreter:
 
         # Check that all ids are valid
         self._logger.info('Validating ids...')
-        var_names = ('delay', 'rf', 'gx', 'gy', 'gz', 'adc', 'ext')
-        var_dicts = [self._delay_events, self._rf_events, self._grad_events, self._grad_events, self._grad_events, self._adc_events, {}]
-        for block in self._blocks.values():
-            for i in range(len(var_names)):
-                id_n = block[var_names[i]]
-                self._error_if(id_n != 0 and id_n not in var_dicts[i], f'Invalid {var_names[i]} id: {id_n}')
-        for rf in self._rf_events.values():
-            self._error_if(rf['mag_id'] not in self._shapes, f'Invalid magnitude shape id: {rf["mag_id"]}')
-            self._error_if(rf['phase_id'] not in self._shapes, f'Invalid phase shape id: {rf["phase_id"]}')
-        for grad in self._grad_events.values():
-            if len(grad) == 3:
-                self._error_if(grad['shape_id'] not in self._shapes, f'Invalid grad shape id: {grad["shape_id"]}')
-        self._logger.info('Valid ids')
+        if self._version_major == 1 and self._version_minor <= 3:
+            var_names = ('delay', 'rf', 'gx', 'gy', 'gz', 'adc', 'ext')
+            var_dicts = [self._delay_events, self._rf_events, self._grad_events, self._grad_events, self._grad_events, self._adc_events, {}]
+            for block in self._blocks.values():
+                for i in range(len(var_names)):
+                    id_n = block[var_names[i]]
+                    self._error_if(id_n != 0 and id_n not in var_dicts[i], f'Invalid {var_names[i]} id: {id_n}')
+            for rf in self._rf_events.values():
+                self._error_if(rf['mag_id'] not in self._shapes, f'Invalid magnitude shape id: {rf["mag_id"]}')
+                self._error_if(rf['phase_id'] not in self._shapes, f'Invalid phase shape id: {rf["phase_id"]}')
+            for grad in self._grad_events.values():
+                if len(grad) == 3:
+                    self._error_if(grad['shape_id'] not in self._shapes, f'Invalid grad shape id: {grad["shape_id"]}')
+            self._logger.info('Valid ids')
 
-        # Check that all delays are multiples of clk_t
-        for events in [self._blocks.values(), self._rf_events.values(), self._grad_events.values(),
-                        self._adc_events.values()]:
-            for event in events:
-                self._warning_if(int(event['delay'] / self._clk_t) * self._clk_t != event['delay'],
-                    f'Event delay {event["delay"]} is not a multiple of clk_t')
-        for delay in self._delay_events.values():
-            self._warning_if(int(delay / self._clk_t) * self._clk_t != delay,
-                f'Delay event {delay} is not a multiple of clk_t')
+            # Check that all delays are multiples of clk_t
+            for events in [self._blocks.values(), self._rf_events.values(), self._grad_events.values(),
+                            self._adc_events.values()]:
+                for event in events:
+                    self._warning_if(int(event['delay'] / self._clk_t) * self._clk_t != event['delay'],
+                        f'Event delay {event["delay"]} is not a multiple of clk_t')
+            for delay in self._delay_events.values():
+                self._warning_if(int(delay / self._clk_t) * self._clk_t != delay,
+                    f'Delay event {delay} is not a multiple of clk_t')
+        else:
+            # version >= 1.4
+            var_names = ('rf', 'gx', 'gy', 'gz', 'adc', 'ext')
+            var_dicts = [self._rf_events, self._grad_events, self._grad_events, self._grad_events, self._adc_events, {}]
+            for block in self._blocks.values():
+                for i in range(len(var_names)):
+                    id_n = block[var_names[i]]
+                    self._error_if(id_n != 0 and id_n not in var_dicts[i], f'Invalid {var_names[i]} id: {id_n}')
+            for rf in self._rf_events.values():
+                self._error_if(rf['mag_id'] not in self._shapes, f'Invalid magnitude shape id: {rf["mag_id"]}')
+                self._error_if(rf['phase_id'] not in self._shapes, f'Invalid phase shape id: {rf["phase_id"]}')
+            for grad in self._grad_events.values():
+                if len(grad) == 3:
+                    self._error_if(grad['shape_id'] not in self._shapes, f'Invalid grad shape id: {grad["shape_id"]}')
+            self._logger.info('Valid ids')
 
         # Check that RF/ADC (TX/RX) only have one frequency offset -- can't be set within one file.
         freq = None
@@ -245,11 +266,24 @@ class PSInterpreter:
             self._error_if(len(mag_shape) != len(phase_shape), f'Tx envelope of RF event {tx_id} has mismatched magnitude ' \
                 'and phase length')
 
-            # Event length and duration, create time points
-            event_len = len(mag_shape) # unitless
-            event_duration = event_len * self._tx_t # us
-            self._error_if(event_len < 1, f"Zero length shape: {tx_event['mag_id']}")
-            x = np.linspace(0, event_duration, num = event_len, endpoint=False)
+            if self._version_major == 1 and self._version_minor < 4:
+                # Event length and duration, create time points
+                event_len = len(mag_shape) # unitless
+                event_duration = event_len * self._tx_t # us
+                self._error_if(event_len < 1, f"Zero length shape: {tx_event['mag_id']}")
+                x = np.linspace(0, event_duration, num = event_len, endpoint=False)
+            else:
+                if tx_event['time_shape_id'] == 0:
+                    # Event length and duration, create time points
+                    event_len = len(mag_shape) # unitless
+                    event_duration = event_len * self._tx_t # us
+                    self._error_if(event_len < 1, f"Zero length shape: {tx_event['mag_id']}")
+                    x = np.linspace(0, event_duration, num = event_len, endpoint=False)
+                else:
+                    # Event length and duration, create time points
+                    event_len = max(self._shapes[tx_event['time_shape_id']]) # unitless
+                    event_duration = event_len * self._definitions['RadiofrequencyRasterTime'] * 1e6# us
+                    x = self._shapes[tx_event['time_shape_id']] * self._definitions['RadiofrequencyRasterTime'] * 1e6
 
             # Scale and convert to complex Tx envelope
             mag = mag_shape * tx_event['amp'] / self._rf_amp_max
@@ -257,7 +291,7 @@ class PSInterpreter:
             tx_env = np.exp((phase + tx_event['phase']) * 1j) * mag
 
             self._error_if(np.any(np.abs(tx_env) > 1.0), f'Magnitude of RF event {tx_id} is too ' \
-                f'large relative to RF max {self._rf_amp_max}')
+                f'large relative to RF max {np.max(np.abs(mag_shape * tx_event["amp"]))} > {self._rf_amp_max}')
 
             # Optionally force zero at the end of tx event
             if self._tx_zero_end:
@@ -282,8 +316,7 @@ class PSInterpreter:
         for grad_id, grad_event in self._grad_events.items():
 
             # Collect shapes, create time points
-            if len(grad_event) == 5: # Trapezoid shape
-
+            if grad_event['is_trap']: # Trapezoid shape
                 # Check for timing issues
                 for time in ['rise', 'flat', 'fall']:
                     self._warning_if(grad_event[time] < self._grad_t, f'Trapezoid {grad_id} has {time} ' \
@@ -311,13 +344,43 @@ class PSInterpreter:
 
                 event_duration = grad_event['rise'] + grad_event['flat'] + grad_event['fall'] # us
             else:
-                # Event length and duration, create time points
-                shape = self._shapes[grad_event['shape_id']]
-                event_len = len(shape) # unitless
-                event_duration = event_len * self._grad_t # us
-                self._error_if(event_len < 1, f"Zero length shape: {grad_event['shape_id']}")
-                grad = shape * grad_event['amp']
-                x = np.linspace(0, event_duration, num = event_len, endpoint=False)
+                if self._version_major == 1 and self._version_minor >= 4:
+                    if grad_event['time_shape_id'] == 0:
+                        shape = self._shapes[grad_event['shape_id']]
+                        event_len = len(shape) # unitless
+                        event_duration = event_len * self._grad_t # us
+                        self._error_if(event_len < 1, f"Zero length shape: {grad_event['shape_id']}")
+                        grad = shape * grad_event['amp']
+                        x = np.linspace(0, event_duration, num = event_len, endpoint=False)
+                    else:
+                        shape = self._shapes[grad_event['shape_id']]
+                        event_len = max(self._shapes[grad_event['time_shape_id']])
+                        event_duration = event_len * self._definitions['GradientRasterTime'] * 1e6
+                        self._error_if(event_len < 1, f"Zero length shape: {grad_event['shape_id']}")
+                        grad_ip = []
+                        x_ip = []
+                        self._error_if(len(shape) == 1, f"Shapes of length 1 are not supported!")                            
+                        for i in range(len(shape) - 1):
+                            delta_t = int(self._shapes[grad_event['time_shape_id']][i + 1] - self._shapes[grad_event['time_shape_id']][i])
+                            shape_x = self._shapes[grad_event['time_shape_id']]
+                            if delta_t > 1:
+                                grad_ip.append(np.linspace(shape[i], shape[i+1], num = delta_t))
+                                x_ip.append(np.linspace(shape_x[i], shape_x[i+1], num = delta_t))
+                            else:
+                                grad_ip.append(shape[i])
+                                x_ip.append(shape_x[i])
+                        # grad = shape * grad_event['amp']
+                        # x = self._shapes[grad_event['time_shape_id']] * self._definitions['GradientRasterTime'] * 1e6
+                        grad = np.hstack([np.array(item).flatten() for item in grad_ip]) * grad_event['amp']
+                        x = np.hstack([np.array(item).flatten() for item in x_ip]) * self._definitions['GradientRasterTime'] * 1e6
+                else:
+                    # Event length and duration, create time points
+                    shape = self._shapes[grad_event['shape_id']]
+                    event_len = len(shape) # unitless
+                    event_duration = event_len * self._grad_t # us
+                    self._error_if(event_len < 1, f"Zero length shape: {grad_event['shape_id']}")
+                    grad = shape * grad_event['amp']
+                    x = np.linspace(0, event_duration, num = event_len, endpoint=False)
 
             # Optionally force zero at the end of gradient event
             if self._grad_zero_end:
@@ -327,6 +390,7 @@ class PSInterpreter:
             # Save grad duration, update times, data
             self._grad_durations[grad_id] = event_duration + grad_event['delay']
             self._grad_times[grad_id] = x + grad_event['delay']
+            # print(f"id:{grad_id} amp:{grad} times:{self._grad_times[grad_id]}")
             self._grad_data[grad_id] = grad
 
         self._logger.info('Gradient data compiled')
@@ -349,7 +413,11 @@ class PSInterpreter:
 
         # Encode all blocks
         for block_id in self._blocks.keys():
-            var_dict, duration, readout_num = self._stream_block(block_id)
+            self._logger.info(f'streaming block {block_id} ...')
+            if self._version_major == 1 and self._version_minor >= 4:
+                var_dict, duration, readout_num = self._stream_block_v2(block_id)
+            else:
+                var_dict, duration, readout_num = self._stream_block(block_id)
 
             for var in self._var_names:
                 times[var].append(var_dict[var][0] + start)
@@ -375,6 +443,7 @@ class PSInterpreter:
 
             out_data[var] = (time_arr, update_arr)
 
+        self._logger.info(f'done')
         return (out_data, readout_total)
 
     # Convert individual block into PR commands (duration, gates), TX offset, and GRAD offset
@@ -438,6 +507,68 @@ class PSInterpreter:
         return (out_dict, duration, int(readout_num))
     #endregion
 
+    # Convert individual block into PR commands (duration, gates), TX offset, and GRAD offset
+    def _stream_block_v2(self, block_id):
+        """
+        Encode block into sequential time updates
+
+        Args:
+            block_id (int): Block id key for block in object dict memory to be encoded
+
+        Returns:
+            dict: tuples of np.ndarray times, updates with variable name keys
+            float: duration of the block
+            int: readout count for the block
+        """
+        out_dict = {var: [] for var in self._var_names}
+        readout_num = 0
+        duration = 0
+
+        block = self._blocks[block_id]
+        # Preset all variables
+        for var in self._var_names:
+             out_dict[var] = (np.zeros(0, dtype=int),) * 2
+
+        # Minimum duration of block
+        duration = block['dur'] * self._definitions['BlockDurationRaster'] * 1e6
+        # if block['delay'] != 0:
+            # duration = max(duration, self._delay_events[block['delay']])
+
+        # Tx and Tx gate updates
+        tx_id = block['rf']
+        if tx_id != 0: 
+            out_dict['tx0'] = (self._tx_times[tx_id], self._tx_data[tx_id])
+            # duration = max(duration, self._tx_durations[tx_id])
+            tx_gate_start = self._tx_times[tx_id][0] - self._tx_warmup
+            self._error_if(tx_gate_start < 0,
+                f'Tx warmup ({self._tx_warmup}) of RF event {tx_id} is longer than delay ({self._tx_times[tx_id][0]})')
+            out_dict['tx_gate'] = (np.array([tx_gate_start, self._tx_durations[tx_id]]),
+                np.array([1, 0]))
+
+        # Gradient updates
+        for grad_ch in ('gx', 'gy', 'gz'):
+            grad_id = block[grad_ch]
+            if grad_id != 0:
+                grad_var_name = grad_ch[0] + 'rad_v' + grad_ch[1] # To get the correct varname for output g[CH] -> grad_v[CH]
+                self._error_if(np.any(np.abs(self._grad_data[grad_id] / self._grad_max[grad_ch]) > 1), 
+                    f'Gradient event {grad_id} for {grad_ch} in block {block_id} is larger than {grad_ch} max')
+                out_dict[grad_var_name] = (self._grad_times[grad_id], self._grad_data[grad_id] / self._grad_max[grad_ch])
+                # duration = max(duration, self._grad_durations[grad_id])
+
+        # Rx updates
+        rx_id = block['adc']
+        if rx_id != 0:
+            rx_event = self._adc_events[rx_id]
+            rx_start = rx_event['delay']
+            rx_end = rx_start + rx_event['num'] * self._rx_t
+            readout_num += rx_event['num']
+            out_dict['rx0_en'] = (np.array([rx_start, rx_end]), np.array([1, 0]))
+            # duration = max(duration, rx_end)
+
+        # Return durations for each PR and leading edge values
+        return (out_dict, duration, int(readout_num))
+    #endregion
+
     # Helper functions for reading sections
     #region
 
@@ -464,6 +595,44 @@ class PSInterpreter:
 
             tmp = rline.split()
             if len(tmp) == 8: # <id> <delay> <rf> <gx> <gy> <gz> <adc> <ext>
+                data_line = [int(x) for x in tmp]
+                self._warning_if(data_line[0] in self._blocks, f'Repeat block ID {data_line[0]}, overwriting')
+                self._blocks[data_line[0]] = {var_names[i] : data_line[i+1] for i in range(len(var_names))}
+            elif len(tmp) == 7: # Spec allows extension ID not included, add it in as 0
+                data_line = [int(x) for x in tmp]
+                data_line.append(0)
+                self._warning_if(data_line[0] in self._blocks, f'Repeat block ID {data_line[0]}, overwriting')
+                self._blocks[data_line[0]] = {var_names[i] : data_line[i+1] for i in range(len(var_names))}
+
+        if len(self._blocks) == 0: self._logger.error('Zero blocks read, nonzero blocks needed')
+        assert len(self._blocks) > 0, 'Zero blocks read, nonzero blocks needed'
+        self._logger.info('Blocks: Complete')
+
+        return rline
+    
+    # [BLOCKS] <id> <dur> <rf> <gx> <gy> <gz> <adc> <ext>
+    def _read_blocks_v2(self, f):
+        """
+        Read BLOCKS (event block) section in PulSeq file f to object dict memory.
+        Event blocks are formatted like: <id> <dur> <rf> <gx> <gy> <gz> <adc> <ext>
+
+        Args:
+            f (_io.TextIOWrapper): File pointer to read from
+
+        Returns:
+            str: Raw next line in file after section ends
+        """
+        var_names = ('dur', 'rf', 'gx', 'gy', 'gz', 'adc', 'ext')
+        rline = ''
+        line = ''
+        self._logger.info('Blocks: Reading (v2)... ')
+        while True:
+            line = f.readline()
+            rline = self._simplify(line)
+            if line == '' or rline in self._pulseq_keys: break
+
+            tmp = rline.split()
+            if len(tmp) == 8: # <id> <dur> <rf> <gx> <gy> <gz> <adc> <ext>
                 data_line = [int(x) for x in tmp]
                 self._warning_if(data_line[0] in self._blocks, f'Repeat block ID {data_line[0]}, overwriting')
                 self._blocks[data_line[0]] = {var_names[i] : data_line[i+1] for i in range(len(var_names))}
@@ -510,6 +679,38 @@ class PSInterpreter:
 
         return rline
 
+    # [RF] <id> <amp> <mag_id> <phase_id> <time_shape_id> <delay> <freq> <phase>
+    def _read_rf_events_v2(self, f):
+        """
+        Read RF (RF event) section in PulSeq file f to object dict memory.
+        RF events are formatted like: <id> <amp> <mag_id> <phase_id> <time_shape_id> <delay> <freq> <phase>
+
+        Args:
+            f (_io.TextIOWrapper): File pointer to read from
+
+        Returns:
+            str: Raw next line in file after section ends
+        """
+        var_names = ('amp', 'mag_id', 'phase_id', 'time_shape_id', 'delay', 'freq', 'phase')
+        rline = ''
+        line = ''
+        self._logger.info('RF: Reading (v2)...')
+        while True:
+            line = f.readline()
+            rline = self._simplify(line)
+            if line == '' or rline in self._pulseq_keys: break
+
+            tmp = rline.split()
+            if len(tmp) == 8: # <id> <amp> <mag id> <phase id> <time_shape_id> <delay> <freq> <phase>
+                data_line = [int(tmp[0]), float(tmp[1]), int(tmp[2]), int(tmp[3]), int(tmp[4]), int(tmp[5]), float(tmp[6]), float(tmp[7])]
+                self._warning_if(data_line[0] in self._rf_events, f'Repeat RF ID {data_line[0]}, overwriting')
+                self._rf_events[data_line[0]] = {var_names[i] : data_line[i+1] for i in range(len(var_names))}
+
+        self._logger.info('RF: Complete')
+
+        return rline
+
+
     # [GRADIENTS] <id> <amp> <shape_id> <delay>
     def _read_grad_events(self, f):
         """
@@ -541,6 +742,44 @@ class PSInterpreter:
                 data_line.append(0)
                 self._warning_if(data_line[0] in self._grad_events, f'Repeat gradient ID {data_line[0]}, in GRADIENTS, overwriting')
                 self._grad_events[data_line[0]] = {var_names[i] : data_line[i+1] for i in range(len(var_names))}
+            self._grad_events[data_line[0]]['is_trap'] = False
+
+        self._logger.info('Gradients: Complete')
+
+        return rline
+    
+        # [GRADIENTS] <id> <amp> <shape_id> <delay>
+    def _read_grad_events_v2(self, f):
+        """
+        Read GRADIENTS (gradient event) section in PulSeq file f to object dict memory.
+        Gradient events are formatted like: <id> <amp> <shape_id> <time_shape_id> <delay>
+
+        Args:
+            f (_io.TextIOWrapper): File pointer to read from
+
+        Returns:
+            str: Raw next line in file after section ends
+        """
+        var_names = ('amp', 'shape_id', 'time_shape_id', 'delay')
+        rline = ''
+        line = ''
+        self._logger.info('Gradients: Reading (v2)...')
+        while True:
+            line = f.readline()
+            rline = self._simplify(line)
+            if line == '' or rline in self._pulseq_keys: break
+
+            tmp = rline.split()
+            if len(tmp) == 5: # GRAD <id> <amp> <shape id> <time_shape_id> <delay>
+                data_line = [int(tmp[0]), float(tmp[1]), int(tmp[2]), int(tmp[3]), int(tmp[4])]
+                self._warning_if(data_line[0] in self._grad_events, f'Repeat gradient ID {data_line[0]} in GRADIENTS, overwriting')
+                self._grad_events[data_line[0]] = {var_names[i] : data_line[i+1] for i in range(len(var_names))}
+            elif len(tmp) == 4: # GRAD <id> <amp> <shape id> <time_shape_id> NO DELAY
+                data_line = [int(tmp[0]), float(tmp[1]), int(tmp[2]), int(tmp[3])]
+                data_line.append(0)
+                self._warning_if(data_line[0] in self._grad_events, f'Repeat gradient ID {data_line[0]}, in GRADIENTS, overwriting')
+                self._grad_events[data_line[0]] = {var_names[i] : data_line[i+1] for i in range(len(var_names))}
+            self._grad_events[data_line[0]]['is_trap'] = False
 
         self._logger.info('Gradients: Complete')
 
@@ -577,6 +816,7 @@ class PSInterpreter:
                 data_line.append(0)
                 self._warning_if(data_line[0] in self._grad_events, f'Repeat gradient ID {data_line[0]} in TRAP, overwriting')
                 self._grad_events[data_line[0]] = {var_names[i] : data_line[i+1] for i in range(len(var_names))}
+            self._grad_events[data_line[0]]['is_trap'] = True
 
         self._logger.info('Trapezoids: Complete')
 
@@ -654,6 +894,7 @@ class PSInterpreter:
         Returns:
             str: Raw next line in file after section ends
         """
+        print(self._pulseq_keys)
         rline = ''
         line = ''
         self._logger.info('Shapes: Reading...')
@@ -680,7 +921,7 @@ class PSInterpreter:
                         x = 0
                     self._shapes[shape_id][i] = x
                     if dx == prev:
-                        r = int(float(self._simplify(f.readline())))
+                        r = int(self._simplify(f.readline()))
                         for _ in range(0, r):
                             i += 1
                             x += dx
@@ -697,6 +938,112 @@ class PSInterpreter:
         self._logger.info('Shapes: Complete')
 
         return rline
+    
+    def _read_shapes_v2(self, f):
+        """
+        Read SHAPES (rastered shapes) section in PulSeq file f to object dict memory.
+        Shapes are formatted with two header lines, followed by lines of single data points in compressed pulseq shape format
+
+        Args:
+            f (_io.TextIOWrapper): File pointer to read from
+
+        Returns:
+            str: Raw next line in file after section ends
+        """
+        rline = ''
+        line = ''
+        self._logger.info('Shapes: Reading (v2)...')
+        while True:
+            line = f.readline()
+            rline = self._simplify(line)
+            if line == '' or rline in self._pulseq_keys: break
+            if len(rline.split()) == 2 and rline.split()[0].lower() == 'shape_id':
+                shape_id = int(rline.split()[1])
+                n = int(self._simplify(f.readline()).split()[1])
+                self._warning_if(shape_id in self._shapes, f'Repeat shape ID {shape_id}, overwriting')
+                self._logger.info(f'reading shape {shape_id} with {n} samples')
+                self._shapes[shape_id] = np.zeros(n)
+
+                values = []
+                while True:
+                    line = f.readline()
+                    rline = self._simplify(line)
+                    if line == '' or rline in self._pulseq_keys or rline == '': break
+                    values.append(float(rline))
+
+                if len(values) == n:
+                    self._logger.info('uncompressed shape')
+                    self._shapes[shape_id] = np.array(values)
+                else:
+                    self._logger.info('compressed shape')
+                    i = 0
+                    prev = -2
+                    x = 0
+                    value_idx = 0
+                    while i < n:
+                        dx = values[value_idx]
+                        value_idx += 1
+                        x += dx
+                        self._warning_if(x > 1 or x < 0, f'Shape {shape_id} entry {i} is {x},'
+                        ' outside of [0, 1], will be capped')
+                        if x > 1:
+                            x = 1
+                        elif x < 0:
+                            x = 0
+                        self._shapes[shape_id][i] = x
+                        if dx == prev:
+                            r = values[value_idx]
+                            value_idx += 1
+                            for _ in range(0, int(r)):
+                                i += 1
+                                x += dx
+                                self._warning_if(x > 1 or x < 0, f'Shape {shape_id} entry {i} is {x},'
+                                ' outside of [0, 1], will be capped')
+                                if x > 1:
+                                    x = 1
+                                elif x < 0:
+                                    x = 0
+                                self._shapes[shape_id][i] = x
+                        i += 1
+                        prev = dx
+
+        self._logger.info('Shapes: Complete')
+
+        return rline
+    
+    def _read_version(self, f):
+        self._logger.info('Definitions: Reading...')
+        while True:
+            line = f.readline()
+            rline = self._simplify(line)
+            if line == '' or rline in self._pulseq_keys: break
+
+            tmp = rline.split()
+            if len(tmp) == 2:
+                varname, value = rline.split()
+                try:
+                    value = int(value)
+                except:
+                    pass
+
+                if varname == 'major':
+                    self._version_major = value
+                elif varname == 'minor':
+                    self._version_minor = value
+                elif varname == 'revision':
+                    self._version_revision = value
+
+        self._logger.info(f'Version {self._version_major}.{self._version_minor}.{self._version_revision}')
+        if self._version_major == 1:
+            if self._version_minor == 4:
+                self._pulseq_keys['[SHAPES]'] = self._read_shapes_v2
+                self._pulseq_keys['[BLOCKS]'] = self._read_blocks_v2
+                self._pulseq_keys['[RF]'] = self._read_rf_events_v2
+                self._pulseq_keys['[GRADIENTS]'] = self._read_grad_events_v2
+            elif self._version_minor > 4:
+                self._logger.warning("pulseq version {self._version_major}.{self._version_minor}.{self._version_revision} is not supported")
+        return rline
+        
 
     # [DEFINITIONS] <varname> <value>
     def _read_defs(self, f):

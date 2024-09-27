@@ -36,6 +36,7 @@ import seq.larmor_raw as larmor_raw
 import seq.mse as mse
 import seq.pulseq_reader as pulseq_reader
 import seq.fix_gain as fix_gain
+import seq.mse_pp as mse_pp
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
@@ -115,9 +116,6 @@ class AutoTuning(autoTuning.AutoTuning):
 class Localizer(localizer.Localizer):
     def __init__(self): super(Localizer, self).__init__()
 
-class MSE(mse.MSE):
-    def __init__(self): super(MSE, self).__init__()
-
 """
 Definition of default sequences
 """
@@ -150,6 +148,7 @@ defaultsequences = {
     'testSE': testSE(),
     # 'PETRAphysio': PETRAphysio(),
     'Larmor Raw': larmor_raw.LarmorRaw(),
-    'MSE': MSE(),
+    'MSE': mse.MSE(),
+    'MSE PyPulseq': mse_pp.MSE(),
     'Larmor PyPulseq': larmor_pypulseq.LarmorPyPulseq(),
 }
