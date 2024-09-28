@@ -34,6 +34,8 @@ import experiment as ex
 import configs.hw_config as hw
 import configs.units as units
 import seq.mriBlankSeq as blankSeq
+from flocra_pulseq.interpreter import PSInterpreter
+
 
 
 #*********************************************************************************
@@ -169,6 +171,27 @@ class MSE(blankSeq.MRIBLANKSEQ):
         print("Run MSE powered by PyPulseq")
         init_gpa = False
         self.demo = demo
+
+        # Define the interpreter. It should be updated on calibration
+        self.flo_interpreter = PSInterpreter(tx_warmup=hw.blkTime,  # us
+                                             rf_center=hw.larmorFreq * 1e6,  # Hz
+                                             rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Hz
+                                             gx_max=hw.gFactor[0] * hw.gammaB,  # Hz/m
+                                             gy_max=hw.gFactor[1] * hw.gammaB,  # Hz/m
+                                             gz_max=hw.gFactor[2] * hw.gammaB,  # Hz/m
+                                             grad_max=np.max(hw.gFactor) * hw.gammaB,  # Hz/m
+                                             )
+
+        # Define system properties according to hw_config file
+        self.system = pp.Opts(
+            rf_dead_time=hw.blkTime*1e-6,   # s
+            max_grad=hw.max_grad,   # mT/m
+            grad_unit='mT/m',
+            max_slew=hw.max_slew_rate,  # mT/m/ms
+            slew_unit='mT/m/ms',
+            grad_raster_time=hw.grad_raster_time,   # s
+            rise_time=hw.grad_rise_time,    # s
+        )
 
         # Get Parameters
         self.dfov = self.getFovDisplacement()
@@ -393,7 +416,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             """
 
             # Instantiate pypulseq sequence object and save it into the batches dictionarly
-            batches[name] = pp.Sequence()
+            batches[name] = pp.Sequence(self.system)
 
             # Set slice and phase gradients to 0
             gs = pp.scale_grad(gs_max, 0.0)
@@ -647,6 +670,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             n += 1
 
         # Normalize image
+        k_space = np.abs(data_ind[:, int(nSL / 2), :, :])
         image = np.abs(image_ind[:, int(nSL / 2), :, :])
         image = image / np.max(image) * 100
 
@@ -712,6 +736,14 @@ class MSE(blankSeq.MRIBLANKSEQ):
                    'row': 0,
                    'col': 0}
 
+        result2 = {'widget': 'image',
+                   'data': np.log10(k_space),
+                   'xLabel': axes_str[0],
+                   'yLabel': axes_str[1],
+                   'title': "k_space",
+                   'row': 0,
+                   'col': 1}
+
         # Dicom tags
         image_DICOM = np.transpose(image, (0, 2, 1))
         slices, rows, columns = image_DICOM.shape
@@ -736,7 +768,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.meta_data["EchoTrainLength"] = self.mapVals['etl']
 
         # create self.out to run in iterative mode
-        self.output = [result1]
+        self.output = [result1, result2]
 
         # save data once self.output is created
         self.saveRawData()
@@ -753,6 +785,6 @@ if __name__ == "__main__":
 
     seq = MSE()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
+    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
     # seq.sequencePlot(standalone=True)
-    seq.sequenceAnalysis(mode='Standalone')
+    # seq.sequenceAnalysis(mode='Standalone')

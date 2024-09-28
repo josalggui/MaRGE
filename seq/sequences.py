@@ -37,6 +37,7 @@ import seq.mse as mse
 import seq.pulseq_reader as pulseq_reader
 import seq.fix_gain as fix_gain
 import seq.mse_pp as mse_pp
+import seq.mse_pp_jma as mse_jma
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
@@ -121,6 +122,7 @@ Definition of default sequences
 """
 defaultsequences = {
     'Larmor': Larmor(),
+    'MSE_jma': mse_jma.MSE(),
     'RAREprotocols': RAREProtocols(),
     'RAREprotocolsTest': RAREProtocolsTest(),
     'RARE': RARE(),
