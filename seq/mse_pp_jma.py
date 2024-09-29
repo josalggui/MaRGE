@@ -76,8 +76,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
     def sequenceInfo(self):
         print("3D MSE sequence")
         print("Author: Dr. J.M. Algarín")
-        print("Author: Teresa Guallart Naval")
-        print("Contact: tguanav@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain \n")
 
     def sequenceTime(self):
@@ -130,16 +128,17 @@ class MSE(blankSeq.MRIBLANKSEQ):
                                              gy_max=hw.gFactor[1] * hw.gammaB,  # Hz/m
                                              gz_max=hw.gFactor[2] * hw.gammaB,  # Hz/m
                                              grad_max=np.max(hw.gFactor) * hw.gammaB,  # Hz/m
+                                             grad_t = 10,  # us
                                              )
 
         # Define system properties according to hw_config file
         self.system = pp.Opts(
-            rf_dead_time=hw.deadTime * 1e-6,  # s
+            rf_dead_time=(hw.blkTime + 5) * 1e-6,  # s
             max_grad=hw.max_grad,  # mT/m
             grad_unit='mT/m',
             max_slew=hw.max_slew_rate,  # mT/m/ms
             slew_unit='mT/m/ms',
-            grad_raster_time=hw.grad_raster_time,  # s
+            grad_raster_time=1e-6,  # s
             rise_time=hw.grad_rise_time,  # s
         )
 
@@ -250,14 +249,16 @@ class MSE(blankSeq.MRIBLANKSEQ):
         # EVENTS ###################
         ############################
 
+        delay_first = pp.make_delay(20e-3 - self.system.rf_dead_time - self.rfExTime/2)
+
         # Excitation pulse
         flip_ex = self.rfExFA * np.pi / 180
         rf_ex = pp.make_block_pulse(
             flip_angle=flip_ex,
             system=self.system,
             duration=self.rfExTime,
-            delay=self.system.rf_dead_time,
-            phase_offset=np.pi/2,
+            delay=0,
+            phase_offset=0.0,
         )
 
         # Dephasing gradient
@@ -266,7 +267,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             system=self.system,
             amplitude=rdDephAmplitude*hw.gammaB,
             flat_time=self.rdDephTime,
-            delay=self.system.rf_dead_time,
+            delay=-hw.gradDelay * 1e-6,
             rise_time=hw.grad_rise_time,
         )
         delay_preph = pp.make_delay(self.echoSpacing / 2 - self.rfExTime / 2 - self.rfReTime / 2 -
@@ -279,7 +280,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             system=self.system,
             duration=self.rfReTime,
             delay=0,
-            phase_offset=0,
+            phase_offset=np.pi/2,
         )
         delay_reph = pp.make_delay(self.echoSpacing)
 
@@ -289,7 +290,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             system=self.system,
             amplitude=phGradAmplitude * hw.gammaB,
             flat_time=self.phGradTime,
-            delay=self.rfReTime + self.system.rf_dead_time,
+            delay=self.rfReTime + self.system.rf_dead_time - hw.gradDelay * 1e-6,
             rise_time=hw.grad_rise_time,
         )
 
@@ -299,13 +300,13 @@ class MSE(blankSeq.MRIBLANKSEQ):
             system=self.system,
             amplitude=slGradAmplitude * hw.gammaB,
             flat_time=self.phGradTime,
-            delay=self.rfReTime + self.system.rf_dead_time,
+            delay=self.rfReTime + self.system.rf_dead_time - hw.gradDelay * 1e-6,
             rise_time=hw.grad_rise_time,
         )
 
         # Readout gradient
         delay = self.rfReTime / 2 + self.echoSpacing /2 - self.rdGradTime / 2 - hw.grad_rise_time + \
-                self.system.rf_dead_time
+                self.system.rf_dead_time - hw.gradDelay * 1e-6
         gr_readout = pp.make_trapezoid(
             channel=rd_channel,
             system=self.system,
@@ -322,7 +323,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
                           delay=delay)
 
         # Phase gradient rephasing
-        delay = -self.echoSpacing / 2 + (nRD / 2 / BW) * 1e-6 + self.rfReTime / 2 + self.system.rf_dead_time
+        delay = -self.echoSpacing / 2 + (nRD / 2 / BW) * 1e-6 + self.rfReTime / 2 + self.system.rf_dead_time - hw.gradDelay * 1e-6
         gr_phase_r = pp.make_trapezoid(
             channel=ph_channel,
             system=self.system,
@@ -333,7 +334,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         )
 
         # Phase gradient rephasing
-        delay = -self.echoSpacing / 2 + (nRD / 2 / BW) * 1e-6 + self.rfReTime / 2 + self.system.rf_dead_time
+        delay = -self.echoSpacing / 2 + (nRD / 2 / BW) * 1e-6 + self.rfReTime / 2 + self.system.rf_dead_time - hw.gradDelay * 1e-6
         gr_slice_r = pp.make_trapezoid(
             channel=sl_channel,
             system=self.system,
@@ -358,6 +359,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
             gp_d = pp.scale_grad(gr_phase_d, 0.0)
             gs_r = pp.scale_grad(gr_slice_r, 0.0)
             gp_r = pp.scale_grad(gr_phase_r, 0.0)
+
+            batches[name].add_block(delay_first)
 
             # Create dummy pulses
             for dummy in range(self.dummyPulses):
@@ -447,6 +450,27 @@ class MSE(blankSeq.MRIBLANKSEQ):
         # Execute the batches
         data_over = []  # To save oversampled data
         for seq_num in waveforms.keys():
+            # Initialize the experiment
+            if not self.demo:
+                self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
+                                          rx_t=samplingPeriod,  # us
+                                          init_gpa=init_gpa,
+                                          gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                                          auto_leds=True
+                                          )
+                sampling_period = self.expt.get_rx_ts()[0]  # us
+                bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
+                sampling_time = sampling_period * nRD * 1e-6  # s
+                print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
+            else:
+                # To be fixed in demo case
+                sampling_period = samplingPeriod * 1e6  # us
+                bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
+                sampling_time = nRD / bw * 1e-6  # s
+            self.mapVals['Bandwidth (Hz)'] = bw * 1e6  # Hz
+            self.mapVals['Sampling time (s)'] = sampling_time
+            self.mapVals['Larmor Frequency (Hz)'] = hw.larmorFreq
+
             # Save the waveforms into the mriBlankSeq dictionaries
             self.pypulseq2mriblankseq(waveforms=waveforms[seq_num], shimming=self.shimming)
 
@@ -464,16 +488,17 @@ class MSE(blankSeq.MRIBLANKSEQ):
                 for scan in range(self.nScans):
                     print("Scan %i, batch %s/%i running..." % ((scan + 1), seq_num[-1], len(n_readouts.values())))
                     acq_points = 0
+                    nn = n_readouts[seq_num] * hw.oversamplingFactor
                     while acq_points != n_readouts[seq_num] * hw.oversamplingFactor:
                         if not self.demo:
                             rxd, msgs = self.expt.run()
                         else:
-                            rxd = {'rx0': np.random.randn(n_readouts[seq_num] * hw.oversamplingFactor) +
-                                          1j * np.random.randn(n_readouts[seq_num] * hw.oversamplingFactor)}
-                        data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
+                            rxd = {'rx0': np.random.randn(nn) +
+                                          1j * np.random.randn(nn)}
                         acq_points = np.size([rxd['rx0']])
-                        print("Acquired points = %i" % acq_points)
-                        print("Expected points = %i" % (n_readouts[seq_num] * hw.oversamplingFactor))
+                    data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
+                    print("Acquired points = %i" % acq_points)
+                    print("Expected points = %i" % (n_readouts[seq_num] * hw.oversamplingFactor))
                     print("Scan %i ready!" % (scan + 1))
 
             elif plotSeq and standalone:
@@ -481,268 +506,17 @@ class MSE(blankSeq.MRIBLANKSEQ):
                 return True
 
             # Close the experiment
-        if not self.demo:
-            self.expt.__del__()
+            if not self.demo:
+                self.expt.__del__()
 
             # Process data to be plotted
         if not plotSeq:
+            # data_over[0:int(nn/2)] *= 100
             self.mapVals['data_over'] = data_over
             data_full = sig.decimate(data_over, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data_full'] = data_full
 
         return True
-
-
-
-        # # Changing time parameters to us
-        # self.rfExTime = self.rfExTime*1e6
-        # self.rfReTime = self.rfReTime*1e6
-        # self.echoSpacing = self.echoSpacing*1e6
-        # self.repetitionTime = self.repetitionTime*1e6
-        # gradRiseTime = gradRiseTime*1e6
-        # self.phGradTime = self.phGradTime*1e6
-        # self.rdGradTime = self.rdGradTime*1e6
-        # self.rdDephTime = self.rdDephTime*1e6
-        # self.inversionTime = self.inversionTime*1e6
-        # self.preExTime = self.preExTime*1e6
-        # self.echo_shift = self.echo_shift*1e6
-        # nRepetitions = int(nSL*nPH)
-        # scanTime = nRepetitions*self.repetitionTime
-        # self.mapVals['scanTime'] = scanTime*nSL*1e-6
-        # nETL = self.etl
-        #
-        # # Create full sequence
-        # # Run the experiment
-        # dataFull = []
-        # dummyData = []
-        # overData = []
-        # noise = []
-        # nBatches = 0
-        # repeIndexArray = np.array([0])
-        # repeIndexGlobal = repeIndexArray[0]
-        # phIndex = 0
-        # slIndex = 0
-        # lnIndex = 0
-        # acqPointsPerBatch = []
-        # while repeIndexGlobal<nRepetitions:
-        #     nBatches += 1
-        #     # Create the experiment if it is not a demo
-        #     if not self.demo:
-        #         self.expt = ex.Experiment(lo_freq=hw.larmorFreq+self.freqOffset, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        #         samplingPeriod = self.expt.get_rx_ts()[0]
-        #         BW = 1/samplingPeriod/hw.oversamplingFactor
-        #
-        #     # Time vector for main points
-        #     self.time_vector = np.linspace(-self.nPoints[0]/BW/2 + 0.5/BW, self.nPoints[0]/BW/2 - 0.5/BW,
-        #                                    self.nPoints[0]) * 1e-6 # s
-        #
-        #     # Run the createSequence method
-        #     self.acqTime = self.nPoints[0]/BW        # us
-        #     self.mapVals['bw'] = BW
-        #     phIndex, slIndex, lnIndex, repeIndexGlobal, aa = createSequence(phIndex=phIndex,
-        #                                                                     slIndex=slIndex,
-        #                                                                     lnIndex=lnIndex,
-        #                                                                     repeIndexGlobal=repeIndexGlobal)
-        #
-        #     # Save instructions into MaRCoS if not a demo
-        #     if not self.demo:
-        #         if self.floDict2Exp(rewrite=nBatches==1):
-        #             print("Sequence waveforms loaded successfully")
-        #             pass
-        #         else:
-        #             print("ERROR: sequence waveforms out of hardware bounds")
-        #             return False
-        #
-        #     repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
-        #     acqPointsPerBatch.append(aa)
-        #
-        #     if not plotSeq:
-        #         for ii in range(self.nScans):
-        #             print("Batch %i, scan %i running..." % (nBatches, ii+1))
-        #             if not self.demo:
-        #                 acq_points = 0
-        #                 while acq_points != (aa * hw.oversamplingFactor):
-        #                     rxd, msgs = self.expt.run()
-        #                     rxd['rx0'] = rxd['rx0']*hw.adcFactor   # Here I normalize to get the result in mV
-        #                     acq_points = np.size(rxd['rx0'])
-        #                     print("Acquired points = %i" % acq_points)
-        #                     print("Expected points = %i" % (aa * hw.oversamplingFactor))
-        #             else:
-        #                 rxd = {}
-        #                 rxd['rx0'] = np.random.randn(aa*hw.oversamplingFactor) + 1j * np.random.randn(aa*hw.oversamplingFactor)
-        #             # Get noise data
-        #             noise = np.concatenate((noise, rxd['rx0'][0:nRD*hw.oversamplingFactor]), axis = 0)
-        #             rxd['rx0'] = rxd['rx0'][nRD*hw.oversamplingFactor::]
-        #             # Get data
-        #             if self.dummyPulses>0:
-        #                 dummyData = np.concatenate((dummyData, rxd['rx0'][0:nRD*self.etl*hw.oversamplingFactor]), axis = 0)
-        #                 overData = np.concatenate((overData, rxd['rx0'][nRD*self.etl*hw.oversamplingFactor::]), axis = 0)
-        #             else:
-        #                 overData = np.concatenate((overData, rxd['rx0']), axis = 0)
-        #     # elif plotSeq and standalone:
-        #     #     self.plotSequence()
-        #
-        #     if not self.demo: self.expt.__del__()
-        # del aa
-        #
-        # if not plotSeq:
-        #     acqPointsPerBatch= (np.array(acqPointsPerBatch)-self.etl*nRD*(self.dummyPulses>0)-nRD)*self.nScans
-        #     print('Scans ready!')
-        #     self.mapVals['noiseData'] = noise
-        #     self.mapVals['overData'] = overData
-        #
-        #     # Fix the echo position using oversampled data
-        #     if self.dummyPulses>0:
-        #         dummyData = np.reshape(dummyData,  (nBatches*self.nScans, self.etl, nRD*hw.oversamplingFactor))
-        #         dummyData = np.average(dummyData, axis=0)
-        #         self.mapVals['dummyData'] = dummyData
-        #         overData = np.reshape(overData, (-1, self.etl, nRD*hw.oversamplingFactor))
-        #         #overData = self.fixEchoPosition(dummyData, overData)
-        #         overData = np.reshape(overData, -1)
-        #         if self.etl > 1:
-        #             self.dummyAnalysis()
-        #
-        #     # Generate dataFull
-        #     dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-        #     if nBatches>1:
-        #         dataFullA = dataFull[0:sum(acqPointsPerBatch[0:-1])]
-        #         dataFullB = dataFull[sum(acqPointsPerBatch[0:-1])::]
-        #
-        #     # Reorganize dataFull
-        #     dataProv = np.zeros([self.nScans,nSL*nPH*nRD*nETL])
-        #     dataProv = dataProv+1j*dataProv
-        #     if nBatches>1:
-        #         dataFullA = np.reshape(dataFullA, (nBatches-1, self.nScans, -1, nRD*nETL))
-        #         dataFullB = np.reshape(dataFullB, (1, self.nScans, -1, nRD*nETL))
-        #     else:
-        #         dataFull = np.reshape(dataFull, (nBatches, self.nScans, -1, nRD*nETL))
-        #     for scan in range(self.nScans):
-        #         if nBatches>1:
-        #             dataProv[scan, :] = np.concatenate((np.reshape(dataFullA[:,scan,:,:],-1), np.reshape(dataFullB[:,scan,:,:],-1)), axis=0)
-        #         else:
-        #             dataProv[scan, :] = np.reshape(dataFull[:,scan,:,:],-1)
-        #     dataFull = np.reshape(dataProv,-1)
-        #
-        #     # Get index for krd = 0
-        #     # Average data
-        #     dataProv = np.reshape(dataFull, (self.nScans, nRD*nETL*nPH*nSL))
-        #     dataProv = np.average(dataProv, axis=0)
-        #     # Reorganize the data acording to sweep mode
-        #     dataProv = np.reshape(dataProv, (nSL, nPH, nETL, nRD))
-        #     dataTemp = dataProv*0
-        #     for jj in range(nETL):
-        #         for ii in range(nPH):
-        #             dataTemp[:, ind[ii], jj, :] = dataProv[:,  ii, jj, :]
-        #     dataProv = dataTemp
-        #     # Check where is krd = 0
-        #     dataProv = dataProv[int(self.nPoints[2]/2), int(nPH/2), 0, :]
-        #     indkrd0 = np.argmax(np.abs(dataProv))
-        #     if indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
-        #         indkrd0 = int(nRD/2)
-        #
-        #     # Get individual images
-        #     dataFull = np.reshape(dataFull, (self.nScans, nSL, nPH, nETL, nRD))
-        #     dataFull = dataFull[:, :, :, :, indkrd0-int(self.nPoints[0]/2):indkrd0+int(self.nPoints[0]/2)]
-        #     dataTemp = dataFull*0
-        #     for ii in range(nPH):
-        #         dataTemp[:, :, ind[ii], :, :] = dataFull[:, :,  ii, :, :]
-        #     dataFull = dataTemp
-        #     imgFull = dataFull*0
-        #     for jj in range(nETL):
-        #         for ii in range(self.nScans):
-        #             imgFull[ii, :, :, jj, :] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataFull[ii, :, :, jj, :])))
-        #     self.mapVals['dataFull'] = dataFull
-        #     self.mapVals['imgFull'] = imgFull
-        #
-        #     # Average data
-        #     dataMSE = np.average(dataFull, axis=0)
-        #     # self.mapVals['kSpace3D_MSE'] = dataMSE
-        #
-        #     imgMSE = dataMSE*0
-        #     for jj in range(nETL):
-        #         imgMSE[:,:,jj,:]=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataMSE[:,:,jj,:])))
-        #     # self.mapVals['image3D_MSE'] = imgMSE
-        #
-        #
-        #     # Concatenate with k_xyz
-        #     for ii in range(3):
-        #         k_prov = np.reshape(k_ph_sl_xyz[ii, :], (nSL, nPH, self.nPoints[0]))
-        #         k_temp = k_prov * 0
-        #         for jj in range(nPH):
-        #             k_temp[:, ind[jj], :] = k_prov[:, jj, :]
-        #         k_ph_sl_xyz[ii, :] = np.reshape(k_temp, -1)
-        #     k_xyz = k_ph_sl_xyz + k_rd_xyz
-        #     data_sampled = np.transpose(dataMSE, (0,1,3,2))
-        #     sampled_xyz = np.concatenate((k_xyz.T, np.reshape(data_sampled, (nSL*nPH*self.nPoints[0], nETL))), axis=1)
-        #     self.mapVals['sampled_xyz'] = sampled_xyz
-        #     # print(sampled_xyz.shape)
-        #
-        #     # Do zero padding
-        #     dataAllAcq= np.zeros((nETL,self.nPoints[0]*self.nPoints[1]*self.nPoints[2]), dtype=complex)
-        #     for jj in range(nETL):
-        #         dataTemp = np.zeros((self.nPoints[2], self.nPoints[1],self.nPoints[0]))
-        #         dataTemp = dataTemp+1j*dataTemp
-        #         dataTemp[0:nSL, :, :] = dataMSE[:,:,jj,:]
-        #         dataTemp = np.reshape(dataTemp, (1,self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
-        #         dataAllAcq[jj,:] = dataTemp
-        #     # print(dataAllAcq.shape)
-        #
-        #     if self.demo:
-        #         data = self.myPhantom()
-        #
-        #     # Fix the position of the sample according to dfov
-        #     kMax = np.array(self.nPoints)/(2*np.array(self.fov))*np.array(self.axesEnable)
-        #     kRD = self.time_vector*hw.gammaB*rdGradAmplitude
-        #     kSL = np.linspace(-kMax[2],kMax[2],num=self.nPoints[2],endpoint=False)
-        #     kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
-        #     kRD = np.reshape(kRD, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
-        #     kPH = np.reshape(kPH, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
-        #     kSL = np.reshape(kSL, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
-        #     dPhase = np.exp(-2*np.pi*1j*(self.dfov[0]*kRD+self.dfov[1]*kPH+self.dfov[2]*kSL))
-        #     kSpaceAll = np.zeros((self.nPoints[2], self.nPoints[1], nETL, self.nPoints[0]),dtype=complex)
-        #     imageAll = np.zeros((self.nPoints[2], self.nPoints[1], nETL, self.nPoints[0]),dtype=complex)
-        #     for jj in range(nETL):
-        #         dataAllAcq[jj,:] = dataAllAcq[jj,:]*dPhase
-        #         dataAux = np.reshape(dataAllAcq[jj,:], (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
-        #         kSpaceAll[:,:,jj,:] = dataAux
-        #         imageAll[:,:,jj,:] = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataAux)))
-        #
-        #     self.mapVals['kSpace3D_MSE'] = kSpaceAll
-        #     self.mapVals['image3D_MSE'] = imageAll
-        #     img = np.transpose(imageAll, (0,2,1,3))
-        #     img = np.reshape(img, (self.nPoints[2]*nETL, self.nPoints[1], self.nPoints[0]))
-        #     self.mapVals['image3D'] = img
-        #     data = np.transpose(kSpaceAll, (0,2,1,3))
-        #     data = np.reshape(data, (self.nPoints[2]*nETL, self.nPoints[1], self.nPoints[0]))
-        #     self.mapVals['kSpace3D'] = data
-        #
-        #     # Create sampled data
-        #     kRD = np.reshape(kRD, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
-        #     kPH = np.reshape(kPH, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
-        #     kSL = np.reshape(kSL, (self.nPoints[0]*self.nPoints[1]*self.nPoints[2], 1))
-        #     dataAll_sampled = dataAllAcq.T
-        #     self.mapVals['kMax'] = kMax
-        #     self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, dataAll_sampled), axis=1)
-        #     self.mapVals['sampledCartesian'] = self.mapVals['sampled']  # To sweep
-        #
-        #     # if self.calculateMap == 1:
-        #     #     print('Obtaining T2 Map...')
-        #     #     def func1(x, m, t2):
-        #     #         return m*np.exp(-x/t2)
-        #     #     t2Map = np.zeros((self.nPoints[2], self.nPoints[1], self.nPoints[0],))
-        #     #     t2_vector = np.linspace(self.echoSpacing, self.echoSpacing * self.etl, num=self.etl, endpoint=True)*1e3 # s
-        #     #     for kk in range(self.nPoints[2]):
-        #     #         for jj in range(self.nPoints[1]):
-        #     #             for ii in range(self.nPoints[0]):
-        #     #                 # Fitting to functions
-        #     #                 fitData, xxx = curve_fit(func1, t2_vector,  np.abs(imageAll[kk,jj,:,ii]),
-        #     #                                 p0=[np.abs(imageAll[kk,jj,0,ii]), 10])
-        #     #                 t2Map[kk,jj,ii] = fitData[1]
-        #     #     print(np.min(t2Map))
-        #     #     print(np.max(t2Map))
-        #     #     self.mapVals['t2Map'] = t2Map
-        #
-        # return True
 
     def sequenceAnalysis(self, mode=None):
         self.mode = mode
@@ -780,7 +554,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         data_ind = np.zeros(shape=(self.etl, nSL, nPH, nRD), dtype=complex)
         data = np.reshape(data, newshape=(nSL, nPH, self.etl, nRD))
         for echo in range(self.etl):
-            data_ind[echo] = data[:, :, echo, :]
+            data_ind[echo, :, :, :] = np.squeeze(data[:, :, echo, :])
 
         # Remove added data in readout direction
         data_ind = data_ind[:, :, :, hw.addRdPoints: nRD - hw.addRdPoints]
@@ -804,12 +578,27 @@ class MSE(blankSeq.MRIBLANKSEQ):
             n += 1
 
         # Normalize image
-        k_space = np.abs(data_ind[:, int(nSL / 2), :, :])
-        image = np.abs(image_ind[:, int(nSL / 2), :, :])
+        k_space = np.zeros((self.etl*nSL, nPH, nRD - 2 * hw.addRdPoints))
+        image = np.zeros((self.etl*nSL, nPH, nRD - 2 * hw.addRdPoints))
+        n = 0
+        for slice in range(nSL):
+            for echo in range(self.etl):
+                k_space[n, :, :] = np.abs(data_ind[echo, slice, :, :])
+                image[n, :, :] = np.abs(image_ind[echo, slice, :, :])
+                n += 1
+        # image = np.reshape(image_ind, newshape=-1)
+        # image = np.abs(np.reshape(image, newshape=(nSL * self.etl, nPH, nRD-2*hw.addRdPoints)))
+        # k_space = np.reshape(data_ind, newshape=-1)
+        # k_space = np.abs(np.reshape(k_space, newshape=(nSL * self.etl, nPH, nRD-2*hw.addRdPoints)))
+        # k_space = np.abs(data_ind[:, int(nSL / 2), :, :])
+        # image = np.abs(image_ind[:, int(nSL / 2), :, :])
+        # k_space = np.abs(data_ind[0, :, :, :])
+        # image = np.abs(image_ind[0, :, :, :])
         image = image / np.max(image) * 100
 
         imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
         if not self.unlock_orientation:  # Image orientation
+            pass
             if self.axesOrientation[2] == 2:  # Sagittal
                 title = "Sagittal"
                 if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  # OK
@@ -919,4 +708,6 @@ if __name__ == "__main__":
 
     seq = MSE()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
+    seq.sequenceAnalysis(mode='standalone')
+    seq.plotResults()

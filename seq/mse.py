@@ -376,7 +376,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
                 repeIndex+=1 # Update the repeIndex after the ETL
 
             # Turn off the gradients after the end of the batch
-            self.endSequence(repeIndex*self.repetitionTime)
+            self.endSequence((repeIndex+1)*self.repetitionTime)
 
             # Return the output variables
             return(phIndex, slIndex, lnIndex, repeIndexGlobal, acqPoints)
