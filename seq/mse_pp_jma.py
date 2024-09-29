@@ -531,8 +531,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
         data_prov = np.zeros([self.nScans, nRD * nPH * nSL * self.etl], dtype=complex)
         if n_batches > 1:
             n_rds = self.mapVals['n_readouts']
-            data_full_a = data_full[0:sum(n_rds[0:-1])]
-            data_full_b = data_full[sum(n_rds[0:-1]):]
+            data_full_a = data_full[0:sum(n_rds[0:-1]) * self.nScans]
+            data_full_b = data_full[sum(n_rds[0:-1]) * self.nScans:]
             data_full_a = np.reshape(data_full_a, newshape=(n_batches - 1, self.nScans, -1, nRD))
             data_full_b = np.reshape(data_full_b, newshape=(1, self.nScans, -1, nRD))
             for scan in range(self.nScans):
