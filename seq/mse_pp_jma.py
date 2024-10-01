@@ -40,38 +40,49 @@ class MSE(blankSeq.MRIBLANKSEQ):
         super(MSE, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='MSEInfo', val='MSE_jma')
-        self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
-        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=10.0, units=units.kHz, field='RF')
+        self.addParameter(key='nScans', string='Number of scans', val=2, field='IM')
+        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz,
+                          field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=60.0, units=units.us, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=120.0, units=units.us, field='RF')
         self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, units=units.ms, field='SEQ')
         self.addParameter(key='preExTime', string='Preexitation time (ms)', val=0.0, units=units.ms, field='SEQ')
-        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ', tip="0 to ommit this pulse")
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
+        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ',
+                          tip="0 to ommit this pulse")
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ',
+                          tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
-        self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 20], field='IM')
+        self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
+                          tip="Position of the gradient isocenter")
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[50, 50, 10], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ')
+        self.addParameter(key='etl', string='Echo train length', val=10, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
-        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM', tip="0=x, 1=y, 2=z")
-        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 1], field='IM', tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
-        self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
-        self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, units=units.ms, field='OTH')
-        self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
-        self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
+        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM',
+                          tip="0=x, 1=y, 2=z")
+        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 1], field='IM',
+                          tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
+        self.addParameter(key='sweepMode', string='Sweep mode', val=0, field='SEQ',
+                          tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
+        self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=3.0, units=units.ms, field='OTH')
+        self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=0.5, units=units.ms, field='OTH')
+        self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=0.5, units=units.ms, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
-        self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
+        self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ',
+                          tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
-        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1, field='OTH', tip="Fraction of k planes aquired in slice direction")
-        self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
-        self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
+        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH',
+                          tip="Fraction of k planes aquired in slice direction")
+        self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH',
+                          tip='Shift the gradient echo time respect to the spin echo time.')
+        self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH',
+                          tip='0: Images oriented according to standard. 1: Image raw orientation')
         # self.addParameter(key='calculateMap', string='Calculate T2 Map', val=1, field='OTH', tip='0: Do not calculate. 1: Calculate')
-        self.addParameter(key='rfMode', string='RF mode', val=3, field='OTH', tip='0: CPMG. 1: APCP. 2:APCPMG. 3:CP')
+        self.addParameter(key='rfMode', string='RF mode', val=0, field='OTH', tip='0: CPMG. 1: APCP. 2:APCPMG. 3:CP')
 
     def sequenceInfo(self):
         print("3D MSE sequence")
@@ -509,9 +520,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
             if not self.demo:
                 self.expt.__del__()
 
-            # Process data to be plotted
+        # Process data to be plotted
         if not plotSeq:
-            # data_over[0:int(nn/2)] *= 100
             self.mapVals['data_over'] = data_over
             data_full = sig.decimate(data_over, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data_full'] = data_full
@@ -578,22 +588,14 @@ class MSE(blankSeq.MRIBLANKSEQ):
             n += 1
 
         # Normalize image
-        k_space = np.zeros((self.etl*nSL, nPH, nRD - 2 * hw.addRdPoints))
-        image = np.zeros((self.etl*nSL, nPH, nRD - 2 * hw.addRdPoints))
+        k_space = np.zeros((self.etl * nSL, nPH, nRD - 2 * hw.addRdPoints))
+        image = np.zeros((self.etl * nSL, nPH, nRD - 2 * hw.addRdPoints))
         n = 0
         for slice in range(nSL):
             for echo in range(self.etl):
                 k_space[n, :, :] = np.abs(data_ind[echo, slice, :, :])
                 image[n, :, :] = np.abs(image_ind[echo, slice, :, :])
                 n += 1
-        # image = np.reshape(image_ind, newshape=-1)
-        # image = np.abs(np.reshape(image, newshape=(nSL * self.etl, nPH, nRD-2*hw.addRdPoints)))
-        # k_space = np.reshape(data_ind, newshape=-1)
-        # k_space = np.abs(np.reshape(k_space, newshape=(nSL * self.etl, nPH, nRD-2*hw.addRdPoints)))
-        # k_space = np.abs(data_ind[:, int(nSL / 2), :, :])
-        # image = np.abs(image_ind[:, int(nSL / 2), :, :])
-        # k_space = np.abs(data_ind[0, :, :, :])
-        # image = np.abs(image_ind[0, :, :, :])
         image = image / np.max(image) * 100
 
         imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
@@ -604,6 +606,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
                 if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  # OK
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
+                    k_space = np.flip(k_space, axis=2)
+                    k_space = np.flip(k_space, axis=1)
                     x_label = "(-Y) A | PHASE | P (+Y)"
                     y_label = "(-X) I | READOUT | S (+X)"
                     imageOrientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
@@ -611,6 +615,9 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     image = np.transpose(image, (0, 2, 1))
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
+                    k_space = np.transpose(k_space, (0, 2, 1))
+                    k_space = np.flip(k_space, axis=2)
+                    k_space = np.flip(k_space, axis=1)
                     x_label = "(-Y) A | READOUT | P (+Y)"
                     y_label = "(-X) I | PHASE | S (+X)"
                     imageOrientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
@@ -620,6 +627,9 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
                     image = np.flip(image, axis=0)
+                    k_space = np.flip(k_space, axis=2)
+                    k_space = np.flip(k_space, axis=1)
+                    k_space = np.flip(k_space, axis=0)
                     x_label = "(+Z) R | PHASE | L (-Z)"
                     y_label = "(-X) I | READOUT | S (+X)"
                     imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
@@ -628,6 +638,10 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
                     image = np.flip(image, axis=0)
+                    k_space = np.transpose(k_space, (0, 2, 1))
+                    k_space = np.flip(k_space, axis=2)
+                    k_space = np.flip(k_space, axis=1)
+                    k_space = np.flip(k_space, axis=0)
                     x_label = "(+Z) R | READOUT | L (-Z)"
                     y_label = "(-X) I | PHASE | S (+X)"
                     imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
@@ -636,6 +650,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
                 if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
+                    k_space = np.flip(k_space, axis=2)
+                    k_space = np.flip(k_space, axis=1)
                     x_label = "(+Z) R | PHASE | L (-Z)"
                     y_label = "(+Y) P | READOUT | A (-Y)"
                     imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
@@ -643,6 +659,9 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     image = np.transpose(image, (0, 2, 1))
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
+                    k_space = np.transpose(k_space, (0, 2, 1))
+                    k_space = np.flip(k_space, axis=2)
+                    k_space = np.flip(k_space, axis=1)
                     x_label = "(+Z) R | READOUT | L (-Z)"
                     y_label = "(+Y) P | PHASE | A (-Y)"
                     imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
@@ -661,8 +680,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
 
         result2 = {'widget': 'image',
                    'data': np.log10(k_space),
-                   'xLabel': axes_str[0],
-                   'yLabel': axes_str[1],
+                   'xLabel': x_label,
+                   'yLabel': y_label,
                    'title': "k_space",
                    'row': 0,
                    'col': 1}

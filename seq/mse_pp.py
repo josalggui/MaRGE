@@ -70,22 +70,25 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=60.0, units=units.us, field='RF')
-        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=100.0, units=units.us, field='RF')
+        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=120.0, units=units.us, field='RF')
+        self.addParameter(key='deadTime', string='Dead time (us)', val=20.0, units=units.us, field='RF')
         self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, units=units.ms, field='SEQ')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=2000., units=units.ms, field='SEQ')
-        self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[25.6, 19.2, 12.8], units=units.cm, field='IM')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=40., units=units.ms, field='SEQ')
+        self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[55.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
                           tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 30, 40], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=10, field='SEQ')
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
-        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM',
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 2, 1], field='IM')
+        self.addParameter(key='etl', string='Echo train length', val=2, field='SEQ')
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
+        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM',
                           tip="0=x, 1=y, 2=z")
-        self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=5.0, units=units.ms, field='OTH')
-        self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ')
+        self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=3.0, units=units.ms, field='OTH')
+        self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ')
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH',
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
+        self.addParameter(key='preemphasis', string='Preemphasis', val=1.0, field='OTH')
+        self.addParameter(key='fsp_r', string='fsp_r', val=1.0, field='OTH')
 
     def sequenceInfo(self):
         print("3D MSE sequence with PyPulseq")
@@ -180,17 +183,18 @@ class MSE(blankSeq.MRIBLANKSEQ):
                                              gy_max=hw.gFactor[1] * hw.gammaB,  # Hz/m
                                              gz_max=hw.gFactor[2] * hw.gammaB,  # Hz/m
                                              grad_max=np.max(hw.gFactor) * hw.gammaB,  # Hz/m
+                                             grad_t=10,  # us
                                              )
 
         # Define system properties according to hw_config file
         self.system = pp.Opts(
-            rf_dead_time=hw.blkTime*1e-6,   # s
-            max_grad=hw.max_grad,   # mT/m
+            rf_dead_time=self.deadTime,  # s
+            max_grad=hw.max_grad,  # mT/m
             grad_unit='mT/m',
             max_slew=hw.max_slew_rate,  # mT/m/ms
             slew_unit='mT/m/ms',
-            grad_raster_time=hw.grad_raster_time,   # s
-            rise_time=hw.grad_rise_time,    # s
+            grad_raster_time=10e-6,  # s
+            rise_time=hw.grad_rise_time,  # s
         )
 
         # Get Parameters
@@ -219,30 +223,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.mapVals['oversamplingFactor'] = os
         t_ex = self.rfExTime
         t_ref = self.rfReTime
-        fsp_r = 1  # Not sure about what this parameter does.
+        fsp_r = self.fsp_r  # Not sure about what this parameter does.
         fsp_s = 0.5  # Not sure about what this parameter does. It is not used in the code.
-
-        # Initialize the experiment
-        bw = nRD / sampling_time * hw.oversamplingFactor  # Hz
-        sampling_period = 1 / bw  # s
-        self.mapVals['samplingPeriod'] = sampling_period
-        if not self.demo:
-            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
-                                      rx_t=sampling_period * 1e6,  # us
-                                      init_gpa=init_gpa,
-                                      gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                      auto_leds=True
-                                      )
-            sampling_period = self.expt.get_rx_ts()[0]  # us
-            bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
-            print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
-        else:
-            sampling_period = sampling_period * 1e6  # us
-            bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
-            sampling_time = nRD / bw * 1e-6  # s
-        self.mapVals['bw'] = bw * 1e6  # Hz
-        self.mapVals['samplingTime'] = sampling_time
-        self.mapVals['larmorFreq'] = hw.larmorFreq
 
         # Derived and modified parameters
         fov = np.array(fov_mm) * 1e-3
@@ -255,7 +237,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             (0.5 * (
                         TE - ro_flattop_time - t_ref) - rf_add) / self.system.grad_raster_time) * self.system.grad_raster_time
         t_spex = round(
-            (0.5 * (TE - t_ex - t_ref) - 2 * rf_add) / self.system.grad_raster_time) * self.system.grad_raster_time
+            (0.5 * (TE - t_ex - t_ref) - rf_add) / self.system.grad_raster_time) * self.system.grad_raster_time
         rf_ex_phase = np.pi / 2
         rf_ref_phase = 0
 
@@ -289,7 +271,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         )
         d_ref = pp.make_delay(t_ref + rf_add * 2)
 
-        delta_krd = 1 / fov[self.axesOrientation[0]]
+        delta_krd = 1 / fov[0]
         ro_amp = nRD * delta_krd / sampling_time
 
         gr_acq = pp.make_trapezoid(
@@ -302,7 +284,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         )
         adc = pp.make_adc(
             num_samples=(nRD_pre + nRD + nRD_post) * os, dwell=sampling_time / nRD / os,
-            delay=t_sp + dG - nRD_pre * sampling_time / nRD
+            delay=0.5 * (TE - t_ref - (nRD + nRD_post + nRD_pre) * sampling_time / nRD ) - rf_add
         )
         gr_spr = pp.make_trapezoid(
             channel=rd_channel,
@@ -315,10 +297,11 @@ class MSE(blankSeq.MRIBLANKSEQ):
         agr_spr = gr_spr.area
         agr_preph = gr_acq.area / 2 + agr_spr
         gr_preph = pp.make_trapezoid(
-            channel=rd_channel, system=self.system, area=agr_preph, duration=t_spex, rise_time=dG
+            channel=rd_channel, system=self.system, area=agr_preph, duration=0.0018, rise_time=dG
         )
+        delay_preph = pp.make_delay(t_spex)
         # Phase-encoding
-        delta_kph = 1 / fov[self.axesOrientation[1]]
+        delta_kph = 1 / fov[1]
         gp_max = pp.make_trapezoid(
             channel=ph_channel,
             system=self.system,
@@ -326,7 +309,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             duration=t_sp,
             rise_time=dG,
         )
-        delta_ksl = 1 / fov[self.axesOrientation[2]]
+        delta_ksl = 1 / fov[2]
         gs_max = pp.make_trapezoid(
             channel=sl_channel,
             system=self.system,
@@ -360,7 +343,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         gs_max = pp.make_extended_trapezoid(channel=sl_channel, times=gc_times, amplitudes=gs_amp)
 
         # Fill-times
-        t_ex = pp.calc_duration(d_ex) + pp.calc_duration(gr_preph)
+        t_ex = pp.calc_duration(d_ex) + pp.calc_duration(delay_preph)
         t_ref = pp.calc_duration(d_ref) + pp.calc_duration(gr)
 
         t_train = t_ex + n_echo * t_ref
@@ -426,7 +409,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             for dummy in range(self.dummyPulses):
                 # Add excitation and pre-phasing
                 batches[name].add_block(rf_ex, d_ex)
-                batches[name].add_block(gr_preph)
+                batches[name].add_block(pp.scale_grad(gr_preph, self.preemphasis), delay_preph)
 
                 # Add echo train
                 for k_echo in range(n_echo):
@@ -522,7 +505,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
 
                     # Add excitation pulse and readout de-phasing gradient
                     batches[seq_num].add_block(rf_ex, d_ex)
-                    batches[seq_num].add_block(gr_preph)
+                    batches[seq_num].add_block(pp.scale_grad(gr_preph, self.preemphasis), delay_preph)
 
                     # Add the echo train
                     for k_echo in range(n_echo):
@@ -565,6 +548,28 @@ class MSE(blankSeq.MRIBLANKSEQ):
         # Execute the batches
         data_over = []  # To save oversampled data
         for seq_num in waveforms.keys():
+            # Initialize the experiment
+            bw = nRD / sampling_time * hw.oversamplingFactor  # Hz
+            sampling_period = 1 / bw  # s
+            self.mapVals['samplingPeriod'] = sampling_period
+            if not self.demo:
+                self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
+                                          rx_t=sampling_period * 1e6,  # us
+                                          init_gpa=init_gpa,
+                                          gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                                          auto_leds=True
+                                          )
+                sampling_period = self.expt.get_rx_ts()[0]  # us
+                bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
+                print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
+            else:
+                sampling_period = sampling_period * 1e6  # us
+                bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
+                sampling_time = nRD / bw * 1e-6  # s
+            self.mapVals['bw'] = bw * 1e6  # Hz
+            self.mapVals['samplingTime'] = sampling_time
+            self.mapVals['larmorFreq'] = hw.larmorFreq
+
             # Save the waveforms into the mriBlankSeq dictionaries
             self.pypulseq2mriblankseq(waveforms=waveforms[seq_num], shimming=self.shimming)
 
@@ -588,19 +593,19 @@ class MSE(blankSeq.MRIBLANKSEQ):
                         else:
                             rxd = {'rx0': np.random.randn(n_readouts[seq_num] * hw.oversamplingFactor) +
                                           1j * np.random.randn(n_readouts[seq_num] * hw.oversamplingFactor)}
-                        data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
                         acq_points = np.size([rxd['rx0']])
-                        print("Acquired points = %i" % acq_points)
-                        print("Expected points = %i" % (n_readouts[seq_num] * hw.oversamplingFactor))
+                    data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
+                    print("Acquired points = %i" % acq_points)
+                    print("Expected points = %i" % (n_readouts[seq_num] * hw.oversamplingFactor))
                     print("Scan %i ready!" % (scan + 1))
 
             elif plotSeq and standalone:
                 self.sequencePlot(standalone=standalone)
                 return True
 
-        # Close the experiment
-        if not self.demo:
-            self.expt.__del__()
+            # Close the experiment
+            if not self.demo:
+                self.expt.__del__()
 
         # Process data to be plotted
         if not plotSeq:
@@ -623,8 +628,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
         data_prov = np.zeros([self.nScans, nRD * nPH * nSL * self.etl], dtype=complex)
         if n_batches > 1:
             n_rds = self.mapVals['n_readouts']
-            data_full_a = data_full[0:sum(n_rds[0:-1])]
-            data_full_b = data_full[sum(n_rds[0:-1]):]
+            data_full_a = data_full[0:sum(n_rds[0:-1]) * self.nScans]
+            data_full_b = data_full[sum(n_rds[0:-1]) * self.nScans:]
             data_full_a = np.reshape(data_full_a, newshape=(n_batches - 1, self.nScans, -1, nRD))
             data_full_b = np.reshape(data_full_b, newshape=(1, self.nScans, -1, nRD))
             for scan in range(self.nScans):
@@ -646,7 +651,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         data_ind = np.zeros(shape=(self.etl, nSL, nPH, nRD), dtype=complex)
         data = np.reshape(data, newshape=(nSL, nPH, self.etl, nRD))
         for echo in range(self.etl):
-            data_ind[echo] = data[:, :, echo, :]
+            data_ind[echo, :, :, :] = np.squeeze(data[:, :, echo, :])
 
         # Remove added data in readout direction
         data_ind = data_ind[:, :, :, hw.addRdPoints: nRD - hw.addRdPoints]
@@ -670,17 +675,26 @@ class MSE(blankSeq.MRIBLANKSEQ):
             n += 1
 
         # Normalize image
-        k_space = np.abs(data_ind[:, int(nSL / 2), :, :])
-        image = np.abs(image_ind[:, int(nSL / 2), :, :])
+        k_space = np.zeros((self.etl * nSL, nPH, nRD - 2 * hw.addRdPoints))
+        image = np.zeros((self.etl * nSL, nPH, nRD - 2 * hw.addRdPoints))
+        n = 0
+        for slice in range(nSL):
+            for echo in range(self.etl):
+                k_space[n, :, :] = np.abs(data_ind[echo, slice, :, :])
+                image[n, :, :] = np.abs(image_ind[echo, slice, :, :])
+                n += 1
         image = image / np.max(image) * 100
 
         imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
         if not self.unlock_orientation:  # Image orientation
+            pass
             if self.axesOrientation[2] == 2:  # Sagittal
                 title = "Sagittal"
                 if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  # OK
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
+                    k_space = np.flip(k_space, axis=2)
+                    k_space = np.flip(k_space, axis=1)
                     x_label = "(-Y) A | PHASE | P (+Y)"
                     y_label = "(-X) I | READOUT | S (+X)"
                     imageOrientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
@@ -688,6 +702,9 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     image = np.transpose(image, (0, 2, 1))
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
+                    k_space = np.transpose(k_space, (0, 2, 1))
+                    k_space = np.flip(k_space, axis=2)
+                    k_space = np.flip(k_space, axis=1)
                     x_label = "(-Y) A | READOUT | P (+Y)"
                     y_label = "(-X) I | PHASE | S (+X)"
                     imageOrientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
@@ -697,6 +714,9 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
                     image = np.flip(image, axis=0)
+                    k_space = np.flip(k_space, axis=2)
+                    k_space = np.flip(k_space, axis=1)
+                    k_space = np.flip(k_space, axis=0)
                     x_label = "(+Z) R | PHASE | L (-Z)"
                     y_label = "(-X) I | READOUT | S (+X)"
                     imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
@@ -705,6 +725,10 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
                     image = np.flip(image, axis=0)
+                    k_space = np.transpose(k_space, (0, 2, 1))
+                    k_space = np.flip(k_space, axis=2)
+                    k_space = np.flip(k_space, axis=1)
+                    k_space = np.flip(k_space, axis=0)
                     x_label = "(+Z) R | READOUT | L (-Z)"
                     y_label = "(-X) I | PHASE | S (+X)"
                     imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
@@ -713,6 +737,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
                 if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
+                    k_space = np.flip(k_space, axis=2)
+                    k_space = np.flip(k_space, axis=1)
                     x_label = "(+Z) R | PHASE | L (-Z)"
                     y_label = "(+Y) P | READOUT | A (-Y)"
                     imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
@@ -720,6 +746,9 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     image = np.transpose(image, (0, 2, 1))
                     image = np.flip(image, axis=2)
                     image = np.flip(image, axis=1)
+                    k_space = np.transpose(k_space, (0, 2, 1))
+                    k_space = np.flip(k_space, axis=2)
+                    k_space = np.flip(k_space, axis=1)
                     x_label = "(+Z) R | READOUT | L (-Z)"
                     y_label = "(+Y) P | PHASE | A (-Y)"
                     imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
@@ -738,8 +767,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
 
         result2 = {'widget': 'image',
                    'data': np.log10(k_space),
-                   'xLabel': axes_str[0],
-                   'yLabel': axes_str[1],
+                   'xLabel': x_label,
+                   'yLabel': y_label,
                    'title': "k_space",
                    'row': 0,
                    'col': 1}
@@ -786,5 +815,4 @@ if __name__ == "__main__":
     seq = MSE()
     seq.sequenceAtributes()
     seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
-    # seq.sequencePlot(standalone=True)
     # seq.sequenceAnalysis(mode='Standalone')

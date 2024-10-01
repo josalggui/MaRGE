@@ -38,17 +38,17 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(PulseqReader, self).__init__()
         # Input the parameters
+        self.files = None
         self.output = None
         self.nScans = None
         self.shimming = None
         self.expt = None
         self.larmorFreq = None
-        self.file_path = None
         self.addParameter(key='seqName', string='PulseqReader', val='PulseqReader')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.066, units=units.MHz, field='IM')
         self.addParameter(key='shimming', string='Shimming', val=[0, 0, 0], field='IM', units=units.sh)
-        self.addParameter(key='file_path', string='File Path', val="sequence.seq", field='IM', tip='Write the path to your .seq file')
+        self.addParameter(key='files', string='Files', val="[batch_1.seq, batch_2.seq]", field='IM', tip='List .seq files')
 
     def sequenceInfo(self):
         
@@ -61,6 +61,13 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
 
     def sequenceTime(self):
         return 0  # minutes, scanTime
+
+    def sequenceAtributes(self):
+        super().sequenceAtributes()
+
+        # Convert files to a list
+        self.files = self.files.strip('[]').split(',')
+        self.files = [s.strip() for s in self.files]
 
     def sequenceRun(self, plotSeq=0, demo=False, standalone=False):
         init_gpa = False
@@ -93,70 +100,63 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
 
             return n_readouts, dwell_time
 
-        # Get the dwell time
-        n_readouts, dwell = get_seq_info(self.file_path)  # dwell is in ns
-
-        # Create experiment
-        if not self.demo:
-            self.expt = ex.Experiment(lo_freq=self.larmorFreq * 1e-6,  # MHz
-                                      rx_t=dwell * 1e-3,  # us
-                                      init_gpa=init_gpa,
-                                      gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                      )
-            dwell = self.expt.get_rx_ts()[0]
-        bw = 1/dwell * 1e9  # Hz
-        self.mapVals['samplingPeriod'] = dwell * 1e-9  # s
-        self.mapVals['bw'] = bw  # Hz
-
-        # Run the interpreter to get the waveforms
-        waveforms, param_dict = self.flo_interpreter.interpret('sequence.seq')
-
-        # Get number of Rx windows
-        n_rx_windows = int(np.sum(waveforms['rx0_en'][1][:]))
-
-        # Convert waveform to mriBlankSeq tools (just do it)
-        self.pypulseq2mriblankseq(waveforms=waveforms, shimming=self.shimming)
-
-        if not self.demo:
-            if self.floDict2Exp():
-                print("Sequence waveforms loaded successfully")
-                pass
-            else:
-                print("ERROR: sequence waveforms out of hardware bounds")
-                return False
-
-        # Run the experiment
         data_over = []  # To save oversampled data
-        if not plotSeq:
-            for scan in range(self.nScans):
-                print("Scan %i running..." % (scan + 1))
-                if not self.demo:
-                    rxd, msgs = self.expt.run()
-                    rxd['rx0'] = hw.adcFactor * (np.real(rxd['rx0']) - 1j * np.imag(rxd['rx0']))
+        for file in self.files:
+            print("Running " + file + "...")
+            # Get the dwell time and n_readouts
+            n_readouts, dwell = get_seq_info(file)  # dwell is in ns
+
+            # Create experiment
+            if not self.demo:
+                self.expt = ex.Experiment(lo_freq=self.larmorFreq * 1e-6,  # MHz
+                                          rx_t=dwell * 1e-3,  # us
+                                          init_gpa=init_gpa,
+                                          gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                                          )
+                dwell = self.expt.get_rx_ts()[0]
+            bw = 1/dwell * 1e9  # Hz
+            self.mapVals['samplingPeriod'] = dwell * 1e-9  # s
+            self.mapVals['bw'] = bw  # Hz
+
+            # Run the interpreter to get the waveforms
+            waveforms, param_dict = self.flo_interpreter.interpret(file)
+
+            # Get number of Rx windows
+            n_rx_windows = int(np.sum(waveforms['rx0_en'][1][:]))
+
+            # Convert waveform to mriBlankSeq tools (just do it)
+            self.pypulseq2mriblankseq(waveforms=waveforms, shimming=self.shimming)
+
+            if not self.demo:
+                if self.floDict2Exp():
+                    print("Sequence waveforms loaded successfully")
+                    pass
                 else:
-                    rxd = {'rx0': np.random.randn(n_readouts * n_rx_windows) +
-                                  1j * np.random.randn(n_readouts * n_rx_windows)}
-                data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
-                print("Acquired points = %i" % np.size([rxd['rx0']]))
-                print("Expected points = %i" % n_readouts * n_rx_windows)
-                print("Scan %i ready!" % (scan + 1))
-                self.mapVals['data_over'] = data_over
-        elif plotSeq and standalone:
-            self.sequencePlot(standalone=standalone)
-            return True
+                    print("ERROR: sequence waveforms out of hardware bounds")
+                    return False
 
-        # Close the experiment
-        if not self.demo:
-            self.expt.__del__()
+            # Run the experiment
+            if not plotSeq:
+                for scan in range(self.nScans):
+                    print("Scan %i running..." % (scan + 1))
+                    if not self.demo:
+                        rxd, msgs = self.expt.run()
+                        rxd['rx0'] = hw.adcFactor * (np.real(rxd['rx0']) - 1j * np.imag(rxd['rx0']))
+                    else:
+                        rxd = {'rx0': np.random.randn(n_readouts * n_rx_windows) +
+                                      1j * np.random.randn(n_readouts * n_rx_windows)}
+                    data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
+                    print("Acquired points = %i" % np.size([rxd['rx0']]))
+                    print("Expected points = %i" % n_readouts * n_rx_windows)
+                    print("Scan %i ready!" % (scan + 1))
+                    self.mapVals['data_over'] = data_over
+            elif plotSeq and standalone:
+                self.sequencePlot(standalone=standalone)
+                return True
 
-        # Add waveforms to the experiment
-        if not self.demo:
-            if self.floDict2Exp():
-                print("Sequence waveforms loaded successfully")
-                pass
-            else:
-                print("ERROR: sequence waveforms out of hardware bounds")
-                return False
+            # Close the experiment
+            if not self.demo:
+                self.expt.__del__()
 
         return True
 
@@ -177,8 +177,8 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__':
     seq = PulseqReader()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
-    # seq.sequenceAnalysis(mode='Standalone')
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
+    seq.sequenceAnalysis(mode='Standalone')
 
 
 
