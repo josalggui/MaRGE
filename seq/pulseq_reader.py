@@ -73,6 +73,36 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
         init_gpa = False
         self.demo = demo
 
+        # Step 1: Define the interpreter for FloSeq/PSInterpreter.
+        # The interpreter is responsible for converting the high-level pulse sequence description into low-level
+        # instructions for the scanner hardware. You will typically update the interpreter during scanner calibration.
+        self.flo_interpreter = PSInterpreter(
+            tx_warmup=hw.blkTime,  # Transmit chain warm-up time (us)
+            rf_center=hw.larmorFreq * 1e6,  # Larmor frequency (Hz)
+            rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Maximum RF amplitude (Hz)
+            gx_max=hw.gFactor[0] * hw.gammaB,  # Maximum gradient amplitude for X (Hz/m)
+            gy_max=hw.gFactor[1] * hw.gammaB,  # Maximum gradient amplitude for Y (Hz/m)
+            gz_max=hw.gFactor[2] * hw.gammaB,  # Maximum gradient amplitude for Z (Hz/m)
+            grad_max=np.max(hw.gFactor) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
+            grad_t=100,  # Gradient raster time (us)
+        )
+
+        # Step 2: Define system properties using PyPulseq (pp.Opts).
+        # These properties define the hardware capabilities of the MRI scanner, such as maximum gradient strengths,
+        # slew rates, and dead times. They are typically set based on the hardware configuration file (`hw_config`).
+        self.system = pp.Opts(
+            rf_dead_time=(hw.blkTime + 5) * 1e-6,  # Dead time between RF pulses (s)
+            max_grad=hw.max_grad,  # Maximum gradient strength (mT/m)
+            grad_unit='mT/m',  # Units of gradient strength
+            max_slew=hw.max_slew_rate,  # Maximum gradient slew rate (mT/m/ms)
+            slew_unit='mT/m/ms',  # Units of gradient slew rate
+            grad_raster_time=100e-6,  # Gradient raster time (s)
+            rise_time=hw.grad_rise_time,  # Gradient rise time (s)
+        )
+
+        # Initialize the sequence
+        self.seq = pp.Sequence(self.system)
+
         # Function to get the dwell time
         def get_seq_info(file_path):
             dwell_time = None
