@@ -278,6 +278,8 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
 
         # Generate batches and get waveforms and readout points
         waveforms, n_readouts = createBatches()
+        self.mapVals['n_readouts'] = list(n_readouts.values())
+        self.mapVals['n_batches'] = len(n_readouts.values())
 
         # Initialize a list to hold oversampled data
         data_over = []
@@ -293,6 +295,9 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
                     gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
                     auto_leds=True  # Automatic control of LEDs
                 )
+                sampling_period = self.expt.get_rx_ts()[0]  # us
+                bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
+                print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
 
             # Convert the PyPulseq waveform to the Red Pitaya compatible format
             self.pypulseq2mriblankseq(waveforms=waveforms[seq_num], shimming=[0.0, 0.0, 0.0])
