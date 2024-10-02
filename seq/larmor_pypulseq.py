@@ -31,6 +31,8 @@ import scipy.signal as sig
 import configs.hw_config as hw
 import configs.units as units
 import experiment as ex
+from flocra_pulseq.interpreter import PSInterpreter
+import pypulseq as pp
 
 
 class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
@@ -77,6 +79,27 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
     def sequenceRun(self, plotSeq=0, demo=False, standalone=False):
         init_gpa = False  # Starts the gpa
         self.demo = demo
+
+        # Define the interpreter. It should be updated on calibration
+        self.flo_interpreter = PSInterpreter(tx_warmup=hw.blkTime,  # us
+                                             rf_center=hw.larmorFreq * 1e6,  # Hz
+                                             rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Hz
+                                             gx_max=hw.gFactor[0] * hw.gammaB,  # Hz/m
+                                             gy_max=hw.gFactor[1] * hw.gammaB,  # Hz/m
+                                             gz_max=hw.gFactor[2] * hw.gammaB,  # Hz/m
+                                             grad_max=np.max(hw.gFactor) * hw.gammaB,  # Hz/m
+                                             )
+
+        # Define system properties according to hw_config file
+        self.system = pp.Opts(
+            rf_dead_time=hw.blkTime * 1e-6,  # s
+            max_grad=hw.max_grad,  # mT/m
+            grad_unit='mT/m',
+            max_slew=hw.max_slew_rate,  # mT/m/ms
+            slew_unit='mT/m/ms',
+            grad_raster_time=hw.grad_raster_time,  # s
+            rise_time=hw.grad_rise_time,  # s
+        )
 
         # Set the refocusing time in to twice the excitation time
         if self.rfReTime == 0:

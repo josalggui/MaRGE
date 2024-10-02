@@ -151,6 +151,6 @@ defaultsequences = {
     # 'PETRAphysio': PETRAphysio(),
     'Larmor Raw': larmor_raw.LarmorRaw(),
     'MSE': mse.MSE(),
-    'MSE PyPulseq': mse_pp.MSE(),
+    'MSE_PyPulseq': mse_pp.MSE(),
     'Larmor PyPulseq': larmor_pypulseq.LarmorPyPulseq(),
 }

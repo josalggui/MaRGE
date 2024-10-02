@@ -37,7 +37,6 @@ import seq.mriBlankSeq as blankSeq
 from flocra_pulseq.interpreter import PSInterpreter
 
 
-
 #*********************************************************************************
 #*********************************************************************************
 #*********************************************************************************
@@ -63,7 +62,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.nPoints = None
         self.fov = None
         self.axesOrientation = None
-        self.addParameter(key='seqName', string='MSEInfo', val='MSE PyPulseq')
+        self.addParameter(key='seqName', string='MSEInfo', val='MSE_PyPulseq')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz,
                           field='RF')
@@ -98,11 +97,10 @@ class MSE(blankSeq.MRIBLANKSEQ):
         print("mriLab @ i3M, CSIC, Spain \n")
 
     def sequenceTime(self):
-        print("Sequence time not calculated...")
         nRD, nPH, nSL = np.array(self.mapVals["nPoints"])
         repetition_time = self.mapVals["repetitionTime"] * 1e-3
         nScans = self.mapVals["nScans"]
-        scan_time = nScans*nPH*nSL*repetition_time / 60  # minutes
+        scan_time = nScans * nPH * nSL * repetition_time / 60  # minutes
         scan_time = np.round(scan_time, decimals=1)
         return scan_time  # minutes
 
@@ -209,6 +207,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         TE = self.echoSpacing
         TR = self.repetitionTime
         dG = hw.grad_rise_time
+        self.mapVals['grad_rise_time'] = hw.grad_rise_time * 1e6
         sampling_time = self.acqTime
         if self.rdGradTime >= self.acqTime:
             ro_flattop_add = (self.rdGradTime - self.acqTime) / 2
@@ -217,7 +216,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
             return False
         nRD_pre = hw.addRdPoints
         nRD_post = hw.addRdPoints
-        self.mapVals['addRdPoints'] = hw.addRdPoints
+        self.mapVals['nRD_pre'] = hw.addRdPoints
+        self.mapVals['nRD_post'] = hw.addRdPoints
         n_rd_points_per_train = n_echo * (nRD + nRD_post + nRD_pre)
         os = hw.oversamplingFactor
         self.mapVals['oversamplingFactor'] = os
@@ -235,7 +235,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
                                self.system.rf_ringdown_time) / self.system.grad_raster_time) * self.system.grad_raster_time  # round up dead times to the gradient raster time to enable correct TE & ESP calculation
         t_sp = round(
             (0.5 * (
-                        TE - ro_flattop_time - t_ref) - rf_add) / self.system.grad_raster_time) * self.system.grad_raster_time
+                    TE - ro_flattop_time - t_ref) - rf_add) / self.system.grad_raster_time) * self.system.grad_raster_time
         t_spex = round(
             (0.5 * (TE - t_ex - t_ref) - rf_add) / self.system.grad_raster_time) * self.system.grad_raster_time
         rf_ex_phase = np.pi / 2
@@ -284,7 +284,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         )
         adc = pp.make_adc(
             num_samples=(nRD_pre + nRD + nRD_post) * os, dwell=sampling_time / nRD / os,
-            delay=0.5 * (TE - t_ref - (nRD + nRD_post + nRD_pre) * sampling_time / nRD ) - rf_add
+            delay=0.5 * (TE - t_ref - (nRD + nRD_post + nRD_pre) * sampling_time / nRD) - rf_add
         )
         gr_spr = pp.make_trapezoid(
             channel=rd_channel,
@@ -352,10 +352,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
         # Round to gradient raster
         TR_fill = self.system.grad_raster_time * np.round(TR_fill / self.system.grad_raster_time)
         if TR_fill < 0:
-            print("ERROR: Repetition time too short.")
+            # print("ERROR: Repetition time too short.")
             return 0
-        else:
-            print(f"TR fill: {1000 * TR_fill} ms")
         delay_TR = pp.make_delay(TR_fill)
 
         # Initialize batches dictionary where batches will be saved
@@ -398,7 +396,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             - `delay_TR`: delay block for the repetition time (TR).
             """
 
-            # Instantiate pypulseq sequence object and save it into the batches dictionarly
+            # Instantiate pypulseq sequence object and save it into the batches dictionary
             batches[name] = pp.Sequence(self.system)
 
             # Set slice and phase gradients to 0
@@ -480,6 +478,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             n_rd_points_dict = {}
             seq_idx = 0
             seq_num = "batch_0"
+            waveforms = {}
 
             # Slice sweep
             for Cz in range(nSL):
@@ -491,11 +490,19 @@ class MSE(blankSeq.MRIBLANKSEQ):
                 for Cy in Nph_range:
                     # Initialize new sequence with corresponding dummy pulses
                     if seq_idx == 0 or n_rd_points + n_rd_points_per_train > hw.maxRdPoints:
+                        # Write seq file
+                        if seq_idx > 0:
+                            batches[seq_num].write(seq_num + ".seq")
+                            waveforms[seq_num], param_dict = self.flo_interpreter.interpret(seq_num + ".seq")
+                            print(seq_num + ".seq ready!")
+
+                        # Create new batch
                         seq_idx += 1
                         n_rd_points_dict[seq_num] = n_rd_points
                         seq_num = "batch_%i" % seq_idx
                         initializeBatch(seq_num)
                         n_rd_points = 0
+                        print("Creating " + seq_num + ".seq...")
 
                     # Fix the phase and slice amplitude
                     sl_scale = (Cz - nSL / 2) / nSL * 2
@@ -522,19 +529,12 @@ class MSE(blankSeq.MRIBLANKSEQ):
             n_rd_points_dict.pop('batch_0')
             n_rd_points_dict[seq_num] = n_rd_points
 
-            # Check whether the timing of the sequence is correct
-            (ok, error_report) = batches[seq_num].check_timing()
-            if ok:
-                print("Timing check passed successfully")
-            else:
-                print("Timing check failed. Error listing follows:")
-                [print(e) for e in error_report]
-
             # Write the sequence files
-            waveforms = {}
-            for seq_num in batches.keys():
-                batches[seq_num].write(seq_num + ".seq")
-                waveforms[seq_num], param_dict = self.flo_interpreter.interpret(seq_num + ".seq")
+            batches[seq_num].write(seq_num + ".seq")
+            waveforms[seq_num], param_dict = self.flo_interpreter.interpret(seq_num + ".seq")
+            print(seq_num + ".seq ready!")
+            print("%i batches created." % len(batches))
+            print("Sequence ready!")
 
             return waveforms, n_rd_points_dict
 
@@ -543,7 +543,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.mapVals['n_readouts'] = list(n_readouts.values())
         self.mapVals['n_batches'] = len(n_readouts.values())
         scan_time = (nPH * nSL + self.mapVals['n_batches'] * self.dummyPulses) * self.repetitionTime * self.nScans
-        self.mapVals['Scan time (s)'] = scan_time
+        self.mapVals['Scan_time_s'] = scan_time
 
         # Execute the batches
         data_over = []  # To save oversampled data
@@ -551,7 +551,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             # Initialize the experiment
             bw = nRD / sampling_time * hw.oversamplingFactor  # Hz
             sampling_period = 1 / bw  # s
-            self.mapVals['samplingPeriod'] = sampling_period
+            self.mapVals['Sampling_Period_s'] = sampling_period
             if not self.demo:
                 self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
                                           rx_t=sampling_period * 1e6,  # us
@@ -566,8 +566,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
                 sampling_period = sampling_period * 1e6  # us
                 bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
                 sampling_time = nRD / bw * 1e-6  # s
-            self.mapVals['bw'] = bw * 1e6  # Hz
-            self.mapVals['samplingTime'] = sampling_time
+            self.mapVals['Bandwidth_Hz'] = bw * 1e6  # Hz
+            self.mapVals['Sampling_Time_s'] = sampling_time
             self.mapVals['larmorFreq'] = hw.larmorFreq
 
             # Save the waveforms into the mriBlankSeq dictionaries
