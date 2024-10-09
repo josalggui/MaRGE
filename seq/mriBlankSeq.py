@@ -259,7 +259,7 @@ class MRIBLANKSEQ:
 
         last_times = np.array([value[0][-1] for value in self.flo_dict.values()])
         last_time = np.max(last_times)
-        self.endSequence(last_time+1)
+        self.endSequence(last_time+10)
 
         return True
 

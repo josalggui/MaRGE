@@ -7,10 +7,6 @@ mrilab @ i3M, CSIC, Spain
 import os
 import sys
 
-# To work with pypulseq
-import pypulseq as pp
-from flocra_pulseq.interpreter import PSInterpreter
-
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))
@@ -31,7 +27,7 @@ import configs.units as units
 import scipy.signal as sig
 import experiment as ex
 import configs.hw_config as hw
-
+from flocra_pulseq.interpreter import PSInterpreter
 
 
 class PulseqReader(blankSeq.MRIBLANKSEQ):
@@ -48,15 +44,14 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.066, units=units.MHz, field='IM')
         self.addParameter(key='shimming', string='Shimming', val=[0, 0, 0], field='IM', units=units.sh)
-        self.addParameter(key='files', string='Files', val="[batch_1.seq, batch_2.seq]", field='IM', tip='List .seq files')
+        self.addParameter(key='files', string='Files', val="entertainer1.seq", field='IM', tip='List .seq files')
 
     def sequenceInfo(self):
-        
         print("Pulseq Reader")
         print("Author: PhD. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("Read a .seq file and run the sequence\n")
+        print("Run a list of .seq files\n")
         
 
     def sequenceTime(self):
@@ -86,22 +81,6 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
             grad_max=np.max(hw.gFactor) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
             grad_t=100,  # Gradient raster time (us)
         )
-
-        # Step 2: Define system properties using PyPulseq (pp.Opts).
-        # These properties define the hardware capabilities of the MRI scanner, such as maximum gradient strengths,
-        # slew rates, and dead times. They are typically set based on the hardware configuration file (`hw_config`).
-        self.system = pp.Opts(
-            rf_dead_time=(hw.blkTime + 5) * 1e-6,  # Dead time between RF pulses (s)
-            max_grad=hw.max_grad,  # Maximum gradient strength (mT/m)
-            grad_unit='mT/m',  # Units of gradient strength
-            max_slew=hw.max_slew_rate,  # Maximum gradient slew rate (mT/m/ms)
-            slew_unit='mT/m/ms',  # Units of gradient slew rate
-            grad_raster_time=100e-6,  # Gradient raster time (s)
-            rise_time=hw.grad_rise_time,  # Gradient rise time (s)
-        )
-
-        # Initialize the sequence
-        self.seq = pp.Sequence(self.system)
 
         # Function to get the dwell time
         def get_seq_info(file_path):
