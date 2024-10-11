@@ -71,11 +71,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         # Connect to Arduino and set the initial state
         self.arduino = autotuning.Arduino(name="auto-tuning", serial_number=hw.ard_sn_autotuning)
         self.arduino.connect()
-        self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "1")
-
-        # Connect to VNA
-        self.vna = autotuning.VNA()
-        self.vna.connect()
+        self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "11")
 
     def sequenceInfo(self):
         print("RF automatic impedance matching")
@@ -99,6 +95,13 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         if self.arduino.device is None:
             print("WARNING: No Arduino found for auto-tuning.")
             return False
+        else:
+            # Connect autotuning to VNA and turn it on.
+            self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "00")
+
+            # Connect to VNA
+            self.vna = autotuning.VNA()
+            self.vna.connect()
 
         if self.vna.device is None:
             print("No nanoVNA found for auto-tuning. \n")
@@ -305,7 +308,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         return True
 
     def runManual(self):
-        self.arduino.send(self.series + self.tuning + self.matching + "0")
+        self.arduino.send(self.series + self.tuning + self.matching + "00")
         if self.vna.device is not None:
             s11, impedance = self.vna.getS11(self.frequency)
             self.s11_hist.append(s11)
@@ -316,7 +319,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             print("S11 = %0.2f dB" % s11dB)
             print("R = %0.2f Ohms" % r)
             print("X = %0.2f Ohms" % x)
-            self.arduino.send(self.series + self.tuning + self.matching + "1")
+            self.arduino.send(self.series + self.tuning + self.matching + "11")
             return True
         else:
             return False
