@@ -401,8 +401,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
         scanTime = nRepetitions*self.repetitionTime
         self.mapVals['Scan Time (s)'] = scanTime*self.nScans*1e-6
 
-        seqTime = nPoints[1] / etl * nPoints[2] * repetitionTime * 1e-3 * nScans * parFourierFraction
-
         # Create full sequence
         # Run the experiment
         dataFull = []
