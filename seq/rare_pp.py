@@ -41,9 +41,9 @@ import pypulseq as pp
 #*********************************************************************************
 #*********************************************************************************
 
-class RARE(blankSeq.MRIBLANKSEQ):
+class RARE_pp(blankSeq.MRIBLANKSEQ):
     def __init__(self):
-        super(RARE, self).__init__()
+        super(RARE_pp, self).__init__()
         # Input the parameters
         self.echoSpacing = None
         self.phGradTime = None
@@ -64,23 +64,23 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.rotation = None
         self.angle = None
         self.axesOrientation = None
-        self.addParameter(key='seqName', string='RAREInfo', val='RARE')
+        self.addParameter(key='seqName', string='RAREInfo', val='RARE_pp')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM') ## number of scans 
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
-        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=35.0, units=units.us, field='RF')
-        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=70.0, units=units.us, field='RF')
-        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=20.0, units=units.ms, field='SEQ')
-        self.addParameter(key='preExTime', string='Preexitation time (ms)', val=0.0, units=units.ms, field='SEQ')
-        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ', tip="0 to ommit this pulse")
+        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=50.0, units=units.us, field='RF')
+        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=100.0, units=units.us, field='RF')
+        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, units=units.ms, field='SEQ')
+        self.addParameter(key='preExTime', string='Preexitation time (ms)', val=10.0, units=units.ms, field='SEQ')
+        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=10.0, units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=50., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 10, 1], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 20, 1], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ') ## nm of peaks in 1 repetition
+        self.addParameter(key='etl', string='Echo train length', val=2, field='SEQ') ## nm of peaks in 1 repetition
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM', tip="0=x, 1=y, 2=z")
         self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 0], tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
@@ -90,7 +90,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
-        self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
+        self.addParameter(key='dummyPulses', string='Dummy pulses', val=2, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
@@ -161,7 +161,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         # Define system properties according to hw_config file
         self.system = pp.Opts(
-            rf_dead_time=(hw.blkTime + 5) * 1e-6,  # s
+            rf_dead_time=(hw.blkTime) * 1e-6,  # s
             rf_ringdown_time=hw.deadTime * 1e-6,  # s
             max_grad=hw.max_grad,  # mT/m
             grad_unit='mT/m',
@@ -169,6 +169,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
             slew_unit='mT/m/ms',
             grad_raster_time=hw.grad_raster_time,  # s
             rise_time=hw.grad_rise_time,  # s
+            rf_raster_time=1e-6,
+            block_duration_raster=1e-6
         )
 
         # Set the fov
@@ -281,9 +283,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
         gradAmp = np.reshape(gradAmp, (3, 1))
         result = np.dot(rot, gradAmp)
 
-        print("Readout direction:")
-        print(np.reshape(result, (1, 3)))
-
         # Map the axis to "x", "y", and "z" according ot axesOrientation
         axes_map = {0: "x", 1: "y", 2: "z"}
         rd_channel = axes_map.get(self.axesOrientation[0], "")
@@ -308,7 +307,15 @@ class RARE(blankSeq.MRIBLANKSEQ):
         # Create pypulseq blocks #
         ##########################
 
-        delay_first = pp.make_delay(self.repetitionTime)
+        if self.inversionTime==0 and self.preExTime==0:
+            delay = self.repetitionTime - self.rfExTime / 2 - self.system.rf_dead_time
+        elif self.inversionTime>0 and self.preExTime==0:
+            delay = self.repetitionTime - self.inversionTime - self.rfReTime / 2 - self.system.rf_dead_time
+        elif self.inversionTime==0 and self.preExTime>0:
+            delay = self.repetitionTime - self.preExTime - self.rfExTime / 2 - self.system.rf_dead_time
+        else:
+            delay = self.repetitionTime - self.preExTime - self.inversionTime - self.rfExTime / 2 - self.system.rf_dead_time
+        delay_first = pp.make_delay(delay)
 
         # ADC to get noise
         delay = 20e-6
@@ -317,36 +324,44 @@ class RARE(blankSeq.MRIBLANKSEQ):
                                        delay=delay)
 
         # Pre-excitation pulse
-        flip_pre = self.rfExFA * np.pi / 180
-        delay = - self.rfExTime / 2 - self.system.rf_dead_time
-        block_rf_pre_excitation = pp.make_block_pulse(
-            flip_angle=flip_pre,
-            system=self.system,
-            duration=self.rfExTime,
-            phase_offset=0.0,
-            delay=delay,
-        )
+        if self.preExTime>0:
+            flip_pre = self.rfExFA * np.pi / 180
+            delay = 0
+            block_rf_pre_excitation = pp.make_block_pulse(
+                flip_angle=flip_pre,
+                system=self.system,
+                duration=self.rfExTime,
+                phase_offset=0.0,
+                delay=0,
+            )
+            if self.inversionTime==0:
+                delay = self.preExTime
+            else:
+                delay = self.rfExTime / 2 - self.rfReTime / 2 + self.preExTime
+            delay_pre_excitation = pp.make_delay(delay)
 
         # Inversion pulse
-        flip_inv = self.rfReFA * np.pi / 180
-        delay = self.preExTime - self.rfReTime / 2 - self.system.rf_dead_time
-        block_rf_inversion = pp.make_block_pulse(
-            flip_angle=flip_inv,
-            system=self.system,
-            duration=self.rfReTime,
-            phase_offset=0.0,
-            delay=delay,
-        )
+        if self.inversionTime>0:
+            flip_inv = self.rfReFA * np.pi / 180
+            block_rf_inversion = pp.make_block_pulse(
+                flip_angle=flip_inv,
+                system=self.system,
+                duration=self.rfReTime,
+                phase_offset=0.0,
+                delay=0,
+            )
+            delay = self.rfReTime / 2 - self.rfExTime / 2 + self.inversionTime
+            delay_inversion = pp.make_delay(delay)
 
         # Excitation pulse
         flip_ex = self.rfExFA * np.pi / 180
-        delay = self.preExTime + self.inversionTime + self.rfExTime / 2 - self.system.rf_dead_time
+        delay = self.preExTime + self.inversionTime
         block_rf_excitation = pp.make_block_pulse(
             flip_angle=flip_ex,
             system=self.system,
             duration=self.rfExTime,
             phase_offset=0.0,
-            delay=delay,
+            delay=0.0,
         )
 
         # Dephasing gradient
@@ -417,7 +432,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                           delay=delay)
 
         # Phase gradient rephasing
-        delay = self.system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time - \
+        delay = self.system.rf_dead_time + self.rfReTime / 2 + self.echoSpacing / 2 + sampling_time / 2 - \
                 hw.gradDelay * 1e-6
         block_gr_ph_reph = pp.make_trapezoid(
             channel=ph_channel,
@@ -429,7 +444,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         )
 
         # Phase gradient rephasing
-        delay = self.system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time - \
+        delay = self.system.rf_dead_time + self.rfReTime / 2 + self.echoSpacing / 2 + sampling_time / 2 - \
                 hw.gradDelay * 1e-6
         block_gr_sl_reph = pp.make_trapezoid(
             channel=sl_channel,
@@ -441,7 +456,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         )
 
         # Delay TR
-        delay_tr = pp.make_delay(self.repetitionTime)
+        delay_tr = pp.make_delay(self.repetitionTime - (self.etl + 0.5) * self.echoSpacing)
 
         # Initialize batch dictionary
         batches = {}
@@ -451,22 +466,43 @@ class RARE(blankSeq.MRIBLANKSEQ):
             batches[name] = pp.Sequence(self.system)
 
             # Set slice and phase gradients to 0
-            grad_ph_deph = pp.scale_grad(block_gr_ph_deph, scale=0.0)
-            grad_sl_deph = pp.scale_grad(block_gr_sl_deph, scale=0.0)
-            grad_ph_reph = pp.scale_grad(block_gr_ph_reph, scale=0.0)
-            grad_sl_reph = pp.scale_grad(block_gr_sl_reph, scale=0.0)
+            gr_ph_deph = pp.scale_grad(block_gr_ph_deph, scale=0.0)
+            gr_sl_deph = pp.scale_grad(block_gr_sl_deph, scale=0.0)
+            gr_ph_reph = pp.scale_grad(block_gr_ph_reph, scale=0.0)
+            gr_sl_reph = pp.scale_grad(block_gr_sl_reph, scale=0.0)
 
-            batches[name].add_block(delay_first, block_adc_noise)
+            batches[name].add_block(pp.make_delay((9.935)*1e-3))
 
-            # # Create dummy pulses
+            # batches[name].add_block(delay_first, block_adc_noise)
+            # batches[name].add_block(block_rf_pre_excitation)
+            batches[name].add_block(block_rf_inversion)
+            # batches[name].add_block(block_rf_excitation)
+            # batches[name].add_block(block_rf_inversion)
+
+            # Create dummy pulses
             # for dummy in range(self.dummyPulses):
+            #     # Pre-excitation pulse
+            #     if self.preExTime>0:
+            #         batches[name].add_block(block_rf_pre_excitation,
+            #                                 delay_pre_excitation)
+            #
+            #     # Inversion pulse
+            #     if self.inversionTime>0:
+            #         batches[name].add_block(block_rf_inversion,
+            #                                 delay_inversion)
+            #
             #     # Add excitation pulse and readout de-phasing gradient
-            #     batches[name].add_block(block_rf_excitation, block_gr_rd_preph, delay_preph)
+            #     batches[name].add_block(block_rf_excitation,
+            #                             block_gr_rd_preph,
+            #                             delay_preph)
             #
             #     # Add echo train
             #     for k_echo in range(self.etl):
-            #         batches[name].add_block(rf_ref, delay_reph, gp_d, gs_d, gr_readout)
-            #         batches[name].add_block(gs_r, gp_r)
+            #         batches[name].add_block(block_rf_refocusing,
+            #                                 block_gr_rd_reph,
+            #                                 gr_ph_deph,
+            #                                 gr_sl_deph,
+            #                                 delay_reph)
             #
             #     # Add time delay to next repetition
             #     batches[name].add_block(delay_tr)
@@ -529,8 +565,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
             n_rd_points_dict[seq_num] = n_rd_points
 
             return waveforms, n_rd_points_dict
-
-        createBatches()
 
         # Generate batches and get waveforms and readout points
         waveforms, n_readouts = createBatches()
@@ -597,7 +631,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             elif plotSeq and standalone:
                 # Plot the sequence if requested and return immediately
                 self.sequencePlot(standalone=standalone)
-                return True
+        return True
 
     def sequenceAnalysis(self, mode=None):
         nPoints = self.mapVals['nPoints']
@@ -955,68 +989,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
         encoding = ismrmrd.xsd.encodingType()  
         encoding.trajectory = ismrmrd.xsd.trajectoryType.CARTESIAN
         #encoding.trajectory =ismrmrd.xsd.trajectoryType[data.processing.trajectory.upper()]
-
-        # # encoded and recon spaces 
-        # efov = ismrmrd.xsd.fieldOfViewMm()  
-        # efov.x =  
-        # efov.y =
-        # efov.z = 
-
-        # rfov = ismrmrd.xsd.fieldOfViewMm() 
-        # rfov.x = 
-        # rfov.y = 
-        # rfov.z = 
-
-        # ematrix = ismrmrd.xsd.matrixSizeType()
-        # rmatrix = ismrmrd.xsd.matrixSizeType()
-
-        # ematrix.x = 
-        # ematrix.y = 
-        # ematrix.z = 
-        # rmatrix.x = 
-        # rmatrix.y = 
-        # rmatrix.z = 
-
-        # espace = ismrmrd.xsd.encodingSpaceType() 
-        # espace.matrixSize = ematrix
-        # espace.fieldOfView_mm = efov
-        # rspace = ismrmrd.xsd.encodingSpaceType()
-        # rspace.matrixSize = rmatrix
-        # rspace.fieldOfView_mm = rfov
-        
-        # encoding.encodedSpace = espace
-        # encoding.reconSpace = rspace
-
-        # Encoding limits field can be filled if needed
-        
-        # limits = ismrmrd.xsd.encodingLimitsType()
-        # limits1 = ismrmrd.xsd.limitType()
-        # limits1.minimum = 
-        # limits1.center = 
-        # limits1.maximum = 
-        # limits.kspace_encoding_step_1 = limits1
-
-        # limits_rep = ismrmrd.xsd.limitType()
-        # limits_rep.minimum = 
-        # limits_rep.center = 
-        # limits_rep.maximum = 
-        # limits.repetition = limits_rep
-
-        # limits_rest = ismrmrd.xsd.limitType()
-        # limits_rest.minimum = 
-        # limits_rest.center = 
-        # limits_rest.maximum =
-        # limits.kspace_encoding_step_0 = 
-        # limits.slice = 
-        # limits.average =
-        # limits.contrast =
-        # limits.kspaceEncodingStep2 = 
-        # limits.phase =  
-        # limits.segment = 
-        # limits.set =
-
-        # encoding.encodingLimits = limits
-        # self.header.encoding.append(encoding)
         
         dset.write_xml_header(self.header.toXML()) # Write the header to the dataset
                 
@@ -1119,7 +1091,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__': 
 
         
-    seq = RARE()
+    seq = RARE_pp()
     seq.sequenceAtributes()
 
     # A
