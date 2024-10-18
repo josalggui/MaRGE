@@ -298,10 +298,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                                  auto_leds=True)
             sampling_period = expt.get_rx_ts()[0]  # us
             bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
-            sampling_time = sampling_period * nRD * 1e-6  # s
+            sampling_time = sampling_period * nRD * hw.oversamplingFactor * 1e-6  # s
             expt.__del__()
         else:
-            sampling_time = sampling_period * nRD * 1e-6  # s
+            sampling_time = sampling_period * nRD * hw.oversamplingFactor * 1e-6  # s
 
         ##########################
         # Create pypulseq blocks #
@@ -355,7 +355,6 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
         # Excitation pulse
         flip_ex = self.rfExFA * np.pi / 180
-        delay = self.preExTime + self.inversionTime
         block_rf_excitation = pp.make_block_pulse(
             flip_angle=flip_ex,
             system=self.system,
@@ -365,7 +364,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # Dephasing gradient
-        delay = self.system.rf_dead_time + self.rfExTime/2 - hw.gradDelay * 1e-6
+        delay = self.system.rf_dead_time + self.rfExTime - hw.gradDelay * 1e-6
         block_gr_rd_preph = pp.make_trapezoid(
             channel=rd_channel,
             system=self.system,
@@ -426,13 +425,13 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # ADC to get the signal
-        delay = self.system.rf_dead_time + self.rfReTime / 2 + self.echoSpacing / 2 - sampling_time
+        delay = self.system.rf_dead_time + self.rfReTime / 2 + self.echoSpacing / 2 - sampling_time / 2
         block_adc_signal = pp.make_adc(num_samples=nRD * hw.oversamplingFactor,
                           dwell=sampling_period * 1e-6,
                           delay=delay)
 
         # Phase gradient rephasing
-        delay = self.system.rf_dead_time + self.rfReTime / 2 + self.echoSpacing / 2 + sampling_time / 2 - \
+        delay = self.system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2 - \
                 hw.gradDelay * 1e-6
         block_gr_ph_reph = pp.make_trapezoid(
             channel=ph_channel,
@@ -444,7 +443,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # Phase gradient rephasing
-        delay = self.system.rf_dead_time + self.rfReTime / 2 + self.echoSpacing / 2 + sampling_time / 2 - \
+        delay = self.system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2 - \
                 hw.gradDelay * 1e-6
         block_gr_sl_reph = pp.make_trapezoid(
             channel=sl_channel,
@@ -456,7 +455,11 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # Delay TR
-        delay_tr = pp.make_delay(self.repetitionTime - (self.etl + 0.5) * self.echoSpacing)
+        delay = self.repetitionTime + self.rfReTime / 2 - self.rfExTime / 2 - (self.etl + 0.5) * self.echoSpacing - \
+            self.inversionTime - self.preExTime
+        if self.inversionTime > 0 and self.preExTime == 0:
+            delay -= self.rfExTime / 2
+        delay_tr = pp.make_delay(delay)
 
         # Initialize batch dictionary
         batches = {}
@@ -471,41 +474,47 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             gr_ph_reph = pp.scale_grad(block_gr_ph_reph, scale=0.0)
             gr_sl_reph = pp.scale_grad(block_gr_sl_reph, scale=0.0)
 
-            batches[name].add_block(pp.make_delay((9.935)*1e-3))
-
-            # batches[name].add_block(delay_first, block_adc_noise)
-            # batches[name].add_block(block_rf_pre_excitation)
-            batches[name].add_block(block_rf_inversion)
-            # batches[name].add_block(block_rf_excitation)
-            # batches[name].add_block(block_rf_inversion)
+            batches[name].add_block(delay_first, block_adc_noise)
 
             # Create dummy pulses
-            # for dummy in range(self.dummyPulses):
-            #     # Pre-excitation pulse
-            #     if self.preExTime>0:
-            #         batches[name].add_block(block_rf_pre_excitation,
-            #                                 delay_pre_excitation)
-            #
-            #     # Inversion pulse
-            #     if self.inversionTime>0:
-            #         batches[name].add_block(block_rf_inversion,
-            #                                 delay_inversion)
-            #
-            #     # Add excitation pulse and readout de-phasing gradient
-            #     batches[name].add_block(block_rf_excitation,
-            #                             block_gr_rd_preph,
-            #                             delay_preph)
-            #
-            #     # Add echo train
-            #     for k_echo in range(self.etl):
-            #         batches[name].add_block(block_rf_refocusing,
-            #                                 block_gr_rd_reph,
-            #                                 gr_ph_deph,
-            #                                 gr_sl_deph,
-            #                                 delay_reph)
-            #
-            #     # Add time delay to next repetition
-            #     batches[name].add_block(delay_tr)
+            for dummy in range(self.dummyPulses):
+                # Pre-excitation pulse
+                if self.preExTime>0:
+                    batches[name].add_block(block_rf_pre_excitation,
+                                            delay_pre_excitation)
+
+                # Inversion pulse
+                if self.inversionTime>0:
+                    batches[name].add_block(block_rf_inversion,
+                                            delay_inversion)
+
+                # Add excitation pulse and readout de-phasing gradient
+                batches[name].add_block(block_gr_rd_preph,
+                                        block_rf_excitation,
+                                        delay_preph)
+
+                # Add echo train
+                for echo in range(self.etl):
+                    if dummy == self.dummyPulses-1:
+                        batches[name].add_block(block_rf_refocusing,
+                                                block_gr_rd_reph,
+                                                gr_ph_deph,
+                                                gr_sl_deph,
+                                                block_adc_signal,
+                                                delay_reph)
+                        batches[name].add_block(gr_ph_reph,
+                                                gr_sl_reph)
+                    else:
+                        batches[name].add_block(block_rf_refocusing,
+                                                block_gr_rd_reph,
+                                                gr_ph_deph,
+                                                gr_sl_deph,
+                                                delay_reph)
+                        batches[name].add_block(gr_ph_reph,
+                                                gr_sl_reph)
+
+                # Add time delay to next repetition
+                batches[name].add_block(delay_tr)
 
         def createBatches():
             n_rd_points = 0  # Initialize the readout points counter
