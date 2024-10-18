@@ -265,8 +265,8 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         ind = self.getIndex(self.etl, nPH, self.sweepMode)
         self.mapVals['sweepOrder'] = ind
         phGradients = phGradients[ind]
-        self.mapVals['phGradients'] = phGradients
-        self.mapVals['slGradients'] = slGradients
+        self.mapVals['phGradients'] = phGradients.copy()
+        self.mapVals['slGradients'] = slGradients.copy()
 
         # Normalize gradient list
         if phGradAmplitude != 0:
