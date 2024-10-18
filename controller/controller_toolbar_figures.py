@@ -5,6 +5,8 @@
 
 """
 import os
+import platform
+import subprocess
 from datetime import datetime
 
 from PyQt5.QtGui import QPixmap
@@ -36,12 +38,11 @@ class FiguresController(FiguresToolBar):
         self.action_full_screen.setCheckable(True)
         self.action_full_screen.triggered.connect(self.doFullScreen)
         self.action_screenshot.triggered.connect(self.doScreenshot)
+        self.action_open_directory.triggered.connect(self.open_folder)
         self.action_postprocessing.triggered.connect(self.openPostGui)
 
     def openPostGui(self):
         self.main.post_gui.showMaximized()
-        # self.main.post_gui.set_console()
-        # self.main.hide()
 
     def doFullScreen(self):
         """
@@ -84,6 +85,26 @@ class FiguresController(FiguresToolBar):
         # Save screenshot and print message
         screenshot.save(screenshot_folder+"/"+file_name)
         print("Screenshot saved in " + screenshot_folder+"/"+file_name)
+
+    def open_folder(self):
+        # Get the current operating system
+        current_os = platform.system()
+
+        try:
+            if current_os == 'Windows':
+                # Open folder on Windows
+                os.startfile(self.main.session['directory'])
+            elif current_os == 'Darwin':  # macOS
+                # Open folder on macOS
+                subprocess.run(['open', self.main.session['directory']])
+            elif current_os == 'Linux':
+                # Open folder on Linux
+                subprocess.run(['xdg-open', self.main.session['directory']])
+            else:
+                print(f"Unsupported OS: {current_os}")
+        except Exception as e:
+            print(f"Error opening folder: {e}")
+
 
 class FiguresControllerPos(FiguresToolBar):
     """
