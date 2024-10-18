@@ -129,6 +129,7 @@ class FiguresControllerPos(FiguresToolBar):
 
         # Hide post button:
         self.action_postprocessing.setVisible(False)
+        self.action_open_directory.setVisible(False)
 
         self.action_full_screen.setCheckable(True)
         self.action_full_screen.triggered.connect(self.doFullScreen)
