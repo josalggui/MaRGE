@@ -463,8 +463,13 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
         # Initialize batch dictionary
         batches = {}
+        n_rd_points_dict = {}  # Dictionary to track readout points for each batch
+        self.n_rd_points = 0
 
         def initializeBatch(name="pp_1"):
+            # Set n_rd_ponts to 0
+            self.n_rd_points = 0
+
             # Instantiate pypulseq sequence object and save it into the batches dictionarly
             batches[name] = pp.Sequence(self.system)
 
@@ -475,6 +480,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             gr_sl_reph = pp.scale_grad(block_gr_sl_reph, scale=0.0)
 
             batches[name].add_block(delay_first, block_adc_noise)
+            self.n_rd_points += nRD
 
             # Create dummy pulses
             for dummy in range(self.dummyPulses):
@@ -504,6 +510,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                                                 delay_reph)
                         batches[name].add_block(gr_ph_reph,
                                                 gr_sl_reph)
+                        self.n_rd_points += nRD
                     else:
                         batches[name].add_block(block_rf_refocusing,
                                                 block_gr_rd_reph,
@@ -517,61 +524,77 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                 batches[name].add_block(delay_tr)
 
         def createBatches():
-            n_rd_points = 0  # Initialize the readout points counter
-            n_rd_points_dict = {}  # Dictionary to track readout points for each batch
             seq_idx = 0  # Sequence batch index
-            seq_num = "batch_0"  # Initial batch name
+            batch_num = "batch_0"  # Initial batch name
             waveforms = {}  # Dictionary to store generated waveforms
 
             # Slice sweep
             for sl_idx in range(nSL):
+                ph_idx = 0
                 # Phase sweep
-                for ph_idx in range(nPH):
+                while ph_idx < nPH:
                     # Check if a new batch is needed (either first batch or exceeding readout points limit)
-                    if seq_idx == 0 or n_rd_points + n_rd_points_per_train > hw.maxRdPoints:
+                    if seq_idx == 0 or self.n_rd_points + n_rd_points_per_train > hw.maxRdPoints:
                         # If a previous batch exists, write and interpret it
                         if seq_idx > 0:
-                            batches[seq_num].write(seq_num + ".seq")
-                            waveforms[seq_num], param_dict = self.flo_interpreter.interpret(seq_num + ".seq")
-                            print(f"{seq_num}.seq ready!")
+                            batches[batch_num].write(batch_num + ".seq")
+                            waveforms[batch_num], param_dict = self.flo_interpreter.interpret(batch_num + ".seq")
+                            print(f"{batch_num}.seq ready!")
 
                         # Update to the next batch
                         seq_idx += 1
-                        n_rd_points_dict[seq_num] = n_rd_points  # Save readout points count
-                        seq_num = f"batch_{seq_idx}"
-                        initializeBatch(seq_num)  # Initialize new batch
-                        n_rd_points = 0  # Reset readout points count
-                        print(f"Creating {seq_num}.seq...")
+                        n_rd_points_dict[batch_num] = self.n_rd_points  # Save readout points count
+                        batch_num = f"batch_{seq_idx}"
+                        initializeBatch(batch_num)  # Initialize new batch
+                        print(f"Creating {batch_num}.seq...")
 
-                    # Fix the phase and slice amplitude
-                    gr_ph_deph = pp.scale_grad(block_gr_ph_deph, phGradients[ph_idx] / grad_reference)
-                    gr_sl_deph = pp.scale_grad(block_gr_sl_deph, slGradients[sl_idx] / grad_reference)
-                    gr_ph_reph = pp.scale_grad(block_gr_ph_reph, - phGradients[ph_idx] / grad_reference)
-                    gr_sl_reph = pp.scale_grad(block_gr_sl_reph, - slGradients[sl_idx] / grad_reference)
+                    # Pre-excitation pulse
+                    if self.preExTime > 0:
+                        batches[batch_num].add_block(block_rf_pre_excitation,
+                                                delay_pre_excitation)
 
-                    # # Add excitation pulse and readout de-phasing gradient
-                    # batches[seq_num].add_block(rf_ex)
-                    # batches[seq_num].add_block(gr_preph, delay_preph)
-                    #
-                    # # Add the echo train
-                    # for k_echo in range(self.etl):
-                    #     # Add refocusing pulse
-                    #     batches[seq_num].add_block(rf_ref, delay_reph, gp_d, gs_d, gr_readout, adc)
-                    #     batches[seq_num].add_block(gs_r, gp_r)
-                    #     n_rd_points += nRD
-                    #
-                    # # Add time delay to next repetition
-                    # batches[seq_num].add_block(delay_tr)
+                    # Inversion pulse
+                    if self.inversionTime > 0:
+                        batches[batch_num].add_block(block_rf_inversion,
+                                                delay_inversion)
+
+                    # Add excitation pulse and readout de-phasing gradient
+                    batches[batch_num].add_block(block_gr_rd_preph,
+                                            block_rf_excitation,
+                                            delay_preph)
+
+                    # Add echo train
+                    for echo in range(self.etl):
+                        # Fix the phase and slice amplitude
+                        gr_ph_deph = pp.scale_grad(block_gr_ph_deph, phGradients[ph_idx] / grad_reference)
+                        gr_sl_deph = pp.scale_grad(block_gr_sl_deph, slGradients[sl_idx] / grad_reference)
+                        gr_ph_reph = pp.scale_grad(block_gr_ph_reph, - phGradients[ph_idx] / grad_reference)
+                        gr_sl_reph = pp.scale_grad(block_gr_sl_reph, - slGradients[sl_idx] / grad_reference)
+
+                        # Add blocks
+                        batches[batch_num].add_block(block_rf_refocusing,
+                                                block_gr_rd_reph,
+                                                gr_ph_deph,
+                                                gr_sl_deph,
+                                                block_adc_signal,
+                                                delay_reph)
+                        batches[batch_num].add_block(gr_ph_reph,
+                                                gr_sl_reph)
+                        self.n_rd_points += nRD
+                        ph_idx += 1
+
+                    # Add time delay to next repetition
+                    batches[batch_num].add_block(delay_tr)
 
             # After final repetition, save and interpret the last batch
-            batches[seq_num].write(seq_num + ".seq")
-            waveforms[seq_num], param_dict = self.flo_interpreter.interpret(seq_num + ".seq")
-            print(f"{seq_num}.seq ready!")
+            batches[batch_num].write(batch_num + ".seq")
+            waveforms[batch_num], param_dict = self.flo_interpreter.interpret(batch_num + ".seq")
+            print(f"{batch_num}.seq ready!")
             print(f"{len(batches)} batches created. Sequence ready!")
 
             # Update the number of acquired ponits in the last batch
             n_rd_points_dict.pop('batch_0')
-            n_rd_points_dict[seq_num] = n_rd_points
+            n_rd_points_dict[batch_num] = self.n_rd_points
 
             return waveforms, n_rd_points_dict
 
