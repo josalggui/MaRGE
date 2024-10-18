@@ -289,15 +289,16 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
         # Get the true sampling rate
         if not self.demo:
-            expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
+            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
                                  rx_t=sampling_period,  # us
                                  init_gpa=init_gpa,
                                  gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
                                  auto_leds=True)
-            sampling_period = expt.get_rx_ts()[0]  # us
+            sampling_period = self.expt.get_rx_ts()[0]  # us
             bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
             sampling_time = sampling_period * nRD * hw.oversamplingFactor * 1e-6  # s
-            expt.__del__()
+            print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
+            self.expt.__del__()
         else:
             sampling_time = sampling_period * nRD * hw.oversamplingFactor * 1e-6  # s
         self.mapVals['bw_MHz'] = bw
@@ -623,9 +624,6 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                     gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
                     auto_leds=True  # Automatic control of LEDs
                 )
-                sampling_period = self.expt.get_rx_ts()[0]  # us
-                bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
-                print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
 
             # Convert the PyPulseq waveform to the Red Pitaya compatible format
             self.pypulseq2mriblankseq(waveforms=waveforms[seq_num], shimming=[0.0, 0.0, 0.0])
@@ -667,6 +665,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             elif plotSeq and standalone:
                 # Plot the sequence if requested and return immediately
                 self.sequencePlot(standalone=standalone)
+
+            if not self.demo:
+                self.expt.__del__()
+
         return True
 
     def sequenceAnalysis(self, mode=None):

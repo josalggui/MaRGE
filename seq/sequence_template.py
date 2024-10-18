@@ -167,8 +167,31 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         # Step 3: Perform any calculations required for the sequence.
         # In this step, students can implement the necessary calculations, such as timing calculations, RF amplitudes, and
         # gradient strengths, before defining the sequence blocks.
+        bw = self.bandwidth * 1e-6 # MHz
+        bw_ov = self.bandwdith - hw.oversamplingFactor  # MHz
+        sampling_period = 1 / bw_ov  # us
 
-        # Step 4: Define sequence blocks.
+        # Step 4: Define the experiment to get the true bandwidth
+        # In this step, student need to get the real bandwidth used in the experiment. To get this bandwidth, an
+        # experiment must be defined and the sampling period should be obtained using get_rx_ts()[0]
+
+
+        if not self.demo:
+            expt = ex.Experiment(
+                lo_freq=hw.larmorFreq,  # Larmor frequency in MHz
+                rx_t=sampling_period,  # Sampling time in us
+                init_gpa=False,  # Whether to initialize GPA board (False for True)
+                gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
+                auto_leds=True  # Automatic control of LEDs (False or True)
+            )
+            sampling_period = expt.get_rx_ts()[0]  # us
+            bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
+            print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
+            expt.__del__()
+        self.mapVals['bw_MHz'] = bw
+        self.mapVals['sampling_period_us'] = sampling_period
+
+        # Step 5: Define sequence blocks.
         # In this step, you will define the building blocks of the MRI sequence, including the RF pulses and gradient pulses.
 
         ## Excitation pulse
@@ -196,7 +219,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         # Additional considerations for students:
         # - Make sure timing calculations account for hardware limitations, such as gradient raster time and dead time.
 
-        # Step 5: Define your initializeBatch according to your sequence.
+        # Step 6: Define your initializeBatch according to your sequence.
         # In this step, you will create the initializeBatch method to create dummy pulses that will be initialized for
         # each new batch.
 
@@ -216,7 +239,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
             for _ in range(self.dummyPulses):
                 batches[name].add_block(rf_ex, delay_repetition)
 
-        # Step 6: Define your createBatches method.
+        # Step 7: Define your createBatches method.
         # In this step you will populate the batches adding the blocks previously defined in step 4, and accounting for
         # number of acquired points to check if a new batch is required.
 
@@ -273,7 +296,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
 
             return waveforms, n_rd_points_dict
 
-        # Step 7: Run the batches
+        # Step 8: Run the batches
         # This step will handle the different batches, run it and get the resulting data. This should not be modified
 
         # Generate batches and get waveforms and readout points
@@ -295,20 +318,16 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
                     gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
                     auto_leds=True  # Automatic control of LEDs
                 )
-                sampling_period = self.expt.get_rx_ts()[0]  # us
-                bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
-                print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
 
             # Convert the PyPulseq waveform to the Red Pitaya compatible format
             self.pypulseq2mriblankseq(waveforms=waveforms[seq_num], shimming=[0.0, 0.0, 0.0])
 
             # Load the waveforms into Red Pitaya if not in demo mode
-            if not self.demo:
-                if not self.floDict2Exp():
-                    print("ERROR: Sequence waveforms out of hardware bounds")
-                    return False
-                else:
-                    print("Sequence waveforms loaded successfully")
+            if not self.floDict2Exp():
+                print("ERROR: Sequence waveforms out of hardware bounds")
+                return False
+            else:
+                print("Sequence waveforms loaded successfully")
 
             # If not plotting the sequence, start scanning
             if not plotSeq:
@@ -320,7 +339,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
                     # Continue acquiring points until we reach the expected number
                     while acquired_points != expected_points:
                         if not self.demo:
-                            rxd, msgs = self.expt.run()  # Run the experiment and collect data
+                            rxd, msgs = expt.run()  # Run the experiment and collect data
                         else:
                             # In demo mode, generate random data as a placeholder
                             rxd = {'rx0': np.random.randn(expected_points) + 1j * np.random.randn(expected_points)}
@@ -335,13 +354,15 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
 
                 # Decimate the oversampled data and store it
                 self.mapVals['data_over'] = data_over
-                data_full = sig.decimate(data_over, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-                self.mapVals['data_full'] = data_full
 
             elif plotSeq and standalone:
                 # Plot the sequence if requested and return immediately
                 self.sequencePlot(standalone=standalone)
-                return True
+
+            if not self.demo:
+                self.expt.__del__()
+
+        return True
 
     def sequenceAnalysis(self, mode=None):
 
