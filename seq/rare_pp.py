@@ -216,7 +216,6 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             self.etl = nPH
 
         # Miscellaneous
-        grad_reference = 0.001  # Used to normalize gradient shape
         n_rd_points_per_train = self.etl * nRD
 
         # parAcqLines in case parAcqLines = 0
@@ -275,6 +274,12 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.mapVals['sweepOrder'] = ind
         phGradients = phGradients[ind]
         self.mapVals['phGradients'] = phGradients
+
+        # Normalize gradient list
+        if phGradAmplitude != 0:
+            phGradients /= phGradAmplitude
+        if slGradAmplitude != 0:
+            slGradients /= slGradAmplitude
 
         # Get the rotation matrix
         rot = self.getRotationMatrix()
@@ -395,7 +400,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         block_gr_ph_deph = pp.make_trapezoid(
             channel=ph_channel,
             system=self.system,
-            amplitude=grad_reference * hw.gammaB,
+            amplitude=phGradAmplitude * hw.gammaB + float(phGradAmplitude==0),
             flat_time=self.phGradTime,
             rise_time=hw.grad_rise_time,
             delay=delay,
@@ -406,7 +411,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         block_gr_sl_deph = pp.make_trapezoid(
             channel=sl_channel,
             system=self.system,
-            amplitude=grad_reference * hw.gammaB,
+            amplitude=slGradAmplitude * hw.gammaB + float(slGradAmplitude==0),
             flat_time=self.phGradTime,
             delay=delay,
             rise_time=hw.grad_rise_time,
@@ -436,19 +441,19 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         block_gr_ph_reph = pp.make_trapezoid(
             channel=ph_channel,
             system=self.system,
-            amplitude=grad_reference * hw.gammaB,
+            amplitude=phGradAmplitude * hw.gammaB + float(phGradAmplitude==0),
             flat_time=self.phGradTime,
             rise_time=hw.grad_rise_time,
             delay=delay,
         )
 
-        # Phase gradient rephasing
+        # Slice gradient rephasing
         delay = self.system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2 - \
                 hw.gradDelay * 1e-6
         block_gr_sl_reph = pp.make_trapezoid(
             channel=sl_channel,
             system=self.system,
-            amplitude=grad_reference * hw.gammaB,
+            amplitude=slGradAmplitude * hw.gammaB + float(slGradAmplitude==0),
             flat_time=self.phGradTime,
             rise_time=hw.grad_rise_time,
             delay=delay,
@@ -486,12 +491,16 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             for dummy in range(self.dummyPulses):
                 # Pre-excitation pulse
                 if self.preExTime>0:
+                    gr_rd_preex = pp.scale_grad(block_gr_rd_preph, scale=1.0)
                     batches[name].add_block(block_rf_pre_excitation,
+                                            gr_rd_preex,
                                             delay_pre_excitation)
 
                 # Inversion pulse
                 if self.inversionTime>0:
+                    gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
                     batches[name].add_block(block_rf_inversion,
+                                            gr_rd_inv,
                                             delay_inversion)
 
                 # Add excitation pulse and readout de-phasing gradient
@@ -566,10 +575,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                     # Add echo train
                     for echo in range(self.etl):
                         # Fix the phase and slice amplitude
-                        gr_ph_deph = pp.scale_grad(block_gr_ph_deph, phGradients[ph_idx] / grad_reference)
-                        gr_sl_deph = pp.scale_grad(block_gr_sl_deph, slGradients[sl_idx] / grad_reference)
-                        gr_ph_reph = pp.scale_grad(block_gr_ph_reph, - phGradients[ph_idx] / grad_reference)
-                        gr_sl_reph = pp.scale_grad(block_gr_sl_reph, - slGradients[sl_idx] / grad_reference)
+                        gr_ph_deph = pp.scale_grad(block_gr_ph_deph, phGradients[ph_idx])
+                        gr_sl_deph = pp.scale_grad(block_gr_sl_deph, slGradients[sl_idx])
+                        gr_ph_reph = pp.scale_grad(block_gr_ph_reph, - phGradients[ph_idx])
+                        gr_sl_reph = pp.scale_grad(block_gr_sl_reph, - slGradients[sl_idx])
 
                         # Add blocks
                         batches[batch_num].add_block(block_rf_refocusing,
