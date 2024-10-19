@@ -24,6 +24,7 @@ from skimage.measure import shannon_entropy
 
 # Import dicom saver
 from manager.dicommanager import DICOMImage
+import shutil
 
 class MRIBLANKSEQ:
     """
@@ -171,6 +172,45 @@ class MRIBLANKSEQ:
         return out, tips
 
     def runBatches(self, waveforms, n_readouts):
+        """
+        Executes multiple batches of waveforms for MRI data acquisition, handling hardware interactions and data processing.
+
+        This method runs an experiment for each batch of waveforms, loads them into the Red Pitaya system, and collects oversampled data.
+        The acquired data is concatenated for each batch and stored. The method can also operate in demo mode, where simulated data is used instead of real hardware interactions.
+
+        Args:
+        - waveforms (dict): A dictionary containing the waveforms for each batch. The keys represent the batch numbers,
+                            and the values contain the PyPulseq-compatible waveforms for that batch.
+        - n_readouts (dict): A dictionary where the keys are batch numbers, and the values represent the number of expected readout points
+                             (before oversampling) for each batch.
+
+        Workflow:
+        1. Updates the internal map `mapVals` to reflect the number of readouts and batches.
+        2. Initializes the Red Pitaya hardware (unless in demo mode) and converts the PyPulseq waveforms into a format compatible with the Red Pitaya.
+        3. Loads the waveforms onto the hardware and ensures they are within acceptable bounds.
+        4. For each batch, the method runs the sequence, collecting data until the expected number of points is acquired.
+        5. If data points are lost (acquired points do not match expected points), the method will warn and repeat the acquisition for that batch.
+        6. The acquired data is oversampled, concatenated, and stored in `mapVals['data_over']`.
+        7. Optionally, if `plotSeq` is set to True, the method will plot the sequence rather than executing it.
+
+        Key Attributes Updated:
+        - `mapVals['n_readouts']`: Stores the list of readout points per batch.
+        - `mapVals['n_batches']`: Stores the total number of batches processed.
+        - `mapVals['data_over']`: Stores the final concatenated data for all batches after oversampling.
+
+        Returns:
+        - bool: Returns True if all batches were processed successfully, or False if an error occurs (e.g., waveform bounds exceeded).
+
+        Notes:
+        - The method operates in either demo mode or real hardware mode, based on the `self.demo` flag.
+        - The method handles oversampling based on the hardware's oversampling factor and concatenates the acquired data.
+        - In case of mismatched acquired points, it will attempt to re-run the batch until successful.
+
+        Example:
+        If `waveforms` contains waveforms for batch_1 and batch_2, and `n_readouts` specifies the expected readout points for each,
+        the method will execute each batch, collect data, and store the final result in `mapVals['data_over']`.
+
+        """
         self.mapVals['n_readouts'] = list(n_readouts.values())
         self.mapVals['n_batches'] = len(n_readouts.values())
 
@@ -1335,7 +1375,6 @@ class MRIBLANKSEQ:
 
         """
         
-        
         # Get directory
         if 'directory' in self.session.keys():
             directory = self.session['directory']
@@ -1352,8 +1391,6 @@ class MRIBLANKSEQ:
         directory_dcm = directory + '/dcm'
         directory_ismrmrd = directory + '/ismrmrd'
         
-        
-        
         if not os.path.exists(directory + '/mat'):
             os.makedirs(directory_mat)
         if not os.path.exists(directory + '/csv'):
@@ -1362,7 +1399,6 @@ class MRIBLANKSEQ:
             os.makedirs(directory_dcm)
         if not os.path.exists(directory + '/ismrmrd'):
             os.makedirs(directory_ismrmrd)
-
 
         self.directory_rmd=directory_ismrmrd 
         
@@ -1394,7 +1430,46 @@ class MRIBLANKSEQ:
         # Save dcm with the final image
         if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode is None): ##verify if output is an image
             self.image2Dicom(fileName="%s/%s.dcm" % (directory_dcm, file_name))
-            
+
+        # Move seq files
+        self.move_batch_files(destination_folder=directory, file_name=file_name)
+
+    @staticmethod
+    def move_batch_files(destination_folder, file_name):
+        """
+        Move batch_X.seq files from the current working directory to the specified destination folder.
+
+        The method scans all files in the current directory and identifies files with the extension '.seq'.
+        It extracts the batch number from the file name (in the format 'batch_X.seq', where 'X' is the batch number).
+        Then, it moves these files to a subfolder 'seq' inside the specified destination folder, renaming them based on the provided `file_name` template.
+
+        Args:
+        - destination_folder (str): The path to the destination folder where the 'seq' subfolder will be created, and the files will be moved.
+        - file_name (str): The prefix used for renaming the files. Files will be renamed in the format 'file_name_X.seq', where 'X' is the extracted batch number from the original file name.
+
+        Example:
+            If the file 'batch_1.seq' is found and `file_name='processed'`, it will be moved and renamed to:
+            'destination_folder/seq/processed_1.seq'.
+
+        Side Effects:
+        - Creates a 'seq' subfolder in the destination folder if it doesn't already exist.
+        - Moves and renames the matched '.seq' files from the current directory.
+
+        """
+        # List all files in the source folder
+        for source_file in os.listdir():
+            # Match files with the pattern 'batch_X.seq'
+            file_prov = source_file.split('.')
+            if file_prov[-1]=='seq' and os.path.isfile(source_file):
+                batch_num = file_prov[0].split('_')[-1]
+
+                # Create the destination folder path based on the batch number
+                os.makedirs(os.path.join(destination_folder, 'seq'), exist_ok=True)
+
+                # Move the file to the destination folder
+                destination_file = os.path.join(destination_folder, 'seq', file_name+'_%s.seq' % batch_num)
+                shutil.move(source_file, destination_file)
+                print(f'Moved: {file_name} to {destination_folder}')
        
         
     def image2Dicom(self, fileName): 
