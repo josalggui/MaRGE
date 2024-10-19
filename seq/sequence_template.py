@@ -188,7 +188,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
 
         '''
         Step 4: Define the experiment to get the true bandwidth
-        In this step, student need to get the real bandwidth used in the experiment. To get this bandwidth, an
+        In this step, student needs to get the real bandwidth used in the experiment. To get this bandwidth, an
         experiment must be defined and the sampling period should be obtained using get_rx_ts()[0]
         '''
 
