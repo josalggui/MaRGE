@@ -146,31 +146,50 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
     def sequenceRun(self, plotSeq=False, demo=False, standalone=False):
         init_gpa = False  # Starts the gpa
         self.demo = demo
+        self.plotSeq = plotSeq
+        self.standalone = standalone
         print('RARE run')
 
-        # Define the interpreter. It should be updated on calibration
-        self.flo_interpreter = PSInterpreter(tx_warmup=hw.blkTime,  # us
-                                             rf_center=hw.larmorFreq * 1e6,  # Hz
-                                             rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Hz
-                                             gx_max=hw.gFactor[0] * hw.gammaB,  # Hz/m
-                                             gy_max=hw.gFactor[1] * hw.gammaB,  # Hz/m
-                                             gz_max=hw.gFactor[2] * hw.gammaB,  # Hz/m
-                                             grad_max=np.max(hw.gFactor) * hw.gammaB,  # Hz/m
-                                             grad_t=hw.grad_raster_time*1e6,  # us
-                                             )
+        '''
+        Step 1: Define the interpreter for FloSeq/PSInterpreter.
+        The interpreter is responsible for converting the high-level pulse sequence description into low-level
+        instructions for the scanner hardware. You will typically update the interpreter during scanner calibration.
+        '''
 
-        # Define system properties according to hw_config file
-        self.system = pp.Opts(rf_dead_time=hw.blkTime * 1e-6,  # s
-                              rf_ringdown_time=hw.deadTime * 1e-6,  # s
-                              max_grad=hw.max_grad,  # mT/m
-                              grad_unit='mT/m',
-                              max_slew=hw.max_slew_rate,  # mT/m/ms
-                              slew_unit='mT/m/ms',
-                              grad_raster_time=hw.grad_raster_time,  # s
-                              rise_time=hw.grad_rise_time,  # s
-                              rf_raster_time=1e-6,
-                              block_duration_raster=1e-6
-                              )
+        self.flo_interpreter = PSInterpreter(
+            tx_warmup=hw.blkTime,  # Transmit chain warm-up time (us)
+            rf_center=hw.larmorFreq * 1e6,  # Larmor frequency (Hz)
+            rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Maximum RF amplitude (Hz)
+            gx_max=hw.gFactor[0] * hw.gammaB,  # Maximum gradient amplitude for X (Hz/m)
+            gy_max=hw.gFactor[1] * hw.gammaB,  # Maximum gradient amplitude for Y (Hz/m)
+            gz_max=hw.gFactor[2] * hw.gammaB,  # Maximum gradient amplitude for Z (Hz/m)
+            grad_max=np.max(hw.gFactor) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
+            grad_t=hw.grad_raster_time * 1e6,  # Gradient raster time (us)
+        )
+
+        '''
+        Step 2: Define system properties using PyPulseq (pp.Opts).
+        These properties define the hardware capabilities of the MRI scanner, such as maximum gradient strengths,
+        slew rates, and dead times. They are typically set based on the hardware configuration file (`hw_config`).
+        '''
+
+        self.system = pp.Opts(
+            rf_dead_time=hw.blkTime * 1e-6,  # Dead time between RF pulses (s)
+            max_grad=np.max(hw.gFactor) * 1e3,  # Maximum gradient strength (mT/m)
+            grad_unit='mT/m',  # Units of gradient strength
+            max_slew=hw.max_slew_rate,  # Maximum gradient slew rate (mT/m/ms)
+            slew_unit='mT/m/ms',  # Units of gradient slew rate
+            grad_raster_time=hw.grad_raster_time,  # Gradient raster time (s)
+            rise_time=hw.grad_rise_time,  # Gradient rise time (s)
+            rf_raster_time=1e-6,
+            block_duration_raster=1e-6
+        )
+
+        '''
+        Step 3: Perform any calculations required for the sequence.
+        In this step, students can implement the necessary calculations, such as timing calculations, RF amplitudes, and
+        gradient strengths, before defining the sequence blocks.
+        '''
 
         # Set the fov
         self.dfov = self.getFovDisplacement()
@@ -287,7 +306,12 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         ph_channel = axes_map.get(self.axesOrientation[1], "")
         sl_channel = axes_map.get(self.axesOrientation[2], "")
 
-        # Get the true sampling rate
+        '''
+        # Step 4: Define the experiment to get the true bandwidth
+        # In this step, student need to get the real bandwidth used in the experiment. To get this bandwidth, an
+        # experiment must be defined and the sampling period should be obtained using get_rx_ts()[0]
+        '''
+
         if not self.demo:
             self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
                                  rx_t=sampling_period,  # us
@@ -306,9 +330,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.mapVals['sampling_period_us'] = sampling_period
         self.mapVals['sampling_time_s'] = sampling_time
 
-        ##########################
-        # Create pypulseq blocks #
-        ##########################
+        '''
+        # Step 5: Define sequence blocks.
+        # In this step, you will define the building blocks of the MRI sequence, including the RF pulses and gradient pulses.
+        '''
 
         if self.inversionTime==0 and self.preExTime==0:
             delay = self.repetitionTime - self.rfExTime / 2 - self.system.rf_dead_time
@@ -464,7 +489,12 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             delay -= self.rfExTime / 2
         delay_tr = pp.make_delay(delay)
 
-        # Initialize batch dictionary
+        '''
+        # Step 6: Define your initializeBatch according to your sequence.
+        # In this step, you will create the initializeBatch method to create dummy pulses that will be initialized for
+        # each new batch.
+        '''
+
         batches = {}
         n_rd_points_dict = {}  # Dictionary to track readout points for each batch
         self.n_rd_points = 0
@@ -529,6 +559,12 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
                 # Add time delay to next repetition
                 batches[name].add_block(delay_tr)
+
+        '''
+        Step 7: Define your createBatches method.
+        In this step you will populate the batches adding the blocks previously defined in step 4, and accounting for
+        number of acquired points to check if a new batch is required.
+        '''
 
         def createBatches():
             seq_idx = 0  # Sequence batch index
@@ -605,71 +641,13 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
             return waveforms, n_rd_points_dict
 
-        # Generate batches and get waveforms and readout points
+        ''' 
+        Step 8: Run the batches
+        This step will handle the different batches, run it and get the resulting data. This should not be modified.
+        Oversampled data will be available in self.mapVals['data_over']
+        '''
         waveforms, n_readouts = createBatches()
-        self.mapVals['n_readouts'] = list(n_readouts.values())
-        self.mapVals['n_batches'] = len(n_readouts.values())
-
-        # Initialize a list to hold oversampled data
-        data_over = []
-
-        # Iterate through each batch of waveforms
-        for seq_num in waveforms.keys():
-            # Initialize the experiment if not in demo mode
-            if not self.demo:
-                self.expt = ex.Experiment(
-                    lo_freq=hw.larmorFreq,  # Larmor frequency in MHz
-                    rx_t=1 / self.bandwidth * hw.oversamplingFactor * 1e6,  # Sampling time in us
-                    init_gpa=False,  # Whether to initialize GPA board (False for now)
-                    gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
-                    auto_leds=True  # Automatic control of LEDs
-                )
-
-            # Convert the PyPulseq waveform to the Red Pitaya compatible format
-            self.pypulseq2mriblankseq(waveforms=waveforms[seq_num], shimming=[0.0, 0.0, 0.0])
-
-            # Load the waveforms into Red Pitaya if not in demo mode
-            if not self.demo:
-                if not self.floDict2Exp():
-                    print("ERROR: Sequence waveforms out of hardware bounds")
-                    return False
-                else:
-                    print("Sequence waveforms loaded successfully")
-
-            # If not plotting the sequence, start scanning
-            if not plotSeq:
-                for scan in range(self.nScans):
-                    print(f"Scan {scan + 1}, batch {seq_num.split('_')[-1]}/{len(n_readouts)} running...")
-                    acquired_points = 0
-                    expected_points = n_readouts[seq_num] * hw.oversamplingFactor  # Expected number of points
-
-                    # Continue acquiring points until we reach the expected number
-                    while acquired_points != expected_points:
-                        if not self.demo:
-                            rxd, msgs = self.expt.run()  # Run the experiment and collect data
-                        else:
-                            # In demo mode, generate random data as a placeholder
-                            rxd = {'rx0': np.random.randn(expected_points) + 1j * np.random.randn(expected_points)}
-
-                        # Update acquired points
-                        acquired_points = np.size(rxd['rx0'])
-
-                    # Concatenate acquired data into the oversampled data array
-                    data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
-                    print(f"Acquired points = {acquired_points}, Expected points = {expected_points}")
-                    print(f"Scan {scan + 1}, batch {seq_num[-1]}/{len(n_readouts)} ready!")
-
-                # Decimate the oversampled data and store it
-                self.mapVals['data_over'] = data_over
-
-            elif plotSeq and standalone:
-                # Plot the sequence if requested and return immediately
-                self.sequencePlot(standalone=standalone)
-
-            if not self.demo:
-                self.expt.__del__()
-
-        return True
+        return self.runBatches(waveforms, n_readouts)
 
     def sequenceAnalysis(self, mode=None):
         self.mode = mode

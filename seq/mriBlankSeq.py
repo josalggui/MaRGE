@@ -170,6 +170,75 @@ class MRIBLANKSEQ:
                 tips[self.mapNmspc[key]] = [self.mapTips[key]]
         return out, tips
 
+    def runBatches(self, waveforms, n_readouts):
+        self.mapVals['n_readouts'] = list(n_readouts.values())
+        self.mapVals['n_batches'] = len(n_readouts.values())
+
+        # Initialize a list to hold oversampled data
+        data_over = []
+
+        # Iterate through each batch of waveforms
+        for seq_num in waveforms.keys():
+            # Initialize the experiment if not in demo mode
+            if not self.demo:
+                self.expt = ex.Experiment(
+                    lo_freq=hw.larmorFreq,  # Larmor frequency in MHz
+                    rx_t=1 / self.bandwidth * hw.oversamplingFactor * 1e6,  # Sampling time in us
+                    init_gpa=False,  # Whether to initialize GPA board (False for now)
+                    gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
+                    auto_leds=True  # Automatic control of LEDs
+                )
+
+            # Convert the PyPulseq waveform to the Red Pitaya compatible format
+            self.pypulseq2mriblankseq(waveforms=waveforms[seq_num], shimming=self.shimming)
+
+            # Load the waveforms into Red Pitaya
+            if not self.floDict2Exp():
+                print("ERROR: Sequence waveforms out of hardware bounds")
+                return False
+            else:
+                print("Sequence waveforms loaded successfully")
+
+            # If not plotting the sequence, start scanning
+            if not self.plotSeq:
+                for scan in range(self.nScans):
+                    print(f"Scan {scan + 1}, batch {seq_num.split('_')[-1]}/{len(n_readouts)} running...")
+                    acquired_points = 0
+                    expected_points = n_readouts[seq_num] * hw.oversamplingFactor  # Expected number of points
+
+                    # Continue acquiring points until we reach the expected number
+                    while acquired_points != expected_points:
+                        if not self.demo:
+                            rxd, msgs = self.expt.run()  # Run the experiment and collect data
+                        else:
+                            # In demo mode, generate random data as a placeholder
+                            rxd = {'rx0': np.random.randn(expected_points) + 1j * np.random.randn(expected_points)}
+
+                        # Update acquired points
+                        acquired_points = np.size(rxd['rx0'])
+
+                        # Check if acquired points coincide with expected points
+                        if acquired_points != expected_points:
+                            print("WARNING: data apoints lost!")
+                            print("Repeating batch...")
+
+                    # Concatenate acquired data into the oversampled data array
+                    data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
+                    print(f"Acquired points = {acquired_points}, Expected points = {expected_points}")
+                    print(f"Scan {scan + 1}, batch {seq_num[-1]}/{len(n_readouts)} ready!")
+
+                # Decimate the oversampled data and store it
+                self.mapVals['data_over'] = data_over
+
+            elif self.plotSeq and self.standalone:
+                # Plot the sequence if requested and return immediately
+                self.sequencePlot(standalone=self.standalone)
+
+            if not self.demo:
+                self.expt.__del__()
+
+        return True
+
     def sequenceInfo(self):
         print("sequenceInfo method is empty."
               "It is recommended to overide this method into your sequence.")

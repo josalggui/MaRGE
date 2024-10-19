@@ -181,18 +181,20 @@ class MSE(blankSeq.MRIBLANKSEQ):
                                              gy_max=hw.gFactor[1] * hw.gammaB,  # Hz/m
                                              gz_max=hw.gFactor[2] * hw.gammaB,  # Hz/m
                                              grad_max=np.max(hw.gFactor) * hw.gammaB,  # Hz/m
-                                             grad_t=10,  # us
+                                             grad_t=hw.grad_raster_time * 1e6,  # us
                                              )
 
         # Define system properties according to hw_config file
         self.system = pp.Opts(
-            rf_dead_time=self.deadTime,  # s
-            max_grad=hw.max_grad,  # mT/m
+            rf_dead_time=hw.blkTime,  # s
+            max_grad=np.max(hw.gFactor) * 1e3,  # mT/m
             grad_unit='mT/m',
             max_slew=hw.max_slew_rate,  # mT/m/ms
             slew_unit='mT/m/ms',
-            grad_raster_time=10e-6,  # s
+            grad_raster_time=hw.grad_raster_time,  # s
             rise_time=hw.grad_rise_time,  # s
+            rf_raster_time=1e-6,
+            block_duration_raster=1e-6
         )
 
         # Get Parameters
