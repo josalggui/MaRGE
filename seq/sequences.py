@@ -6,6 +6,7 @@ Created on Thu June 2 2022
 """
 
 import seq.rare as rare
+import seq.rare_pp as rare_pp
 import seq.rareProtocols as rareProtocols
 import seq.rareProtocolsTest as rareProtocolsTest
 # import seq.haste as haste
@@ -126,6 +127,7 @@ defaultsequences = {
     'RAREprotocols': RAREProtocols(),
     'RAREprotocolsTest': RAREProtocolsTest(),
     'RARE': RARE(),
+    'RARE_pp': rare_pp.RARE_pp(),
     'PulseqReader': pulseq_reader.PulseqReader(),
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),

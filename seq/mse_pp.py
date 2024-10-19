@@ -174,25 +174,28 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.demo = demo
 
         # Define the interpreter. It should be updated on calibration
-        self.flo_interpreter = PSInterpreter(tx_warmup=hw.blkTime,  # us
-                                             rf_center=hw.larmorFreq * 1e6,  # Hz
-                                             rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Hz
-                                             gx_max=hw.gFactor[0] * hw.gammaB,  # Hz/m
-                                             gy_max=hw.gFactor[1] * hw.gammaB,  # Hz/m
-                                             gz_max=hw.gFactor[2] * hw.gammaB,  # Hz/m
-                                             grad_max=np.max(hw.gFactor) * hw.gammaB,  # Hz/m
-                                             grad_t=10,  # us
-                                             )
+        self.flo_interpreter = PSInterpreter(
+            tx_warmup=hw.blkTime,  # Transmit chain warm-up time (us)
+            rf_center=hw.larmorFreq * 1e6,  # Larmor frequency (Hz)
+            rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Maximum RF amplitude (Hz)
+            gx_max=hw.gFactor[0] * hw.gammaB,  # Maximum gradient amplitude for X (Hz/m)
+            gy_max=hw.gFactor[1] * hw.gammaB,  # Maximum gradient amplitude for Y (Hz/m)
+            gz_max=hw.gFactor[2] * hw.gammaB,  # Maximum gradient amplitude for Z (Hz/m)
+            grad_max=np.max(hw.gFactor) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
+            grad_t=hw.grad_raster_time * 1e6,  # Gradient raster time (us)
+        )
 
         # Define system properties according to hw_config file
         self.system = pp.Opts(
-            rf_dead_time=self.deadTime,  # s
-            max_grad=hw.max_grad,  # mT/m
-            grad_unit='mT/m',
-            max_slew=hw.max_slew_rate,  # mT/m/ms
-            slew_unit='mT/m/ms',
-            grad_raster_time=10e-6,  # s
-            rise_time=hw.grad_rise_time,  # s
+            rf_dead_time=hw.blkTime * 1e-6,  # Dead time between RF pulses (s)
+            max_grad=np.max(hw.gFactor) * 1e3,  # Maximum gradient strength (mT/m)
+            grad_unit='mT/m',  # Units of gradient strength
+            max_slew=hw.max_slew_rate,  # Maximum gradient slew rate (mT/m/ms)
+            slew_unit='mT/m/ms',  # Units of gradient slew rate
+            grad_raster_time=hw.grad_raster_time,  # Gradient raster time (s)
+            rise_time=hw.grad_rise_time,  # Gradient rise time (s)
+            rf_raster_time=1e-6,
+            block_duration_raster=1e-6
         )
 
         # Get Parameters

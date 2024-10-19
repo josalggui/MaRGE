@@ -7,10 +7,6 @@ mrilab @ i3M, CSIC, Spain
 import os
 import sys
 
-# To work with pypulseq
-import pypulseq as pp
-from flocra_pulseq.interpreter import PSInterpreter
-
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))
@@ -31,7 +27,7 @@ import configs.units as units
 import scipy.signal as sig
 import experiment as ex
 import configs.hw_config as hw
-
+from flocra_pulseq.interpreter import PSInterpreter
 
 
 class PulseqReader(blankSeq.MRIBLANKSEQ):
@@ -48,15 +44,14 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.066, units=units.MHz, field='IM')
         self.addParameter(key='shimming', string='Shimming', val=[0, 0, 0], field='IM', units=units.sh)
-        self.addParameter(key='files', string='Files', val="[batch_1.seq, batch_2.seq]", field='IM', tip='List .seq files')
+        self.addParameter(key='files', string='Files', val="entertainer1.seq", field='IM', tip='List .seq files')
 
     def sequenceInfo(self):
-        
         print("Pulseq Reader")
         print("Author: PhD. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("Read a .seq file and run the sequence\n")
+        print("Run a list of .seq files\n")
         
 
     def sequenceTime(self):
@@ -72,6 +67,20 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
     def sequenceRun(self, plotSeq=0, demo=False, standalone=False):
         init_gpa = False
         self.demo = demo
+
+        # Step 1: Define the interpreter for FloSeq/PSInterpreter.
+        # The interpreter is responsible for converting the high-level pulse sequence description into low-level
+        # instructions for the scanner hardware. You will typically update the interpreter during scanner calibration.
+        self.flo_interpreter = PSInterpreter(
+            tx_warmup=hw.blkTime,  # Transmit chain warm-up time (us)
+            rf_center=hw.larmorFreq * 1e6,  # Larmor frequency (Hz)
+            rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Maximum RF amplitude (Hz)
+            gx_max=hw.gFactor[0] * hw.gammaB,  # Maximum gradient amplitude for X (Hz/m)
+            gy_max=hw.gFactor[1] * hw.gammaB,  # Maximum gradient amplitude for Y (Hz/m)
+            gz_max=hw.gFactor[2] * hw.gammaB,  # Maximum gradient amplitude for Z (Hz/m)
+            grad_max=np.max(hw.gFactor) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
+            grad_t=100,  # Gradient raster time (us)
+        )
 
         # Function to get the dwell time
         def get_seq_info(file_path):

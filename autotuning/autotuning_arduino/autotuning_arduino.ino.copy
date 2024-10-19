@@ -1,7 +1,10 @@
-// Code to control the autotuning circuit with python.
-//  cPins[] = {S1, S2, S3, S4, S5, T1, T2, T3, T4, T5, M1, M2, M3, M4, M5, TTL}
-int cPins[] = {23, 31, 29, 27, 25, 41, 39, 37, 35, 33, 43, 51, 49, 47, 45, 53};
-int nPins = 16;
+/* Code to control the autotuning circuit with python.
+We added two relays to control the VNA. First one selects if the autotuning is connected to the scanner or to the VNA.
+Second one switches on or off the VNA to prevent noise coupling to the RF chain in the scanner.
+*/
+//  cPins[] = {S1, S2, S3, S4, S5, T1, T2, T3, T4, T5, M1, M2, M3, M4, M5, VNA, VNA}
+int cPins[] = {34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 51, 53, 47, 49, 43, 45,  32};
+int nPins = 17;
 
 void setup() {
   // Start the Serial communication
