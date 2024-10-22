@@ -203,10 +203,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.mapVals['phGradients'] = phGradients
         self.mapVals['slGradients'] = slGradients
 
-        # Set phase vector to given sweep mode
-        ind = self.getIndex(self.etl, nPH, self.sweepMode)
-        self.mapVals['sweepOrder'] = ind
-        phGradients = phGradients[ind]
         # Get the rotation matrix
         rot = self.getRotationMatrix()
         gradAmp = np.array([0.0, 0.0, 0.0])

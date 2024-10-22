@@ -346,7 +346,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         delay_first = pp.make_delay(delay)
 
         # ADC to get noise
-        delay = 20e-6
+        delay = 40e-6
         block_adc_noise = pp.make_adc(num_samples=nRD * hw.oversamplingFactor,
                                        dwell=sampling_period * 1e-6,
                                        delay=delay)
@@ -650,7 +650,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         return self.runBatches(waveforms,
                                n_readouts,
                                frequency=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
-                               bandwdith=bw_ov,  # MHz
+                               bandwidth=bw_ov,  # MHz
                                )
 
     def sequenceAnalysis(self, mode=None):
@@ -1187,8 +1187,8 @@ if __name__ == '__main__':
     seq.sequenceAtributes()
 
     # A
-    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
+    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
 
     # # B
     # seq.sequenceRun(demo=True, plotSeq=False)
-    seq.sequenceAnalysis(mode='Standalone')
+    # seq.sequenceAnalysis(mode='Standalone')

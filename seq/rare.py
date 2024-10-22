@@ -253,11 +253,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
             self.iniSequence(20, self.shimming)
             while acqPoints+self.etl*nRD<=hw.maxRdPoints and orders<=hw.maxOrders and repeIndexGlobal<nRepetitions:
                 # Initialize time
-                tEx = 20e3+self.repetitionTime*repeIndex+self.inversionTime+self.preExTime
+                tEx = self.repetitionTime+self.repetitionTime*repeIndex+self.inversionTime+self.preExTime
 
                 # First I do a noise measurement.
                 if repeIndex==0:
-                    t0 = tEx-self.preExTime-self.inversionTime-self.acqTime-2*addRdPoints/BW-self.rfExTime/2-hw.blkTime
+                    t0 = 40
                     self.rxGate(t0, self.acqTime+2*addRdPoints/BW)
                     acqPoints += nRD
 
@@ -380,7 +380,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 repeIndex+=1 # Update the repeIndex after the ETL
 
             # Turn off the gradients after the end of the batch
-            self.endSequence(repeIndex*self.repetitionTime)
+            self.endSequence((repeIndex+1)*self.repetitionTime)
 
             # Return the output variables
             return(phIndex, slIndex, lnIndex, repeIndexGlobal, acqPoints)
