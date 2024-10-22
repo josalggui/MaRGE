@@ -170,7 +170,38 @@ class MRIBLANKSEQ:
                 tips[self.mapNmspc[key]] = [self.mapTips[key]]
         return out, tips
 
-    def runBatches(self, waveforms, n_readouts):
+    def runBatches(self, waveforms, n_readouts, frequency=hw.larmorFreq, bandwidth=0.03):
+        """
+        Execute multiple batches of waveforms for MRI data acquisition, handle scanning, and store oversampled data.
+
+        Parameters:
+        -----------
+        waveforms : dict
+            A dictionary of waveform sequences, where each key corresponds to a batch identifier and
+            the value is the waveform data generated using PyPulseq.
+        n_readouts : dict
+            A dictionary that specifies the number of readout points for each batch. Keys correspond to
+            the batch identifiers, and values specify the number of readout points for each sequence.
+        frequency : float, optional
+            Larmor frequency in MHz for the MRI scan (default is the system's Larmor frequency, hw.larmorFreq).
+        bandwidth : float, optional
+            Bandwidth in Hz used to calculate the sampling time (1 / bandwidth gives the sampling period).
+
+        Returns:
+        --------
+        bool
+            Returns True if all batches were successfully executed, and False if an error occurred (e.g.,
+            sequence waveforms are out of hardware bounds).
+
+        Notes:
+        ------
+        - The method will initialize the Red Pitaya hardware if not in demo mode.
+        - The method converts waveforms from PyPulseq format to Red Pitaya compatible format.
+        - If plotSeq is True, the sequence will be plotted instead of being executed.
+        - In demo mode, the acquisition simulates random data instead of using actual hardware.
+        - Oversampled data is stored in the class attribute `self.mapVals['data_over']`.
+        - Data points are acquired in batches, with error handling in case of data loss, and batches are repeated if necessary.
+        """
         self.mapVals['n_readouts'] = list(n_readouts.values())
         self.mapVals['n_batches'] = len(n_readouts.values())
 
@@ -182,8 +213,8 @@ class MRIBLANKSEQ:
             # Initialize the experiment if not in demo mode
             if not self.demo:
                 self.expt = ex.Experiment(
-                    lo_freq=hw.larmorFreq,  # Larmor frequency in MHz
-                    rx_t=1 / self.bandwidth * hw.oversamplingFactor * 1e6,  # Sampling time in us
+                    lo_freq=frequency,  # Larmor frequency in MHz
+                    rx_t=1 / bandwidth,  # Sampling time in us
                     init_gpa=False,  # Whether to initialize GPA board (False for now)
                     gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
                     auto_leds=True  # Automatic control of LEDs

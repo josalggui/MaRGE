@@ -328,7 +328,11 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         '''
 
         waveforms, n_readouts = createBatches()
-        return self.runBatches(waveforms, n_readouts)
+        return self.runBatches(waveforms,
+                               n_readouts,
+                               frequency=hw.larmorFreq,  # MHz
+                               bandwidth=bw_ov,  # MHz
+                               )
 
     def sequenceAnalysis(self, mode=None):
 

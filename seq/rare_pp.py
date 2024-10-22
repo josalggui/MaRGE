@@ -647,7 +647,11 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         Oversampled data will be available in self.mapVals['data_over']
         '''
         waveforms, n_readouts = createBatches()
-        return self.runBatches(waveforms, n_readouts)
+        return self.runBatches(waveforms,
+                               n_readouts,
+                               frequency=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
+                               bandwdith=bw_ov,  # MHz
+                               )
 
     def sequenceAnalysis(self, mode=None):
         self.mode = mode
