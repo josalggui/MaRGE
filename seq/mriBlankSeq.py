@@ -24,6 +24,7 @@ from skimage.measure import shannon_entropy
 
 # Import dicom saver
 from manager.dicommanager import DICOMImage
+import shutil
 
 class MRIBLANKSEQ:
     """
@@ -1366,7 +1367,6 @@ class MRIBLANKSEQ:
 
         """
         
-        
         # Get directory
         if 'directory' in self.session.keys():
             directory = self.session['directory']
@@ -1383,8 +1383,6 @@ class MRIBLANKSEQ:
         directory_dcm = directory + '/dcm'
         directory_ismrmrd = directory + '/ismrmrd'
         
-        
-        
         if not os.path.exists(directory + '/mat'):
             os.makedirs(directory_mat)
         if not os.path.exists(directory + '/csv'):
@@ -1393,7 +1391,6 @@ class MRIBLANKSEQ:
             os.makedirs(directory_dcm)
         if not os.path.exists(directory + '/ismrmrd'):
             os.makedirs(directory_ismrmrd)
-
 
         self.directory_rmd=directory_ismrmrd 
         
@@ -1425,7 +1422,46 @@ class MRIBLANKSEQ:
         # Save dcm with the final image
         if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode is None): ##verify if output is an image
             self.image2Dicom(fileName="%s/%s.dcm" % (directory_dcm, file_name))
-            
+
+        # Move seq files
+        self.move_batch_files(destination_folder=directory, file_name=file_name)
+
+    @staticmethod
+    def move_batch_files(destination_folder, file_name):
+        """
+        Move batch_X.seq files from the current working directory to the specified destination folder.
+
+        The method scans all files in the current directory and identifies files with the extension '.seq'.
+        It extracts the batch number from the file name (in the format 'batch_X.seq', where 'X' is the batch number).
+        Then, it moves these files to a subfolder 'seq' inside the specified destination folder, renaming them based on the provided `file_name` template.
+
+        Args:
+        - destination_folder (str): The path to the destination folder where the 'seq' subfolder will be created, and the files will be moved.
+        - file_name (str): The prefix used for renaming the files. Files will be renamed in the format 'file_name_X.seq', where 'X' is the extracted batch number from the original file name.
+
+        Example:
+            If the file 'batch_1.seq' is found and `file_name='processed'`, it will be moved and renamed to:
+            'destination_folder/seq/processed_1.seq'.
+
+        Side Effects:
+        - Creates a 'seq' subfolder in the destination folder if it doesn't already exist.
+        - Moves and renames the matched '.seq' files from the current directory.
+
+        """
+        # List all files in the source folder
+        for source_file in os.listdir():
+            # Match files with the pattern 'batch_X.seq'
+            file_prov = source_file.split('.')
+            if file_prov[-1]=='seq' and os.path.isfile(source_file):
+                batch_num = file_prov[0].split('_')[-1]
+
+                # Create the destination folder path based on the batch number
+                os.makedirs(os.path.join(destination_folder, 'seq'), exist_ok=True)
+
+                # Move the file to the destination folder
+                destination_file = os.path.join(destination_folder, 'seq', file_name+'_%s.seq' % batch_num)
+                shutil.move(source_file, destination_file)
+                print(f'Moved: {file_name} to {destination_folder}')
        
         
     def image2Dicom(self, fileName): 
