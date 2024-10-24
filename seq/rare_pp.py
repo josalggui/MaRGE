@@ -591,15 +591,19 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                         initializeBatch(batch_num)  # Initialize new batch
                         print(f"Creating {batch_num}.seq...")
 
-                    # Pre-excitation pulse
-                    if self.preExTime > 0:
-                        batches[batch_num].add_block(block_rf_pre_excitation,
-                                                delay_pre_excitation)
+                        # Pre-excitation pulse
+                        if self.preExTime > 0:
+                            gr_rd_preex = pp.scale_grad(block_gr_rd_preph, scale=+1.0)
+                            batches[batch_num].add_block(block_rf_pre_excitation,
+                                                         gr_rd_preex,
+                                                         delay_pre_excitation)
 
-                    # Inversion pulse
-                    if self.inversionTime > 0:
-                        batches[batch_num].add_block(block_rf_inversion,
-                                                delay_inversion)
+                        # Inversion pulse
+                        if self.inversionTime > 0:
+                            gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
+                            batches[batch_num].add_block(block_rf_inversion,
+                                                         gr_rd_inv,
+                                                         delay_inversion)
 
                     # Add excitation pulse and readout de-phasing gradient
                     batches[batch_num].add_block(block_gr_rd_preph,
