@@ -285,7 +285,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             system=self.system,
             amplitude=rdDephAmplitude*hw.gammaB,
             flat_time=self.rdDephTime,
-            delay=-hw.gradDelay * 1e-6,
+            delay=0,
             rise_time=hw.grad_rise_time,
         )
         delay_preph = pp.make_delay(self.echoSpacing / 2 - self.rfExTime / 2 - self.rfReTime / 2 -
@@ -308,7 +308,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             system=self.system,
             amplitude=phGradAmplitude * hw.gammaB,
             flat_time=self.phGradTime,
-            delay=self.rfReTime + self.system.rf_dead_time - hw.gradDelay * 1e-6,
+            delay=self.rfReTime + self.system.rf_dead_time,
             rise_time=hw.grad_rise_time,
         )
 
@@ -318,13 +318,13 @@ class MSE(blankSeq.MRIBLANKSEQ):
             system=self.system,
             amplitude=slGradAmplitude * hw.gammaB,
             flat_time=self.phGradTime,
-            delay=self.rfReTime + self.system.rf_dead_time - hw.gradDelay * 1e-6,
+            delay=self.rfReTime + self.system.rf_dead_time,
             rise_time=hw.grad_rise_time,
         )
 
         # Readout gradient
         delay = self.rfReTime / 2 + self.echoSpacing /2 - self.rdGradTime / 2 - hw.grad_rise_time + \
-                self.system.rf_dead_time - hw.gradDelay * 1e-6
+                self.system.rf_dead_time
         gr_readout = pp.make_trapezoid(
             channel=rd_channel,
             system=self.system,
@@ -341,7 +341,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
                           delay=delay)
 
         # Phase gradient rephasing
-        delay = -self.echoSpacing / 2 + (nRD / 2 / BW) * 1e-6 + self.rfReTime / 2 + self.system.rf_dead_time - hw.gradDelay * 1e-6
+        delay = -self.echoSpacing / 2 + (nRD / 2 / BW) * 1e-6 + self.rfReTime / 2 + self.system.rf_dead_time
         gr_phase_r = pp.make_trapezoid(
             channel=ph_channel,
             system=self.system,
@@ -352,7 +352,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         )
 
         # Phase gradient rephasing
-        delay = -self.echoSpacing / 2 + (nRD / 2 / BW) * 1e-6 + self.rfReTime / 2 + self.system.rf_dead_time - hw.gradDelay * 1e-6
+        delay = -self.echoSpacing / 2 + (nRD / 2 / BW) * 1e-6 + self.rfReTime / 2 + self.system.rf_dead_time
         gr_slice_r = pp.make_trapezoid(
             channel=sl_channel,
             system=self.system,
