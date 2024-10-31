@@ -354,9 +354,9 @@ class MRIBLANKSEQ:
                 self.flo_dict[key] = [np.array([0]), np.array([0])]
 
         # Add shimming
-        self.flo_dict['g0'][1] += shimming[0]
-        self.flo_dict['g1'][1] += shimming[1]
-        self.flo_dict['g2'][1] += shimming[2]
+        self.flo_dict['g0'][1] = self.flo_dict['g0'][1] + shimming[0]
+        self.flo_dict['g1'][1] = self.flo_dict['g1'][1] + shimming[1]
+        self.flo_dict['g2'][1] = self.flo_dict['g2'][1] + shimming[2]
 
         # Add gradient latency
         self.flo_dict['g0'][0] -= hw.gradDelay
