@@ -72,25 +72,25 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=50.0, units=units.us, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=100.0, units=units.us, field='RF')
         self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, units=units.ms, field='SEQ')
-        self.addParameter(key='preExTime', string='Preexitation time (ms)', val=10.0, units=units.ms, field='SEQ')
-        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=10.0, units=units.ms, field='SEQ', tip="0 to ommit this pulse")
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=50., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
-        self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
+        self.addParameter(key='preExTime', string='Preexitation time (ms)', val=0.0, units=units.ms, field='SEQ')
+        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ', tip="0 to ommit this pulse")
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
+        self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[60, 60, 20], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=2, field='SEQ') ## nm of peaks in 1 repetition
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
-        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM', tip="0=x, 1=y, 2=z")
-        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 0], tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
+        self.addParameter(key='etl', string='Echo train length', val=6, field='SEQ') ## nm of peaks in 1 repetition
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
+        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
+        self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 1], tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
         self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
-        self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, units=units.ms, field='OTH')
+        self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=5.0, units=units.ms, field='OTH')
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
-        self.addParameter(key='dummyPulses', string='Dummy pulses', val=2, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
+        self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
@@ -392,7 +392,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # Dephasing gradient
-        delay = self.system.rf_dead_time + self.rfExTime - hw.gradDelay * 1e-6
+        delay = self.system.rf_dead_time + self.rfExTime
         block_gr_rd_preph = pp.make_trapezoid(
             channel=rd_channel,
             system=self.system,
@@ -419,7 +419,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         delay_reph = pp.make_delay(self.echoSpacing)
 
         # Phase gradient dephasing
-        delay = self.system.rf_dead_time + self.rfReTime - hw.gradDelay * 1e-6
+        delay = self.system.rf_dead_time + self.rfReTime
         block_gr_ph_deph = pp.make_trapezoid(
             channel=ph_channel,
             system=self.system,
@@ -430,7 +430,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # Slice gradient dephasing
-        delay = self.system.rf_dead_time + self.rfReTime - hw.gradDelay * 1e-6
+        delay = self.system.rf_dead_time + self.rfReTime
         block_gr_sl_deph = pp.make_trapezoid(
             channel=sl_channel,
             system=self.system,
@@ -442,7 +442,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
         # Readout gradient
         delay = self.system.rf_dead_time + self.rfReTime / 2 + self.echoSpacing / 2 - self.rdGradTime / 2 - \
-                hw.grad_rise_time - hw.gradDelay * 1e-6
+                hw.grad_rise_time
         block_gr_rd_reph = pp.make_trapezoid(
             channel=rd_channel,
             system=self.system,
@@ -459,8 +459,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                           delay=delay)
 
         # Phase gradient rephasing
-        delay = self.system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2 - \
-                hw.gradDelay * 1e-6
+        delay = self.system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2
         block_gr_ph_reph = pp.make_trapezoid(
             channel=ph_channel,
             system=self.system,
@@ -471,8 +470,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # Slice gradient rephasing
-        delay = self.system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2 - \
-                hw.gradDelay * 1e-6
+        delay = self.system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2
         block_gr_sl_reph = pp.make_trapezoid(
             channel=sl_channel,
             system=self.system,
@@ -1184,15 +1182,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         dset.close()    
 
 
-if __name__ == '__main__': 
-
-        
+if __name__ == '__main__':
     seq = RARE_pp()
     seq.sequenceAtributes()
-
-    # A
     seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
-
-    # # B
-    # seq.sequenceRun(demo=True, plotSeq=False)
-    # seq.sequenceAnalysis(mode='Standalone')
