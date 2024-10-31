@@ -106,10 +106,29 @@ class ReconstructionTabWidget(QWidget):
         self.pocs_group = QGroupBox("Partial Reconstruction")
         self.pocs_group.setLayout(self.pocs_layout)
 
+        # *****************
+        # TYGER
+        # *****************
+        # Define layout
+        tyger_layout = QHBoxLayout()
+
+        # Define new buttons here
+        self.tyger_ifft_button = QPushButton('IFFT')
+        self.tyger_art_button = QPushButton('ART')
+
+        # Add defined buttons to the layout
+        tyger_layout.addWidget(self.tyger_ifft_button)
+        tyger_layout.addWidget(self.tyger_art_button)
+
+        # Define the group box
+        tyger_group = QGroupBox('TYGER')
+        tyger_group.setLayout(tyger_layout)
+
         # Main layout
         self.reconstruction_layout = QVBoxLayout()
         self.reconstruction_layout.addWidget(self.art_group)
         self.reconstruction_layout.addWidget(self.fft_group)
         self.reconstruction_layout.addWidget(self.pocs_group)
+        self.reconstruction_layout.addWidget(tyger_group)
         self.reconstruction_layout.addStretch()
         self.setLayout(self.reconstruction_layout)

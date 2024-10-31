@@ -1,7 +1,10 @@
 import os
+import sys
 import time
 import threading
 import numpy as np
+from PyQt5.QtWidgets import QApplication, QWidget
+
 from widgets.widget_reconstruction import ReconstructionTabWidget
 try:
     import cupy as cp
@@ -120,6 +123,14 @@ class ReconstructionTabController(ReconstructionTabWidget):
         self.ifft_button.clicked.connect(self.ifft)
         self.dfft_button.clicked.connect(self.dfft)
         self.image_art_button.clicked.connect(self.artReconstruction)
+        self.tyger_ifft_button.clicked.connect(self.tyger_ifft_clicked)
+        self.tyger_art_button.clicked.connect(self.tyger_art_clicked)
+
+    def tyger_art_clicked(self):
+        print("The file is located in %s" % self.main.file_path)
+
+    def tyger_ifft_clicked(self):
+        print("The file is located in %s" % self.main.file_path)
 
     def dfft(self):
 
@@ -509,3 +520,10 @@ class ReconstructionTabController(ReconstructionTabWidget):
                                           operation="POCS - " + str(factors[-1::-1]),
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = ReconstructionTabController(parent=QWidget)
+    window.main.file_path = "D:/CSIC/REPOSITORIOS/MaRGE/RARE.2024.09.25.11.07.51.836.mat"
+    window.show()
+    sys.exit(app.exec_())

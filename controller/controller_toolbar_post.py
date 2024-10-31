@@ -73,6 +73,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             file_name = os.path.basename(file_path)
         else:
             file_path = file_path+file_name
+        self.main.file_path = file_path
         self.main.file_name = file_name
         self.mat_data = sp.io.loadmat(file_path)
         self.nPoints = np.reshape(self.mat_data['nPoints'], -1)
