@@ -959,7 +959,7 @@ class MRIBLANKSEQ:
 
         return dataFull
 
-    def rfSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, rewrite=True):
+    def rfSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, channel=0, rewrite=True):
         """
         Generate an RF pulse with a sinc pulse shape and the corresponding deblanking signal. It uses a Hanning window
         to reduce the banding of the frequency profile.
@@ -981,10 +981,35 @@ class MRIBLANKSEQ:
         txAmp = rfAmplitude * np.exp(1j * rfPhase) * hanning * np.abs(np.sinc(tx))
         txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
         txGateAmp = np.array([1, 0])
-        self.flo_dict['tx0'][0] = np.concatenate((self.flo_dict['tx0'][0], txTime), axis=0)
-        self.flo_dict['tx0'][1] = np.concatenate((self.flo_dict['tx0'][1], txAmp), axis=0)
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
         self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
         self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
+
+    def rfRawSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, channel=0, rewrite=True):
+        """
+        Generate an RF pulse with a sinc pulse shape. It uses a Hanning window
+        to reduce the banding of the frequency profile.
+
+        Args:
+            tStart (float): Start time of the RF pulse.
+            rfTime (float): Duration of the RF pulse.
+            rfAmplitude (float): Amplitude of the RF pulse.
+            rfPhase (float): Phase of the RF pulse in radians. Default is 0.
+            nLobes (int): Number of lobes in the sinc pulse. Default is 7.
+            channel (int): Channel index for the RF pulse. Default is 0.
+            rewrite (bool): Whether to rewrite the existing RF pulse. Default is True.
+
+        """
+        txTime = np.linspace(tStart, tStart + rfTime, num=100, endpoint=True) + hw.blkTime
+        nZeros = (nLobes + 1)
+        tx = np.linspace(-nZeros / 2, nZeros / 2, num=100, endpoint=True)
+        hanning = 0.5 * (1 + np.cos(2 * np.pi * tx / nZeros))
+        txAmp = rfAmplitude * np.exp(1j * rfPhase) * hanning * np.abs(np.sinc(tx))
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
+        txGateAmp = np.array([1, 0])
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
 
     def rfRecPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, channel=0):
         """
