@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QLabel, QLineEdit, QHBoxLayout, QGroupBox, QWidget
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QLabel, QLineEdit, QHBoxLayout, QGroupBox, QWidget, QGridLayout
 
 
 class ReconstructionTabWidget(QWidget):
@@ -110,15 +110,25 @@ class ReconstructionTabWidget(QWidget):
         # TYGER
         # *****************
         # Define layout
-        tyger_layout = QHBoxLayout()
+        tyger_layout = QGridLayout()
 
         # Define new buttons here
-        self.tyger_ifft_button = QPushButton('IFFT')
-        self.tyger_art_button = QPushButton('ART')
+        self.tyger_ifft_button = QPushButton('Python iFFT')
+        self.tyger_art_button = QPushButton('Python ART')
+        self.tyger_artpk_button = QPushButton('Python ART PK')
+        self.tyger_ifft_bart_button = QPushButton('BART iFFT')
+        self.tyger_ifftus_bart_button = QPushButton('BART iFFT us')
+        self.tyger_cs_bart_button = QPushButton('BART CS')
+        self.tyger_pix2pix_button = QPushButton('Pix2Pix Net Knee')
 
         # Add defined buttons to the layout
-        tyger_layout.addWidget(self.tyger_ifft_button)
-        tyger_layout.addWidget(self.tyger_art_button)
+        tyger_layout.addWidget(self.tyger_ifft_button, 0, 0)
+        tyger_layout.addWidget(self.tyger_art_button,0,1)
+        tyger_layout.addWidget(self.tyger_artpk_button,0,2)
+        tyger_layout.addWidget(self.tyger_ifft_bart_button,1,0)
+        tyger_layout.addWidget(self.tyger_ifftus_bart_button,1,1)
+        tyger_layout.addWidget(self.tyger_cs_bart_button,1,2)
+        tyger_layout.addWidget(self.tyger_pix2pix_button,2,0)
 
         # Define the group box
         tyger_group = QGroupBox('TYGER')

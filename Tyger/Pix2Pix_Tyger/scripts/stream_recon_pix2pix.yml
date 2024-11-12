@@ -1,0 +1,18 @@
+job:
+  codespec:
+    image: ghcr.io/teresaguallartnaval/marcos_tyger_gan_knee:v0.1
+    buffers:
+      inputs:
+        - input
+      outputs:
+        - output
+    args:
+      - python3
+      - stream_recon_i3m_pix2pix.py
+      - -i
+      - $(INPUT_PIPE)
+      - -o
+      - $(OUTPUT_PIPE) 
+    resources:
+      requests:
+        cpu: 1

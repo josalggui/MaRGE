@@ -3,9 +3,11 @@ import sys
 import time
 import threading
 import numpy as np
+import subprocess
 from PyQt5.QtWidgets import QApplication, QWidget
-
+import configs.hw_config as hw
 from widgets.widget_reconstruction import ReconstructionTabWidget
+import scipy.io as sio
 try:
     import cupy as cp
     print("GPU will be used for ART reconstruction")
@@ -125,15 +127,181 @@ class ReconstructionTabController(ReconstructionTabWidget):
         self.image_art_button.clicked.connect(self.artReconstruction)
         self.tyger_ifft_button.clicked.connect(self.tyger_ifft_clicked)
         self.tyger_art_button.clicked.connect(self.tyger_art_clicked)
+        self.tyger_artpk_button.clicked.connect(self.tyger_artpk_clicked)
+        self.tyger_ifft_bart_button.clicked.connect(self.tyger_ifft_bart_clicked)
+        self.tyger_ifftus_bart_button.clicked.connect(self.tyger_ifftus_bart_clicked)
+        self.tyger_cs_bart_button.clicked.connect(self.tyger_cs_bart_clicked)
+        self.tyger_pix2pix_button.clicked.connect(self.tyger_pix2pix_clicked)
 
+    def tyger_pix2pix_clicked(self):
+        print("Running Pix2Pix in tyger...")
+        process = subprocess.run([hw.bash_path, "--", "./Tyger/control_buttons/pix2pix_python.sh", self.main.file_path])
+
+        rawData = sio.loadmat(self.main.file_path)
+        imgTyger = rawData['imgReconTyger2D_Red'][0]
+        self.main.image_view_widget.main_matrix = imgTyger
+        figure = imgTyger[0] / np.max(np.abs(imgTyger)) * 100
+        figure = np.reshape(figure, (1,figure.shape[0],figure.shape[1]))
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
+        figure = np.transpose(figure, (0,2,1))
+        figure = np.flip(figure, 2)
+        figure = np.flip(figure, 1)
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="Pix2Pix net Tyger",
+                                          image=figure,
+                                          orientation=orientation,
+                                          operation="Pix2Pix net Tyger",
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
+        
+        rawData = sio.loadmat(self.main.file_path)
+        img3T = rawData['highfield_img'][18]
+        self.main.image_view_widget.main_matrix = imgTyger
+        figure = img3T/ np.max(np.abs(imgTyger)) * 100
+        figure = np.reshape(figure, (1,figure.shape[0],figure.shape[1]))
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
+        figure = np.transpose(figure, (0,2,1))
+        figure = np.flip(figure, 2)
+        figure = np.flip(figure, 1)
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="High field ref Img",
+                                          image=figure,
+                                          orientation=orientation,
+                                          operation="High field ref Img",
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
+        print("Done!")
     def tyger_art_clicked(self):
-        print("The file is located in %s" % self.main.file_path)
+        print("Running python ART in tyger...")
+        process = subprocess.run([hw.bash_path, "--", "./Tyger/control_buttons/art_python.sh", self.main.file_path])
+
+        rawData = sio.loadmat(self.main.file_path)
+        imgTyger = rawData['imgReconTyger2D'][0]
+        self.main.image_view_widget.main_matrix = imgTyger
+        figure = imgTyger[0] / np.max(np.abs(imgTyger)) * 100
+        figure = np.reshape(figure, (1,figure.shape[0],figure.shape[1]))
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="Python ART Tyger",
+                                          image=figure,
+                                          orientation=orientation,
+                                          operation="Python ART Tyger",
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
+    
+    def tyger_artpk_clicked(self):
+        print("Running python ART PK in tyger...")
+        process = subprocess.run([hw.bash_path, "--", "./Tyger/control_buttons/artPK_python.sh", self.main.file_path])
+
+        rawData = sio.loadmat(self.main.file_path)
+        imgTyger = rawData['imgReconTyger2D'][0]
+        self.main.image_view_widget.main_matrix = imgTyger
+        figure = imgTyger[0] / np.max(np.abs(imgTyger)) * 100
+        figure = np.reshape(figure, (1,figure.shape[0],figure.shape[1]))
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
+
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="Python ART PK Tyger",
+                                          image=figure,
+                                          orientation=orientation,
+                                          operation="Python ART PK Tyger",
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
 
     def tyger_ifft_clicked(self):
-        print("The file is located in %s" % self.main.file_path)
+        print("Running python iFFT in tyger...")
+        subprocess.call([hw.bash_path, "--", "./Tyger/control_buttons/fft_python.sh", self.main.file_path])
 
+        rawData = sio.loadmat(self.main.file_path)
+        imgTyger = rawData['imgReconTyger2D'][0]
+        self.main.image_view_widget.main_matrix = imgTyger
+        figure = imgTyger[0] / np.max(np.abs(imgTyger)) * 100
+        figure = np.reshape(figure, (1,figure.shape[0],figure.shape[1]))
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="Python iFFT Tyger",
+                                          image=figure,
+                                          orientation=orientation,
+                                          operation="Python iFFT Tyger",
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
+
+    def tyger_ifft_bart_clicked(self):
+        print("Running BART iFFT in tyger...")
+        process = subprocess.run([hw.bash_path, "--", "./Tyger/control_buttons/bart_fft.sh", self.main.file_path])
+
+        rawData = sio.loadmat(self.main.file_path)
+        imgTyger = rawData['imgReconTyger2D'][0]
+        self.main.image_view_widget.main_matrix = imgTyger
+        figure = imgTyger[0] / np.max(np.abs(imgTyger)) * 100
+        figure = np.reshape(figure, (1,figure.shape[0],figure.shape[1]))
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
+        figure = np.transpose(figure, (0,2,1))
+        figure = np.flip(figure, 2)
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="BART iFFT Tyger",
+                                          image=figure,
+                                          orientation=orientation,
+                                          operation="BART iFFT Tyger",
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
+        
+    def tyger_ifftus_bart_clicked(self):
+        print("Running BART iFFT us in tyger...")
+        subprocess.run([hw.bash_path, "--", "./Tyger/control_buttons/bart_fftus.sh", self.main.file_path])
+
+        rawData = sio.loadmat(self.main.file_path)
+        imgTyger = rawData['imgReconTyger2D'][0]
+        self.main.image_view_widget.main_matrix = imgTyger
+        figure = imgTyger[0] / np.max(np.abs(imgTyger)) * 100
+        figure = np.reshape(figure, (1,figure.shape[0],figure.shape[1]))
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
+        figure = np.transpose(figure, (0,2,1))
+        figure = np.flip(figure, 2)
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="BART iFFT us  Tyger",
+                                          image=figure,
+                                          orientation=orientation,
+                                          operation="BART iFFT us Tyger",
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
+    def tyger_cs_bart_clicked(self):
+        print("Running BART CS in tyger...")
+        subprocess.run([hw.bash_path, "--", "./Tyger/control_buttons/bart_cs.sh", self.main.file_path])
+
+        rawData = sio.loadmat(self.main.file_path)
+        imgTyger = rawData['imgReconTyger2D'][0]
+        self.main.image_view_widget.main_matrix = imgTyger
+        figure = imgTyger[0] / np.max(np.abs(imgTyger)) * 100
+        figure = np.reshape(figure, (1,figure.shape[0],figure.shape[1]))
+        orientation=None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
+        figure = np.transpose(figure, (0,2,1))
+        figure = np.flip(figure, 2)
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="BART CS Tyger",
+                                          image=figure,
+                                          orientation=orientation,
+                                          operation="BART CS Tyger",
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
+    
     def dfft(self):
-
         thread = threading.Thread(target=self.runDFFT)
         thread.start()
 
@@ -192,7 +360,6 @@ class ReconstructionTabController(ReconstructionTabWidget):
         orientation=None
         if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
             orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
-
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="iFFT",
                                           image=figure,
@@ -295,28 +462,28 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Launch the GPU function
         rho = np.reshape(np.zeros((nPoints[0] * nPoints[1] * nPoints[2]), dtype=complex), (-1, 1))
         start = time.time()
-        if 'cp' in globals():
-            print('Executing ART in GPU...')
+        # if 'cp' in globals():
+        #     print('Executing ART in GPU...')
 
-            # Transfer numpy arrays to cupy arrays
-            kx_gpu = cp.asarray(kx)
-            ky_gpu = cp.asarray(ky)
-            kz_gpu = cp.asarray(kz)
-            x_gpu = cp.asarray(x)
-            y_gpu = cp.asarray(y)
-            z_gpu = cp.asarray(z)
-            s_gpu = cp.asarray(s)
-            index = cp.asarray(index)
-            rho_gpu = cp.asarray(rho)
+        #     # Transfer numpy arrays to cupy arrays
+        #     kx_gpu = cp.asarray(kx)
+        #     ky_gpu = cp.asarray(ky)
+        #     kz_gpu = cp.asarray(kz)
+        #     x_gpu = cp.asarray(x)
+        #     y_gpu = cp.asarray(y)
+        #     z_gpu = cp.asarray(z)
+        #     s_gpu = cp.asarray(s)
+        #     index = cp.asarray(index)
+        #     rho_gpu = cp.asarray(rho)
 
-            # Execute ART
-            rho_gpu = iterative_process_gpu(kx_gpu, ky_gpu, kz_gpu, x_gpu, y_gpu, z_gpu, s_gpu, rho_gpu, lbda, n_iter,
-                                            index)
-            rho = cp.asnumpy(rho_gpu)
-        else:
-            print('Executing ART in CPU...')
+        #     # Execute ART
+        #     rho_gpu = iterative_process_gpu(kx_gpu, ky_gpu, kz_gpu, x_gpu, y_gpu, z_gpu, s_gpu, rho_gpu, lbda, n_iter,
+        #                                     index)
+        #     rho = cp.asnumpy(rho_gpu)
+        # else:
+        print('Executing ART in CPU...')
 
-            rho = iterative_process_cpu(kx, ky, kz, x, y, z, s, rho, lbda, n_iter,
+        rho = iterative_process_cpu(kx, ky, kz, x, y, z, s, rho, lbda, n_iter,
                                             index)
         end = time.time()
         print("Reconstruction time = %0.1f s" % (end - start))

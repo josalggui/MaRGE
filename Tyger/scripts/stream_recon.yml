@@ -1,0 +1,20 @@
+job:
+  codespec:
+    image: ghcr.io/teresaguallartnaval/marcos_tyger:v1.0
+    buffers:
+      inputs:
+        - input
+      outputs:
+        - output
+    args:
+      - python3
+      - stream_recon_i3m.py
+      - -i
+      - $(INPUT_PIPE)
+      - -o
+      - $(OUTPUT_PIPE) 
+      - -r
+      - 'pythonfft'
+    resources:
+      requests:
+        cpu: 1
