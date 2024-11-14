@@ -39,6 +39,7 @@ import seq.pulseq_reader as pulseq_reader
 import seq.fix_gain as fix_gain
 import seq.mse_pp as mse_pp
 import seq.mse_pp_jma as mse_jma
+import seq.rare_t2prep_pp as rare_t2prep_pp
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
@@ -128,6 +129,7 @@ defaultsequences = {
     'RAREprotocolsTest': RAREProtocolsTest(),
     'RARE': RARE(),
     'RARE_pp': rare_pp.RARE_pp(),
+    'RARE_T2prep_pp': rare_t2prep_pp.RARE_T2prep_pp(),
     'PulseqReader': pulseq_reader.PulseqReader(),
     'Noise': Noise(),
     'RabiFlops': RabiFlops(),

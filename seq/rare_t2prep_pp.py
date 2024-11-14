@@ -24,7 +24,6 @@ for subdir in subdirs:
 import numpy as np
 import experiment as ex
 import scipy.signal as sig
-from scipy.stats import linregress
 import configs.hw_config as hw # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
@@ -41,10 +40,14 @@ import pypulseq as pp
 #*********************************************************************************
 #*********************************************************************************
 
-class RARE_pp(blankSeq.MRIBLANKSEQ):
+class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
     def __init__(self):
-        super(RARE_pp, self).__init__()
+        super(RARE_T2prep_pp, self).__init__()
         # Input the parameters
+        self.dummyPulses = None
+        self.spoilerTime = None
+        self.repetitionTime = None
+        self.echoTime = None
         self.echoSpacing = None
         self.phGradTime = None
         self.rdGradTime = None
@@ -64,27 +67,25 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.rotation = None
         self.angle = None
         self.axesOrientation = None
-        self.addParameter(key='seqName', string='RAREInfo', val='RARE_pp')
-        self.addParameter(key='nScans', string='Number of scans', val=1, field='IM') ## number of scans 
+        self.addParameter(key='seqName', string='RAREInfo', val='RARE_T2prep_pp')
+        self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=50.0, units=units.us, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=100.0, units=units.us, field='RF')
-        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, units=units.ms, field='SEQ')
-        self.addParameter(key='preExTime', string='Preexitation time (ms)', val=0.0, units=units.ms, field='SEQ')
-        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ', tip="0 to ommit this pulse")
+        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, units=units.ms, field='SEQ', tip='Echo spacing for the echo train')
+        self.addParameter(key='echoTime', string='Echo Time (ms)', val=10.0, units=units.ms, field='SEQ', tip='Echo time for the preparation pulse')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[60, 60, 20], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[60, 60, 1], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=6, field='SEQ') ## nm of peaks in 1 repetition
+        self.addParameter(key='etl', string='Echo train length', val=1, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
         self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 1], tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
-        self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=5.0, units=units.ms, field='OTH')
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
@@ -101,7 +102,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         
        
     def sequenceInfo(self):
-        print("3D RARE sequence")
+        print("3D RARE sequence with T2 preparation pulse")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain \n")
@@ -148,7 +149,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.demo = demo
         self.plotSeq = plotSeq
         self.standalone = standalone
-        print('RARE run')
+        print('RARE_T2_prep run')
 
         '''
         Step 1: Define the interpreter for FloSeq/PSInterpreter.
@@ -203,9 +204,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                 axesEnable.append(0)
             else:
                 axesEnable.append(1)
-        self.mapVals['axesEnable'] = axesEnable
+        self.mapVals['axes_enable_rd_ph_sl'] = axesEnable
 
         # Miscellaneous
+        spoiler_time = 3e-3  # s
         self.freqOffset = self.freqOffset*1e6 # MHz
         gradRiseTime = hw.grad_rise_time
         resolution = self.fov/self.nPoints
@@ -218,7 +220,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.mapVals['addRdPoints'] = hw.addRdPoints
         self.mapVals['larmorFreq'] = hw.larmorFreq + self.freqOffset
         if rfExAmp > 1 or rfReAmp > 1:
-            print("ERROR: RF amplitude is too high, try with longer RF pulse time.")
+            print("ERROR: RF amplitude is too high, try with longer RF pulse time to reduce RF amplitude.")
             return 0
 
         # Matrix size
@@ -246,13 +248,13 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         if self.rdGradTime<self.acqTime:
             self.rdGradTime = self.acqTime
             print("Readout gradient time set to %0.1f ms" % (self.rdGradTime * 1e3))
-        self.mapVals['rdGradTime'] = self.rdGradTime * 1e3  # ms
+            self.mapVals['rdGradTime'] = self.rdGradTime * 1e3  # ms
 
         # Phase and slice de- and re-phasing time
         if self.phGradTime == 0 or self.phGradTime > self.echoSpacing/2-self.rfExTime/2-self.rfReTime/2-2*gradRiseTime:
             self.phGradTime = self.echoSpacing/2-self.rfExTime/2-self.rfReTime/2-2*gradRiseTime
             print("Phase and slice gradient time set to %0.1f ms" % (self.phGradTime * 1e3))
-        self.mapVals['phGradTime'] = self.phGradTime*1e3  # ms
+            self.mapVals['phGradTime'] = self.phGradTime*1e3  # ms
 
         # Max gradient amplitude
         rdGradAmplitude = self.nPoints[0]/(hw.gammaB*self.fov[0]*self.acqTime)*axesEnable[0]
@@ -278,7 +280,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         print("Number of acquired slices: %i" % nSL)
 
         # Set phase vector to given sweep mode
-        ind = self.getIndex(self.etl, nPH, self.sweepMode)
+        ind = self.getIndex(self.etl, nPH, 1)
         self.mapVals['sweepOrder'] = ind
         phGradients = phGradients[ind]
         self.mapVals['phGradients'] = phGradients.copy()
@@ -332,51 +334,88 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         # In this step, you will define the building blocks of the MRI sequence, including the RF pulses and gradient pulses.
         '''
 
-        if self.inversionTime==0 and self.preExTime==0:
-            delay = self.repetitionTime - self.rfExTime / 2 - self.system.rf_dead_time
-        elif self.inversionTime>0 and self.preExTime==0:
-            delay = self.repetitionTime - self.inversionTime - self.rfReTime / 2 - self.system.rf_dead_time
-        elif self.inversionTime==0 and self.preExTime>0:
-            delay = self.repetitionTime - self.preExTime - self.rfExTime / 2 - self.system.rf_dead_time
-        else:
-            delay = self.repetitionTime - self.preExTime - self.inversionTime - self.rfExTime / 2 - self.system.rf_dead_time
+        # First delay
+        delay = self.repetitionTime - self.rfExTime / 2 - self.system.rf_dead_time - spoiler_time
         delay_first = pp.make_delay(delay)
 
         # ADC to get noise
         delay = 40e-6
         block_adc_noise = pp.make_adc(num_samples=nRD * hw.oversamplingFactor,
-                                       dwell=sampling_period * 1e-6,
-                                       delay=delay)
+                                      dwell=sampling_period * 1e-6,
+                                      delay=delay)
 
-        # Pre-excitation pulse
-        if self.preExTime>0:
-            flip_pre = self.rfExFA * np.pi / 180
-            delay = 0
-            block_rf_pre_excitation = pp.make_block_pulse(
-                flip_angle=flip_pre,
-                system=self.system,
-                duration=self.rfExTime,
-                phase_offset=0.0,
-                delay=0,
-            )
-            if self.inversionTime==0:
-                delay = self.preExTime
-            else:
-                delay = self.rfExTime / 2 - self.rfReTime / 2 + self.preExTime
-            delay_pre_excitation = pp.make_delay(delay)
+        # Preparation: plus x pi/2 pulse
+        flip_angle = np.pi / 2  # rads
+        delay = 0
+        block_rf_plus_x_pi2 = pp.make_block_pulse(
+            flip_angle=flip_angle,
+            system=self.system,
+            duration=self.rfExTime,
+            phase_offset=0.0,
+            delay=delay,
+            use='preparation',
+        )
+        delay = self.rfExTime / 2 - self.rfReTime / 2 + self.echoTime / 2
+        delay_rf_plus_x_pi2 = pp.make_delay(delay)
 
-        # Inversion pulse
-        if self.inversionTime>0:
-            flip_inv = self.rfReFA * np.pi / 180
-            block_rf_inversion = pp.make_block_pulse(
-                flip_angle=flip_inv,
-                system=self.system,
-                duration=self.rfReTime,
-                phase_offset=0.0,
-                delay=0,
-            )
-            delay = self.rfReTime / 2 - self.rfExTime / 2 + self.inversionTime
-            delay_inversion = pp.make_delay(delay)
+        # Preparation: plus y pi pulse
+        flip_angle = np.pi  # rads
+        delay = 0
+        block_rf_plus_y_pi = pp.make_block_pulse(
+            flip_angle=flip_angle,
+            system=self.system,
+            duration=self.rfReTime,
+            phase_offset=np.pi / 2,
+            delay=delay,
+            use='preparation',
+        )
+        delay = self.rfExTime / 2 - self.rfReTime / 2 + self.echoTime / 2
+        delay_rf_plus_y_pi = pp.make_delay(delay)
+
+        # Preparation: minus x pi/2 pulse
+        flip_angle = np.pi / 2
+        delay = 0
+        block_rf_minus_x_pi2 = pp.make_block_pulse(
+            flip_angle=flip_angle,
+            system=self.system,
+            duration=self.rfExTime,
+            phase_offset=np.pi,
+            delay=delay,
+            use='preparation',
+        )
+
+        # Preparation: spoiler gradient x
+        block_gr_x_spoiler = pp.make_trapezoid(
+            channel="x",
+            system=self.system,
+            amplitude=hw.gFactor[0] * hw.gammaB / 3,
+            flat_time=spoiler_time - 3 * self.system.rise_time,
+            rise_time=hw.grad_rise_time,
+            delay=0,
+        )
+
+        # Preparation: spoiler gradient y
+        block_gr_y_spoiler = pp.make_trapezoid(
+            channel="y",
+            system=self.system,
+            amplitude=hw.gFactor[1] * hw.gammaB / 3,
+            flat_time=spoiler_time - 3 * self.system.rise_time,
+            rise_time=hw.grad_rise_time,
+            delay=0,
+        )
+
+        # Preparation: spoiler gradient x
+        block_gr_z_spoiler = pp.make_trapezoid(
+            channel="z",
+            system=self.system,
+            amplitude=hw.gFactor[2] * hw.gammaB / 3,
+            flat_time=spoiler_time - 3 * self.system.rise_time,
+            rise_time=hw.grad_rise_time,
+            delay=0,
+        )
+
+        # Preparation: delay to next excitation
+        delay_prep = pp.make_delay(spoiler_time)
 
         # Excitation pulse
         flip_ex = self.rfExFA * np.pi / 180
@@ -386,7 +425,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             duration=self.rfExTime,
             phase_offset=0.0,
             delay=0.0,
-            use = 'excitation'
+            use='excitation'
         )
 
         # Dephasing gradient
@@ -481,9 +520,8 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
         # Delay TR
         delay = self.repetitionTime + self.rfReTime / 2 - self.rfExTime / 2 - (self.etl + 0.5) * self.echoSpacing - \
-            self.inversionTime - self.preExTime
-        if self.inversionTime > 0 and self.preExTime == 0:
-            delay -= self.rfExTime / 2
+            self.echoTime - spoiler_time
+
         delay_tr = pp.make_delay(delay)
 
         '''
@@ -497,10 +535,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.n_rd_points = 0
 
         def initializeBatch(name="pp_1"):
-            # Set n_rd_ponts to 0
+            # Set n_rd_points to 0
             self.n_rd_points = 0
 
-            # Instantiate pypulseq sequence object and save it into the batches dictionarly
+            # Instantiate pypulseq sequence object and save it into the batches dictionary
             batches[name] = pp.Sequence(self.system)
 
             # Set slice and phase gradients to 0
@@ -514,19 +552,16 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
             # Create dummy pulses
             for dummy in range(self.dummyPulses):
-                # Pre-excitation pulse
-                if self.preExTime>0:
-                    gr_rd_preex = pp.scale_grad(block_gr_rd_preph, scale=1.0)
-                    batches[name].add_block(block_rf_pre_excitation,
-                                            gr_rd_preex,
-                                            delay_pre_excitation)
-
-                # Inversion pulse
-                if self.inversionTime>0:
-                    gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
-                    batches[name].add_block(block_rf_inversion,
-                                            gr_rd_inv,
-                                            delay_inversion)
+                # Add preparation pulses
+                batches[name].add_block(block_rf_plus_x_pi2,
+                                        delay_rf_plus_x_pi2)
+                batches[name].add_block(block_rf_plus_y_pi,
+                                        delay_rf_plus_y_pi)
+                batches[name].add_block(block_rf_minus_x_pi2)
+                batches[name].add_block(block_gr_x_spoiler,
+                                        block_gr_y_spoiler,
+                                        block_gr_z_spoiler,
+                                        delay_prep)
 
                 # Add excitation pulse and readout de-phasing gradient
                 batches[name].add_block(block_gr_rd_preph,
@@ -588,19 +623,16 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                         initializeBatch(batch_num)  # Initialize new batch
                         print(f"Creating {batch_num}.seq...")
 
-                    # Pre-excitation pulse
-                    if self.preExTime > 0:
-                        gr_rd_preex = pp.scale_grad(block_gr_rd_preph, scale=+1.0)
-                        batches[batch_num].add_block(block_rf_pre_excitation,
-                                                     gr_rd_preex,
-                                                     delay_pre_excitation)
-
-                    # Inversion pulse
-                    if self.inversionTime > 0:
-                        gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
-                        batches[batch_num].add_block(block_rf_inversion,
-                                                     gr_rd_inv,
-                                                     delay_inversion)
+                    # Add preparation pulses
+                    batches[batch_num].add_block(block_rf_plus_x_pi2,
+                                            delay_rf_plus_x_pi2)
+                    batches[batch_num].add_block(block_rf_plus_y_pi,
+                                            delay_rf_plus_y_pi)
+                    batches[batch_num].add_block(block_rf_minus_x_pi2)
+                    batches[batch_num].add_block(block_gr_x_spoiler,
+                                            block_gr_y_spoiler,
+                                            block_gr_z_spoiler,
+                                            delay_prep)
 
                     # Add excitation pulse and readout de-phasing gradient
                     batches[batch_num].add_block(block_gr_rd_preph,
@@ -1050,7 +1082,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         nRD = self.nPoints[0]
         nPH = self.nPoints[1]
         nSL = self.nPoints[2]
-        ind = self.getIndex(self.etl, nPH, self.sweepMode)
+        ind = self.getIndex(self.etl, nPH, 1)
         nRep = (nPH//etl)*nSL
         bw = self.mapVals['bw_MHz']
         
@@ -1182,6 +1214,6 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
 
 if __name__ == '__main__':
-    seq = RARE_pp()
+    seq = RARE_T2prep_pp()
     seq.sequenceAtributes()
     seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
