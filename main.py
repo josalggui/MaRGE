@@ -21,8 +21,6 @@ for subdir in subdirs:
     sys.path.append(full_path)
 # ******************************************************************************
 
-import experiment as ex
-
 print("****************************************************************************************")
 print("Graphical User Interface for MaRCoS                                                    *")
 print("Dr. J.M. Algarín, mriLab @ i3M, CSIC, Spain                                            *")

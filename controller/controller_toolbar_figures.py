@@ -93,7 +93,7 @@ class FiguresController(FiguresToolBar):
         try:
             if current_os == 'Windows':
                 # Open folder on Windows
-                os.startfile(self.main.session['directory'])
+                os.startfile(os.path.normpath(self.main.session['directory']))
             elif current_os == 'Darwin':  # macOS
                 # Open folder on macOS
                 subprocess.run(['open', self.main.session['directory']])
