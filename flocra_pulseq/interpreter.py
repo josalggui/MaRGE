@@ -18,7 +18,7 @@ class PSInterpreter:
     def __init__(self, rf_center=3e+6, rf_amp_max=5e+3, grad_max=1e+7,
                  gx_max=None, gy_max=None, gz_max=None,
                  clk_t=1/122.88, tx_t=123/122.88, grad_t=1229/122.88,
-                 tx_warmup=10, tx_zero_end=True, grad_zero_end=True,
+                 tx_warmup=500, tx_zero_end=True, grad_zero_end=True,
                  log_file = 'ps_interpreter', log_level = 20):
         """
         Create PSInterpreter object for FLOCRA with system parameters.
@@ -65,9 +65,9 @@ class PSInterpreter:
         self._grad_max = {}
         if gx_max is None: self._grad_max['gx'] = grad_max
         else: self._grad_max['gx'] = gx_max
-        if gx_max is None: self._grad_max['gy'] = grad_max
+        if gy_max is None: self._grad_max['gy'] = grad_max
         else: self._grad_max['gy'] = gy_max
-        if gx_max is None: self._grad_max['gz'] = grad_max
+        if gz_max is None: self._grad_max['gz'] = grad_max
         else: self._grad_max['gz'] = gz_max    
 
         self._tx_warmup = tx_warmup # us
@@ -329,13 +329,11 @@ class PSInterpreter:
                 fall_len = int(grad_event['fall'] / self._grad_t)
 
                 x_rise = np.linspace(grad_event['rise'] - rise_len * self._grad_t,
-                 grad_event['rise'],
-                 num=rise_len, endpoint=False)
+                    grad_event['rise'], num=rise_len, endpoint=False)
                 rise = np.flip(np.linspace(grad_event['amp'], 0, num=rise_len, endpoint=False))
 
                 x_fall = np.linspace(grad_event['rise'] + grad_event['flat'],
-                 grad_event['rise'] + grad_event['flat'] + fall_len * self._grad_t,
-                 num=fall_len, endpoint=False)
+                    grad_event['rise'] + grad_event['flat'] + fall_len * self._grad_t, num=fall_len, endpoint=False)
                 fall = np.flip(np.linspace(0, grad_event['amp'], num=fall_len, endpoint=False))
 
                 # Concatenate times and data
@@ -351,7 +349,8 @@ class PSInterpreter:
                         event_duration = event_len * self._grad_t # us
                         self._error_if(event_len < 1, f"Zero length shape: {grad_event['shape_id']}")
                         grad = shape * grad_event['amp']
-                        x = np.linspace(0, event_duration, num = event_len, endpoint=False)
+                        # points are in the center of a raster cell, therefore + 0.5 * self._definitions['GradientRasterTime'] * 1e6
+                        x = np.linspace(0, event_duration, num = event_len, endpoint=False) + 0.5 * self._definitions['GradientRasterTime'] * 1e6
                     else:
                         shape = self._shapes[grad_event['shape_id']]
                         event_len = max(self._shapes[grad_event['time_shape_id']])
@@ -359,7 +358,7 @@ class PSInterpreter:
                         self._error_if(event_len < 1, f"Zero length shape: {grad_event['shape_id']}")
                         grad_ip = []
                         x_ip = []
-                        self._error_if(len(shape) == 1, f"Shapes of length 1 are not supported!")                            
+                        self._error_if(len(shape) == 1, f'Shapes of length 1 are not supported!')                            
                         for i in range(len(shape) - 1):
                             delta_t = int(self._shapes[grad_event['time_shape_id']][i + 1] - self._shapes[grad_event['time_shape_id']][i])
                             shape_x = self._shapes[grad_event['time_shape_id']]
@@ -369,8 +368,6 @@ class PSInterpreter:
                             else:
                                 grad_ip.append(shape[i])
                                 x_ip.append(shape_x[i])
-                        # grad = shape * grad_event['amp']
-                        # x = self._shapes[grad_event['time_shape_id']] * self._definitions['GradientRasterTime'] * 1e6
                         grad = np.hstack([np.array(item).flatten() for item in grad_ip]) * grad_event['amp']
                         x = np.hstack([np.array(item).flatten() for item in x_ip]) * self._definitions['GradientRasterTime'] * 1e6
                 else:
@@ -702,9 +699,13 @@ class PSInterpreter:
 
             tmp = rline.split()
             if len(tmp) == 8: # <id> <amp> <mag id> <phase id> <time_shape_id> <delay> <freq> <phase>
+                if tmp[4] != 0:
+                    self._logger.warning('time_shape_id != 0 is not yet supported for RF events')
                 data_line = [int(tmp[0]), float(tmp[1]), int(tmp[2]), int(tmp[3]), int(tmp[4]), int(tmp[5]), float(tmp[6]), float(tmp[7])]
                 self._warning_if(data_line[0] in self._rf_events, f'Repeat RF ID {data_line[0]}, overwriting')
                 self._rf_events[data_line[0]] = {var_names[i] : data_line[i+1] for i in range(len(var_names))}
+            else:
+                self._logger.warning(f'unknow RF event format: {rline}')
 
         self._logger.info('RF: Complete')
 
