@@ -44,6 +44,11 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RARE_T2prep_pp, self).__init__()
         # Input the parameters
+        self.nScans = None
+        self.spoiler_amp = None
+        self.rdDephTime = None
+        self.spoiler_duration = None
+        self.spoiler_delay = None
         self.dummyPulses = None
         self.spoilerTime = None
         self.repetitionTime = None
@@ -82,7 +87,7 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[60, 60, 1], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=1, field='SEQ')
+        self.addParameter(key='etl', string='Echo train length', val=6, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
         self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 1], tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
@@ -96,6 +101,9 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
+        self.addParameter(key='spoiler_amp', string='Spoiler amplitude (mT/m)', val=5.0, units=units.mTm, field='SEQ')
+        self.addParameter(key='spoiler_duration', string='Spoiler duration (ms)', val=3.0, units=units.ms, field='SEQ')
+        self.addParameter(key='spoiler_delay', string='Spoiler delay (ms)', val=10.0, units=units.ms, field='SEQ')
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
         self.header = ismrmrd.xsd.ismrmrdHeader()
@@ -207,7 +215,6 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
         self.mapVals['axes_enable_rd_ph_sl'] = axesEnable
 
         # Miscellaneous
-        spoiler_time = 3e-3  # s
         self.freqOffset = self.freqOffset*1e6 # MHz
         gradRiseTime = hw.grad_rise_time
         resolution = self.fov/self.nPoints
@@ -335,7 +342,7 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
         '''
 
         # First delay
-        delay = self.repetitionTime - self.rfExTime / 2 - self.system.rf_dead_time - spoiler_time
+        delay = self.repetitionTime - self.rfExTime / 2 - self.system.rf_dead_time - self.spoiler_delay
         delay_first = pp.make_delay(delay)
 
         # ADC to get noise
@@ -388,8 +395,8 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
         block_gr_x_spoiler = pp.make_trapezoid(
             channel="x",
             system=self.system,
-            amplitude=hw.gFactor[0] * hw.gammaB / 3,
-            flat_time=spoiler_time - 3 * self.system.rise_time,
+            amplitude=self.spoiler_amp * hw.gammaB,
+            flat_time=self.spoiler_duration,
             rise_time=hw.grad_rise_time,
             delay=0,
         )
@@ -398,8 +405,8 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
         block_gr_y_spoiler = pp.make_trapezoid(
             channel="y",
             system=self.system,
-            amplitude=hw.gFactor[1] * hw.gammaB / 3,
-            flat_time=spoiler_time - 3 * self.system.rise_time,
+            amplitude=self.spoiler_amp * hw.gammaB,
+            flat_time=self.spoiler_duration,
             rise_time=hw.grad_rise_time,
             delay=0,
         )
@@ -408,14 +415,14 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
         block_gr_z_spoiler = pp.make_trapezoid(
             channel="z",
             system=self.system,
-            amplitude=hw.gFactor[2] * hw.gammaB / 3,
-            flat_time=spoiler_time - 3 * self.system.rise_time,
+            amplitude=self.spoiler_amp * hw.gammaB,
+            flat_time=self.spoiler_duration,
             rise_time=hw.grad_rise_time,
             delay=0,
         )
 
         # Preparation: delay to next excitation
-        delay_prep = pp.make_delay(spoiler_time)
+        delay_prep = pp.make_delay(self.spoiler_delay)
 
         # Excitation pulse
         flip_ex = self.rfExFA * np.pi / 180
@@ -520,7 +527,7 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
 
         # Delay TR
         delay = self.repetitionTime + self.rfReTime / 2 - self.rfExTime / 2 - (self.etl + 0.5) * self.echoSpacing - \
-            self.echoTime - spoiler_time
+            self.echoTime - self.spoiler_delay
 
         delay_tr = pp.make_delay(delay)
 
