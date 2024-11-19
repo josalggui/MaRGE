@@ -21,3 +21,5 @@ autotuning/autotuning_arduino/autotuning_arduino.ino
 *.log
 ps_interpreter.log
 sequence.seq
+*.mat
+*.rar
