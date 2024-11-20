@@ -171,37 +171,43 @@ class MRIBLANKSEQ:
                 tips[self.mapNmspc[key]] = [self.mapTips[key]]
         return out, tips
 
-    def runBatches(self, waveforms, n_readouts, frequency=hw.larmorFreq, bandwidth=0.03):
+    def runBatches(self, waveforms, n_readouts, n_adc, frequency=hw.larmorFreq, bandwidth=0.03, decimate='Normal'):
         """
-        Execute multiple batches of waveforms for MRI data acquisition, handle scanning, and store oversampled data.
+        Execute multiple batches of MRI waveforms, manage data acquisition, and store oversampled data.
 
         Parameters:
         -----------
         waveforms : dict
-            A dictionary of waveform sequences, where each key corresponds to a batch identifier and
-            the value is the waveform data generated using PyPulseq.
+            Dictionary containing waveform sequences. Keys represent batch identifiers, and values are
+            the corresponding waveform data generated with PyPulseq.
         n_readouts : dict
-            A dictionary that specifies the number of readout points for each batch. Keys correspond to
-            the batch identifiers, and values specify the number of readout points for each sequence.
+            Dictionary specifying the number of readout points for each batch. Keys match the batch
+            identifiers, and values indicate the number of readout points.
+        n_adc : int
+            Number of ADC windows. Each window must have the same length.
         frequency : float, optional
-            Larmor frequency in MHz for the MRI scan (default is the system's Larmor frequency, hw.larmorFreq).
+            Larmor frequency in MHz for the MRI acquisition. Defaults to the system's Larmor frequency (hw.larmorFreq).
         bandwidth : float, optional
-            Bandwidth in Hz used to calculate the sampling time (1 / bandwidth gives the sampling period).
+            Bandwidth in MHz used to calculate the sampling period (sampling time = 1 / bandwidth). Defaults to 0.03 MHz.
+        decimate : str, optional
+            Specifies the decimation method.
+            - 'Normal': Decimates the acquired array without preprocessing.
+            - 'PETRA': Adjusts the pre-readout points to the desired starting point.
 
         Returns:
         --------
         bool
-            Returns True if all batches were successfully executed, and False if an error occurred (e.g.,
-            sequence waveforms are out of hardware bounds).
+            True if all batches are executed successfully, False if an error occurs (e.g., waveform constraints exceed hardware limits).
 
         Notes:
         ------
-        - The method will initialize the Red Pitaya hardware if not in demo mode.
-        - The method converts waveforms from PyPulseq format to Red Pitaya compatible format.
-        - If plotSeq is True, the sequence will be plotted instead of being executed.
-        - In demo mode, the acquisition simulates random data instead of using actual hardware.
-        - Oversampled data is stored in the class attribute `self.mapVals['data_over']`.
-        - Data points are acquired in batches, with error handling in case of data loss, and batches are repeated if necessary.
+        - Initializes Red Pitaya hardware unless in demo mode.
+        - Converts PyPulseq waveforms to Red Pitaya-compatible format.
+        - If `plotSeq` is True, the sequence is plotted instead of executed.
+        - In demo mode, simulated random data replaces hardware acquisition.
+        - Oversampled data is stored in `self.mapVals['data_over']`.
+        - Decimated data is stored in `self.mapVals['data_decimated']`.
+        - Handles data loss by repeating batches until the expected points are acquired.
         """
         self.mapVals['n_readouts'] = list(n_readouts.values())
         self.mapVals['n_batches'] = len(n_readouts.values())
@@ -222,7 +228,7 @@ class MRIBLANKSEQ:
                 )
 
             # Convert the PyPulseq waveform to the Red Pitaya compatible format
-            self.pypulseq2mriblankseq(waveforms=waveforms[seq_num], shimming=self.shimming)
+            self.pypulseq2mriblankseq(waveforms=waveforms[seq_num], shimming=self.shimming, sampling_period=1/bandwidth)
 
             # Load the waveforms into Red Pitaya
             if not self.floDict2Exp():
@@ -261,6 +267,8 @@ class MRIBLANKSEQ:
 
                 # Decimate the oversampled data and store it
                 self.mapVals['data_over'] = data_over
+                data = self.decimate(data_over, n_adc=n_adc, option='Normal', remove=False)
+                self.mapVals['data_decimated'] = data
 
             elif self.plotSeq and self.standalone:
                 # Plot the sequence if requested and return immediately
@@ -280,29 +288,60 @@ class MRIBLANKSEQ:
              "It is recommended to overide this method into your sequence.")
         return 0
 
-    def pypulseq2mriblankseq(self, waveforms=None, shimming=np.array([0.0, 0.0, 0.0])):
+    def pypulseq2mriblankseq(self, waveforms=None, shimming=np.array([0.0, 0.0, 0.0]), sampling_period=0.0):
         """
-        Translates PyPulseq waveforms into mriBlankSeq dictionary format for use in the GUI.
+        Converts PyPulseq waveforms into a format compatible with MRI hardware.
 
-        Args:
-            waveforms (dict, optional):
-                A dictionary containing waveform data for different channels. The keys represent channel names
-                ('tx0', 'tx1', 'rx0_en', 'rx1_en', 'tx_gate', 'rx_gate', 'grad_vx', 'grad_vy', 'grad_vz') and
-                the values are lists of numpy arrays representing the waveform data for each channel.
-            shimming (numpy.ndarray, optional):
-                A 1D numpy array of length 3 containing shimming values for the gradient channels
-                (default is [0.0, 0.0, 0.0]).
+        Parameters:
+        -----------
+        waveforms : dict, optional
+            Dictionary containing PyPulseq waveforms. The keys represent waveform types (e.g., 'tx0', 'rx0_en',
+            'grad_vx'), and values are arrays of time and amplitude pairs.
+        shimming : numpy.ndarray, optional
+            Array of three values representing the shimming currents to apply in the x, y, and z gradients, respectively.
+            Defaults to [0.0, 0.0, 0.0].
+        sampling_period : float, optional
+            Sampling period in seconds, used to account for delays in the CIC filter. Defaults to 0.0.
 
         Returns:
-            bool: Returns True when the conversion and sequence update are completed successfully.
+        --------
+        bool
+            Returns True if the conversion is successful.
+
+        Workflow:
+        ---------
+        1. **Reset flo_dict**:
+            Initializes the flo dictionary, which stores gradient, RF, and TTL signals for MRI hardware execution.
+
+        2. **Fill flo_dict**:
+            Iterates through the input `waveforms` to populate the flo dictionary. Each key corresponds to a signal
+            type, and the waveform data is appended.
+
+        3. **Fill missing keys**:
+            Ensures that all keys in `flo_dict` are populated, even if no data exists for certain signals. Unfilled
+            keys are set to default arrays with zero values.
+
+        4. **Apply shimming**:
+            Adds the shimming values to the corresponding gradient channels (x, y, z).
+
+        5. **Set sequence end**:
+            Ensures all signals return to zero at the end of the sequence to finalize waveform execution.
+
+        6. **Add hardware-specific corrections**:
+            - Applies gradient latency adjustments.
+            - Accounts for CIC filter delays in the receive (rx) signals.
+
+        7. **Revalidate sequence end**:
+            Reassesses and ensures all signal channels return to zero with a buffer period.
 
         Notes:
-            The function translates the waveform data to the mriBlankSeq dictionary format which is compatible with
-            the GUI functionalities. If certain waveform keys are not provided in the input, the function initializes
-            them with default values. Additionally, shimming values are added to the gradient channels.
+        ------
+        - This method processes and validates input waveform data to ensure compatibility with MRI hardware.
+        - Hardware-specific parameters such as gradient delay (`hw.gradDelay`) and CIC filter delay
+          (`hw.cic_delay_points`) are applied.
+        - Any signal not specified in `waveforms` is initialized with a default value of zero.
 
         """
-
         # Reset flo dictionary
         self.flo_dict = {'g0': [[], []],
                          'g1': [[], []],
@@ -358,15 +397,24 @@ class MRIBLANKSEQ:
         self.flo_dict['g1'][1] = self.flo_dict['g1'][1] + shimming[1]
         self.flo_dict['g2'][1] = self.flo_dict['g2'][1] + shimming[2]
 
+        # Set everything to zero
+        last_times = np.array([value[0][-1] for value in self.flo_dict.values()])
+        last_time = np.max(last_times)
+        self.endSequence(last_time+10)
+
         # Add gradient latency
         self.flo_dict['g0'][0][1::] -= hw.gradDelay
         self.flo_dict['g1'][0][1::] -= hw.gradDelay
         self.flo_dict['g2'][0][1::] -= hw.gradDelay
 
-        # Set everything to zero
+        # Account for CIC filter delay
+        self.flo_dict['rx0'][0][1::] += hw.cic_delay_points * sampling_period / hw.oversamplingFactor
+        self.flo_dict['rx1'][0][1::] += hw.cic_delay_points * sampling_period / hw.oversamplingFactor
+
+        # Set everything to zero (again)
         last_times = np.array([value[0][-1] for value in self.flo_dict.values()])
         last_time = np.max(last_times)
-        self.endSequence(last_time+10)
+        self.endSequence(last_time + 10)
 
         return True
 
@@ -918,46 +966,78 @@ class MRIBLANKSEQ:
             data1[:, ii, -idx[ii]::] = data0[:, ii, 0:n + idx[ii]]
         return data1
 
-    def decimate(self, dataOver, nRdLines, option='PETRA'):
+    def decimate(self, data_over, n_adc, option='PETRA', remove=True):
         """
-        Preprocess and decimate the oversampled data.
+        Decimates oversampled MRI data, with optional preprocessing to manage oscillations and postprocessing
+        to remove extra points.
 
-        This method performs preprocessing and decimation on the input oversampled data. It deletes added points that
-        account for the time shift and ramp of the CIC filter and preprocesses the data to avoid oscillations due to
-        the FIR filter in the decimation process. It is intended for use when the sequence uses "rxGateSync" to acquire
-        data.
-
-        Args:
-            dataOver (numpy.ndarray): The oversampled data array.
-            nRdLines (int): The number of readout lines.
-            option (str): Default is 'PETRA'. 'PETRA': Preprocesses the initial signal to avoid oscillations due to decimation coming from ring-down. 'Normal': No preprocessing is applied.
+        Parameters:
+        -----------
+        data_over : numpy.ndarray
+            The oversampled data array to be decimated.
+        n_adc : int
+            The number of adc windows in the dataset, used to reshape and process the data appropriately.
+        option : str, optional
+            Preprocessing option to handle data before decimation:
+            - 'PETRA': Adjusts initial points to avoid oscillations during decimation.
+            - 'Normal': Applies no preprocessing (default is 'PETRA').
+        remove : bool, optional
+            If True, removes `addRdPoints` from the start and end of each readout line after decimation.
+            Defaults to True.
 
         Returns:
-            numpy.ndarray: The decimated data array.
+        --------
+        numpy.ndarray
+            The decimated data array, optionally adjusted to remove extra points.
 
+        Workflow:
+        ---------
+        1. **Preprocess data (optional)**:
+            - For 'PETRA' mode, reshapes the data into adc windows and adjusts the first few points of each line
+              to avoid oscillations caused by decimation.
+            - For 'Normal' mode, no preprocessing is applied.
+
+        2. **Decimate the signal**:
+            - Applies a finite impulse response (FIR) filter and decimates the signal by the oversampling factor
+              (`hw.oversamplingFactor`).
+            - Starts decimation after skipping `(oversamplingFactor - 1) / 2` points to minimize edge effects.
+
+        3. **Postprocess data (if `remove=True`)**:
+            - Reshapes the decimated data into adc windows.
+            - Removes `hw.addRdPoints` from the start and end of each line.
+            - Reshapes the cleaned data back into a 1D array.
+
+        Notes:
+        ------
+        - This method uses the hardware-specific parameters:
+          - `hw.oversamplingFactor`: The oversampling factor applied during data acquisition.
+          - `hw.addRdPoints`: The number of additional readout points to include or remove.
+        - The 'PETRA' preprocessing mode is tailored for specialized MRI acquisitions that require smoothing of
+          initial points to prevent oscillations.
         """
+
         # Preprocess the signal to avoid oscillations due to decimation
         if option == 'PETRA':
-            dataOver = np.reshape(dataOver, (nRdLines, -1))
-            for line in range(nRdLines):
-                dataOver[line, 0:hw.addRdPoints * hw.oversamplingFactor] = dataOver[
+            data_over = np.reshape(data_over, (n_adc, -1))
+            for line in range(n_adc):
+                data_over[line, 0:hw.addRdPoints * hw.oversamplingFactor] = data_over[
                     line, hw.addRdPoints * hw.oversamplingFactor]
-            dataOver = np.reshape(dataOver, -1)
+            data_over = np.reshape(data_over, -1)
         elif option == 'Normal':
             pass
-        self.mapVals['dataOver'] = dataOver
 
         # Decimate the signal after 'fir' filter
-        dataFull = sig.decimate(dataOver[int((hw.oversamplingFactor - 1) / 2)::], hw.oversamplingFactor, ftype='fir',
-                                zero_phase=True)
+        data_decimated = sig.decimate(data_over[int((hw.oversamplingFactor - 1) / 2)::], hw.oversamplingFactor,
+                                      ftype='fir', zero_phase=True)
 
         # Remove addRdPoints
-        nPoints = int(dataFull.shape[0] / nRdLines) - 2 * hw.addRdPoints
-        dataFull = np.reshape(dataFull, (nRdLines, -1))
-        dataFull = dataFull[:, hw.addRdPoints:hw.addRdPoints + nPoints]
-        dataFull = np.reshape(dataFull, -1)
+        if remove:
+            nPoints = int(data_decimated.shape[0] / n_adc) - 2 * hw.addRdPoints
+            data_decimated = np.reshape(data_decimated, (n_adc, -1))
+            data_decimated = data_decimated[:, hw.addRdPoints:hw.addRdPoints + nPoints]
+            data_decimated = np.reshape(data_decimated, -1)
 
-        return dataFull
+        return data_decimated
 
     def rfSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, channel=0, rewrite=True):
         """
