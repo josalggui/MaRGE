@@ -68,6 +68,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='matching', string='Matching capacitor', val='10011', field='IM')
         self.addParameter(key='test', string='Test', val='auto', field='IM',
                           tip='Choose one option: auto, manual')
+        self.addParameter(key='xyz', string='xyz', val=0.0, field='IM')
 
         # Connect to Arduino and set the initial state
         self.arduino = autotuning.Arduino(name="auto-tuning", serial_number=hw.ard_sn_autotuning)
