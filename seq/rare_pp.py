@@ -543,7 +543,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                 - Returns the configured sequence (`batch`), total readout points (`n_rd_points`), and number of ADC events (`n_adc`).
 
             """
-            # Instantiate pypulseq sequence object and save it into the batches dictionarly
+            # Instantiate pypulseq sequence object
             batch = pp.Sequence(self.system)
             n_rd_points = 0
             n_adc = 0
@@ -747,7 +747,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         Step 8: Run the batches
         This step will handle the different batches, run it and get the resulting data. This should not be modified.
         Oversampled data will be available in self.mapVals['data_over']
-        Decimated data will be availabel in self.mapVals['data_decimated']
+        Decimated data will be available in self.mapVals['data_decimated']
         '''
         waveforms, n_readouts, n_adc = createBatches()
         return self.runBatches(waveforms=waveforms,
