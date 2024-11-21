@@ -45,8 +45,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
         self.addParameter(key='NyquistOS', string='Radial oversampling', val=1, field='SEQ')
         self.addParameter(key='reco', string='ART->0,  FFT->1', val=1, field='IM')
-
-
+        self.addParameter(key='boolGrid', string='Bool regridding', val=1, field='OTH')
 
     def sequenceInfo(self):
         
@@ -88,6 +87,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         txChannel = self.mapVals['txChannel']
         rxChannel = self.mapVals['rxChannel']
         NyquistOS = self.mapVals['NyquistOS']
+        boolGrid = self.mapVals['boolGrid']
 
         # Conversion of variables to non-multiplied units
         larmorFreq = larmorFreq*1e6
@@ -420,12 +420,14 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                     kxTarget = np.reshape(kCartesian[:, 0], -1)
                     kyTarget = np.reshape(kCartesian[:, 1], -1)
                     kzTarget = np.reshape(kCartesian[:, 2], -1)
-                    valCartesian = griddata((kxOriginal, kyOriginal, kzOriginal), np.reshape(kSpace[:, 3], -1), (kxTarget, kyTarget, kzTarget), method='linear', fill_value=0, rescale=False)
-
+                    if boolGrid == 0:
+                        valCartesian = 1
+                    else:
+                        valCartesian = griddata((kxOriginal, kyOriginal, kzOriginal), np.reshape(kSpace[:, 3], -1),(kxTarget, kyTarget, kzTarget), method='linear', fill_value=0, rescale=False)
                     DELX = dfov[0]
                     DELY = dfov[1]
                     DELZ = dfov[2]
-                    phase = np.exp(-2 * np.pi * 1j * (DELX * kCartesian[:, 0] + DELY * kCartesian[:, 1]+DELZ * kCartesian[:, 2]))
+                    phase = np.exp(-2 * np.pi * 1j * (DELX * kCartesian[:, 0] + DELY * kCartesian[:, 1] + DELZ * kCartesian[:, 2]))
                     valCartesian = valCartesian * phase
 
                 if (nCir == 1) and (nLPC > 2):
@@ -433,19 +435,26 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                     kyOriginal = np.reshape(np.real(kSpace[:, 1]), -1)
                     kxTarget = np.reshape(kCartesian[:, 0], -1)
                     kyTarget = np.reshape(kCartesian[:, 1], -1)
-                    valCartesian = griddata((kxOriginal, kyOriginal), np.reshape(kSpace[:, 3], -1), (kxTarget, kyTarget), method='linear', fill_value=0, rescale=False)
+                    if boolGrid == 0:
+                        valCartesian = 1
+                    else:
+                        valCartesian = griddata((kxOriginal, kyOriginal), np.reshape(kSpace[:, 3], -1),(kxTarget, kyTarget), method='linear', fill_value=0, rescale=False)
+                    DELX = dfov[0]
+                    DELY = dfov[1]
+                    phase = np.exp(-2 * np.pi * 1j * (DELX * kCartesian[:, 0] + DELY * kCartesian[:, 1]))
+                    valCartesian = valCartesian * phase
 
                 if (nCir == 1) and (nLPC == 2):
                     kxOriginal = np.reshape(np.real(kSpace[:, 0]), -1)
                     kxTarget = np.reshape(kCartesian[:, 0], -1)
-                    valCartesian = griddata((kxOriginal), np.reshape(kSpace[:, 3], -1), (kxTarget), method='linear', fill_value=0, rescale=False)
+                    valCartesian = griddata((kxOriginal), np.reshape(kSpace[:, 3], -1), (kxTarget), method='linear',fill_value=0, rescale=False)
                     self.valCartesian = valCartesian
-
-                DELX = dfov[0]
-                DELY = dfov[1]
-                DELZ = dfov[2]
-                phase = np.exp(-2 * np.pi * 1j * (DELX * kCartesian[:, 0] + DELY * kCartesian[:, 1]+DELZ * kCartesian[:, 2]))
-                valCartesian = valCartesian * phase
+                    DELX = dfov[0]
+                    DELY = dfov[1]
+                    DELZ = dfov[2]
+                    phase = np.exp(
+                        -2 * np.pi * 1j * (DELX * kCartesian[:, 0] + DELY * kCartesian[:, 1] + DELZ * kCartesian[:, 2]))
+                    valCartesian = valCartesian * phase
 
                 kSpaceCartesian = np.zeros((kCartesian.shape[0], 6))
                 kSpaceCartesian[:, 0] = kCartesian[:, 0]
