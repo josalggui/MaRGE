@@ -152,10 +152,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         '''
         Step 1: Define the interpreter for FloSeq/PSInterpreter.
         The interpreter is responsible for converting the high-level pulse sequence description into low-level
-        instructions for the scanner hardware. You will typically update the interpreter during scanner calibration.
+        instructions for the scanner hardware.
         '''
 
-        self.flo_interpreter = PSInterpreter(
+        flo_interpreter = PSInterpreter(
             tx_warmup=hw.blkTime,  # Transmit chain warm-up time (us)
             rf_center=hw.larmorFreq * 1e6,  # Larmor frequency (Hz)
             rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Maximum RF amplitude (Hz)
@@ -172,7 +172,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         slew rates, and dead times. They are typically set based on the hardware configuration file (`hw_config`).
         '''
 
-        self.system = pp.Opts(
+        system = pp.Opts(
             rf_dead_time=hw.blkTime * 1e-6,  # Dead time between RF pulses (s)
             max_grad=np.max(hw.gFactor) * 1e3,  # Maximum gradient strength (mT/m)
             grad_unit='mT/m',  # Units of gradient strength
@@ -205,7 +205,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.mapVals['axesEnable'] = axesEnable
 
         # Miscellaneous
-        self.freqOffset = self.freqOffset*1e6 # MHz
+        self.freqOffset = self.freqOffset*1e6  # MHz
         gradRiseTime = hw.grad_rise_time
         resolution = self.fov/self.nPoints
         rfExAmp = self.rfExFA/(self.rfExTime*1e6*hw.b1Efficiency)*np.pi/180
@@ -304,7 +304,8 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         '''
         # Step 4: Define the experiment to get the true bandwidth
         # In this step, student need to get the real bandwidth used in the experiment. To get this bandwidth, an
-        # experiment must be defined and the sampling period should be obtained using get_rx_ts()[0]
+        # experiment must be defined and the sampling period should be obtained using get_sampling_period()
+        # Note: experiment must be passed as a class property named self.expt
         '''
 
         if not self.demo:
@@ -329,18 +330,19 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         # In this step, you will define the building blocks of the MRI sequence, including the RF pulses and gradient pulses.
         '''
 
+        # First delay, sequence will start after 1 repetition time, this ensure gradient and ADC latency is not an issue.
         if self.inversionTime==0 and self.preExTime==0:
-            delay = self.repetitionTime - self.rfExTime / 2 - self.system.rf_dead_time
+            delay = self.repetitionTime - self.rfExTime / 2 - system.rf_dead_time
         elif self.inversionTime>0 and self.preExTime==0:
-            delay = self.repetitionTime - self.inversionTime - self.rfReTime / 2 - self.system.rf_dead_time
+            delay = self.repetitionTime - self.inversionTime - self.rfReTime / 2 - system.rf_dead_time
         elif self.inversionTime==0 and self.preExTime>0:
-            delay = self.repetitionTime - self.preExTime - self.rfExTime / 2 - self.system.rf_dead_time
+            delay = self.repetitionTime - self.preExTime - self.rfExTime / 2 - system.rf_dead_time
         else:
-            delay = self.repetitionTime - self.preExTime - self.inversionTime - self.rfExTime / 2 - self.system.rf_dead_time
+            delay = self.repetitionTime - self.preExTime - self.inversionTime - self.rfExTime / 2 - system.rf_dead_time
         delay_first = pp.make_delay(delay)
 
         # ADC to get noise
-        delay = 40e-6
+        delay = 100e-6
         block_adc_noise = pp.make_adc(
             num_samples=nRD,
             dwell=sampling_period * 1e-6,
@@ -353,7 +355,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             delay = 0
             block_rf_pre_excitation = pp.make_block_pulse(
                 flip_angle=flip_pre,
-                system=self.system,
+                system=system,
                 duration=self.rfExTime,
                 phase_offset=0.0,
                 delay=0,
@@ -369,7 +371,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             flip_inv = self.rfReFA * np.pi / 180
             block_rf_inversion = pp.make_block_pulse(
                 flip_angle=flip_inv,
-                system=self.system,
+                system=system,
                 duration=self.rfReTime,
                 phase_offset=0.0,
                 delay=0,
@@ -381,7 +383,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         flip_ex = self.rfExFA * np.pi / 180
         block_rf_excitation = pp.make_block_pulse(
             flip_angle=flip_ex,
-            system=self.system,
+            system=system,
             duration=self.rfExTime,
             phase_offset=0.0,
             delay=0.0,
@@ -389,10 +391,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # Dephasing gradient
-        delay = self.system.rf_dead_time + self.rfExTime
+        delay = system.rf_dead_time + self.rfExTime
         block_gr_rd_preph = pp.make_trapezoid(
             channel=rd_channel,
-            system=self.system,
+            system=system,
             amplitude=rdDephAmplitude * hw.gammaB,
             flat_time=self.rdDephTime,
             rise_time=hw.grad_rise_time,
@@ -406,7 +408,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         flip_re = self.rfReFA * np.pi / 180
         block_rf_refocusing = pp.make_block_pulse(
             flip_angle=flip_re,
-            system=self.system,
+            system=system,
             duration=self.rfReTime,
             phase_offset=np.pi / 2,
             delay=0,
@@ -417,10 +419,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         delay_reph = pp.make_delay(self.echoSpacing)
 
         # Phase gradient dephasing
-        delay = self.system.rf_dead_time + self.rfReTime
+        delay = system.rf_dead_time + self.rfReTime
         block_gr_ph_deph = pp.make_trapezoid(
             channel=ph_channel,
-            system=self.system,
+            system=system,
             amplitude=phGradAmplitude * hw.gammaB + float(phGradAmplitude==0),
             flat_time=self.phGradTime,
             rise_time=hw.grad_rise_time,
@@ -428,10 +430,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # Slice gradient dephasing
-        delay = self.system.rf_dead_time + self.rfReTime
+        delay = system.rf_dead_time + self.rfReTime
         block_gr_sl_deph = pp.make_trapezoid(
             channel=sl_channel,
-            system=self.system,
+            system=system,
             amplitude=slGradAmplitude * hw.gammaB + float(slGradAmplitude==0),
             flat_time=self.phGradTime,
             delay=delay,
@@ -439,11 +441,11 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # Readout gradient
-        delay = self.system.rf_dead_time + self.rfReTime / 2 + self.echoSpacing / 2 - self.rdGradTime / 2 - \
+        delay = system.rf_dead_time + self.rfReTime / 2 + self.echoSpacing / 2 - self.rdGradTime / 2 - \
                 hw.grad_rise_time
         block_gr_rd_reph = pp.make_trapezoid(
             channel=rd_channel,
-            system=self.system,
+            system=system,
             amplitude=rdGradAmplitude * hw.gammaB,
             flat_time=self.rdGradTime,
             rise_time=hw.grad_rise_time,
@@ -451,7 +453,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # ADC to get the signal
-        delay = self.system.rf_dead_time + self.rfReTime / 2 + self.echoSpacing / 2 - sampling_time / 2
+        delay = system.rf_dead_time + self.rfReTime / 2 + self.echoSpacing / 2 - sampling_time / 2
         block_adc_signal = pp.make_adc(
             num_samples=nRD,
             dwell=sampling_period * 1e-6,
@@ -459,10 +461,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # Phase gradient rephasing
-        delay = self.system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2
+        delay = system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2
         block_gr_ph_reph = pp.make_trapezoid(
             channel=ph_channel,
-            system=self.system,
+            system=system,
             amplitude=phGradAmplitude * hw.gammaB + float(phGradAmplitude==0),
             flat_time=self.phGradTime,
             rise_time=hw.grad_rise_time,
@@ -470,10 +472,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         )
 
         # Slice gradient rephasing
-        delay = self.system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2
+        delay = system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2
         block_gr_sl_reph = pp.make_trapezoid(
             channel=sl_channel,
-            system=self.system,
+            system=system,
             amplitude=slGradAmplitude * hw.gammaB + float(slGradAmplitude==0),
             flat_time=self.phGradTime,
             rise_time=hw.grad_rise_time,
@@ -544,7 +546,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
             """
             # Instantiate pypulseq sequence object
-            batch = pp.Sequence(self.system)
+            batch = pp.Sequence(system)
             n_rd_points = 0
             n_adc = 0
 
@@ -676,7 +678,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                         # If a previous batch exists, write and interpret it
                         if seq_idx > 0:
                             batches[batch_num].write(batch_num + ".seq")
-                            waveforms[batch_num], param_dict = self.flo_interpreter.interpret(batch_num + ".seq")
+                            waveforms[batch_num], param_dict = flo_interpreter.interpret(batch_num + ".seq")
                             print(f"{batch_num}.seq ready!")
 
                         # Update to the next batch
@@ -733,11 +735,11 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
             # After final repetition, save and interpret the last batch
             batches[batch_num].write(batch_num + ".seq")
-            waveforms[batch_num], param_dict = self.flo_interpreter.interpret(batch_num + ".seq")
+            waveforms[batch_num], param_dict = flo_interpreter.interpret(batch_num + ".seq")
             print(f"{batch_num}.seq ready!")
             print(f"{len(batches)} batches created. Sequence ready!")
 
-            # Update the number of acquired ponits in the last batch
+            # Update the number of acquired points in the last batch
             n_rd_points_dict.pop('batch_0')
             n_rd_points_dict[batch_num] = n_rd_points
 
