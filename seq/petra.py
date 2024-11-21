@@ -396,8 +396,8 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                 carPoints = gradientVectors2.shape[0]*(1+2*hw.addRdPoints)*hw.oversamplingFactor
                 overDataRad = np.reshape(overData[:, 0:radPoints], -1)
                 overDataCar = np.reshape(overData[:, radPoints: radPoints+carPoints], -1)
-                fullDataRad = self.decimate(overDataRad, nScans*gradientVectors1.shape[0])
-                fullDataCar = self.decimate(overDataCar, nScans*gradientVectors2.shape[0])
+                fullDataRad = self.decimate(overDataRad, nScans*gradientVectors1.shape[0], option='PETRA')
+                fullDataCar = self.decimate(overDataCar, nScans*gradientVectors2.shape[0], option='PETRA')
 
                 # Average results
                 RadialSampledPointsRaw = np.average(np.reshape(fullDataRad, (nScans, -1)), axis=0)

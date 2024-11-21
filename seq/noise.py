@@ -70,7 +70,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
             dataR = np.random.randn((self.nPoints + 2 * hw.addRdPoints) * hw.oversamplingFactor)
             dataC = np.random.randn((self.nPoints + 2 * hw.addRdPoints) * hw.oversamplingFactor)
             data = dataR+1j*dataC
-            data = self.decimate(dataOver=data, nRdLines=1, option='Normal')
+            data = self.decimate(data_over=data, n_adc=1, option='Normal')
             acqTime = self.nPoints/self.bw
             tVector = np.linspace(0, acqTime, num=self.nPoints) * 1e-3  # ms
             spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
@@ -172,6 +172,6 @@ class Noise(blankSeq.MRIBLANKSEQ):
 if __name__=='__main__':
     seq = Noise()
     seq.sequenceAtributes()
-    seq.sequenceRun(demo=False)
+    seq.sequenceRun(demo=True)
     seq.sequenceAnalysis(mode='Standalone')
 

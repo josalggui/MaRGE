@@ -287,7 +287,7 @@ class PETRAphysio(blankSeq.MRIBLANKSEQ):
                     else:
                         dataOverRadial = np.concatenate((dataOverRadial, rxd['rx0']), axis=0)
                 dataOverRadial = np.reshape(dataOverRadial, (self.nScans, -1))
-                dataRadial = self.decimate(dataOverRadial, self.nScans * self.nRadialLines)
+                dataRadial = self.decimate(dataOverRadial, self.nScans * self.nRadialLines, option='PETRA')
                 dataAvgRadial = np.average(np.reshape(dataRadial, (self.nScans, -1)),axis=0)[:,np.newaxis]
                 kRadial4D = np.concatenate((self.kRadialFull, dataAvgRadial), axis=1)
                 self.mapVals['dataRadial'] = dataRadial
@@ -321,7 +321,7 @@ class PETRAphysio(blankSeq.MRIBLANKSEQ):
                     else:
                         dataOverSingleP = np.concatenate((dataOverSingleP, rxd['rx0']), axis=0)
                 dataOverSingleP = np.reshape(dataOverSingleP, (self.nScans, -1))
-                dataSingleP = self.decimate(dataOverSingleP, self.nScans * self.nSinglePoints)
+                dataSingleP = self.decimate(dataOverSingleP, self.nScans * self.nSinglePoints, option='PETRA')
                 dataAvgSingleP = np.average(np.reshape(dataSingleP, (self.nScans, -1)), axis=0)[:, np.newaxis]
                 kSingleP4D = np.concatenate((self.kSinglePFull, dataAvgSingleP), axis=1)
                 self.mapVals['dataRadial'] = dataSingleP
