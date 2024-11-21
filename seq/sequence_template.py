@@ -334,6 +334,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         This step will handle the different batches, run it and get the resulting data. This should not be modified.
         Oversampled data will be available in self.mapVals['data_over']
         Decimated data will be available in self.mapVals['data_decimated']
+        The decimated data is shifted to account for CIC delay, so data is synchronized with real-time signal
         '''
 
         waveforms, n_readouts, n_adc = createBatches()
