@@ -64,7 +64,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         if self.mapVals['logScale'] == 1:
             parVector0 = np.geomspace(start[0], end[0], nSteps[0])
         parVector1 = np.linspace(start[1], end[1], nSteps[1])
-        seq = self.sequenceList[seqName] # Select the sequence that we want to sweep with modified parameters
+        seq = self.sequence_list[seqName] # Select the sequence that we want to sweep with modified parameters
         parMatrix = np.zeros((nSteps[0]*nSteps[1], 2))
         n = 0
         for step0 in range(nSteps[0]):

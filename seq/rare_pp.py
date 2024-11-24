@@ -41,10 +41,21 @@ import pypulseq as pp
 #*********************************************************************************
 #*********************************************************************************
 
-class RARE_pp(blankSeq.MRIBLANKSEQ):
+class RarePyPulseq(blankSeq.MRIBLANKSEQ):
     def __init__(self):
-        super(RARE_pp, self).__init__()
+        super(RarePyPulseq, self).__init__()
         # Input the parameters
+        self.sequence_list = None
+        self.unlock_orientation = None
+        self.rdDephTime = None
+        self.dummyPulses = None
+        self.nScans = None
+        self.standalone = None
+        self.repetitionTime = None
+        self.inversionTime = None
+        self.preExTime = None
+        self.sweepMode = None
+        self.expt = None
         self.echoSpacing = None
         self.phGradTime = None
         self.rdGradTime = None
@@ -64,7 +75,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.rotation = None
         self.angle = None
         self.axesOrientation = None
-        self.addParameter(key='seqName', string='RAREInfo', val='RARE_pp')
+        self.addParameter(key='seqName', string='RAREInfo', val='RarePyPulseq')
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM') ## number of scans 
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
@@ -107,26 +118,26 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         print("mriLab @ i3M, CSIC, Spain \n")
 
     def sequenceTime(self):
-        nScans = self.mapVals['nScans']
-        nPoints = np.array(self.mapVals['nPoints'])
+        n_scans = self.mapVals['nScans']
+        n_points = np.array(self.mapVals['nPoints'])
         etl = self.mapVals['etl']
-        repetitionTime = self.mapVals['repetitionTime']
-        parFourierFraction = self.mapVals['parFourierFraction']
+        repetition_time = self.mapVals['repetitionTime']
+        par_fourier_fraction = self.mapVals['parFourierFraction']
 
         # check if rf amplitude is too high
-        rfExFA = self.mapVals['rfExFA'] / 180 * np.pi  # rads
-        rfReFA = self.mapVals['rfReFA'] / 180 * np.pi  # rads
-        rfExTime = self.mapVals['rfExTime']  # us
-        rfReTime = self.mapVals['rfReTime']  # us
-        rfExAmp = rfExFA / (rfExTime * hw.b1Efficiency)
-        rfReAmp = rfReFA / (rfReTime * hw.b1Efficiency)
-        if rfExAmp>1 or rfReAmp>1:
+        rf_ex_fa = self.mapVals['rfExFA'] / 180 * np.pi  # rads
+        rf_re_fa = self.mapVals['rfReFA'] / 180 * np.pi  # rads
+        rf_ex_time = self.mapVals['rfExTime']  # us
+        rf_re_time = self.mapVals['rfReTime']  # us
+        rf_ex_amp = rf_ex_fa / (rf_ex_time * hw.b1Efficiency)
+        rf_re_amp = rf_re_fa / (rf_re_time * hw.b1Efficiency)
+        if rf_ex_amp>1 or rf_re_amp>1:
             print("ERROR: RF amplitude is too high, try with longer RF pulse time.")
-            return(0)
+            return 0
 
-        seqTime = nPoints[1]/etl*nPoints[2]*repetitionTime*1e-3*nScans*parFourierFraction/60
-        seqTime = np.round(seqTime, decimals=1)
-        return seqTime  # minutes, scanTime
+        seq_time = n_points[1]/etl*n_points[2]*repetition_time*1e-3*n_scans*par_fourier_fraction/60
+        seq_time = np.round(seq_time, decimals=1)
+        return seq_time  # minutes, scanTime
 
         # TODO: check for min and max values for all fields
 
@@ -143,9 +154,9 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.dfovs.append(self.dfov.tolist())
         self.fovs.append(self.fov.tolist())
 
-    def sequenceRun(self, plotSeq=False, demo=False, standalone=False):
+    def sequenceRun(self, plot_seq=False, demo=False, standalone=False):
         self.demo = demo
-        self.plotSeq = plotSeq
+        self.plotSeq = plot_seq
         self.standalone = standalone
         print('RARE run...')
 
@@ -196,45 +207,44 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.fov = self.fov[self.axesOrientation]
 
         # Check for used axes
-        axesEnable = []
+        axes_enable = []
         for ii in range(3):
             if self.nPoints[ii] == 1:
-                axesEnable.append(0)
+                axes_enable.append(0)
             else:
-                axesEnable.append(1)
-        self.mapVals['axesEnable'] = axesEnable
+                axes_enable.append(1)
+        self.mapVals['axes_enable'] = axes_enable
 
         # Miscellaneous
         self.freqOffset = self.freqOffset*1e6  # MHz
-        gradRiseTime = hw.grad_rise_time
         resolution = self.fov/self.nPoints
-        rfExAmp = self.rfExFA/(self.rfExTime*1e6*hw.b1Efficiency)*np.pi/180
-        rfReAmp = self.rfReFA/(self.rfReTime*1e6*hw.b1Efficiency)*np.pi/180
-        self.mapVals['rfExAmp'] = rfExAmp
-        self.mapVals['rfReAmp'] = rfReAmp
+        rf_ex_amp = self.rfExFA/(self.rfExTime*1e6*hw.b1Efficiency)*np.pi/180
+        rf_re_amp = self.rfReFA/(self.rfReTime*1e6*hw.b1Efficiency)*np.pi/180
+        self.mapVals['rf_ex_amp'] = rf_ex_amp
+        self.mapVals['rf_re_amp'] = rf_re_amp
         self.mapVals['resolution'] = resolution
-        self.mapVals['gradRiseTime'] = gradRiseTime
+        self.mapVals['grad_rise_time'] = hw.grad_rise_time
         self.mapVals['addRdPoints'] = hw.addRdPoints
         self.mapVals['larmorFreq'] = hw.larmorFreq + self.freqOffset
-        if rfExAmp > 1 or rfReAmp > 1:
+        if rf_ex_amp > 1 or rf_re_amp > 1:
             print("ERROR: RF amplitude is too high, try with longer RF pulse time.")
             return 0
 
         # Matrix size
-        nRD = self.nPoints[0] + 2 * hw.addRdPoints
-        nPH = self.nPoints[1]
-        nSL = self.nPoints[2]
+        n_rd = self.nPoints[0] + 2 * hw.addRdPoints
+        n_ph = self.nPoints[1]
+        n_sl = self.nPoints[2]
 
-        # ETL if etl>nPH
-        if self.etl>nPH:
-            self.etl = nPH
+        # ETL if etl>n_ph
+        if self.etl>n_ph:
+            self.etl = n_ph
 
         # Miscellaneous
-        n_rd_points_per_train = self.etl * nRD
+        n_rd_points_per_train = self.etl * n_rd
 
-        # parAcqLines in case parAcqLines = 0
-        parAcqLines = int(int(self.nPoints[2]*self.parFourierFraction)-self.nPoints[2]/2)
-        self.mapVals['partialAcquisition'] = parAcqLines
+        # par_acq_lines in case par_acq_lines = 0
+        par_acq_lines = int(int(self.nPoints[2]*self.parFourierFraction)-self.nPoints[2]/2)
+        self.mapVals['partialAcquisition'] = par_acq_lines
 
         # BW
         bw = self.nPoints[0] / self.acqTime * 1e-6  # MHz
@@ -247,53 +257,53 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.mapVals['rdGradTime'] = self.rdGradTime * 1e3  # ms
 
         # Phase and slice de- and re-phasing time
-        if self.phGradTime == 0 or self.phGradTime > self.echoSpacing/2-self.rfExTime/2-self.rfReTime/2-2*gradRiseTime:
-            self.phGradTime = self.echoSpacing/2-self.rfExTime/2-self.rfReTime/2-2*gradRiseTime
+        if self.phGradTime == 0 or self.phGradTime > self.echoSpacing/2-self.rfExTime/2-self.rfReTime/2-2*hw.grad_rise_time:
+            self.phGradTime = self.echoSpacing/2-self.rfExTime/2-self.rfReTime/2-2*hw.grad_rise_time
             print("Phase and slice gradient time set to %0.1f ms" % (self.phGradTime * 1e3))
         self.mapVals['phGradTime'] = self.phGradTime*1e3  # ms
 
         # Max gradient amplitude
-        rdGradAmplitude = self.nPoints[0]/(hw.gammaB*self.fov[0]*self.acqTime)*axesEnable[0]
-        phGradAmplitude = nPH/(2*hw.gammaB*self.fov[1]*(self.phGradTime+gradRiseTime))*axesEnable[1]
-        slGradAmplitude = nSL/(2*hw.gammaB*self.fov[2]*(self.phGradTime+gradRiseTime))*axesEnable[2]
-        self.mapVals['rdGradAmplitude'] = rdGradAmplitude
-        self.mapVals['phGradAmplitude'] = phGradAmplitude
-        self.mapVals['slGradAmplitude'] = slGradAmplitude
+        rd_grad_amplitude = self.nPoints[0]/(hw.gammaB*self.fov[0]*self.acqTime)*axes_enable[0]
+        ph_grad_amplitude = n_ph/(2*hw.gammaB*self.fov[1]*(self.phGradTime+hw.grad_rise_time))*axes_enable[1]
+        sl_grad_amplitude = n_sl/(2*hw.gammaB*self.fov[2]*(self.phGradTime+hw.grad_rise_time))*axes_enable[2]
+        self.mapVals['rd_grad_amplitude'] = rd_grad_amplitude
+        self.mapVals['ph_grad_amplitude'] = ph_grad_amplitude
+        self.mapVals['sl_grad_amplitude'] = sl_grad_amplitude
 
         # Readout dephasing amplitude
-        rdDephAmplitude = 0.5*rdGradAmplitude*(gradRiseTime+self.rdGradTime)/(gradRiseTime+self.rdDephTime)
-        self.mapVals['rdDephAmplitude'] = rdDephAmplitude
-        print("Max rd gradient amplitude: %0.1f mT/m" % (max(rdGradAmplitude, rdDephAmplitude) * 1e3))
-        print("Max ph gradient amplitude: %0.1f mT/m" % (phGradAmplitude * 1e3))
-        print("Max sl gradient amplitude: %0.1f mT/m" % (slGradAmplitude * 1e3))
+        rd_deph_amplitude = 0.5*rd_grad_amplitude*(hw.grad_rise_time+self.rdGradTime)/(hw.grad_rise_time+self.rdDephTime)
+        self.mapVals['rd_deph_amplitude'] = rd_deph_amplitude
+        print("Max rd gradient amplitude: %0.1f mT/m" % (max(rd_grad_amplitude, rd_deph_amplitude) * 1e3))
+        print("Max ph gradient amplitude: %0.1f mT/m" % (ph_grad_amplitude * 1e3))
+        print("Max sl gradient amplitude: %0.1f mT/m" % (sl_grad_amplitude * 1e3))
 
         # Phase and slice gradient vector
-        phGradients = np.linspace(-phGradAmplitude,phGradAmplitude,num=nPH,endpoint=False)
-        slGradients = np.linspace(-slGradAmplitude,slGradAmplitude,num=nSL,endpoint=False)
+        ph_gradients = np.linspace(-ph_grad_amplitude,ph_grad_amplitude,num=n_ph,endpoint=False)
+        sl_gradients = np.linspace(-sl_grad_amplitude,sl_grad_amplitude,num=n_sl,endpoint=False)
 
-        # Now fix the number of slices to partailly acquired k-space
-        nSL = (int(self.nPoints[2]/2)+parAcqLines)*axesEnable[2]+(1-axesEnable[2])
-        print("Number of acquired slices: %i" % nSL)
+        # Now fix the number of slices to partially acquired k-space
+        n_sl = (int(self.nPoints[2]/2)+par_acq_lines)*axes_enable[2]+(1-axes_enable[2])
+        print("Number of acquired slices: %i" % n_sl)
 
         # Set phase vector to given sweep mode
-        ind = self.getIndex(self.etl, nPH, self.sweepMode)
+        ind = self.getIndex(self.etl, n_ph, self.sweepMode)
         self.mapVals['sweepOrder'] = ind
-        phGradients = phGradients[ind]
-        self.mapVals['phGradients'] = phGradients.copy()
-        self.mapVals['slGradients'] = slGradients.copy()
+        ph_gradients = ph_gradients[ind]
+        self.mapVals['ph_gradients'] = ph_gradients.copy()
+        self.mapVals['sl_gradients'] = sl_gradients.copy()
 
         # Normalize gradient list
-        if phGradAmplitude != 0:
-            phGradients /= phGradAmplitude
-        if slGradAmplitude != 0:
-            slGradients /= slGradAmplitude
+        if ph_grad_amplitude != 0:
+            ph_gradients /= ph_grad_amplitude
+        if sl_grad_amplitude != 0:
+            sl_gradients /= sl_grad_amplitude
 
         # Get the rotation matrix
         rot = self.getRotationMatrix()
-        gradAmp = np.array([0.0, 0.0, 0.0])
-        gradAmp[self.axesOrientation[0]] = 1
-        gradAmp = np.reshape(gradAmp, (3, 1))
-        result = np.dot(rot, gradAmp)
+        grad_amp = np.array([0.0, 0.0, 0.0])
+        grad_amp[self.axesOrientation[0]] = 1
+        grad_amp = np.reshape(grad_amp, (3, 1))
+        result = np.dot(rot, grad_amp)
 
         # Map the axis to "x", "y", and "z" according ot axesOrientation
         axes_map = {0: "x", 1: "y", 2: "z"}
@@ -311,16 +321,16 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         if not self.demo:
             self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
                                       rx_t=sampling_period,  # us
-                                      init_gpa=init_gpa,
+                                      init_gpa=False,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
                                       auto_leds=True)
             sampling_period = self.expt.get_sampling_period() # us
             bw = 1 / sampling_period  # MHz
-            sampling_time = sampling_period * nRD * 1e-6  # s
+            sampling_time = sampling_period * n_rd * 1e-6  # s
             print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
             self.expt.__del__()
         else:
-            sampling_time = sampling_period * nRD * 1e-6  # s
+            sampling_time = sampling_period * n_rd * 1e-6  # s
         self.mapVals['bw_MHz'] = bw
         self.mapVals['sampling_period_us'] = sampling_period
         self.mapVals['sampling_time_s'] = sampling_time
@@ -344,7 +354,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         # ADC to get noise
         delay = 100e-6
         block_adc_noise = pp.make_adc(
-            num_samples=nRD,
+            num_samples=n_rd,
             dwell=sampling_period * 1e-6,
             delay=delay,
         )
@@ -390,18 +400,18 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             use = 'excitation'
         )
 
-        # Dephasing gradient
+        # De-phasing gradient
         delay = system.rf_dead_time + self.rfExTime
         block_gr_rd_preph = pp.make_trapezoid(
             channel=rd_channel,
             system=system,
-            amplitude=rdDephAmplitude * hw.gammaB,
+            amplitude=rd_deph_amplitude * hw.gammaB,
             flat_time=self.rdDephTime,
             rise_time=hw.grad_rise_time,
             delay=delay,
         )
 
-        # Delay to refosucing pulse
+        # Delay to re-focusing pulse
         delay_preph = pp.make_delay(self.echoSpacing / 2 + self.rfExTime / 2 - self.rfReTime / 2)
 
         # Refocusing pulse
@@ -418,23 +428,23 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         # Delay to next refocusing pulse
         delay_reph = pp.make_delay(self.echoSpacing)
 
-        # Phase gradient dephasing
+        # Phase gradient de-phasing
         delay = system.rf_dead_time + self.rfReTime
         block_gr_ph_deph = pp.make_trapezoid(
             channel=ph_channel,
             system=system,
-            amplitude=phGradAmplitude * hw.gammaB + float(phGradAmplitude==0),
+            amplitude=ph_grad_amplitude * hw.gammaB + float(ph_grad_amplitude==0),
             flat_time=self.phGradTime,
             rise_time=hw.grad_rise_time,
             delay=delay,
         )
 
-        # Slice gradient dephasing
+        # Slice gradient de-phasing
         delay = system.rf_dead_time + self.rfReTime
         block_gr_sl_deph = pp.make_trapezoid(
             channel=sl_channel,
             system=system,
-            amplitude=slGradAmplitude * hw.gammaB + float(slGradAmplitude==0),
+            amplitude=sl_grad_amplitude * hw.gammaB + float(sl_grad_amplitude==0),
             flat_time=self.phGradTime,
             delay=delay,
             rise_time=hw.grad_rise_time,
@@ -446,7 +456,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         block_gr_rd_reph = pp.make_trapezoid(
             channel=rd_channel,
             system=system,
-            amplitude=rdGradAmplitude * hw.gammaB,
+            amplitude=rd_grad_amplitude * hw.gammaB,
             flat_time=self.rdGradTime,
             rise_time=hw.grad_rise_time,
             delay=delay,
@@ -455,28 +465,28 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         # ADC to get the signal
         delay = system.rf_dead_time + self.rfReTime / 2 + self.echoSpacing / 2 - sampling_time / 2
         block_adc_signal = pp.make_adc(
-            num_samples=nRD,
+            num_samples=n_rd,
             dwell=sampling_period * 1e-6,
             delay=delay,
         )
 
-        # Phase gradient rephasing
+        # Phase gradient re-phasing
         delay = system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2
         block_gr_ph_reph = pp.make_trapezoid(
             channel=ph_channel,
             system=system,
-            amplitude=phGradAmplitude * hw.gammaB + float(phGradAmplitude==0),
+            amplitude=ph_grad_amplitude * hw.gammaB + float(ph_grad_amplitude==0),
             flat_time=self.phGradTime,
             rise_time=hw.grad_rise_time,
             delay=delay,
         )
 
-        # Slice gradient rephasing
+        # Slice gradient re-phasing
         delay = system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2
         block_gr_sl_reph = pp.make_trapezoid(
             channel=sl_channel,
             system=system,
-            amplitude=slGradAmplitude * hw.gammaB + float(slGradAmplitude==0),
+            amplitude=sl_grad_amplitude * hw.gammaB + float(sl_grad_amplitude==0),
             flat_time=self.phGradTime,
             rise_time=hw.grad_rise_time,
             delay=delay,
@@ -495,7 +505,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         # each new batch.
         '''
 
-        def initializeBatch():
+        def initialize_batch():
             """
             Initializes a batch of MRI sequence blocks using PyPulseq for a given experimental configuration.
 
@@ -558,7 +568,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
             # Add first delay and first noise measurement
             batch.add_block(delay_first, block_adc_noise)
-            n_rd_points += nRD
+            n_rd_points += n_rd
             n_adc += 1
 
             # Create dummy pulses
@@ -593,7 +603,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                                                 delay_reph)
                         batch.add_block(gr_ph_reph,
                                                 gr_sl_reph)
-                        n_rd_points += nRD
+                        n_rd_points += n_rd
                         n_adc += 1
                     else:
                         batch.add_block(block_rf_refocusing,
@@ -615,7 +625,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         number of acquired points to check if a new batch is required.
         '''
 
-        def createBatches():
+        def create_batches():
             """
             Creates and processes multiple batches of MRI sequence blocks for slice and phase encoding sweeps.
 
@@ -633,7 +643,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                 - Tracks the current readout point count (`n_rd_points`), ADC window count (`n_adc`), and batch index (`seq_idx`).
 
             2. **Slice and Phase Sweep**:
-                - Iterates over slices (`nSL`) and phases (`nPH`) to build and organize sequence blocks:
+                - Iterates over slices (`n_sl`) and phases (`n_ph`) to build and organize sequence blocks:
                     - **Batch Management**:
                         - Creates a new batch if no batch exists or the current batch exceeds the hardware limit (`hw.maxRdPoints`).
                         - Writes the previous batch to disk, interprets it using `flo_interpreter`, and updates dictionaries.
@@ -669,10 +679,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             batch_num = "batch_0"  # Initial batch name
 
             # Slice sweep
-            for sl_idx in range(nSL):
+            for sl_idx in range(n_sl):
                 ph_idx = 0
                 # Phase sweep
-                while ph_idx < nPH:
+                while ph_idx < n_ph:
                     # Check if a new batch is needed (either first batch or exceeding readout points limit)
                     if seq_idx == 0 or n_rd_points + n_rd_points_per_train > hw.maxRdPoints:
                         # If a previous batch exists, write and interpret it
@@ -686,7 +696,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                         n_rd_points_dict[batch_num] = n_rd_points  # Save readout points count
                         n_rd_points = 0
                         batch_num = f"batch_{seq_idx}"
-                        batches[batch_num], n_rd_points, n_adc_0 = initializeBatch()  # Initialize new batch
+                        batches[batch_num], n_rd_points, n_adc_0 = initialize_batch()  # Initialize new batch
                         n_adc += n_adc_0
                         print(f"Creating {batch_num}.seq...")
 
@@ -712,10 +722,10 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                     # Add echo train
                     for echo in range(self.etl):
                         # Fix the phase and slice amplitude
-                        gr_ph_deph = pp.scale_grad(block_gr_ph_deph, phGradients[ph_idx])
-                        gr_sl_deph = pp.scale_grad(block_gr_sl_deph, slGradients[sl_idx])
-                        gr_ph_reph = pp.scale_grad(block_gr_ph_reph, - phGradients[ph_idx])
-                        gr_sl_reph = pp.scale_grad(block_gr_sl_reph, - slGradients[sl_idx])
+                        gr_ph_deph = pp.scale_grad(block_gr_ph_deph, ph_gradients[ph_idx])
+                        gr_sl_deph = pp.scale_grad(block_gr_sl_deph, sl_gradients[sl_idx])
+                        gr_ph_reph = pp.scale_grad(block_gr_ph_reph, - ph_gradients[ph_idx])
+                        gr_sl_reph = pp.scale_grad(block_gr_sl_reph, - sl_gradients[sl_idx])
 
                         # Add blocks
                         batches[batch_num].add_block(block_rf_refocusing,
@@ -726,7 +736,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                                                 delay_reph)
                         batches[batch_num].add_block(gr_ph_reph,
                                                 gr_sl_reph)
-                        n_rd_points += nRD
+                        n_rd_points += n_rd
                         n_adc += 1
                         ph_idx += 1
 
@@ -751,7 +761,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         Oversampled data will be available in self.mapVals['data_over']
         Decimated data will be available in self.mapVals['data_decimated']
         '''
-        waveforms, n_readouts, n_adc = createBatches()
+        waveforms, n_readouts, n_adc = create_batches()
         return self.runBatches(waveforms=waveforms,
                                n_readouts=n_readouts,
                                n_adc=n_adc,
@@ -766,8 +776,8 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         # Get data
         data_over = self.mapVals['data_over']
         data_decimated = self.mapVals['data_decimated']
-        nRD, nPH, nSL = self.nPoints
-        nRD = nRD + 2 * hw.addRdPoints
+        n_rd, n_ph, n_sl = self.nPoints
+        n_rd = n_rd + 2 * hw.addRdPoints
         n_batches = self.mapVals['n_batches']
         n_readouts = self.mapVals['n_readouts']
         ind = self.getParameter('sweepOrder')
@@ -776,7 +786,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         data_noise = []
         data_dummy = []
         data_signal = []
-        points_per_rd = nRD
+        points_per_rd = n_rd
         points_per_train = points_per_rd * self.etl
         idx_0 = 0
         idx_1 = 0
@@ -790,7 +800,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                     data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd+points_per_train]), axis=0)
                 data_signal = np.concatenate((data_signal, data_prov[points_per_rd+points_per_train::]), axis=0)
                 idx_0 = idx_1
-            n_readouts[batch] += -nRD - nRD * self.etl
+            n_readouts[batch] += -n_rd - n_rd * self.etl
         self.mapVals['data_noise'] = data_noise
         self.mapVals['data_dummy'] = data_dummy
         self.mapVals['data_signal'] = data_signal
@@ -799,18 +809,18 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         data_full = data_signal
 
         # Reorganize data_full
-        data_prov = np.zeros(shape=[self.nScans, nSL * nPH * nRD], dtype=complex)
+        data_prov = np.zeros(shape=[self.nScans, n_sl * n_ph * n_rd], dtype=complex)
         if n_batches > 1:
             data_full_a = data_full[0:sum(n_readouts[0:-1]) * self.nScans]
             data_full_b = data_full[sum(n_readouts[0:-1]) * self.nScans:]
-            data_full_a = np.reshape(data_full_a, newshape=(n_batches - 1, self.nScans, -1, nRD))
-            data_full_b = np.reshape(data_full_b, newshape=(1, self.nScans, -1, nRD))
+            data_full_a = np.reshape(data_full_a, newshape=(n_batches - 1, self.nScans, -1, n_rd))
+            data_full_b = np.reshape(data_full_b, newshape=(1, self.nScans, -1, n_rd))
             for scan in range(self.nScans):
                 data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
                 data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
                 data_prov[scan, :] = np.concatenate((data_scan_a, data_scan_b), axis=0)
         else:
-            data_full = np.reshape(data_full, newshape=(1, self.nScans, -1, nRD))
+            data_full = np.reshape(data_full, newshape=(1, self.nScans, -1, n_rd))
             for scan in range(self.nScans):
                 data_prov[scan, :] = np.reshape(data_full[:, scan, :, :], -1)
         data_full = np.reshape(data_prov, -1)
@@ -820,25 +830,25 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
         # Get index for krd = 0
         # Average data
-        data_prov = np.reshape(data_full, newshape=(self.nScans, nRD * nPH * nSL))
+        data_prov = np.reshape(data_full, newshape=(self.nScans, n_rd * n_ph * n_sl))
         data_prov = np.average(data_prov, axis=0)
-        # Reorganize the data acording to sweep mode
-        data_prov = np.reshape(data_prov, newshape=(nSL, nPH, nRD))
+        # Reorganize the data according to sweep mode
+        data_prov = np.reshape(data_prov, newshape=(n_sl, n_ph, n_rd))
         data_temp = np.zeros_like(data_prov)
-        for ii in range(nPH):
+        for ii in range(n_ph):
             data_temp[:, ind[ii], :] = data_prov[:, ii, :]
         data_prov = data_temp
         # Get central line
-        data_prov = data_prov[int(self.nPoints[2] / 2), int(nPH / 2), :]
-        indkrd0 = np.argmax(np.abs(data_prov))
-        if indkrd0 < nRD / 2 - hw.addRdPoints or indkrd0 > nRD / 2 + hw.addRdPoints:
-            indkrd0 = int(nRD / 2)
+        data_prov = data_prov[int(self.nPoints[2] / 2), int(n_ph / 2), :]
+        ind_krd_0 = np.argmax(np.abs(data_prov))
+        if ind_krd_0 < n_rd / 2 - hw.addRdPoints or ind_krd_0 > n_rd / 2 + hw.addRdPoints:
+            ind_krd_0 = int(n_rd / 2)
 
         # Get individual images
-        data_full = np.reshape(data_full, newshape=(self.nScans, nSL, nPH, nRD))
-        data_full = data_full[:, :, :, indkrd0 - int(self.nPoints[0] / 2):indkrd0 + int(self.nPoints[0] / 2)]
+        data_full = np.reshape(data_full, newshape=(self.nScans, n_sl, n_ph, n_rd))
+        data_full = data_full[:, :, :, ind_krd_0 - int(self.nPoints[0] / 2):ind_krd_0 + int(self.nPoints[0] / 2)]
         data_temp = np.zeros_like(data_full)
-        for ii in range(nPH):
+        for ii in range(n_ph):
             data_temp[:, :, ind[ii], :] = data_full[:, :, ii, :]
         data_full = data_temp
         self.mapVals['data_full'] = data_full
@@ -848,15 +858,15 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
         # Do zero padding
         data_temp = np.zeros(shape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]), dtype=complex)
-        data_temp[0:nSL, :, :] = data
+        data_temp[0:n_sl, :, :] = data
         data = np.reshape(data_temp, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
 
         # Fix the position of the sample according to dfov
         bw = self.getParameter('bw_MHz')
         time_vector = np.linspace(-self.nPoints[0] / bw / 2 + 0.5 / bw, self.nPoints[0] / bw / 2 - 0.5 / bw,
                                        self.nPoints[0]) * 1e-6  # s
-        kMax = np.array(self.nPoints) / (2 * np.array(self.fov)) * np.array(self.mapVals['axesEnable'])
-        kRD = time_vector * hw.gammaB * self.getParameter('rdGradAmplitude')
+        kMax = np.array(self.nPoints) / (2 * np.array(self.fov)) * np.array(self.mapVals['axes_enable'])
+        kRD = time_vector * hw.gammaB * self.getParameter('rd_grad_amplitude')
         kPH = np.linspace(-kMax[1], kMax[1], num=self.nPoints[1], endpoint=False)
         kSL = np.linspace(-kMax[2], kMax[2], num=self.nPoints[2], endpoint=False)
         kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
@@ -880,8 +890,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         self.mapVals['sampledCartesian'] = self.mapVals['sampled']  # To sweep
         data = np.reshape(data, newshape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]))
 
-        nPoints = self.mapVals['nPoints']
-        axesEnable = self.mapVals['axesEnable']
+        axes_enable = self.mapVals['axes_enable']
 
         # Get axes in strings
         axes = self.mapVals['axesOrientation']
@@ -895,12 +904,12 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             axesStr[n] = axesKeys[index]
             n += 1
 
-        if (axesEnable[1] == 0 and axesEnable[2] == 0):
+        if (axes_enable[1] == 0 and axes_enable[2] == 0):
             bw = self.mapVals['bw']*1e-3 # kHz
             acqTime = self.mapVals['acqTime'] # ms
-            tVector = np.linspace(-acqTime/2, acqTime/2, nPoints[0])
+            tVector = np.linspace(-acqTime/2, acqTime/2, self.nPoints[0])
             sVector = self.mapVals['sampled'][:, 3]
-            fVector = np.linspace(-bw/2, bw/2, nPoints[0])
+            fVector = np.linspace(-bw/2, bw/2, self.nPoints[0])
             iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
 
             # Plots to show into the GUI
@@ -934,71 +943,68 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             image = image/np.max(np.reshape(image,-1))*100
 
             # Image orientation
-            imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+            image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+            x_label = "%s axis" % axesStr[1]
+            y_label = "%s axis" % axesStr[0]
+            title = "Image"
             if not self.unlock_orientation: # Image orientation
                 if self.axesOrientation[2] == 2:  # Sagittal
                     title = "Sagittal"
                     if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  #OK
                         image = np.flip(image, axis=2)
                         image = np.flip(image, axis=1)
-                        xLabel = "(-Y) A | PHASE | P (+Y)"
-                        yLabel = "(-X) I | READOUT | S (+X)"
-                        imageOrientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+                        x_label = "(-Y) A | PHASE | P (+Y)"
+                        y_label = "(-X) I | READOUT | S (+X)"
+                        image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
                     else:
                         image = np.transpose(image, (0, 2, 1))
                         image = np.flip(image, axis=2)
                         image = np.flip(image, axis=1)
-                        xLabel = "(-Y) A | READOUT | P (+Y)"
-                        yLabel = "(-X) I | PHASE | S (+X)"
-                        imageOrientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+                        x_label = "(-Y) A | READOUT | P (+Y)"
+                        y_label = "(-X) I | PHASE | S (+X)"
+                        image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
                 elif self.axesOrientation[2] == 1: # Coronal
                     title = "Coronal"
                     if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2: #OK
                         image = np.flip(image, axis=2)
                         image = np.flip(image, axis=1)
                         image = np.flip(image, axis=0)
-                        xLabel = "(+Z) R | PHASE | L (-Z)"
-                        yLabel = "(-X) I | READOUT | S (+X)"
-                        imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
+                        x_label = "(+Z) R | PHASE | L (-Z)"
+                        y_label = "(-X) I | READOUT | S (+X)"
+                        image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
                     else:
                         image = np.transpose(image, (0, 2, 1))
                         image = np.flip(image, axis=2)
                         image = np.flip(image, axis=1)
                         image = np.flip(image, axis=0)
-                        xLabel = "(+Z) R | READOUT | L (-Z)"
-                        yLabel = "(-X) I | PHASE | S (+X)"
-                        imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
+                        x_label = "(+Z) R | READOUT | L (-Z)"
+                        y_label = "(-X) I | PHASE | S (+X)"
+                        image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
                 elif self.axesOrientation[2] == 0:  # Transversal
                     title = "Transversal"
                     if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
                         image = np.flip(image, axis=2)
                         image = np.flip(image, axis=1)
-                        xLabel = "(+Z) R | PHASE | L (-Z)"
-                        yLabel = "(+Y) P | READOUT | A (-Y)"
-                        imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+                        x_label = "(+Z) R | PHASE | L (-Z)"
+                        y_label = "(+Y) P | READOUT | A (-Y)"
+                        image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
                     else:  #OK
                         image = np.transpose(image, (0, 2, 1))
                         image = np.flip(image, axis=2)
                         image = np.flip(image, axis=1)
-                        xLabel = "(+Z) R | READOUT | L (-Z)"
-                        yLabel = "(+Y) P | PHASE | A (-Y)"
-                        imageOrientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
-            else:
-                xLabel = "%s axis" % axesStr[1]
-                yLabel = "%s axis" % axesStr[0]
-                title = "Image"
+                        x_label = "(+Z) R | READOUT | L (-Z)"
+                        y_label = "(+Y) P | PHASE | A (-Y)"
+                        image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
 
-            result1 = {}
-            result1['widget'] = 'image'
-            result1['data'] = image
-            result1['xLabel'] = xLabel
-            result1['yLabel'] = yLabel
-            result1['title'] = title
-            result1['row'] = 0
-            result1['col'] = 0
+            result1 = {'widget': 'image',
+                       'data': image,
+                       'xLabel': x_label,
+                       'yLabel': y_label,
+                       'title': title,
+                       'row': 0,
+                       'col': 0}
 
-            result2 = {}
-            result2['widget'] = 'image'
+            result2 = {'widget': 'image'}
             if self.parFourierFraction==1:
                 result2['data'] = np.log10(np.abs(self.mapVals['kSpace3D']))
             else:
@@ -1011,11 +1017,11 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
 
             # DICOM TAGS
             # Image
-            imageDICOM = np.transpose(image, (0, 2, 1))
+            image_dicom = np.transpose(image, (0, 2, 1))
             # If it is a 3d image
-            if len(imageDICOM.shape) > 2:
+            if len(image_dicom.shape) > 2:
                 # Obtener dimensiones
-                slices, rows, columns = imageDICOM.shape
+                slices, rows, columns = image_dicom.shape
                 self.meta_data["Columns"] = columns
                 self.meta_data["Rows"] = rows
                 self.meta_data["NumberOfSlices"] = slices
@@ -1023,22 +1029,20 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             # if it is a 2d image
             else:
                 # Obtener dimensiones
-                rows, columns = imageDICOM.shape
+                rows, columns = image_dicom.shape
+                slices = 1
                 self.meta_data["Columns"] = columns
                 self.meta_data["Rows"] = rows
                 self.meta_data["NumberOfSlices"] = 1
                 self.meta_data["NumberOfFrames"] = 1
-            imgAbs = np.abs(imageDICOM)
-            imgFullAbs = np.abs(imageDICOM) * (2 ** 15 - 1) / np.amax(np.abs(imageDICOM))
-            x2 = np.amax(np.abs(imageDICOM))
-            imgFullInt = np.int16(np.abs(imgFullAbs))
-            imgFullInt = np.reshape(imgFullInt, (slices, rows, columns))
-            arr = np.zeros((slices, rows, columns), dtype=np.int16)
-            arr = imgFullInt
+            img_full_abs = np.abs(image_dicom) * (2 ** 15 - 1) / np.amax(np.abs(image_dicom))
+            img_full_int = np.int16(np.abs(img_full_abs))
+            img_full_int = np.reshape(img_full_int, (slices, rows, columns))
+            arr = img_full_int
             self.meta_data["PixelData"] = arr.tobytes()
             self.meta_data["WindowWidth"] = 26373
             self.meta_data["WindowCenter"] = 13194
-            self.meta_data["ImageOrientationPatient"] = imageOrientation_dicom
+            self.meta_data["ImageOrientationPatient"] = image_orientation_dicom
             resolution = self.mapVals['resolution'] * 1e3
             self.meta_data["PixelSpacing"] = [resolution[0], resolution[1]]
             self.meta_data["SliceThickness"] = resolution[2]
@@ -1059,13 +1063,12 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         # Save results
         self.saveRawData()
         self.save_ismrmrd()
-        
 
         self.mapVals['angle'] = 0.0
         self.mapVals['dfov'] = [0.0, 0.0, 0.0]
         try:
-            self.sequenceList['RARE'].mapVals['angle'] = 0.0
-            self.sequenceList['RARE'].mapVals['dfov'] = [0.0, 0.0, 0.0]
+            self.sequence_list['RARE'].mapVals['angle'] = 0.0
+            self.sequence_list['RARE'].mapVals['dfov'] = [0.0, 0.0, 0.0]
         except:
             pass
         hw.dfov = [0.0, 0.0, 0.0]
@@ -1074,44 +1077,6 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
             self.plotResults()
 
         return self.output
-
-    def myPhantom(self):
-        # Reorganize the fov
-        n_pixels = self.nPoints[0]*self.nPoints[1]*self.nPoints[2]
-
-        # Get x, y and z vectors in real (x, y, z) and relative (rd, ph, sl) coordinates
-        rd = np.linspace(-self.fov[0] / 2, self.fov[0] / 2, self.nPoints[0])
-        ph = np.linspace(-self.fov[1] / 2, self.fov[1] / 2, self.nPoints[1])
-        if self.nPoints[2]==1:
-            sl = sl = np.linspace(-0, 0, 1)
-            p = np.array([0.01, 0.01, 0.0])
-            p = p[self.axesOrientation]
-        else:
-            sl = np.linspace(-self.fov[2] / 2, self.fov[2] / 2, self.nPoints[2])
-            p = np.array([0.01, 0.01, 0.01])
-        ph, sl, rd = np.meshgrid(ph, sl, rd)
-        rd = np.reshape(rd, (1, -1))
-        ph = np.reshape(ph, (1, -1))
-        sl = np.reshape(sl, (1, -1))
-        pos_rela = np.concatenate((rd, ph, sl), axis=0)
-        pos_real = pos_rela[self.axesOrientation, :]
-
-        # Generate the phantom
-        image = np.zeros((1, n_pixels))
-        image = np.concatenate((pos_real, image), axis=0)
-        r = 0.01
-        for ii in range(n_pixels):
-            d = np.sqrt((pos_real[0,ii] - p[0])**2 + (pos_real[1,ii] - p[1])**2 + (pos_real[2,ii] - p[2])**2)
-            if d <= r:
-                image[3, ii] = 1
-        image_3d = np.reshape(image[3, :], self.nPoints[-1::-1])
-        
-        # Generate k-space
-        kspace_3d = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(image_3d)))
-        
-        kspace = np.reshape(kspace_3d, (1, -1))
-        
-        return kspace
         
     def save_ismrmrd(self):
         """
@@ -1150,15 +1115,13 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
         path= "%s/%s.h5" % (directory_rmd, file_name)
         
         dset = ismrmrd.Dataset(path, f'/dataset', True) # Create the dataset
-        
-        nScans = self.mapVals['nScans']
-        nPoints = np.array(self.mapVals['nPoints'])
+
         etl = self.mapVals['etl']
-        nRD = self.nPoints[0]
-        nPH = self.nPoints[1]
-        nSL = self.nPoints[2]
-        ind = self.getIndex(self.etl, nPH, self.sweepMode)
-        nRep = (nPH//etl)*nSL
+        n_rd = self.nPoints[0]
+        n_ph = self.nPoints[1]
+        n_sl = self.nPoints[2]
+        ind = self.getIndex(self.etl, n_ph, self.sweepMode)
+        nRep = (n_ph//etl)*n_sl
         bw = self.mapVals['bw_MHz']
         
         axesOrientation = self.axesOrientation
@@ -1194,20 +1157,20 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                 
         
         
-        new_data = np.zeros((nPH * nSL * nScans, nRD + 2*hw.addRdPoints))
-        new_data = np.reshape(self.data_fullmat, (nScans, nSL, nPH, nRD+ 2*hw.addRdPoints))
+        new_data = np.zeros((n_ph * n_sl * self.nScans, n_rd + 2*hw.addRdPoints))
+        new_data = np.reshape(self.data_fullmat, (self.nScans, n_sl, n_ph, n_rd+ 2*hw.addRdPoints))
         
         counter=0  
-        for scan in range(nScans):
-            for slice_idx in range(nSL):
-                for phase_idx in range(nPH):
+        for scan in range(self.nScans):
+            for slice_idx in range(n_sl):
+                for phase_idx in range(n_ph):
                     
                     line = new_data[scan, slice_idx, phase_idx, :]
-                    line2d = np.reshape(line, (1, nRD+2*hw.addRdPoints))
+                    line2d = np.reshape(line, (1, n_rd+2*hw.addRdPoints))
                     acq = ismrmrd.Acquisition.from_array(line2d, None)
                     
                     index_in_repetition = phase_idx % etl
-                    current_repetition = (phase_idx // etl) + (slice_idx * (nPH // etl))
+                    current_repetition = (phase_idx // etl) + (slice_idx * (n_ph // etl))
                     
                     acq.clearAllFlags()
                     
@@ -1218,12 +1181,12 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                     
                     if ind[phase_idx]== 0:
                         acq.setFlag(ismrmrd.ACQ_FIRST_IN_PHASE)
-                    elif ind[phase_idx] == nPH - 1:
+                    elif ind[phase_idx] == n_ph - 1:
                         acq.setFlag(ismrmrd.ACQ_LAST_IN_PHASE)
                     
                     if slice_idx == 0:
                         acq.setFlag(ismrmrd.ACQ_FIRST_IN_SLICE)
-                    elif slice_idx == nSL - 1:
+                    elif slice_idx == n_sl - 1:
                         acq.setFlag(ismrmrd.ACQ_LAST_IN_SLICE)
                         
                     if int(current_repetition) == 0:
@@ -1233,7 +1196,7 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                         
                     if scan == 0:
                         acq.setFlag(ismrmrd.ACQ_FIRST_IN_AVERAGE)
-                    elif scan == nScans-1:
+                    elif scan == self.nScans-1:
                         acq.setFlag(ismrmrd.ACQ_LAST_IN_AVERAGE)
                     
                     
@@ -1262,9 +1225,9 @@ class RARE_pp(blankSeq.MRIBLANKSEQ):
                         
                         
         image=self.mapVals['image3D']
-        image_reshaped = np.reshape(image, (nSL, nPH, nRD))
+        image_reshaped = np.reshape(image, (n_sl, n_ph, n_rd))
         
-        for slice_idx in range (nSL): ## image3d does not have scan dimension
+        for slice_idx in range (n_sl): ## image3d does not have scan dimension
             
             image_slice = image_reshaped[slice_idx, :, :]
             img = ismrmrd.Image.from_array(image_slice)

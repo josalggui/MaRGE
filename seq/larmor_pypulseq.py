@@ -250,7 +250,7 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         self.mapVals['spectrum'] = [fVector, spectrum]
 
         if mode != 'Standalone':
-            for sequence in self.sequenceList.values():
+            for sequence in self.sequence_list.values():
                 if 'larmorFreq' in sequence.mapVals:
                     sequence.mapVals['larmorFreq'] = hw.larmorFreq
 

@@ -160,7 +160,7 @@ class FID(blankSeq.MRIBLANKSEQ):
         fwhm=getFHWM(spectrum, fVector, bw)
         dB0=fwhm*1e6/hw.larmorFreq
 
-        for sequence in self.sequenceList.values():
+        for sequence in self.sequence_list.values():
             if 'larmorFreq' in sequence.mapVals:
                 sequence.mapVals['larmorFreq'] = hw.larmorFreq
 

@@ -128,7 +128,7 @@ defaultsequences = {
     'RAREprotocols': RAREProtocols(),
     'RAREprotocolsTest': RAREProtocolsTest(),
     'RARE': RARE(),
-    'RARE_pp': rare_pp.RARE_pp(),
+    'RarePyPulseq': rare_pp.RarePyPulseq(),
     'RARE_T2prep_pp': rare_t2prep_pp.RARE_T2prep_pp(),
     'PulseqReader': pulseq_reader.PulseqReader(),
     'Noise': Noise(),

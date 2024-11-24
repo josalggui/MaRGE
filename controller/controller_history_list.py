@@ -396,7 +396,7 @@ class HistoryListController(HistoryListWidget):
             object: The result of the sequence analysis.
         """
         # Save sequence list into the current sequence, just in case you need to do sweep
-        sequence.sequenceList = defaultsequences
+        sequence.sequence_list = defaultsequences
         sequence.raw_data_name = raw_data_name
 
         # Save input parameters

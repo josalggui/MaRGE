@@ -996,8 +996,8 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
         self.mapVals['angle'] = 0.0
         self.mapVals['dfov'] = [0.0, 0.0, 0.0]
         try:
-            self.sequenceList['RARE'].mapVals['angle'] = 0.0
-            self.sequenceList['RARE'].mapVals['dfov'] = [0.0, 0.0, 0.0]
+            self.sequence_list['RARE'].mapVals['angle'] = 0.0
+            self.sequence_list['RARE'].mapVals['dfov'] = [0.0, 0.0, 0.0]
         except:
             pass
         hw.dfov = [0.0, 0.0, 0.0]

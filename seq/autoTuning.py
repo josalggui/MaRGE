@@ -289,7 +289,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
         # Save parameters to source sequence
         try:
-            sequence = self.sequenceList[self.mapVals['seqName']]
+            sequence = self.sequence_list[self.mapVals['seqName']]
             sequence.mapVals['matching'] = self.states[stateCm]
             sequence.mapVals['tuning'] = self.states[stateCt]
             sequence.mapVals['series'] = self.states[stateCs]
