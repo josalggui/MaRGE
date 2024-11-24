@@ -12,7 +12,7 @@ import numpy as np
 import configs.hw_config as hw
 from datetime import date, datetime
 from scipy.io import savemat, loadmat
-import experiment as ex
+import controller.experiment_gui as ex
 import scipy.signal as sig
 import csv
 import ismrmrd
