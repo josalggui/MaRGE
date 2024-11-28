@@ -129,9 +129,13 @@ class PSInterpreter:
         self._logger.info(f'Interpreting ' + pulseq_file)
         if self.is_assembled:
             self._logger.info('Re-initializing over old sequence...')
-            self.__init__(rf_center=self._rf_center, rf_amp_max=self._rf_amp_max, 
+            self.__init__(
+                rf_center=self._rf_center, rf_amp_max=self._rf_amp_max,
                 gx_max=self._grad_max['gx'], gy_max=self._grad_max['gy'], gz_max=self._grad_max['gz'],
-                clk_t=self._clk_t, tx_t=self._tx_t, grad_t=self._grad_t)
+                clk_t=self._clk_t, tx_t=self._tx_t, grad_t=self._grad_t,
+                tx_warmup=self._tx_warmup, tx_zero_end=self._tx_zero_end, grad_zero_end=self._grad_zero_end,
+                log_file='ps_interpreter', log_level=20,
+                )
         self._read_pulseq(pulseq_file)
         self._compile_tx_data()
         self._compile_grad_data()
@@ -537,6 +541,8 @@ class PSInterpreter:
             out_dict['tx0'] = (self._tx_times[tx_id], self._tx_data[tx_id])
             # duration = max(duration, self._tx_durations[tx_id])
             tx_gate_start = self._tx_times[tx_id][0] - self._tx_warmup
+            if tx_gate_start < 0:
+                print("ERROR")
             self._error_if(tx_gate_start < 0,
                 f'Tx warmup ({self._tx_warmup}) of RF event {tx_id} is longer than delay ({self._tx_times[tx_id][0]})')
             out_dict['tx_gate'] = (np.array([tx_gate_start, self._tx_durations[tx_id]]),
