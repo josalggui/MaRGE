@@ -27,7 +27,7 @@ import configs.units as units
 import scipy.signal as sig
 import experiment as ex
 import configs.hw_config as hw
-from flocra_pulseq.interpreter import PSInterpreter
+from marga_pulseq.interpreter import PSInterpreter
 
 
 class PulseqReader(blankSeq.MRIBLANKSEQ):

@@ -33,7 +33,7 @@ import ismrmrd
 import ismrmrd.xsd
 import datetime
 import ctypes
-from flocra_pulseq.interpreter import PSInterpreter
+from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 
 #*********************************************************************************

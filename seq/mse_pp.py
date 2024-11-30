@@ -34,7 +34,7 @@ import experiment as ex
 import configs.hw_config as hw
 import configs.units as units
 import seq.mriBlankSeq as blankSeq
-from flocra_pulseq.interpreter import PSInterpreter
+from marga_pulseq.interpreter import PSInterpreter
 
 
 #*********************************************************************************

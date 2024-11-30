@@ -25,7 +25,7 @@ import controller.experiment_gui as ex
 import configs.hw_config as hw  # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-from flocra_pulseq.interpreter import PSInterpreter  # Import the flocra-pulseq interpreter
+from marga_pulseq.interpreter import PSInterpreter  # Import the flocra-pulseq interpreter
 import pypulseq as pp  # Import PyPulseq
 
 # Template Class for MRI Sequences
