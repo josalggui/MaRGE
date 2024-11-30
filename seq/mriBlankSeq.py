@@ -1449,7 +1449,7 @@ class MRIBLANKSEQ:
         for key in self.flo_dict.keys():
             item = self.flo_dict[key]
             dt = item[0][1::] - item[0][0:-1]
-            if (dt <= 0).any():
+            if (dt <= 1).any():
                 print("ERROR: %s timing error" % key)
                 return False
             if (item[1] > 1).any() or (item[1] < -1).any():

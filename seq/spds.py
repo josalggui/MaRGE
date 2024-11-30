@@ -57,19 +57,19 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip='Number of repetitions of the full scan.')
         self.addParameter(key='FreqOffset', string='Frequency offset (kHz)', val=0, units=units.kHz, field='RF',
                           tip='Frequency offset respect Larmor.')
-        self.addParameter(key='rfExFA', string='Excitation Flip Angle (degrees)', val=90.0, field='RF',
+        self.addParameter(key='rfExFA', string='Excitation Flip Angle (degrees)', val=45.0, field='RF',
                           tip="Flip angle of the excitation RF pulse in degrees")
         self.addParameter(key='rfExTime', string='Excitation time (us)', val=100.0, units=units.us, field='RF',
                           tip="Duration of the RF excitation pulse in microseconds (us).")
-        self.addParameter(key='nPoints', string='Matrix size [rd, ph, sl]', val=[2, 2, 2], field='IM',
+        self.addParameter(key='nPoints', string='Matrix size [rd, ph, sl]', val=[10, 10, 10], field='IM',
                           tip='Matrix size for the acquired images.')
-        self.addParameter(key='fov', string='Field of View (cm)', val=[20.0, 20.0, 20.0], field='IM',
+        self.addParameter(key='fov', string='Field of View (cm)', val=[5.0, 5.0, 5.0], field='IM',
                           tip='Field of View (cm).')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM',
                           tip="0=x, 1=y, 2=z")
-        self.addParameter(key='repetitionTime', string='Repetition Time (ms)', val=5.0, units=units.ms, field='SEQ',
+        self.addParameter(key='repetitionTime', string='Repetition Time (ms)', val=100.0, units=units.ms, field='SEQ',
                           tip="The time between successive excitation pulses, in milliseconds (ms).")
-        self.addParameter(key='deadTime', string='Dead times (us)', val=[100.0, 200.0], units=units.us, field='SEQ',
+        self.addParameter(key='deadTime', string='Dead times (us)', val=[500.0, 600.0], units=units.us, field='SEQ',
                           tip='Dead time for the two acquisitions in microseconds (us).')
         self.addParameter(key='dummyPulses', string='Number of dummy pulses', val=1, field='SEQ',
                           tip='Number of dummy pulses at the beginning of each batch.')
@@ -93,20 +93,16 @@ class spds(blankSeq.MRIBLANKSEQ):
         Students can extend this method as needed.
         """
 
-        k_max = np.array(self.mapVals['nPoints']) / (2 * np.array(self.mapVals['fov']) * 1e-2)
-        kx = np.linspace(start=-1, stop=1, endpoint=False, num=self.nPoints[0])
-        ky = np.linspace(start=-1, stop=1, endpoint=False, num=self.nPoints[1])
-        kz = np.linspace(start=-1, stop=1, endpoint=False, num=self.nPoints[2])
+        nPoints = self.mapVals['nPoints']
+        kx = np.linspace(start=-1, stop=1, endpoint=False, num=nPoints[0])
+        ky = np.linspace(start=-1, stop=1, endpoint=False, num=nPoints[1])
+        kz = np.linspace(start=-1, stop=1, endpoint=False, num=nPoints[2])
         ky, kz, kx = np.meshgrid(ky, kz, kx)
         k_norm = np.zeros(shape=(np.size(kx), 3))
         k_norm[:, 0] = np.reshape(kx, -1)
         k_norm[:, 1] = np.reshape(ky, -1)
         k_norm[:, 2] = np.reshape(kz, -1)
         distance = np.sqrt(np.sum(k_norm ** 2, axis=1))
-        k_cartesian = np.zeros_like(k_norm)
-        k_cartesian[:, 0] = k_norm[:, 0] * k_max[0]
-        k_cartesian[:, 1] = k_norm[:, 1] * k_max[1]
-        k_cartesian[:, 2] = k_norm[:, 2] * k_max[2]
         self.mask = distance <= 1
         n = np.sum(self.mask)
 
@@ -174,7 +170,7 @@ class spds(blankSeq.MRIBLANKSEQ):
             grad_unit='mT/m',  # Units of gradient strength
             max_slew=hw.max_slew_rate,  # Maximum gradient slew rate (mT/m/ms)
             slew_unit='mT/m/ms',  # Units of gradient slew rate
-            grad_raster_time=10e-6,  # Gradient raster time (s)
+            grad_raster_time=1e-6,  # Gradient raster time (s)
             rise_time=hw.grad_rise_time,  # Gradient rise time (s)
             rf_raster_time=1e-6,
             block_duration_raster=1e-6
@@ -312,12 +308,12 @@ class spds(blankSeq.MRIBLANKSEQ):
         block_adc_a = pp.make_adc(
             num_samples=n_rd,
             dwell=1 / bw_a * 1e-6,
-            delay=self.repetitionTime - time_acq_a,
+            delay=self.repetitionTime - n_rd / bw_a * 1e-6,
         )
         block_adc_b = pp.make_adc(
             num_samples=n_rd,
             dwell=1 / bw_b * 1e-6,
-            delay=self.repetitionTime - time_acq_b,
+            delay=self.repetitionTime - n_rd / bw_a * 1e-6,
         )
 
         '''
