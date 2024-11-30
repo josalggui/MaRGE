@@ -17,8 +17,6 @@ import scipy.signal as sig
 import csv
 import ismrmrd
 import matplotlib.pyplot as plt
-import pypulseq as pp
-from flocra_pulseq.interpreter import PSInterpreter
 from skimage.util import view_as_blocks
 from skimage.measure import shannon_entropy
 
@@ -83,10 +81,6 @@ class MRIBLANKSEQ:
                          'tx1': [[],[]],
                          'ttl0': [[],[]],
                          'ttl1': [[],[]],}
-
-        # Initialize the sequence
-        self.seq = pp.Sequence()
-
 
 
     # *********************************************************************************
@@ -176,6 +170,7 @@ class MRIBLANKSEQ:
                    bandwidth=0.03,
                    decimate='Normal',
                    hardware=True,
+                   output='',
                    ):
         """
         Execute multiple batches of MRI waveforms, manage data acquisition, and store oversampled data.
@@ -199,7 +194,9 @@ class MRIBLANKSEQ:
             - 'Normal': Decimates the acquired array without preprocessing.
             - 'PETRA': Adjusts the pre-readout points to the desired starting point.
         hardware: bool, optional
-            Take into account gradient and ADC delay
+            Take into account gradient and ADC delay.
+        output: str, optional
+            String to add to the output keys saved in the mapVals parameter.
 
         Returns:
         --------
@@ -277,9 +274,14 @@ class MRIBLANKSEQ:
                     print(f"Scan {scan + 1}, batch {seq_num[-1]}/{len(n_readouts)} ready!")
 
                 # Decimate the oversampled data and store it
-                self.mapVals['data_over'] = data_over
-                data = self.decimate(data_over, n_adc=n_adc, option='Normal', remove=False)
-                self.mapVals['data_decimated'] = data
+                if output=='':
+                    self.mapVals[f'data_over'] = data_over
+                    data = self.decimate(data_over, n_adc=n_adc, option='Normal', remove=False)
+                    self.mapVals[f'data_decimated'] = data
+                else:
+                    self.mapVals[f'data_over_{output}'] = data_over
+                    data = self.decimate(data_over, n_adc=n_adc, option='Normal', remove=False)
+                    self.mapVals[f'data_decimated_{output}'] = data
 
             elif self.plotSeq and self.standalone:
                 # Plot the sequence if requested and return immediately
@@ -1468,14 +1470,6 @@ class MRIBLANKSEQ:
                                    }, rewrite)
         return True
 
-
-
-
-
-
-
-
-
     def saveRawData(self):
         
         """
@@ -1589,8 +1583,7 @@ class MRIBLANKSEQ:
                 destination_file = os.path.join(destination_folder, 'seq', file_name+'_%s.seq' % batch_num)
                 shutil.move(source_file, destination_file)
                 print(f'Moved: {file_name} to {destination_folder}')
-       
-        
+
     def image2Dicom(self, fileName): 
         """
         Save the DICOM image.
@@ -1658,11 +1651,6 @@ class MRIBLANKSEQ:
 
         # Save DICOM file
         dicom_image.save(fileName)
-        
-        
-        
-        
-        
 
     def addParameter(self, key='', string='', val=0, units=True, field='', tip=None):
         """
@@ -1796,6 +1784,90 @@ class MRIBLANKSEQ:
         self.mapVals[key] = val
         self.mapNmspc[key] = string
         self.map_units[key] = unit
+
+    @staticmethod
+    def fix_image_orientation(image, axes):
+        """
+        Adjusts the orientation of a 3D image array to match standard anatomical planes
+        (sagittal, coronal, or transversal) and returns the oriented image along with labeling
+        and metadata for visualization.
+
+        Args:
+            image (np.ndarray): A 3D numpy array representing the image data to be reoriented.
+            axes (list[int]): A list of three integers representing the current order of the
+                              axes in the image (e.g., [0, 1, 2] for x, y, z).
+
+        Returns:
+            dict: A dictionary containing the following keys:
+                - 'widget': A fixed string "image" indicating the type of data for visualization.
+                - 'data': The reoriented 3D image array (np.ndarray).
+                - 'xLabel': A string representing the label for the x-axis in the visualization.
+                - 'yLabel': A string representing the label for the y-axis in the visualization.
+                - 'title': A string representing the title of the visualization (e.g., "Sagittal").
+        """
+
+        # Get axes in strings
+        axes_dict = {'x': 0, 'y': 1, 'z': 2}
+        axes_keys = list(axes_dict.keys())
+        axes_vals = list(axes_dict.values())
+        axes_str = ['', '', '']
+        n = 0
+        for val in axes:
+            index = axes_vals.index(val)
+            axes_str[n] = axes_keys[index]
+            n += 1
+
+        # Create output dictionaries to plot figures
+        x_label = "%s axis" % axes_str[1]
+        y_label = "%s axis" % axes_str[0]
+        title = "Image"
+        if axes[2] == 2:  # Sagittal
+            title = "Sagittal"
+            if axes[0] == 0 and axes[1] == 1:
+                image = np.flip(image, axis=0)
+                x_label = "(-Y) A | PHASE | P (+Y)"
+                y_label = "(-X) I | READOUT | S (+X)"
+                image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+            else:
+                image = np.transpose(image, (0, 2, 1))
+                image = np.flip(image, axis=0)
+                x_label = "(-Y) A | READOUT | P (+Y)"
+                y_label = "(-X) I | PHASE | S (+X)"
+                image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+        elif axes[2] == 1:  # Coronal
+            title = "Coronal"
+            if axes[0] == 0 and axes[1] == 2:
+                x_label = "(+Z) R | PHASE | L (-Z)"
+                y_label = "(-X) I | READOUT | S (+X)"
+                image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
+            else:
+                image = np.transpose(image, (0, 2, 1))
+                x_label = "(+Z) R | READOUT | L (-Z)"
+                y_label = "(-X) I | PHASE | S (+X)"
+                image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
+        elif axes[2] == 0:  # Transversal
+            title = "Transversal"
+            if axes[0] == 1 and axes[1] == 2:
+                image = np.flip(image, axis=0)
+                x_label = "(+Z) R | PHASE | L (-Z)"
+                y_label = "(+Y) P | READOUT | A (-Y)"
+                image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+            else:
+                image = np.transpose(image, (0, 2, 1))
+                image = np.flip(image, axis=0)
+                x_label = "(+Z) R | READOUT | L (-Z)"
+                y_label = "(+Y) P | PHASE | A (-Y)"
+                image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+
+        output = {
+            'widget': 'image',
+            'data': image,
+            'xLabel': x_label,
+            'yLabel': y_label,
+            'title': title,
+        }
+
+        return output
 
     @staticmethod
     def runIFFT(k_space):

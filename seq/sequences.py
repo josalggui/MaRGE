@@ -13,6 +13,7 @@ import seq.rareProtocolsTest as rareProtocolsTest
 import seq.gre3d as gre3d
 import seq.gre1d as gre1d
 import seq.petra as petra
+import seq.spds as spds
 import seq.fid as fid
 import seq.FIDandNoise as FIDandNoise
 import seq.rabiFlops as rabiFlops
@@ -32,7 +33,6 @@ import seq.autoTuning as autoTuning
 import seq.localizer as localizer
 # import seq.MRID as mrid
 import seq.tsePrescan as tsePrescan
-# import seq.PETRAphysio as PETRAphysio
 import seq.larmor_raw as larmor_raw
 import seq.mse as mse
 import seq.pulseq_reader as pulseq_reader
@@ -43,9 +43,6 @@ import seq.rare_t2prep_pp as rare_t2prep_pp
 
 class RARE(rare.RARE):
     def __init__(self): super(RARE, self).__init__()
-
-# class PETRAphysio(PETRAphysio.PETRAphysio):
-#     def __init__(self): super(PETRAphysio, self).__init__()
 
 class TSEPrescan(tsePrescan.TSEPRE):
     def __init__(self): super(TSEPrescan, self).__init__()
@@ -135,6 +132,7 @@ defaultsequences = {
     'RabiFlops': RabiFlops(),
     'Shimming': Shimming(),
     'AutoTuning': AutoTuning(),
+    'SPDS': spds.spds(),
     'FixGain': fix_gain.FixGain(),
     'TSE_prescan': TSEPrescan(),
     'Localizer': Localizer(),
