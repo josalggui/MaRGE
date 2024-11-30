@@ -171,7 +171,12 @@ class MRIBLANKSEQ:
                 tips[self.mapNmspc[key]] = [self.mapTips[key]]
         return out, tips
 
-    def runBatches(self, waveforms, n_readouts, n_adc, frequency=hw.larmorFreq, bandwidth=0.03, decimate='Normal'):
+    def runBatches(self, waveforms, n_readouts, n_adc,
+                   frequency=hw.larmorFreq,
+                   bandwidth=0.03,
+                   decimate='Normal',
+                   hardware=True,
+                   ):
         """
         Execute multiple batches of MRI waveforms, manage data acquisition, and store oversampled data.
 
@@ -193,6 +198,8 @@ class MRIBLANKSEQ:
             Specifies the decimation method.
             - 'Normal': Decimates the acquired array without preprocessing.
             - 'PETRA': Adjusts the pre-readout points to the desired starting point.
+        hardware: bool, optional
+            Take into account gradient and ADC delay
 
         Returns:
         --------
@@ -228,7 +235,11 @@ class MRIBLANKSEQ:
                 )
 
             # Convert the PyPulseq waveform to the Red Pitaya compatible format
-            self.pypulseq2mriblankseq(waveforms=waveforms[seq_num], shimming=self.shimming, sampling_period=1/bandwidth)
+            self.pypulseq2mriblankseq(waveforms=waveforms[seq_num],
+                                      shimming=self.shimming,
+                                      sampling_period=1/bandwidth,
+                                      hardware=hardware,
+                                      )
 
             # Load the waveforms into Red Pitaya
             if not self.floDict2Exp():
@@ -288,7 +299,11 @@ class MRIBLANKSEQ:
              "It is recommended to overide this method into your sequence.")
         return 0
 
-    def pypulseq2mriblankseq(self, waveforms=None, shimming=np.array([0.0, 0.0, 0.0]), sampling_period=0.0):
+    def pypulseq2mriblankseq(self, waveforms=None,
+                             shimming=np.array([0.0, 0.0, 0.0]),
+                             sampling_period=0.0,
+                             hardware=True,
+                             ):
         """
         Converts PyPulseq waveforms into a format compatible with MRI hardware.
 
@@ -302,6 +317,8 @@ class MRIBLANKSEQ:
             Defaults to [0.0, 0.0, 0.0].
         sampling_period : float, optional
             Sampling period in seconds, used to account for delays in the CIC filter. Defaults to 0.0.
+        hardware: bool, optional
+            Take into account gradient and ADC delay
 
         Returns:
         --------
