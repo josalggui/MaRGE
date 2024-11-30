@@ -63,7 +63,7 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip="Duration of the RF excitation pulse in microseconds (us).")
         self.addParameter(key='nPoints', string='Matrix size [rd, ph, sl]', val=[10, 10, 10], field='IM',
                           tip='Matrix size for the acquired images.')
-        self.addParameter(key='fov', string='Field of View (cm)', val=[5.0, 5.0, 5.0], field='IM',
+        self.addParameter(key='fov', string='Field of View (cm)', val=[15.0, 15.0, 15.0], field='IM',
                           tip='Field of View (cm).')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM',
                           tip="0=x, 1=y, 2=z")
@@ -313,7 +313,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         block_adc_b = pp.make_adc(
             num_samples=n_rd,
             dwell=1 / bw_b * 1e-6,
-            delay=self.repetitionTime - n_rd / bw_a * 1e-6,
+            delay=self.repetitionTime - n_rd / bw_b * 1e-6,
         )
 
         '''
