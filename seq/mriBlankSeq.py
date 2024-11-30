@@ -419,14 +419,13 @@ class MRIBLANKSEQ:
         last_time = np.max(last_times)
         self.endSequence(last_time+10)
 
-        # Add gradient latency
-        self.flo_dict['g0'][0][1::] -= hw.gradDelay
-        self.flo_dict['g1'][0][1::] -= hw.gradDelay
-        self.flo_dict['g2'][0][1::] -= hw.gradDelay
-
-        # Account for CIC filter delay
-        self.flo_dict['rx0'][0][1::] += hw.cic_delay_points * sampling_period / hw.oversamplingFactor
-        self.flo_dict['rx1'][0][1::] += hw.cic_delay_points * sampling_period / hw.oversamplingFactor
+        # Add gradient latency and CIC filter delay
+        if hardware:
+            self.flo_dict['g0'][0][1::] -= hw.gradDelay
+            self.flo_dict['g1'][0][1::] -= hw.gradDelay
+            self.flo_dict['g2'][0][1::] -= hw.gradDelay
+            self.flo_dict['rx0'][0][1::] += hw.cic_delay_points * sampling_period / hw.oversamplingFactor
+            self.flo_dict['rx1'][0][1::] += hw.cic_delay_points * sampling_period / hw.oversamplingFactor
 
         # Set everything to zero (again)
         last_times = np.array([value[0][-1] for value in self.flo_dict.values()])
