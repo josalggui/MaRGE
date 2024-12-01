@@ -59,7 +59,7 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip='Frequency offset respect Larmor.')
         self.addParameter(key='rfExFA', string='Excitation Flip Angle (degrees)', val=45.0, field='RF',
                           tip="Flip angle of the excitation RF pulse in degrees")
-        self.addParameter(key='rfExTime', string='Excitation time (us)', val=100.0, units=units.us, field='RF',
+        self.addParameter(key='rfExTime', string='Excitation time (us)', val=50.0, units=units.us, field='RF',
                           tip="Duration of the RF excitation pulse in microseconds (us).")
         self.addParameter(key='nPoints', string='Matrix size [rd, ph, sl]', val=[10, 10, 10], field='IM',
                           tip='Matrix size for the acquired images.')
@@ -67,9 +67,9 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip='Field of View (cm).')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM',
                           tip="0=x, 1=y, 2=z")
-        self.addParameter(key='repetitionTime', string='Repetition Time (ms)', val=100.0, units=units.ms, field='SEQ',
+        self.addParameter(key='repetitionTime', string='Repetition Time (ms)', val=50.0, units=units.ms, field='SEQ',
                           tip="The time between successive excitation pulses, in milliseconds (ms).")
-        self.addParameter(key='deadTime', string='Dead times (us)', val=[500.0, 600.0], units=units.us, field='SEQ',
+        self.addParameter(key='deadTime', string='Dead times (us)', val=[500.0, 550.0], units=units.us, field='SEQ',
                           tip='Dead time for the two acquisitions in microseconds (us).')
         self.addParameter(key='dummyPulses', string='Number of dummy pulses', val=1, field='SEQ',
                           tip='Number of dummy pulses at the beginning of each batch.')
@@ -483,12 +483,17 @@ class spds(blankSeq.MRIBLANKSEQ):
         self.mapVals['space_i_a'] = i_data_a
         self.mapVals['space_i_b'] = i_data_b
 
+        # Generate mask
+        p_max = np.max(np.abs(i_data_a))
+        mask = np.abs(i_data_a) < p_max/3
+
         # Get phase
         i_phase_a = np.angle(i_data_a)
         i_phase_b = np.angle(i_data_b)
 
         # Get magnetic field
         b_field = (i_phase_b - i_phase_a) / (2 * np.pi * hw.gammaB * (self.deadTime[1] - self.deadTime[0]))
+        b_field[mask] = 0
         self.mapVals['b_field'] = b_field
 
         axes_map = {0: "x", 1: "y", 2: "z"}
