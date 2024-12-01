@@ -1799,7 +1799,7 @@ class MRIBLANKSEQ:
 
         Returns:
             dict: A dictionary containing the following keys:
-                - 'widget': A fixed string "image" indicating the type of data for visualization.
+                - 'widget': A fixed string "image" or "curve" indicating the type of data for visualization.
                 - 'data': The reoriented 3D image array (np.ndarray).
                 - 'xLabel': A string representing the label for the x-axis in the visualization.
                 - 'yLabel': A string representing the label for the y-axis in the visualization.

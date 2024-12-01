@@ -63,7 +63,7 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip="Duration of the RF excitation pulse in microseconds (us).")
         self.addParameter(key='nPoints', string='Matrix size [rd, ph, sl]', val=[10, 10, 10], field='IM',
                           tip='Matrix size for the acquired images.')
-        self.addParameter(key='fov', string='Field of View (cm)', val=[15.0, 15.0, 15.0], field='IM',
+        self.addParameter(key='fov', string='Field of View (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM',
                           tip='Field of View (cm).')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM',
                           tip="0=x, 1=y, 2=z")
@@ -73,8 +73,11 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip='Dead time for the two acquisitions in microseconds (us).')
         self.addParameter(key='dummyPulses', string='Number of dummy pulses', val=1, field='SEQ',
                           tip='Number of dummy pulses at the beginning of each batch.')
-        self.addParameter(key='shimming', string='Shimming', val=[0.0, 0.0, 0.0], units=units.sh, field='SEQ',
+        self.addParameter(key='shimming', string='Shimming', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH',
                           tip='Shimming parameter to compensate B0 linear inhomogeneity.')
+        self.addParameter(key='bw', string='Bandwidth (kHz)', val=50.0, units=units.kHz, field='IMG',
+                          tip='Set acquisition bandwidth in kilohertz (kHz).')
+
 
     def sequenceInfo(self):
         """
@@ -183,24 +186,23 @@ class spds(blankSeq.MRIBLANKSEQ):
         '''
 
         # Get k-space info
-        dk = 1 / self.fov
-        k_max = self.nPoints / (2 * self.fov)
+        dk = 1 / self.fov  # m^-1
+        k_max = self.nPoints / (2 * self.fov)  # m^-1
         self.mapVals['dk'] = dk
         self.mapVals['k_max'] = k_max
 
         # Get bandwidths and acquisition window
-        bw_a = np.max(self.nPoints) / (2 * self.deadTime[0])  # Hz
-        bw_b = np.max(self.nPoints) / (2 * self.deadTime[1])  # Hz
-        hw.addRdPoints = 1
+        bw_a = self.bw  # Hz
+        bw_b = self.bw  # Hz
         n_rd = 1 + 2 * hw.addRdPoints
 
         # Get timing parameters
         time_acq_a = n_rd / bw_a  # s
         time_acq_b = n_rd / bw_b  # s
-        time_delay0_a = self.rfExTime / 2 + self.deadTime[0] + time_acq_a / 2
-        time_delay0_b = self.rfExTime / 2 + self.deadTime[1] + time_acq_b / 2
-        time_grad_a = self.repetitionTime - time_delay0_a - hw.grad_rise_time - self.rfExTime / 2
-        time_grad_b = self.repetitionTime - time_delay0_b - hw.grad_rise_time - self.rfExTime / 2
+        time_delay0_a = self.rfExTime / 2 + self.deadTime[0] + time_acq_a / 2  # s
+        time_delay0_b = self.rfExTime / 2 + self.deadTime[1] + time_acq_b / 2  # s
+        time_grad_a = self.repetitionTime - time_delay0_a - hw.grad_rise_time - self.rfExTime / 2  # s
+        time_grad_b = self.repetitionTime - time_delay0_b - hw.grad_rise_time - self.rfExTime / 2  # s
 
         # Get cartesian points
         kx = np.linspace(start=-1, stop=1, endpoint=False, num=self.nPoints[0])
@@ -213,15 +215,15 @@ class spds(blankSeq.MRIBLANKSEQ):
         k_norm[:, 2] = np.reshape(kz, -1)
         distance = np.sqrt(np.sum(k_norm ** 2, axis=1))
         k_cartesian = np.zeros_like(k_norm)
-        k_cartesian[:, 0] = k_norm[:, 0] * k_max[0]
-        k_cartesian[:, 1] = k_norm[:, 1] * k_max[1]
-        k_cartesian[:, 2] = k_norm[:, 2] * k_max[2]
+        k_cartesian[:, 0] = k_norm[:, 0] * k_max[0]  # m^-1
+        k_cartesian[:, 1] = k_norm[:, 1] * k_max[1]  # m^-1
+        k_cartesian[:, 2] = k_norm[:, 2] * k_max[2]  # m^-1
         self.mask = distance <= 1
         self.mapVals['k_cartesian'] = k_cartesian
 
         # Get gradients
-        gradients_a = k_cartesian / (hw.gammaB * self.deadTime[0])
-        gradients_b = k_cartesian / (hw.gammaB * self.deadTime[1])
+        gradients_a = k_cartesian / (hw.gammaB * self.deadTime[0])  # T/m
+        gradients_b = k_cartesian / (hw.gammaB * self.deadTime[1])  # T/m
         gradients_a = gradients_a[self.mask]
         gradients_b = gradients_b[self.mask]
         self.mapVals['gradients_a'] = gradients_a
@@ -476,6 +478,10 @@ class spds(blankSeq.MRIBLANKSEQ):
         k_data_b = np.reshape(k_data_b, (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
         i_data_a = self.runIFFT(k_data_a)
         i_data_b = self.runIFFT(k_data_b)
+        self.mapVals['space_k_a'] = k_data_a
+        self.mapVals['space_k_b'] = k_data_b
+        self.mapVals['space_i_a'] = i_data_a
+        self.mapVals['space_i_b'] = i_data_b
 
         # Get phase
         i_phase_a = np.angle(i_data_a)
@@ -483,24 +489,50 @@ class spds(blankSeq.MRIBLANKSEQ):
 
         # Get magnetic field
         b_field = (i_phase_b - i_phase_a) / (2 * np.pi * hw.gammaB * (self.deadTime[1] - self.deadTime[0]))
+        self.mapVals['b_field'] = b_field
 
-        # Create the outputs to be plotted
-        output_0 = self.fix_image_orientation(np.abs(i_data_a), axes=self.axesOrientation)
-        output_0['row'] = 0
-        output_0['col'] = 0
-
-        # Create the outputs to be plotted
-        output_1 = self.fix_image_orientation(np.abs(i_data_b), axes=self.axesOrientation)
-        output_1['row'] = 0
-        output_1['col'] = 1
+        axes_map = {0: "x", 1: "y", 2: "z"}
+        rd_channel = axes_map.get(self.axesOrientation[0], "")
+        ph_channel = axes_map.get(self.axesOrientation[1], "")
+        sl_channel = axes_map.get(self.axesOrientation[2], "")
 
         # Create the outputs to be plotted
         output_2 = self.fix_image_orientation(b_field, axes=self.axesOrientation)
         output_2['row'] = 0
-        output_2['col'] = 2
+        output_2['col'] = 0
+
+        # Create the outputs to be plotted
+        output_0 = self.fix_image_orientation(np.abs(i_data_a), axes=self.axesOrientation)
+        output_0['row'] = 0
+        output_0['col'] = 1
+
+        # Create the outputs to be plotted
+        output_1 = self.fix_image_orientation(np.abs(i_data_b), axes=self.axesOrientation)
+        output_1['row'] = 0
+        output_1['col'] = 2
+
+        output_3 = {
+            'widget': 'image',
+            'data': np.abs(k_data_a),
+            'xLabel': ph_channel,
+            'yLabel': rd_channel,
+            'title': 'k-space A',
+            'row': 1,
+            'col': 1,
+        }
+
+        output_4 = {
+            'widget': 'image',
+            'data': np.abs(k_data_b),
+            'xLabel': ph_channel,
+            'yLabel': rd_channel,
+            'title': 'k-space B',
+            'row': 1,
+            'col': 2,
+        }
 
         # create self.out to run in iterative mode
-        self.output = [output_0, output_1, output_2]
+        self.output = [output_0, output_1, output_2, output_3, output_4]
 
         # save data once self.output is created
         self.saveRawData()
