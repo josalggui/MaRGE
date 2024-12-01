@@ -13,3 +13,4 @@ pyserial>=3.5
 ismrmrd==1.14.1
 cupy-cuda12x>=13.0.0
 pypulseq==1.4.2
+marga_pulseq>=0.2.2
