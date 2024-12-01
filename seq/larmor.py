@@ -23,13 +23,15 @@ for subdir in subdirs:
 #******************************************************************************
 import controller.experiment_gui as ex
 import numpy as np
-import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import scipy.signal as sig
+import seq.mriBlankSeq as blankSeq
 import configs.hw_config as hw
 import configs.units as units
 
 
 class Larmor(blankSeq.MRIBLANKSEQ):
+    """
+    Runs the Larmor sequence, which uses a spin echo technique to estimate the Larmor frequency.
+    """
     def __init__(self):
         super(Larmor, self).__init__()
         # Input the parameters
@@ -71,6 +73,23 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         return (repetitionTime * nScans / 60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq=0, demo=False, standalone=False):
+        """
+        This method sets up the sequence parameters, including the RF pulse amplitudes, acquisition times,
+        and echo times. It initializes the experiment, runs the scan, and processes the acquired data. The
+        Larmor frequency is determined by the spin echo response.
+
+        Args:
+            plotSeq (int, optional): Flag to indicate if sequence plotting is required. Defaults to 0 (no plotting).
+            demo (bool, optional): Flag to indicate if the sequence should run in demo mode (using simulated data). Defaults to False.
+            standalone (bool, optional): Flag to indicate if the sequence is run in standalone mode (with plotting). Defaults to False.
+
+        Returns:
+            bool: True if the sequence ran successfully, False otherwise.
+
+        Notes:
+            - The sequence assumes that hardware settings are configured correctly (e.g., B1 efficiency, bandwidth).
+            - In demo mode, actual hardware is not used, and simulated data is generated for testing purposes.
+        """
         init_gpa = False  # Starts the gpa
         self.demo = demo
 
@@ -181,6 +200,29 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         return True
 
     def sequenceAnalysis(self, mode=None):
+        """
+        Analyzes the acquired data from the Larmor sequence to determine the Larmor frequency
+        and compute the corresponding time-domain signal and frequency spectrum.
+
+        This method processes the acquired data by generating time and frequency vectors,
+        performing a Fourier transform to obtain the signal spectrum, and determining the
+        central frequency. It updates the Larmor frequency and provides the results in both
+        time and frequency domains. The data is then optionally plotted, and the results are
+        saved for further analysis.
+
+        Args:
+            mode (str, optional): The mode of execution. If set to 'Standalone', the results are plotted
+                                   in a standalone manner. Defaults to None.
+
+        Returns:
+            list: A list containing the time-domain signal and frequency spectrum for visualization.
+
+        Notes:
+            - The Larmor frequency is recalculated based on the signal's central frequency from the spectrum.
+            - The time-domain signal and frequency spectrum are both included in the output layout for visualization.
+            - The results are saved as raw data and can be accessed later.
+            - If the mode is not 'Standalone', the Larmor frequency is updated in all sequences in the sequence list.
+        """
         self.mode = mode
         # Load data
         signal = self.mapVals['data']
