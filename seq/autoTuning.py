@@ -37,6 +37,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(AutoTuning, self).__init__()
         # Input the parameters
+        self.vna = None
         self.freqOffset = None
         self.frequency = None
         self.statesXm = None
@@ -87,6 +88,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         return 0  # minutes, scanTime
 
     def sequenceRun(self, plotSeq=0, demo=False):
+        self.vna = None
         self.demo = demo
         self.s11_hist = []
         self.s11_db_hist = []
@@ -98,19 +100,28 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             print("WARNING: No Arduino found for auto-tuning.")
             return False
         else:
-            # Connect autotuning to VNA and turn it on.
-            self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "00")
-            print("nanoVNA ON")
-            time.sleep(1)
+            counter=0
+            while self.vna.device is None and counter<10:
+                # Turn OFF vna.
+                self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "11")
+                print("nanoVNA OFF")
+                time.sleep(0.5)
 
-            # Connect to VNA
-            self.vna = autotuning.VNA()
-            self.vna.connect()
+                # Turn ON vna.
+                self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "00")
+                print("nanoVNA ON")
+                time.sleep(0.5)
 
-        if self.vna.device is None:
-            print("No nanoVNA found for auto-tuning. \n")
-            print("Only test mode.")
-            return False
+                # Connect to VNA
+                print("Linking to nanoVNA...")
+                self.vna = autotuning.VNA()
+                self.vna.connect()
+
+                if self.vna.device is None:
+                    print("No nanoVNA found for auto-tuning. \n")
+                    return False
+
+                counter += 1
 
         if self.test == 'auto':
             return self.runAutoTuning()
