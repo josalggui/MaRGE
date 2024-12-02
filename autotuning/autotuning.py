@@ -127,8 +127,12 @@ class VNA:
                 return True
             except IndexError:
                 print("WARNING: No interfaces available for nanoVNA auto-tuning")
+                return False
             except Exception as e:
                 print(f"WARNING: Failed to connect to nanoVNA for auto-tuning: {e}")
+                return False
+        else:
+            return True
 
     def getFrequency(self):
         """

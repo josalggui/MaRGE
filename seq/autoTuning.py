@@ -113,15 +113,16 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                 # Connect to VNA
                 print("Linking to nanoVNA...")
                 self.vna = autotuning.VNA()
-                self.vna.connect()
-
-                # Check connection with nanoVNA
-                counter += 1
-                if self.vna.device is None:
-                    print("No nanoVNA found for auto-tuning. \n")
-                    return False
-                else:
+                if self.vna.connect():
                     break
+                else:
+                    counter += 1
+                    print("No nanoVNA found for auto-tuning....\n")
+
+            # Check connection with nanoVNA
+            if self.vna.device is None:
+                print("No nanoVNA found for auto-tuning. \n")
+                return False
 
         if self.test == 'auto':
             return self.runAutoTuning()
