@@ -37,7 +37,6 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(AutoTuning, self).__init__()
         # Input the parameters
-        self.vna = None
         self.freqOffset = None
         self.frequency = None
         self.statesXm = None
@@ -88,20 +87,19 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         return 0  # minutes, scanTime
 
     def sequenceRun(self, plotSeq=0, demo=False):
-        self.vna = None
         self.demo = demo
         self.s11_hist = []
         self.s11_db_hist = []
         self.states_hist = [[], [], []]
         self.n_aux = [[], [], []]
-        self.frequency = hw.larmorFreq+self.freqOffset*1e-6
+        self.frequency = hw.larmorFreq + self.freqOffset * 1e-6
 
         if self.arduino.device is None:
             print("WARNING: No Arduino found for auto-tuning.")
             return False
         else:
-            counter=0
-            while self.vna.device is None and counter<10:
+            counter = 0
+            while counter < 10:
                 # Turn OFF vna.
                 self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "11")
                 print("nanoVNA OFF")
@@ -117,11 +115,13 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                 self.vna = autotuning.VNA()
                 self.vna.connect()
 
+                # Check connection with nanoVNA
+                counter += 1
                 if self.vna.device is None:
                     print("No nanoVNA found for auto-tuning. \n")
                     return False
-
-                counter += 1
+                else:
+                    break
 
         if self.test == 'auto':
             return self.runAutoTuning()
@@ -157,11 +157,11 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         try:
             idx = np.argmin(s_vec_db)
             f0 = f_vec_t[idx]
-            f1 = f_vec_t[np.argmin(np.abs(s_vec_db[0:idx]+3))]
-            f2 = f_vec_t[idx+np.argmin(np.abs(s_vec_db[idx::]+3))]
-            q = f0/(f2-f1)
+            f1 = f_vec_t[np.argmin(np.abs(s_vec_db[0:idx] + 3))]
+            f2 = f_vec_t[idx + np.argmin(np.abs(s_vec_db[idx::] + 3))]
+            q = f0 / (f2 - f1)
             print("Q = %0.0f" % q)
-            print("BW @ -3 dB = %0.0f kHz" % ((f2-f1)*1e3))
+            print("BW @ -3 dB = %0.0f kHz" % ((f2 - f1) * 1e3))
         except:
             pass
 
@@ -503,7 +503,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                     if cm == 0 or cm == 17 or ct == -1 or ct == 32:
                         continue
                     else:
-                        state = self.states[ct]+self.states[cm]
+                        state = self.states[ct] + self.states[cm]
                     # Get s11 if current state has not been tested before
                     if state not in result[3]:
                         cs_bin = self.states[cs]
@@ -577,6 +577,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             iteration += 1
 
         return cs_new, ct_new, cm_new
+
 
 if __name__ == '__main__':
     seq = AutoTuning()
