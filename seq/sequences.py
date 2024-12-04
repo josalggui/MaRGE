@@ -63,7 +63,7 @@ defaultsequences = {
     'TSE': tse.TSE(),
     'EDDYCURRENTS': eddycurrents.EDDYCURRENTS(),
     'InversionRecovery': inversionRecovery.InversionRecovery(),
-    'SWEEP': sweep.SWEEP(),
+    'SWEEP': sweep.SweepImage(),
     'Larmor Raw': larmor_raw.LarmorRaw(),
     'MSE': mse.MSE(),
     'MSE_PyPulseq': mse_pp.MSE(),
