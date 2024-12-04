@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>seq.rabiFlops &mdash; MaRGE 0.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=486e5634"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MaRGE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../seq.html">API reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MaRGE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">seq.rabiFlops</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for seq.rabiFlops</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">@author: T. Guallart</span>
+<span class="sd">@author: J.M. Algarín</span>
+
+<span class="sd">@summary: increase the pulse width and plot the peak value of the signal received </span>
+<span class="sd">@status: under development</span>
+<span class="sd">@todo:</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="c1">#*****************************************************************************</span>
+<span class="c1"># Get the directory of the current script</span>
+<span class="n">main_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">parent_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">main_directory</span><span class="p">)</span>
+<span class="n">parent_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">parent_directory</span><span class="p">)</span>
+
+<span class="c1"># Define the subdirectories you want to add to sys.path</span>
+<span class="n">subdirs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MaRGE&#39;</span><span class="p">,</span> <span class="s1">&#39;marcos_client&#39;</span><span class="p">]</span>
+
+<span class="c1"># Add the subdirectories to sys.path</span>
+<span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="n">subdirs</span><span class="p">:</span>
+    <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parent_directory</span><span class="p">,</span> <span class="n">subdir</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+<span class="c1">#*****************************************************************************</span>
+<span class="kn">import</span> <span class="nn">experiment</span> <span class="k">as</span> <span class="nn">ex</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">seq.mriBlankSeq</span> <span class="k">as</span> <span class="nn">blankSeq</span>  <span class="c1"># Import the mriBlankSequence for any new sequence.</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span> <span class="k">as</span> <span class="nn">sig</span>
+<span class="kn">import</span> <span class="nn">configs.hw_config</span> <span class="k">as</span> <span class="nn">hw</span>
+
+
+<div class="viewcode-block" id="RabiFlops">
+<a class="viewcode-back" href="../../seq.html#seq.rabiFlops.RabiFlops">[docs]</a>
+<span class="k">class</span> <span class="nc">RabiFlops</span><span class="p">(</span><span class="n">blankSeq</span><span class="o">.</span><span class="n">MRIBLANKSEQ</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RabiFlops</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="c1"># Input the parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cal_method</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;seqName&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RabiFlopsInfo&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="s1">&#39;RabiFlops&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nScans&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Number of scans&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;freqOffset&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Larmor frequency offset (kHz)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfExAmp&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF excitation amplitude (a.u.)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfReAmp&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF refocusing amplitude (a.u.)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfReTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF refocusing time (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;echoTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Echo time (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;repetitionTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Repetition time (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">500.</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nPoints&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;nPoints&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;IM&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;acqTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Acquisition time (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;shimming&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Shimming (*1e-4)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">12.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">12.5</span><span class="p">,</span> <span class="mf">7.5</span><span class="p">],</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;OTH&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfExTime0&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Rf pulse time, Start (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfExTime1&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF pulse time, End (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nSteps&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Number of steps&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;deadTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Dead time (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfRefPhase&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Refocusing phase (degrees)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Rephasing method: 0-&gt;Amp, 1-&gt;Time&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;dummyPulses&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Dummy pulses&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;cal_method&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Calibration method&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="s1">&#39;FID&#39;</span><span class="p">,</span> <span class="n">tip</span><span class="o">=</span><span class="s1">&#39;FID or ECHO&#39;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;OTH&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RabiFlops.sequenceInfo">
+<a class="viewcode-back" href="../../seq.html#seq.rabiFlops.RabiFlops.sequenceInfo">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rabi Flops&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Author: Dr. J.M. Algarín&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Contact: josalggui@i3m.upv.es&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mriLab @ i3M, CSIC, Spain&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rabi Flops with different methods&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Notes:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Set RF refocusing amplitude to 0.0 to get single excitation behavior&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Set RF refocusing time to 0.0 to auto set the RF refocusing time:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-If Rephasing method = 0, refocusing amplitude is twice the excitation amplitude&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-If Rephasing method = 1, refocusing time is twice the excitation time</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+        
+
+<div class="viewcode-block" id="RabiFlops.sequenceTime">
+<a class="viewcode-back" href="../../seq.html#seq.rabiFlops.RabiFlops.sequenceTime">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceTime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">nScans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nScans&#39;</span><span class="p">]</span>
+        <span class="n">nSteps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nSteps&#39;</span><span class="p">]</span>
+        <span class="n">dummyPulses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;dummyPulses&#39;</span><span class="p">]</span>
+        <span class="n">repetitionTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;repetitionTime&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e-3</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">repetitionTime</span> <span class="o">*</span> <span class="n">nScans</span> <span class="o">*</span> <span class="n">nSteps</span> <span class="o">*</span> <span class="p">(</span><span class="n">dummyPulses</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span>  <span class="c1"># minutes, scanTime</span></div>
+
+
+<div class="viewcode-block" id="RabiFlops.sequenceRun">
+<a class="viewcode-back" href="../../seq.html#seq.rabiFlops.RabiFlops.sequenceRun">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceRun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plotSeq</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">demo</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">init_gpa</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Starts the gpa</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">demo</span> <span class="o">=</span> <span class="n">demo</span>
+
+        <span class="c1"># I do not understand why I cannot create the input parameters automatically</span>
+        <span class="n">seqName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;seqName&#39;</span><span class="p">]</span>
+        <span class="n">nScans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nScans&#39;</span><span class="p">]</span>
+        <span class="n">freqOffset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;freqOffset&#39;</span><span class="p">]</span>
+        <span class="n">rfExAmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfExAmp&#39;</span><span class="p">]</span>
+        <span class="n">rfReAmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfReAmp&#39;</span><span class="p">]</span>
+        <span class="n">echoTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;echoTime&#39;</span><span class="p">]</span>
+        <span class="n">repetitionTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;repetitionTime&#39;</span><span class="p">]</span>
+        <span class="n">nPoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nPoints&#39;</span><span class="p">]</span>
+        <span class="n">acqTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;acqTime&#39;</span><span class="p">]</span>
+        <span class="n">shimming</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;shimming&#39;</span><span class="p">])</span>
+        <span class="n">rfExTime0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfExTime0&#39;</span><span class="p">]</span>
+        <span class="n">rfExTime1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfExTime1&#39;</span><span class="p">]</span>
+        <span class="n">nSteps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nSteps&#39;</span><span class="p">]</span>
+        <span class="n">deadTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;deadTime&#39;</span><span class="p">]</span>
+        <span class="n">rfRefPhase</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfRefPhase&#39;</span><span class="p">]</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span>
+        <span class="n">rfReTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfReTime&#39;</span><span class="p">]</span>
+        <span class="n">dummyPulses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;dummyPulses&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Time variables in us and MHz</span>
+        <span class="n">freqOffset</span> <span class="o">*=</span> <span class="mf">1e-3</span>
+        <span class="n">echoTime</span> <span class="o">*=</span> <span class="mf">1e3</span>
+        <span class="n">repetitionTime</span> <span class="o">*=</span> <span class="mf">1e3</span>
+        <span class="n">acqTime</span> <span class="o">*=</span> <span class="mf">1e3</span>
+        <span class="n">shimming</span> <span class="o">=</span> <span class="n">shimming</span> <span class="o">*</span> <span class="mf">1e-4</span>
+
+        <span class="c1"># Rf excitation time vector</span>
+        <span class="n">rfTime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">rfExTime0</span><span class="p">,</span> <span class="n">rfExTime1</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">nSteps</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># us</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfTime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rfTime</span> <span class="o">*</span> <span class="mf">1e-6</span>  <span class="c1"># s</span>
+
+        <span class="k">def</span> <span class="nf">createSequence</span><span class="p">():</span>
+            <span class="c1"># Set shimming</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iniSequence</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">shimming</span><span class="p">)</span>
+
+            <span class="n">tEx</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># First excitation at 1 ms</span>
+            <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nScans</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nSteps</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">pulse</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dummyPulses</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="c1"># Excitation pulse</span>
+                        <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span> <span class="o">-</span> <span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span> <span class="o">-</span> <span class="n">rfTime</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">rfRecPulse</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">rfTime</span><span class="p">[</span><span class="n">step</span><span class="p">],</span> <span class="n">rfExAmp</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+                        <span class="c1"># Rx gate for FID</span>
+                        <span class="k">if</span> <span class="n">pulse</span> <span class="o">==</span> <span class="n">dummyPulses</span><span class="p">:</span>
+                            <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span> <span class="o">+</span> <span class="n">rfTime</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">deadTime</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">rxGate</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">acqTime</span><span class="p">)</span>
+
+                        <span class="c1"># Refocusing pulse</span>
+                        <span class="k">if</span> <span class="n">method</span><span class="p">:</span>  <span class="c1"># time</span>
+                            <span class="k">if</span> <span class="n">rfReTime</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                                <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span> <span class="o">+</span> <span class="n">echoTime</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span> <span class="o">-</span> <span class="n">rfTime</span><span class="p">[</span><span class="n">step</span><span class="p">]</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">rfRecPulse</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">rfTime</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">rfReAmp</span><span class="p">,</span> <span class="n">rfRefPhase</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span> <span class="o">+</span> <span class="n">echoTime</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span> <span class="o">-</span> <span class="n">rfReTime</span> <span class="o">/</span> <span class="mi">2</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">rfRecPulse</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">rfReTime</span><span class="p">,</span> <span class="n">rfReAmp</span><span class="p">,</span> <span class="n">rfRefPhase</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>  <span class="c1"># amplitude</span>
+                            <span class="k">if</span> <span class="n">rfReTime</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                                <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span> <span class="o">+</span> <span class="n">echoTime</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span> <span class="o">-</span> <span class="n">rfTime</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">rfRecPulse</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">rfTime</span><span class="p">[</span><span class="n">step</span><span class="p">],</span> <span class="n">rfExAmp</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">rfRefPhase</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span> <span class="o">+</span> <span class="n">echoTime</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span> <span class="o">-</span> <span class="n">rfReTime</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">rfRecPulse</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">rfReTime</span><span class="p">,</span> <span class="n">rfExAmp</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">rfRefPhase</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span><span class="p">)</span>
+
+                        <span class="c1"># Rx gate for Echo</span>
+                        <span class="k">if</span> <span class="n">pulse</span> <span class="o">==</span> <span class="n">dummyPulses</span><span class="p">:</span>
+                            <span class="n">t0</span> <span class="o">=</span> <span class="n">tEx</span> <span class="o">+</span> <span class="n">echoTime</span> <span class="o">-</span> <span class="n">acqTime</span> <span class="o">/</span> <span class="mi">2</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">rxGate</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">acqTime</span><span class="p">)</span>
+
+                        <span class="c1"># Update exitation time for next repetition</span>
+                        <span class="n">tEx</span> <span class="o">+=</span> <span class="n">repetitionTime</span>
+
+            <span class="c1"># Turn off the gradients after the end of the batch</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">endSequence</span><span class="p">(</span><span class="n">repetitionTime</span> <span class="o">*</span> <span class="n">nSteps</span> <span class="o">*</span> <span class="n">nScans</span> <span class="o">*</span> <span class="p">(</span><span class="n">dummyPulses</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># Create experiment</span>
+        <span class="n">bw</span> <span class="o">=</span> <span class="n">nPoints</span> <span class="o">/</span> <span class="n">acqTime</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span>  <span class="c1"># MHz</span>
+        <span class="n">samplingPeriod</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">bw</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expt</span> <span class="o">=</span> <span class="n">ex</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="n">lo_freq</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">larmorFreq</span> <span class="o">+</span> <span class="n">freqOffset</span><span class="p">,</span>
+                                      <span class="n">rx_t</span><span class="o">=</span><span class="n">samplingPeriod</span><span class="p">,</span>
+                                      <span class="n">init_gpa</span><span class="o">=</span><span class="n">init_gpa</span><span class="p">,</span>
+                                      <span class="n">gpa_fhdo_offset_time</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">0.2</span> <span class="o">/</span> <span class="mf">3.1</span><span class="p">),</span>
+                                      <span class="n">print_infos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                      <span class="p">)</span>
+            <span class="n">samplingPeriod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="n">get_rx_ts</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;samplingPeriod&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">samplingPeriod</span>
+        <span class="n">bw</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">samplingPeriod</span> <span class="o">/</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;bw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bw</span> <span class="o">*</span> <span class="mf">1e6</span>
+        <span class="n">acqTime</span> <span class="o">=</span> <span class="n">nPoints</span> <span class="o">/</span> <span class="n">bw</span>
+
+        <span class="c1"># Execute the experiment</span>
+        <span class="n">createSequence</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">floDict2Exp</span><span class="p">(</span><span class="n">demo</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sequence waveforms loaded successfully&quot;</span><span class="p">)</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: sequence waveforms out of hardware bounds&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">plotSeq</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">:</span>
+                <span class="n">rxd</span><span class="p">,</span> <span class="n">msgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="fm">__del__</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">msgs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rxd</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;rx0&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nSteps</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">)</span> <span class="o">+</span>
+                              <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nSteps</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">)}</span>
+            <span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx0&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">adcFactor</span>  <span class="c1"># Here I normalize to get the result in mV</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;dataOversampled&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx0&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="RabiFlops.sequenceAnalysis">
+<a class="viewcode-back" href="../../seq.html#seq.rabiFlops.RabiFlops.sequenceAnalysis">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="n">nScans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nScans&#39;</span><span class="p">]</span>
+        <span class="n">nSteps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nSteps&#39;</span><span class="p">]</span>
+        <span class="n">nPoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nPoints&#39;</span><span class="p">]</span>
+        <span class="n">dataOversampled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;dataOversampled&#39;</span><span class="p">]</span>
+        <span class="n">timeVector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfTime&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Get FID and Echo</span>
+        <span class="n">dataFull</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">decimate</span><span class="p">(</span><span class="n">dataOversampled</span><span class="p">,</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">,</span> <span class="n">ftype</span><span class="o">=</span><span class="s1">&#39;fir&#39;</span><span class="p">,</span> <span class="n">zero_phase</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;dataFull&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataFull</span>
+        <span class="n">dataFull</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dataFull</span><span class="p">,</span> <span class="p">(</span><span class="n">nScans</span><span class="p">,</span> <span class="n">nSteps</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">dataFID</span> <span class="o">=</span> <span class="n">dataFull</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;dataFID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataFID</span>
+        <span class="n">dataEcho</span> <span class="o">=</span> <span class="n">dataFull</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;dataEcho&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataEcho</span>
+        <span class="n">dataFIDAvg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dataFID</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;dataFIDAvg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataFIDAvg</span>
+        <span class="n">dataEchoAvg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dataEcho</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;dataEchoAvg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataEchoAvg</span>
+
+        <span class="n">rabiFID</span> <span class="o">=</span> <span class="n">dataFIDAvg</span><span class="p">[:,</span> <span class="mi">10</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rabiFID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rabiFID</span>
+        <span class="n">rabiEcho</span> <span class="o">=</span> <span class="n">dataEchoAvg</span><span class="p">[:,</span> <span class="nb">int</span><span class="p">(</span><span class="n">nPoints</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rabiEcho&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rabiEcho</span>
+
+        <span class="c1"># Get values for pi/2 and pi pulses</span>
+        <span class="n">test</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="n">test</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="n">nSteps</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cal_method</span> <span class="o">==</span> <span class="s1">&#39;FID&#39;</span><span class="p">:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rabiFID</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rabiFID</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">cal_method</span> <span class="o">==</span> <span class="s1">&#39;ECHO&#39;</span><span class="p">:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rabiEcho</span><span class="p">[</span><span class="n">n</span><span class="p">])</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rabiEcho</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">test</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">piHalfTime</span> <span class="o">=</span> <span class="n">timeVector</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e6</span>  <span class="c1"># us</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;piHalfTime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">piHalfTime</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;pi/2 pulse with RF amp = </span><span class="si">%0.2f</span><span class="s2"> a.u. and pulse time = </span><span class="si">%0.1f</span><span class="s2"> us&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfExAmp&#39;</span><span class="p">],</span>
+                                                                                   <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;piHalfTime&#39;</span><span class="p">]))</span>
+        <span class="n">hw</span><span class="o">.</span><span class="n">b1Efficiency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;rfExAmp&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">piHalfTime</span><span class="p">)</span>
+
+        <span class="c1"># Signal vs rf time</span>
+        <span class="n">result1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="s1">&#39;curve&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;xData&#39;</span><span class="p">:</span> <span class="n">timeVector</span> <span class="o">*</span> <span class="mf">1e6</span><span class="p">,</span>
+                   <span class="s1">&#39;yData&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rabiFID</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">rabiFID</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">rabiFID</span><span class="p">)],</span>
+                   <span class="s1">&#39;xLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Time (us)&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;yLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Signal amplitude (mV)&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Rabi Flops with FID&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;legend&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;abs&#39;</span><span class="p">,</span> <span class="s1">&#39;real&#39;</span><span class="p">,</span> <span class="s1">&#39;imag&#39;</span><span class="p">],</span>
+                   <span class="s1">&#39;row&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                   <span class="s1">&#39;col&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+
+        <span class="n">result2</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="s1">&#39;curve&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;xData&#39;</span><span class="p">:</span> <span class="n">timeVector</span> <span class="o">*</span> <span class="mf">1e6</span><span class="p">,</span>
+                   <span class="s1">&#39;yData&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rabiEcho</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">rabiEcho</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">rabiEcho</span><span class="p">)],</span>
+                   <span class="s1">&#39;xLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Time (us)&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;yLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Signal amplitude (mV)&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Rabi Flops with Spin Echo&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;legend&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;abs&#39;</span><span class="p">,</span> <span class="s1">&#39;real&#39;</span><span class="p">,</span> <span class="s1">&#39;imag&#39;</span><span class="p">],</span>
+                   <span class="s1">&#39;row&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                   <span class="s1">&#39;col&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="n">result1</span><span class="p">,</span> <span class="n">result2</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveRawData</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;Standalone&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotResults</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span></div>
+</div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">seq</span> <span class="o">=</span> <span class="n">RabiFlops</span><span class="p">()</span>
+    <span class="n">seq</span><span class="o">.</span><span class="n">sequenceAtributes</span><span class="p">()</span>
+    <span class="n">seq</span><span class="o">.</span><span class="n">sequenceRun</span><span class="p">(</span><span class="n">demo</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">seq</span><span class="o">.</span><span class="n">sequenceAnalysis</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;Standalone&#39;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, J.M. Algarín.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

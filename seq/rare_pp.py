@@ -155,6 +155,28 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plot_seq=False, demo=False, standalone=False):
+        """
+        Runs the RARE MRI pulse sequence.
+
+        This method orchestrates the execution of the RARE sequence by performing several key steps:
+        1. Define the interpreter (FloSeq/PSInterpreter) to convert the sequence description into scanner instructions.
+        2. Set system properties using PyPulseq (`pp.Opts`), which define hardware capabilities such as maximum gradient strengths and slew rates.
+        3. Perform any necessary calculations for the sequence, such as timing, RF amplitudes, and gradient strengths.
+        4. Define the experiment to determine the true bandwidth by using `get_sampling_period()` with an experiment defined as a class property (`self.expt`).
+        5. Define sequence blocks including RF and gradient pulses that form the building blocks of the MRI sequence.
+        6. Implement the `initializeBatch` method to create dummy pulses for each new batch.
+        7. Define and populate the `createBatches` method, which accounts for the number of acquired points to determine when a new batch is needed.
+        8. Run the batches and return the resulting data. Oversampled data is stored in `self.mapVals['data_over']`, and decimated data in `self.mapVals['data_decimated']`.
+
+        Parameters:
+        - plot_seq (bool): If True, plots the pulse sequence.
+        - demo (bool): If True, runs the sequence in demo mode with simulated hardware.
+        - standalone (bool): If True, runs the sequence as a standalone operation.
+
+        Returns:
+        - result (bool): The result of running the sequence, including oversampled and decimated data.
+        """
+
         self.demo = demo
         self.plotSeq = plot_seq
         self.standalone = standalone
@@ -771,6 +793,40 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                                )
 
     def sequenceAnalysis(self, mode=None):
+        """
+        Analyzes the sequence data and performs several steps including data extraction, processing,
+        noise estimation, dummy pulse separation, signal decimation, data reshaping, Fourier transforms,
+        and image reconstruction.
+
+        Parameters:
+        mode (str, optional): A string indicating the mode of operation. If set to 'Standalone',
+                               additional plotting will be performed. Default is None.
+
+        The method performs the following key operations:
+        1. Extracts relevant data from `self.mapVals`, including the data for readouts, signal,
+           noise, and dummy pulses.
+        2. Decimates the signal data to match the desired bandwidth and reorganizes the data for
+           further analysis.
+        3. Performs averaging on the data and reorganizes it according to sweep order.
+        4. Computes the central line and adjusts for any drift in the k-space data.
+        5. Applies zero-padding to the data to match the expected resolution.
+        6. Computes the k-space trajectory (kRD, kPH, kSL) and applies the phase correction.
+        7. Performs inverse Fourier transforms to reconstruct the 3D image data.
+        8. Saves the processed data and produces plots for visualization based on the mode of operation.
+        9. Optionally outputs sampled data and performs DICOM formatting for medical imaging storage.
+
+        The method also handles the creation of various output results that can be plotted in the GUI,
+        including signal curves, frequency spectra, and 3D images. It also updates the metadata for
+        DICOM storage.
+
+        The sequence of operations ensures the data is processed correctly according to the
+        hardware setup and scan parameters.
+
+        Results are saved in `self.mapVals` and visualized depending on the provided mode. The method
+        also ensures proper handling of rotation angles and field-of-view (dfov) values, resetting
+        them as necessary.
+        """
+
         self.mode = mode
 
         # Get data
@@ -944,68 +1000,12 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             image = np.abs(self.mapVals['image3D'])
             image = image/np.max(np.reshape(image,-1))*100
 
-            # Image orientation
-            image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
-            x_label = "%s axis" % axesStr[1]
-            y_label = "%s axis" % axesStr[0]
-            title = "Image"
-            if not self.unlock_orientation: # Image orientation
-                if self.axesOrientation[2] == 2:  # Sagittal
-                    title = "Sagittal"
-                    if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 1:  #OK
-                        image = np.flip(image, axis=2)
-                        image = np.flip(image, axis=1)
-                        x_label = "(-Y) A | PHASE | P (+Y)"
-                        y_label = "(-X) I | READOUT | S (+X)"
-                        image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
-                    else:
-                        image = np.transpose(image, (0, 2, 1))
-                        image = np.flip(image, axis=2)
-                        image = np.flip(image, axis=1)
-                        x_label = "(-Y) A | READOUT | P (+Y)"
-                        y_label = "(-X) I | PHASE | S (+X)"
-                        image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
-                elif self.axesOrientation[2] == 1: # Coronal
-                    title = "Coronal"
-                    if self.axesOrientation[0] == 0 and self.axesOrientation[1] == 2: #OK
-                        image = np.flip(image, axis=2)
-                        image = np.flip(image, axis=1)
-                        image = np.flip(image, axis=0)
-                        x_label = "(+Z) R | PHASE | L (-Z)"
-                        y_label = "(-X) I | READOUT | S (+X)"
-                        image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
-                    else:
-                        image = np.transpose(image, (0, 2, 1))
-                        image = np.flip(image, axis=2)
-                        image = np.flip(image, axis=1)
-                        image = np.flip(image, axis=0)
-                        x_label = "(+Z) R | READOUT | L (-Z)"
-                        y_label = "(-X) I | PHASE | S (+X)"
-                        image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
-                elif self.axesOrientation[2] == 0:  # Transversal
-                    title = "Transversal"
-                    if self.axesOrientation[0] == 1 and self.axesOrientation[1] == 2:
-                        image = np.flip(image, axis=2)
-                        image = np.flip(image, axis=1)
-                        x_label = "(+Z) R | PHASE | L (-Z)"
-                        y_label = "(+Y) P | READOUT | A (-Y)"
-                        image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
-                    else:  #OK
-                        image = np.transpose(image, (0, 2, 1))
-                        image = np.flip(image, axis=2)
-                        image = np.flip(image, axis=1)
-                        x_label = "(+Z) R | READOUT | L (-Z)"
-                        y_label = "(+Y) P | PHASE | A (-Y)"
-                        image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+            # Image plot
+            result_1, image = self.fix_image_orientation(np.abs(image), axes=self.axesOrientation)
+            result_1['row'] = 0
+            result_1['col'] = 0
 
-            result1 = {'widget': 'image',
-                       'data': image,
-                       'xLabel': x_label,
-                       'yLabel': y_label,
-                       'title': title,
-                       'row': 0,
-                       'col': 0}
-
+            # k-space plot
             result2 = {'widget': 'image'}
             if self.parFourierFraction==1:
                 result2['data'] = np.log10(np.abs(self.mapVals['kSpace3D']))
@@ -1018,6 +1018,13 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             result2['col'] = 1
 
             # DICOM TAGS
+            if self.axesOrientation[2]==2:
+                image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+            elif self.axesOrientation[2]==1:
+                image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+            elif self.axesOrientation[2]==0:
+                image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
+
             # Image
             image_dicom = np.transpose(image, (0, 2, 1))
             # If it is a 3d image

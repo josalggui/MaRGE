@@ -1798,12 +1798,13 @@ class MRIBLANKSEQ:
                               axes in the image (e.g., [0, 1, 2] for x, y, z).
 
         Returns:
-            dict: A dictionary containing the following keys:
+            output (dict): A dictionary containing the following keys:
                 - 'widget': A fixed string "image" or "curve" indicating the type of data for visualization.
                 - 'data': The reoriented 3D image array (np.ndarray).
                 - 'xLabel': A string representing the label for the x-axis in the visualization.
                 - 'yLabel': A string representing the label for the y-axis in the visualization.
                 - 'title': A string representing the title of the visualization (e.g., "Sagittal").
+            image (np.ndarray): Reoriented 3D image array
         """
 
         # Get axes in strings
@@ -1867,7 +1868,7 @@ class MRIBLANKSEQ:
             'title': title,
         }
 
-        return output
+        return output, image
 
     @staticmethod
     def runIFFT(k_space):

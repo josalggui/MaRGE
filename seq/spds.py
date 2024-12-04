@@ -32,6 +32,10 @@ import pypulseq as pp  # Import PyPulseq
 
 # Template Class for MRI Sequences
 class spds(blankSeq.MRIBLANKSEQ):
+    """
+    Executes the SPDS (Single Point Double Shot) sequence, designed to estimate the B₀ map by acquiring data with two
+    distinct acquisition windows.
+    """
     def __init__(self):
         """
         Defines the parameters for the sequence.
@@ -81,7 +85,7 @@ class spds(blankSeq.MRIBLANKSEQ):
 
     def sequenceInfo(self):
         """
-        Description of the sequence. Students should customize this.
+        Description of the sequence.
         """
         print("SPDS")
         print("Contributor: PhD. J.M. Algarín")
@@ -93,7 +97,10 @@ class spds(blankSeq.MRIBLANKSEQ):
     def sequenceTime(self):
         """
         Calculate the sequence time based on its parameters.
-        Students can extend this method as needed.
+
+        Output:
+        -------
+        - time (float): sequence time in minutes
         """
 
         nPoints = self.mapVals['nPoints']
@@ -116,28 +123,44 @@ class spds(blankSeq.MRIBLANKSEQ):
 
     def sequenceAtributes(self):
         """
-        Additional sequence attributes or parameters.
-        Extend this method with specific calculations or modifications.
+        Assign input parameters as attributes for the sequence.
+
+        This method is called by the GUI before invoking the `sequenceRun` method.
+        It ensures that any input parameters defined using methods like
+        `self.addParameter(key='param', string='Parameter', val=1)` are assigned as
+        class attributes, allowing them to be accessed directly using `self.param`.
+
+        Example:
+            If you define an input parameter as:
+                `self.addParameter(key='param', string='Parameter', val=1, ...)`
+            You can access its value later in the sequence as:
+                `self.param`
         """
         super().sequenceAtributes()
 
     def sequenceRun(self, plotSeq=False, demo=False, standalone=False):
         """
-        Run the MRI sequence.
+        This method orchestrates the definition, preparation,
+        and execution of the sequence.
 
-        This method initializes batches and creates the full sequence by iterating through slices and phase-encoding steps.
+        Parameters:
+        -----------
+        plotSeq : bool, optional
+            If True, the sequence is plotted for visualization without execution (default: False).
+        demo : bool, optional
+            If True, runs the sequence in demonstration mode without hardware communication (default: False).
+        standalone : bool, optional
+            If True, runs the sequence independently, without external triggering or batch processing (default: False).
 
-        Instructions for students:
-        - Batches divide the sequence into smaller, hardware-manageable sections.
-        - `initializeBatch` sets up new sequence batches, while `createBatches` iterates through slices and phase-encoding to create the full sequence.
+        Output:
+        -------
+        - Oversampled and decimated data stored in `self.mapVals['data_over']` and `self.mapVals['data_decimated']`.
+        - Generated sequence files for verification and debugging.
 
-        Args:
-            plotSeq (bool): If True, plots the sequence.
-            demo (bool): If True, runs in demo mode.
-            standalone (bool): If True, runs the sequence independently.
-
-        Returns:
-            bool: Indicates success or failure of the sequence run.
+        Notes:
+        ------
+        - This method is tailored for SPDS sequences, which are particularly useful for estimating
+          B₀ inhomogeneities in low-field MRI systems under high inhomogeneities.
         """
 
         self.demo = demo
@@ -448,6 +471,32 @@ class spds(blankSeq.MRIBLANKSEQ):
                                )
 
     def sequenceAnalysis(self, mode=None):
+        """
+        Analyzes the data acquired from the SPDS (Single Point Double Shot) sequence to estimate the B₀ map,
+        generate k-space and spatial domain images, and prepare the outputs for visualization.
+
+        Parameters:
+        -----------
+        mode : str, optional
+            Execution mode of the analysis. If set to 'Standalone', the results are plotted immediately
+            after analysis (default: None).
+
+        Outputs:
+        --------
+        - `output` (list): A list of dictionaries defining the data and parameters for visualization.
+          Includes:
+            - Spatial domain magnitude images for channels A and B.
+            - B₀ field map.
+            - k-space magnitude images for channels A and B.
+        - Updates `self.mapVals` with intermediate results, including k-space, spatial images, and the
+          B₀ field map.
+        - If `mode == 'Standalone'`, plots the results.
+
+        Notes:
+        ------
+        - Assumes that the k-space mask and orientation settings are correctly preconfigured.
+        """
+
         # Pass mode to the self, it will be required by the mriBlankSeq
         self.mode = mode
 
@@ -502,19 +551,19 @@ class spds(blankSeq.MRIBLANKSEQ):
         sl_channel = axes_map.get(self.axesOrientation[2], "")
 
         # Create the outputs to be plotted
-        output_2 = self.fix_image_orientation(b_field, axes=self.axesOrientation)
-        output_2['row'] = 0
-        output_2['col'] = 0
-
-        # Create the outputs to be plotted
-        output_0 = self.fix_image_orientation(np.abs(i_data_a), axes=self.axesOrientation)
+        output_0, _ = self.fix_image_orientation(b_field, axes=self.axesOrientation)
         output_0['row'] = 0
-        output_0['col'] = 1
+        output_0['col'] = 0
 
         # Create the outputs to be plotted
-        output_1 = self.fix_image_orientation(np.abs(i_data_b), axes=self.axesOrientation)
+        output_1, _ = self.fix_image_orientation(np.abs(i_data_a), axes=self.axesOrientation)
         output_1['row'] = 0
-        output_1['col'] = 2
+        output_1['col'] = 1
+
+        # Create the outputs to be plotted
+        output_2, _ = self.fix_image_orientation(np.abs(i_data_b), axes=self.axesOrientation)
+        output_2['row'] = 0
+        output_2['col'] = 2
 
         output_3 = {
             'widget': 'image',
