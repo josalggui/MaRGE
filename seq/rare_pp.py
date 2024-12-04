@@ -972,29 +972,29 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
 
             # Plots to show into the GUI
-            result1 = {}
-            result1['widget'] = 'curve'
-            result1['xData'] = tVector
-            result1['yData'] = [np.abs(sVector), np.real(sVector), np.imag(sVector)]
-            result1['xLabel'] = 'Time (ms)'
-            result1['yLabel'] = 'Signal amplitude (mV)'
-            result1['title'] = "Signal"
-            result1['legend'] = ['Magnitude', 'Real', 'Imaginary']
-            result1['row'] = 0
-            result1['col'] = 0
+            result_1 = {}
+            result_1['widget'] = 'curve'
+            result_1['xData'] = tVector
+            result_1['yData'] = [np.abs(sVector), np.real(sVector), np.imag(sVector)]
+            result_1['xLabel'] = 'Time (ms)'
+            result_1['yLabel'] = 'Signal amplitude (mV)'
+            result_1['title'] = "Signal"
+            result_1['legend'] = ['Magnitude', 'Real', 'Imaginary']
+            result_1['row'] = 0
+            result_1['col'] = 0
 
-            result2 = {}
-            result2['widget'] = 'curve'
-            result2['xData'] = fVector
-            result2['yData'] = [np.abs(iVector)]
-            result2['xLabel'] = 'Frequency (kHz)'
-            result2['yLabel'] = "Amplitude (a.u.)"
-            result2['title'] = "Spectrum"
-            result2['legend'] = ['Spectrum magnitude']
-            result2['row'] = 1
-            result2['col'] = 0
+            result_2 = {}
+            result_2['widget'] = 'curve'
+            result_2['xData'] = fVector
+            result_2['yData'] = [np.abs(iVector)]
+            result_2['xLabel'] = 'Frequency (kHz)'
+            result_2['yLabel'] = "Amplitude (a.u.)"
+            result_2['title'] = "Spectrum"
+            result_2['legend'] = ['Spectrum magnitude']
+            result_2['row'] = 1
+            result_2['col'] = 0
 
-            self.output = [result1, result2]
+            self.output = [result_1, result_2]
             
         else:
             # Plot image
@@ -1007,16 +1007,16 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             result_1['col'] = 0
 
             # k-space plot
-            result2 = {'widget': 'image'}
+            result_2 = {'widget': 'image'}
             if self.parFourierFraction==1:
-                result2['data'] = np.log10(np.abs(self.mapVals['kSpace3D']))
+                result_2['data'] = np.log10(np.abs(self.mapVals['kSpace3D']))
             else:
-                result2['data'] = np.abs(self.mapVals['kSpace3D'])
-            result2['xLabel'] = "k%s"%axesStr[1]
-            result2['yLabel'] = "k%s"%axesStr[0]
-            result2['title'] = "k-Space"
-            result2['row'] = 0
-            result2['col'] = 1
+                result_2['data'] = np.abs(self.mapVals['kSpace3D'])
+            result_2['xLabel'] = "k%s"%axesStr[1]
+            result_2['yLabel'] = "k%s"%axesStr[0]
+            result_2['title'] = "k-Space"
+            result_2['row'] = 0
+            result_2['col'] = 1
 
             # DICOM TAGS
             if self.axesOrientation[2]==2:
@@ -1061,8 +1061,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
             self.meta_data["EchoTrainLength"] = self.mapVals['etl']
 
-            # Add results into the output attribute (result1 must be the image to save in dicom)
-            self.output = [result1, result2]
+            # Add results into the output attribute (result_1 must be the image to save in dicom)
+            self.output = [result_1, result_2]
 
         # Reset rotation angle and dfov to zero
         self.mapVals['angle'] = self.angle
