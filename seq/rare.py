@@ -60,7 +60,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM') 
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 10], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ') ## nm of peaks in 1 repetition
@@ -143,6 +143,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             else:
                 axesEnable.append(1)
         self.mapVals['axesEnable'] = axesEnable
+        self.axesEnable = axesEnable
 
         # Miscellaneous
         self.freqOffset = self.freqOffset*1e6 # MHz
@@ -567,8 +568,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             data = np.reshape(data, (nSL, nPH, self.nPoints[0]))
 
             # Do zero padding
-            dataTemp = np.zeros((self.nPoints[2], self.nPoints[1], self.nPoints[0]))
-            dataTemp = dataTemp+1j*dataTemp
+            dataTemp = np.zeros((self.nPoints[2], self.nPoints[1], self.nPoints[0]), dtype=complex)
             dataTemp[0:nSL, :, :] = data
             data = np.reshape(dataTemp, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
 
@@ -925,7 +925,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         etl = self.mapVals['etl']
         nRD = self.nPoints[0]
         nPH = self.nPoints[1]
-        nSL = self.nPoints[2]
+        nSL = ((self.nPoints[2] // 2) + self.mapVals['partialAcquisition']) * self.axesEnable[2] + (1 - self.axesEnable[2])
         ind = self.getIndex(self.etl, nPH, self.sweepMode)
         nRep = (nPH//etl)*nSL
         bw = self.mapVals['bw']
@@ -1093,7 +1093,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                         
                         
         image=self.mapVals['image3D']
-        image_reshaped = np.reshape(image, (nSL, nPH, nRD))
+        image_reshaped = np.reshape(image, (self.nPoints[::-1]))
         
         for slice_idx in range (nSL): ## image3d does not have scan dimension
             

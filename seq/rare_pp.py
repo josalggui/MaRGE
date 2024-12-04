@@ -88,10 +88,10 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[120, 120, 10], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 10], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=6, field='SEQ') ## nm of peaks in 1 repetition
+        self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ') ## nm of peaks in 1 repetition
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
         self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 1], tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
@@ -103,7 +103,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
-        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
+        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
         self.acq = ismrmrd.Acquisition()
@@ -774,10 +774,12 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.mode = mode
 
         # Get data
+        axes_enable = self.mapVals['axes_enable']
         data_over = self.mapVals['data_over']
         data_decimated = self.mapVals['data_decimated']
         n_rd, n_ph, n_sl = self.nPoints
         n_rd = n_rd + 2 * hw.addRdPoints
+        n_sl = (n_sl // 2 + self.mapVals['partialAcquisition'] * axes_enable[2] + (1 - axes_enable[2]))
         n_batches = self.mapVals['n_batches']
         n_readouts = self.mapVals['n_readouts']
         ind = self.getParameter('sweepOrder')
@@ -1117,9 +1119,10 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         dset = ismrmrd.Dataset(path, f'/dataset', True) # Create the dataset
 
         etl = self.mapVals['etl']
+        axes_enable = self.mapVals['axes_enable']
         n_rd = self.nPoints[0]
         n_ph = self.nPoints[1]
-        n_sl = self.nPoints[2]
+        n_sl = (((self.nPoints[2] // 2) + self.mapVals['partialAcquisition']) * axes_enable[2] + (1 - axes_enable[2]))
         ind = self.getIndex(self.etl, n_ph, self.sweepMode)
         nRep = (n_ph//etl)*n_sl
         bw = self.mapVals['bw_MHz']
@@ -1225,7 +1228,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                         
                         
         image=self.mapVals['image3D']
-        image_reshaped = np.reshape(image, (n_sl, n_ph, n_rd))
+        image_reshaped = np.reshape(image, (self.nPoints[::-1]))
         
         for slice_idx in range (n_sl): ## image3d does not have scan dimension
             
