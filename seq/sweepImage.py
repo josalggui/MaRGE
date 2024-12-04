@@ -181,9 +181,9 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                            'col': 0}
                 self.mapVals['sweepResult'] = [parVector0, np.abs(image)]
 
-                self.output = [result1]
+            self.output = [result1]
 
-                self.saveRawData()
+            self.saveRawData()
 
         return self.output
 

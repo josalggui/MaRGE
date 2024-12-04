@@ -228,8 +228,8 @@ class spds(blankSeq.MRIBLANKSEQ):
         gradients_b = gradients_b[self.mask]
         self.mapVals['gradients_a'] = gradients_a
         self.mapVals['gradients_b'] = gradients_b
-        gradients_a = np.vstack([[0.0, 0.0, 0.0], gradients_a])
-        gradients_b = np.vstack([[0.0, 0.0, 0.0], gradients_b])
+        gradients_a = np.vstack([[0.0, 0.0, 0.0], gradients_a, [0.0, 0.0, 0.0]])
+        gradients_b = np.vstack([[0.0, 0.0, 0.0], gradients_b, [0.0, 0.0, 0.0]])
 
         # Map the axis to "x", "y", and "z" according ot axesOrientation
         axes_map = {0: "x", 1: "y", 2: "z"}
@@ -457,11 +457,11 @@ class spds(blankSeq.MRIBLANKSEQ):
         k_points = self.mapVals['k_cartesian']
         mask = self.mask
 
-        # Delete the addRdPoints
+        # Delete the addRdPoints and last readout
         data_a = np.reshape(data_a, (-1, 1 + 2 * hw.addRdPoints))
         data_b = np.reshape(data_b, (-1, 1 + 2 * hw.addRdPoints))
-        data_a = data_a[:, hw.addRdPoints]
-        data_b = data_b[:, hw.addRdPoints]
+        data_a = data_a[0:-1, hw.addRdPoints]
+        data_b = data_b[0:-1, hw.addRdPoints]
 
         # Fill k_space
         k_data_a = np.zeros(np.size(k_points, 0), dtype=complex)
