@@ -422,7 +422,7 @@ class HistoryListController(HistoryListWidget):
         try:
             return sequence.sequenceAnalysis()
         except Exception as e:
-            print(f"An erro ocurred in sequenceAnalysis method: {e}")
+            print(f"An error ocurred in sequenceAnalysis method: {e}")
             return 0
 
 

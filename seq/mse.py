@@ -40,6 +40,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         super(MSE, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='MSEInfo', val='MSE')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')

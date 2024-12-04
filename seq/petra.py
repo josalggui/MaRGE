@@ -21,6 +21,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         super(PETRA, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='PETRAInfo', val='PETRA')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')

@@ -29,6 +29,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         super(SweepImage, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='SWEEPinfo', val='SWEEP')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='seqNameSweep', string='Sequence', val='Noise', field='OTH')
         self.addParameter(key='parameter0', string='Parameter 0 X-axis', val='bw', field='OTH')
         self.addParameter(key='start0', string='Start point 0', val=30.0, field='OTH')

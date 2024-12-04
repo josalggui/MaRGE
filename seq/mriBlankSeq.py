@@ -171,6 +171,7 @@ class MRIBLANKSEQ:
                    decimate='Normal',
                    hardware=True,
                    output='',
+                   channels=[0],
                    ):
         """
         Execute multiple batches of MRI waveforms, manage data acquisition, and store oversampled data.
@@ -197,6 +198,8 @@ class MRIBLANKSEQ:
             Take into account gradient and ADC delay.
         output: str, optional
             String to add to the output keys saved in the mapVals parameter.
+        channels : list, optional
+            List of channels used for Rx
 
         Returns:
         --------
@@ -236,6 +239,7 @@ class MRIBLANKSEQ:
                                       shimming=self.shimming,
                                       sampling_period=1/bandwidth,
                                       hardware=hardware,
+                                      channels=channels
                                       )
 
             # Load the waveforms into Red Pitaya
@@ -305,6 +309,7 @@ class MRIBLANKSEQ:
                              shimming=np.array([0.0, 0.0, 0.0]),
                              sampling_period=0.0,
                              hardware=True,
+                             channels=[0],
                              ):
         """
         Converts PyPulseq waveforms into a format compatible with MRI hardware.
@@ -321,6 +326,8 @@ class MRIBLANKSEQ:
             Sampling period in seconds, used to account for delays in the CIC filter. Defaults to 0.0.
         hardware: bool, optional
             Take into account gradient and ADC delay
+        channels: list, optional
+            List of channels used for Rx
 
         Returns:
         --------

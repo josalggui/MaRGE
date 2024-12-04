@@ -62,6 +62,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
         # Parameters
         self.addParameter(key='seqName', string='AutoTuningInfo', val='AutoTuning')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='freqOffset', string='Frequency offset(kHz)', val=0.0, units=units.kHz, field='IM')
         self.addParameter(key='series', string='Series capacitor', val='11011', field='IM')
         self.addParameter(key='tuning', string='Tuning capacitor', val='10000', field='IM')

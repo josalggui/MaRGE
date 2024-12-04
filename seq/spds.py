@@ -57,6 +57,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         self.plotSeq = None
         self.addParameter(key='seqName', string='Sequence Name', val='SPDS',
                           tip="The identifier name for the sequence.")
+        self.addParameter(key='toMaRGE', val=True)  # New parameter to automatically include this sequence in MaRGE
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM',
                           tip='Number of repetitions of the full scan.')
         self.addParameter(key='FreqOffset', string='Frequency offset (kHz)', val=0, units=units.kHz, field='RF',

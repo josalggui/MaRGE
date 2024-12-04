@@ -29,7 +29,8 @@ class FixGain(larmor.Larmor):
         self.attenuation = None
         self.mode = None
         self.setParameter(key='seqName', string='FixGain', val='FixGain')
-        self.addParameter(key='gain', string='Attenuation (dB)', val=50, field='OTH',
+        self.addParameter(key='toMaRGE', val=False)
+        self.addParameter(key='gain', string='Attenuation (dB)', val=45, field='OTH',
                           tip='Integer from %i to %i' % (hw.rf_min_gain, hw.rf_max_gain))
         self.addParameter(key='mode', string='Mode', val='AUTO', field='OTH', tip="'AUTO' or 'MANUAL'")
 

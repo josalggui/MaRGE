@@ -63,6 +63,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.fov = None
         self.axesOrientation = None
         self.addParameter(key='seqName', string='MSEInfo', val='MSE_PyPulseq')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz,
                           field='RF')

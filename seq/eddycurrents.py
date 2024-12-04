@@ -44,6 +44,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
         self.tDelayMin = None
         self.shimming = None
         self.addParameter(key='seqName', string='EDDYCURRENTSinfo', val='EDDYCURRENTS')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.0, units=units.MHz, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
