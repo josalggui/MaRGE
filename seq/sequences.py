@@ -41,7 +41,7 @@ def instantiate_sequences():
             try:
                 if class_().mapVals['toMaRGE']:
                     defaultsequences[class_().mapVals['seqName']] = class_()
-                    print(f'{class_().mapVals['seqName']} added to MaRGE')
+                    print(f"{class_().mapVals['seqName']} added to MaRGE")
             except:
                 pass
 
