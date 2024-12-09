@@ -179,6 +179,16 @@ class Plot3DController(Plot3DWidget):
         roi_pos_px = self.roiFOV.pos()
         roi_angle = a * self.roiFOV.angle()
 
+        # ROI center
+        x0 = roi_pos_px[0]
+        y0 = roi_pos_px[1]
+        x1 = x0 + roi_fov_px[0] * np.cos(roi_angle * np.pi / 180)
+        y1 = y0 - roi_fov_px[0] * np.sin(roi_angle * np.pi / 180)
+        x2 = x1 + roi_fov_px[1] * np.sin(roi_angle * np.pi / 180)
+        y2 = y1 + roi_fov_px[1] * np.cos(roi_angle * np.pi / 180)
+        x_roi = (x0 + x2) / 2
+        y_roi = (y0 + y2) / 2
+
         # ROI center in pixels respect to the roi upper-left corner
         x0_px = (+ (ima_fov_px[0] / 2 - roi_pos_px[0]) * np.cos(roi_angle * np.pi / 180)
                  + (ima_fov_px[1] / 2 - roi_pos_px[1]) * np.sin(roi_angle * np.pi / 180))
