@@ -452,7 +452,7 @@ class MRIBLANKSEQ:
         """
 
         def rotationMatrix(rotation):
-            theta = rotation[3] * np.pi / 180
+            theta = - rotation[3]
             ux, uy, uz = rotation[:3]
             out = np.zeros((3, 3))
             out[0, 0] = np.cos(theta) + ux ** 2 * (1 - np.cos(theta))
