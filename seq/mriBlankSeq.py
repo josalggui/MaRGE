@@ -64,9 +64,9 @@ class MRIBLANKSEQ:
         self.mapTips = {}
         self.map_units = {}
         self.meta_data = {}
-        self.rotations = []
-        self.dfovs = []
-        self.fovs = []
+        self.rotations = hw.rotations
+        self.dfovs = hw.dfovs
+        self.fovs = hw.fovs
         self.session = {}
         self.demo = None
         self.mode = None

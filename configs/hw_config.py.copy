@@ -31,6 +31,13 @@ antenna_dict = {"RF01": np.pi/(0.3*70), "RF02": np.pi/(0.3*70)}
 reference_time = 70  # us, reference excitation time to get the amplitude for rabi
 fov = [20.0, 20.0, 20.0]
 dfov = [0.0, 0.0, 0.0]
+
+# To change the original reference system. Check in MaRGE wiki for more info.
+rotations = []  # List of rations, each rotation is a list of four elements [ux, uy, uz, theta] with ux**2+uy**2+uz**2 = 1
+dfovs = []  # List of displacements in mm, each displacement is a list of three elements [dfov_x, dfov_y, dfov_z]. It MUST match the length of rotations
+fovs = []  # List of FOVs in cm, each fov is a list of three elements [fov_x, fov_y, fov_z]. It MUST match the length of rotations. Not sure, but I think this is useless...
+# TODO: document this into the wiki
+
 bash_path = "D:\Archivos de Programa\Git\git-bash.exe" # use "gnome-terminal" for genome linux
 rp_ip_address = "192.168.1.101"
 rp_version = "rp-122"
