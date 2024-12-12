@@ -53,6 +53,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='Sequence Name', val='Default_SeqName',
                           tip="The identifier name for the sequence.")
 
+        # To automatically include the sequence into MaRGE.
         self.addParameter(key='toMaRGE', val=True)
 
         # Number of scans
@@ -349,7 +350,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
                                )
 
     def sequenceAnalysis(self, mode=None):
-
+        self.mode = mode
 
         # create self.out to run in iterative mode
         self.output = []
