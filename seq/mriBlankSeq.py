@@ -170,9 +170,9 @@ class MRIBLANKSEQ:
         rot = self.getRotationMatrix()
 
         # Get the waveforms
-        gx = waveforms['batch_1']['grad_vx']
-        gy = waveforms['batch_1']['grad_vy']
-        gz = waveforms['batch_1']['grad_vz']
+        gx = waveforms['grad_vx']
+        gy = waveforms['grad_vy']
+        gz = waveforms['grad_vz']
         is_x = np.zeros_like(gx[0], dtype=int)
         is_y = np.zeros_like(gy[0], dtype=int) + 1
         is_z = np.zeros_like(gz[0], dtype=int) + 2
@@ -253,9 +253,21 @@ class MRIBLANKSEQ:
                     gy_new[1].append(g_new[1][-1])
                     gz_new[1].append(g_new[2][-1])
                 step += 1
-        aa = np.array(g_new)
-        print(np.array(g_new))
+        g_new = np.array(g_new)
 
+        # Rotate the waveforms
+        rot = self.getRotationMatrix()
+        for step in range(np.size(g_new, axis=1)):
+            g_new[:, step] = np.dot(rot, g_new[:, step])
+        gx_new[1] = list(g_new[0, :])
+        gy_new[1] = list(g_new[1, :])
+        gz_new[1] = list(g_new[2, :])
+
+        waveforms['grad_vx'] = gx_new
+        waveforms['grad_vy'] = gy_new
+        waveforms['grad_vz'] = gz_new
+
+        return waveforms
 
     def runBatches(self, waveforms, n_readouts, n_adc,
                    frequency=hw.larmorFreq,
@@ -314,11 +326,11 @@ class MRIBLANKSEQ:
         # Initialize a list to hold oversampled data
         data_over = []
 
-        # Rotate the waveforms to given reference system
-        self.rotate_waveforms(waveforms)
-
         # Iterate through each batch of waveforms
         for seq_num in waveforms.keys():
+            # Rotate the waveforms to given reference system
+            waveforms[seq_num] = self.rotate_waveforms(waveforms[seq_num])
+
             # Initialize the experiment if not in demo mode
             if not self.demo:
                 self.expt = ex.Experiment(

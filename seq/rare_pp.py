@@ -89,7 +89,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 10], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ') ## nm of peaks in 1 repetition
@@ -494,7 +494,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         )
 
         # Phase gradient re-phasing
-        delay = system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2
+        delay = system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + self.nPoints[0] / 2 / bw * 1e-6
         block_gr_ph_reph = pp.make_trapezoid(
             channel=ph_channel,
             system=system,
@@ -505,7 +505,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         )
 
         # Slice gradient re-phasing
-        delay = system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2
+        delay = system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + self.nPoints[0] / 2 / bw * 1e-6
         block_gr_sl_reph = pp.make_trapezoid(
             channel=sl_channel,
             system=system,
