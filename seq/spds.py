@@ -28,6 +28,7 @@ import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 from marga_pulseq.interpreter import PSInterpreter  # Import the marga_pulseq interpreter
 import pypulseq as pp  # Import PyPulseq
+from skimage.restoration import unwrap_phase as unwrap
 
 
 # Template Class for MRI Sequences
@@ -107,7 +108,10 @@ class spds(blankSeq.MRIBLANKSEQ):
         nPoints = self.mapVals['nPoints']
         kx = np.linspace(start=-1, stop=1, endpoint=False, num=nPoints[0])
         ky = np.linspace(start=-1, stop=1, endpoint=False, num=nPoints[1])
-        kz = np.linspace(start=-1, stop=1, endpoint=False, num=nPoints[2])
+        if nPoints > 1:
+            kz = np.linspace(start=-1, stop=1, endpoint=False, num=nPoints[2])
+        else:
+            kz = np.array([0.0])
         ky, kz, kx = np.meshgrid(ky, kz, kx)
         k_norm = np.zeros(shape=(np.size(kx), 3))
         k_norm[:, 0] = np.reshape(kx, -1)
@@ -541,8 +545,8 @@ class spds(blankSeq.MRIBLANKSEQ):
         mask = np.abs(i_data_a) < p_max/3
 
         # Get phase
-        i_phase_a = np.angle(i_data_a)
-        i_phase_b = np.angle(i_data_b)
+        i_phase_a = unwrap(np.angle(i_data_a))
+        i_phase_b = unwrap(np.angle(i_data_b))
 
         # Get magnetic field
         b_field = (i_phase_b - i_phase_a) / (2 * np.pi * hw.gammaB * (self.deadTime[1] - self.deadTime[0]))
