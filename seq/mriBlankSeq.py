@@ -165,6 +165,98 @@ class MRIBLANKSEQ:
                 tips[self.mapNmspc[key]] = [self.mapTips[key]]
         return out, tips
 
+    def rotate_waveforms(self, waveforms):
+        # Get rotation matrix
+        rot = self.getRotationMatrix()
+
+        # Get the waveforms
+        gx = waveforms['batch_1']['grad_vx']
+        gy = waveforms['batch_1']['grad_vy']
+        gz = waveforms['batch_1']['grad_vz']
+        is_x = np.zeros_like(gx[0], dtype=int)
+        is_y = np.zeros_like(gy[0], dtype=int) + 1
+        is_z = np.zeros_like(gz[0], dtype=int) + 2
+
+        # Concatenate arrays
+        time = np.concatenate((gx[0], gy[0], gz[0]))
+        ampl = np.concatenate((gx[1], gy[1], gz[1]))
+        is_a = np.concatenate((is_x, is_y, is_z))
+
+        # Sort arrays
+        idx = np.argsort(time)
+        time = time[idx]
+        ampl = ampl[idx]
+        is_a = is_a[idx]
+
+        # Define new gradient waveforms
+        gx_new = [[], []]
+        gy_new = [[], []]
+        gz_new = [[], []]
+        g_new = [[], [], []]
+
+        # Populate new waveform
+        w = []
+        t = []
+        step = 0
+        n_steps = 0
+        while step < len(time):
+            g = [0., 0., 0.]
+
+            # Add time
+            gx_new[0].append(time[step])
+            gy_new[0].append(time[step])
+            gz_new[0].append(time[step])
+
+            next = True
+            while next:
+                try:
+                    # Get amplitude
+                    g_new[is_a[step]].append(ampl[step])
+                    if time[step + 1] != time[step]:
+                        if step == 0:
+                            if len(g_new[0]) == 0:
+                                g_new[0].append(0.)
+                            if len(g_new[0]) == 0:
+                                g_new[1].append(0.)
+                            if len(g_new[0]) == 0:
+                                g_new[2].append(0.)
+                        elif step > 0:
+                            if len(g_new[0]) == n_steps:
+                                g_new[0].append(g_new[0][-1])
+                            if len(g_new[1]) == n_steps:
+                                g_new[1].append(g_new[1][-1])
+                            if len(g_new[2]) == n_steps:
+                                g_new[2].append(g_new[2][-1])
+                        n_steps += 1
+                        next = False
+                        gx_new[1].append(g_new[0][-1])
+                        gy_new[1].append(g_new[1][-1])
+                        gz_new[1].append(g_new[2][-1])
+                except:
+                    if step == 0:
+                        if len(g_new[0]) == 0:
+                            g_new[0].append(0.)
+                        if len(g_new[0]) == 0:
+                            g_new[1].append(0.)
+                        if len(g_new[0]) == 0:
+                            g_new[2].append(0.)
+                    elif step > 0:
+                        if len(g_new[0]) == n_steps:
+                            g_new[0].append(g_new[0][-1])
+                        if len(g_new[1]) == n_steps:
+                            g_new[1].append(g_new[1][-1])
+                        if len(g_new[2]) == n_steps:
+                            g_new[2].append(g_new[2][-1])
+                    n_steps += 1
+                    next = False
+                    gx_new[1].append(g_new[0][-1])
+                    gy_new[1].append(g_new[1][-1])
+                    gz_new[1].append(g_new[2][-1])
+                step += 1
+        aa = np.array(g_new)
+        print(np.array(g_new))
+
+
     def runBatches(self, waveforms, n_readouts, n_adc,
                    frequency=hw.larmorFreq,
                    bandwidth=0.03,
@@ -221,6 +313,9 @@ class MRIBLANKSEQ:
 
         # Initialize a list to hold oversampled data
         data_over = []
+
+        # Rotate the waveforms to given reference system
+        self.rotate_waveforms(waveforms)
 
         # Iterate through each batch of waveforms
         for seq_num in waveforms.keys():
