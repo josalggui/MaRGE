@@ -66,7 +66,7 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip="Flip angle of the excitation RF pulse in degrees")
         self.addParameter(key='rfExTime', string='Excitation time (us)', val=50.0, units=units.us, field='RF',
                           tip="Duration of the RF excitation pulse in microseconds (us).")
-        self.addParameter(key='nPoints', string='Matrix size [rd, ph, sl]', val=[10, 10, 10], field='IM',
+        self.addParameter(key='nPoints', string='Matrix size [rd, ph, sl]', val=[10, 10, 1], field='IM',
                           tip='Matrix size for the acquired images.')
         self.addParameter(key='fov', string='Field of View (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM',
                           tip='Field of View (cm).')
@@ -231,7 +231,10 @@ class spds(blankSeq.MRIBLANKSEQ):
         # Get cartesian points
         kx = np.linspace(start=-1, stop=1, endpoint=False, num=self.nPoints[0])
         ky = np.linspace(start=-1, stop=1, endpoint=False, num=self.nPoints[1])
-        kz = np.linspace(start=-1, stop=1, endpoint=False, num=self.nPoints[2])
+        if self.nPoints[2] > 1:
+            kz = np.linspace(start=-1, stop=1, endpoint=False, num=self.nPoints[2])
+        else:
+            kz = np.array([0.0])
         ky, kz, kx = np.meshgrid(ky, kz, kx)
         k_norm = np.zeros(shape=(np.size(kx), 3))
         k_norm[:, 0] = np.reshape(kx, -1)
