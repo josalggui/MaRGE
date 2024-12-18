@@ -70,6 +70,8 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip='Matrix size for the acquired images.')
         self.addParameter(key='fov', string='Field of View (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM',
                           tip='Field of View (cm).')
+        self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
+                          tip="Position of the gradient isocenter")
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM',
                           tip="0=x, 1=y, 2=z")
         self.addParameter(key='repetitionTime', string='Repetition Time (ms)', val=50.0, units=units.ms, field='SEQ',
@@ -82,6 +84,10 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip='Shimming parameter to compensate B0 linear inhomogeneity.')
         self.addParameter(key='bw', string='Bandwidth (kHz)', val=50.0, units=units.kHz, field='IMG',
                           tip='Set acquisition bandwidth in kilohertz (kHz).')
+        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM',
+                          tip='Angle in degrees to rotate the fov')
+        self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM',
+                          tip='Axis of rotation')
 
 
     def sequenceInfo(self):
@@ -138,6 +144,13 @@ class spds(blankSeq.MRIBLANKSEQ):
                 `self.param`
         """
         super().sequenceAtributes()
+
+        # Add rotation, dfov and fov to the history
+        self.rotation = self.rotationAxis.tolist()
+        self.rotation.append(self.angle)
+        self.rotations.append(self.rotation)
+        self.dfovs.append(self.dfov.tolist())
+        self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plotSeq=False, demo=False, standalone=False):
         """
@@ -208,6 +221,11 @@ class spds(blankSeq.MRIBLANKSEQ):
         In this step, students can implement the necessary calculations, such as timing calculations, RF amplitudes, and
         gradient strengths, before defining the sequence blocks.
         '''
+
+        # Set the fov
+        self.dfov = self.getFovDisplacement()
+        self.dfov = self.dfov[self.axesOrientation]
+        self.fov = self.fov[self.axesOrientation]
 
         # Get k-space info
         dk = 1 / self.fov  # m^-1
