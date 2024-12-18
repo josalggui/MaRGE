@@ -253,6 +253,15 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             print("ERROR: RF amplitude is too high, try with longer RF pulse time.")
             return 0
 
+        # Set timing to multiples of gradient raster time for consistency (use us to get more accuracy)
+        self.echoSpacing = (self.echoSpacing * 1e6) // (hw.grad_raster_time * 1e6) * hw.grad_raster_time
+        self.repetitionTime = (self.repetitionTime * 1e6) // (hw.grad_raster_time * 1e6) * hw.grad_raster_time
+        self.rdGradTime = (self.rdGradTime * 1e6) // (hw.grad_raster_time * 1e6) * hw.grad_raster_time
+        self.phGradTime = (self.phGradTime * 1e6) // (hw.grad_raster_time * 1e6) * hw.grad_raster_time
+        self.rdDephTime = (self.rdDephTime * 1e6) // (hw.grad_raster_time * 1e6) * hw.grad_raster_time
+        print("Echo spacing: %0.3f ms" % (self.echoSpacing * 1e3))
+        print("Repetition time: %0.3f ms" % (self.repetitionTime * 1e3))
+
         # Matrix size
         n_rd = self.nPoints[0] + 2 * hw.addRdPoints
         n_ph = self.nPoints[1]
@@ -320,13 +329,6 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             ph_gradients /= ph_grad_amplitude
         if sl_grad_amplitude != 0:
             sl_gradients /= sl_grad_amplitude
-
-        # Get the rotation matrix
-        rot = self.getRotationMatrix()
-        grad_amp = np.array([0.0, 0.0, 0.0])
-        grad_amp[self.axesOrientation[0]] = 1
-        grad_amp = np.reshape(grad_amp, (3, 1))
-        result = np.dot(rot, grad_amp)
 
         # Map the axis to "x", "y", and "z" according ot axesOrientation
         axes_map = {0: "x", 1: "y", 2: "z"}
@@ -424,7 +426,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         )
 
         # De-phasing gradient
-        delay = system.rf_dead_time + self.rfExTime
+        delay = system.rf_dead_time + self.rfExTime / 2 + ((self.rfExTime / 2* 1e6) // (hw.grad_raster_time * 1e6) + 1) * hw.grad_raster_time  # multiple of grad_raster_time
         block_gr_rd_preph = pp.make_trapezoid(
             channel=rd_channel,
             system=system,
@@ -452,7 +454,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         delay_reph = pp.make_delay(self.echoSpacing)
 
         # Phase gradient de-phasing
-        delay = system.rf_dead_time + self.rfReTime
+        delay = system.rf_dead_time + self.rfReTime / 2 + ((self.rfReTime / 2 * 1e6) // (hw.grad_raster_time * 1e6) + 1) * hw.grad_raster_time
         block_gr_ph_deph = pp.make_trapezoid(
             channel=ph_channel,
             system=system,
@@ -463,7 +465,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         )
 
         # Slice gradient de-phasing
-        delay = system.rf_dead_time + self.rfReTime
+        delay = system.rf_dead_time + self.rfReTime / 2 + ((self.rfReTime / 2 * 1e6) // (hw.grad_raster_time * 1e6) + 1) * hw.grad_raster_time
         block_gr_sl_deph = pp.make_trapezoid(
             channel=sl_channel,
             system=system,
@@ -494,7 +496,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         )
 
         # Phase gradient re-phasing
-        delay = system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + self.nPoints[0] / 2 / bw * 1e-6
+        delay = (system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 +
+                 ((self.nPoints[0] / 2 / bw) // (hw.grad_raster_time * 1e6) + 1) * hw.grad_raster_time)
         block_gr_ph_reph = pp.make_trapezoid(
             channel=ph_channel,
             system=system,
@@ -505,7 +508,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         )
 
         # Slice gradient re-phasing
-        delay = system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + self.nPoints[0] / 2 / bw * 1e-6
+        delay = (system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 +
+                 ((self.nPoints[0] / 2 / bw) // (hw.grad_raster_time * 1e6) + 1) * hw.grad_raster_time)
         block_gr_sl_reph = pp.make_trapezoid(
             channel=sl_channel,
             system=system,
@@ -791,6 +795,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                                frequency=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
                                bandwidth=bw,  # MHz
                                decimate='Normal',
+                               hardware=True,
                                )
 
     def sequenceAnalysis(self, mode=None):
