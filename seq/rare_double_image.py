@@ -75,9 +75,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.rotation = None
         self.angle = None
         self.axesOrientation = None
-        self.addParameter(key='seqName', string='RAREInfo', val='RarePyPulseq')
+        self.addParameter(key='seqName', string='RAREInfo', val='RareDoubleImage')
         self.addParameter(key='toMaRGE', val=True)
-        self.addParameter(key='nScans', string='Number of scans', val=1, field='IM') ## number of scans 
+        self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
@@ -92,7 +92,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ') ## nm of peaks in 1 repetition
+        self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
         self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
@@ -821,7 +821,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             data_temp_eve[:, :, ind[ii], :] = data_full_eve[:, :, ii, :]
 
         data_full_odd = data_temp_odd
-        data_full_eve = data_full_eve
+        data_full_eve = data_temp_eve
         self.mapVals['data_full_odd_echoes'] = data_full_odd
         self.mapVals['data_full_even_echoes'] = data_full_eve
 
