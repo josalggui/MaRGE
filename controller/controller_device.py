@@ -20,12 +20,12 @@ for subdir in subdirs:
     full_path = os.path.join(parent_directory, subdir)
     sys.path.append(full_path)
 #******************************************************************************
-import experiment as ex
+import device as dev
 import server_comms as sc
 import configs.hw_config as hw
 import numpy as np
 
-class Experiment(ex.Experiment):
+class Experiment(dev.Device):
     """
     Custom experiment class that extends the base Experiment class from the 'ex' module.
 
@@ -54,18 +54,27 @@ class Experiment(ex.Experiment):
         It inherits all the attributes and methods from the base class and overrides the __init__() and run() methods.
     """
     def __init__(self,
+                 ip_address=hw.rp_ip_address,  # by default imported from local_config, but can be overriden if desired
+                 port=hw.rp_port,  # by default imported from local_config, but can be overriden if desired
+                 fpga_clk_freq_MHz=hw.fpga_clk_freq_MHz,
+                 grad_board=hw.grad_board,
                  lo_freq=1,  # MHz
                  rx_t=3.125, # us; multiples of 1/122.88, such as 3.125, are exact, others will be rounded to the nearest multiple of the 122.88 MHz clock
                  seq_dict=None,
                  seq_csv=None,
                  rx_lo=0,  # which of internal NCO local oscillators (LOs), out of 0, 1, 2, to use for each channel
                  grad_max_update_rate=0.2,  # MSPS, across all channels in parallel, best-effort
+                 grad_latency=0, # us, delay inherent in gradient board + external hardware (positive values are corrected for by shifting the gradient update events back in time)
                  gpa_fhdo_offset_time=0, # when GPA-FHDO is used, offset the Y, Z and Z2 gradient times by 1x, 2x and 3x this value to emulate 'simultaneous' updates
                  print_infos=True,  # show server info messages
                  assert_errors=True,  # halt on server errors
                  init_gpa=False,  # initialise the GPA (will reset its outputs when the Experiment object is created)
                  initial_wait=None, # initial pause before experiment begins - required to configure the LOs and RX rate; must be at least a few us. Is suitably set based on grad_max_update_rate by default.
                  auto_leds=True, # automatically scan the LED pattern from 0 to 255 as the sequence runs (set to off if you wish to manually control the LEDs)
+                 mimo_master=False,  # if MIMO master, add a trigger pulse to trig_out channel
+                 trig_output_time=0,  # usec, when should the master's trig_out pulse occur
+                 slave_trig_latency=6.079,  # usec, how much to delay MIMO master events after the trigger is sent to slaves. Only used for MIMO masters, MIMO slaves or standalone devices unaffected. Device, trigger method and cable-specific.
+                 trig_timeout=0,  # if MIMO slave or externally-triggered master, nonzero values will add a wait-for-trigger instruction to the start of the sequence, with a timeout in microseconds. Positive values must be below 136533 (0.13sec), which is the current limit of marga. Negative values will lead to an infinite wait (i.e. never timing out, blocking forever until a trigger arrives.)
                  prev_socket=None,  # previously-opened socket, if want to maintain status etc
                  fix_cic_scale=True, # scale the RX data precisely based on the rate being used; otherwise a 2x variation possible in data amplitude based on rate
                  set_cic_shift=False, # program the CIC internal bit shift to maintain the gain within a factor of 2 independent of rate; required if the open-source CIC is used in the design
@@ -76,24 +85,34 @@ class Experiment(ex.Experiment):
         """
         Initialize the Experiment object with the specified parameters.
         """
-        super(Experiment, self).__init__(lo_freq,
-                                         rx_t / hw.oversamplingFactor,
-                                         seq_dict,
-                                         seq_csv,
-                                         rx_lo,
-                                         grad_max_update_rate,
-                                         gpa_fhdo_offset_time,
-                                         print_infos,
-                                         assert_errors,
-                                         init_gpa,
-                                         initial_wait,
-                                         auto_leds,
-                                         prev_socket,
-                                         fix_cic_scale,
-                                         set_cic_shift,
-                                         allow_user_init_cfg,
-                                         halt_and_reset,
-                                         flush_old_rx,)
+        super().__init__(
+            ip_address,
+            port,
+            fpga_clk_freq_MHz,
+            grad_board,
+            lo_freq,
+            rx_t,
+            seq_dict,
+            seq_csv,
+            rx_lo,
+            grad_max_update_rate,
+            grad_latency,
+            gpa_fhdo_offset_time,
+            print_infos,
+            assert_errors,
+            init_gpa,
+            initial_wait,
+            auto_leds,
+            mimo_master,
+            trig_output_time,
+            slave_trig_latency,
+            trig_timeout,
+            prev_socket,
+            fix_cic_scale,
+            set_cic_shift,
+            allow_user_init_cfg,
+            halt_and_reset,
+            flush_old_rx)
 
     def getSamplingRate(self):
         """
