@@ -15,7 +15,7 @@ for subdir in subdirs:
     full_path = os.path.join(parent_directory, subdir)
     sys.path.append(full_path)
 #******************************************************************************
-import controller.experiment_gui as ex
+import controller.controller_device as device
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import configs.hw_config as hw
@@ -308,7 +308,7 @@ class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
 
 # **********************************************************************************************************************
 # METHOD TO ASSESS MINIMUM DELAY TO EDDY CURRENTS ATTENUATION FOR A GRADIENT ESTABLISHED IN A ZTE EMBODIMENT
-# import experiment as ex
+# import device as dev
 # import numpy as np
 # import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 # import scipy.signal as sig

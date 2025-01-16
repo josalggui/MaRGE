@@ -12,7 +12,7 @@ import numpy as np
 import configs.hw_config as hw
 from datetime import date, datetime
 from scipy.io import savemat, loadmat
-import controller.experiment_gui as ex
+import controller.controller_device as device
 import scipy.signal as sig
 import csv
 import ismrmrd
@@ -30,31 +30,37 @@ class MRIBLANKSEQ:
 
     This class provides functionality for creating and managing MRI sequences. It includes methods for setting
     parameters, generating sequences, processing data, and plotting results.
-
-    Attributes:
-        mapKeys (list): Keys for the maps.
-        mapNmspc (dict): Name to show in the GUI.
-        mapVals (dict): Values to show in the GUI.
-        mapFields (dict): Fields to classify the input parameters.
-        mapLen (dict): Length of the input values.
-        mapTips (dict): Tips for the input parameters.
-        map_units (dict): Units for the input parameters.
-        meta_data (dict): Dictionary to save meta data for DICOM files.
-        rotations (list): List of rotation matrices.
-        dfovs (list): List of displacement field of views.
-        fovs (list): List of field of views.
-        session (dict): Session information.
-        demo (bool): Demo information.
-        mode (string): Mode information for 'Standalone' execution.
-        flo_dict (dict): Dictionary containing sequence waveforms.
-
     """
 
     def __init__(self):
         """
-        Constructor method for initializing the MRIBLANKSEQ class instance.
+        Initialize an instance of the MRIBLANKSEQ class.
 
-        This method initializes the instance attributes.
+        This constructor method sets up the attributes necessary for managing
+        and configuring MRI sequences. It initializes various mappings, metadata,
+        hardware settings, and session parameters.
+
+        Attributes:
+            mapKeys (list): A list of keys used for internal mappings.
+            mapNmspc (dict): A dictionary to store namespace mappings.
+            mapVals (dict): A dictionary to store mapped values.
+            mapFields (dict): A dictionary to store mapping fields.
+            mapLen (dict): A dictionary to store the lengths of mapped items.
+            mapTips (dict): A dictionary to store mapping tooltips or hints.
+            map_units (dict): A dictionary to store units associated with mapped values.
+            meta_data (dict): A dictionary to store metadata related to the sequence.
+            rotations (list): Rotation parameters retrieved from the hardware configuration.
+            dfovs (list): Delta field-of-view parameters retrieved from the hardware configuration.
+            fovs (list): Field-of-view parameters retrieved from the hardware configuration.
+            session (dict): A dictionary to store session-specific settings or data.
+            demo (None or object): Placeholder for demo-related settings or data (default is None).
+            mode (None or str): Operational mode for the instance (default is None).
+            n_devices (int): Number of devices managed by the instance.
+            output (list): A list to store output data (default is an empty list).
+            raw_data_name (str): Name used for raw data storage (default is "raw_data").
+            flo_dict (dict): A dictionary containing hardware channel configurations,
+                initialized with empty lists for each channel type, including gradient (g0, g1, g2),
+                receiver (rx0, rx1), transmitter (tx0, tx1), and TTL channels (ttl0, ttl1).
         """
         self.mapKeys = []
         self.mapNmspc = {}
@@ -226,13 +232,36 @@ class MRIBLANKSEQ:
         for seq_num in waveforms.keys():
             # Initialize the experiment if not in demo mode
             if not self.demo:
-                self.expt = ex.Experiment(
-                    lo_freq=frequency,  # Larmor frequency in MHz
-                    rx_t=1 / bandwidth,  # Sampling time in us
-                    init_gpa=False,  # Whether to initialize GPA board (False for now)
-                    gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
-                    auto_leds=True  # Automatic control of LEDs
-                )
+                # Define device arguments
+                dev_kwargs = {
+                    "lo_freq": frequency,
+                    "rx_t": 1 / bandwidth,
+                    "print_infos": True,
+                    "assert_errors": True,
+                    "halt_and_reset": False,
+                    "fix_cic_scale": True,
+                    "set_cic_shift": False,  # needs to be true for open-source cores
+                    "flush_old_rx": False,
+                    "init_gpa": False,
+                    "gpa_fhdo_offset_time": 1 / 0.2 / 3.1,
+                    "auto_leds": True
+                }
+
+                # Define master arguments
+                master_kwargs = {
+                    'mimo_master': True,
+                    'trig_output_time': 1e5,
+                    'slave_trig_latency': 6.079
+                }
+
+                # Create list of devices
+                for ip in hw.rp_ip_list:
+                    devices = [device(
+                        ip_address=ip,
+                        port=hw.rp_port,
+                        **(master_kwargs | dev_kwargs)
+                    )]
+                    master_kwargs = {}
 
             # Convert the PyPulseq waveform to the Red Pitaya compatible format
             self.pypulseq2mriblankseq(waveforms=waveforms[seq_num],

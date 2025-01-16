@@ -2,10 +2,10 @@
 # Vlad Negnevitsky, October 2020
 # Rudimentary setup procedure for the SDRLab
 
-if [[ "$#" -ne 2 || ($2 != "rp-125" && $2 != "rp-122" ) ]]; then
+if [[ "$#" -ne 2 || ($2 != "rp-125" && $2 != "rp-122" && $2 != "rp-122_opensource" && $2 != "rp-122_single") ]]; then
     echo "Usage: ./copy_bitstream.sh IP DEVICE"
     echo "IP: the IP address of your SDRLab/RP"
-    echo "DEVICE: your SDRLab/RP hardware, either rp-122 or rp-125"
+    echo "DEVICE: your SDRLab/RP hardware, either rp-122 or rp-125 or rp-122_opensource or rp-122_single"
     echo "Example usage: "
     echo "   ./copy_bitstream.sh 192.168.1.163 rp-122"
     echo "*Warning*: marga bitstream currently only runs on rp-122 for now!"

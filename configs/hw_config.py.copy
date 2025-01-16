@@ -43,7 +43,7 @@ fovs = []  # List of FOVs in cm, each fov is a list of three elements [fov_x, fo
 bash_path = "C:/Program Files/Git/git-bash.exe"  # use "gnome-terminal" for genome linux
 
 # Red Pitaya connection configuration
-rp_ip_address = "192.168.1.101"
+rp_ip_list = ["192.168.1.101"]
 rp_port = 11111
 rp_version = "rp-122"
 rp_max_input_voltage = 225  # mV

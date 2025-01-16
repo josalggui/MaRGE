@@ -1,5 +1,5 @@
 
-import controller.experiment_gui as ex
+import controller.controller_device as device
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig

@@ -21,7 +21,7 @@ for subdir in subdirs:
     sys.path.append(full_path)
 #******************************************************************************
 import numpy as np
-import controller.experiment_gui as ex
+import controller.controller_device as device
 import configs.hw_config as hw  # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.

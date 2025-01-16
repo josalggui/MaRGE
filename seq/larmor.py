@@ -21,7 +21,7 @@ for subdir in subdirs:
     full_path = os.path.join(parent_directory, subdir)
     sys.path.append(full_path)
 #******************************************************************************
-import controller.experiment_gui as ex
+import controller.controller_device as device
 import numpy as np
 import seq.mriBlankSeq as blankSeq
 import configs.hw_config as hw

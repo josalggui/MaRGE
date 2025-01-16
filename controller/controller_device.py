@@ -54,7 +54,7 @@ class Experiment(dev.Device):
         It inherits all the attributes and methods from the base class and overrides the __init__() and run() methods.
     """
     def __init__(self,
-                 ip_address=hw.rp_ip_address,  # by default imported from local_config, but can be overriden if desired
+                 ip_address=hw.rp_ip_list,  # by default imported from local_config, but can be overriden if desired
                  port=hw.rp_port,  # by default imported from local_config, but can be overriden if desired
                  fpga_clk_freq_MHz=hw.fpga_clk_freq_MHz,
                  grad_board=hw.grad_board,

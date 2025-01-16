@@ -9,7 +9,7 @@ import time
 from widgets.widget_toolbar_marcos import MarcosToolBar
 import subprocess
 import platform
-import experiment as ex
+import device as dev
 import numpy as np
 import shutil
 import configs.hw_config as hw
@@ -63,12 +63,13 @@ class MarcosController(MarcosToolBar):
     def search_sdrlab(self):
         # Get the IP of the SDRLab
         if not self.main.demo:
+            hw.rp_ip_list = []
             try:
-                hw.rp_ip_address = self.get_sdrlab_ip()[0]
+                self.get_sdrlab_ip()
             except:
                 print("ERROR: No SDRLab found.")
                 try:
-                    hw.rp_ip_address = self.get_sdrlab_ip()[0]
+                    self.get_sdrlab_ip()
                 except:
                     print("ERROR: No communication with SDRLab.")
                     print("ERROR: Try manually.")
@@ -77,11 +78,11 @@ class MarcosController(MarcosToolBar):
     def get_sdrlab_ip():
         print("Searching for SDRLabs...")
 
-        ip_addresses = []
+        hw.rp_ip_list = []
         subnet = '192.168.1.'
         timeout = 0.1  # Adjust timeout value as needed
 
-        for i in range(101, 132):  # Scan IP range 192.168.1.101 to 192.168.1.132
+        for i in range(100, 132):  # Scan IP range 192.168.1.101 to 192.168.1.132
             ip = subnet + str(i)
             try:
                 if platform.system() == 'Linux':
@@ -98,16 +99,16 @@ class MarcosController(MarcosToolBar):
                     ssh_result = subprocess.run(ssh_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
                     if ssh_result.returncode == 0:  # SSH was successful
-                        ip_addresses.append(ip)
+                        hw.rp_ip_list.append(ip)
                     else:
                         print(f"WARNING: No SDRLab found at ip {ip}.")
             except:
                 pass
 
-        for ip in ip_addresses:
-            print("READY: SDRLab found at IP " + ip)
+        for ip in hw.rp_ip_list:
+            print("SDRLab found at IP " + ip)
 
-        return ip_addresses
+        print("READY: SDRLab detection finished.")
 
     def startMaRCoS(self):
         """

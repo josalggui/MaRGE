@@ -30,7 +30,7 @@ import scipy.signal as sig
 
 import pypulseq as pp
 
-import experiment as ex
+import device as dev
 import configs.hw_config as hw
 import configs.units as units
 import seq.mriBlankSeq as blankSeq

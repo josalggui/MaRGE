@@ -22,7 +22,7 @@ for subdir in subdirs:
     sys.path.append(full_path)
 #******************************************************************************
 import numpy as np
-import controller.experiment_gui as ex
+import controller.controller_device as device
 import scipy.signal as sig
 from scipy.stats import linregress
 import configs.hw_config as hw # Import the scanner hardware config
@@ -43,7 +43,7 @@ import pypulseq as pp
 
 class RarePyPulseq(blankSeq.MRIBLANKSEQ):
     def __init__(self):
-        super(RarePyPulseq, self).__init__()
+        super().__init__()
         # Input the parameters
         self.sequence_list = None
         self.unlock_orientation = None
