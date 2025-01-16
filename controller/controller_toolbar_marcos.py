@@ -6,6 +6,8 @@
 """
 import time
 
+import paramiko
+
 from widgets.widget_toolbar_marcos import MarcosToolBar
 import subprocess
 import platform
@@ -82,7 +84,7 @@ class MarcosController(MarcosToolBar):
         subnet = '192.168.1.'
         timeout = 0.1  # Adjust timeout value as needed
 
-        for i in range(100, 132):  # Scan IP range 192.168.1.101 to 192.168.1.132
+        for i in range(101, 133):  # Scan IP range 192.168.1.101 to 192.168.1.132
             ip = subnet + str(i)
             try:
                 if platform.system() == 'Linux':
@@ -138,25 +140,28 @@ class MarcosController(MarcosToolBar):
         """
         if not self.main.demo:
             if not self.action_server.isChecked():
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                for ip in hw.rp_ip_list:
+                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
                 self.action_server.setStatusTip('Connect to marcos server')
                 self.action_server.setToolTip('Connect to marcos server')
                 print("Server disconnected")
             else:
                 try:
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                    time.sleep(1.5)
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
-                    time.sleep(1.5)
+                    for ip in hw.rp_ip_list:
+                        subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+                        time.sleep(1.5)
+                        subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "~/marcos_server"])
+                        time.sleep(1.5)
                     self.action_server.setStatusTip('Kill marcos server')
                     self.action_server.setToolTip('Kill marcos server')
 
-                    expt = ex.Experiment(init_gpa=False)
-                    expt.add_flodict({
-                        'grad_vx': (np.array([100]), np.array([0])),
-                    })
-                    expt.run()
-                    expt.__del__()
+                    # TODO: Test connection to server
+                    # device = dev.Device(init_gpa=False)
+                    # device.add_flodict({
+                    #     'grad_vx': (np.array([100]), np.array([0])),
+                    # })
+                    # device.run()
+                    # device.__del__()
                     print("READY: Server connected!")
 
                 except Exception as e:
@@ -174,9 +179,10 @@ class MarcosController(MarcosToolBar):
         """
         if not self.main.demo:
             try:
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', hw.rp_ip_address, 'rp-122'], timeout=10)
-                print("READY: MaRCoS updated")
+                for ip in hw.rp_ip_list:
+                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+                    subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', ip, 'rp-122'], timeout=10)
+                    print(f"READY: communication with FPGA from {ip} established")
             except subprocess.TimeoutExpired as e:
                 print("ERROR: MaRCoS init timeout")
                 print(e)
