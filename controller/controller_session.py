@@ -4,6 +4,9 @@
 :affiliation: MRILab, i3M, CSIC, Valencia, Spain
 
 """
+import threading
+import time
+
 from ui.window_session import SessionWindow
 from controller.controller_main import MainController
 import os
@@ -90,12 +93,20 @@ class SessionController(SessionWindow):
         Args:
             event: The close event.
         """
+
+        def disconnect_server():
+            ip = self.ip
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+
         if self.main_gui is not None:
             self.main_gui.app_open = False
             if not self.main_gui.demo:
                 # Close server
                 try:
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                    for self.ip in hw.rp_ip_list:
+                        thread = threading.Thread(target=disconnect_server)
+                        thread.start()
+                        time.sleep(0.1)
                 except:
                     print(
                         "ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
@@ -110,13 +121,20 @@ class SessionController(SessionWindow):
         """
         Closes the session and exits the program.
         """
+
+        def disconnect_server():
+            ip = self.ip
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+
         if self.main_gui is not None:
             self.main_gui.app_open = False
             if not self.main_gui.demo:
                 # Close server
                 try:
-                    subprocess.run(
-                        [hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                    for self.ip in hw.rp_ip_list:
+                        thread = threading.Thread(target=disconnect_server)
+                        thread.start()
+                        time.sleep(0.1)
                 except:
                     print(
                         "ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
