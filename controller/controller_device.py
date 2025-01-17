@@ -25,11 +25,15 @@ import server_comms as sc
 import configs.hw_config as hw
 import numpy as np
 
-class Experiment(dev.Device):
+class Device(dev.Device):
     """
-    Custom experiment class that extends the base Experiment class from the 'ex' module.
+    Custom experiment class that extends the base Device class from the 'ex' module.
 
     Args:
+        ip_address: IP address of SDRLab
+        port: port of SDRLab
+        fpga_clk_freq_MHz: SDRLab's clock frequency
+        grad_board: gradient board of SDRLab; either "ocra1", "gpa-fhdo" or "none".
         lo_freq (float): Frequency of the LO (Local Oscillator) in MHz.
         rx_t (float): RX (Receiver) time in microseconds. Should be multiples of 1/122.88, where some values like 3.125 are exact.
         seq_dict (dict): Dictionary containing the sequence information.
@@ -39,7 +43,7 @@ class Experiment(dev.Device):
         gpa_fhdo_offset_time (int): Offset time used when GPA-FHDO (Gradient Pulse Amplitude - Fractional High Dynamic Range Output) is used.
         print_infos (bool): Flag to control the display of server info messages.
         assert_errors (bool): Flag to control whether to halt on server errors.
-        init_gpa (bool): Flag to initialize the GPA (Gradient Pulse Amplitude) when the Experiment object is created.
+        init_gpa (bool): Flag to initialize the GPA (Gradient Pulse Amplitude) when the Device object is created.
         initial_wait (float): Initial pause before the experiment begins, in microseconds. Required to configure the LOs (Local Oscillators) and RX rate.
         auto_leds (bool): Flag to automatically scan the LED (Light-Emitting Diode) pattern from 0 to 255 as the sequence runs.
         prev_socket (socket): Previously-opened socket to maintain status.
@@ -50,7 +54,7 @@ class Experiment(dev.Device):
         flush_old_rx (bool): Flag to read out and clear the old RX (Receiver) FIFOs before running a sequence.
 
     Summary:
-        The Experiment class extends the base Experiment class from the 'ex' module and provides additional functionality and customization for experiments.
+        The Device class extends the base Device class from the 'ex' module and provides additional functionality and customization for experiments.
         It inherits all the attributes and methods from the base class and overrides the __init__() and run() methods.
     """
     def __init__(self,
@@ -68,7 +72,7 @@ class Experiment(dev.Device):
                  gpa_fhdo_offset_time=0, # when GPA-FHDO is used, offset the Y, Z and Z2 gradient times by 1x, 2x and 3x this value to emulate 'simultaneous' updates
                  print_infos=True,  # show server info messages
                  assert_errors=True,  # halt on server errors
-                 init_gpa=False,  # initialise the GPA (will reset its outputs when the Experiment object is created)
+                 init_gpa=False,  # initialise the GPA (will reset its outputs when the Device object is created)
                  initial_wait=None, # initial pause before experiment begins - required to configure the LOs and RX rate; must be at least a few us. Is suitably set based on grad_max_update_rate by default.
                  auto_leds=True, # automatically scan the LED pattern from 0 to 255 as the sequence runs (set to off if you wish to manually control the LEDs)
                  mimo_master=False,  # if MIMO master, add a trigger pulse to trig_out channel
@@ -83,7 +87,7 @@ class Experiment(dev.Device):
                  flush_old_rx=False, # when debugging or developing new code, you may accidentally fill up the RX FIFOs - they will not automatically be cleared in case there is important data inside. Setting this true will always read them out and clear them before running a sequence. More advanced manual code can read RX from existing sequences.
                  ):
         """
-        Initialize the Experiment object with the specified parameters.
+        Initialize the Device object with the specified parameters.
         """
         super().__init__(
             ip_address,
