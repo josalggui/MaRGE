@@ -6,14 +6,17 @@
 """
 import time
 
+from configs.hw_config import rp_ip_list
 from widgets.widget_toolbar_marcos import MarcosToolBar
 import subprocess
-import device as dev
+import controller.controller_device as device
+from mimo_devices import mimo_dev_run
 import numpy as np
 import shutil
 import configs.hw_config as hw
 import autotuning.autotuning as autotuning # Just to use an arduino
 import threading
+import multiprocessing as mp
 
 
 class MarcosController(MarcosToolBar):
@@ -199,13 +202,30 @@ class MarcosController(MarcosToolBar):
                         self.arduino.send("GPA_ON 0;")
                         self.arduino.send("RFPA_RF 0;")
 
+                        # Define device arguments
+                        dev_kwargs = {
+                            "init_gpa": True,
+                        }
+
+                        # Define master arguments
+                        master_kwargs = {
+                            'mimo_master': True,
+                            'trig_output_time': 1e5,
+                            'slave_trig_latency': 6.079
+                        }
+
+                        # Create list of devices
+                        master_device = device.Device(
+                            ip_address=rp_ip_list[0], port=hw.rp_port, **(master_kwargs | dev_kwargs))
+
                         # Run init_gpa sequence
-                        expt = ex.Experiment(init_gpa=True)
-                        expt.add_flodict({
+                        master_device.add_flodict({
                             'grad_vx': (np.array([100]), np.array([0])),
                         })
-                        expt.run()
-                        expt.__del__()
+                        mpl = [(master_device, 0)]
+                        with mp.Pool(1) as p:
+                            p.map(mimo_dev_run, mpl)
+                        master_device.__del__()  # manual destructor needed
                         link = True
                         print("READY: GPA init done!")
 
