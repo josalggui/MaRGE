@@ -6,11 +6,8 @@
 """
 import time
 
-import paramiko
-
 from widgets.widget_toolbar_marcos import MarcosToolBar
 import subprocess
-import platform
 import device as dev
 import numpy as np
 import shutil
@@ -43,10 +40,10 @@ class MarcosController(MarcosToolBar):
         super(MarcosController, self).__init__(*args, **kwargs)
 
         # Copy relevant files from marcos_extras
-        shutil.copy("../marcos_extras/copy_bitstream.sh", "../MaRGE")
-        shutil.copy("../marcos_extras/marcos_fpga_rp-122.bit", "../MaRGE")
-        shutil.copy("../marcos_extras/marcos_fpga_rp-122.bit.bin", "../MaRGE")
-        shutil.copy("../marcos_extras/marcos_fpga_rp-122.dtbo", "../MaRGE")
+        shutil.copy(f"../marcos_extras/copy_bitstream.sh", "../MaRGE")
+        shutil.copy(f"../marcos_extras/marcos_fpga_{hw.rp_version}.bit", "../MaRGE")
+        shutil.copy(f"../marcos_extras/marcos_fpga_{hw.rp_version}.bit.bin", "../MaRGE")
+        shutil.copy(f"../marcos_extras/marcos_fpga_{hw.rp_version}.dtbo", "../MaRGE")
         shutil.copy("../marcos_extras/readme.org", "../MaRGE")
 
         self.action_server.setCheckable(True)
@@ -55,62 +52,9 @@ class MarcosController(MarcosToolBar):
         self.action_copybitstream.triggered.connect(self.copyBitStream)
         self.action_gpa_init.triggered.connect(self.initgpa)
 
-        thread = threading.Thread(target=self.search_sdrlab)
-        thread.start()
-
         # Arduino to control the interlock
         self.arduino = autotuning.Arduino(baudrate=19200, name="interlock", serial_number=hw.ard_sn_interlock)
         self.arduino.connect()
-
-    def search_sdrlab(self):
-        # Get the IP of the SDRLab
-        if not self.main.demo:
-            hw.rp_ip_list = []
-            try:
-                self.get_sdrlab_ip()
-            except:
-                print("ERROR: No SDRLab found.")
-                try:
-                    self.get_sdrlab_ip()
-                except:
-                    print("ERROR: No communication with SDRLab.")
-                    print("ERROR: Try manually.")
-
-    @staticmethod
-    def get_sdrlab_ip():
-        print("Searching for SDRLabs...")
-
-        hw.rp_ip_list = []
-        subnet = '192.168.1.'
-        timeout = 0.1  # Adjust timeout value as needed
-
-        for i in range(101, 133):  # Scan IP range 192.168.1.101 to 192.168.1.132
-            ip = subnet + str(i)
-            try:
-                if platform.system() == 'Linux':
-                    result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                   timeout=timeout)
-                elif platform.system() == 'Windows':
-                    result = subprocess.run(['ping', '-n', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                   timeout=timeout)
-                if result.returncode == 0:
-                    print(f"Checking ip {ip}...")
-                    # Attempt SSH connection without authentication
-                    ssh_command = ['ssh', '-o', 'BatchMode=yes', '-o', f'ConnectTimeout={5}',
-                                   f'{"root"}@{ip}', 'exit']
-                    ssh_result = subprocess.run(ssh_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-                    if ssh_result.returncode == 0:  # SSH was successful
-                        hw.rp_ip_list.append(ip)
-                    else:
-                        print(f"WARNING: No SDRLab found at ip {ip}.")
-            except:
-                pass
-
-        for ip in hw.rp_ip_list:
-            print("SDRLab found at IP " + ip)
-
-        print("READY: SDRLab detection finished.")
 
     def startMaRCoS(self):
         """
@@ -119,7 +63,6 @@ class MarcosController(MarcosToolBar):
         Executes startRP.sh: copy_bitstream.sh & marcos_server.
         """
         if not self.main.demo:
-
             try:
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 subprocess.run([hw.bash_path, "--", "./startRP.sh", hw.rp_ip_address, hw.rp_version])
@@ -138,20 +81,35 @@ class MarcosController(MarcosToolBar):
 
         Connects or disconnects from the MaRCoS server.
         """
+        def connect_server():
+            ip = self.ip
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+            result = subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "~/marcos_server"],
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if result.returncode == 0:
+                print(f"READY: {ip} server connected!")
+            else:
+                print(f"ERROR: {ip} server not connected!")
+
+        def disconnect_server():
+            ip = self.ip
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+            self.action_server.setStatusTip('Connect to marcos server')
+            self.action_server.setToolTip('Connect to marcos server')
+            print("Server disconnected")
+
         if not self.main.demo:
             if not self.action_server.isChecked():
-                for ip in hw.rp_ip_list:
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
-                self.action_server.setStatusTip('Connect to marcos server')
-                self.action_server.setToolTip('Connect to marcos server')
-                print("Server disconnected")
+                for self.ip in hw.rp_ip_list:
+                    thread = threading.Thread(target=disconnect_server)
+                    thread.start()
+                    time.sleep(0.1)
             else:
                 try:
-                    for ip in hw.rp_ip_list:
-                        subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
-                        time.sleep(1.5)
-                        subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "~/marcos_server"])
-                        time.sleep(1.5)
+                    for self.ip in hw.rp_ip_list:
+                        thread = threading.Thread(target=connect_server)
+                        thread.start()
+                        time.sleep(0.1)
                     self.action_server.setStatusTip('Kill marcos server')
                     self.action_server.setToolTip('Kill marcos server')
 
@@ -162,7 +120,6 @@ class MarcosController(MarcosToolBar):
                     # })
                     # device.run()
                     # device.__del__()
-                    print("READY: Server connected!")
 
                 except Exception as e:
                     print("ERROR: Server not connected!")
@@ -177,12 +134,22 @@ class MarcosController(MarcosToolBar):
 
         Executes copy_bitstream.sh.
         """
+        def do_copy_bitstream():
+            ip = self.ip
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+            start_time = time.time()
+            subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', ip, hw.rp_version], timeout=10)
+            if time.time() - start_time<10:
+                print(f"READY: {ip} initialized!")
+            else:
+                print(f"WARNING: {ip} timeout.")
+
         if not self.main.demo:
             try:
-                for ip in hw.rp_ip_list:
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
-                    subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', ip, 'rp-122'], timeout=10)
-                    print(f"READY: communication with FPGA from {ip} established")
+                for self.ip in hw.rp_ip_list:
+                    thread = threading.Thread(target=do_copy_bitstream)
+                    thread.start()
+                    time.sleep(0.1)
             except subprocess.TimeoutExpired as e:
                 print("ERROR: MaRCoS init timeout")
                 print(e)
