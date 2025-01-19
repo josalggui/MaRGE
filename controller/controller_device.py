@@ -95,7 +95,7 @@ class Device(dev.Device):
             fpga_clk_freq_MHz,
             grad_board,
             lo_freq,
-            rx_t,
+            rx_t / hw.oversamplingFactor,
             seq_dict,
             seq_csv,
             rx_lo,

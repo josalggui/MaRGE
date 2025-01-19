@@ -13,12 +13,14 @@ import configs.hw_config as hw
 from datetime import date, datetime
 from scipy.io import savemat, loadmat
 import controller.controller_device as device
+from mimo_devices import mimo_dev_run
 import scipy.signal as sig
 import csv
 import ismrmrd
 import matplotlib.pyplot as plt
 from skimage.util import view_as_blocks
 from skimage.measure import shannon_entropy
+import multiprocessing as mp
 
 # Import dicom saver
 from manager.dicommanager import DICOMImage
@@ -257,7 +259,7 @@ class MRIBLANKSEQ:
                 # Create list of devices
                 self.devices = []
                 for ip in hw.rp_ip_list:
-                    self.devices.append(device(
+                    self.devices.append(device.Device(
                         ip_address=ip,
                         port=hw.rp_port,
                         **(master_kwargs | dev_kwargs)
@@ -290,8 +292,8 @@ class MRIBLANKSEQ:
                     while acquired_points != expected_points:
                         if not self.demo:
                             devl = []  # devices and delays
-                            for device in self.devices:
-                                devl.append((device, 0))  # set delay to 0 between devices
+                            for dev in self.devices:
+                                devl.append((dev, 0))  # set delay to 0 between devices
                             with mp.Pool(len(self.devices)) as p:
                                 results, msgs = p.map(mimo_dev_run, devl)  # Run the experiment and collect data
                         else:
@@ -335,8 +337,8 @@ class MRIBLANKSEQ:
                 self.sequencePlot(standalone=self.standalone)
 
             if not self.demo:
-                for device in self.devices:
-                    device.__del__()
+                for dev in self.devices:
+                    dev.__del__()
 
         return True
 

@@ -89,7 +89,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 10], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ') ## nm of peaks in 1 repetition
@@ -365,12 +365,12 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         # Define experiment
         if not self.demo:
-            device = device(ip_address=ip, port=hw.rp_port, **(master_kwargs | dev_kwargs))
-            sampling_period = device.get_sampling_period() # us
+            dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port, **(master_kwargs | dev_kwargs))
+            sampling_period = dev.get_sampling_period() # us
             bw = 1 / sampling_period  # MHz
             sampling_time = sampling_period * n_rd * 1e-6  # s
             print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
-            device.__del__()
+            dev.__del__()
         else:
             sampling_time = sampling_period * n_rd * 1e-6  # s
         self.mapVals['bw_MHz'] = bw
@@ -1284,5 +1284,5 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__':
     seq = RarePyPulseq()
     seq.sequenceAtributes()
-    seq.sequenceRun(plot_seq=False, demo=True, standalone=True)
+    seq.sequenceRun(plot_seq=False, demo=False, standalone=True)
     seq.sequenceAnalysis(mode='Standalone')

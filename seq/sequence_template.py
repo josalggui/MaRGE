@@ -193,18 +193,34 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         experiment must be defined and the sampling period should be obtained using get_
         '''
 
+        # Define device arguments
+        dev_kwargs = {
+            "lo_freq": hw.larmorFreq,
+            "rx_t": 1 / bw,
+            "print_infos": True,
+            "assert_errors": True,
+            "halt_and_reset": False,
+            "fix_cic_scale": True,
+            "set_cic_shift": False,  # needs to be true for open-source cores
+            "flush_old_rx": False,
+            "init_gpa": False,
+            "gpa_fhdo_offset_time": 1 / 0.2 / 3.1,
+            "auto_leds": True
+        }
+
+        # Define master arguments
+        master_kwargs = {
+            'mimo_master': True,
+            'trig_output_time': 1e5,
+            'slave_trig_latency': 6.079
+        }
+
         if not self.demo:
-            expt = ex.Experiment(
-                lo_freq=hw.larmorFreq,  # Larmor frequency in MHz
-                rx_t=sampling_period,  # Sampling time in us
-                init_gpa=False,  # Whether to initialize GPA board (False for True)
-                gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
-                auto_leds=True  # Automatic control of LEDs (False or True)
-            )
-            sampling_period = expt.get_sampling_period()  # us
+            dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port, **(master_kwargs | dev_kwargs))
+            sampling_period = dev.get_sampling_period()  # us
             bw = 1 / sampling_period  # MHz
             print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
-            expt.__del__()
+            dev.__del__()
         self.mapVals['bw_MHz'] = bw
         self.mapVals['sampling_period_us'] = sampling_period
 
