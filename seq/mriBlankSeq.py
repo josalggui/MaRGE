@@ -13,7 +13,6 @@ import configs.hw_config as hw
 from datetime import date, datetime
 from scipy.io import savemat, loadmat
 import controller.controller_device as device
-from mimo_devices import mimo_dev_run
 import scipy.signal as sig
 import csv
 import ismrmrd
@@ -257,14 +256,8 @@ class MRIBLANKSEQ:
                 }
 
                 # Create list of devices
-                self.devices = []
-                for ip in hw.rp_ip_list:
-                    self.devices.append(device.Device(
-                        ip_address=ip,
-                        port=hw.rp_port,
-                        **(master_kwargs | dev_kwargs)
-                    ))
-                    master_kwargs = {}
+                devices = device.MimoDevices(ips=hw.rp_ip_list, ports=hw.rp_port, **(master_kwargs | dev_kwargs))
+                self.devices = devices.dev_list()
 
             # Convert the PyPulseq waveform to the Red Pitaya compatible format
             self.pypulseq2mriblankseq(waveforms=waveforms[seq_num],
@@ -291,11 +284,8 @@ class MRIBLANKSEQ:
                     # Continue acquiring points until we reach the expected number
                     while acquired_points != expected_points:
                         if not self.demo:
-                            devl = []  # devices and delays
-                            for dev in self.devices:
-                                devl.append((dev, 0))  # set delay to 0 between devices
-                            with mp.Pool(len(self.devices)) as p:
-                                results, msgs = p.map(mimo_dev_run, devl)  # Run the experiment and collect data
+                            result = devices.run()  # Run the experiment and collect data
+                            results = [tup[0] for tup in result]  # List of rx results for each device
                         else:
                             # In demo mode, generate random data as a placeholder
                             results = []
@@ -1515,7 +1505,7 @@ class MRIBLANKSEQ:
                                          'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
                                          'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
                                          'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
-                                         'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
+                                         'rx1_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
                                          'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
                                          'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
                                          'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
@@ -1523,7 +1513,7 @@ class MRIBLANKSEQ:
                                          }, rewrite)
             for ii in range(1, len(self.devices)):
                 self.devices[ii].add_flodict({'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
-                                              'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
+                                              'rx1_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
                                               }, rewrite)
         return True
 

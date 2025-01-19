@@ -365,7 +365,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         # Define experiment
         if not self.demo:
-            dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port, **(master_kwargs | dev_kwargs))
+            dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port[0], **(master_kwargs | dev_kwargs))
             sampling_period = dev.get_sampling_period() # us
             bw = 1 / sampling_period  # MHz
             sampling_time = sampling_period * n_rd * 1e-6  # s
