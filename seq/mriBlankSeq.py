@@ -226,7 +226,7 @@ class MRIBLANKSEQ:
         self.mapVals['n_batches'] = len(n_readouts.values())
 
         # Initialize a list to hold oversampled data
-        data_over = []
+        data_over = [[] for _ in range(2*len(hw.rp_ip_list))]
 
         # Iterate through each batch of waveforms
         for seq_num in waveforms.keys():
@@ -255,12 +255,13 @@ class MRIBLANKSEQ:
                 }
 
                 # Create list of devices
+                self.devices = []
                 for ip in hw.rp_ip_list:
-                    devices = [device(
+                    self.devices.append(device(
                         ip_address=ip,
                         port=hw.rp_port,
                         **(master_kwargs | dev_kwargs)
-                    )]
+                    ))
                     master_kwargs = {}
 
             # Convert the PyPulseq waveform to the Red Pitaya compatible format
@@ -288,13 +289,21 @@ class MRIBLANKSEQ:
                     # Continue acquiring points until we reach the expected number
                     while acquired_points != expected_points:
                         if not self.demo:
-                            rxd, msgs = self.expt.run()  # Run the experiment and collect data
+                            devl = []  # devices and delays
+                            for device in self.devices:
+                                devl.append((device, 0))  # set delay to 0 between devices
+                            with mp.Pool(len(self.devices)) as p:
+                                results, msgs = p.map(mimo_dev_run, devl)  # Run the experiment and collect data
                         else:
                             # In demo mode, generate random data as a placeholder
-                            rxd = {'rx0': np.random.randn(expected_points) + 1j * np.random.randn(expected_points)}
+                            results = []
+                            for ii in range(len(hw.rp_ip_list)):
+                                results.append(
+                                    {'rx0': np.random.randn(expected_points) + 1j * np.random.randn(expected_points),
+                                     'rx1': np.random.randn(expected_points) + 1j * np.random.randn(expected_points)})
 
                         # Update acquired points
-                        acquired_points = np.size(rxd['rx0'])
+                        acquired_points = np.size(results[0]['rx0'])
 
                         # Check if acquired points coincide with expected points
                         if acquired_points != expected_points:
@@ -302,18 +311,23 @@ class MRIBLANKSEQ:
                             print("Repeating batch...")
 
                     # Concatenate acquired data into the oversampled data array
-                    data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
+                    for ii in range(len(hw.rp_ip_list)):
+                        data_over[2*ii] = np.concatenate((data_over[2*ii], results[ii]['rx0']), axis=0)
+                        data_over[2*ii+1] = np.concatenate((data_over[2*ii+1], results[ii]['rx1']), axis=0)
                     print(f"Acquired points = {acquired_points}, Expected points = {expected_points}")
                     print(f"Scan {scan + 1}, batch {seq_num[-1]}/{len(n_readouts)} ready!")
 
                 # Decimate the oversampled data and store it
+                data = []
                 if output=='':
                     self.mapVals[f'data_over'] = data_over
-                    data = self.decimate(data_over, n_adc=n_adc, option='Normal', remove=False)
+                    for data_prov in data_over:
+                        data.append(self.decimate(data_prov, n_adc=n_adc, option='Normal', remove=False))
                     self.mapVals[f'data_decimated'] = data
                 else:
                     self.mapVals[f'data_over_{output}'] = data_over
-                    data = self.decimate(data_over, n_adc=n_adc, option='Normal', remove=False)
+                    for data_prov in data_over:
+                        data.append(self.decimate(data_prov, n_adc=n_adc, option='Normal', remove=False))
                     self.mapVals[f'data_decimated_{output}'] = data
 
             elif self.plotSeq and self.standalone:
@@ -321,7 +335,8 @@ class MRIBLANKSEQ:
                 self.sequencePlot(standalone=self.standalone)
 
             if not self.demo:
-                self.expt.__del__()
+                for device in self.devices:
+                    device.__del__()
 
         return True
 
@@ -1494,16 +1509,20 @@ class MRIBLANKSEQ:
 
         # Add instructions to server
         if not self.demo:
-            self.expt.add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
-                                   'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
-                                   'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
-                                   'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
-                                   'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
-                                   'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
-                                   'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
-                                   'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
-                                   'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
-                                   }, rewrite)
+            self.devices[0].add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
+                                         'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
+                                         'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
+                                         'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
+                                         'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
+                                         'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
+                                         'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
+                                         'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
+                                         'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
+                                         }, rewrite)
+            for ii in range(1, len(self.devices)):
+                self.devices[ii].add_flodict({'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
+                                              'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
+                                              }, rewrite)
         return True
 
     def saveRawData(self):

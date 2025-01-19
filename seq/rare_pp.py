@@ -341,17 +341,36 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         # Note: experiment must be passed as a class property named self.expt
         '''
 
+        # Define device arguments
+        dev_kwargs = {
+            "lo_freq": hw.larmorFreq,
+            "rx_t": 1 / bw,
+            "print_infos": True,
+            "assert_errors": True,
+            "halt_and_reset": False,
+            "fix_cic_scale": True,
+            "set_cic_shift": False,  # needs to be true for open-source cores
+            "flush_old_rx": False,
+            "init_gpa": False,
+            "gpa_fhdo_offset_time": 1 / 0.2 / 3.1,
+            "auto_leds": True
+        }
+
+        # Define master arguments
+        master_kwargs = {
+            'mimo_master': True,
+            'trig_output_time': 1e5,
+            'slave_trig_latency': 6.079
+        }
+
+        # Define experiment
         if not self.demo:
-            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
-                                      rx_t=sampling_period,  # us
-                                      init_gpa=False,
-                                      gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                      auto_leds=True)
-            sampling_period = self.expt.get_sampling_period() # us
+            device = device(ip_address=ip, port=hw.rp_port, **(master_kwargs | dev_kwargs))
+            sampling_period = device.get_sampling_period() # us
             bw = 1 / sampling_period  # MHz
             sampling_time = sampling_period * n_rd * 1e-6  # s
             print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
-            self.expt.__del__()
+            device.__del__()
         else:
             sampling_time = sampling_period * n_rd * 1e-6  # s
         self.mapVals['bw_MHz'] = bw
@@ -832,8 +851,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         # Get data
         axes_enable = self.mapVals['axes_enable']
-        data_over = self.mapVals['data_over']
-        data_decimated = self.mapVals['data_decimated']
+        data_over = self.mapVals['data_over'][0]
+        data_decimated = self.mapVals['data_decimated'][0]
         n_rd, n_ph, n_sl = self.nPoints
         n_rd = n_rd + 2 * hw.addRdPoints
         n_sl = (n_sl // 2 + self.mapVals['partialAcquisition'] * axes_enable[2] + (1 - axes_enable[2]))
