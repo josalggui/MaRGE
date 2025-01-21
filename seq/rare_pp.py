@@ -76,7 +76,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.angle = None
         self.axesOrientation = None
         self.addParameter(key='seqName', string='RAREInfo', val='RarePyPulseq')
-        self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
+        self.addParameter(key='pypulseq', string='PyPulseq', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM') ## number of scans 
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
@@ -89,7 +90,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 10], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ') ## nm of peaks in 1 repetition
@@ -141,19 +142,6 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         return seq_time  # minutes, scanTime
 
         # TODO: check for min and max values for all fields
-
-    def sequenceAtributes(self):
-        super().sequenceAtributes()
-
-        # Conversion of variables to non-multiplied units
-        self.angle = self.angle * np.pi / 180 # rads
-
-        # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.tolist()
-        self.rotation.append(self.angle)
-        self.rotations.append(self.rotation)
-        self.dfovs.append(self.dfov.tolist())
-        self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plot_seq=False, demo=False, standalone=False):
         """
@@ -253,6 +241,15 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             print("ERROR: RF amplitude is too high, try with longer RF pulse time.")
             return 0
 
+        # Set timing to multiples of gradient raster time for consistency (use us to get more accuracy)
+        self.echoSpacing = (self.echoSpacing * 1e6) // (hw.grad_raster_time * 1e6) * hw.grad_raster_time
+        self.repetitionTime = (self.repetitionTime * 1e6) // (hw.grad_raster_time * 1e6) * hw.grad_raster_time
+        self.rdGradTime = (self.rdGradTime * 1e6) // (hw.grad_raster_time * 1e6) * hw.grad_raster_time
+        self.phGradTime = (self.phGradTime * 1e6) // (hw.grad_raster_time * 1e6) * hw.grad_raster_time
+        self.rdDephTime = (self.rdDephTime * 1e6) // (hw.grad_raster_time * 1e6) * hw.grad_raster_time
+        print("Echo spacing: %0.3f ms" % (self.echoSpacing * 1e3))
+        print("Repetition time: %0.3f ms" % (self.repetitionTime * 1e3))
+
         # Matrix size
         n_rd = self.nPoints[0] + 2 * hw.addRdPoints
         n_ph = self.nPoints[1]
@@ -320,13 +317,6 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             ph_gradients /= ph_grad_amplitude
         if sl_grad_amplitude != 0:
             sl_gradients /= sl_grad_amplitude
-
-        # Get the rotation matrix
-        rot = self.getRotationMatrix()
-        grad_amp = np.array([0.0, 0.0, 0.0])
-        grad_amp[self.axesOrientation[0]] = 1
-        grad_amp = np.reshape(grad_amp, (3, 1))
-        result = np.dot(rot, grad_amp)
 
         # Map the axis to "x", "y", and "z" according ot axesOrientation
         axes_map = {0: "x", 1: "y", 2: "z"}
@@ -424,7 +414,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         )
 
         # De-phasing gradient
-        delay = system.rf_dead_time + self.rfExTime
+        delay = system.rf_dead_time + self.rfExTime / 2 + ((self.rfExTime / 2* 1e6) // (hw.grad_raster_time * 1e6) + 1) * hw.grad_raster_time  # multiple of grad_raster_time
         block_gr_rd_preph = pp.make_trapezoid(
             channel=rd_channel,
             system=system,
@@ -452,7 +442,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         delay_reph = pp.make_delay(self.echoSpacing)
 
         # Phase gradient de-phasing
-        delay = system.rf_dead_time + self.rfReTime
+        delay = system.rf_dead_time + self.rfReTime / 2 + ((self.rfReTime / 2 * 1e6) // (hw.grad_raster_time * 1e6) + 1) * hw.grad_raster_time
         block_gr_ph_deph = pp.make_trapezoid(
             channel=ph_channel,
             system=system,
@@ -463,7 +453,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         )
 
         # Slice gradient de-phasing
-        delay = system.rf_dead_time + self.rfReTime
+        delay = system.rf_dead_time + self.rfReTime / 2 + ((self.rfReTime / 2 * 1e6) // (hw.grad_raster_time * 1e6) + 1) * hw.grad_raster_time
         block_gr_sl_deph = pp.make_trapezoid(
             channel=sl_channel,
             system=system,
@@ -494,7 +484,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         )
 
         # Phase gradient re-phasing
-        delay = system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2
+        delay = (system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 +
+                 ((self.nPoints[0] / 2 / bw) // (hw.grad_raster_time * 1e6) + 1) * hw.grad_raster_time)
         block_gr_ph_reph = pp.make_trapezoid(
             channel=ph_channel,
             system=system,
@@ -505,7 +496,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         )
 
         # Slice gradient re-phasing
-        delay = system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 + sampling_time / 2
+        delay = (system.rf_dead_time + self.rfReTime / 2 - self.echoSpacing / 2 +
+                 ((self.nPoints[0] / 2 / bw) // (hw.grad_raster_time * 1e6) + 1) * hw.grad_raster_time)
         block_gr_sl_reph = pp.make_trapezoid(
             channel=sl_channel,
             system=system,
@@ -791,6 +783,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                                frequency=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
                                bandwidth=bw,  # MHz
                                decimate='Normal',
+                               hardware=True,
                                )
 
     def sequenceAnalysis(self, mode=None):

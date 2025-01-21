@@ -114,19 +114,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         # TODO: check for min and max values for all fields
 
-    def sequenceAtributes(self):
-        super().sequenceAtributes()
-
-        # Conversion of variables to non-multiplied units
-        self.angle = self.angle * np.pi / 180 # rads
-
-        # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.tolist()
-        self.rotation.append(self.angle)
-        self.rotations.append(self.rotation)
-        self.dfovs.append(self.dfov.tolist())
-        self.fovs.append(self.fov.tolist())
-
     def sequenceRun(self, plotSeq=False, demo=False):
         init_gpa=False # Starts the gpa
         self.demo = demo
