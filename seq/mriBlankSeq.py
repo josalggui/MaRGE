@@ -172,9 +172,6 @@ class MRIBLANKSEQ:
         return out, tips
 
     def rotate_waveforms(self, waveforms):
-        # Get rotation matrix
-        rot = self.getRotationMatrix()
-
         # Get the waveforms
         gx = waveforms['grad_vx']
         gy = waveforms['grad_vy']
@@ -185,7 +182,7 @@ class MRIBLANKSEQ:
 
         # Concatenate arrays
         time = np.concatenate((gx[0], gy[0], gz[0]))
-        ampl = np.concatenate((gx[1], gy[1], gz[1]))
+        ampl = np.concatenate((gx[1] * hw.gFactor[0], gy[1] * hw.gFactor[1], gz[1] * hw.gFactor[2]))  # mT/m
         is_a = np.concatenate((is_x, is_y, is_z))
 
         # Sort arrays
@@ -265,13 +262,19 @@ class MRIBLANKSEQ:
         rot = self.getRotationMatrix()
         for step in range(np.size(g_new, axis=1)):
             g_new[:, step] = np.dot(rot, g_new[:, step])
-        gx_new[1] = list(g_new[0, :])
-        gy_new[1] = list(g_new[1, :])
-        gz_new[1] = list(g_new[2, :])
+        gx_new[1] = list(g_new[0, :] / hw.gFactor[0])
+        gy_new[1] = list(g_new[1, :] / hw.gFactor[0])
+        gz_new[1] = list(g_new[2, :] / hw.gFactor[0])
 
         waveforms['grad_vx'] = gx_new
         waveforms['grad_vy'] = gy_new
         waveforms['grad_vz'] = gz_new
+
+        # Delete last rotation/displacement if plot
+        if self.plotSeq:
+            self.fovs.pop()
+            self.dfovs.pop()
+            self.rotations.pop()
 
         return waveforms
 
