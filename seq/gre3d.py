@@ -98,19 +98,6 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         repetition_time = self.mapVals['repetition_time']
         return(nPoints[1]*nPoints[2]*repetition_time*1e-3*nScans/60)  # minutes, scanTime
 
-    def sequenceAtributes(self):
-        super().sequenceAtributes()
-
-        # Conversion of variables to non-multiplied units
-        self.angle = self.angle * np.pi / 180 # rads
-
-        # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.tolist()
-        self.rotation.append(self.angle)
-        self.rotations.append(self.rotation)
-        self.dfovs.append(self.dfov.tolist())
-        self.fovs.append(self.fov.tolist())
-
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa
         self.demo = demo

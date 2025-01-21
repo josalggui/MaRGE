@@ -82,6 +82,12 @@ class MRIBLANKSEQ:
                          'ttl0': [[],[]],
                          'ttl1': [[],[]],}
 
+        self.addParameter(key='seqName', val='blankSeq')
+        self.addParameter(key='angle', val=0)
+        self.addParameter(key='rotationAxis', val=[0, 0, 1])
+        self.addParameter(key='dfov', val=[0.0, 0.0, 0.0])
+        self.addParameter(key='fov', val=[0.0, 0.0, 0.0])
+        self.addParameter(key='pypulseq', val=False)
 
     # *********************************************************************************
     # *********************************************************************************
@@ -1785,7 +1791,7 @@ class MRIBLANKSEQ:
             None
 
         """
-        if key is not self.mapVals.keys():
+        if key not in self.mapVals.keys():
             self.mapKeys.append(key)
         self.mapNmspc[key] = string
         self.mapVals[key] = val
@@ -1814,6 +1820,19 @@ class MRIBLANKSEQ:
                 setattr(self, key, np.array([element * self.map_units[key] for element in self.mapVals[key]]))
             else:
                 setattr(self, key, self.mapVals[key] * self.map_units[key])
+
+        # Conversion of variables to non-multiplied units
+        if self.pypulseq:
+            self.angle = - self.angle * np.pi / 180  # rads
+        else:
+            self.angle = + self.angle * np.pi / 180
+
+        # Add rotation, dfov and fov to the history
+        self.rotation = self.rotationAxis.tolist()
+        self.rotation.append(self.angle)
+        self.rotations.append(self.rotation)
+        self.dfovs.append(self.dfov.tolist())
+        self.fovs.append(self.fov.tolist())
 
     def plotResults(self):
         """
