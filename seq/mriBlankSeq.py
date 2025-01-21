@@ -263,8 +263,8 @@ class MRIBLANKSEQ:
         for step in range(np.size(g_new, axis=1)):
             g_new[:, step] = np.dot(rot, g_new[:, step])
         gx_new[1] = list(g_new[0, :] / hw.gFactor[0])
-        gy_new[1] = list(g_new[1, :] / hw.gFactor[0])
-        gz_new[1] = list(g_new[2, :] / hw.gFactor[0])
+        gy_new[1] = list(g_new[1, :] / hw.gFactor[1])
+        gz_new[1] = list(g_new[2, :] / hw.gFactor[2])
 
         waveforms['grad_vx'] = gx_new
         waveforms['grad_vy'] = gy_new
