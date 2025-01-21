@@ -129,30 +129,6 @@ class spds(blankSeq.MRIBLANKSEQ):
 
         return time  # minutes
 
-    def sequenceAtributes(self):
-        """
-        Assign input parameters as attributes for the sequence.
-
-        This method is called by the GUI before invoking the `sequenceRun` method.
-        It ensures that any input parameters defined using methods like
-        `self.addParameter(key='param', string='Parameter', val=1)` are assigned as
-        class attributes, allowing them to be accessed directly using `self.param`.
-
-        Example:
-            If you define an input parameter as:
-                `self.addParameter(key='param', string='Parameter', val=1, ...)`
-            You can access its value later in the sequence as:
-                `self.param`
-        """
-        super().sequenceAtributes()
-
-        # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.tolist()
-        self.rotation.append(self.angle)
-        self.rotations.append(self.rotation)
-        self.dfovs.append(self.dfov.tolist())
-        self.fovs.append(self.fov.tolist())
-
     def sequenceRun(self, plotSeq=False, demo=False, standalone=False):
         """
         This method orchestrates the definition, preparation,

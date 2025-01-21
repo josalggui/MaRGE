@@ -106,12 +106,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         scan_time = np.round(scan_time, decimals=1)
         return scan_time  # minutes
 
-    def sequenceAtributes(self):
-        super().sequenceAtributes()
-
-        # self.dfovs.append(self.dfov.tolist())
-        self.fovs.append(self.fov.tolist())
-
     def sequenceRun(self, plotSeq=0, demo=False, standalone=False):
         """
         Runs a multi-spin echo (MSE) sequence using PyPulseq to control the pulse sequence timing and hardware settings.
