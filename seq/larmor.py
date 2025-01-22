@@ -66,7 +66,6 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
         print("This sequence runs a single spin echo to find larmor\n")
-        
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']

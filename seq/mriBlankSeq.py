@@ -89,6 +89,12 @@ class MRIBLANKSEQ:
                          'ttl0': [[],[]],
                          'ttl1': [[],[]],}
 
+        self.addParameter(key='seqName', val='blankSeq')
+        self.addParameter(key='angle', val=0)
+        self.addParameter(key='rotationAxis', val=[0, 0, 1])
+        self.addParameter(key='dfov', val=[0.0, 0.0, 0.0])
+        self.addParameter(key='fov', val=[0.0, 0.0, 0.0])
+        self.addParameter(key='pypulseq', val=False)
 
     # *********************************************************************************
     # *********************************************************************************
@@ -172,6 +178,113 @@ class MRIBLANKSEQ:
                 tips[self.mapNmspc[key]] = [self.mapTips[key]]
         return out, tips
 
+    def rotate_waveforms(self, waveforms):
+        # Get the waveforms
+        gx = waveforms['grad_vx']
+        gy = waveforms['grad_vy']
+        gz = waveforms['grad_vz']
+        is_x = np.zeros_like(gx[0], dtype=int)
+        is_y = np.zeros_like(gy[0], dtype=int) + 1
+        is_z = np.zeros_like(gz[0], dtype=int) + 2
+
+        # Concatenate arrays
+        time = np.concatenate((gx[0], gy[0], gz[0]))
+        ampl = np.concatenate((gx[1] * hw.gFactor[0], gy[1] * hw.gFactor[1], gz[1] * hw.gFactor[2]))  # mT/m
+        is_a = np.concatenate((is_x, is_y, is_z))
+
+        # Sort arrays
+        idx = np.argsort(time)
+        time = time[idx]
+        ampl = ampl[idx]
+        is_a = is_a[idx]
+
+        # Define new gradient waveforms
+        gx_new = [[], []]
+        gy_new = [[], []]
+        gz_new = [[], []]
+        g_new = [[], [], []]
+
+        # Populate new waveform
+        w = []
+        t = []
+        step = 0
+        n_steps = 0
+        while step < len(time):
+            g = [0., 0., 0.]
+
+            # Add time
+            gx_new[0].append(time[step])
+            gy_new[0].append(time[step])
+            gz_new[0].append(time[step])
+
+            next = True
+            while next:
+                try:
+                    # Get amplitude
+                    g_new[is_a[step]].append(ampl[step])
+                    if time[step + 1] != time[step]:
+                        if step == 0:
+                            if len(g_new[0]) == 0:
+                                g_new[0].append(0.)
+                            if len(g_new[0]) == 0:
+                                g_new[1].append(0.)
+                            if len(g_new[0]) == 0:
+                                g_new[2].append(0.)
+                        elif step > 0:
+                            if len(g_new[0]) == n_steps:
+                                g_new[0].append(g_new[0][-1])
+                            if len(g_new[1]) == n_steps:
+                                g_new[1].append(g_new[1][-1])
+                            if len(g_new[2]) == n_steps:
+                                g_new[2].append(g_new[2][-1])
+                        n_steps += 1
+                        next = False
+                        gx_new[1].append(g_new[0][-1])
+                        gy_new[1].append(g_new[1][-1])
+                        gz_new[1].append(g_new[2][-1])
+                except:
+                    if step == 0:
+                        if len(g_new[0]) == 0:
+                            g_new[0].append(0.)
+                        if len(g_new[0]) == 0:
+                            g_new[1].append(0.)
+                        if len(g_new[0]) == 0:
+                            g_new[2].append(0.)
+                    elif step > 0:
+                        if len(g_new[0]) == n_steps:
+                            g_new[0].append(g_new[0][-1])
+                        if len(g_new[1]) == n_steps:
+                            g_new[1].append(g_new[1][-1])
+                        if len(g_new[2]) == n_steps:
+                            g_new[2].append(g_new[2][-1])
+                    n_steps += 1
+                    next = False
+                    gx_new[1].append(g_new[0][-1])
+                    gy_new[1].append(g_new[1][-1])
+                    gz_new[1].append(g_new[2][-1])
+                step += 1
+        g_new = np.array(g_new)
+
+        # Rotate the waveforms
+        rot = self.getRotationMatrix()
+        for step in range(np.size(g_new, axis=1)):
+            g_new[:, step] = np.dot(rot, g_new[:, step])
+        gx_new[1] = list(g_new[0, :] / hw.gFactor[0])
+        gy_new[1] = list(g_new[1, :] / hw.gFactor[1])
+        gz_new[1] = list(g_new[2, :] / hw.gFactor[2])
+
+        waveforms['grad_vx'] = gx_new
+        waveforms['grad_vy'] = gy_new
+        waveforms['grad_vz'] = gz_new
+
+        # Delete last rotation/displacement if plot
+        if self.plotSeq:
+            self.fovs.pop()
+            self.dfovs.pop()
+            self.rotations.pop()
+
+        return waveforms
+
     def runBatches(self, waveforms, n_readouts, n_adc,
                    frequency=hw.larmorFreq,
                    bandwidth=0.03,
@@ -231,6 +344,9 @@ class MRIBLANKSEQ:
 
         # Iterate through each batch of waveforms
         for seq_num in waveforms.keys():
+            # Rotate the waveforms to given reference system
+            waveforms[seq_num] = self.rotate_waveforms(waveforms[seq_num])
+
             # Initialize the experiment if not in demo mode
             if not self.demo:
                 # Define device arguments
@@ -1719,7 +1835,7 @@ class MRIBLANKSEQ:
             None
 
         """
-        if key is not self.mapVals.keys():
+        if key not in self.mapVals.keys():
             self.mapKeys.append(key)
         self.mapNmspc[key] = string
         self.mapVals[key] = val
@@ -1748,6 +1864,19 @@ class MRIBLANKSEQ:
                 setattr(self, key, np.array([element * self.map_units[key] for element in self.mapVals[key]]))
             else:
                 setattr(self, key, self.mapVals[key] * self.map_units[key])
+
+        # Conversion of variables to non-multiplied units
+        if self.pypulseq:
+            self.angle = - self.angle * np.pi / 180  # rads
+        else:
+            self.angle = + self.angle * np.pi / 180
+
+        # Add rotation, dfov and fov to the history
+        self.rotation = self.rotationAxis.tolist()
+        self.rotation.append(self.angle)
+        self.rotations.append(self.rotation)
+        self.dfovs.append(self.dfov.tolist())
+        self.fovs.append(self.fov.tolist())
 
     def plotResults(self):
         """

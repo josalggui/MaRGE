@@ -63,7 +63,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.fov = None
         self.axesOrientation = None
         self.addParameter(key='seqName', string='MSEInfo', val='MSE_PyPulseq')
-        self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
+        self.addParameter(key='pypulseq', string='PyPulseq', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz,
                           field='RF')
@@ -104,12 +105,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         scan_time = nScans * nPH * nSL * repetition_time / 60  # minutes
         scan_time = np.round(scan_time, decimals=1)
         return scan_time  # minutes
-
-    def sequenceAtributes(self):
-        super().sequenceAtributes()
-
-        # self.dfovs.append(self.dfov.tolist())
-        self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plotSeq=0, demo=False, standalone=False):
         """
