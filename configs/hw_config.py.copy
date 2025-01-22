@@ -44,7 +44,7 @@ bash_path = "C:/Program Files/Git/git-bash.exe"  # use "gnome-terminal" for geno
 
 # Red Pitaya connection configuration
 rp_ip_list = ["192.168.1.101"]
-rp_port = 11111
+rp_port = [11111]
 rp_version = "rp-122"
 rp_max_input_voltage = 225  # mV
 grad_board = "gpa-fhdo"  # gpa-fhdo or ocra1
