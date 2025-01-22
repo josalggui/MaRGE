@@ -251,7 +251,7 @@ class MRIBLANKSEQ:
                 # Define master arguments
                 master_kwargs = {
                     'mimo_master': True,
-                    'trig_output_time': 1e5,
+                    'trig_output_time': 1e6,
                     'slave_trig_latency': 6.079
                 }
 
@@ -1512,16 +1512,10 @@ class MRIBLANKSEQ:
                                          'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
                                          }, rewrite)
             for ii in range(1, len(self.devices)):
-                self.devices[ii].add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
-                                         'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
-                                         'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
-                                         'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
-                                         'rx1_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
-                                         'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
-                                         'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
-                                         'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
-                                         'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
-                                         }, rewrite)
+                self.devices[ii].add_flodict({
+                                              'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
+                                              'rx1_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
+                                              }, rewrite)
         return True
 
     def saveRawData(self):

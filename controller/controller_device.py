@@ -31,8 +31,8 @@ class MimoDevices(mimo_devices.MimoDevices):
     Custom MimoDevices class
     """
 
-    def __init__(self, ips, ports, trig_output_time=10e3, slave_trig_latency=6.079,
-                 trig_timeout=136533, master_run_delay=0, extra_args=None, **kwargs):
+    def __init__(self, ips, ports, trig_output_time=1e6, slave_trig_latency=6.079,
+                 trig_timeout=-1, master_run_delay=0, extra_args=None, **kwargs):
         """
         ips: list of device IPs, master first
 
