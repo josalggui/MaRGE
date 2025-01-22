@@ -95,6 +95,8 @@ class MRIBLANKSEQ:
         self.addParameter(key='dfov', val=[0.0, 0.0, 0.0])
         self.addParameter(key='fov', val=[0.0, 0.0, 0.0])
         self.addParameter(key='pypulseq', val=False)
+        self.addParameter(key='channels', string='Channels', val=list(range(1, len(hw.rp_ip_list) * 2 + 1)),
+                          field='OTH', tip='Select the Rx channels you want to use.')
 
     # *********************************************************************************
     # *********************************************************************************
@@ -340,7 +342,7 @@ class MRIBLANKSEQ:
         self.mapVals['n_batches'] = len(n_readouts.values())
 
         # Initialize a list to hold oversampled data
-        data_over = [[] for _ in range(2*len(hw.rp_ip_list))]
+        data_over = [[] for _ in range(len(self.channels))]
 
         # Iterate through each batch of waveforms
         for seq_num in waveforms.keys():
@@ -401,17 +403,18 @@ class MRIBLANKSEQ:
                     while acquired_points != expected_points:
                         if not self.demo:
                             result = devices.run()  # Run the experiment and collect data
-                            results = [tup[0] for tup in result]  # List of rx results for each device
+                            prov = [tup[0] for tup in result]  # List of rx results for each device
+                            results = {}
+                            for channel in self.channels:
+                                results[f'rx{channel}'] = prov[(channel - 1) // 2][f'rx{(channel - 1) % 2}']
                         else:
                             # In demo mode, generate random data as a placeholder
-                            results = []
-                            for ii in range(len(hw.rp_ip_list)):
-                                results.append(
-                                    {'rx0': np.random.randn(expected_points) + 1j * np.random.randn(expected_points),
-                                     'rx1': np.random.randn(expected_points) + 1j * np.random.randn(expected_points)})
+                            results = {}
+                            for channel in self.channels:
+                                results[f'rx{channel}'] = np.random.randn(expected_points) + 1j * np.random.randn(expected_points)
 
                         # Update acquired points
-                        acquired_points = np.size(results[0]['rx0'])
+                        acquired_points = np.size(results[f'rx{self.channels[0]}'])
 
                         # Check if acquired points coincide with expected points
                         if acquired_points != expected_points:
@@ -419,9 +422,8 @@ class MRIBLANKSEQ:
                             print("Repeating batch...")
 
                     # Concatenate acquired data into the oversampled data array
-                    for ii in range(len(hw.rp_ip_list)):
-                        data_over[2*ii] = np.concatenate((data_over[2*ii], results[ii]['rx0']), axis=0)
-                        data_over[2*ii+1] = np.concatenate((data_over[2*ii+1], results[ii]['rx1']), axis=0)
+                    for ii in range(len(self.channels)):
+                        data_over[ii] = np.concatenate((data_over[ii], results[f'rx{self.channels[ii]}']), axis=0)
                     print(f"Acquired points = {acquired_points}, Expected points = {expected_points}")
                     print(f"Scan {scan + 1}, batch {seq_num[-1]}/{len(n_readouts)} ready!")
 
@@ -777,19 +779,20 @@ class MRIBLANKSEQ:
                         try:
                             inputNum.append(float(valNew[ii]))
                         except:
-                            inputNum.append(float(valOld[ii]))
+                            # inputNum.append(float(valOld[ii]))
+                            pass
                     elif dataType == int:
                         try:
                             inputNum.append(int(valNew[ii]))
                         except:
-                            inputNum.append(int(valOld[ii]))
+                            # inputNum.append(int(valOld[ii]))
+                            pass
                     else:
                         try:
                             inputNum.append(str(valNew[0]))
-                            break
                         except:
-                            inputNum.append(str(valOld[0]))
-                            break
+                            # inputNum.append(str(valOld[0]))
+                            pass
                 if dataType == str:
                     self.mapVals[key] = inputNum[0]
                 else:
@@ -1617,21 +1620,20 @@ class MRIBLANKSEQ:
 
         # Add instructions to server
         if not self.demo:
+            # Add Tx and gradient waveforms to the master
             self.devices[0].add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
                                          'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
                                          'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
-                                         'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
-                                         'rx1_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
                                          'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
                                          'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
                                          'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
                                          'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
                                          }, rewrite)
-            for ii in range(1, len(self.devices)):
-                self.devices[ii].add_flodict({
-                                              'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
-                                              'rx1_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
-                                              }, rewrite)
+
+            # Add Rx waveforms to the master and slaves according to the selected input channels.
+            for channel in self.channels:
+                self.devices[(channel - 1)//2].add_flodict({f'rx{(channel - 1)%2}_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1])})
+
         return True
 
     def saveRawData(self):

@@ -165,19 +165,21 @@ class SequenceParameter(QHBoxLayout):
                 try:
                     inputNum.append(float(valNew[ii]))
                 except:
-                    inputNum.append(float(valOld[ii]))
+                    # inputNum.append(float(valOld[ii]))
+                    pass
             elif dataType == int:
                 try:
                     inputNum.append(int(valNew[ii]))
                 except:
-                    inputNum.append(int(valOld[ii]))
+                    # inputNum.append(int(valOld[ii]))
+                    pass
             else:
                 try:
                     inputNum.append(str(valNew[0]))
-                    break
                 except:
-                    inputNum.append(str(valOld[0]))
-                    break
+                    # inputNum.append(str(valOld[0]))
+                    # break
+                    pass
         if dataType == str:
             sequence.mapVals[key] = inputNum[0]
         else:

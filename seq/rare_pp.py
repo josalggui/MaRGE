@@ -111,8 +111,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
         self.header = ismrmrd.xsd.ismrmrdHeader()
-        
-       
+
     def sequenceInfo(self):
         print("3D RARE sequence powered by PyPulseq")
         print("Author: Dr. J.M. Algarín")
@@ -1277,5 +1276,5 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__':
     seq = RarePyPulseq()
     seq.sequenceAtributes()
-    seq.sequenceRun(plot_seq=False, demo=False, standalone=True)
+    seq.sequenceRun(plot_seq=False, demo=True, standalone=True)
     seq.sequenceAnalysis(mode='Standalone')
