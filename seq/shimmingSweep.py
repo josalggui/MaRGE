@@ -95,15 +95,15 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         # Perform shimming
         self.mapVals['data'] = np.array([])
-        if self.shimming(axis='x'):
+        if self.run_shimming(axis='x'):
             pass
         else:
             return False
-        if self.shimming(axis='y'):
+        if self.run_shimming(axis='y'):
             pass
         else:
             return False
-        if self.shimming(axis='z'):
+        if self.run_shimming(axis='z'):
             pass
         else:
             return False
@@ -229,7 +229,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         # End sequence
         self.endSequence((self.nShimming + self.dummyPulses) * self.repetitionTime)
 
-    def shimming(self, axis='x'):
+    def run_shimming(self, axis='x'):
         # Create shimming matrix
         sxVector = self.mapVals['sxVector']
         syVector = self.mapVals['syVector']
