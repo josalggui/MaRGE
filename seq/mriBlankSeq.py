@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from skimage.util import view_as_blocks
 from skimage.measure import shannon_entropy
 import multiprocessing as mp
+import configs.units as units
 
 # Import dicom saver
 from manager.dicommanager import DICOMImage
@@ -90,13 +91,15 @@ class MRIBLANKSEQ:
                          'ttl1': [[],[]],}
 
         self.addParameter(key='seqName', val='blankSeq')
-        self.addParameter(key='angle', val=0)
+        self.addParameter(key='angle', val=0.0)
         self.addParameter(key='rotationAxis', val=[0, 0, 1])
         self.addParameter(key='dfov', val=[0.0, 0.0, 0.0])
         self.addParameter(key='fov', val=[0.0, 0.0, 0.0])
         self.addParameter(key='pypulseq', val=False)
         self.addParameter(key='channels', string='Channels', val=list(range(1, len(hw.rp_ip_list) * 2 + 1)),
                           field='OTH', tip='Select the Rx channels you want to use.')
+        self.addParameter(key='shimming', string='Shimming', val=[0.0, 0.0, 0.0], units=units.sh)
+        self.addParameter(key='nScans', string='Number of scans', val=1, field='OTH')
 
     # *********************************************************************************
     # *********************************************************************************

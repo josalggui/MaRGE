@@ -37,7 +37,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.bw = None
         self.freqOffset = None
         self.addParameter(key='seqName', string='NoiseInfo', val='Noise')
-        self.addParameter(key='toMaRGE', val='True')
+        self.addParameter(key='toMaRGE', val='False')
         self.addParameter(key='freqOffset', string='RF frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='nPoints', string='Number of points', val=2500, field='RF')
         self.addParameter(key='bw', string='Acquisition bandwidth (kHz)', val=50.0, units=units.kHz, field='RF')

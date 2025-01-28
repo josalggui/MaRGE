@@ -66,7 +66,6 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
         print("This sequence runs a single spin echo to find larmor\n")
-        
 
     def sequenceTime(self):
         nScans = self.mapVals['nScans']
@@ -193,9 +192,6 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         and ADC blocks.
         '''
 
-        # First delay, sequence will start after 1 repetition time.
-        delay_first = pp.make_delay(self.repetitionTime - self.rfExTime/2 - system.rf_dead_time)
-
         # Create excitation rf event
         delay_rf_ex = self.repetitionTime-acq_time/2-echo_time-self.rfExTime/2-hw.blkTime*1e-6
         event_rf_ex = pp.make_block_pulse(flip_angle=self.rfExFA * np.pi / 180,
@@ -289,8 +285,6 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
             n_rd_points_dict[batch_num] = n_rd_points
 
             return waveforms, n_rd_points_dict, n_adc
-
-        # Create the sequence here
 
         '''
         Step 8: Run the batches
