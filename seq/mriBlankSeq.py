@@ -341,6 +341,7 @@ class MRIBLANKSEQ:
         - Decimated data is stored in `self.mapVals['data_decimated']`.
         - Handles data loss by repeating batches until the expected points are acquired.
         """
+
         self.mapVals['n_readouts'] = list(n_readouts.values())
         self.mapVals['n_batches'] = len(n_readouts.values())
 
@@ -468,6 +469,7 @@ class MRIBLANKSEQ:
                              hardware=True,
                              channels=[0],
                              ):
+
         """
         Converts PyPulseq waveforms into a format compatible with MRI hardware.
 

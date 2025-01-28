@@ -48,7 +48,6 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500.0, field='RF', units=units.ms)
 
     def sequenceInfo(self):
-        
         print("Noise")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
@@ -114,10 +113,10 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.mapVals['larmorFreq'] = hw.larmorFreq
 
         '''
-                Step 4: Define the experiment to get the true bandwidth
-                In this step, student needs to get the real bandwidth used in the experiment. To get this bandwidth, an
-                experiment must be defined and the sampling period should be obtained using get_
-                '''
+        Step 4: Define the experiment to get the true bandwidth
+        In this step, student needs to get the real bandwidth used in the experiment. To get this bandwidth, an
+        experiment must be defined and the sampling period should be obtained using get_
+        '''
 
         if not self.demo:
             # Define device arguments
