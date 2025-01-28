@@ -50,7 +50,13 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         super(SEQUENCE_TEMPLATE, self).__init__()
 
         # Sequence name (Do not include 'field')
-        self.addParameter(key='seqName', string='Sequence Name', val='Default_SeqName',
+        self.repetitionTime = None
+        self.rfExTime = None
+        self.nPoints = None
+        self.nRepetitions = None
+        self.nScans = None
+        self.channels = None
+        self.addParameter(key='seqName', string='Sequence Name', val='Sequence Template',
                           tip="The identifier name for the sequence.")
 
         # To automatically include the sequence into MaRGE.
@@ -369,10 +375,42 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
                                )
 
     def sequenceAnalysis(self, mode=None):
+        self.mode = mode
 
+        # Load data
+        data = self.mapVals['data_decimated']
+
+        # Average data
+        data_avg = []
+        for channel in range(len(self.channels)):
+            data_prov = np.reshape(data[channel-1], (self.nScans, -1))
+            data_avg.append(np.abs(np.mean(data_prov, axis=0)))
+
+        # Get time vector
+        sampling_period = self.mapVals['sampling_period_us'] * 1e-3  # ms
+        t0 = np.arange(self.nPoints) * sampling_period + self.rfExTime * 1e3 / 2 + hw.deadTime * 1e-3  # ms
+        t1 = np.arange(self.nPoints) * sampling_period + self.rfExTime * 1e3 / 2 + hw.deadTime * 1e-3  # ms
+        for ii in range(1, self.nRepetitions):
+            t1 = np.concatenate((t1, t0 + ii * self.repetitionTime * 1e3))
+
+        # Generate legend
+        legend = []
+        for channel in self.channels:
+            legend.append(f'Channel {channel}')
+
+        # Create plot dictionary
+        result = {'widget': 'curve',
+                   'xData': t1,  # numpy array with time vector
+                   'yData': data_avg,  # List of numpy arrays of measured signals (averaged on nScans)
+                   'xLabel': 'Time (ms)',
+                   'yLabel': 'Signal amplitude (mV)',
+                   'title': 'Measured signal',
+                   'legend': legend,  # List of legends
+                   'row': 0,
+                   'col': 0}
 
         # create self.out to run in iterative mode
-        self.output = []
+        self.output = [result]
 
         # save data once self.output is created
         self.saveRawData()
@@ -389,6 +427,5 @@ if __name__ == "__main__":
 
     seq = SEQUENCE_TEMPLATE()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
-    # seq.sequenceAnalysis(mode='standalone')
-    # seq.plotResults()
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
+    seq.sequenceAnalysis(mode='Standalone')
