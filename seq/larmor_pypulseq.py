@@ -26,7 +26,7 @@ import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new se
 import scipy.signal as sig
 import configs.hw_config as hw
 import configs.units as units
-import device as dev
+import controller.controller_device as device
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 
@@ -46,14 +46,16 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         self.rfExFA = None
         self.rfExTime = None
         self.nScans = None
-        self.addParameter(key='seqName', string='LarmorInfo', val='Larmor PyPulseq')
+        self.addParameter(key='seqName', string='LarmorInfo', val='Larmor')
+        self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
+        self.addParameter(key='pypulseq', string='PyPulseq', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.066, units=units.MHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90.0, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180.0, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF', units=units.us)
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, field='RF', units=units.us)
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., field='SEQ', units=units.ms)
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=100., field='SEQ', units=units.ms)
         self.addParameter(key='bw', string='Bandwidth (kHz)', val=50, field='RF', units=units.kHz)
         self.addParameter(key='dF', string='Frequency resolution (Hz)', val=100, field='RF')
         self.addParameter(key='shimming', string='Shimming', val=[-12.5, -12.5, 7.5], field='OTH', units=units.sh)
@@ -73,29 +75,68 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         return (repetitionTime * nScans / 60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq=0, demo=False, standalone=False):
-        init_gpa = False  # Starts the gpa
+        """
+        This method sets up the sequence parameters, including the RF pulse amplitudes, acquisition times,
+        and echo times. It initializes the experiment, runs the scan, and processes the acquired data. The
+        Larmor frequency is determined by the spin echo response.
+
+        Args:
+            plotSeq (int, optional): Flag to indicate if sequence plotting is required. Defaults to 0 (no plotting).
+            demo (bool, optional): Flag to indicate if the sequence should run in demo mode (using simulated data).Defaults to False.
+            standalone (bool, optional): Flag to indicate if the sequence is run in standalone mode (with plotting). Defaults to False.
+
+        Returns:
+            bool: True if the sequence ran successfully, False otherwise.
+
+        Notes:
+            - The sequence assumes that hardware settings are configured correctly (e.g., B1 efficiency, bandwidth).
+            - In demo mode, actual hardware is not used, and simulated data is generated for testing purposes.
+        """
+
         self.demo = demo
+        self.plotSeq = plotSeq
+        self.standalone = standalone
 
-        # Define the interpreter. It should be updated on calibration
-        self.flo_interpreter = PSInterpreter(tx_warmup=hw.blkTime,  # us
-                                             rf_center=hw.larmorFreq * 1e6,  # Hz
-                                             rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Hz
-                                             gx_max=hw.gFactor[0] * hw.gammaB,  # Hz/m
-                                             gy_max=hw.gFactor[1] * hw.gammaB,  # Hz/m
-                                             gz_max=hw.gFactor[2] * hw.gammaB,  # Hz/m
-                                             grad_max=np.max(hw.gFactor) * hw.gammaB,  # Hz/m
-                                             )
+        '''
+        Step 1: Define the interpreter for FloSeq/PSInterpreter.
+        The interpreter is responsible for converting the high-level pulse sequence description into low-level
+        instructions for the scanner hardware.
+        '''
 
-        # Define system properties according to hw_config file
-        self.system = pp.Opts(
-            rf_dead_time=hw.blkTime * 1e-6,  # s
-            max_grad=hw.max_grad,  # mT/m
-            grad_unit='mT/m',
-            max_slew=hw.max_slew_rate,  # mT/m/ms
-            slew_unit='mT/m/ms',
-            grad_raster_time=hw.grad_raster_time,  # s
-            rise_time=hw.grad_rise_time,  # s
+        flo_interpreter = PSInterpreter(
+            tx_warmup=hw.blkTime,  # Transmit chain warm-up time (us)
+            rf_center=hw.larmorFreq * 1e6,  # Larmor frequency (Hz)
+            rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Maximum RF amplitude (Hz)
+            gx_max=hw.gFactor[0] * hw.gammaB,  # Maximum gradient amplitude for X (Hz/m)
+            gy_max=hw.gFactor[1] * hw.gammaB,  # Maximum gradient amplitude for Y (Hz/m)
+            gz_max=hw.gFactor[2] * hw.gammaB,  # Maximum gradient amplitude for Z (Hz/m)
+            grad_max=np.max(hw.gFactor) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
+            grad_t=hw.grad_raster_time * 1e6,  # Gradient raster time (us)
         )
+
+        '''
+        Step 2: Define system properties using PyPulseq (pp.Opts).
+        These properties define the hardware capabilities of the MRI scanner, such as maximum gradient strengths,
+        slew rates, and dead times. They are typically set based on the hardware configuration file (`hw_config`).
+        '''
+
+        system = pp.Opts(
+            rf_dead_time=hw.blkTime * 1e-6,  # Dead time between RF pulses (s)
+            max_grad=np.max(hw.gFactor) * 1e3,  # Maximum gradient strength (mT/m)
+            grad_unit='mT/m',  # Units of gradient strength
+            max_slew=hw.max_slew_rate,  # Maximum gradient slew rate (mT/m/ms)
+            slew_unit='mT/m/ms',  # Units of gradient slew rate
+            grad_raster_time=hw.grad_raster_time,  # Gradient raster time (s)
+            rise_time=hw.grad_rise_time,  # Gradient rise time (s)
+            rf_raster_time=1e-6,
+            block_duration_raster=1e-6
+        )
+
+        '''
+        Step 3: Perform any calculations required for the sequence.
+        In this step, students can implement the necessary calculations, such as timing calculations, RF amplitudes, and
+        gradient strengths, before defining the sequence blocks.
+        '''
 
         # Set the refocusing time in to twice the excitation time
         if self.rfReTime == 0:
@@ -105,36 +146,63 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         n_points = int(self.bw / self.dF)
         acq_time = 1 / self.dF  # s
         echo_time = 2 * acq_time  # s
+        sampling_period = 1 / self.bw * 1e6  # us
         self.mapVals['nPoints'] = n_points
         self.mapVals['acqTime'] = acq_time
         self.mapVals['echoTime'] = echo_time
 
-        # Initialize the experiment
-        self.bw = n_points / acq_time * hw.oversamplingFactor  # Hz
-        sampling_period = 1 / self.bw  # s
-        self.mapVals['samplingPeriod'] = sampling_period
+        '''
+        Step 4: Define the experiment to get the true bandwidth
+        In this step, student needs to get the real bandwidth used in the experiment. To get this bandwidth, an
+        experiment must be defined and the sampling period should be obtained using get_
+        '''
+
+        # Define device arguments
+        dev_kwargs = {
+            "lo_freq": hw.larmorFreq,  # MHz
+            "rx_t": sampling_period,  # us
+            "print_infos": True,
+            "assert_errors": True,
+            "halt_and_reset": False,
+            "fix_cic_scale": True,
+            "set_cic_shift": False,  # needs to be true for open-source cores
+            "flush_old_rx": False,
+            "init_gpa": False,
+            "gpa_fhdo_offset_time": 1 / 0.2 / 3.1,
+            "auto_leds": True
+        }
+
+        # Define master arguments
+        master_kwargs = {
+            'mimo_master': True,
+            'trig_output_time': 1e5,
+            'slave_trig_latency': 6.079
+        }
+
         if not self.demo:
-            self.expt = ex.Experiment(lo_freq=self.larmorFreq * 1e-6,  # MHz
-                                      rx_t=sampling_period * 1e6,  # us
-                                      init_gpa=init_gpa,
-                                      gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                      auto_leds=True
-                                      )
-            sampling_period = self.expt.get_rx_ts()[0]  # us
-            self.bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
-            acq_time = n_points / self.bw * 1e-6  # s
-            self.mapVals['bw_true'] = self.bw * 1e3  # kHz
-        else:
-            sampling_period = sampling_period * 1e6  # us
-            self.bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
-            acq_time = n_points / self.bw * 1e-6  # s
+            dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port, **(master_kwargs | dev_kwargs))
+            sampling_period = dev.get_sampling_period()  # us
+            self.bw = 1 / sampling_period  # MHz
+            print("Acquisition bandwidth fixed to: %0.3f kHz" % (self.bw * 1e3))
+            dev.__del__()
+        self.mapVals['bw_MHz'] = self.bw
+        self.mapVals['sampling_period_us'] = sampling_period
+
+        '''
+        Step 5: Define sequence blocks.
+        In this step, you will define the building blocks of the MRI sequence, including the RF pulses, gradient pulses,
+        and ADC blocks.
+        '''
+
+        # First delay, sequence will start after 1 repetition time.
+        delay_first = pp.make_delay(self.repetitionTime - self.rfExTime/2 - system.rf_dead_time)
 
         # Create excitation rf event
         delay_rf_ex = self.repetitionTime-acq_time/2-echo_time-self.rfExTime/2-hw.blkTime*1e-6
         event_rf_ex = pp.make_block_pulse(flip_angle=self.rfExFA * np.pi / 180,
                                           duration=self.rfExTime,
                                           delay=delay_rf_ex,
-                                          system=self.system,
+                                          system=system,
                                           use="excitation",)
 
         # Create refocusing rf event
@@ -142,7 +210,7 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         event_rf_re = pp.make_block_pulse(flip_angle=self.rfReFA * np.pi / 180,
                                           duration=self.rfReTime,
                                           delay=delay_rf_re,
-                                          system=self.system,
+                                          system=system,
                                           use="refocusing")
 
         # Create ADC event
@@ -150,84 +218,125 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         event_adc = pp.make_adc(num_samples=n_points*hw.oversamplingFactor,
                                 duration=acq_time,  # s
                                 delay=delay_adc,  # s
-                                system=self.system)
+                                system=system)
+
+        '''
+        Step 6: Define your initializeBatch according to your sequence.
+        In this step, you will create the initializeBatch method to create dummy pulses that will be initialized for
+        each new batch.
+        '''
+
+        def initializeBatch():
+            # Instantiate pypulseq sequence object
+            batch = pp.Sequence(system)
+            n_rd_points = 0
+            n_adc = 0
+
+            return batch, n_rd_points, n_adc
+
+        '''
+        Step 7: Define your createBatches method.
+        In this step you will populate the batches adding the blocks previously defined in step 4, and accounting for
+        number of acquired points to check if a new batch is required.
+        '''
+
+        def createBatches():
+            """
+            Create batches for the full pulse sequence.
+
+            Instructions:
+            - This function creates the complete pulse sequence by iterating through repetitions.
+            - Each iteration adds new blocks to the sequence, including the RF pulse, ADC block, and repetition delay.
+            - If a batch exceeds the maximum number of readout points, a new batch is started.
+
+            Returns:
+                waveforms (dict): Contains the waveforms for each batch.
+                n_rd_points_dict (dict): Dictionary of readout points per batch.
+                n_adc (int): Total number of ADC acquisitions across all batches
+            """
+            batches = {}  # Dictionary to save batches PyPulseq sequences
+            waveforms = {}  # Dictionary to store generated waveforms per each batch
+            n_rd_points_dict = {}  # Dictionary to track readout points for each batch
+            n_rd_points = 0  # To account for number of acquired rd points
+            seq_idx = 0  # Sequence batch index
+            n_adc = 0  # To account for number of adc windows
+            batch_num = "batch_0"  # Initial batch name
+
+            # Update to the next batch
+            seq_idx += 1
+            n_rd_points_dict[batch_num] = n_rd_points  # Save readout points count
+            n_rd_points = 0
+            batch_num = f"batch_{seq_idx}"
+            batches[batch_num], n_rd_points, n_adc_0 = initializeBatch()  # Initialize new batch
+            n_adc += n_adc_0
+            print(f"Creating {batch_num}.seq...")
+
+            # Add sequence blocks
+            # batches[batch_num].add_block(delay_first)
+            batches[batch_num].add_block(event_rf_ex)
+            batches[batch_num].add_block(event_rf_re)
+            batches[batch_num].add_block(event_adc)
+            n_rd_points += n_points
+            n_adc += 1
+
+            # After final repetition, save and interpret the last batch
+            batches[batch_num].write(batch_num + ".seq")
+            waveforms[batch_num], param_dict = flo_interpreter.interpret(batch_num + ".seq")
+            print(f"{batch_num}.seq ready!")
+            print(f"{len(batches)} batches created. Sequence ready!")
+
+            # Update the number of acquired ponits in the last batch
+            n_rd_points_dict.pop('batch_0')
+            n_rd_points_dict[batch_num] = n_rd_points
+
+            return waveforms, n_rd_points_dict, n_adc
 
         # Create the sequence here
-        def createSequence():  # Here I will test pypulseq
-            rd_points = 0
 
-            # # Shimming
-            # self.iniSequence(t0, self.shimming)
+        '''
+        Step 8: Run the batches
+        This step will handle the different batches, run it and get the resulting data. This should not be modified.
+        Oversampled data will be available in self.mapVals['data_over']
+        Decimated data will be available in self.mapVals['data_decimated']
+        The decimated data is shifted to account for CIC delay, so data is synchronized with real-time signal
+        '''
 
-            # Add excitatoin
-            self.seq.add_block(event_rf_ex)
-
-            # Add refocusing
-            self.seq.add_block(event_rf_re)
-
-            # Add ADC
-            self.seq.add_block(event_adc)
-            rd_points += n_points
-
-            # Create the sequence file
-            self.seq.write('sequence.seq')
-
-            # Run the interpreter to get the waveforms
-            waveforms, param_dict = self.flo_interpreter.interpret('sequence.seq')
-
-            # Convert waveform to mriBlankSeq tools (just do it)
-            self.pypulseq2mriblankseq(waveforms=waveforms, shimming=self.shimming)
-
-            return rd_points
-
-        # Create the sequence and add instructions to the experiment
-        acq_points = createSequence()
-        if not self.demo:
-            if self.floDict2Exp():
-                print("Sequence waveforms loaded successfully")
-                pass
-            else:
-                print("ERROR: sequence waveforms out of hardware bounds")
-                return False
-
-        # Run the experiment
-        data_over = []  # To save oversampled data
-        if not plotSeq:
-            for scan in range(self.nScans):
-                print("Scan %i running..." % (scan + 1))
-                if not self.demo:
-                    rxd, msgs = self.expt.run()
-                else:
-                    rxd = {'rx0': np.random.randn(acq_points * hw.oversamplingFactor) +
-                                  1j * np.random.randn(acq_points * hw.oversamplingFactor)}
-                data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
-                print("Acquired points = %i" % np.size([rxd['rx0']]))
-                print("Expected points = %i" % ((acq_points + 2 * hw.addRdPoints) * hw.oversamplingFactor))
-                print("Scan %i ready!" % (scan + 1))
-        elif plotSeq and standalone:
-            self.sequencePlot(standalone=standalone)
-            return True
-
-        # Close the experiment
-        if not self.demo:
-            self.expt.__del__()
-
-        # Process data to be plotted
-        if not plotSeq:
-            data_full = sig.decimate(data_over, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            self.mapVals['data_full'] = data_full
-            data = np.average(np.reshape(data_full, (self.nScans, -1)), axis=0)
-            self.mapVals['data'] = data
-
-            # Data to sweep sequence
-            self.mapVals['sampledPoint'] = data[int(n_points / 2)]
-
-        return True
+        waveforms, n_readouts, n_adc = createBatches()
+        return self.runBatches(waveforms=waveforms,
+                               n_readouts=n_readouts,
+                               n_adc=n_adc,
+                               frequency=hw.larmorFreq,  # MHz
+                               bandwidth=self.bw,  # MHz
+                               decimate='Normal',
+                               )
 
     def sequenceAnalysis(self, mode=None):
+        """
+        Analyzes the acquired data from the Larmor sequence to determine the Larmor frequency
+        and compute the corresponding time-domain signal and frequency spectrum.
+
+        This method processes the acquired data by generating time and frequency vectors,
+        performing a Fourier transform to obtain the signal spectrum, and determining the
+        central frequency. It updates the Larmor frequency and provides the results in both
+        time and frequency domains. The data is then optionally plotted, and the results are
+        saved for further analysis.
+
+        Args:
+            mode (str, optional): The mode of execution. If set to 'Standalone', the results are plotted
+                                   in a standalone manner. Defaults to None.
+
+        Returns:
+            list: A list containing the time-domain signal and frequency spectrum for visualization.
+
+        Notes:
+            - The Larmor frequency is recalculated based on the signal's central frequency from the spectrum.
+            - The time-domain signal and frequency spectrum are both included in the output layout for visualization.
+            - The results are saved as raw data and can be accessed later.
+            - If the mode is not 'Standalone', the Larmor frequency is updated in all sequences in the sequence list.
+        """
         self.mode = mode
         # Load data
-        signal = self.mapVals['data']
+        signal = self.mapVals['data_decimated'][0]
         acq_time = self.mapVals['acqTime'] * 1e3  # ms
         n_points = self.mapVals['nPoints']
 
@@ -289,5 +398,4 @@ if __name__ == '__main__':
     seq = LarmorPyPulseq()
     seq.sequenceAtributes()
     seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
-    # seq.sequencePlot(standalone=True)
     seq.sequenceAnalysis(mode='Standalone')

@@ -50,6 +50,9 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         super(SEQUENCE_TEMPLATE, self).__init__()
 
         # Sequence name (Do not include 'field')
+        self.dummyPulses = None
+        self.rfExFA = None
+        self.bandwidth = None
         self.repetitionTime = None
         self.rfExTime = None
         self.nPoints = None
