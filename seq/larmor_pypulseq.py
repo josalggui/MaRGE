@@ -23,7 +23,6 @@ for subdir in subdirs:
 #******************************************************************************
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import scipy.signal as sig
 import configs.hw_config as hw
 import configs.units as units
 import controller.controller_device as device
@@ -335,14 +334,15 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
             - If the mode is not 'Standalone', the Larmor frequency is updated in all sequences in the sequence list.
         """
         self.mode = mode
+
         # Load data
         signal = self.mapVals['data_decimated'][0]
         acq_time = self.mapVals['acqTime'] * 1e3  # ms
         n_points = self.mapVals['nPoints']
 
-        # Generate time and frequency vectors and calcualte the signal spectrum
+        # Generate time and frequency vectors and calculate the signal spectrum
         tVector = np.linspace(-acq_time / 2, acq_time / 2, n_points)
-        fVector = np.linspace(-self.bw / 2, self.bw / 2, n_points) * 1e3  # kHz
+        fVector = np.linspace(-self.bw / 2, self.bw / 2, n_points) * 1e-3  # kHz
         spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal)))
 
         # Get the central frequency
