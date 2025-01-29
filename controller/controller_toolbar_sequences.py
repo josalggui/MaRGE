@@ -93,7 +93,7 @@ class SequenceController(SequenceToolBar):
             'AutoTuning',
             'Noise',
             'Shimming',
-            'RabiFlops',
+            'Rabi Flops',
             'Larmor',
         ]
 
@@ -103,7 +103,7 @@ class SequenceController(SequenceToolBar):
             seq.loadParams(directory='calibration', file=seq_name)
 
             # Specific tasks for RabiFlops
-            if seq_name == 'RabiFlops':
+            if seq_name == 'Rabi Flops':
                 # Fix rf amplitude
                 rf_amp = np.pi/(hw.b1Efficiency*hw.reference_time)
                 seq.mapVals['rfExAmp'] = rf_amp
