@@ -23,7 +23,6 @@ for subdir in subdirs:
 #******************************************************************************
 import numpy as np
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import scipy.signal as sig
 import configs.hw_config as hw
 import configs.units as units
 import controller.controller_device as device
@@ -257,6 +256,12 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                 )
 
             return batch, n_rd_points, n_adc
+
+        '''
+        Step 7: Define your createBatches method.
+        In this step you will populate the batches adding the blocks previously defined in step 4, and accounting for
+        number of acquired points to check if a new batch is required.
+        '''
 
         def create_batches(case='x'):
             batches = {}  # Dictionary to save batches PyPulseq sequences

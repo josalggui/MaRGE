@@ -36,7 +36,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # Input the parameters
         self.cal_method = None
         self.addParameter(key='seqName', string='RabiFlopsInfo', val='RabiFlops')
-        self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='toMaRGE', val=False)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
@@ -46,7 +46,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
-        self.addParameter(key='shimming', string='Shimming (*1e-4)', val=[-12.5, -12.5, 7.5], field='OTH')
+        self.addParameter(key='shimming', string='Shimming (*1e-4)', val=[0.0, 0.0, 0.0], field='OTH')
         self.addParameter(key='rfExTime0', string='Rf pulse time, Start (us)', val=5.0, field='RF')
         self.addParameter(key='rfExTime1', string='RF pulse time, End (us)', val=100.0, field='RF')
         self.addParameter(key='nSteps', string='Number of steps', val=20, field='RF')

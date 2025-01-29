@@ -302,6 +302,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         In this step you will populate the batches adding the blocks previously defined in step 4, and accounting for
         number of acquired points to check if a new batch is required.
         '''
+
         def createBatches():
             """
             Create batches for the full pulse sequence.
