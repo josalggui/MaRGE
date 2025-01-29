@@ -6,6 +6,7 @@
 
 import os
 import sys
+
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))
@@ -56,22 +57,23 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='ShimmingSweepInfo', val='Shimming')
         self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
         self.addParameter(key='pypulseq', string='PyPulseq', val=True)
-        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
+        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz,
+                          field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90.0, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180.0, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, units=units.us, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, units=units.us, field='RF')
         self.addParameter(key='echoTime', string='Echo time (ms)', val=10., units=units.ms, field='SEQ')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., units=units.ms, field='SEQ')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=20., units=units.ms, field='SEQ')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ')
         self.addParameter(key='shimming0', string='Shimming 0', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
-        self.addParameter(key='nShimming', string='n Shimming steps', val=10, field='OTH')
-        self.addParameter(key='dShimming', string='Shiming step', val=[2.5, 2.5, 2.5], units=units.sh, field='OTH')
+        self.addParameter(key='nShimming', string='n Shimming steps', val=4, field='OTH')
+        self.addParameter(key='dShimming', string='Shimming step', val=[2.5, 2.5, 2.5], units=units.sh, field='OTH')
 
     def sequenceInfo(self):
-        
+
         print("Shimming")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
@@ -120,7 +122,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             grad_raster_time=hw.grad_raster_time,  # Gradient raster time (s)
             rise_time=hw.grad_rise_time,  # Gradient rise time (s)
             rf_raster_time=1e-6,
-            block_duration_raster=1e-6
+            block_duration_raster=1e-9
         )
 
         '''
@@ -198,17 +200,25 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         '''
 
         # First delay
-        delay_first = pp.make_delay(self.repetitionTime - self.rfExTime / 2 - system.rf_dead_time)
+        delay_first = pp.make_delay(self.repetitionTime)
+
+        # Block durations
+        block_a_duration = (self.repetitionTime - self.acqTime / 2 - self.echoTime +
+                            ((self.rfExTime / 2) // hw.grad_raster_time + 1) * hw.grad_raster_time)
+        block_b_duration = self.repetitionTime - block_a_duration
+        delay_a = pp.make_delay(block_a_duration)
+        delay_b = pp.make_delay(block_b_duration)
 
         # Create excitation rf event
+        delay_rf_ex = self.repetitionTime - self.acqTime / 2 - self.echoTime - self.rfExTime / 2
         event_rf_ex = pp.make_block_pulse(flip_angle=self.rfExFA * np.pi / 180,
                                           duration=self.rfExTime,
-                                          delay=0,
+                                          delay=delay_rf_ex,
                                           system=system,
-                                          use="excitation", )
+                                          use="excitation")
 
         # Create refocusing rf event
-        delay_rf_re = self.echoTime / 2 - self.rfExTime / 2 - self.rfReTime / 2
+        delay_rf_re = block_b_duration - self.acqTime / 2 - self.echoTime / 2 - self.rfReTime / 2
         event_rf_re = pp.make_block_pulse(flip_angle=self.rfReFA * np.pi / 180,
                                           duration=self.rfReTime,
                                           delay=delay_rf_re,
@@ -216,7 +226,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                                           use="refocusing")
 
         # Create ADC event
-        delay_adc = self.echoTime - self.rfExTime / 2 - self.acqTime / 2
+        delay_adc = block_b_duration - self.acqTime
         event_adc = pp.make_adc(num_samples=self.nPoints * hw.oversamplingFactor,
                                 duration=self.acqTime,  # s
                                 delay=delay_adc,  # s
@@ -237,9 +247,14 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             # Add dummy pulses
             batch.add_block(delay_first)
             for _ in range(self.dummyPulses):
-                batch.add_block(event_rf_ex)
-                batch.add_block(event_rf_re)
-                batch.add_block(pp.make_delay(self.repetitionTime - self.echoTime / 2 - self.rfReTime / 2 - 2 * system.rf_dead_time))
+                batch.add_block(
+                    event_rf_ex,
+                    delay_a,
+                )
+                batch.add_block(
+                    event_rf_re,
+                    delay_b
+                )
 
             return batch, n_rd_points, n_adc
 
@@ -256,32 +271,56 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
             # Select gradient vector
             sh_vector = []
-            if case=='x':
+            if case == 'x':
                 sh_vector = sx_vector
-            elif case=='y':
+            elif case == 'y':
                 sh_vector = sy_vector
-            elif case=='z':
+            elif case == 'z':
                 sh_vector = sz_vector
 
             # Populate the sequence
             for ii in range(1, np.size(sh_vector)):
-                # g_amp = np.array([sh_vector[ii - 1, 0], sh_vector[ii, 0], sh_vector[ii, 0]]) * hw.gammaB
-                # g_time = np.array([0.0, hw.grad_rise_time, self.repetitionTime])
+                # Gradient ramp, up to excitation pulse
                 g_amp_a = np.array([sh_vector[ii - 1, 0], sh_vector[ii, 0], sh_vector[ii, 0]]) * hw.gammaB
-                t0 = system.rf_dead_time - 0.001
-                t1 = system.rf_dead_time - 0.001 + hw.grad_rise_time
-                t2 = system.rf_dead_time + 0.0
+                t0 = 0.0
+                t1 = hw.grad_rise_time
+                t2 = (self.repetitionTime - self.acqTime / 2 - self.echoTime +
+                      ((self.rfExTime / 2) // hw.grad_raster_time + 1) * hw.grad_raster_time)
                 g_time_a = np.array([t0, t1, t2])
-                batches[batch_name].add_block(
-                    pp.make_extended_trapezoid(channel=case,
-                                                     amplitudes=g_amp_a,
-                                                     times=g_time_a,
-                                                     system=system),
-                    pp.make_delay(self.repetitionTime),
-                    event_rf_ex,
-                )
-                    # n_adc += 1
-                    # n_rd_points += n_rd
+
+                # Gradient flat, up to the end of the repetition
+                g_amp_b = np.array([sh_vector[ii, 0], sh_vector[ii, 0]]) * hw.gammaB
+                g_time_b = np.array([0, self.repetitionTime - t2])
+
+                if ii == np.size(sh_vector) - 1:
+                    batches[batch_name].add_block(
+                        pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_a, times=g_time_a, system=system,
+                                                   skip_check=True),
+                        delay_a,
+                    )
+
+                    batches[batch_name].add_block(
+                        pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_b, times=g_time_b, system=system,
+                                                   skip_check=True),
+                        delay_b
+                    )
+                else:
+                    batches[batch_name].add_block(
+                        pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_a, times=g_time_a, system=system,
+                                                   skip_check=True),
+                        event_rf_ex,
+                        delay_a,
+                    )
+
+                    batches[batch_name].add_block(
+                        pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_b, times=g_time_b, system=system,
+                                                   skip_check=True),
+                        event_rf_re,
+                        event_adc,
+                        delay_b
+                    )
+                    n_adc += 1
+                    n_rd_points += self.nPoints
 
             # Write sequence file and interpret the sequence to get the waveform
             batches[batch_name].write(batch_name + ".seq")
@@ -299,34 +338,67 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         The decimated data is shifted to account for CIC delay, so data is synchronized with real-time signal
         '''
 
-        waveforms, n_readouts, n_adc = create_batches(case='x')
-        return self.runBatches(waveforms=waveforms,
-                               n_readouts=n_readouts,
-                               n_adc=n_adc,
-                               frequency=hw.larmorFreq,  # MHz
-                               bandwidth=bw,  # MHz
-                               decimate='Normal',
-                               )
+        waveforms_x, n_readouts_x, n_adc_x = create_batches(case='x')
+        waveforms_y, n_readouts_y, n_adc_y = create_batches(case='y')
+        waveforms_z, n_readouts_z, n_adc_z = create_batches(case='z')
 
+        # Run sequence x
+        if self.runBatches(waveforms=waveforms_x,
+                           n_readouts=n_readouts_x,
+                           n_adc=n_adc_x,
+                           frequency=hw.larmorFreq,  # MHz
+                           bandwidth=bw,  # MHz
+                           decimate='Normal',
+                           output='x',
+                           ):
+            pass
+        else:
+            return False
 
+        # Run sequence y
+        if self.runBatches(waveforms=waveforms_y,
+                           n_readouts=n_readouts_y,
+                           n_adc=n_adc_y,
+                           frequency=hw.larmorFreq,  # MHz
+                           bandwidth=bw,  # MHz
+                           decimate='Normal',
+                           output='y',
+                           ):
+            pass
+        else:
+            return False
+
+        # Run sequence z
+        return self.runBatches(waveforms=waveforms_z,
+                        n_readouts=n_readouts_z,
+                        n_adc=n_adc_z,
+                        frequency=hw.larmorFreq,  # MHz
+                        bandwidth=bw,  # MHz
+                        decimate='Normal',
+                        output='z',
+                        )
 
     def sequenceAnalysis(self, mode=None):
         self.mode = mode
 
         # Get data
-        data = np.reshape(self.mapVals['data'], (3, self.nShimming, -1))
+        data_x = self.mapVals['data_decimated_x'][0]
+        data_y = self.mapVals['data_decimated_y'][0]
+        data_z = self.mapVals['data_decimated_z'][0]
+        data = np.concatenate((data_x, data_y, data_z))
+        data = np.reshape(data, (3, self.nShimming, -1))
 
         def getFHWM(s=None):
-            bw = self.mapVals['bw']*1e-3
-            f_vector = np.linspace(-bw/2, bw/2, self.nPoints)
+            bw = self.mapVals['bw_MHz'] * 1e3  # kHz
+            f_vector = np.linspace(-bw / 2, bw / 2, self.nPoints)
             target = np.max(s) / 2
             p0 = np.argmax(s)
             f0 = f_vector[p0]
-            s1 = np.abs(s[0:p0]-target)
+            s1 = np.abs(s[0:p0] - target)
             f1 = f_vector[np.argmin(s1)]
-            s2 = np.abs(s[p0::]-target)
-            f2 = f_vector[np.argmin(s2)+p0]
-            return f2-f1
+            s2 = np.abs(s[p0::] - target)
+            f2 = f_vector[np.argmin(s2) + p0]
+            return f2 - f1
 
         # Get FFT
         dataFFT = np.zeros((3, self.nShimming))
@@ -339,9 +411,9 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.mapVals['amplitudeVSshimming'] = dataFFT
 
         # Get max signal for each excitation
-        sxVector = np.squeeze(self.mapVals['sxVector'])
-        syVector = np.squeeze(self.mapVals['syVector'])
-        szVector = np.squeeze(self.mapVals['szVector'])
+        sxVector = np.squeeze(self.mapVals['sx_vector'])[1:-1]
+        syVector = np.squeeze(self.mapVals['sy_vector'])[1:-1]
+        szVector = np.squeeze(self.mapVals['sz_vector'])[1:-1]
 
         # Get the shimming values
         sx = sxVector[np.argmax(dataFFT[0, :])]
@@ -352,7 +424,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         print("Shimming Y = %0.1f" % (sy / units.sh))
         print("Shimming Z = %0.1f" % (sz / units.sh))
         print("FHWM = %0.0f Hz" % (fwhm * 1e3))
-        print("Homogeneity = %0.0f ppm" % (fwhm*1e3/hw.larmorFreq))
+        print("Homogeneity = %0.0f ppm" % (fwhm * 1e3 / hw.larmorFreq))
         print("Shimming loaded into the sequences.")
 
         # Shimming plot
@@ -373,15 +445,15 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                    'yLabel': 'FHWM (kHz)',
                    'title': 'FWHM',
                    'legend': ['X', 'Y', 'Z'],
-                   'row': 2,
+                   'row': 1,
                    'col': 0}
 
         # Update the shimming in hw_config
-        if mode != "standalone":
+        if mode != "Standalone":
             for seqName in self.sequence_list:
                 self.sequence_list[seqName].mapVals['shimming'] = [np.round(sx / units.sh, decimals=1),
-                                                                  np.round(sy / units.sh, decimals=1),
-                                                                  np.round(sz / units.sh, decimals=1)]
+                                                                   np.round(sy / units.sh, decimals=1),
+                                                                   np.round(sz / units.sh, decimals=1)]
         shimming = [np.round(sx / units.sh, decimals=1),
                     np.round(sy / units.sh, decimals=1),
                     np.round(sz / units.sh, decimals=1)]
@@ -396,8 +468,9 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         return self.output
 
+
 if __name__ == '__main__':
     seq = ShimmingSweep()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
-    # seq.sequenceAnalysis(mode='Standalone')
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
+    seq.sequenceAnalysis(mode='Standalone')

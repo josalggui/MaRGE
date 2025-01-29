@@ -44,8 +44,8 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ')
-        self.addParameter(key='shimming0', string='Shimming', val=[-12.5, -12.5, 7.5], units=units.sh, field='OTH')
-        self.addParameter(key='nShimming', string='n Shimming steps', val=10, field='OTH')
+        self.addParameter(key='shimming0', string='Shimming', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
+        self.addParameter(key='nShimming', string='n Shimming steps', val=4, field='OTH')
         self.addParameter(key='dShimming', string='Shiming step', val=[2.5, 2.5, 2.5], units=units.sh, field='OTH')
 
     def sequenceInfo(self):
@@ -179,7 +179,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                    'col': 0}
 
         # Update the shimming in hw_config
-        if mode != "standalone":
+        if mode != "Standalone":
             for seqName in self.sequence_list:
                 self.sequence_list[seqName].mapVals['shimming'] = [np.round(sx / units.sh, decimals=1),
                                                                   np.round(sy / units.sh, decimals=1),
