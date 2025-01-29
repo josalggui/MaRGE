@@ -75,6 +75,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.rotation = None
         self.angle = None
         self.axesOrientation = None
+        self.rdPreemphasis = None
         self.addParameter(key='seqName', string='RAREInfo', val='RareDoubleImage')
         self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
@@ -100,6 +101,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
+        self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH', tip="Fraction of k planes aquired in slice direction")
@@ -152,7 +154,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.dfovs.append(self.dfov.tolist())
         self.fovs.append(self.fov.tolist())
 
-    def sequenceRun(self, plot_seq=False, demo=False, standalone=False):
+    def sequenceRun(self, plotSeq=False, demo=False, standalone=False):
         """
         Runs the RARE MRI pulse sequence.
 
@@ -176,7 +178,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         """
 
         self.demo = demo
-        self.plotSeq = plot_seq
+        self.plotSeq = plotSeq
         self.standalone = standalone
         print('RARE run...')
 
@@ -306,7 +308,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         print("Number of acquired slices: %i" % n_sl)
 
         # Set phase vector to given sweep mode
-        ind = self.getIndex(self.etl, n_ph, self.sweepMode)
+        ind = self.getIndex(self.etl // 2, n_ph, self.sweepMode)
         self.mapVals['sweepOrder'] = ind
         ph_gradients = ph_gradients[ind]
         self.mapVals['ph_gradients'] = ph_gradients.copy()
@@ -425,7 +427,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         block_gr_rd_preph = pp.make_trapezoid(
             channel=rd_channel,
             system=system,
-            amplitude=rd_deph_amplitude * hw.gammaB,
+            amplitude=rd_deph_amplitude * hw.gammaB * self.rdPreemphasis,
             flat_time=self.rdDephTime,
             rise_time=hw.grad_rise_time,
             delay=delay,
@@ -434,13 +436,24 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         # Delay to re-focusing pulse
         delay_preph = pp.make_delay(self.echoSpacing / 2 + self.rfExTime / 2 - self.rfReTime / 2)
 
-        # Refocusing pulse
+        # Refocusing pulse odd
         flip_re = self.rfReFA * np.pi / 180
-        block_rf_refocusing = pp.make_block_pulse(
+        block_rf_refocusing_odd = pp.make_block_pulse(
             flip_angle=flip_re,
             system=system,
             duration=self.rfReTime,
             phase_offset=np.pi / 2,
+            delay=0,
+            use='refocusing'
+        )
+
+        # Refocusing pulse
+        flip_re = self.rfReFA * np.pi / 180
+        block_rf_refocusing_eve = pp.make_block_pulse(
+            flip_angle=flip_re,
+            system=system,
+            duration=self.rfReTime,
+            phase_offset=np.pi / 2 + self.rfPhase * np.pi / 180,
             delay=0,
             use='refocusing'
         )
@@ -566,7 +579,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 # Add echo train
                 for echo in range(self.etl):
                     if dummy == self.dummyPulses-1:
-                        batch.add_block(block_rf_refocusing,
+                        batch.add_block(block_rf_refocusing_odd,
                                                 block_gr_rd_reph,
                                                 gr_ph_deph,
                                                 gr_sl_deph,
@@ -577,7 +590,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                         n_rd_points += n_rd
                         n_adc += 1
                     else:
-                        batch.add_block(block_rf_refocusing,
+                        batch.add_block(block_rf_refocusing_odd,
                                                 block_gr_rd_reph,
                                                 gr_ph_deph,
                                                 gr_sl_deph,
@@ -655,14 +668,24 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                         gr_sl_reph = pp.scale_grad(block_gr_sl_reph, - sl_gradients[sl_idx])
 
                         # Add blocks
-                        batches[batch_num].add_block(block_rf_refocusing,
-                                                block_gr_rd_reph,
-                                                gr_ph_deph,
-                                                gr_sl_deph,
-                                                block_adc_signal,
-                                                delay_reph)
-                        batches[batch_num].add_block(gr_ph_reph,
-                                                gr_sl_reph)
+                        if echo%2==0:
+                            batches[batch_num].add_block(block_rf_refocusing_odd,
+                                                    block_gr_rd_reph,
+                                                    gr_ph_deph,
+                                                    gr_sl_deph,
+                                                    block_adc_signal,
+                                                    delay_reph)
+                            batches[batch_num].add_block(gr_ph_reph,
+                                                    gr_sl_reph)
+                        else:
+                            batches[batch_num].add_block(block_rf_refocusing_eve,
+                                                         block_gr_rd_reph,
+                                                         gr_ph_deph,
+                                                         gr_sl_deph,
+                                                         block_adc_signal,
+                                                         delay_reph)
+                            batches[batch_num].add_block(gr_ph_reph,
+                                                         gr_sl_reph)
                         n_rd_points += n_rd
                         n_adc += 1
 
@@ -871,6 +894,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.mapVals['kMax_1/m'] = kMax
         self.mapVals['sampled_odd'] = np.concatenate((kRD, kPH, kSL, data_odd), axis=1)
         self.mapVals['sampled_eve'] = np.concatenate((kRD, kPH, kSL, data_eve), axis=1)
+        self.mapVals['sampledCartesian'] = self.mapVals['sampled_odd']
 
         axes_enable = self.mapVals['axes_enable']
 
@@ -890,7 +914,13 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         img_mag_odd = np.abs(img_odd)
         img_mag_eve = np.abs(img_eve)
         img_pha_odd = np.angle(img_odd)
+        mask_odd = img_mag_odd > 0.3 * np.max(img_mag_odd)
+        mean_phase_odd = np.mean(img_pha_odd[mask_odd])
+        img_pha_odd[~mask_odd] = mean_phase_odd
         img_pha_eve = np.angle(img_eve)
+        mask_eve = img_mag_eve > 0.3 * np.max(img_mag_eve)
+        mean_phase_eve = np.mean(img_pha_eve[mask_eve])
+        img_pha_eve[~mask_eve] = mean_phase_eve
 
         # Image plot
         result_mag_odd, img_mag_odd = self.fix_image_orientation(img_mag_odd, axes=self.axesOrientation)
@@ -962,5 +992,5 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__':
     seq = RarePyPulseq()
     seq.sequenceAtributes()
-    seq.sequenceRun(plot_seq=True, demo=True, standalone=True)
-    # seq.sequenceAnalysis(mode='Standalone')
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
+    seq.sequenceAnalysis(mode='Standalone')
