@@ -188,71 +188,85 @@ class MarcosController(MarcosToolBar):
         """
         Initializes the GPA board.
         """
-        if self.action_server.isChecked():
-            if not self.main.demo:
-                link = False
-                while not link:
-                    try:
-                        # Check if GPA available
-                        received_string = self.arduino.send("GPA_VERB 1;").decode()
-                        if received_string[0:4] != ">OK;":
-                            print("WARNING: GPA not available.")
-                        else:
-                            print("READY: GPA available.")
 
-                        # Remote communication with GPA
-                        received_string = self.arduino.send("GPA_SPC:CTL 1;").decode()  # Activate remote control
-                        if received_string[0:4] != ">OK;":  # If wrong response
-                            print("WARNING: Error enabling GPA remote control.")
-                        else:  # If good response
-                            print("READY: GPA remote communication succeed.")
+        def init_gpa():
+            if self.action_server.isChecked():
+                if not self.main.demo:
+                    link = False
+                    while not link:
+                        try:
+                            # Check if GPA available
+                            received_string = self.arduino.send("GPA_VERB 1;").decode()
+                            if received_string[0:4] != ">OK;":
+                                print("WARNING: GPA not available.")
+                            else:
+                                print("READY: GPA available.")
 
-                        # Check if RFPA available
-                        received_string = self.arduino.send("RFPA_VERB 1;").decode()
-                        if received_string[0:4] != ">OK;":
-                            print("WARNING: RFPA not available.")
-                        else:
-                            print("READY: RFPA available.")
+                            # Remote communication with GPA
+                            received_string = self.arduino.send("GPA_SPC:CTL 1;").decode()  # Activate remote control
+                            if received_string[0:4] != ">OK;":  # If wrong response
+                                print("WARNING: Error enabling GPA remote control.")
+                            else:  # If good response
+                                print("READY: GPA remote communication succeed.")
 
-                        # Remote communication with RFPA
-                        received_string = self.arduino.send("RFPA_SPC:CTL 1;").decode()
-                        if received_string[0:4] != ">OK;":
-                            print("WARNING: Error enabling RFPA remote control.")
-                        else:
-                            print("READY: RFPA remote communication succeed.")
+                            # Disable Interlock
+                            received_string = self.arduino.send("GPA_ERRST;").decode()  # Activate remote control
+                            if received_string[0:4] != ">OK;":  # If wrong response
+                                print("WARNING: Interlock reset.")
+                            else:  # If good response
+                                print("READY: Interlock reset done.")
 
-                        # Disable power module
-                        self.arduino.send("GPA_ON 0;")
-                        self.arduino.send("RFPA_RF 0;")
+                            # Check if RFPA available
+                            received_string = self.arduino.send("RFPA_VERB 1;").decode()
+                            if received_string[0:4] != ">OK;":
+                                print("WARNING: RFPA not available.")
+                            else:
+                                print("READY: RFPA available.")
 
-                        # Run init_gpa sequence
-                        expt = ex.Experiment(init_gpa=True)
-                        expt.add_flodict({
-                            'grad_vx': (np.array([100]), np.array([0])),
-                        })
-                        expt.run()
-                        expt.__del__()
-                        link = True
-                        print("READY: GPA init done!")
+                            # Remote communication with RFPA
+                            received_string = self.arduino.send("RFPA_SPC:CTL 1;").decode()
+                            if received_string[0:4] != ">OK;":
+                                print("WARNING: Error enabling RFPA remote control.")
+                            else:
+                                print("READY: RFPA remote communication succeed.")
 
-                        # Enable power modules
-                        # Enable GPA module
-                        received_string = self.arduino.send("GPA_ON 1;").decode()  # Enable power module
-                        if received_string[0:4] != ">OK;":  # If wrong response
-                            print("WARNING: Error activating GPA power module.")
-                        else:  # If good reponse
-                            print("READY: GPA power enabled.")
+                            # Disable power module
+                            self.arduino.send("GPA_ON 0;")
+                            self.arduino.send("RFPA_RF 0;")
 
-                        # Enable RFPA module
-                        received_string = self.arduino.send("RFPA_RF 1;").decode()
-                        if received_string[0:4] != ">OK;":
-                            print("WARNING: Error activating RFPA power module.")
-                        else:
-                            print("READY: RFPA power enabled.")
+                            # Run init_gpa sequence
+                            expt = ex.Experiment(init_gpa=True)
+                            expt.add_flodict({
+                                'grad_vx': (np.array([100]), np.array([0])),
+                            })
+                            expt.run()
+                            expt.__del__()
+                            link = True
+                            print("READY: GPA init done!")
 
-                    except:
-                        link = False
-                        time.sleep(1)
-        else:
-            print("ERROR: No connection to the server")
-            print("Please, connect to MaRCoS server first")
+                            # Enable power modules
+                            # Enable GPA module
+                            received_string = self.arduino.send("GPA_ON 1;").decode()  # Enable power module
+                            if received_string[0:4] != ">OK;":  # If wrong response
+                                print("WARNING: Error activating GPA power module.")
+                            else:  # If good reponse
+                                print("READY: GPA power enabled.")
+
+                            # Enable RFPA module
+                            received_string = self.arduino.send("RFPA_RF 1;").decode()
+                            if received_string[0:4] != ">OK;":
+                                print("WARNING: Error activating RFPA power module.")
+                            else:
+                                print("READY: RFPA power enabled.")
+
+                        except:
+                            link = False
+                            time.sleep(1)
+            else:
+                print("ERROR: No connection to the server")
+                print("Please, connect to MaRCoS server first")
+
+        thread = threading.Thread(target=init_gpa)
+        thread.start()
+
+
