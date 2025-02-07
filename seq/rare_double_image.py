@@ -7,6 +7,7 @@ Created on Thu June 2 2022
 
 import os
 import sys
+
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))
@@ -25,7 +26,7 @@ import numpy as np
 import controller.experiment_gui as ex
 import scipy.signal as sig
 from scipy.stats import linregress
-import configs.hw_config as hw # Import the scanner hardware config
+import configs.hw_config as hw  # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 
@@ -37,6 +38,7 @@ import ctypes
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 
+
 #*********************************************************************************
 #*********************************************************************************
 #*********************************************************************************
@@ -45,6 +47,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RarePyPulseq, self).__init__()
         # Input the parameters
+        self.full_plot = None
         self.sequence_list = None
         self.unlock_orientation = None
         self.rdDephTime = None
@@ -79,37 +82,48 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='RAREInfo', val='RareDoubleImage')
         self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
-        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
+        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz,
+                          field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=50.0, units=units.us, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=100.0, units=units.us, field='RF')
         self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, units=units.ms, field='SEQ')
         self.addParameter(key='preExTime', string='Preexitation time (ms)', val=0.0, units=units.ms, field='SEQ')
-        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ', tip="0 to ommit this pulse")
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=50., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
+        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ',
+                          tip="0 to ommit this pulse")
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=50., units=units.ms, field='SEQ',
+                          tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
-        self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
+        self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
+                          tip="Position of the gradient isocenter")
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
-        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
-        self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
+        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM',
+                          tip="0=x, 1=y, 2=z")
+        self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ',
+                          tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=5.0, units=units.ms, field='OTH')
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
-        self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
+        self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ',
+                          tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
-        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH', tip="Fraction of k planes aquired in slice direction")
-        self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
+        self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH',
+                          tip="Fraction of k planes aquired in slice direction")
+        self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH',
+                          tip='0: Images oriented according to standard. 1: Image raw orientation')
+        self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
+                          tip="'True' or 'False' to plot odd and even images separately")
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
         self.header = ismrmrd.xsd.ismrmrdHeader()
-       
+
     def sequenceInfo(self):
         print("3D RARE sequence powered by PyPulseq")
         print("It gets two images, one from even echoes and a second one from odd echoes")
@@ -131,11 +145,11 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         rf_re_time = self.mapVals['rfReTime']  # us
         rf_ex_amp = rf_ex_fa / (rf_ex_time * hw.b1Efficiency)
         rf_re_amp = rf_re_fa / (rf_re_time * hw.b1Efficiency)
-        if rf_ex_amp>1 or rf_re_amp>1:
+        if rf_ex_amp > 1 or rf_re_amp > 1:
             print("ERROR: RF amplitude is too high, try with longer RF pulse time.")
             return 0
 
-        seq_time = n_points[1]/etl*n_points[2]*repetition_time*1e-3*n_scans*par_fourier_fraction/60
+        seq_time = n_points[1] / etl * n_points[2] * repetition_time * 1e-3 * n_scans * par_fourier_fraction / 60
         seq_time = np.round(seq_time, decimals=1)
         return seq_time  # minutes, scanTime
 
@@ -145,7 +159,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         super().sequenceAtributes()
 
         # Conversion of variables to non-multiplied units
-        self.angle = self.angle * np.pi / 180 # rads
+        self.angle = self.angle * np.pi / 180  # rads
 
         # Add rotation, dfov and fov to the history
         self.rotation = self.rotationAxis.tolist()
@@ -238,10 +252,10 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.mapVals['axes_enable'] = axes_enable
 
         # Miscellaneous
-        self.freqOffset = self.freqOffset*1e6  # MHz
-        resolution = self.fov/self.nPoints
-        rf_ex_amp = self.rfExFA/(self.rfExTime*1e6*hw.b1Efficiency)*np.pi/180
-        rf_re_amp = self.rfReFA/(self.rfReTime*1e6*hw.b1Efficiency)*np.pi/180
+        self.freqOffset = self.freqOffset * 1e6  # MHz
+        resolution = self.fov / self.nPoints
+        rf_ex_amp = self.rfExFA / (self.rfExTime * 1e6 * hw.b1Efficiency) * np.pi / 180
+        rf_re_amp = self.rfReFA / (self.rfReTime * 1e6 * hw.b1Efficiency) * np.pi / 180
         self.mapVals['rf_ex_amp'] = rf_ex_amp
         self.mapVals['rf_re_amp'] = rf_re_amp
         self.mapVals['resolution'] = resolution
@@ -258,14 +272,14 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         n_sl = self.nPoints[2]
 
         # ETL if etl>n_ph
-        if self.etl>n_ph:
+        if self.etl > n_ph:
             self.etl = n_ph
 
         # Miscellaneous
         n_rd_points_per_train = self.etl * n_rd
 
         # par_acq_lines in case par_acq_lines = 0
-        par_acq_lines = int(int(self.nPoints[2]*self.parFourierFraction)-self.nPoints[2]/2)
+        par_acq_lines = int(int(self.nPoints[2] * self.parFourierFraction) - self.nPoints[2] / 2)
         self.mapVals['partialAcquisition'] = par_acq_lines
 
         # BW
@@ -273,38 +287,41 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         sampling_period = 1 / bw  # us
 
         # Readout gradient time
-        if self.rdGradTime<self.acqTime:
+        if self.rdGradTime < self.acqTime:
             self.rdGradTime = self.acqTime
             print("Readout gradient time set to %0.1f ms" % (self.rdGradTime * 1e3))
         self.mapVals['rdGradTime'] = self.rdGradTime * 1e3  # ms
 
         # Phase and slice de- and re-phasing time
-        if self.phGradTime == 0 or self.phGradTime > self.echoSpacing/2-self.rfExTime/2-self.rfReTime/2-2*hw.grad_rise_time:
-            self.phGradTime = self.echoSpacing/2-self.rfExTime/2-self.rfReTime/2-2*hw.grad_rise_time
+        if self.phGradTime == 0 or self.phGradTime > self.echoSpacing / 2 - self.rfExTime / 2 - self.rfReTime / 2 - 2 * hw.grad_rise_time:
+            self.phGradTime = self.echoSpacing / 2 - self.rfExTime / 2 - self.rfReTime / 2 - 2 * hw.grad_rise_time
             print("Phase and slice gradient time set to %0.1f ms" % (self.phGradTime * 1e3))
-        self.mapVals['phGradTime'] = self.phGradTime*1e3  # ms
+        self.mapVals['phGradTime'] = self.phGradTime * 1e3  # ms
 
         # Max gradient amplitude
-        rd_grad_amplitude = self.nPoints[0]/(hw.gammaB*self.fov[0]*self.acqTime)*axes_enable[0]
-        ph_grad_amplitude = n_ph/(2*hw.gammaB*self.fov[1]*(self.phGradTime+hw.grad_rise_time))*axes_enable[1]
-        sl_grad_amplitude = n_sl/(2*hw.gammaB*self.fov[2]*(self.phGradTime+hw.grad_rise_time))*axes_enable[2]
+        rd_grad_amplitude = self.nPoints[0] / (hw.gammaB * self.fov[0] * self.acqTime) * axes_enable[0]
+        ph_grad_amplitude = n_ph / (2 * hw.gammaB * self.fov[1] * (self.phGradTime + hw.grad_rise_time)) * axes_enable[
+            1]
+        sl_grad_amplitude = n_sl / (2 * hw.gammaB * self.fov[2] * (self.phGradTime + hw.grad_rise_time)) * axes_enable[
+            2]
         self.mapVals['rd_grad_amplitude'] = rd_grad_amplitude
         self.mapVals['ph_grad_amplitude'] = ph_grad_amplitude
         self.mapVals['sl_grad_amplitude'] = sl_grad_amplitude
 
         # Readout dephasing amplitude
-        rd_deph_amplitude = 0.5*rd_grad_amplitude*(hw.grad_rise_time+self.rdGradTime)/(hw.grad_rise_time+self.rdDephTime)
+        rd_deph_amplitude = 0.5 * rd_grad_amplitude * (hw.grad_rise_time + self.rdGradTime) / (
+                    hw.grad_rise_time + self.rdDephTime)
         self.mapVals['rd_deph_amplitude'] = rd_deph_amplitude
         print("Max rd gradient amplitude: %0.1f mT/m" % (max(rd_grad_amplitude, rd_deph_amplitude) * 1e3))
         print("Max ph gradient amplitude: %0.1f mT/m" % (ph_grad_amplitude * 1e3))
         print("Max sl gradient amplitude: %0.1f mT/m" % (sl_grad_amplitude * 1e3))
 
         # Phase and slice gradient vector
-        ph_gradients = np.linspace(-ph_grad_amplitude,ph_grad_amplitude,num=n_ph,endpoint=False)
-        sl_gradients = np.linspace(-sl_grad_amplitude,sl_grad_amplitude,num=n_sl,endpoint=False)
+        ph_gradients = np.linspace(-ph_grad_amplitude, ph_grad_amplitude, num=n_ph, endpoint=False)
+        sl_gradients = np.linspace(-sl_grad_amplitude, sl_grad_amplitude, num=n_sl, endpoint=False)
 
         # Now fix the number of slices to partially acquired k-space
-        n_sl = (int(self.nPoints[2]/2)+par_acq_lines)*axes_enable[2]+(1-axes_enable[2])
+        n_sl = (int(self.nPoints[2] / 2) + par_acq_lines) * axes_enable[2] + (1 - axes_enable[2])
         print("Number of acquired slices: %i" % n_sl)
 
         # Set phase vector to given sweep mode
@@ -346,7 +363,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                                       init_gpa=False,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
                                       auto_leds=True)
-            sampling_period = self.expt.get_sampling_period() # us
+            sampling_period = self.expt.get_sampling_period()  # us
             bw = 1 / sampling_period  # MHz
             sampling_time = sampling_period * n_rd * 1e-6  # s
             print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
@@ -363,11 +380,11 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         '''
 
         # First delay, sequence will start after 1 repetition time, this ensure gradient and ADC latency is not an issue.
-        if self.inversionTime==0 and self.preExTime==0:
+        if self.inversionTime == 0 and self.preExTime == 0:
             delay = self.repetitionTime - self.rfExTime / 2 - system.rf_dead_time
-        elif self.inversionTime>0 and self.preExTime==0:
+        elif self.inversionTime > 0 and self.preExTime == 0:
             delay = self.repetitionTime - self.inversionTime - self.rfReTime / 2 - system.rf_dead_time
-        elif self.inversionTime==0 and self.preExTime>0:
+        elif self.inversionTime == 0 and self.preExTime > 0:
             delay = self.repetitionTime - self.preExTime - self.rfExTime / 2 - system.rf_dead_time
         else:
             delay = self.repetitionTime - self.preExTime - self.inversionTime - self.rfExTime / 2 - system.rf_dead_time
@@ -382,7 +399,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         )
 
         # Pre-excitation pulse
-        if self.preExTime>0:
+        if self.preExTime > 0:
             flip_pre = self.rfExFA * np.pi / 180
             delay = 0
             block_rf_pre_excitation = pp.make_block_pulse(
@@ -392,14 +409,14 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 phase_offset=0.0,
                 delay=0,
             )
-            if self.inversionTime==0:
+            if self.inversionTime == 0:
                 delay = self.preExTime
             else:
                 delay = self.rfExTime / 2 - self.rfReTime / 2 + self.preExTime
             delay_pre_excitation = pp.make_delay(delay)
 
         # Inversion pulse
-        if self.inversionTime>0:
+        if self.inversionTime > 0:
             flip_inv = self.rfReFA * np.pi / 180
             block_rf_inversion = pp.make_block_pulse(
                 flip_angle=flip_inv,
@@ -419,7 +436,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             duration=self.rfExTime,
             phase_offset=0.0,
             delay=0.0,
-            use = 'excitation'
+            use='excitation'
         )
 
         # De-phasing gradient
@@ -466,7 +483,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         block_gr_ph_deph = pp.make_trapezoid(
             channel=ph_channel,
             system=system,
-            amplitude=ph_grad_amplitude * hw.gammaB + float(ph_grad_amplitude==0),
+            amplitude=ph_grad_amplitude * hw.gammaB + float(ph_grad_amplitude == 0),
             flat_time=self.phGradTime,
             rise_time=hw.grad_rise_time,
             delay=delay,
@@ -477,7 +494,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         block_gr_sl_deph = pp.make_trapezoid(
             channel=sl_channel,
             system=system,
-            amplitude=sl_grad_amplitude * hw.gammaB + float(sl_grad_amplitude==0),
+            amplitude=sl_grad_amplitude * hw.gammaB + float(sl_grad_amplitude == 0),
             flat_time=self.phGradTime,
             delay=delay,
             rise_time=hw.grad_rise_time,
@@ -508,7 +525,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         block_gr_ph_reph = pp.make_trapezoid(
             channel=ph_channel,
             system=system,
-            amplitude=ph_grad_amplitude * hw.gammaB + float(ph_grad_amplitude==0),
+            amplitude=ph_grad_amplitude * hw.gammaB + float(ph_grad_amplitude == 0),
             flat_time=self.phGradTime,
             rise_time=hw.grad_rise_time,
             delay=delay,
@@ -519,7 +536,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         block_gr_sl_reph = pp.make_trapezoid(
             channel=sl_channel,
             system=system,
-            amplitude=sl_grad_amplitude * hw.gammaB + float(sl_grad_amplitude==0),
+            amplitude=sl_grad_amplitude * hw.gammaB + float(sl_grad_amplitude == 0),
             flat_time=self.phGradTime,
             rise_time=hw.grad_rise_time,
             delay=delay,
@@ -527,7 +544,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         # Delay TR
         delay = self.repetitionTime + self.rfReTime / 2 - self.rfExTime / 2 - (self.etl + 0.5) * self.echoSpacing - \
-            self.inversionTime - self.preExTime
+                self.inversionTime - self.preExTime
         if self.inversionTime > 0 and self.preExTime == 0:
             delay -= self.rfExTime / 2
         delay_tr = pp.make_delay(delay)
@@ -558,45 +575,45 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             # Create dummy pulses
             for dummy in range(self.dummyPulses):
                 # Pre-excitation pulse
-                if self.preExTime>0:
+                if self.preExTime > 0:
                     gr_rd_preex = pp.scale_grad(block_gr_rd_preph, scale=1.0)
                     batch.add_block(block_rf_pre_excitation,
-                                            gr_rd_preex,
-                                            delay_pre_excitation)
+                                    gr_rd_preex,
+                                    delay_pre_excitation)
 
                 # Inversion pulse
-                if self.inversionTime>0:
+                if self.inversionTime > 0:
                     gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
                     batch.add_block(block_rf_inversion,
-                                            gr_rd_inv,
-                                            delay_inversion)
+                                    gr_rd_inv,
+                                    delay_inversion)
 
                 # Add excitation pulse and readout de-phasing gradient
                 batch.add_block(block_gr_rd_preph,
-                                        block_rf_excitation,
-                                        delay_preph)
+                                block_rf_excitation,
+                                delay_preph)
 
                 # Add echo train
                 for echo in range(self.etl):
-                    if dummy == self.dummyPulses-1:
+                    if dummy == self.dummyPulses - 1:
                         batch.add_block(block_rf_refocusing_odd,
-                                                block_gr_rd_reph,
-                                                gr_ph_deph,
-                                                gr_sl_deph,
-                                                block_adc_signal,
-                                                delay_reph)
+                                        block_gr_rd_reph,
+                                        gr_ph_deph,
+                                        gr_sl_deph,
+                                        block_adc_signal,
+                                        delay_reph)
                         batch.add_block(gr_ph_reph,
-                                                gr_sl_reph)
+                                        gr_sl_reph)
                         n_rd_points += n_rd
                         n_adc += 1
                     else:
                         batch.add_block(block_rf_refocusing_odd,
-                                                block_gr_rd_reph,
-                                                gr_ph_deph,
-                                                gr_sl_deph,
-                                                delay_reph)
+                                        block_gr_rd_reph,
+                                        gr_ph_deph,
+                                        gr_sl_deph,
+                                        delay_reph)
                         batch.add_block(gr_ph_reph,
-                                                gr_sl_reph)
+                                        gr_sl_reph)
 
                 # Add time delay to next repetition
                 batch.add_block(delay_tr)
@@ -656,8 +673,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
                     # Add excitation pulse and readout de-phasing gradient
                     batches[batch_num].add_block(block_gr_rd_preph,
-                                            block_rf_excitation,
-                                            delay_preph)
+                                                 block_rf_excitation,
+                                                 delay_preph)
 
                     # Add echo train
                     for echo in range(self.etl):
@@ -668,15 +685,15 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                         gr_sl_reph = pp.scale_grad(block_gr_sl_reph, - sl_gradients[sl_idx])
 
                         # Add blocks
-                        if echo%2==0:
+                        if echo % 2 == 0:
                             batches[batch_num].add_block(block_rf_refocusing_odd,
-                                                    block_gr_rd_reph,
-                                                    gr_ph_deph,
-                                                    gr_sl_deph,
-                                                    block_adc_signal,
-                                                    delay_reph)
+                                                         block_gr_rd_reph,
+                                                         gr_ph_deph,
+                                                         gr_sl_deph,
+                                                         block_adc_signal,
+                                                         delay_reph)
                             batches[batch_num].add_block(gr_ph_reph,
-                                                    gr_sl_reph)
+                                                         gr_sl_reph)
                         else:
                             batches[batch_num].add_block(block_rf_refocusing_eve,
                                                          block_gr_rd_reph,
@@ -689,7 +706,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                         n_rd_points += n_rd
                         n_adc += 1
 
-                        if echo%2 == 1:
+                        if echo % 2 == 1:
                             ph_idx += 1
                         # else:
                         #     ph_idx += 1
@@ -786,8 +803,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 data_prov = data_decimated[idx_0:idx_1]
                 data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd]), axis=0)
                 if self.dummyPulses > 0:
-                    data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd+points_per_train]), axis=0)
-                data_signal = np.concatenate((data_signal, data_prov[points_per_rd+points_per_train::]), axis=0)
+                    data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd + points_per_train]),
+                                                axis=0)
+                data_signal = np.concatenate((data_signal, data_prov[points_per_rd + points_per_train::]), axis=0)
                 idx_0 = idx_1
             n_readouts[batch] += -n_rd - n_rd * self.etl
         self.mapVals['data_noise'] = data_noise
@@ -836,7 +854,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         # Get individual images
         data_full = np.reshape(data_full, newshape=(self.nScans, n_sl, n_ph, 2 * n_rd))
         data_full_odd = data_full[:, :, :, ind_krd_0 - int(self.nPoints[0] / 2):ind_krd_0 + int(self.nPoints[0] / 2)]
-        data_full_eve = data_full[:, :, :, n_rd + ind_krd_0 - int(self.nPoints[0] / 2):n_rd + ind_krd_0 + int(self.nPoints[0] / 2)]
+        data_full_eve = data_full[:, :, :,
+                        n_rd + ind_krd_0 - int(self.nPoints[0] / 2):n_rd + ind_krd_0 + int(self.nPoints[0] / 2)]
         data_temp_odd = np.zeros_like(data_full_odd)
         data_temp_eve = np.zeros_like(data_full_eve)
         for ii in range(n_ph):
@@ -863,7 +882,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         # Fix the position of the sample according to dfov
         bw = self.getParameter('bw_MHz')
         time_vector = np.linspace(-self.nPoints[0] / bw / 2 + 0.5 / bw, self.nPoints[0] / bw / 2 - 0.5 / bw,
-                                       self.nPoints[0]) * 1e-6  # s
+                                  self.nPoints[0]) * 1e-6  # s
         kMax = np.array(self.nPoints) / (2 * np.array(self.fov)) * np.array(self.mapVals['axes_enable'])
         kRD = time_vector * hw.gammaB * self.getParameter('rd_grad_amplitude')
         kPH = np.linspace(-kMax[1], kMax[1], num=self.nPoints[1], endpoint=False)
@@ -880,8 +899,10 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.mapVals['kSpace3D_even_echoes'] = data_eve
         img_odd = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data_odd)))
         img_eve = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data_eve)))
+        img = (np.abs(img_odd) + np.abs(img_eve)) / 2
         self.mapVals['image3D_odd_echoes'] = img_odd
         self.mapVals['image3D_even_echoes'] = img_eve
+        self.mapVals['image3D'] = img
         data_odd = np.reshape(data_odd, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
         data_eve = np.reshape(data_eve, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
 
@@ -900,10 +921,10 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         # Get axes in strings
         axes = self.mapVals['axesOrientation']
-        axesDict = {'x':0, 'y':1, 'z':2}
+        axesDict = {'x': 0, 'y': 1, 'z': 2}
         axesKeys = list(axesDict.keys())
         axesVals = list(axesDict.values())
-        axesStr = ['','','']
+        axesStr = ['', '', '']
         n = 0
         for val in axes:
             index = axesVals.index(val)
@@ -922,49 +943,58 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         mean_phase_eve = np.mean(img_pha_eve[mask_eve])
         img_pha_eve[~mask_eve] = mean_phase_eve
 
-        # Image plot
-        result_mag_odd, img_mag_odd = self.fix_image_orientation(img_mag_odd, axes=self.axesOrientation)
-        result_mag_odd['row'] = 0
-        result_mag_odd['col'] = 0
+        if self.full_plot:
+            # Image plot
+            result_mag_odd, img_mag_odd = self.fix_image_orientation(img_mag_odd, axes=self.axesOrientation)
+            result_mag_odd['row'] = 0
+            result_mag_odd['col'] = 0
 
-        result_mag_eve, img_mag_eve = self.fix_image_orientation(img_mag_eve, axes=self.axesOrientation)
-        result_mag_eve['row'] = 1
-        result_mag_eve['col'] = 0
+            result_mag_eve, img_mag_eve = self.fix_image_orientation(img_mag_eve, axes=self.axesOrientation)
+            result_mag_eve['row'] = 1
+            result_mag_eve['col'] = 0
 
-        result_pha_odd, img_pha_odd = self.fix_image_orientation(img_pha_odd, axes=self.axesOrientation)
-        result_pha_odd['row'] = 0
-        result_pha_odd['col'] = 1
+            result_pha_odd, img_pha_odd = self.fix_image_orientation(img_pha_odd, axes=self.axesOrientation)
+            result_pha_odd['row'] = 0
+            result_pha_odd['col'] = 1
 
-        result_pha_eve, img_pha_eve = self.fix_image_orientation(img_pha_eve, axes=self.axesOrientation)
-        result_pha_eve['row'] = 1
-        result_pha_eve['col'] = 1
+            result_pha_eve, img_pha_eve = self.fix_image_orientation(img_pha_eve, axes=self.axesOrientation)
+            result_pha_eve['row'] = 1
+            result_pha_eve['col'] = 1
 
-        # k-space plot
-        result_k_odd = {'widget': 'image'}
-        if self.parFourierFraction==1:
-            result_k_odd['data'] = np.log10(np.abs(self.mapVals['kSpace3D_odd_echoes']))
+            # k-space plot
+            result_k_odd = {'widget': 'image'}
+            if self.parFourierFraction == 1:
+                result_k_odd['data'] = np.log10(np.abs(self.mapVals['kSpace3D_odd_echoes']))
+            else:
+                result_k_odd['data'] = np.abs(self.mapVals['kSpace3D_odd_echoes'])
+            result_k_odd['xLabel'] = "k%s" % axesStr[1]
+            result_k_odd['yLabel'] = "k%s" % axesStr[0]
+            result_k_odd['title'] = "k-Space odd echoes"
+            result_k_odd['row'] = 0
+            result_k_odd['col'] = 2
+
+            # k-space plot
+            result_k_eve = {'widget': 'image'}
+            if self.parFourierFraction == 1:
+                result_k_eve['data'] = np.log10(np.abs(self.mapVals['kSpace3D_even_echoes']))
+            else:
+                result_k_eve['data'] = np.abs(self.mapVals['kSpace3D_odd_echoes'])
+            result_k_eve['xLabel'] = "k%s" % axesStr[1]
+            result_k_eve['yLabel'] = "k%s" % axesStr[0]
+            result_k_eve['title'] = "k-Space even echoes"
+            result_k_eve['row'] = 1
+            result_k_eve['col'] = 2
+
+            # Add results into the output attribute (result_1 must be the image to save in dicom)
+            self.output = [result_mag_odd, result_pha_odd, result_k_odd, result_mag_eve, result_pha_eve, result_k_eve]
         else:
-            result_k_odd['data'] = np.abs(self.mapVals['kSpace3D_odd_echoes'])
-        result_k_odd['xLabel'] = "k%s"%axesStr[1]
-        result_k_odd['yLabel'] = "k%s"%axesStr[0]
-        result_k_odd['title'] = "k-Space odd echoes"
-        result_k_odd['row'] = 0
-        result_k_odd['col'] = 2
+            # Image plot
+            result, img = self.fix_image_orientation(img, axes=self.axesOrientation)
+            result['row'] = 0
+            result['col'] = 0
 
-        # k-space plot
-        result_k_eve = {'widget': 'image'}
-        if self.parFourierFraction == 1:
-            result_k_eve['data'] = np.log10(np.abs(self.mapVals['kSpace3D_even_echoes']))
-        else:
-            result_k_eve['data'] = np.abs(self.mapVals['kSpace3D_odd_echoes'])
-        result_k_eve['xLabel'] = "k%s" % axesStr[1]
-        result_k_eve['yLabel'] = "k%s" % axesStr[0]
-        result_k_eve['title'] = "k-Space even echoes"
-        result_k_eve['row'] = 1
-        result_k_eve['col'] = 2
-
-        # Add results into the output attribute (result_1 must be the image to save in dicom)
-        self.output = [result_mag_odd, result_pha_odd, result_k_odd, result_mag_eve, result_pha_eve, result_k_eve]
+            # Add results into the output attribute (result_1 must be the image to save in dicom)
+            self.output = [result]
 
         # Reset rotation angle and dfov to zero
         self.mapVals['angle'] = self.angle
@@ -988,6 +1018,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             self.plotResults()
 
         return self.output
+
 
 if __name__ == '__main__':
     seq = RarePyPulseq()
