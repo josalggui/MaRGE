@@ -74,6 +74,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.rotationAxis = None
         self.rotation = None
         self.angle = None
+        self.echoMode = None
         self.axesOrientation = None
         self.addParameter(key='seqName', string='RAREInfo', val='RarePyPulseq')
         self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
@@ -85,6 +86,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=50.0, units=units.us, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=100.0, units=units.us, field='RF')
         self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, units=units.ms, field='SEQ')
+        self.addParameter(key='echoMode', string='Echoes', val='Odd', field='SEQ', tip="'All', 'Odd', 'Even'")
         self.addParameter(key='preExTime', string='Preexitation time (ms)', val=0.0, units=units.ms, field='SEQ')
         self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
@@ -761,17 +763,61 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                         gr_sl_reph = pp.scale_grad(block_gr_sl_reph, - sl_gradients[sl_idx])
 
                         # Add blocks
-                        batches[batch_num].add_block(block_rf_refocusing,
-                                                block_gr_rd_reph,
-                                                gr_ph_deph,
-                                                gr_sl_deph,
-                                                block_adc_signal,
-                                                delay_reph)
-                        batches[batch_num].add_block(gr_ph_reph,
-                                                gr_sl_reph)
-                        n_rd_points += n_rd
-                        n_adc += 1
-                        ph_idx += 1
+                        if self.echoMode=='All':
+                            batches[batch_num].add_block(block_rf_refocusing,
+                                                    block_gr_rd_reph,
+                                                    gr_ph_deph,
+                                                    gr_sl_deph,
+                                                    block_adc_signal,
+                                                    delay_reph)
+                            batches[batch_num].add_block(gr_ph_reph,
+                                                    gr_sl_reph)
+                            n_rd_points += n_rd
+                            n_adc += 1
+                            ph_idx += 1
+                        elif self.echoMode=='Odd' and echo%2==0:
+                            batches[batch_num].add_block(block_rf_refocusing,
+                                                         block_gr_rd_reph,
+                                                         gr_ph_deph,
+                                                         gr_sl_deph,
+                                                         block_adc_signal,
+                                                         delay_reph)
+                            batches[batch_num].add_block(gr_ph_reph,
+                                                         gr_sl_reph)
+                            n_rd_points += n_rd
+                            n_adc += 1
+                            ph_idx += 1
+                        elif self.echoMode=='Odd' and echo%2==1:
+                            batches[batch_num].add_block(block_rf_refocusing,
+                                                         block_gr_rd_reph,
+                                                         gr_ph_deph,
+                                                         gr_sl_deph,
+                                                         delay_reph)
+                            batches[batch_num].add_block(gr_ph_reph,
+                                                         gr_sl_reph)
+                        elif self.echoMode=='Even' and echo%2==1:
+                            batches[batch_num].add_block(block_rf_refocusing,
+                                                         block_gr_rd_reph,
+                                                         gr_ph_deph,
+                                                         gr_sl_deph,
+                                                         block_adc_signal,
+                                                         delay_reph)
+                            batches[batch_num].add_block(gr_ph_reph,
+                                                         gr_sl_reph)
+                            n_rd_points += n_rd
+                            n_adc += 1
+                            ph_idx += 1
+                        elif self.echoMode=='Even' and echo%2==0:
+                            batches[batch_num].add_block(block_rf_refocusing,
+                                                         block_gr_rd_reph,
+                                                         gr_ph_deph,
+                                                         gr_sl_deph,
+                                                         delay_reph)
+                            batches[batch_num].add_block(gr_ph_reph,
+                                                         gr_sl_reph)
+
+                        if ph_idx == n_ph:
+                            break
 
                     # Add time delay to next repetition
                     batches[batch_num].add_block(delay_tr)
