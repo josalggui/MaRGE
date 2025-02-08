@@ -228,7 +228,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         }
 
         if not self.demo:
-            dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port, **(master_kwargs | dev_kwargs))
+            dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port[0], **(master_kwargs | dev_kwargs))
             sampling_period = dev.get_sampling_period()  # us
             bw = 1 / sampling_period  # MHz
             print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))

@@ -29,6 +29,7 @@ import configs.units as units
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 
+
 class Noise(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(Noise, self).__init__()
@@ -53,7 +54,6 @@ class Noise(blankSeq.MRIBLANKSEQ):
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
         print("Get a noise measurement\n")
-        
 
     def sequenceTime(self):
         return 0  # minutes, scanTime
@@ -107,7 +107,6 @@ class Noise(blankSeq.MRIBLANKSEQ):
         # Fix units to MHz and us
         self.freqOffset *= 1e-6  # MHz
         self.bw *= 1e-6  # MHz
-        self.repetitionTime *= 1e6  # us
         acq_time = self.nPoints / self.bw * 1e-6  # s
         sampling_period = 1 / self.bw  # us
         self.mapVals['larmorFreq'] = hw.larmorFreq
@@ -141,7 +140,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
                 'slave_trig_latency': 6.079
             }
 
-            dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port, **(master_kwargs | dev_kwargs))
+            dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port[0], **(master_kwargs | dev_kwargs))
             sampling_period = dev.get_sampling_period()  # us
             self.bw = 1 / sampling_period  # MHz
             print("Acquisition bandwidth fixed to: %0.3f kHz" % (self.bw * 1e3))
@@ -242,10 +241,10 @@ class Noise(blankSeq.MRIBLANKSEQ):
         tVector = np.linspace(0, self.nPoints / self.bw, num=self.nPoints) * 1e-3  # ms
         noiserms = np.std(data)
         self.mapVals['RMS noise'] = noiserms
-        self.mapVals['sampledPoint'] = noiserms # for sweep method
-        noiserms = noiserms*1e3
+        self.mapVals['sampledPoint'] = noiserms  # for sweep method
+        noiserms = noiserms * 1e3
         print('rms noise: %0.5f uV' % noiserms)
-        bw = self.bw * 1e6 # Hz
+        bw = self.bw * 1e6  # Hz
         johnson = np.sqrt(2 * 50 * hw.temperature * bw * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e6  # uV
         print('Expected by Johnson: %0.5f uV' % johnson)
 
@@ -284,9 +283,8 @@ class Noise(blankSeq.MRIBLANKSEQ):
         return self.output
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     seq = Noise()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=False, demo=True, standalone=False)
+    seq.sequenceRun(plotSeq=False, demo=False, standalone=True)
     seq.sequenceAnalysis(mode='Standalone')
-

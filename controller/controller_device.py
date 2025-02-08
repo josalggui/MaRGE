@@ -94,6 +94,7 @@ class MimoDevices(mimo_devices.MimoDevices):
                 run_delay = master_rd
             else:
                 kwargs = devargs | {
+                    'mimo_master': False,
                     'trig_timeout': trig_timeout
                 }
                 run_delay = slave_rd
