@@ -48,6 +48,7 @@ rp_port = [11111]
 rp_version = "rp-122"
 rp_max_input_voltage = 225  # mV
 grad_board = "gpa-fhdo"  # gpa-fhdo or ocra1
+fpga_clk_freq_MHz = 122.88  # RP-122
 
 # receiving channel properties
 lnaGain = 45  # dB
