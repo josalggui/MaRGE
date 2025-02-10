@@ -195,70 +195,80 @@ class MarcosController(MarcosToolBar):
                     link = False
                     while not link:
                         try:
-                            # Check if GPA available
-                            received_string = self.arduino.send("GPA_VERB 1;").decode()
-                            if received_string[0:4] != ">OK;":
-                                print("WARNING: GPA not available.")
-                            else:
-                                print("READY: GPA available.")
+                            # Initialize communication with gpa
+                            if hw.gpa_model=="Barthel":
+                                # Check if GPA available
+                                received_string = self.arduino.send("GPA_VERB 1;").decode()
+                                if received_string[0:4] != ">OK;":
+                                    print("WARNING: GPA not available.")
+                                else:
+                                    print("READY: GPA available.")
 
-                            # Remote communication with GPA
-                            received_string = self.arduino.send("GPA_SPC:CTL 1;").decode()  # Activate remote control
-                            if received_string[0:4] != ">OK;":  # If wrong response
-                                print("WARNING: Error enabling GPA remote control.")
-                            else:  # If good response
-                                print("READY: GPA remote communication succeed.")
+                                # Remote communication with GPA
+                                received_string = self.arduino.send("GPA_SPC:CTL 1;").decode()  # Activate remote control
+                                if received_string[0:4] != ">OK;":  # If wrong response
+                                    print("WARNING: Error enabling GPA remote control.")
+                                else:  # If good response
+                                    print("READY: GPA remote communication succeed.")
 
-                            # Disable Interlock
-                            received_string = self.arduino.send("GPA_ERRST;").decode()  # Activate remote control
-                            if received_string[0:4] != ">OK;":  # If wrong response
-                                print("WARNING: Interlock reset.")
-                            else:  # If good response
-                                print("READY: Interlock reset done.")
+                                # Disable Interlock
+                                received_string = self.arduino.send("GPA_ERRST;").decode()  # Activate remote control
+                                if received_string[0:4] != ">OK;":  # If wrong response
+                                    print("WARNING: Interlock reset.")
+                                else:  # If good response
+                                    print("READY: Interlock reset done.")
 
-                            # Check if RFPA available
-                            received_string = self.arduino.send("RFPA_VERB 1;").decode()
-                            if received_string[0:4] != ">OK;":
-                                print("WARNING: RFPA not available.")
-                            else:
-                                print("READY: RFPA available.")
+                                # Disable power module
+                                self.arduino.send("GPA_ON 0;")
 
-                            # Remote communication with RFPA
-                            received_string = self.arduino.send("RFPA_SPC:CTL 1;").decode()
-                            if received_string[0:4] != ">OK;":
-                                print("WARNING: Error enabling RFPA remote control.")
-                            else:
-                                print("READY: RFPA remote communication succeed.")
+                            # Initialize communication with rfpa
+                            if hw.rfpa_model == "Barthel":
+                                # Check if RFPA available
+                                received_string = self.arduino.send("RFPA_VERB 1;").decode()
+                                if received_string[0:4] != ">OK;":
+                                    print("WARNING: RFPA not available.")
+                                else:
+                                    print("READY: RFPA available.")
 
-                            # Disable power module
-                            self.arduino.send("GPA_ON 0;")
-                            self.arduino.send("RFPA_RF 0;")
+                                # Remote communication with RFPA
+                                received_string = self.arduino.send("RFPA_SPC:CTL 1;").decode()
+                                if received_string[0:4] != ">OK;":
+                                    print("WARNING: Error enabling RFPA remote control.")
+                                else:
+                                    print("READY: RFPA remote communication succeed.")
+
+                                # Disable power module
+                                self.arduino.send("RFPA_RF 0;")
 
                             # Run init_gpa sequence
-                            expt = ex.Experiment(init_gpa=True)
-                            expt.add_flodict({
-                                'grad_vx': (np.array([100]), np.array([0])),
-                            })
-                            expt.run()
-                            expt.__del__()
-                            link = True
-                            print("READY: GPA init done!")
+                            if hw.grad_board == "ocra1":
+                                expt = ex.Experiment(init_gpa=True)
+                                expt.add_flodict({
+                                    'grad_vx': (np.array([100]), np.array([0])),
+                                })
+                                expt.run()
+                                expt.__del__()
+                                link = True
+                                print("READY: GPA init done!")
+                            elif hw.grad_board == "gpa-fhdo":
+                                link = True
 
-                            # Enable power modules
-                            # Enable GPA module
-                            received_string = self.arduino.send("GPA_ON 1;").decode()  # Enable power module
-                            if received_string[0:4] != ">OK;":  # If wrong response
-                                print("WARNING: Error activating GPA power module.")
-                            else:  # If good reponse
-                                print("READY: GPA power enabled.")
+                            # Enable gpa power modules
+                            if hw.gpa_model == "Barthel":
+                                # Enable GPA module
+                                received_string = self.arduino.send("GPA_ON 1;").decode()  # Enable power module
+                                if received_string[0:4] != ">OK;":  # If wrong response
+                                    print("WARNING: Error activating GPA power module.")
+                                else:  # If good reponse
+                                    print("READY: GPA power enabled.")
 
-                            # Enable RFPA module
-                            received_string = self.arduino.send("RFPA_RF 1;").decode()
-                            if received_string[0:4] != ">OK;":
-                                print("WARNING: Error activating RFPA power module.")
-                            else:
-                                print("READY: RFPA power enabled.")
-
+                            # Enable rfpa power module
+                            if hw.rfpa_model == "Barthel":
+                                received_string = self.arduino.send("RFPA_RF 1;").decode()
+                                if received_string[0:4] != ">OK;":
+                                    print("WARNING: Error activating RFPA power module.")
+                                else:
+                                    print("READY: RFPA power enabled.")
                         except:
                             link = False
                             time.sleep(1)

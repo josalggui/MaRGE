@@ -48,6 +48,10 @@ rf_max_gain = 76  # dB, if your rf chain uses a fix gain, set this number equal 
 temperature = 293 # k
 shimming_factor = 1e-5
 
+# RFPA model and GPA model
+rfpa_model = ""  # Only "Barthel" is supported, use "" for any other RFPA. You need specific hardware from MRILab, CSIC, Valencia.
+gpa_model = ""  # Only Barthel is supported, use "" for any other GPA. You need specific hardware from MRILab, CSIC, Valencia.
+
 # Arduinos
 ard_sn_autotuning = '242353133363518050E0'
 ard_sn_interlock = '242353133363518050E1'
