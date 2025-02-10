@@ -36,7 +36,6 @@ dfov = [0.0, 0.0, 0.0]
 rotations = []  # List of rations, each rotation is a list of four elements [ux, uy, uz, theta] with ux**2+uy**2+uz**2 = 1
 dfovs = []  # List of displacements in mm, each displacement is a list of three elements [dfov_x, dfov_y, dfov_z]. It MUST match the length of rotations
 fovs = []  # List of FOVs in cm, each fov is a list of three elements [fov_x, fov_y, fov_z]. It MUST match the length of rotations. Not sure, but I think this is useless...
-# TODO: document this into the wiki
 
 bash_path = "D:\Archivos de Programa\Git\git-bash.exe" # use "gnome-terminal" for genome linux
 rp_ip_address = "192.168.1.101"
@@ -51,6 +50,7 @@ shimming_factor = 1e-5
 # RFPA model and GPA model
 rfpa_model = ""  # Only "Barthel" is supported, use "" for any other RFPA. You need specific hardware from MRILab, CSIC, Valencia.
 gpa_model = ""  # Only Barthel is supported, use "" for any other GPA. You need specific hardware from MRILab, CSIC, Valencia.
+grad_board = "gpa-fhdo"  # gpa-fhdo or ocra1
 
 # Arduinos
 ard_sn_autotuning = '242353133363518050E0'
