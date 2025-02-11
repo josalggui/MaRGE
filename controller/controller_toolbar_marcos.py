@@ -252,6 +252,7 @@ class MarcosController(MarcosToolBar):
                                 print("READY: GPA init done!")
                             elif hw.grad_board == "gpa-fhdo":
                                 link = True
+                                print("READY: GPA init done!")
 
                             # Enable gpa power modules
                             if hw.gpa_model == "Barthel":
