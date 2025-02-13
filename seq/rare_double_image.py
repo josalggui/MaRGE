@@ -47,6 +47,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RarePyPulseq, self).__init__()
         # Input the parameters
+        self.angulation = None
         self.full_plot = None
         self.sequence_list = None
         self.unlock_orientation = None
@@ -120,6 +121,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
         self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
                           tip="'True' or 'False' to plot odd and even images separately")
+        self.addParameter(key='angulation', string='Angulation', val=1, field='OTH',
+                          tip='1: Consider FOV angulation. 0: Keep the image unangled.')
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
         self.header = ismrmrd.xsd.ismrmrdHeader()
@@ -739,6 +742,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                                frequency=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
                                bandwidth=bw,  # MHz
                                decimate='Normal',
+                               angulation=self.angulation,
                                )
 
     def sequenceAnalysis(self, mode=None):

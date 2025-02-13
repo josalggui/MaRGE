@@ -285,6 +285,7 @@ class MRIBLANKSEQ:
                    hardware=True,
                    output='',
                    channels=[0],
+                   angulation=1,
                    ):
         """
         Execute multiple batches of MRI waveforms, manage data acquisition, and store oversampled data.
@@ -313,6 +314,8 @@ class MRIBLANKSEQ:
             String to add to the output keys saved in the mapVals parameter.
         channels : list, optional
             List of channels used for Rx
+        angulation : bool, optional
+            Bool parameter to work with angulation (1) or without angulation (0)
 
         Returns:
         --------
@@ -338,7 +341,8 @@ class MRIBLANKSEQ:
         # Iterate through each batch of waveforms
         for seq_num in waveforms.keys():
             # Rotate the waveforms to given reference system
-            waveforms[seq_num] = self.rotate_waveforms(waveforms[seq_num])
+            if angulation:
+                waveforms[seq_num] = self.rotate_waveforms(waveforms[seq_num])
 
             # Initialize the experiment if not in demo mode
             if not self.demo:
