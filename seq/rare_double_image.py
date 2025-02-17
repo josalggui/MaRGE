@@ -1004,8 +1004,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             self.output = [result]
 
         # Add dicom information
-        image_dicom = np.transpose(img, axes=(0, 2, 1))
-        if len(image_dicom.shape)==3:
+        image_dicom = np.transpose(img, (0, 2, 1))
+        if len(image_dicom.shape) > 2:
             slices, rows, columns = image_dicom.shape
             self.meta_data["Columns"] = columns
             self.meta_data["Rows"] = rows
@@ -1016,13 +1016,12 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             slices = 1
             self.meta_data["Columns"] = columns
             self.meta_data["Rows"] = rows
-            self.meta_data["NumberOfSlices"] = slices
-            self.meta_data["NumberOfFrames"] = slices
-        imgFullAbs = np.abs(image_dicom) * (2 ** 15 - 1) / np.amax(np.abs(image_dicom))
-        imgFullInt = np.int16(np.abs(imgFullAbs))
-        imgFullInt = np.reshape(imgFullInt, (slices, rows, columns))
-        arr = imgFullInt
-
+            self.meta_data["NumberOfSlices"] = 1
+            self.meta_data["NumberOfFrames"] = 1
+        img_full_abs = np.abs(image_dicom) * (2 ** 15 - 1) / np.amax(np.abs(image_dicom))
+        img_full_int = np.int16(np.abs(img_full_abs))
+        img_full_int = np.reshape(img_full_int, (slices, rows, columns))
+        arr = img_full_int
         self.meta_data["PixelData"] = arr.tobytes()
         self.meta_data["WindowWidth"] = 26373
         self.meta_data["WindowCenter"] = 13194
