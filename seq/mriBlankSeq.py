@@ -1925,8 +1925,7 @@ class MRIBLANKSEQ:
         self.mapNmspc[key] = string
         self.map_units[key] = unit
 
-    @staticmethod
-    def fix_image_orientation(image, axes):
+    def fix_image_orientation(self, image, axes):
         """
         Adjusts the orientation of a 3D image array to match standard anatomical planes
         (sagittal, coronal, or transversal) and returns the oriented image along with labeling
@@ -1968,37 +1967,37 @@ class MRIBLANKSEQ:
                 image = np.flip(image, axis=0)
                 x_label = "(-Y) A | PHASE | P (+Y)"
                 y_label = "(-X) I | READOUT | S (+X)"
-                image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+                self.image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
             else:
                 image = np.transpose(image, (0, 2, 1))
                 image = np.flip(image, axis=0)
                 x_label = "(-Y) A | READOUT | P (+Y)"
                 y_label = "(-X) I | PHASE | S (+X)"
-                image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+                self.image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
         elif axes[2] == 1:  # Coronal
             title = "Coronal"
             if axes[0] == 0 and axes[1] == 2:
                 x_label = "(+Z) R | PHASE | L (-Z)"
                 y_label = "(-X) I | READOUT | S (+X)"
-                image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
+                self.image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
             else:
                 image = np.transpose(image, (0, 2, 1))
                 x_label = "(+Z) R | READOUT | L (-Z)"
                 y_label = "(-X) I | PHASE | S (+X)"
-                image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
+                self.image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
         elif axes[2] == 0:  # Transversal
             title = "Transversal"
             if axes[0] == 1 and axes[1] == 2:
                 image = np.flip(image, axis=0)
                 x_label = "(+Z) R | PHASE | L (-Z)"
                 y_label = "(+Y) P | READOUT | A (-Y)"
-                image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+                self.image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
             else:
                 image = np.transpose(image, (0, 2, 1))
                 image = np.flip(image, axis=0)
                 x_label = "(+Z) R | READOUT | L (-Z)"
                 y_label = "(+Y) P | PHASE | A (-Y)"
-                image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+                self.image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
 
         output = {
             'widget': 'image',

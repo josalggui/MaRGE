@@ -991,6 +991,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
             # Add results into the output attribute (result_1 must be the image to save in dicom)
             self.output = [result_mag_odd, result_pha_odd, result_k_odd, result_mag_eve, result_pha_eve, result_k_eve]
+
+            # For dicom
+            _, img = self.fix_image_orientation(img, axes=self.axesOrientation)
         else:
             # Image plot
             result, img = self.fix_image_orientation(img, axes=self.axesOrientation)
@@ -999,6 +1002,38 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
             # Add results into the output attribute (result_1 must be the image to save in dicom)
             self.output = [result]
+
+        # Add dicom information
+        image_dicom = np.transpose(img, axes=(0, 2, 1))
+        if len(image_dicom.shape)==3:
+            slices, rows, columns = image_dicom.shape
+            self.meta_data["Columns"] = columns
+            self.meta_data["Rows"] = rows
+            self.meta_data["NumberOfSlices"] = slices
+            self.meta_data["NumberOfFrames"] = slices
+        else:
+            rows, columns = image_dicom.shape
+            slices = 1
+            self.meta_data["Columns"] = columns
+            self.meta_data["Rows"] = rows
+            self.meta_data["NumberOfSlices"] = slices
+            self.meta_data["NumberOfFrames"] = slices
+        imgFullAbs = np.abs(image_dicom) * (2 ** 15 - 1) / np.amax(np.abs(image_dicom))
+        imgFullInt = np.int16(np.abs(imgFullAbs))
+        imgFullInt = np.reshape(imgFullInt, (slices, rows, columns))
+        arr = imgFullInt
+
+        self.meta_data["PixelData"] = arr.tobytes()
+        self.meta_data["WindowWidth"] = 26373
+        self.meta_data["WindowCenter"] = 13194
+        self.meta_data["ImageOrientationPatient"] = self.image_orientation_dicom
+        resolution = self.mapVals['resolution'] * 1e3
+        self.meta_data["PixelSpacing"] = [resolution[0], resolution[1]]
+        self.meta_data["SliceThickness"] = resolution[2]
+        # Sequence parameters
+        self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
+        self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
+        self.meta_data["EchoTrainLength"] = self.mapVals['etl']
 
         # Reset rotation angle and dfov to zero
         self.mapVals['angle'] = self.angle
