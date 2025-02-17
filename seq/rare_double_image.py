@@ -947,7 +947,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         mean_phase_eve = np.mean(img_pha_eve[mask_eve])
         img_pha_eve[~mask_eve] = mean_phase_eve
 
-        if self.full_plot:
+        if self.full_plot==True or self.full_plot=='True':
             # Image plot
             result_mag_odd, img_mag_odd = self.fix_image_orientation(img_mag_odd, axes=self.axesOrientation)
             result_mag_odd['row'] = 0
