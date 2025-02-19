@@ -54,17 +54,11 @@ class HardwareWindow(QMainWindow):
                     "Oversampling factor",  # ADC
                     "Max readout points",
                     "Add readout points",
-                    "ADC factor (mV/unit)",
                     "FOVx (cm)",  # FOV
                     "FOVy (cm)",
                     "FOVz (cm)",
                     "Shimming factor",  # shimming
                     "Bash path",  # others
-                    "Number of red pitayas",
-                    "Red Pitaya model",
-                    "Maximum input voltage (mV)",
-                    "Gradient board model",
-                    "Clock frequency (MHz)",
                     "LNA gain (dB)",
                     "RF gain min (dB)",
                     "RF gain max (dB)",
@@ -88,17 +82,11 @@ class HardwareWindow(QMainWindow):
                   "5",
                   "1e5",
                   "5",
-                  "13.788",
                   "20.0",
                   "20.0",
                   "20.0",
                   "1e-5",
                   "gnome-terminal",
-                  "1",
-                  "rp-122",
-                  "225",
-                  "gpa-fhdo",
-                  "122.88",
                   "45",
                   "45",
                   "76",
@@ -157,7 +145,6 @@ class HardwareWindow(QMainWindow):
         hw.oversamplingFactor = int(self.input_boxes["RF dead time (us)"].text())
         hw.maxRdPoints = int(float(self.input_boxes["Max readout points"].text()))
         hw.addRdPoints = int(self.input_boxes["Add readout points"].text())
-        hw.adcFactor = float(self.input_boxes["ADC factor (mV/unit)"].text())
         hw.reference_time = float(self.input_boxes["Reference time (us)"].text())
         hw.fov = [float(self.input_boxes["FOVx (cm)"].text()),
                   float(self.input_boxes["FOVy (cm)"].text()),
@@ -165,22 +152,12 @@ class HardwareWindow(QMainWindow):
         hw.shimming_factor = float(self.input_boxes["Shimming factor"].text())
         hw.scanner_name = self.input_boxes["Scanner name"].text()
         hw.bash_path = self.input_boxes["Bash path"].text()
-        hw.rp_version = self.input_boxes["Red Pitaya model"].text()
-        hw.rp_max_input_voltage = float(self.input_boxes["Maximum input voltage (mV)"].text())
-        hw.grad_board = self.input_boxes["Gradient board model"].text()
-        hw.fpga_clk_freq_MHz = float(self.input_boxes["Clock frequency (MHz)"].text())
         hw.lnaGain = float(self.input_boxes["LNA gain (dB)"].text())
         hw.rf_min_gain = float(self.input_boxes["RF gain min (dB)"].text())
         hw.rf_max_gain = float(self.input_boxes["RF gain max (dB)"].text())
         hw.ard_sn_interlock = self.input_boxes["Arduino interlock"].text()
         hw.ard_sn_attenuator = self.input_boxes["Arduino attenuator"].text()
         hw.ard_sn_autotuning = self.input_boxes["Arduino autotuning"].text()
-        n_rp = int(self.input_boxes["Number of red pitayas"].text())
-        hw.rp_ip_list = []
-        hw.rp_port = []
-        for ii in range(n_rp):
-            hw.rp_ip_list.append(f"192.168.1.10{ii+1}")
-            hw.rp_port.append(11111)
 
 
 
