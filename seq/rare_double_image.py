@@ -313,7 +313,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         # Readout dephasing amplitude
         rd_deph_amplitude = 0.5 * rd_grad_amplitude * (hw.grad_rise_time + self.rdGradTime) / (
-                    hw.grad_rise_time + self.rdDephTime)
+                hw.grad_rise_time + self.rdDephTime)
         self.mapVals['rd_deph_amplitude'] = rd_deph_amplitude
         print("Max rd gradient amplitude: %0.1f mT/m" % (max(rd_grad_amplitude, rd_deph_amplitude) * 1e3))
         print("Max ph gradient amplitude: %0.1f mT/m" % (ph_grad_amplitude * 1e3))
@@ -904,11 +904,14 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         img_odd = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data_odd)))
         img_eve = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data_eve)))
         img = (np.abs(img_odd) + np.abs(img_eve)) / 2
+        data = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(img)))
         self.mapVals['image3D_odd_echoes'] = img_odd
         self.mapVals['image3D_even_echoes'] = img_eve
         self.mapVals['image3D'] = img
+        self.mapVals['kSpace3D'] = data
         data_odd = np.reshape(data_odd, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
         data_eve = np.reshape(data_eve, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        data = np.reshape(data, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
 
         # Create sampled data
         kRD = np.reshape(kRD, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
@@ -916,10 +919,12 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         kSL = np.reshape(kSL, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
         data_odd = np.reshape(data_odd, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
         data_eve = np.reshape(data_eve, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
+        data = np.reshape(data, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
         self.mapVals['kMax_1/m'] = kMax
         self.mapVals['sampled_odd'] = np.concatenate((kRD, kPH, kSL, data_odd), axis=1)
         self.mapVals['sampled_eve'] = np.concatenate((kRD, kPH, kSL, data_eve), axis=1)
-        self.mapVals['sampledCartesian'] = self.mapVals['sampled_odd']
+        self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
+        self.mapVals['sampledCartesian'] = self.mapVals['sampled']
 
         axes_enable = self.mapVals['axes_enable']
 
@@ -947,7 +952,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         mean_phase_eve = np.mean(img_pha_eve[mask_eve])
         img_pha_eve[~mask_eve] = mean_phase_eve
 
-        if self.full_plot==True or self.full_plot=='True':
+        if self.full_plot is True or self.full_plot == 'True':
             # Image plot
             result_mag_odd, img_mag_odd = self.fix_image_orientation(img_mag_odd, axes=self.axesOrientation)
             result_mag_odd['row'] = 0
