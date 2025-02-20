@@ -80,7 +80,7 @@ class GradientsWidget(QWidget):
         hw.gradDelay = int(self.input_boxes["Gradient delay (us)"].text())
 
     def save_gradient_entries(self):
-        file_name = "../configs/hw_gradients.csv"
+        file_name = "configs/hw_gradients.csv"
         with open(file_name, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["ID", "Value"])
@@ -90,7 +90,7 @@ class GradientsWidget(QWidget):
 
     def load_gradient_entries(self):
         """Load label-value pairs from a CSV file and update the input fields."""
-        file_path = "../configs/hw_gradients.csv"
+        file_path = "configs/hw_gradients.csv"
         try:
             with open(file_path, mode="r", newline="") as file:
                 reader = csv.reader(file)
@@ -101,8 +101,6 @@ class GradientsWidget(QWidget):
                         label, value = row
                         if label in self.input_boxes:
                             self.input_boxes[label].setText(value)  # Update input box
-
-                print(f"Hardware configuration loaded.")
         except:
             print("No hardware configuration loaded for gradients.")
 

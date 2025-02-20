@@ -42,8 +42,6 @@ class HardwareWindow(QMainWindow):
         # Set the central widget of the main window to be the tabs
         self.setCentralWidget(self.tabs)
 
-        self.show()
-
     def setupTab1(self):
         widget = RpWidget()
         layout = QVBoxLayout()

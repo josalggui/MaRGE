@@ -4,11 +4,12 @@
 :affiliation: MRILab, i3M, CSIC, Valencia, Spain
 
 """
+import configs.hw_config as hw
 from ui.window_session import SessionWindow
 from controller.controller_main import MainController
+from ui.window_hardware import HardwareWindow
 import os
 import sys
-import configs.hw_config as hw
 import subprocess
 
 
@@ -25,11 +26,52 @@ class SessionController(SessionWindow):
         """
         super(SessionController, self).__init__()
         self.main_gui = None
+        self.hardware_gui = HardwareWindow()
+        self.rf_coil_combo_box.addItems(hw.antenna_dict.keys())
 
         # Set slots for toolbar actions
         self.launch_gui_action.triggered.connect(self.runMainGui)
         self.demo_gui_action.triggered.connect(self.runDemoGui)
+        self.setup_hardware_action.triggered.connect(self.setup_hardware)
         self.close_action.triggered.connect(self.close)
+
+        # Check if system is ready
+        self.check_system()
+
+    def check_system(self):
+        check = True
+        if not os.path.exists("configs/sys_projects.csv"):
+            print("ERROR: Projects not configured. Add at least one project.")
+            check = False
+        if not os.path.exists("configs/sys_study.csv"):
+            print("ERROR: Study cases not configured. Add at least one study case.")
+            check = False
+        if not os.path.exists("configs/hw_gradients.csv"):
+            print("ERROR: Gradient hardware not configured. Go to hardware config.")
+            check = False
+        if not os.path.exists("configs/hw_others.csv"):
+            print("ERROR: Other hardware not configured. Go to hardware config.")
+            check = False
+        if not os.path.exists("configs/hw_redpitayas.csv"):
+            print("ERROR: Red Pitayas not configured. Go to hardware config.")
+            check = False
+        if not os.path.exists("configs/hw_rf.csv"):
+            print("ERROR: RF hardware not configured. Go to hardware config.")
+            check = False
+        if len(hw.rp_ip_list) == 0:
+            print("ERROR: Red pitaya ip address required. Go to hardware config.")
+            check = False
+        if len(hw.antenna_dict) == 0:
+            print("ERROR: Antenna definition required. Go to hardware config.")
+            check = False
+
+        if check:
+            print("System configuration ready.")
+            self.launch_gui_action.setDisabled(False)
+            self.demo_gui_action.setDisabled(False)
+
+    def setup_hardware(self):
+        self.hardware_gui.show()
 
     def runMainGui(self):
         """

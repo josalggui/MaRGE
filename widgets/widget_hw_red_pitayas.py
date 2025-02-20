@@ -132,7 +132,7 @@ class RpWidget(QWidget):
         self.dynamic_container.update()
 
     def save_rp_entries(self):
-        file_name = "../configs/hw_redpitayas.csv"
+        file_name = "configs/hw_redpitayas.csv"
         with open(file_name, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["ID", "Value"])
@@ -143,7 +143,7 @@ class RpWidget(QWidget):
         print(f"Data saved for red pitayas")
 
     def load_rp_entries(self):
-        file_name = "../configs/hw_redpitayas.csv"
+        file_name = "configs/hw_redpitayas.csv"
         if os.path.exists(file_name):
             with open(file_name, 'r') as csvfile:
                 reader = csv.reader(csvfile)

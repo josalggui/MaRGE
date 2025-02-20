@@ -154,7 +154,7 @@ class RfWidget(QWidget):
         self.dynamic_container.update()
 
     def save_rf_entries(self):
-        file_name = "../configs/hw_rf.csv"
+        file_name = "configs/hw_rf.csv"
         with open(file_name, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["ID", "Value"])
@@ -165,7 +165,7 @@ class RfWidget(QWidget):
         print(f"Data saved for rf.")
 
     def load_rf_entries(self):
-        file_name = "../configs/hw_rf.csv"
+        file_name = "configs/hw_rf.csv"
         if os.path.exists(file_name):
             with open(file_name, 'r') as csvfile:
                 reader = csv.reader(csvfile)
