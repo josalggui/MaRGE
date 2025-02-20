@@ -96,7 +96,20 @@ class RfWidget(QWidget):
         self.update_hw_config_rp()
 
     def update_hw_config_rp(self):
-        pass
+        hw.blkTime = float(self.input_boxes["RF de-blanking time (us)"].text())
+        hw.deadTime = float(self.input_boxes["RF dead time (us)"].text())
+        hw.larmorFreq = float(self.input_boxes["Larmor frequency (MHz)"].text())
+        hw.oversamplingFactor = int(self.input_boxes["RF dead time (us)"].text())
+        hw.maxRdPoints = int(float(self.input_boxes["Max readout points"].text()))
+        hw.addRdPoints = int(self.input_boxes["Add readout points"].text())
+        hw.reference_time = float(self.input_boxes["Reference time (us)"].text())
+        hw.lnaGain = float(self.input_boxes["LNA gain (dB)"].text())
+        hw.rf_min_gain = float(self.input_boxes["RF gain min (dB)"].text())
+        hw.rf_max_gain = float(self.input_boxes["RF gain max (dB)"].text())
+        for rf_id, rf_eff in self.added_rfs:
+            rf_name = rf_id
+            rf_value = float(rf_eff)
+            hw.antenna_dict[rf_name] = rf_value
 
     def add_rf(self):
         rf_identifier = self.text_box_1.text().strip()
