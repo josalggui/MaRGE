@@ -39,14 +39,6 @@ class HardwareWindow(QMainWindow):
 
         # Labels 1
         labels_1 = ["Scanner name",
-                    "Gx max (mT/m)",  # Gradients
-                    "Gy max (mT/m)",
-                    "Gz max (mT/m)",
-                    "Max slew rate (mT/m/ms)",
-                    "Gradient raster time (us)",
-                    "Gradient rise time (us)",
-                    "Gradient steps",
-                    "Gradient delay (us)",
                     "RF de-blanking time (us)",  # RF
                     "RF dead time (us)",
                     "Larmor frequency (MHz)",
@@ -67,14 +59,6 @@ class HardwareWindow(QMainWindow):
                     "Arduino attenuator",
                     ]
         values = ["Demo",
-                  "50",
-                  "80",
-                  "70",
-                  "80",
-                  "50",
-                  "400",
-                  "16",
-                  "9",
                   "15",
                   "400",
                   "3.066",
