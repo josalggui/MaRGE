@@ -39,41 +39,21 @@ class HardwareWindow(QMainWindow):
 
         # Labels 1
         labels_1 = ["Scanner name",
-                    "RF de-blanking time (us)",  # RF
-                    "RF dead time (us)",
-                    "Larmor frequency (MHz)",
-                    "Reference time (us)",
-                    "Oversampling factor",  # ADC
-                    "Max readout points",
-                    "Add readout points",
                     "FOVx (cm)",  # FOV
                     "FOVy (cm)",
                     "FOVz (cm)",
                     "Shimming factor",  # shimming
                     "Bash path",  # others
-                    "LNA gain (dB)",
-                    "RF gain min (dB)",
-                    "RF gain max (dB)",
                     "Arduino autotuning",
                     "Arduino interlock",
                     "Arduino attenuator",
                     ]
         values = ["Demo",
-                  "15",
-                  "400",
-                  "3.066",
-                  "70",
-                  "5",
-                  "1e5",
-                  "5",
                   "20.0",
                   "20.0",
                   "20.0",
                   "1e-5",
                   "gnome-terminal",
-                  "45",
-                  "45",
-                  "76",
                   "242353133363518050E0",
                   "242353133363518050E1",
                   "242353133363518050E2",
@@ -114,26 +94,6 @@ class HardwareWindow(QMainWindow):
         self.show()
 
     def update_hw_config(self):
-        hw.blkTime = float(self.input_boxes["RF de-blanking time (us)"].text())
-        hw.deadTime = float(self.input_boxes["RF dead time (us)"].text())
-        hw.larmorFreq = float(self.input_boxes["Larmor frequency (MHz)"].text())
-        hw.oversamplingFactor = int(self.input_boxes["RF dead time (us)"].text())
-        hw.maxRdPoints = int(float(self.input_boxes["Max readout points"].text()))
-        hw.addRdPoints = int(self.input_boxes["Add readout points"].text())
-        hw.reference_time = float(self.input_boxes["Reference time (us)"].text())
-        hw.fov = [float(self.input_boxes["FOVx (cm)"].text()),
-                  float(self.input_boxes["FOVy (cm)"].text()),
-                  float(self.input_boxes["FOVz (cm)"].text())]
-        hw.shimming_factor = float(self.input_boxes["Shimming factor"].text())
-        hw.scanner_name = self.input_boxes["Scanner name"].text()
-        hw.bash_path = self.input_boxes["Bash path"].text()
-        hw.lnaGain = float(self.input_boxes["LNA gain (dB)"].text())
-        hw.rf_min_gain = float(self.input_boxes["RF gain min (dB)"].text())
-        hw.rf_max_gain = float(self.input_boxes["RF gain max (dB)"].text())
-        hw.ard_sn_interlock = self.input_boxes["Arduino interlock"].text()
-        hw.ard_sn_attenuator = self.input_boxes["Arduino attenuator"].text()
-        hw.ard_sn_autotuning = self.input_boxes["Arduino autotuning"].text()
-
 
 
     def save_to_csv(self):

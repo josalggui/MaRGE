@@ -29,7 +29,7 @@ class RfWidget(QWidget):
         self.delete_button.clicked.connect(self.delete_rf_coil)
 
         self.save_button = QPushButton('Save', self)
-        self.save_button.clicked.connect(self.save_to_csv)
+        self.save_button.clicked.connect(self.save_rf_coils_entries)
 
         # Layout for input field and buttons
         input_layout = QHBoxLayout()
@@ -42,7 +42,7 @@ class RfWidget(QWidget):
         self.rf_entries = []
 
         # Load existing RF coils from CSV
-        self.load_rf_coils()
+        self.load_rf_coils_entries()
 
         # Update hardware configuration dictionary
         self.update_hw_config_rf()
@@ -109,7 +109,7 @@ class RfWidget(QWidget):
 
         print("ERROR: RF coil not found!")
 
-    def save_to_csv(self):
+    def save_rf_coils_entries(self):
         """Saves the current RF coil entries to a CSV file."""
         if not self.rf_entries:
             print("ERROR: No RF coils to save!")
@@ -130,7 +130,7 @@ class RfWidget(QWidget):
         except Exception as e:
             print(f"ERROR: Failed to save data: {e}")
 
-    def load_rf_coils(self):
+    def load_rf_coils_entries(self):
         """Loads RF coil entries from a CSV file."""
         filename = os.path.abspath("../configs/hw_rf_coils.csv")
         if os.path.exists(filename):
@@ -144,8 +144,8 @@ class RfWidget(QWidget):
                             rf_name, rf_value = row
                             self.add_rf_coil(rf_name, rf_value)
 
-            except Exception as e:
-                print(f"ERROR: Failed to load RF data: {e}")
+            except:
+                print("No hardware configuration loaded for rf coils.")
 
 
 if __name__ == '__main__':

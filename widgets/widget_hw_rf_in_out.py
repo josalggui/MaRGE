@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QLabel
 )
 
-class GradientsWidget(QWidget):
+class RfInOutWidget(QWidget):
     def __init__(self):
         super().__init__()
 
@@ -17,23 +17,27 @@ class GradientsWidget(QWidget):
         self.main_layout.addLayout(self.layout)
 
         # Labels and Boxes lists
-        labels = ["Gx max (mT/m)",  # Gradients
-                  "Gy max (mT/m)",
-                  "Gz max (mT/m)",
-                  "Max slew rate (mT/m/ms)",
-                  "Gradient raster time (us)",
-                  "Gradient rise time (us)",
-                  "Gradient steps",
-                  "Gradient delay (us)",
+        labels = ["RF de-blanking time (us)",  # RF
+                  "RF dead time (us)",
+                  "Larmor frequency (MHz)",
+                  "Reference time (us)",
+                  "Oversampling factor",  # ADC
+                  "Max readout points",
+                  "Add readout points",
+                  "LNA gain (dB)",
+                  "RF gain min (dB)",
+                  "RF gain max (dB)",
                   ]
-        values = ["50",
-                  "80",
-                  "70",
-                  "80",
-                  "50",
+        values = ["15",
                   "400",
-                  "16",
-                  "9",
+                  "3.066",
+                  "70",
+                  "5",
+                  "1e5",
+                  "5",
+                  "45",
+                  "45",
+                  "76",
                   ]
 
         # Dictionary to store references to input fields
@@ -51,7 +55,7 @@ class GradientsWidget(QWidget):
 
         # Buttons
         self.save_button = QPushButton('Save', self)
-        self.save_button.clicked.connect(self.save_gradient_entries)
+        self.save_button.clicked.connect(self.save_rf_in_out_entries)
 
         layout = QHBoxLayout()
         layout.addWidget(self.save_button)
@@ -59,28 +63,29 @@ class GradientsWidget(QWidget):
         self.main_layout.addLayout(layout)
 
         self.setLayout(self.main_layout)
-        self.setWindowTitle('Gradients Entry')
+        self.setWindowTitle('RF in/out Entry')
         self.resize(400, 200)
 
         # Load saved gradient entries
-        self.load_gradient_entries()
+        self.load_rf_in_out_entries()
 
         # Update hardware
         self.update_hw_config_rp()
 
     def update_hw_config_rp(self):
-        hw.gFactor = np.array([float(self.input_boxes["Gx max (mT/m)"].text()),
-                               float(self.input_boxes["Gy max (mT/m)"].text()),
-                               float(self.input_boxes["Gz max (mT/m)"].text())]) * 1e-3  # T/m
-        hw.max_grad = np.min(hw.gFactor) * 1e3
-        hw.max_slew_rate = float(self.input_boxes["Max slew rate (mT/m/ms)"].text())
-        hw.grad_raster_time = float(self.input_boxes["Gradient raster time (us)"].text()) * 1e-6  # s
-        hw.grad_rise_time = float(self.input_boxes["Gradient rise time (us)"].text()) * 1e-6  # s
-        hw.grad_steps = int(self.input_boxes["Gradient steps"].text())
-        hw.gradDelay = int(self.input_boxes["Gradient delay (us)"].text())
+        hw.blkTime = float(self.input_boxes["RF de-blanking time (us)"].text())
+        hw.deadTime = float(self.input_boxes["RF dead time (us)"].text())
+        hw.larmorFreq = float(self.input_boxes["Larmor frequency (MHz)"].text())
+        hw.oversamplingFactor = int(self.input_boxes["RF dead time (us)"].text())
+        hw.maxRdPoints = int(float(self.input_boxes["Max readout points"].text()))
+        hw.addRdPoints = int(self.input_boxes["Add readout points"].text())
+        hw.reference_time = float(self.input_boxes["Reference time (us)"].text())
+        hw.lnaGain = float(self.input_boxes["LNA gain (dB)"].text())
+        hw.rf_min_gain = float(self.input_boxes["RF gain min (dB)"].text())
+        hw.rf_max_gain = float(self.input_boxes["RF gain max (dB)"].text())
 
-    def save_gradient_entries(self):
-        file_name = "../configs/hw_gradients.csv"
+    def save_rf_in_out_entries(self):
+        file_name = "../configs/hw_rf_in_out.csv"
         with open(file_name, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(["ID", "Value"])
@@ -88,9 +93,9 @@ class GradientsWidget(QWidget):
                 writer.writerow([label, input_box.text()])  # Write each pair
         print(f"Data saved for gradients entries")
 
-    def load_gradient_entries(self):
+    def load_rf_in_out_entries(self):
         """Load label-value pairs from a CSV file and update the input fields."""
-        file_path = "../configs/hw_gradients.csv"
+        file_path = "../configs/hw_rf_in_out.csv"
         try:
             with open(file_path, mode="r", newline="") as file:
                 reader = csv.reader(file)
@@ -104,11 +109,12 @@ class GradientsWidget(QWidget):
 
                 print(f"Hardware configuration loaded.")
         except:
-            print("No hardware configuration loaded for gradients.")
+            print("No hardware configuration loaded for rf input and outputs.")
+
 
 if __name__ == '__main__':
     # Run the application
     app = QApplication(sys.argv)
-    widget = GradientsWidget()
+    widget = RfInOutWidget()
     widget.show()
     sys.exit(app.exec())

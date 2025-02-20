@@ -54,7 +54,7 @@ class RpWidget(QWidget):
         self.add_button.clicked.connect(self.add_rp)
 
         self.save_button = QPushButton('Save', self)
-        self.save_button.clicked.connect(self.save_to_csv)
+        self.save_button.clicked.connect(self.save_rp_entries)
 
         self.layout.addLayout(self.dynamic_container)
 
@@ -76,7 +76,7 @@ class RpWidget(QWidget):
         self.added_rps = []
 
         # Load saved RP entries
-        self.load_rp()
+        self.load_rp_entries()
 
         # Update hardware
         self.update_hw_config_rp()
@@ -131,7 +131,7 @@ class RpWidget(QWidget):
 
         self.dynamic_container.update()
 
-    def save_to_csv(self):
+    def save_rp_entries(self):
         file_name = "../configs/hw_redpitayas.csv"
         with open(file_name, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
@@ -142,7 +142,7 @@ class RpWidget(QWidget):
                 writer.writerow([f"RP-{rp_id}", ip])
         print(f"Data saved for red pitayas")
 
-    def load_rp(self):
+    def load_rp_entries(self):
         file_name = "../configs/hw_redpitayas.csv"
         if os.path.exists(file_name):
             with open(file_name, 'r') as csvfile:
@@ -155,6 +155,8 @@ class RpWidget(QWidget):
                     else:
                         self.added_rps.append((label.split('-')[1], value))
                         self.add_rp_from_data(label.split('-')[1], value)
+        else:
+            print("No hardware configuration loaded for red pitayas.")
 
     def add_rp_from_data(self, rp_id, ip):
         row_layout = QHBoxLayout()
