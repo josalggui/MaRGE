@@ -132,23 +132,29 @@ class RpWidget(QWidget):
         self.dynamic_container.update()
 
     def save_to_csv(self):
-        file_name = "../configs/rps.csv"
+        file_name = "../configs/hw_redpitayas.csv"
         with open(file_name, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(["ID", "IP Address"])
+            writer.writerow(["ID", "Value"])
+            for label, input_box in self.input_boxes.items():
+                writer.writerow([label, input_box.text()])  # Write each pair
             for rp_id, ip in self.added_rps:
                 writer.writerow([f"RP-{rp_id}", ip])
         print(f"Data saved for red pitayas")
 
     def load_rp(self):
-        file_name = "../configs/rps.csv"
+        file_name = "../configs/hw_redpitayas.csv"
         if os.path.exists(file_name):
             with open(file_name, 'r') as csvfile:
                 reader = csv.reader(csvfile)
                 next(reader)  # Skip header row
-                for rp_id, ip in reader:
-                    self.added_rps.append((rp_id.split('-')[1], ip))
-                    self.add_rp_from_data(rp_id.split('-')[1], ip)
+                for row in reader:
+                    label, value = row
+                    if label in self.input_boxes:
+                        self.input_boxes[label].setText(value)
+                    else:
+                        self.added_rps.append((label.split('-')[1], value))
+                        self.add_rp_from_data(label.split('-')[1], value)
 
     def add_rp_from_data(self, rp_id, ip):
         row_layout = QHBoxLayout()

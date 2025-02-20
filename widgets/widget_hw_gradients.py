@@ -83,7 +83,7 @@ class GradientsWidget(QWidget):
         file_name = "../configs/hw_gradients.csv"
         with open(file_name, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(["ID", "IP Address"])
+            writer.writerow(["ID", "Value"])
             for label, input_box in self.input_boxes.items():
                 writer.writerow([label, input_box.text()])  # Write each pair
         print(f"Data saved for gradients entries")

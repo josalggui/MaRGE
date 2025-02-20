@@ -115,11 +115,11 @@ class RfWidget(QWidget):
             print("ERROR: No RF coils to save!")
             return
 
-        filename = os.path.abspath("../configs/rf_coils.csv")
+        filename = os.path.abspath("../configs/hw_rf_coils.csv")
         try:
             with open(filename, mode="w", newline="") as file:
                 writer = csv.writer(file)
-                writer.writerow(["RF Coil Name", "Value"])
+                writer.writerow(["ID", "Value"])
 
                 for label, text_box, _ in self.rf_entries:
                     rf_name = label.text().replace("RF coil efficiency (rad / us / unit amplitude) ", "").strip()
@@ -132,7 +132,7 @@ class RfWidget(QWidget):
 
     def load_rf_coils(self):
         """Loads RF coil entries from a CSV file."""
-        filename = os.path.abspath("../configs/rf_coils.csv")
+        filename = os.path.abspath("../configs/hw_rf_coils.csv")
         if os.path.exists(filename):
             try:
                 with open(filename, mode="r", newline="") as file:

@@ -114,15 +114,6 @@ class HardwareWindow(QMainWindow):
         self.show()
 
     def update_hw_config(self):
-        hw.gFactor = np.array([float(self.input_boxes["Gx max (mT/m)"].text()),
-                               float(self.input_boxes["Gy max (mT/m)"].text()),
-                               float(self.input_boxes["Gz max (mT/m)"].text())]) * 1e-3  # T/m
-        hw.max_grad = np.min(hw.gFactor) * 1e3
-        hw.max_slew_rate = float(self.input_boxes["Max slew rate (mT/m/ms)"].text())
-        hw.grad_raster_time = float(self.input_boxes["Gradient raster time (us)"].text()) * 1e-6  # s
-        hw.grad_rise_time = float(self.input_boxes["Gradient rise time (us)"].text()) * 1e-6  # s
-        hw.grad_steps = int(self.input_boxes["Gradient steps"].text())
-        hw.gradDelay = int(self.input_boxes["Gradient delay (us)"].text())
         hw.blkTime = float(self.input_boxes["RF de-blanking time (us)"].text())
         hw.deadTime = float(self.input_boxes["RF dead time (us)"].text())
         hw.larmorFreq = float(self.input_boxes["Larmor frequency (MHz)"].text())
