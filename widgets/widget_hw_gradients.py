@@ -86,7 +86,7 @@ class GradientsWidget(QWidget):
             writer.writerow(["ID", "Value"])
             for label, input_box in self.input_boxes.items():
                 writer.writerow([label, input_box.text()])  # Write each pair
-        print(f"Data saved for gradients entries")
+        print(f"Data saved for gradients.")
 
     def load_gradient_entries(self):
         """Load label-value pairs from a CSV file and update the input fields."""
