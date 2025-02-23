@@ -1,7 +1,7 @@
 import sys
 import qdarkstyle
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QLabel, QVBoxLayout, QTabWidget
-from widgets.widget_hw_red_pitayas import RpWidget
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QTabWidget, QStatusBar
+from widgets.widget_hw_console import ConsoleWidget
 from widgets.widget_hw_others import OthersWidget
 from widgets.widget_hw_gradients import GradientsWidget
 from widgets.widget_hw_rf import RfWidget
@@ -28,7 +28,7 @@ class HardwareWindow(QMainWindow):
         self.tab4 = QWidget()
 
         # Add the tabs to the QTabWidget
-        self.tabs.addTab(self.tab1, "Red Pitayas")
+        self.tabs.addTab(self.tab1, "Console")
         self.tabs.addTab(self.tab2, "Gradients")
         self.tabs.addTab(self.tab3, "RF")
         self.tabs.addTab(self.tab4, "Others")
@@ -42,8 +42,11 @@ class HardwareWindow(QMainWindow):
         # Set the central widget of the main window to be the tabs
         self.setCentralWidget(self.tabs)
 
+        # Status bar
+        self.setStatusBar(QStatusBar(self))
+
     def setupTab1(self):
-        widget = RpWidget()
+        widget = ConsoleWidget()
         layout = QVBoxLayout()
         layout.addWidget(widget)
         self.tab1.setLayout(layout)
@@ -72,6 +75,7 @@ if __name__ == '__main__':
 
     # Instantiate the window
     window = HardwareWindow()
+    window.show()
 
     # Start the event loop.
     app.exec()

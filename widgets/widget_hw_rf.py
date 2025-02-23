@@ -4,7 +4,7 @@ import csv
 from configs import hw_config as hw
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton,
-    QHBoxLayout, QLabel
+    QHBoxLayout, QLabel, QGridLayout
 )
 
 
@@ -15,47 +15,40 @@ class RfWidget(QWidget):
         # Main layout
         self.main_layout = QVBoxLayout()
         self.dynamic_container = QVBoxLayout()  # Store reference
-        self.layout = QVBoxLayout()
-        self.main_layout.addLayout(self.layout)
+        self.layout = QGridLayout()
 
-        # Labels and Boxes lists
-        labels = ["RF de-blanking time (us)",  # RF
-                  "RF dead time (us)",
-                  "Gyromagnetic ration (MHz/T)"
-                  "Larmor frequency (MHz)",
-                  "Reference time (us)",
-                  "Oversampling factor",  # ADC
-                  "Max readout points",
-                  "Add readout points",
-                  "LNA gain (dB)",
-                  "RF gain min (dB)",
-                  "RF gain max (dB)",
-                  ]
-        values = ["15",
-                  "400",
-                  "42.57747892"
-                  "3.066",
-                  "70",
-                  "5",
-                  "1e5",
-                  "5",
-                  "45",
-                  "45",
-                  "76",
-                  ]
+        # Parameters to save inputs
+        self.labels = []
+        self.values = []
+        self.tips = []
+
+        # Add inputs
+        self.add_input(label="RF de-blanking time (us)", value="15", tip="Time required to de-blank RF system")
+        self.add_input(label="RF dead time (us)", value="400", tip="Time after RF pulse before acquisition starts")
+        self.add_input(label="Gyromagnetic ratio (MHz/T)", value="42.57747892",
+                       tip="Gyromagnetic ratio of the nucleus being imaged")
+        self.add_input(label="Larmor frequency (MHz)", value="3.066",
+                       tip="Larmor frequency based on magnetic field strength")
+        self.add_input(label="Reference time (us)", value="70", tip="Reference time used in efficiency calibration")
+        self.add_input(label="Oversampling factor", value="5", tip="Factor by which data is oversampled")
+        self.add_input(label="Max readout points", value="1e5", tip="Maximum number of readout points")
+        self.add_input(label="Add readout points", value="5", tip="Additional readout points for processing")
+        self.add_input(label="LNA gain (dB)", value="45", tip="Low-noise amplifier gain in dB")
+        self.add_input(label="RF gain min (dB)", value="45", tip="Minimum RF amplifier gain in dB")
+        self.add_input(label="RF gain max (dB)", value="76", tip="Maximum RF amplifier gain in dB")
 
         # Dictionary to store references to input fields
         self.input_boxes = {}
 
         # Create blocks iteratively
-        for label, value in zip(labels, values):
-            row_layout = QHBoxLayout()
+        for row, (label, value) in enumerate(zip(self.labels, self.values)):
             label_widget = QLabel(label)
             input_box = QLineEdit(value)
+            input_box.setStatusTip(self.tips[row])
             self.input_boxes[label] = input_box
-            row_layout.addWidget(label_widget)
-            row_layout.addWidget(input_box)
-            self.layout.addLayout(row_layout)
+
+            self.layout.addWidget(label_widget, row, 0)  # Label in column 0
+            self.layout.addWidget(input_box, row, 1)  # Input box in column 1
 
         # Input field for RP ip address
         self.text_box_1 = QLineEdit(self)
@@ -71,15 +64,15 @@ class RfWidget(QWidget):
         self.save_button = QPushButton('Save', self)
         self.save_button.clicked.connect(self.save_rf_entries)
 
-        self.layout.addLayout(self.dynamic_container)
-
         layout = QHBoxLayout()
         layout.addWidget(self.text_box_1)
         layout.addWidget(self.text_box_2)
         layout.addWidget(self.add_button)
         layout.addWidget(self.save_button)
-        self.main_layout.addStretch()
+        self.main_layout.addLayout(self.layout)
+        self.main_layout.addLayout(self.dynamic_container)
         self.main_layout.addLayout(layout)
+        self.main_layout.addStretch()
 
         self.setLayout(self.main_layout)
         self.setWindowTitle('Red Pitaya Entry')
@@ -96,6 +89,11 @@ class RfWidget(QWidget):
 
         # Update hardware
         self.update_hw_config_rf()
+
+    def add_input(self, label="", value="", tip=""):
+        self.labels.append(label)
+        self.values.append(value)
+        self.tips.append(tip)
 
     def update_hw_config_rf(self):
         hw.blkTime = float(self.input_boxes["RF de-blanking time (us)"].text())

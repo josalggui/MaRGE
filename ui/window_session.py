@@ -7,14 +7,12 @@ session_controller.py
 import csv
 import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QLabel, QToolBar, QAction, QStatusBar, QGridLayout, QWidget, \
-    QComboBox, QLineEdit, QSizePolicy, QVBoxLayout, QInputDialog, QMessageBox
+    QComboBox, QLineEdit, QSizePolicy, QInputDialog, QMessageBox
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
 import qdarkstyle
 from datetime import datetime
 import configs.hw_config as hw
 import configs.sys_config as sys_config
-import copy
 import os
 
 
@@ -156,7 +154,7 @@ class SessionWindow(QMainWindow):
         # Create QLineEdit for subject height
         row += 1
         self.main_layout.addWidget(QLabel("Subject height"), row, 0)
-        self.height_line_edit = ClickableLineEdit()
+        self.height_line_edit = QLineEdit()
         self.height_line_edit.setPlaceholderText("cm")
         self.height_line_edit.setStatusTip("Write the subject height")
         self.main_layout.addWidget(self.height_line_edit, row, 1)
@@ -184,17 +182,6 @@ class SessionWindow(QMainWindow):
 
         # Show the window
         self.show()
-
-class ClickableLineEdit(QLineEdit):
-    def __init__(self, *args, **kwargs):
-        super(ClickableLineEdit, self).__init__(*args, **kwargs)
-        self.default_text = copy.copy(self.text())
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            if self.text() == self.default_text:
-                self.setText("")
-        super().mousePressEvent(event)
 
 class DynamicComboBox(QComboBox):
     def __init__(self, file_name):

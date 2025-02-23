@@ -38,6 +38,7 @@ class ConsoleWidget(QWidget):
         for row, (label, value) in enumerate(zip(self.labels, self.values)):
             label_widget = QLabel(label)
             input_box = QLineEdit(value)
+            input_box.setStatusTip(self.tips[row])
             self.input_boxes[label] = input_box
 
             self.layout.addWidget(label_widget, row, 0)  # Label in column 0
@@ -60,10 +61,10 @@ class ConsoleWidget(QWidget):
         layout.addWidget(self.text_box)
         layout.addWidget(self.add_button)
         layout.addWidget(self.save_button)
-        self.main_layout.addStretch()
         self.main_layout.addLayout(self.layout)
         self.main_layout.addLayout(self.dynamic_container)
         self.main_layout.addLayout(layout)
+        self.main_layout.addStretch()
 
         self.setLayout(self.main_layout)
         self.setWindowTitle('Red Pitaya Entry')

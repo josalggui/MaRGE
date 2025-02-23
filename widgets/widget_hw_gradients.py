@@ -38,7 +38,9 @@ class GradientsWidget(QWidget):
         for row, (label, value) in enumerate(zip(self.labels, self.values)):
             label_widget = QLabel(label)
             input_box = QLineEdit(value)
+            input_box.setStatusTip(self.tips[row])
             self.input_boxes[label] = input_box
+
             self.layout.addWidget(label_widget, row, 0)  # Label in column 0
             self.layout.addWidget(input_box, row, 1)  # Input box in column 1
 
@@ -48,8 +50,8 @@ class GradientsWidget(QWidget):
 
         layout = QHBoxLayout()
         layout.addWidget(self.save_button)
-        self.main_layout.addStretch()
         self.main_layout.addLayout(layout)
+        self.main_layout.addStretch()
 
         self.setLayout(self.main_layout)
         self.setWindowTitle('Gradients Entry')

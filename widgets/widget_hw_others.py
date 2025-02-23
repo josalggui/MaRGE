@@ -4,7 +4,7 @@ import numpy as np
 from configs import hw_config as hw
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton,
-    QHBoxLayout, QLabel
+    QHBoxLayout, QLabel, QGridLayout
 )
 
 class OthersWidget(QWidget):
@@ -13,43 +13,40 @@ class OthersWidget(QWidget):
 
         # Main layout
         self.main_layout = QVBoxLayout()
-        self.layout = QVBoxLayout()
+        self.layout = QGridLayout()
         self.main_layout.addLayout(self.layout)
 
-        # Labels and Boxes lists
-        labels = ["Scanner name",
-                    "FOVx (cm)",  # FOV
-                    "FOVy (cm)",
-                    "FOVz (cm)",
-                    "Shimming factor",  # shimming
-                    "Bash path",  # others
-                    "Arduino autotuning",
-                    "Arduino interlock",
-                    "Arduino attenuator",
-                  ]
-        values = ["Demo",
-                  "20.0",
-                  "20.0",
-                  "20.0",
-                  "1e-5",
-                  "gnome-terminal",
-                  "242353133363518050E0",
-                  "242353133363518050E1",
-                  "242353133363518050E2",
-                  ]
+        # Parameters to save inputs
+        self.labels = []
+        self.values = []
+        self.tips = []
+
+        # Add inputs
+        self.add_input(label="Scanner name", value="Demo", tip="Name of the MRI scanner")
+        self.add_input(label="FOVx (cm)", value="20.0", tip="Field of View in the X direction")
+        self.add_input(label="FOVy (cm)", value="20.0", tip="Field of View in the Y direction")
+        self.add_input(label="FOVz (cm)", value="20.0", tip="Field of View in the Z direction")
+        self.add_input(label="Shimming factor", value="1e-5", tip="Factor used for shimming adjustments")
+        self.add_input(label="Bash path", value="gnome-terminal", tip="Path for executing bash commands")
+        self.add_input(label="Arduino autotuning", value="242353133363518050E0",
+                       tip="Arduino serial number for autotuning")
+        self.add_input(label="Arduino interlock", value="242353133363518050E1",
+                       tip="Arduino serial number for interlock system")
+        self.add_input(label="Arduino attenuator", value="242353133363518050E2",
+                       tip="Arduino serial number for RF attenuation")
 
         # Dictionary to store references to input fields
         self.input_boxes = {}
 
         # Create blocks iteratively
-        for label, value in zip(labels, values):
-            row_layout = QHBoxLayout()
+        for row, (label, value) in enumerate(zip(self.labels, self.values)):
             label_widget = QLabel(label)
             input_box = QLineEdit(value)
+            input_box.setStatusTip(self.tips[row])
             self.input_boxes[label] = input_box
-            row_layout.addWidget(label_widget)
-            row_layout.addWidget(input_box)
-            self.layout.addLayout(row_layout)
+
+            self.layout.addWidget(label_widget, row, 0)  # Label in column 0
+            self.layout.addWidget(input_box, row, 1)  # Input box in column 1
 
         # Buttons
         self.save_button = QPushButton('Save', self)
@@ -57,8 +54,8 @@ class OthersWidget(QWidget):
 
         layout = QHBoxLayout()
         layout.addWidget(self.save_button)
-        self.main_layout.addStretch()
         self.main_layout.addLayout(layout)
+        self.main_layout.addStretch()
 
         self.setLayout(self.main_layout)
         self.setWindowTitle('Others Entry')
@@ -69,6 +66,11 @@ class OthersWidget(QWidget):
 
         # Update hardware
         self.update_hw_config_others()
+
+    def add_input(self, label="", value="", tip=""):
+        self.labels.append(label)
+        self.values.append(value)
+        self.tips.append(tip)
 
     def update_hw_config_others(self):
         hw.fov = [float(self.input_boxes["FOVx (cm)"].text()),
