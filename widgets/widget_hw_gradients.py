@@ -4,7 +4,7 @@ import numpy as np
 from configs import hw_config as hw
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton,
-    QHBoxLayout, QLabel
+    QHBoxLayout, QLabel, QGridLayout
 )
 
 class GradientsWidget(QWidget):
@@ -13,41 +13,34 @@ class GradientsWidget(QWidget):
 
         # Main layout
         self.main_layout = QVBoxLayout()
-        self.layout = QVBoxLayout()
+        self.layout = QGridLayout()
         self.main_layout.addLayout(self.layout)
 
-        # Labels and Boxes lists
-        labels = ["Gx max (mT/m)",  # Gradients
-                  "Gy max (mT/m)",
-                  "Gz max (mT/m)",
-                  "Max slew rate (mT/m/ms)",
-                  "Gradient raster time (us)",
-                  "Gradient rise time (us)",
-                  "Gradient steps",
-                  "Gradient delay (us)",
-                  ]
-        values = ["50",
-                  "80",
-                  "70",
-                  "80",
-                  "50",
-                  "400",
-                  "16",
-                  "9",
-                  ]
+        # Parameters to save inputs
+        self.labels = []
+        self.values = []
+        self.tips = []
+
+        # Add inputs
+        self.add_input(label="Gx max (mT/m)", value="50", tip="Maximum gradient along X direction")
+        self.add_input(label="Gy max (mT/m)", value="80", tip="Maximum gradient along Y direction")
+        self.add_input(label="Gz max (mT/m)", value="70", tip="Maximum gradient along Z direction")
+        self.add_input(label="Max slew rate (mT/m/ms)", value="80", tip="Maximum slew rate")
+        self.add_input(label="Gradient raster time (us)", value="50", tip="Time resolution of gradient system")
+        self.add_input(label="Gradient rise time (us)", value="400", tip="Time to reach maximum gradient amplitude")
+        self.add_input(label="Gradient steps", value="16", tip="Number of steps for gradient transition")
+        self.add_input(label="Gradient delay (us)", value="9", tip="Delay before gradient application")
 
         # Dictionary to store references to input fields
         self.input_boxes = {}
 
         # Create blocks iteratively
-        for label, value in zip(labels, values):
-            row_layout = QHBoxLayout()
+        for row, (label, value) in enumerate(zip(self.labels, self.values)):
             label_widget = QLabel(label)
             input_box = QLineEdit(value)
             self.input_boxes[label] = input_box
-            row_layout.addWidget(label_widget)
-            row_layout.addWidget(input_box)
-            self.layout.addLayout(row_layout)
+            self.layout.addWidget(label_widget, row, 0)  # Label in column 0
+            self.layout.addWidget(input_box, row, 1)  # Input box in column 1
 
         # Buttons
         self.save_button = QPushButton('Save', self)
@@ -67,6 +60,11 @@ class GradientsWidget(QWidget):
 
         # Update hardware
         self.update_hw_config_gradients()
+
+    def add_input(self, label="", value="", tip=""):
+        self.labels.append(label)
+        self.values.append(value)
+        self.tips.append(tip)
 
     def update_hw_config_gradients(self):
         hw.gFactor = np.array([float(self.input_boxes["Gx max (mT/m)"].text()),
