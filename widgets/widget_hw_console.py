@@ -4,48 +4,44 @@ import csv
 from configs import hw_config as hw
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton,
-    QHBoxLayout, QLabel
+    QHBoxLayout, QLabel, QGridLayout
 )
 
 
-class RpWidget(QWidget):
+class ConsoleWidget(QWidget):
     def __init__(self):
         super().__init__()
 
         # Main layout
         self.main_layout = QVBoxLayout()
         self.dynamic_container = QVBoxLayout()  # Store reference
-        self.layout = QVBoxLayout()
-        self.main_layout.addLayout(self.layout)
+        self.layout = QGridLayout()
 
-        # Labels and Boxes lists
-        labels = ["Red Pitaya model",
-                  "Maximum input voltage (mV)",
-                  "Gradient board model",
-                  "Clock frequency (MHz)",
-                  "ADC factor (mV/unit)",
-                  "CIC delay points"
-                  ]
-        values = ["rp-122",
-                  "225",
-                  "gpa-fhdo",
-                  "122.88",
-                  "13.788",
-                  "3"
-                  ]
+        # Parameters to save inputs
+        self.labels = []
+        self.values = []
+        self.tips = []
+
+        # Add inputs
+        self.add_input(label="Red Pitaya model", value="rp-122", tip="Model of the Red Pitaya board")
+        self.add_input(label="Maximum input voltage (mV)", value="225",
+                       tip="Maximum voltage that can be input to the system")
+        self.add_input(label="Gradient board model", value="gpa-fhdo", tip="Model of the gradient controller board")
+        self.add_input(label="Clock frequency (MHz)", value="122.88", tip="Clock frequency of the system")
+        self.add_input(label="ADC factor (mV/unit)", value="13.788", tip="ADC conversion factor from unit to mV")
+        self.add_input(label="CIC delay points", value="3", tip="Number of delay points in the CIC filter")
 
         # Dictionary to store references to input fields
         self.input_boxes = {}
 
         # Create blocks iteratively
-        for label, value in zip(labels, values):
-            row_layout = QHBoxLayout()
+        for row, (label, value) in enumerate(zip(self.labels, self.values)):
             label_widget = QLabel(label)
             input_box = QLineEdit(value)
             self.input_boxes[label] = input_box
-            row_layout.addWidget(label_widget)
-            row_layout.addWidget(input_box)
-            self.layout.addLayout(row_layout)
+
+            self.layout.addWidget(label_widget, row, 0)  # Label in column 0
+            self.layout.addWidget(input_box, row, 1)  # Input box in column 1
 
         # Input field for RP ip address
         self.text_box = QLineEdit(self)
@@ -58,13 +54,15 @@ class RpWidget(QWidget):
         self.save_button = QPushButton('Save', self)
         self.save_button.clicked.connect(self.save_rp_entries)
 
-        self.layout.addLayout(self.dynamic_container)
+        # self.layout.addLayout(self.dynamic_container)
 
         layout = QHBoxLayout()
         layout.addWidget(self.text_box)
         layout.addWidget(self.add_button)
         layout.addWidget(self.save_button)
         self.main_layout.addStretch()
+        self.main_layout.addLayout(self.layout)
+        self.main_layout.addLayout(self.dynamic_container)
         self.main_layout.addLayout(layout)
 
         self.setLayout(self.main_layout)
@@ -82,6 +80,11 @@ class RpWidget(QWidget):
 
         # Update hardware
         self.update_hw_config_rp()
+
+    def add_input(self, label="", value="", tip=""):
+        self.labels.append(label)
+        self.values.append(value)
+        self.tips.append(tip)
 
     def update_hw_config_rp(self):
         hw.rp_ip_list = []
@@ -181,6 +184,6 @@ class RpWidget(QWidget):
 if __name__ == '__main__':
     # Run the application
     app = QApplication(sys.argv)
-    widget = RpWidget()
+    widget = ConsoleWidget()
     widget.show()
     sys.exit(app.exec())
