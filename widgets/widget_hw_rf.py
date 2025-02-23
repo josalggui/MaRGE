@@ -104,8 +104,9 @@ class RfWidget(QWidget):
         hw.addRdPoints = int(self.input_boxes["Add readout points"].text())
         hw.reference_time = float(self.input_boxes["Reference time (us)"].text())
         hw.lnaGain = float(self.input_boxes["LNA gain (dB)"].text())
-        hw.rf_min_gain = float(self.input_boxes["RF gain min (dB)"].text())
-        hw.rf_max_gain = float(self.input_boxes["RF gain max (dB)"].text())
+        hw.rf_min_gain = int(self.input_boxes["RF gain min (dB)"].text())
+        hw.rf_max_gain = int(self.input_boxes["RF gain max (dB)"].text())
+        hw.antenna_dict = {}
         for rf_id, rf_eff in self.added_rfs:
             rf_name = rf_id
             rf_value = float(rf_eff)
