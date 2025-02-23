@@ -24,12 +24,14 @@ class RpWidget(QWidget):
                   "Gradient board model",
                   "Clock frequency (MHz)",
                   "ADC factor (mV/unit)",
+                  "CIC delay points"
                   ]
         values = ["rp-122",
                   "225",
                   "gpa-fhdo",
                   "122.88",
                   "13.788",
+                  "3"
                   ]
 
         # Dictionary to store references to input fields
@@ -92,6 +94,7 @@ class RpWidget(QWidget):
         hw.grad_board = self.input_boxes["Gradient board model"].text()
         hw.fpga_clk_freq_MHz = float(self.input_boxes["Clock frequency (MHz)"].text())
         hw.adcFactor = float(self.input_boxes["ADC factor (mV/unit)"].text())
+        hw.cic_delay_points = int(self.input_boxes["CIC delay points"].text())
 
     def add_rp(self):
         text = self.text_box.text().strip()
