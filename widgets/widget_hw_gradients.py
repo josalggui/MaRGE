@@ -66,9 +66,9 @@ class GradientsWidget(QWidget):
         self.load_gradient_entries()
 
         # Update hardware
-        self.update_hw_config_rp()
+        self.update_hw_config_gradients()
 
-    def update_hw_config_rp(self):
+    def update_hw_config_gradients(self):
         hw.gFactor = np.array([float(self.input_boxes["Gx max (mT/m)"].text()),
                                float(self.input_boxes["Gy max (mT/m)"].text()),
                                float(self.input_boxes["Gz max (mT/m)"].text())]) * 1e-3  # T/m
@@ -86,6 +86,7 @@ class GradientsWidget(QWidget):
             writer.writerow(["ID", "Value"])
             for label, input_box in self.input_boxes.items():
                 writer.writerow([label, input_box.text()])  # Write each pair
+        self.update_hw_config_gradients()
         print(f"Data saved for gradients.")
 
     def load_gradient_entries(self):

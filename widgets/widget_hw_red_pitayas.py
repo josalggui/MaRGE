@@ -140,6 +140,7 @@ class RpWidget(QWidget):
                 writer.writerow([label, input_box.text()])  # Write each pair
             for rp_id, ip in self.added_rps:
                 writer.writerow([f"RP-{rp_id}", ip])
+        self.update_hw_config_rp()
         print(f"Data saved for red pitayas")
 
     def load_rp_entries(self):

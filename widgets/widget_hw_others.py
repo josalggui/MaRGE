@@ -68,9 +68,9 @@ class OthersWidget(QWidget):
         self.load_others_entries()
 
         # Update hardware
-        self.update_hw_config_rp()
+        self.update_hw_config_others()
 
-    def update_hw_config_rp(self):
+    def update_hw_config_others(self):
         hw.fov = [float(self.input_boxes["FOVx (cm)"].text()),
                   float(self.input_boxes["FOVy (cm)"].text()),
                   float(self.input_boxes["FOVz (cm)"].text())]
@@ -88,6 +88,7 @@ class OthersWidget(QWidget):
             writer.writerow(["ID", "Value"])
             for label, input_box in self.input_boxes.items():
                 writer.writerow([label, input_box.text()])  # Write each pair
+        self.update_hw_config_others()
         print(f"Data saved for others.")
 
     def load_others_entries(self):

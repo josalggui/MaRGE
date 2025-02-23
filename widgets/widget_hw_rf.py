@@ -93,9 +93,9 @@ class RfWidget(QWidget):
         self.load_rf_entries()
 
         # Update hardware
-        self.update_hw_config_rp()
+        self.update_hw_config_rf()
 
-    def update_hw_config_rp(self):
+    def update_hw_config_rf(self):
         hw.blkTime = float(self.input_boxes["RF de-blanking time (us)"].text())
         hw.deadTime = float(self.input_boxes["RF dead time (us)"].text())
         hw.larmorFreq = float(self.input_boxes["Larmor frequency (MHz)"].text())
@@ -162,6 +162,7 @@ class RfWidget(QWidget):
                 writer.writerow([label, input_box.text()])  # Write each pair
             for rf_identifier, rf_efficiency in self.added_rfs:
                 writer.writerow([rf_identifier, rf_efficiency])
+        self.update_hw_config_rf()
         print(f"Data saved for rf.")
 
     def load_rf_entries(self):
