@@ -5,12 +5,12 @@
 
 """
 import configs.hw_config as hw
-from ui.window_session import SessionWindow
 from controller.controller_main import MainController
-from ui.window_hardware import HardwareWindow
 import os
 import sys
 import subprocess
+
+from ui.window_session import SessionWindow
 
 
 class SessionController(SessionWindow):
@@ -24,15 +24,14 @@ class SessionController(SessionWindow):
         """
         Initializes the SessionController.
         """
-        super(SessionController, self).__init__()
+        super().__init__()
         self.main_gui = None
-        self.hardware_gui = HardwareWindow()
-        self.rf_coil_combo_box.addItems(hw.antenna_dict.keys())
+        self.tab_session.rf_coil_combo_box.addItems(hw.antenna_dict.keys())
 
         # Set slots for toolbar actions
         self.launch_gui_action.triggered.connect(self.runMainGui)
         self.demo_gui_action.triggered.connect(self.runDemoGui)
-        self.setup_hardware_action.triggered.connect(self.setup_hardware)
+        self.update_action.triggered.connect(self.update_hardware)
         self.close_action.triggered.connect(self.close)
 
         # Check if system is ready
@@ -70,8 +69,8 @@ class SessionController(SessionWindow):
             self.launch_gui_action.setDisabled(False)
             self.demo_gui_action.setDisabled(False)
 
-    def setup_hardware(self):
-        self.hardware_gui.show()
+    def update_hardware(self):
+        self.tab_session.rf_coil_combo_box.addItems(hw.antenna_dict.keys())
 
     def runMainGui(self):
         """
