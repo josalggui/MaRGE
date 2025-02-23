@@ -21,6 +21,7 @@ class RfWidget(QWidget):
         # Labels and Boxes lists
         labels = ["RF de-blanking time (us)",  # RF
                   "RF dead time (us)",
+                  "Gyromagnetic ration (MHz/T)"
                   "Larmor frequency (MHz)",
                   "Reference time (us)",
                   "Oversampling factor",  # ADC
@@ -32,6 +33,7 @@ class RfWidget(QWidget):
                   ]
         values = ["15",
                   "400",
+                  "42.57747892"
                   "3.066",
                   "70",
                   "5",
@@ -98,6 +100,7 @@ class RfWidget(QWidget):
     def update_hw_config_rf(self):
         hw.blkTime = float(self.input_boxes["RF de-blanking time (us)"].text())
         hw.deadTime = float(self.input_boxes["RF dead time (us)"].text())
+        hw.gammaB = float(self.input_boxes["Gyromagnetic ratio (MHz/T)"].text()) * 1e6
         hw.larmorFreq = float(self.input_boxes["Larmor frequency (MHz)"].text())
         hw.oversamplingFactor = int(self.input_boxes["RF dead time (us)"].text())
         hw.maxRdPoints = int(float(self.input_boxes["Max readout points"].text()))
