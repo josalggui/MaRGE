@@ -153,7 +153,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             return 0
 
         seq_time = n_points[1] / etl * n_points[2] * repetition_time * 1e-3 * n_scans * par_fourier_fraction / 60
-        seq_time = np.round(seq_time, decimals=1)
+        seq_time = np.round(seq_time, decimals=1) * 2
         return seq_time  # minutes, scanTime
 
         # TODO: check for min and max values for all fields
@@ -212,7 +212,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             gx_max=hw.gFactor[0] * hw.gammaB,  # Maximum gradient amplitude for X (Hz/m)
             gy_max=hw.gFactor[1] * hw.gammaB,  # Maximum gradient amplitude for Y (Hz/m)
             gz_max=hw.gFactor[2] * hw.gammaB,  # Maximum gradient amplitude for Z (Hz/m)
-            grad_max=np.max(hw.gFactor) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
+            grad_max=np.max(np.abs(hw.gFactor)) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
             grad_t=hw.grad_raster_time * 1e6,  # Gradient raster time (us)
         )
 
@@ -224,7 +224,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         system = pp.Opts(
             rf_dead_time=hw.blkTime * 1e-6,  # Dead time between RF pulses (s)
-            max_grad=np.max(hw.gFactor) * 1e3,  # Maximum gradient strength (mT/m)
+            max_grad=np.max(np.abs(hw.gFactor)) * 1e3,  # Maximum gradient strength (mT/m)
             grad_unit='mT/m',  # Units of gradient strength
             max_slew=hw.max_slew_rate,  # Maximum gradient slew rate (mT/m/ms)
             slew_unit='mT/m/ms',  # Units of gradient slew rate
