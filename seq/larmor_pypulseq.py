@@ -7,10 +7,6 @@ MRILAB @ I3M
 import os
 import sys
 
-# To work with pypulseq
-import pypulseq as pp
-from flocra_pulseq.interpreter import PSInterpreter
-
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))
@@ -31,7 +27,7 @@ import scipy.signal as sig
 import configs.hw_config as hw
 import configs.units as units
 import experiment as ex
-from flocra_pulseq.interpreter import PSInterpreter
+from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 
 
@@ -250,7 +246,7 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         self.mapVals['spectrum'] = [fVector, spectrum]
 
         if mode != 'Standalone':
-            for sequence in self.sequenceList.values():
+            for sequence in self.sequence_list.values():
                 if 'larmorFreq' in sequence.mapVals:
                     sequence.mapVals['larmorFreq'] = hw.larmorFreq
 

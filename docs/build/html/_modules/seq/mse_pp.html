@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>seq.mse_pp &mdash; MaRGE 0.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=486e5634"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MaRGE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../seq.html">API reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MaRGE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">seq.mse_pp</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for seq.mse_pp</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tuesday, September 17th 2024</span>
+<span class="sd">@author: Prof. Dr. Maxim Zaitsev, Department of Diagnostic and Interventional Radiology, University of Freiburg, Germany</span>
+<span class="sd">@author: Dr. J.M. Algarín, MRILab, i3M, CSIC, Valencia, Spain</span>
+<span class="sd">@Summary: mse sequence class coded with pypulseq compatible with MaRGE</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c1">#*****************************************************************************</span>
+<span class="c1"># Get the directory of the current script</span>
+<span class="n">main_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">parent_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">main_directory</span><span class="p">)</span>
+<span class="n">parent_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">parent_directory</span><span class="p">)</span>
+
+<span class="c1"># Define the subdirectories you want to add to sys.path</span>
+<span class="n">subdirs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MaRGE&#39;</span><span class="p">,</span> <span class="s1">&#39;marcos_client&#39;</span><span class="p">]</span>
+
+<span class="c1"># Add the subdirectories to sys.path</span>
+<span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="n">subdirs</span><span class="p">:</span>
+    <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parent_directory</span><span class="p">,</span> <span class="n">subdir</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+<span class="c1">#******************************************************************************</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span> <span class="k">as</span> <span class="nn">sig</span>
+
+<span class="kn">import</span> <span class="nn">pypulseq</span> <span class="k">as</span> <span class="nn">pp</span>
+
+<span class="kn">import</span> <span class="nn">experiment</span> <span class="k">as</span> <span class="nn">ex</span>
+<span class="kn">import</span> <span class="nn">configs.hw_config</span> <span class="k">as</span> <span class="nn">hw</span>
+<span class="kn">import</span> <span class="nn">configs.units</span> <span class="k">as</span> <span class="nn">units</span>
+<span class="kn">import</span> <span class="nn">seq.mriBlankSeq</span> <span class="k">as</span> <span class="nn">blankSeq</span>
+<span class="kn">from</span> <span class="nn">marga_pulseq.interpreter</span> <span class="kn">import</span> <span class="n">PSInterpreter</span>
+
+
+<span class="c1">#*********************************************************************************</span>
+<span class="c1">#*********************************************************************************</span>
+<span class="c1">#*********************************************************************************</span>
+
+<div class="viewcode-block" id="MSE">
+<a class="viewcode-back" href="../../seq.html#seq.mse_pp.MSE">[docs]</a>
+<span class="k">class</span> <span class="nc">MSE</span><span class="p">(</span><span class="n">blankSeq</span><span class="o">.</span><span class="n">MRIBLANKSEQ</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MSE</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1"># Input parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nScans</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shimming</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dummyPulses</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freqOffset</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfReFA</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfExFA</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfReTime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfExTime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rdGradTime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repetitionTime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">echoSpacing</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">etl</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fov</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;seqName&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;MSEInfo&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="s1">&#39;MSE_PyPulseq&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nScans&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Number of scans&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;IM&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;freqOffset&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Larmor frequency offset (kHz)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">kHz</span><span class="p">,</span>
+                          <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfExFA&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Excitation flip angle (º)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfReFA&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Refocusing flip angle (º)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfExTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF excitation time (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">us</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfReTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF refocusing time (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">120.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">us</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;deadTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Dead time (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">us</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;echoSpacing&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Echo spacing (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;repetitionTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Repetition time (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">40.</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;fov&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;FOV[x,y,z] (cm)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="p">[</span><span class="mf">55.0</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">,</span> <span class="mf">12.0</span><span class="p">],</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">cm</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;IM&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;dfov&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;dFOV[x,y,z] (mm)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">mm</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;IM&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;Position of the gradient isocenter&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nPoints&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;nPoints[rd, ph, sl]&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="p">[</span><span class="mi">40</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;IM&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;etl&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Echo train length&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;acqTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Acquisition time (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;axesOrientation&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Axes[rd,ph,sl]&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;IM&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;0=x, 1=y, 2=z&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rdGradTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Rd gradient time (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;OTH&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;dummyPulses&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Dummy pulses&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;shimming&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Shimming (*1e4)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">sh</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;OTH&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;unlock_orientation&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Unlock image orientation&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;OTH&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s1">&#39;0: Images oriented according to standard. 1: Image raw orientation&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;preemphasis&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Preemphasis&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;OTH&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;fsp_r&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;fsp_r&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;OTH&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MSE.sequenceInfo">
+<a class="viewcode-back" href="../../seq.html#seq.mse_pp.MSE.sequenceInfo">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;3D MSE sequence with PyPulseq&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Author: Prof. Dr. Maxim Zaitsev&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;University of Freiburg, Germany&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Author: Dr. José Miguel Algarín&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mriLab @ i3M, CSIC, Spain </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MSE.sequenceTime">
+<a class="viewcode-back" href="../../seq.html#seq.mse_pp.MSE.sequenceTime">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceTime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">nRD</span><span class="p">,</span> <span class="n">nPH</span><span class="p">,</span> <span class="n">nSL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s2">&quot;nPoints&quot;</span><span class="p">])</span>
+        <span class="n">repetition_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s2">&quot;repetitionTime&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e-3</span>
+        <span class="n">nScans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s2">&quot;nScans&quot;</span><span class="p">]</span>
+        <span class="n">scan_time</span> <span class="o">=</span> <span class="n">nScans</span> <span class="o">*</span> <span class="n">nPH</span> <span class="o">*</span> <span class="n">nSL</span> <span class="o">*</span> <span class="n">repetition_time</span> <span class="o">/</span> <span class="mi">60</span>  <span class="c1"># minutes</span>
+        <span class="n">scan_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">scan_time</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scan_time</span>  <span class="c1"># minutes</span></div>
+
+
+<div class="viewcode-block" id="MSE.sequenceAtributes">
+<a class="viewcode-back" href="../../seq.html#seq.mse_pp.MSE.sequenceAtributes">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceAtributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sequenceAtributes</span><span class="p">()</span>
+
+        <span class="c1"># self.dfovs.append(self.dfov.tolist())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fovs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fov</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="MSE.sequenceRun">
+<a class="viewcode-back" href="../../seq.html#seq.mse_pp.MSE.sequenceRun">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceRun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plotSeq</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">demo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs a multi-spin echo (MSE) sequence using PyPulseq to control the pulse sequence timing and hardware settings.</span>
+
+<span class="sd">        This method initiates the running of an MSE sequence, handling various hardware and sequence parameters such as</span>
+<span class="sd">        field of view (FOV), resolution, readout gradients, and timing. It prepares and configures the experiment for data</span>
+<span class="sd">        acquisition, creates pulse sequence batches, and can either run the experiment or plot the sequence.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        plotSeq : int, optional</span>
+<span class="sd">            If set to 1, the sequence will be plotted instead of executed. Defaults to 0.</span>
+
+<span class="sd">        demo : bool, optional</span>
+<span class="sd">            If True, the method will simulate the sequence execution in demo mode without actual hardware. Defaults to False.</span>
+
+<span class="sd">        standalone : bool, optional</span>
+<span class="sd">            If True, the method will run in standalone mode and plot the sequence. Defaults to False.</span>
+
+<span class="sd">        Key Parameters Used</span>
+<span class="sd">        -------------------</span>
+<span class="sd">        - `self.fov`: Field of view (FOV) for the imaging sequence (X, Y, Z).</span>
+<span class="sd">        - `self.nPoints`: Number of readout points in each direction (RD, PH, SL).</span>
+<span class="sd">        - `self.etl`: Echo train length (number of echoes in the sequence).</span>
+<span class="sd">        - `self.echoSpacing`: Time between echoes (TE).</span>
+<span class="sd">        - `self.repetitionTime`: Repetition time (TR) between sequences.</span>
+<span class="sd">        - `self.acqTime`: Acquisition time during readout.</span>
+<span class="sd">        - `self.rfExFA`: Flip angle for excitation pulse.</span>
+<span class="sd">        - `self.rfReFA`: Flip angle for refocusing pulse.</span>
+<span class="sd">        - `self.dummyPulses`: Number of dummy pulses to add before the actual acquisition starts.</span>
+<span class="sd">        - `self.shimming`: Shimming parameters for adjusting magnetic field homogeneity.</span>
+
+<span class="sd">        Key Process Steps</span>
+<span class="sd">        -----------------</span>
+<span class="sd">        1. Initializes the experiment and configures the system parameters, such as bandwidth and gradient times.</span>
+<span class="sd">        2. Defines the readout, phase, and slice gradients according to the `axesOrientation`.</span>
+<span class="sd">        3. Creates RF excitation and refocusing pulses.</span>
+<span class="sd">        4. Prepares and adds sequence blocks (RF pulses, gradients, and delays).</span>
+<span class="sd">        5. Creates and processes batches of the sequence, performing slice and phase encoding sweeps.</span>
+<span class="sd">        6. Executes the pulse sequence or plots it based on the provided arguments.</span>
+<span class="sd">        7. Handles data acquisition and decimation for oversampled data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if the sequence execution or plotting was successful, False if there were errors in configuration or timing.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            Raised if the sequence timing is incorrect or the hardware configuration is out of bounds.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - The method assumes access to global hardware settings (`hw`) and a `Experiment` object (`expt`).</span>
+<span class="sd">        - In case of sequence plotting, the `plotSeq` argument should be set, and the sequence will be visualized</span>
+<span class="sd">          instead of executed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Run MSE powered by PyPulseq&quot;</span><span class="p">)</span>
+        <span class="n">init_gpa</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">demo</span> <span class="o">=</span> <span class="n">demo</span>
+
+        <span class="c1"># Define the interpreter. It should be updated on calibration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flo_interpreter</span> <span class="o">=</span> <span class="n">PSInterpreter</span><span class="p">(</span>
+            <span class="n">tx_warmup</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span><span class="p">,</span>  <span class="c1"># Transmit chain warm-up time (us)</span>
+            <span class="n">rf_center</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">larmorFreq</span> <span class="o">*</span> <span class="mf">1e6</span><span class="p">,</span>  <span class="c1"># Larmor frequency (Hz)</span>
+            <span class="n">rf_amp_max</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">b1Efficiency</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e6</span><span class="p">,</span>  <span class="c1"># Maximum RF amplitude (Hz)</span>
+            <span class="n">gx_max</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">gFactor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">gammaB</span><span class="p">,</span>  <span class="c1"># Maximum gradient amplitude for X (Hz/m)</span>
+            <span class="n">gy_max</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">gFactor</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">gammaB</span><span class="p">,</span>  <span class="c1"># Maximum gradient amplitude for Y (Hz/m)</span>
+            <span class="n">gz_max</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">gFactor</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">gammaB</span><span class="p">,</span>  <span class="c1"># Maximum gradient amplitude for Z (Hz/m)</span>
+            <span class="n">grad_max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">hw</span><span class="o">.</span><span class="n">gFactor</span><span class="p">)</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">gammaB</span><span class="p">,</span>  <span class="c1"># Maximum gradient amplitude (Hz/m)</span>
+            <span class="n">grad_t</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">grad_raster_time</span> <span class="o">*</span> <span class="mf">1e6</span><span class="p">,</span>  <span class="c1"># Gradient raster time (us)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Define system properties according to hw_config file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">Opts</span><span class="p">(</span>
+            <span class="n">rf_dead_time</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span> <span class="o">*</span> <span class="mf">1e-6</span><span class="p">,</span>  <span class="c1"># Dead time between RF pulses (s)</span>
+            <span class="n">max_grad</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">hw</span><span class="o">.</span><span class="n">gFactor</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span>  <span class="c1"># Maximum gradient strength (mT/m)</span>
+            <span class="n">grad_unit</span><span class="o">=</span><span class="s1">&#39;mT/m&#39;</span><span class="p">,</span>  <span class="c1"># Units of gradient strength</span>
+            <span class="n">max_slew</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">max_slew_rate</span><span class="p">,</span>  <span class="c1"># Maximum gradient slew rate (mT/m/ms)</span>
+            <span class="n">slew_unit</span><span class="o">=</span><span class="s1">&#39;mT/m/ms&#39;</span><span class="p">,</span>  <span class="c1"># Units of gradient slew rate</span>
+            <span class="n">grad_raster_time</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">grad_raster_time</span><span class="p">,</span>  <span class="c1"># Gradient raster time (s)</span>
+            <span class="n">rise_time</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">grad_rise_time</span><span class="p">,</span>  <span class="c1"># Gradient rise time (s)</span>
+            <span class="n">rf_raster_time</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+            <span class="n">block_duration_raster</span><span class="o">=</span><span class="mf">1e-6</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Get Parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dfov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFovDisplacement</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dfov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dfov</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fov</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">]</span>
+        <span class="n">resolution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fov</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolution</span>
+        <span class="n">fov_mm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fov</span> <span class="o">*</span> <span class="mf">1e3</span>
+        <span class="n">nRD</span><span class="p">,</span> <span class="n">nPH</span><span class="p">,</span> <span class="n">nSL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span>  <span class="c1"># this is actually nRd, nPh and nSl, axes given by axesOrientation</span>
+        <span class="n">n_echo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">etl</span>
+        <span class="n">TE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">echoSpacing</span>
+        <span class="n">TR</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">repetitionTime</span>
+        <span class="n">dG</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">grad_rise_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;grad_rise_time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">grad_rise_time</span> <span class="o">*</span> <span class="mf">1e6</span>
+        <span class="n">sampling_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rdGradTime</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span><span class="p">:</span>
+            <span class="n">ro_flattop_add</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rdGradTime</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: readout gradient time must be longer than acquisition time.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">nRD_pre</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">addRdPoints</span>
+        <span class="n">nRD_post</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">addRdPoints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nRD_pre&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">addRdPoints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nRD_post&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">addRdPoints</span>
+        <span class="n">n_rd_points_per_train</span> <span class="o">=</span> <span class="n">n_echo</span> <span class="o">*</span> <span class="p">(</span><span class="n">nRD</span> <span class="o">+</span> <span class="n">nRD_post</span> <span class="o">+</span> <span class="n">nRD_pre</span><span class="p">)</span>
+        <span class="n">os</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;oversamplingFactor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span>
+        <span class="n">t_ex</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfExTime</span>
+        <span class="n">t_ref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfReTime</span>
+        <span class="n">fsp_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsp_r</span>  <span class="c1"># Not sure about what this parameter does.</span>
+        <span class="n">fsp_s</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># Not sure about what this parameter does. It is not used in the code.</span>
+
+        <span class="c1"># Derived and modified parameters</span>
+        <span class="n">fov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fov_mm</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-3</span>
+        <span class="n">TE</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span>
+            <span class="n">TE</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">grad_raster_time</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">grad_raster_time</span> <span class="o">*</span> <span class="mi">2</span>  <span class="c1"># TE (=ESP) should be divisible to a double gradient raster, which simplifies calcuations</span>
+        <span class="n">ro_flattop_time</span> <span class="o">=</span> <span class="n">sampling_time</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ro_flattop_add</span>
+        <span class="n">rf_add</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">rf_dead_time</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">rf_ringdown_time</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">grad_raster_time</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">grad_raster_time</span>  <span class="c1"># round up dead times to the gradient raster time to enable correct TE &amp; ESP calculation</span>
+        <span class="n">t_sp</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span>
+            <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span>
+                    <span class="n">TE</span> <span class="o">-</span> <span class="n">ro_flattop_time</span> <span class="o">-</span> <span class="n">t_ref</span><span class="p">)</span> <span class="o">-</span> <span class="n">rf_add</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">grad_raster_time</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">grad_raster_time</span>
+        <span class="n">t_spex</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span>
+            <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">TE</span> <span class="o">-</span> <span class="n">t_ex</span> <span class="o">-</span> <span class="n">t_ref</span><span class="p">)</span> <span class="o">-</span> <span class="n">rf_add</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">grad_raster_time</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">grad_raster_time</span>
+        <span class="n">rf_ex_phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">rf_ref_phase</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Map the axis to &quot;x&quot;, &quot;y&quot;, and &quot;z&quot; according ot axesOrientation</span>
+        <span class="n">axes_map</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;z&quot;</span><span class="p">}</span>
+        <span class="n">rd_channel</span> <span class="o">=</span> <span class="n">axes_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">ph_channel</span> <span class="o">=</span> <span class="n">axes_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">sl_channel</span> <span class="o">=</span> <span class="n">axes_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># ======</span>
+        <span class="c1"># CREATE EVENTS</span>
+        <span class="c1"># ======</span>
+        <span class="n">flip_ex</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfExFA</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span>
+        <span class="n">rf_ex</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_block_pulse</span><span class="p">(</span>
+            <span class="n">flip_angle</span><span class="o">=</span><span class="n">flip_ex</span><span class="p">,</span>
+            <span class="n">system</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
+            <span class="n">duration</span><span class="o">=</span><span class="n">t_ex</span><span class="p">,</span>
+            <span class="n">delay</span><span class="o">=</span><span class="n">rf_add</span><span class="p">,</span>
+            <span class="n">phase_offset</span><span class="o">=</span><span class="n">rf_ex_phase</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">d_ex</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_delay</span><span class="p">(</span><span class="n">t_ex</span> <span class="o">+</span> <span class="n">rf_add</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">flip_ref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfReFA</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span>
+        <span class="n">rf_ref</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_block_pulse</span><span class="p">(</span>
+            <span class="n">flip_angle</span><span class="o">=</span><span class="n">flip_ref</span><span class="p">,</span>
+            <span class="n">system</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
+            <span class="n">duration</span><span class="o">=</span><span class="n">t_ref</span><span class="p">,</span>
+            <span class="n">delay</span><span class="o">=</span><span class="n">rf_add</span><span class="p">,</span>
+            <span class="n">phase_offset</span><span class="o">=</span><span class="n">rf_ref_phase</span><span class="p">,</span>
+            <span class="n">use</span><span class="o">=</span><span class="s2">&quot;refocusing&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">d_ref</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_delay</span><span class="p">(</span><span class="n">t_ref</span> <span class="o">+</span> <span class="n">rf_add</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">delta_krd</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">fov</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ro_amp</span> <span class="o">=</span> <span class="n">nRD</span> <span class="o">*</span> <span class="n">delta_krd</span> <span class="o">/</span> <span class="n">sampling_time</span>
+
+        <span class="n">gr_acq</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_trapezoid</span><span class="p">(</span>
+            <span class="n">channel</span><span class="o">=</span><span class="n">rd_channel</span><span class="p">,</span>
+            <span class="n">system</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
+            <span class="n">amplitude</span><span class="o">=</span><span class="n">ro_amp</span><span class="p">,</span>
+            <span class="n">flat_time</span><span class="o">=</span><span class="n">ro_flattop_time</span><span class="p">,</span>
+            <span class="n">delay</span><span class="o">=</span><span class="n">t_sp</span><span class="p">,</span>
+            <span class="n">rise_time</span><span class="o">=</span><span class="n">dG</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">adc</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_adc</span><span class="p">(</span>
+            <span class="n">num_samples</span><span class="o">=</span><span class="p">(</span><span class="n">nRD_pre</span> <span class="o">+</span> <span class="n">nRD</span> <span class="o">+</span> <span class="n">nRD_post</span><span class="p">)</span> <span class="o">*</span> <span class="n">os</span><span class="p">,</span> <span class="n">dwell</span><span class="o">=</span><span class="n">sampling_time</span> <span class="o">/</span> <span class="n">nRD</span> <span class="o">/</span> <span class="n">os</span><span class="p">,</span>
+            <span class="n">delay</span><span class="o">=</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">TE</span> <span class="o">-</span> <span class="n">t_ref</span> <span class="o">-</span> <span class="p">(</span><span class="n">nRD</span> <span class="o">+</span> <span class="n">nRD_post</span> <span class="o">+</span> <span class="n">nRD_pre</span><span class="p">)</span> <span class="o">*</span> <span class="n">sampling_time</span> <span class="o">/</span> <span class="n">nRD</span><span class="p">)</span> <span class="o">-</span> <span class="n">rf_add</span>
+        <span class="p">)</span>
+        <span class="n">gr_spr</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_trapezoid</span><span class="p">(</span>
+            <span class="n">channel</span><span class="o">=</span><span class="n">rd_channel</span><span class="p">,</span>
+            <span class="n">system</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
+            <span class="n">area</span><span class="o">=</span><span class="n">gr_acq</span><span class="o">.</span><span class="n">area</span> <span class="o">*</span> <span class="n">fsp_r</span><span class="p">,</span>
+            <span class="n">duration</span><span class="o">=</span><span class="n">t_sp</span><span class="p">,</span>
+            <span class="n">rise_time</span><span class="o">=</span><span class="n">dG</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">agr_spr</span> <span class="o">=</span> <span class="n">gr_spr</span><span class="o">.</span><span class="n">area</span>
+        <span class="n">agr_preph</span> <span class="o">=</span> <span class="n">gr_acq</span><span class="o">.</span><span class="n">area</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">agr_spr</span>
+        <span class="n">gr_preph</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_trapezoid</span><span class="p">(</span>
+            <span class="n">channel</span><span class="o">=</span><span class="n">rd_channel</span><span class="p">,</span> <span class="n">system</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span> <span class="n">area</span><span class="o">=</span><span class="n">agr_preph</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">0.0018</span><span class="p">,</span> <span class="n">rise_time</span><span class="o">=</span><span class="n">dG</span>
+        <span class="p">)</span>
+        <span class="n">delay_preph</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_delay</span><span class="p">(</span><span class="n">t_spex</span><span class="p">)</span>
+        <span class="c1"># Phase-encoding</span>
+        <span class="n">delta_kph</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">fov</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">gp_max</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_trapezoid</span><span class="p">(</span>
+            <span class="n">channel</span><span class="o">=</span><span class="n">ph_channel</span><span class="p">,</span>
+            <span class="n">system</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
+            <span class="n">area</span><span class="o">=</span><span class="n">delta_kph</span> <span class="o">*</span> <span class="n">nPH</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">duration</span><span class="o">=</span><span class="n">t_sp</span><span class="p">,</span>
+            <span class="n">rise_time</span><span class="o">=</span><span class="n">dG</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">delta_ksl</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">fov</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">gs_max</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_trapezoid</span><span class="p">(</span>
+            <span class="n">channel</span><span class="o">=</span><span class="n">sl_channel</span><span class="p">,</span>
+            <span class="n">system</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
+            <span class="n">area</span><span class="o">=</span><span class="n">delta_ksl</span> <span class="o">*</span> <span class="n">nSL</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">duration</span><span class="o">=</span><span class="n">t_sp</span><span class="p">,</span>
+            <span class="n">rise_time</span><span class="o">=</span><span class="n">dG</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># combine parts of the read gradient</span>
+        <span class="n">gc_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="n">gr_spr</span><span class="o">.</span><span class="n">rise_time</span><span class="p">,</span>
+                <span class="n">gr_spr</span><span class="o">.</span><span class="n">flat_time</span><span class="p">,</span>
+                <span class="n">gr_spr</span><span class="o">.</span><span class="n">fall_time</span><span class="p">,</span>
+                <span class="n">gr_acq</span><span class="o">.</span><span class="n">flat_time</span><span class="p">,</span>
+                <span class="n">gr_spr</span><span class="o">.</span><span class="n">fall_time</span><span class="p">,</span>
+                <span class="n">gr_spr</span><span class="o">.</span><span class="n">flat_time</span><span class="p">,</span>
+                <span class="n">gr_spr</span><span class="o">.</span><span class="n">rise_time</span><span class="p">,</span>
+            <span class="p">])</span>
+        <span class="n">gc_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">gc_times</span><span class="p">)</span>
+
+        <span class="n">gr_amp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">gr_spr</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">gr_spr</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">gr_acq</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">gr_acq</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">gr_spr</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span>
+                           <span class="n">gr_spr</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">gr</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_extended_trapezoid</span><span class="p">(</span><span class="n">channel</span><span class="o">=</span><span class="n">rd_channel</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="n">gc_times</span><span class="p">,</span> <span class="n">amplitudes</span><span class="o">=</span><span class="n">gr_amp</span><span class="p">)</span>
+
+        <span class="n">gp_amp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">gp_max</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">gp_max</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">gp_max</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="o">-</span><span class="n">gp_max</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">gp_max</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_extended_trapezoid</span><span class="p">(</span><span class="n">channel</span><span class="o">=</span><span class="n">ph_channel</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="n">gc_times</span><span class="p">,</span> <span class="n">amplitudes</span><span class="o">=</span><span class="n">gp_amp</span><span class="p">)</span>
+
+        <span class="n">gs_amp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">gs_max</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">gs_max</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">gs_max</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="o">-</span><span class="n">gs_max</span><span class="o">.</span><span class="n">amplitude</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">gs_max</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_extended_trapezoid</span><span class="p">(</span><span class="n">channel</span><span class="o">=</span><span class="n">sl_channel</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="n">gc_times</span><span class="p">,</span> <span class="n">amplitudes</span><span class="o">=</span><span class="n">gs_amp</span><span class="p">)</span>
+
+        <span class="c1"># Fill-times</span>
+        <span class="n">t_ex</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">calc_duration</span><span class="p">(</span><span class="n">d_ex</span><span class="p">)</span> <span class="o">+</span> <span class="n">pp</span><span class="o">.</span><span class="n">calc_duration</span><span class="p">(</span><span class="n">delay_preph</span><span class="p">)</span>
+        <span class="n">t_ref</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">calc_duration</span><span class="p">(</span><span class="n">d_ref</span><span class="p">)</span> <span class="o">+</span> <span class="n">pp</span><span class="o">.</span><span class="n">calc_duration</span><span class="p">(</span><span class="n">gr</span><span class="p">)</span>
+
+        <span class="n">t_train</span> <span class="o">=</span> <span class="n">t_ex</span> <span class="o">+</span> <span class="n">n_echo</span> <span class="o">*</span> <span class="n">t_ref</span>
+
+        <span class="n">TR_fill</span> <span class="o">=</span> <span class="n">TR</span> <span class="o">-</span> <span class="n">t_train</span>
+        <span class="c1"># Round to gradient raster</span>
+        <span class="n">TR_fill</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">grad_raster_time</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">TR_fill</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">grad_raster_time</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">TR_fill</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># print(&quot;ERROR: Repetition time too short.&quot;)</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="n">delay_TR</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_delay</span><span class="p">(</span><span class="n">TR_fill</span><span class="p">)</span>
+
+        <span class="c1"># Initialize batches dictionary where batches will be saved</span>
+        <span class="n">batches</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">def</span> <span class="nf">initializeBatch</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;pp_1&quot;</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Initialize a sequence with specified name and add predefined blocks for MRI pulse</span>
+<span class="sd">            sequence corresponding to dummy pulses.</span>
+
+<span class="sd">            This function initializes a new sequence with the given name (or &quot;pp_1&quot; by default)</span>
+<span class="sd">            and adds blocks for dummy pulses, RF excitation, pre-phasing gradients, echo cycles,</span>
+<span class="sd">            and TR delay. The slice and phase encoding gradients are set to zero, and multiple</span>
+<span class="sd">            dummy pulses and echo blocks are added to the sequence.</span>
+
+<span class="sd">            Parameters:</span>
+<span class="sd">            ----------</span>
+<span class="sd">            name : str, optional</span>
+<span class="sd">                The name of the sequence to initialize. Defaults to &quot;pp_1&quot;.</span>
+
+<span class="sd">            Actions:</span>
+<span class="sd">            --------</span>
+<span class="sd">            1. Initializes a new sequence object.</span>
+<span class="sd">            2. Sets the slice and phase gradients to 0.</span>
+<span class="sd">            3. Adds dummy pulses followed by excitation, prephasing, echo, and TR blocks.</span>
+
+<span class="sd">            Notes:</span>
+<span class="sd">            ------</span>
+<span class="sd">            The function assumes that the following variables are defined globally or</span>
+<span class="sd">            accessible in the scope:</span>
+
+<span class="sd">            - `batches`: a dictionary to store the batches.</span>
+<span class="sd">            - `pp`: pypulseq class responsible for handling sequences and gradients.</span>
+<span class="sd">            - `gs_max`, `gp_max`: maximum values for slice and phase gradients.</span>
+<span class="sd">            - `rf_ex`, `d_ex`: RF excitation pulse and corresponding duration.</span>
+<span class="sd">            - `gr_preph`: pre-phasing gradient block.</span>
+<span class="sd">            - `n_echo`: number of echo cycles.</span>
+<span class="sd">            - `rf_ref`, `d_ref`: RF refocusing pulse and corresponding duration.</span>
+<span class="sd">            - `gs`, `gp`, `gr`: slice, phase, and readout gradients.</span>
+<span class="sd">            - `delay_TR`: delay block for the repetition time (TR).</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="c1"># Instantiate pypulseq sequence object and save it into the batches dictionary</span>
+            <span class="n">batches</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">Sequence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">)</span>
+
+            <span class="c1"># Set slice and phase gradients to 0</span>
+            <span class="n">gs</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">scale_grad</span><span class="p">(</span><span class="n">gs_max</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">gp</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">scale_grad</span><span class="p">(</span><span class="n">gp_max</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+            <span class="c1"># Create dummy pulses</span>
+            <span class="k">for</span> <span class="n">dummy</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dummyPulses</span><span class="p">):</span>
+                <span class="c1"># Add excitation and pre-phasing</span>
+                <span class="n">batches</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">rf_ex</span><span class="p">,</span> <span class="n">d_ex</span><span class="p">)</span>
+                <span class="n">batches</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">scale_grad</span><span class="p">(</span><span class="n">gr_preph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">preemphasis</span><span class="p">),</span> <span class="n">delay_preph</span><span class="p">)</span>
+
+                <span class="c1"># Add echo train</span>
+                <span class="k">for</span> <span class="n">k_echo</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_echo</span><span class="p">):</span>
+                    <span class="n">batches</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">rf_ref</span><span class="p">,</span> <span class="n">d_ref</span><span class="p">)</span>
+                    <span class="n">batches</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">gs</span><span class="p">,</span> <span class="n">gp</span><span class="p">,</span> <span class="n">gr</span><span class="p">)</span>
+
+                <span class="c1"># Add repetition delay</span>
+                <span class="n">batches</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">delay_TR</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">createBatches</span><span class="p">():</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Create MRI pulse sequence based on slice and phase sweeps, manage readout points,</span>
+<span class="sd">            and ensure timing correctness for each sequence.</span>
+
+<span class="sd">            This method generates multiple batches by sweeping across slice and phase encoding</span>
+<span class="sd">            gradients, adding excitation, refocusing pulses, and gradient blocks. It dynamically</span>
+<span class="sd">            divides the readout points between batches and ensures that no one exceeds</span>
+<span class="sd">            the maximum allowable readout points. The batches are checked for timing errors,</span>
+<span class="sd">            and the finalized batches are written to files.</span>
+
+<span class="sd">            Workflow:</span>
+<span class="sd">            ---------</span>
+<span class="sd">            1. Loop over slice positions (`Cz`) and phase positions (`Cy`) to generate batches.</span>
+<span class="sd">            2. Initialize a new sequence when needed based on the readout points limit.</span>
+<span class="sd">            3. Add excitation, refocusing pulses, gradients (slice, phase, readout), and ADC blocks.</span>
+<span class="sd">            4. Ensure correct timing of the final sequence and generate a timing error report if needed.</span>
+<span class="sd">            5. Write each sequence to a file and interpret the sequence to generate waveforms.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">            --------</span>
+<span class="sd">            waveforms : dict</span>
+<span class="sd">                Dictionary containing waveforms for each sequence.</span>
+
+<span class="sd">            n_rd_points_dict : dict</span>
+<span class="sd">                Dictionary tracking the number of readout points for each sequence.</span>
+
+<span class="sd">            Notes:</span>
+<span class="sd">            ------</span>
+<span class="sd">            The function assumes that the following variables are defined globally or accessible</span>
+<span class="sd">            in the scope:</span>
+
+<span class="sd">            - `nSL`: number of slices.</span>
+<span class="sd">            - `nPH`: number of phase encoding steps.</span>
+<span class="sd">            - `n_rd_points_per_train`: number of readout points per echo train.</span>
+<span class="sd">            - `hw.maxRdPoints`: hardware maximum allowable readout points.</span>
+<span class="sd">            - `rf_ex`, `d_ex`: RF excitation pulse and corresponding duration.</span>
+<span class="sd">            - `rf_ref`, `d_ref`: RF refocusing pulse and corresponding duration.</span>
+<span class="sd">            - `gr_preph`: pre-phasing gradient block.</span>
+<span class="sd">            - `gs_max`, `gp_max`: maximum slice and phase gradient amplitudes.</span>
+<span class="sd">            - `n_echo`: number of echoes per sequence.</span>
+<span class="sd">            - `nRD`, `nRD_post`, `nRD_pre`: readout duration and pre/post readout periods.</span>
+<span class="sd">            - `adc`: analog-to-digital converter settings for readout.</span>
+<span class="sd">            - `delay_TR`: delay block for the repetition time (TR).</span>
+<span class="sd">            - `pp`: a module or class for gradient scaling and sequence management.</span>
+
+<span class="sd">            Timing Check:</span>
+<span class="sd">            -------------</span>
+<span class="sd">            The function performs a timing check after generating the batches. If the timing</span>
+<span class="sd">            is incorrect, an error report is printed with details.</span>
+
+<span class="sd">            File Output:</span>
+<span class="sd">            ------------</span>
+<span class="sd">            The sequence files are saved with the `.seq` extension, and the waveforms are</span>
+<span class="sd">            interpreted using the `flo_interpreter`.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="n">n_rd_points</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">n_rd_points_dict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">seq_idx</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">seq_num</span> <span class="o">=</span> <span class="s2">&quot;batch_0&quot;</span>
+            <span class="n">waveforms</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="c1"># Slice sweep</span>
+            <span class="k">for</span> <span class="n">Cz</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nSL</span><span class="p">):</span>
+
+                <span class="c1"># Get slice gradient amplitude</span>
+                <span class="n">Nph_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">nPH</span><span class="p">)</span>
+
+                <span class="c1"># Phase sweep</span>
+                <span class="k">for</span> <span class="n">Cy</span> <span class="ow">in</span> <span class="n">Nph_range</span><span class="p">:</span>
+                    <span class="c1"># Initialize new sequence with corresponding dummy pulses</span>
+                    <span class="k">if</span> <span class="n">seq_idx</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">n_rd_points</span> <span class="o">+</span> <span class="n">n_rd_points_per_train</span> <span class="o">&gt;</span> <span class="n">hw</span><span class="o">.</span><span class="n">maxRdPoints</span><span class="p">:</span>
+                        <span class="c1"># Write seq file</span>
+                        <span class="k">if</span> <span class="n">seq_idx</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">batches</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">seq_num</span> <span class="o">+</span> <span class="s2">&quot;.seq&quot;</span><span class="p">)</span>
+                            <span class="n">waveforms</span><span class="p">[</span><span class="n">seq_num</span><span class="p">],</span> <span class="n">param_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flo_interpreter</span><span class="o">.</span><span class="n">interpret</span><span class="p">(</span><span class="n">seq_num</span> <span class="o">+</span> <span class="s2">&quot;.seq&quot;</span><span class="p">)</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="n">seq_num</span> <span class="o">+</span> <span class="s2">&quot;.seq ready!&quot;</span><span class="p">)</span>
+
+                        <span class="c1"># Create new batch</span>
+                        <span class="n">seq_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">n_rd_points_dict</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_rd_points</span>
+                        <span class="n">seq_num</span> <span class="o">=</span> <span class="s2">&quot;batch_</span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">seq_idx</span>
+                        <span class="n">initializeBatch</span><span class="p">(</span><span class="n">seq_num</span><span class="p">)</span>
+                        <span class="n">n_rd_points</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating &quot;</span> <span class="o">+</span> <span class="n">seq_num</span> <span class="o">+</span> <span class="s2">&quot;.seq...&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Fix the phase and slice amplitude</span>
+                    <span class="n">sl_scale</span> <span class="o">=</span> <span class="p">(</span><span class="n">Cz</span> <span class="o">-</span> <span class="n">nSL</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">nSL</span> <span class="o">*</span> <span class="mi">2</span>
+                    <span class="n">pe_scale</span> <span class="o">=</span> <span class="p">(</span><span class="n">Cy</span> <span class="o">-</span> <span class="n">nPH</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">nPH</span> <span class="o">*</span> <span class="mi">2</span>
+                    <span class="n">gs</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">scale_grad</span><span class="p">(</span><span class="n">gs_max</span><span class="p">,</span> <span class="n">sl_scale</span><span class="p">)</span>
+                    <span class="n">gp</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">scale_grad</span><span class="p">(</span><span class="n">gp_max</span><span class="p">,</span> <span class="n">pe_scale</span><span class="p">)</span>
+
+                    <span class="c1"># Add excitation pulse and readout de-phasing gradient</span>
+                    <span class="n">batches</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">rf_ex</span><span class="p">,</span> <span class="n">d_ex</span><span class="p">)</span>
+                    <span class="n">batches</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">scale_grad</span><span class="p">(</span><span class="n">gr_preph</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">preemphasis</span><span class="p">),</span> <span class="n">delay_preph</span><span class="p">)</span>
+
+                    <span class="c1"># Add the echo train</span>
+                    <span class="k">for</span> <span class="n">k_echo</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_echo</span><span class="p">):</span>
+                        <span class="c1"># Add refocusing pulse</span>
+                        <span class="n">batches</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">rf_ref</span><span class="p">,</span> <span class="n">d_ref</span><span class="p">)</span>
+                        <span class="c1"># Add slice, phase and readout gradients</span>
+                        <span class="n">batches</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">gs</span><span class="p">,</span> <span class="n">gp</span><span class="p">,</span> <span class="n">gr</span><span class="p">,</span> <span class="n">adc</span><span class="p">)</span>
+                        <span class="n">n_rd_points</span> <span class="o">+=</span> <span class="n">nRD</span> <span class="o">+</span> <span class="n">nRD_post</span> <span class="o">+</span> <span class="n">nRD_pre</span>
+
+                    <span class="c1"># Add time delay to next repetition</span>
+                    <span class="n">batches</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">delay_TR</span><span class="p">)</span>
+
+            <span class="c1"># Get the rd point list</span>
+            <span class="n">n_rd_points_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;batch_0&#39;</span><span class="p">)</span>
+            <span class="n">n_rd_points_dict</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_rd_points</span>
+
+            <span class="c1"># Write the sequence files</span>
+            <span class="n">batches</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">seq_num</span> <span class="o">+</span> <span class="s2">&quot;.seq&quot;</span><span class="p">)</span>
+            <span class="n">waveforms</span><span class="p">[</span><span class="n">seq_num</span><span class="p">],</span> <span class="n">param_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flo_interpreter</span><span class="o">.</span><span class="n">interpret</span><span class="p">(</span><span class="n">seq_num</span> <span class="o">+</span> <span class="s2">&quot;.seq&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">seq_num</span> <span class="o">+</span> <span class="s2">&quot;.seq ready!&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%i</span><span class="s2"> batches created.&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">batches</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sequence ready!&quot;</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">waveforms</span><span class="p">,</span> <span class="n">n_rd_points_dict</span>
+
+        <span class="c1"># Create the batches</span>
+        <span class="n">waveforms</span><span class="p">,</span> <span class="n">n_readouts</span> <span class="o">=</span> <span class="n">createBatches</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;n_readouts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">n_readouts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;n_batches&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">n_readouts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">scan_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">nPH</span> <span class="o">*</span> <span class="n">nSL</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;n_batches&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dummyPulses</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">repetitionTime</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nScans</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;Scan_time_s&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scan_time</span>
+
+        <span class="c1"># Execute the batches</span>
+        <span class="n">data_over</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># To save oversampled data</span>
+        <span class="k">for</span> <span class="n">seq_num</span> <span class="ow">in</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># Initialize the experiment</span>
+            <span class="n">bw</span> <span class="o">=</span> <span class="n">nRD</span> <span class="o">/</span> <span class="n">sampling_time</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span>  <span class="c1"># Hz</span>
+            <span class="n">sampling_period</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">bw</span>  <span class="c1"># s</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;Sampling_Period_s&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampling_period</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">expt</span> <span class="o">=</span> <span class="n">ex</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="n">lo_freq</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">larmorFreq</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">freqOffset</span> <span class="o">*</span> <span class="mf">1e-6</span><span class="p">,</span>  <span class="c1"># MHz</span>
+                                          <span class="n">rx_t</span><span class="o">=</span><span class="n">sampling_period</span> <span class="o">*</span> <span class="mf">1e6</span><span class="p">,</span>  <span class="c1"># us</span>
+                                          <span class="n">init_gpa</span><span class="o">=</span><span class="n">init_gpa</span><span class="p">,</span>
+                                          <span class="n">gpa_fhdo_offset_time</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">0.2</span> <span class="o">/</span> <span class="mf">3.1</span><span class="p">),</span>
+                                          <span class="n">auto_leds</span><span class="o">=</span><span class="kc">True</span>
+                                          <span class="p">)</span>
+                <span class="n">sampling_period</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="n">get_rx_ts</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># us</span>
+                <span class="n">bw</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sampling_period</span> <span class="o">/</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span>  <span class="c1"># MHz</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Acquisition bandwidth fixed to: </span><span class="si">%0.3f</span><span class="s2"> kHz&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">bw</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sampling_period</span> <span class="o">=</span> <span class="n">sampling_period</span> <span class="o">*</span> <span class="mf">1e6</span>  <span class="c1"># us</span>
+                <span class="n">bw</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sampling_period</span> <span class="o">/</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span>  <span class="c1"># MHz</span>
+                <span class="n">sampling_time</span> <span class="o">=</span> <span class="n">nRD</span> <span class="o">/</span> <span class="n">bw</span> <span class="o">*</span> <span class="mf">1e-6</span>  <span class="c1"># s</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;Bandwidth_Hz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bw</span> <span class="o">*</span> <span class="mf">1e6</span>  <span class="c1"># Hz</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;Sampling_Time_s&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampling_time</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;larmorFreq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">larmorFreq</span>
+
+            <span class="c1"># Save the waveforms into the mriBlankSeq dictionaries</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pypulseq2mriblankseq</span><span class="p">(</span><span class="n">waveforms</span><span class="o">=</span><span class="n">waveforms</span><span class="p">[</span><span class="n">seq_num</span><span class="p">],</span> <span class="n">shimming</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shimming</span><span class="p">)</span>
+
+            <span class="c1"># Load the waveforms into the red pitaya</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">floDict2Exp</span><span class="p">():</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sequence waveforms loaded successfully&quot;</span><span class="p">)</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: sequence waveforms out of hardware bounds&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="c1"># Run the experiment or plot the sequence</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">plotSeq</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scan </span><span class="si">%i</span><span class="s2">, batch </span><span class="si">%s</span><span class="s2">/</span><span class="si">%i</span><span class="s2"> running...&quot;</span> <span class="o">%</span> <span class="p">((</span><span class="n">scan</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">seq_num</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">n_readouts</span><span class="o">.</span><span class="n">values</span><span class="p">())))</span>
+                    <span class="n">acq_points</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">while</span> <span class="n">acq_points</span> <span class="o">!=</span> <span class="n">n_readouts</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">:</span>
+                            <span class="n">rxd</span><span class="p">,</span> <span class="n">msgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">rxd</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;rx0&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_readouts</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">)</span> <span class="o">+</span>
+                                          <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_readouts</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">)}</span>
+                        <span class="n">acq_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">([</span><span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx0&#39;</span><span class="p">]])</span>
+                    <span class="n">data_over</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">data_over</span><span class="p">,</span> <span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx0&#39;</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Acquired points = </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">acq_points</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Expected points = </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n_readouts</span><span class="p">[</span><span class="n">seq_num</span><span class="p">]</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">))</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scan </span><span class="si">%i</span><span class="s2"> ready!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">scan</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+            <span class="k">elif</span> <span class="n">plotSeq</span> <span class="ow">and</span> <span class="n">standalone</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sequencePlot</span><span class="p">(</span><span class="n">standalone</span><span class="o">=</span><span class="n">standalone</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="c1"># Close the experiment</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="fm">__del__</span><span class="p">()</span>
+
+        <span class="c1"># Process data to be plotted</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">plotSeq</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;data_over&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_over</span>
+            <span class="n">data_full</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">decimate</span><span class="p">(</span><span class="n">data_over</span><span class="p">,</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">,</span> <span class="n">ftype</span><span class="o">=</span><span class="s1">&#39;fir&#39;</span><span class="p">,</span> <span class="n">zero_phase</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;data_full&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_full</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="MSE.sequenceAnalysis">
+<a class="viewcode-back" href="../../seq.html#seq.mse_pp.MSE.sequenceAnalysis">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+
+        <span class="c1"># Get data</span>
+        <span class="n">data_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;data_full&#39;</span><span class="p">]</span>
+        <span class="n">nRD</span><span class="p">,</span> <span class="n">nPH</span><span class="p">,</span> <span class="n">nSL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span>
+        <span class="n">nRD</span> <span class="o">=</span> <span class="n">nRD</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">addRdPoints</span>
+        <span class="n">n_batches</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;n_batches&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Reorganize data_full</span>
+        <span class="n">data_prov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">,</span> <span class="n">nRD</span> <span class="o">*</span> <span class="n">nPH</span> <span class="o">*</span> <span class="n">nSL</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">etl</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_batches</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">n_rds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;n_readouts&#39;</span><span class="p">]</span>
+            <span class="n">data_full_a</span> <span class="o">=</span> <span class="n">data_full</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nb">sum</span><span class="p">(</span><span class="n">n_rds</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">]</span>
+            <span class="n">data_full_b</span> <span class="o">=</span> <span class="n">data_full</span><span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">n_rds</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">:]</span>
+            <span class="n">data_full_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_full_a</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">n_batches</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">nRD</span><span class="p">))</span>
+            <span class="n">data_full_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_full_b</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">nRD</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">):</span>
+                <span class="n">data_scan_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_full_a</span><span class="p">[:,</span> <span class="n">scan</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">data_scan_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_full_b</span><span class="p">[:,</span> <span class="n">scan</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">data_prov</span><span class="p">[</span><span class="n">scan</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">data_scan_a</span><span class="p">,</span> <span class="n">data_scan_b</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_full</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">nRD</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">):</span>
+                <span class="n">data_prov</span><span class="p">[</span><span class="n">scan</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_full</span><span class="p">[:,</span> <span class="n">scan</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">data_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_prov</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Average data</span>
+        <span class="n">data_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_full</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">data_full</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="c1"># Generate different k-space data</span>
+        <span class="n">data_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">etl</span><span class="p">,</span> <span class="n">nSL</span><span class="p">,</span> <span class="n">nPH</span><span class="p">,</span> <span class="n">nRD</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">nSL</span><span class="p">,</span> <span class="n">nPH</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">etl</span><span class="p">,</span> <span class="n">nRD</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">echo</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">etl</span><span class="p">):</span>
+            <span class="n">data_ind</span><span class="p">[</span><span class="n">echo</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">echo</span><span class="p">,</span> <span class="p">:])</span>
+
+        <span class="c1"># Remove added data in readout direction</span>
+        <span class="n">data_ind</span> <span class="o">=</span> <span class="n">data_ind</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="n">hw</span><span class="o">.</span><span class="n">addRdPoints</span><span class="p">:</span> <span class="n">nRD</span> <span class="o">-</span> <span class="n">hw</span><span class="o">.</span><span class="n">addRdPoints</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;kSpace&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_ind</span>
+
+        <span class="c1"># Get images</span>
+        <span class="n">image_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data_ind</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">echo</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">etl</span><span class="p">):</span>
+            <span class="n">image_ind</span><span class="p">[</span><span class="n">echo</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftn</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftshift</span><span class="p">(</span><span class="n">data_ind</span><span class="p">[</span><span class="n">echo</span><span class="p">])))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;iSpace&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_ind</span>
+
+        <span class="c1"># Prepare data to plot (plot central slice)</span>
+        <span class="n">axes_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+        <span class="n">axes_keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">axes_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">axes_vals</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">axes_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">axes_str</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">axes_vals</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+            <span class="n">axes_str</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">axes_keys</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Normalize image</span>
+        <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">etl</span> <span class="o">*</span> <span class="n">nSL</span><span class="p">,</span> <span class="n">nPH</span><span class="p">,</span> <span class="n">nRD</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">addRdPoints</span><span class="p">))</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">etl</span> <span class="o">*</span> <span class="n">nSL</span><span class="p">,</span> <span class="n">nPH</span><span class="p">,</span> <span class="n">nRD</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">addRdPoints</span><span class="p">))</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="nb">slice</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nSL</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">echo</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">etl</span><span class="p">):</span>
+                <span class="n">k_space</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data_ind</span><span class="p">[</span><span class="n">echo</span><span class="p">,</span> <span class="nb">slice</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:])</span>
+                <span class="n">image</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">image_ind</span><span class="p">[</span><span class="n">echo</span><span class="p">,</span> <span class="nb">slice</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:])</span>
+                <span class="n">n</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">image</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+
+        <span class="n">imageOrientation_dicom</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">unlock_orientation</span><span class="p">:</span>  <span class="c1"># Image orientation</span>
+            <span class="k">pass</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># Sagittal</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Sagittal&quot;</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># OK</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">x_label</span> <span class="o">=</span> <span class="s2">&quot;(-Y) A | PHASE | P (+Y)&quot;</span>
+                    <span class="n">y_label</span> <span class="o">=</span> <span class="s2">&quot;(-X) I | READOUT | S (+X)&quot;</span>
+                    <span class="n">imageOrientation_dicom</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">x_label</span> <span class="o">=</span> <span class="s2">&quot;(-Y) A | READOUT | P (+Y)&quot;</span>
+                    <span class="n">y_label</span> <span class="o">=</span> <span class="s2">&quot;(-X) I | PHASE | S (+X)&quot;</span>
+                    <span class="n">imageOrientation_dicom</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Coronal</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Coronal&quot;</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># OK</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">x_label</span> <span class="o">=</span> <span class="s2">&quot;(+Z) R | PHASE | L (-Z)&quot;</span>
+                    <span class="n">y_label</span> <span class="o">=</span> <span class="s2">&quot;(-X) I | READOUT | S (+X)&quot;</span>
+                    <span class="n">imageOrientation_dicom</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">x_label</span> <span class="o">=</span> <span class="s2">&quot;(+Z) R | READOUT | L (-Z)&quot;</span>
+                    <span class="n">y_label</span> <span class="o">=</span> <span class="s2">&quot;(-X) I | PHASE | S (+X)&quot;</span>
+                    <span class="n">imageOrientation_dicom</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Transversal</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Transversal&quot;</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">axesOrientation</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">x_label</span> <span class="o">=</span> <span class="s2">&quot;(+Z) R | PHASE | L (-Z)&quot;</span>
+                    <span class="n">y_label</span> <span class="o">=</span> <span class="s2">&quot;(+Y) P | READOUT | A (-Y)&quot;</span>
+                    <span class="n">imageOrientation_dicom</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># OK</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+                    <span class="n">k_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">k_space</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">x_label</span> <span class="o">=</span> <span class="s2">&quot;(+Z) R | READOUT | L (-Z)&quot;</span>
+                    <span class="n">y_label</span> <span class="o">=</span> <span class="s2">&quot;(+Y) P | PHASE | A (-Y)&quot;</span>
+                    <span class="n">imageOrientation_dicom</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x_label</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> axis&quot;</span> <span class="o">%</span> <span class="n">axes_str</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">y_label</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> axis&quot;</span> <span class="o">%</span> <span class="n">axes_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;Image&quot;</span>
+
+        <span class="n">result1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span>
+                   <span class="s1">&#39;xLabel&#39;</span><span class="p">:</span> <span class="n">x_label</span><span class="p">,</span>
+                   <span class="s1">&#39;yLabel&#39;</span><span class="p">:</span> <span class="n">y_label</span><span class="p">,</span>
+                   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
+                   <span class="s1">&#39;row&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                   <span class="s1">&#39;col&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+
+        <span class="n">result2</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">k_space</span><span class="p">),</span>
+                   <span class="s1">&#39;xLabel&#39;</span><span class="p">:</span> <span class="n">x_label</span><span class="p">,</span>
+                   <span class="s1">&#39;yLabel&#39;</span><span class="p">:</span> <span class="n">y_label</span><span class="p">,</span>
+                   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s2">&quot;k_space&quot;</span><span class="p">,</span>
+                   <span class="s1">&#39;row&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                   <span class="s1">&#39;col&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+
+        <span class="c1"># Dicom tags</span>
+        <span class="n">image_DICOM</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">slices</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">image_DICOM</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;Columns&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;Rows&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rows</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;NumberOfSlices&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">slices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;NumberOfFrames&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">slices</span>
+        <span class="n">img_full_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">image_DICOM</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">15</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">image_DICOM</span><span class="p">))</span>
+        <span class="n">img_full_int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">img_full_abs</span><span class="p">))</span>
+        <span class="n">img_full_int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">img_full_int</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">slices</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">))</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">img_full_int</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;PixelData&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;WindowWidth&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">26373</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;WindowCenter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">13194</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;ImageOrientationPatient&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">imageOrientation_dicom</span>
+        <span class="n">resolution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;PixelSpacing&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">resolution</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;SliceThickness&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolution</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="c1"># Sequence parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;RepetitionTime&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;repetitionTime&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;EchoTime&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;echoSpacing&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="s2">&quot;EchoTrainLength&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;etl&#39;</span><span class="p">]</span>
+
+        <span class="c1"># create self.out to run in iterative mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="n">result1</span><span class="p">,</span> <span class="n">result2</span><span class="p">]</span>
+
+        <span class="c1"># save data once self.output is created</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveRawData</span><span class="p">()</span>
+
+        <span class="c1"># Plot result in standalone execution</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;Standalone&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotResults</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span></div>
+</div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># main(plot=True, write_seq=True)</span>
+
+    <span class="n">seq</span> <span class="o">=</span> <span class="n">MSE</span><span class="p">()</span>
+    <span class="n">seq</span><span class="o">.</span><span class="n">sequenceAtributes</span><span class="p">()</span>
+    <span class="n">seq</span><span class="o">.</span><span class="n">sequenceRun</span><span class="p">(</span><span class="n">plotSeq</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">demo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># seq.sequenceAnalysis(mode=&#39;Standalone&#39;)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, J.M. Algarín.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

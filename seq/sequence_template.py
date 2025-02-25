@@ -21,12 +21,11 @@ for subdir in subdirs:
     sys.path.append(full_path)
 #******************************************************************************
 import numpy as np
-import experiment as ex
-import scipy.signal as sig
+import controller.experiment_gui as ex
 import configs.hw_config as hw  # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-from flocra_pulseq.interpreter import PSInterpreter  # Import the flocra-pulseq interpreter
+from marga_pulseq.interpreter import PSInterpreter  # Import the flocra-pulseq interpreter
 import pypulseq as pp  # Import PyPulseq
 
 # Template Class for MRI Sequences
@@ -53,6 +52,12 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         # Sequence name (Do not include 'field')
         self.addParameter(key='seqName', string='Sequence Name', val='Default_SeqName',
                           tip="The identifier name for the sequence.")
+
+        # To automatically include the sequence into MaRGE.
+        self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
+
+        # To let the code know that we are using tools associated to pypulseq
+        self.addParameter(key='pypulseq', string='PyPulseq', val=True)
 
         # Number of scans
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM',
@@ -144,10 +149,10 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         '''
         Step 1: Define the interpreter for FloSeq/PSInterpreter.
         The interpreter is responsible for converting the high-level pulse sequence description into low-level
-        instructions for the scanner hardware. You will typically update the interpreter during scanner calibration.
+        instructions for the scanner hardware.
         '''
 
-        self.flo_interpreter = PSInterpreter(
+        flo_interpreter = PSInterpreter(
             tx_warmup=hw.blkTime,  # Transmit chain warm-up time (us)
             rf_center=hw.larmorFreq * 1e6,  # Larmor frequency (Hz)
             rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Maximum RF amplitude (Hz)
@@ -164,7 +169,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         slew rates, and dead times. They are typically set based on the hardware configuration file (`hw_config`).
         '''
 
-        self.system = pp.Opts(
+        system = pp.Opts(
             rf_dead_time=hw.blkTime * 1e-6,  # Dead time between RF pulses (s)
             max_grad=np.max(hw.gFactor) * 1e3,  # Maximum gradient strength (mT/m)
             grad_unit='mT/m',  # Units of gradient strength
@@ -183,13 +188,12 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         '''
 
         bw = self.bandwidth * 1e-6 # MHz
-        bw_ov = self.bandwidth - hw.oversamplingFactor  # MHz
-        sampling_period = 1 / bw_ov  # us
+        sampling_period = 1 / bw  # us
 
         '''
         Step 4: Define the experiment to get the true bandwidth
         In this step, student needs to get the real bandwidth used in the experiment. To get this bandwidth, an
-        experiment must be defined and the sampling period should be obtained using get_rx_ts()[0]
+        experiment must be defined and the sampling period should be obtained using get_
         '''
 
         if not self.demo:
@@ -200,8 +204,8 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
                 gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
                 auto_leds=True  # Automatic control of LEDs (False or True)
             )
-            sampling_period = expt.get_rx_ts()[0]  # us
-            bw = 1 / sampling_period / hw.oversamplingFactor  # MHz
+            sampling_period = expt.get_sampling_period()  # us
+            bw = 1 / sampling_period  # MHz
             print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
             expt.__del__()
         self.mapVals['bw_MHz'] = bw
@@ -209,7 +213,8 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
 
         '''
         Step 5: Define sequence blocks.
-        In this step, you will define the building blocks of the MRI sequence, including the RF pulses and gradient pulses.
+        In this step, you will define the building blocks of the MRI sequence, including the RF pulses, gradient pulses,
+        and ADC blocks.
         '''
 
         ## Excitation pulse
@@ -217,7 +222,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         flip_ex = self.rfExFA * np.pi / 180  # Convert flip angle from degrees to radians
         rf_ex = pp.make_block_pulse(
             flip_angle=flip_ex,  # Set the flip angle for the RF pulse
-            system=self.system,  # Use the system properties defined earlier
+            system=system,  # Use the system properties defined earlier
             duration=self.rfExTime,  # Set the RF pulse duration
             delay=0,  # Delay before the RF pulse (if any)
             phase_offset=0.0,  # Set the phase offset for the pulse (0 by default)
@@ -226,7 +231,8 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         ## ADC block
         # Define the ADC block using PyPulseq. You need to specify number of samples and delay.
         adc = pp.make_adc(
-            num_samples=self.nPoints, dwell=1 / self.bandwidth,
+            num_samples=self.nPoints,
+            dwell=sampling_period * 1e-6,
             delay=hw.blkTime*1e-6 + self.rfExTime + hw.deadTime*1e-6
         )
 
@@ -243,27 +249,28 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         each new batch.
         '''
 
-        # Initialize batches dictionary to store different parts of the sequence.
-        batches = {}
-        n_rd_points_dict = {}  # Dictionary to track readout points for each batch
-        self.n_rd_points = 0
-
-        def initializeBatch(name="pp_1"):
+        def initializeBatch():
             """
-            Initializes a new sequence batch.
+            Initializes a batch of MRI sequence blocks using PyPulseq for a given experimental configuration.
 
-            Args:
-                name (str): Name of the batch. Defaults to "pp_1".
+            Returns:
+            --------
+            tuple
+                - batch (pp.Sequence): A PyPulseq sequence object containing the configured sequence blocks.
+                - n_rd_points (int): Total number of readout points in the batch.
+                - n_adc (int): Total number of ADC acquisitions in the batch.
             """
-            # Set n_rd_ponts to 0
-            self.n_rd_points = 0
 
-            # Instantiate pypulseq sequence object and save it into the batches dictionarly
-            batches[name] = pp.Sequence(self.system)
+            # Instantiate pypulseq sequence object
+            batch = pp.Sequence(system)
+            n_rd_points = 0
+            n_adc = 0
 
             # Add dummy pulses to batch
             for _ in range(self.dummyPulses):
-                batches[name].add_block(rf_ex, delay_repetition)
+                batch.add_block(rf_ex, delay_repetition)
+
+            return batch, n_rd_points, n_adc
 
         '''
         Step 7: Define your createBatches method.
@@ -282,10 +289,15 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
             Returns:
                 waveforms (dict): Contains the waveforms for each batch.
                 n_rd_points_dict (dict): Dictionary of readout points per batch.
+                n_adc (int): Total number of ADC acquisitions across all batches
             """
+            batches = {}  # Dictionary to save batches PyPulseq sequences
+            waveforms = {}  # Dictionary to store generated waveforms per each batch
+            n_rd_points_dict = {}  # Dictionary to track readout points for each batch
+            n_rd_points = 0  # To account for number of acquired rd points
             seq_idx = 0  # Sequence batch index
+            n_adc = 0  # To account for number of adc windows
             batch_num = "batch_0"  # Initial batch name
-            waveforms = {}  # Dictionary to store generated waveforms
 
             # Loop through all repetitions (e.g., slices)
             for repetition in range(self.nRepetitions):
@@ -294,24 +306,26 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
                     # If a previous batch exists, write and interpret it
                     if seq_idx > 0:
                         batches[batch_num].write(batch_num + ".seq")
-                        waveforms[batch_num], param_dict = self.flo_interpreter.interpret(batch_num + ".seq")
+                        waveforms[batch_num], param_dict = flo_interpreter.interpret(batch_num + ".seq")
                         print(f"{batch_num}.seq ready!")
 
                     # Update to the next batch
                     seq_idx += 1
-                    n_rd_points_dict[batch_num] = self.n_rd_points  # Save readout points count
+                    n_rd_points_dict[batch_num] = n_rd_points  # Save readout points count
+                    n_rd_points = 0
                     batch_num = f"batch_{seq_idx}"
-                    initializeBatch(batch_num)  # Initialize new batch
-                    n_rd_points = 0  # Reset readout points count
+                    batches[batch_num], n_rd_points, n_adc_0 = initializeBatch()  # Initialize new batch
+                    n_adc += n_adc_0
                     print(f"Creating {batch_num}.seq...")
 
                 # Add sequence blocks (RF, ADC, repetition delay) to the current batch
                 batches[batch_num].add_block(rf_ex, adc, delay_repetition)
                 n_rd_points += self.nPoints  # Accounts for additional acquired points in each adc block
+                n_adc += 1
 
             # After final repetition, save and interpret the last batch
             batches[batch_num].write(batch_num + ".seq")
-            waveforms[batch_num], param_dict = self.flo_interpreter.interpret(batch_num + ".seq")
+            waveforms[batch_num], param_dict = flo_interpreter.interpret(batch_num + ".seq")
             print(f"{batch_num}.seq ready!")
             print(f"{len(batches)} batches created. Sequence ready!")
 
@@ -319,16 +333,24 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
             n_rd_points_dict.pop('batch_0')
             n_rd_points_dict[batch_num] = n_rd_points
 
-            return waveforms, n_rd_points_dict
+            return waveforms, n_rd_points_dict, n_adc
 
         '''
         Step 8: Run the batches
         This step will handle the different batches, run it and get the resulting data. This should not be modified.
         Oversampled data will be available in self.mapVals['data_over']
+        Decimated data will be available in self.mapVals['data_decimated']
+        The decimated data is shifted to account for CIC delay, so data is synchronized with real-time signal
         '''
 
-        waveforms, n_readouts = createBatches()
-        return self.runBatches(waveforms, n_readouts)
+        waveforms, n_readouts, n_adc = createBatches()
+        return self.runBatches(waveforms=waveforms,
+                               n_readouts=n_readouts,
+                               n_adc=n_adc,
+                               frequency=hw.larmorFreq,  # MHz
+                               bandwidth=bw,  # MHz
+                               decimate='Normal',
+                               )
 
     def sequenceAnalysis(self, mode=None):
 

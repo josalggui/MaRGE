@@ -5,8 +5,12 @@ experiments
 calibration
 protocols
 .idea/
+configs/units.py
+configs/hw_config.py
 *.dcm
 *.pptx
+configs/sys_config.py
+configs/autotuning.py
 venv/
 marcos_fpga_rp-122.bit
 marcos_fpga_rp-122.bit.bin
@@ -18,3 +22,5 @@ autotuning/autotuning_arduino/autotuning_arduino.ino
 ps_interpreter.log
 sequence.seq
 *.csv
+*.mat
+*.rar

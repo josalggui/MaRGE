@@ -28,7 +28,7 @@ import configs.hw_config as hw # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 from scipy.optimize import curve_fit
-from flocra_pulseq.interpreter import PSInterpreter
+from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 
 #*********************************************************************************
@@ -40,6 +40,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         super(MSE, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='MSEInfo', val='MSE_jma')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=2, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz,
                           field='RF')
@@ -113,19 +114,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
 
         # TODO: check for min and max values for all fields
 
-    def sequenceAtributes(self):
-        super().sequenceAtributes()
-
-        # Conversion of variables to non-multiplied units
-        self.angle = self.angle * np.pi / 180 # rads
-
-        # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.tolist()
-        self.rotation.append(self.angle)
-        self.rotations.append(self.rotation)
-        # self.dfovs.append(self.dfov.tolist())
-        self.fovs.append(self.fov.tolist())
-
     def sequenceRun(self, plotSeq=False, demo=False, standalone=False):
         print('MSE run')
         init_gpa=False # Starts the gpa
@@ -141,7 +129,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             gx_max=hw.gFactor[0] * hw.gammaB,  # Maximum gradient amplitude for X (Hz/m)
             gy_max=hw.gFactor[1] * hw.gammaB,  # Maximum gradient amplitude for Y (Hz/m)
             gz_max=hw.gFactor[2] * hw.gammaB,  # Maximum gradient amplitude for Z (Hz/m)
-            grad_max=np.max(hw.gFactor) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
+            grad_max=np.max(np.abs(hw.gFactor)) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
             grad_t=hw.grad_raster_time * 1e6,  # Gradient raster time (us)
         )
 
@@ -150,7 +138,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         # slew rates, and dead times. They are typically set based on the hardware configuration file (`hw_config`).
         self.system = pp.Opts(
             rf_dead_time=hw.blkTime * 1e-6,  # Dead time between RF pulses (s)
-            max_grad=np.max(hw.gFactor) * 1e3,  # Maximum gradient strength (mT/m)
+            max_grad=np.max(np.abs(hw.gFactor)) * 1e3,  # Maximum gradient strength (mT/m)
             grad_unit='mT/m',  # Units of gradient strength
             max_slew=hw.max_slew_rate,  # Maximum gradient slew rate (mT/m/ms)
             slew_unit='mT/m/ms',  # Units of gradient slew rate
@@ -285,7 +273,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             system=self.system,
             amplitude=rdDephAmplitude*hw.gammaB,
             flat_time=self.rdDephTime,
-            delay=-hw.gradDelay * 1e-6,
+            delay=0,
             rise_time=hw.grad_rise_time,
         )
         delay_preph = pp.make_delay(self.echoSpacing / 2 - self.rfExTime / 2 - self.rfReTime / 2 -
@@ -308,7 +296,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
             system=self.system,
             amplitude=phGradAmplitude * hw.gammaB,
             flat_time=self.phGradTime,
-            delay=self.rfReTime + self.system.rf_dead_time - hw.gradDelay * 1e-6,
+            delay=self.rfReTime + self.system.rf_dead_time,
             rise_time=hw.grad_rise_time,
         )
 
@@ -318,13 +306,13 @@ class MSE(blankSeq.MRIBLANKSEQ):
             system=self.system,
             amplitude=slGradAmplitude * hw.gammaB,
             flat_time=self.phGradTime,
-            delay=self.rfReTime + self.system.rf_dead_time - hw.gradDelay * 1e-6,
+            delay=self.rfReTime + self.system.rf_dead_time,
             rise_time=hw.grad_rise_time,
         )
 
         # Readout gradient
         delay = self.rfReTime / 2 + self.echoSpacing /2 - self.rdGradTime / 2 - hw.grad_rise_time + \
-                self.system.rf_dead_time - hw.gradDelay * 1e-6
+                self.system.rf_dead_time
         gr_readout = pp.make_trapezoid(
             channel=rd_channel,
             system=self.system,
@@ -341,7 +329,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
                           delay=delay)
 
         # Phase gradient rephasing
-        delay = -self.echoSpacing / 2 + (nRD / 2 / BW) * 1e-6 + self.rfReTime / 2 + self.system.rf_dead_time - hw.gradDelay * 1e-6
+        delay = -self.echoSpacing / 2 + (nRD / 2 / BW) * 1e-6 + self.rfReTime / 2 + self.system.rf_dead_time
         gr_phase_r = pp.make_trapezoid(
             channel=ph_channel,
             system=self.system,
@@ -352,7 +340,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         )
 
         # Phase gradient rephasing
-        delay = -self.echoSpacing / 2 + (nRD / 2 / BW) * 1e-6 + self.rfReTime / 2 + self.system.rf_dead_time - hw.gradDelay * 1e-6
+        delay = -self.echoSpacing / 2 + (nRD / 2 / BW) * 1e-6 + self.rfReTime / 2 + self.system.rf_dead_time
         gr_slice_r = pp.make_trapezoid(
             channel=sl_channel,
             system=self.system,

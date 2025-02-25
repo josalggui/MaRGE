@@ -62,12 +62,14 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
         # Parameters
         self.addParameter(key='seqName', string='AutoTuningInfo', val='AutoTuning')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='freqOffset', string='Frequency offset(kHz)', val=0.0, units=units.kHz, field='IM')
         self.addParameter(key='series', string='Series capacitor', val='11011', field='IM')
         self.addParameter(key='tuning', string='Tuning capacitor', val='10000', field='IM')
         self.addParameter(key='matching', string='Matching capacitor', val='10011', field='IM')
         self.addParameter(key='test', string='Test', val='auto', field='IM',
                           tip='Choose one option: auto, manual')
+        self.addParameter(key='xyz', string='xyz', val=0.0, field='IM')
 
         # Connect to Arduino and set the initial state
         self.arduino = autotuning.Arduino(name="auto-tuning", serial_number=hw.ard_sn_autotuning)
@@ -91,25 +93,37 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.s11_db_hist = []
         self.states_hist = [[], [], []]
         self.n_aux = [[], [], []]
-        self.frequency = hw.larmorFreq+self.freqOffset*1e-6
+        self.frequency = hw.larmorFreq + self.freqOffset * 1e-6
 
         if self.arduino.device is None:
             print("WARNING: No Arduino found for auto-tuning.")
             return False
         else:
-            # Connect autotuning to VNA and turn it on.
-            self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "00")
-            print("nanoVNA ON")
-            time.sleep(1)
+            counter = 0
+            while counter < 10:
+                # Turn OFF vna.
+                self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "11")
+                print("nanoVNA OFF")
+                time.sleep(0.5)
 
-            # Connect to VNA
-            self.vna = autotuning.VNA()
-            self.vna.connect()
+                # Turn ON vna.
+                self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "00")
+                print("nanoVNA ON")
+                time.sleep(0.5)
 
-        if self.vna.device is None:
-            print("No nanoVNA found for auto-tuning. \n")
-            print("Only test mode.")
-            return False
+                # Connect to VNA
+                print("Linking to nanoVNA...")
+                self.vna = autotuning.VNA()
+                if self.vna.connect():
+                    break
+                else:
+                    counter += 1
+                    print("No nanoVNA found for auto-tuning....\n")
+
+            # Check connection with nanoVNA
+            if self.vna.device is None:
+                print("No nanoVNA found for auto-tuning. \n")
+                return False
 
         if self.test == 'auto':
             return self.runAutoTuning()
@@ -145,11 +159,11 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         try:
             idx = np.argmin(s_vec_db)
             f0 = f_vec_t[idx]
-            f1 = f_vec_t[np.argmin(np.abs(s_vec_db[0:idx]+3))]
-            f2 = f_vec_t[idx+np.argmin(np.abs(s_vec_db[idx::]+3))]
-            q = f0/(f2-f1)
+            f1 = f_vec_t[np.argmin(np.abs(s_vec_db[0:idx] + 3))]
+            f2 = f_vec_t[idx + np.argmin(np.abs(s_vec_db[idx::] + 3))]
+            q = f0 / (f2 - f1)
             print("Q = %0.0f" % q)
-            print("BW @ -3 dB = %0.0f kHz" % ((f2-f1)*1e3))
+            print("BW @ -3 dB = %0.0f kHz" % ((f2 - f1) * 1e3))
         except:
             pass
 
@@ -288,7 +302,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
         # Save parameters to source sequence
         try:
-            sequence = self.sequenceList[self.mapVals['seqName']]
+            sequence = self.sequence_list[self.mapVals['seqName']]
             sequence.mapVals['matching'] = self.states[stateCm]
             sequence.mapVals['tuning'] = self.states[stateCt]
             sequence.mapVals['series'] = self.states[stateCs]
@@ -491,7 +505,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                     if cm == 0 or cm == 17 or ct == -1 or ct == 32:
                         continue
                     else:
-                        state = self.states[ct]+self.states[cm]
+                        state = self.states[ct] + self.states[cm]
                     # Get s11 if current state has not been tested before
                     if state not in result[3]:
                         cs_bin = self.states[cs]
@@ -565,6 +579,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             iteration += 1
 
         return cs_new, ct_new, cm_new
+
 
 if __name__ == '__main__':
     seq = AutoTuning()

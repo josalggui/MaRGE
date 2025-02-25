@@ -39,6 +39,7 @@ class RAREProtocolsTest(blankSeq.MRIBLANKSEQ):
         super(RAREProtocolsTest, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='RAREInfo', val='RAREprotocolsTest')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
         self.addParameter(key='rfExFA', string='Exitation flip angle (º)', val=90, field='RF')

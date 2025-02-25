@@ -48,6 +48,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         super(RARE, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='RAREInfo', val='RARE')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM') ## number of scans 
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
@@ -60,7 +61,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM') 
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 10], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ') ## nm of peaks in 1 repetition
@@ -113,19 +114,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         # TODO: check for min and max values for all fields
 
-    def sequenceAtributes(self):
-        super().sequenceAtributes()
-
-        # Conversion of variables to non-multiplied units
-        self.angle = self.angle * np.pi / 180 # rads
-
-        # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.tolist()
-        self.rotation.append(self.angle)
-        self.rotations.append(self.rotation)
-        self.dfovs.append(self.dfov.tolist())
-        self.fovs.append(self.fov.tolist())
-
     def sequenceRun(self, plotSeq=False, demo=False):
         init_gpa=False # Starts the gpa
         self.demo = demo
@@ -143,6 +131,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             else:
                 axesEnable.append(1)
         self.mapVals['axesEnable'] = axesEnable
+        self.axesEnable = axesEnable
 
         # Miscellaneous
         self.freqOffset = self.freqOffset*1e6 # MHz
@@ -253,11 +242,11 @@ class RARE(blankSeq.MRIBLANKSEQ):
             self.iniSequence(20, self.shimming)
             while acqPoints+self.etl*nRD<=hw.maxRdPoints and orders<=hw.maxOrders and repeIndexGlobal<nRepetitions:
                 # Initialize time
-                tEx = 20e3+self.repetitionTime*repeIndex+self.inversionTime+self.preExTime
+                tEx = self.repetitionTime+self.repetitionTime*repeIndex+self.inversionTime+self.preExTime
 
                 # First I do a noise measurement.
                 if repeIndex==0:
-                    t0 = tEx-self.preExTime-self.inversionTime-self.acqTime-2*addRdPoints/BW-self.rfExTime/2-hw.blkTime
+                    t0 = 40
                     self.rxGate(t0, self.acqTime+2*addRdPoints/BW)
                     acqPoints += nRD
 
@@ -380,7 +369,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                 repeIndex+=1 # Update the repeIndex after the ETL
 
             # Turn off the gradients after the end of the batch
-            self.endSequence(repeIndex*self.repetitionTime)
+            self.endSequence((repeIndex+1)*self.repetitionTime)
 
             # Return the output variables
             return(phIndex, slIndex, lnIndex, repeIndexGlobal, acqPoints)
@@ -567,8 +556,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
             data = np.reshape(data, (nSL, nPH, self.nPoints[0]))
 
             # Do zero padding
-            dataTemp = np.zeros((self.nPoints[2], self.nPoints[1], self.nPoints[0]))
-            dataTemp = dataTemp+1j*dataTemp
+            dataTemp = np.zeros((self.nPoints[2], self.nPoints[1], self.nPoints[0]), dtype=complex)
             dataTemp[0:nSL, :, :] = data
             data = np.reshape(dataTemp, (1, self.nPoints[0]*self.nPoints[1]*self.nPoints[2]))
 
@@ -788,8 +776,8 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.mapVals['angle'] = 0.0
         self.mapVals['dfov'] = [0.0, 0.0, 0.0]
         try:
-            self.sequenceList['RARE'].mapVals['angle'] = 0.0
-            self.sequenceList['RARE'].mapVals['dfov'] = [0.0, 0.0, 0.0]
+            self.sequence_list['RARE'].mapVals['angle'] = 0.0
+            self.sequence_list['RARE'].mapVals['dfov'] = [0.0, 0.0, 0.0]
         except:
             pass
         hw.dfov = [0.0, 0.0, 0.0]
@@ -925,7 +913,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         etl = self.mapVals['etl']
         nRD = self.nPoints[0]
         nPH = self.nPoints[1]
-        nSL = self.nPoints[2]
+        nSL = ((self.nPoints[2] // 2) + self.mapVals['partialAcquisition']) * self.axesEnable[2] + (1 - self.axesEnable[2])
         ind = self.getIndex(self.etl, nPH, self.sweepMode)
         nRep = (nPH//etl)*nSL
         bw = self.mapVals['bw']
@@ -1093,7 +1081,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
                         
                         
         image=self.mapVals['image3D']
-        image_reshaped = np.reshape(image, (nSL, nPH, nRD))
+        image_reshaped = np.reshape(image, (self.nPoints[::-1]))
         
         for slice_idx in range (nSL): ## image3d does not have scan dimension
             

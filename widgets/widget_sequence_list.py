@@ -13,7 +13,7 @@ class SequenceListWidget(QComboBox):
         self.main = parent
 
         # Add sequences to sequences list
-        self.addItems(list(defaultsequences.keys()))
+        self.addItems(sorted(list(defaultsequences.keys())))
 
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.setMaximumWidth(400)

@@ -33,6 +33,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         super(ShimmingSweep, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='ShimmingSweepInfo', val='Shimming')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90.0, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180.0, field='RF')
@@ -179,8 +180,8 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         # Update the shimming in hw_config
         if mode != "standalone":
-            for seqName in self.sequenceList:
-                self.sequenceList[seqName].mapVals['shimming'] = [np.round(sx / units.sh, decimals=1),
+            for seqName in self.sequence_list:
+                self.sequence_list[seqName].mapVals['shimming'] = [np.round(sx / units.sh, decimals=1),
                                                                   np.round(sy / units.sh, decimals=1),
                                                                   np.round(sz / units.sh, decimals=1)]
         shimming = [np.round(sx / units.sh, decimals=1),

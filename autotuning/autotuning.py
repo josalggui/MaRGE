@@ -125,9 +125,14 @@ class VNA:
                 self.frequencies = np.array(self.device.readFrequencies()) * 1e-6  # MHz
                 print("Connected to nanoVNA for auto-tuning")
                 return True
-            except:
-                print("WARNING: No nanoVNA detected for auto-tuning")
+            except IndexError:
+                print("WARNING: No interfaces available for nanoVNA auto-tuning")
                 return False
+            except Exception as e:
+                print(f"WARNING: Failed to connect to nanoVNA for auto-tuning: {e}")
+                return False
+        else:
+            return True
 
     def getFrequency(self):
         """

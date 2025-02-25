@@ -156,19 +156,19 @@ class Plot3DController(Plot3DWidget):
         a = 1
         if self.title == "Sagittal":
             a = -1
-            d = [-1, -1]
+            d = [1, 1]
             x_axis = 1
             y_axis = 0
             z_axis = 2
         elif self.title == "Coronal":
-            a = -1
-            d = [-1, -1]
+            a = 1
+            d = [1, 1]
             x_axis = 2
             y_axis = 0
             z_axis = 1
         elif self.title == "Transversal":
             a = 1
-            d = [-1, -1]
+            d = [1, 1]
             x_axis = 2
             y_axis = 1
             z_axis = 0
@@ -177,17 +177,21 @@ class Plot3DController(Plot3DWidget):
         ima_fov_px = np.array(np.shape(self.getProcessedImage()))[1::]
         roi_fov_px = self.roiFOV.size()
         roi_pos_px = self.roiFOV.pos()
-        roi_angle = a * self.roiFOV.angle()
+        roi_angle = self.roiFOV.angle()
 
-        # ROI center in pixels respect to the roi upper-left corner
-        x0_px = (+ (ima_fov_px[0] / 2 - roi_pos_px[0]) * np.cos(roi_angle * np.pi / 180)
-                 + (ima_fov_px[1] / 2 - roi_pos_px[1]) * np.sin(roi_angle * np.pi / 180))
-        y0_px = (- (ima_fov_px[0] / 2 - roi_pos_px[0]) * np.sin(roi_angle * np.pi / 180)
-                 + (ima_fov_px[1] / 2 - roi_pos_px[1]) * np.cos(roi_angle * np.pi / 180))
+        # ROI center in pixel units
+        x0 = roi_pos_px[0]  # Upper left corner
+        y0 = roi_pos_px[1]  # Upper left corner
+        x1 = x0 + roi_fov_px[0] * np.cos(- roi_angle * np.pi / 180)  # Upper right corner
+        y1 = y0 - roi_fov_px[0] * np.sin(- roi_angle * np.pi / 180)  # Upper right corner
+        x2 = x1 + roi_fov_px[1] * np.sin(- roi_angle * np.pi / 180)  # Bottom right corner
+        y2 = y1 + roi_fov_px[1] * np.cos(- roi_angle * np.pi / 180)  # Bottom right corner
+        x3 = (x0 + x2) / 2  # Center
+        y3 = (y0 + y2) / 2  # Center
 
         # ROI center in real units
-        x0_ru = (x0_px - roi_fov_px[0] / 2) * self.img_resolution[0]
-        y0_ru = (y0_px - roi_fov_px[1] / 2) * self.img_resolution[1]
+        x0_ru = (x3 - ima_fov_px[0] / 2) * self.img_resolution[0]
+        y0_ru = (y3 - ima_fov_px[1] / 2) * self.img_resolution[1]
 
         # Set fov properties in true units
         fov_roi = hw.fov.copy()
@@ -204,7 +208,7 @@ class Plot3DController(Plot3DWidget):
         # Define rotation
         rotation = [0, 0, 0, 0]
         rotation[z_axis] = 1
-        rotation[3] = roi_angle
+        rotation[3] = a * roi_angle
 
         # Update sequence parameters
         for sequence in defaultsequences.values():

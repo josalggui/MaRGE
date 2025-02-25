@@ -44,6 +44,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         super(GRE3D, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='GRE3DInfo', val='GRE3D')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=2, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz,
                           field='RF')
@@ -96,19 +97,6 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         nPoints = np.array(self.mapVals['nPoints'])
         repetition_time = self.mapVals['repetition_time']
         return(nPoints[1]*nPoints[2]*repetition_time*1e-3*nScans/60)  # minutes, scanTime
-
-    def sequenceAtributes(self):
-        super().sequenceAtributes()
-
-        # Conversion of variables to non-multiplied units
-        self.angle = self.angle * np.pi / 180 # rads
-
-        # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.tolist()
-        self.rotation.append(self.angle)
-        self.rotations.append(self.rotation)
-        self.dfovs.append(self.dfov.tolist())
-        self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False  # Starts the gpa

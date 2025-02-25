@@ -104,6 +104,15 @@ class Experiment(ex.Experiment):
         """
         return self.get_rx_ts()[0] * hw.oversamplingFactor
 
+    def get_sampling_period(self):
+        """
+        Get the sampling rate of the experiment in the sequence sampling rate.
+
+        Returns:
+            float: The sampling rate in samples per second.
+        """
+        return self.get_rx_ts()[0] * hw.oversamplingFactor  # s
+
     def run(self):
         """
         Compile the TX and gradient data and send everything over to the server.

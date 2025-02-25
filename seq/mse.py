@@ -40,24 +40,25 @@ class MSE(blankSeq.MRIBLANKSEQ):
         super(MSE, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='MSEInfo', val='MSE')
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=60.0, units=units.us, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=120.0, units=units.us, field='RF')
-        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, units=units.ms, field='SEQ')
+        self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=20.0, units=units.ms, field='SEQ')
         self.addParameter(key='preExTime', string='Preexitation time (ms)', val=0.0, units=units.ms, field='SEQ')
         self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ', tip="0 to ommit this pulse")
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=40., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
-        self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
+        self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 2, 2], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[60, 60, 10], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=2, field='SEQ')
+        self.addParameter(key='etl', string='Echo train length', val=20, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
-        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM', tip="0=x, 1=y, 2=z")
+        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
         self.addParameter(key='axesEnable', string='Axes enable', val=[1, 1, 1], field='IM', tip="Use 0 for directions with matrix size 1, use 1 otherwise.")
         self.addParameter(key='sweepMode', string='Sweep mode', val=0, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=2.5, units=units.ms, field='OTH')
@@ -65,7 +66,7 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
-        self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
+        self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
@@ -103,19 +104,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         return(seqTime)  # minutes, scanTime
 
         # TODO: check for min and max values for all fields
-
-    def sequenceAtributes(self):
-        super().sequenceAtributes()
-
-        # Conversion of variables to non-multiplied units
-        self.angle = self.angle * np.pi / 180 # rads
-
-        # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.tolist()
-        self.rotation.append(self.angle)
-        self.rotations.append(self.rotation)
-        # self.dfovs.append(self.dfov.tolist())
-        self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plotSeq=False, demo=False):
         print('MSE run')
@@ -203,10 +191,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.mapVals['phGradients'] = phGradients
         self.mapVals['slGradients'] = slGradients
 
-        # Set phase vector to given sweep mode
-        ind = self.getIndex(self.etl, nPH, self.sweepMode)
-        self.mapVals['sweepOrder'] = ind
-        phGradients = phGradients[ind]
         # Get the rotation matrix
         rot = self.getRotationMatrix()
         gradAmp = np.array([0.0, 0.0, 0.0])
@@ -432,13 +416,12 @@ class MSE(blankSeq.MRIBLANKSEQ):
                                                                             repeIndexGlobal=repeIndexGlobal)
             
             # Save instructions into MaRCoS if not a demo
-            if not self.demo:
-                if self.floDict2Exp(rewrite=nBatches==1):
-                    print("Sequence waveforms loaded successfully")
-                    pass
-                else:
-                    print("ERROR: sequence waveforms out of hardware bounds")
-                    return False
+            if self.floDict2Exp(rewrite=nBatches==1):
+                print("Sequence waveforms loaded successfully")
+                pass
+            else:
+                print("ERROR: sequence waveforms out of hardware bounds")
+                return False
 
             repeIndexArray = np.concatenate((repeIndexArray, np.array([repeIndexGlobal-1])), axis=0)
             acqPointsPerBatch.append(aa)
@@ -514,14 +497,8 @@ class MSE(blankSeq.MRIBLANKSEQ):
             # Average data
             dataProv = np.reshape(dataFull, (self.nScans, nRD*nETL*nPH*nSL))
             dataProv = np.average(dataProv, axis=0)
-            # Reorganize the data acording to sweep mode
-            dataProv = np.reshape(dataProv, (nSL, nPH, nETL, nRD))
-            dataTemp = dataProv*0
-            for jj in range(nETL):
-                for ii in range(nPH):
-                    dataTemp[:, ind[ii], jj, :] = dataProv[:,  ii, jj, :]
-            dataProv = dataTemp
             # Check where is krd = 0
+            dataProv = np.reshape(dataProv, (nSL, nPH, nETL, nRD))
             dataProv = dataProv[int(self.nPoints[2]/2), int(nPH/2), 0, :]
             indkrd0 = np.argmax(np.abs(dataProv))
             if indkrd0 < nRD/2-addRdPoints or indkrd0 > nRD/2+addRdPoints:
@@ -530,10 +507,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
             # Get individual images
             dataFull = np.reshape(dataFull, (self.nScans, nSL, nPH, nETL, nRD))
             dataFull = dataFull[:, :, :, :, indkrd0-int(self.nPoints[0]/2):indkrd0+int(self.nPoints[0]/2)]
-            dataTemp = dataFull*0
-            for ii in range(nPH):
-                dataTemp[:, :, ind[ii], :, :] = dataFull[:, :,  ii, :, :]
-            dataFull = dataTemp
             imgFull = dataFull*0
             for jj in range(nETL):
                 for ii in range(self.nScans):
@@ -548,21 +521,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
             imgMSE = dataMSE*0
             for jj in range(nETL):
                 imgMSE[:,:,jj,:]=np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(dataMSE[:,:,jj,:])))
-            # self.mapVals['image3D_MSE'] = imgMSE
-           
-
-            # Concatenate with k_xyz
-            for ii in range(3):
-                k_prov = np.reshape(k_ph_sl_xyz[ii, :], (nSL, nPH, self.nPoints[0]))
-                k_temp = k_prov * 0
-                for jj in range(nPH):
-                    k_temp[:, ind[jj], :] = k_prov[:, jj, :]
-                k_ph_sl_xyz[ii, :] = np.reshape(k_temp, -1)
-            k_xyz = k_ph_sl_xyz + k_rd_xyz
-            data_sampled = np.transpose(dataMSE, (0,1,3,2))
-            sampled_xyz = np.concatenate((k_xyz.T, np.reshape(data_sampled, (nSL*nPH*self.nPoints[0], nETL))), axis=1)
-            self.mapVals['sampled_xyz'] = sampled_xyz
-            # print(sampled_xyz.shape)
 
             # Do zero padding
             dataAllAcq= np.zeros((nETL,self.nPoints[0]*self.nPoints[1]*self.nPoints[2]), dtype=complex)
@@ -917,5 +875,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
 if __name__=="__main__":
     seq = MSE()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=True, demo=True)
-    seq.sequencePlot(standalone=True)
+    seq.sequenceRun(plotSeq=False, demo=True)
+    # seq.sequencePlot(standalone=True)
+    seq.sequenceAnalysis(mode='Standalone')

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>seq.sequence_template &mdash; MaRGE 0.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=486e5634"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MaRGE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../seq.html">API reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MaRGE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">seq.sequence_template</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for seq.sequence_template</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue October 1st, 2024</span>
+<span class="sd">@author: [Student&#39;s Name]</span>
+<span class="sd">@Summary: [Sequence Name] class template</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="c1">#*****************************************************************************</span>
+<span class="c1"># Get the directory of the current script</span>
+<span class="n">main_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">parent_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">main_directory</span><span class="p">)</span>
+<span class="n">parent_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">parent_directory</span><span class="p">)</span>
+
+<span class="c1"># Define the subdirectories you want to add to sys.path</span>
+<span class="n">subdirs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MaRGE&#39;</span><span class="p">,</span> <span class="s1">&#39;marcos_client&#39;</span><span class="p">]</span>
+
+<span class="c1"># Add the subdirectories to sys.path</span>
+<span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="n">subdirs</span><span class="p">:</span>
+    <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parent_directory</span><span class="p">,</span> <span class="n">subdir</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+<span class="c1">#******************************************************************************</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">controller.experiment_gui</span> <span class="k">as</span> <span class="nn">ex</span>
+<span class="kn">import</span> <span class="nn">configs.hw_config</span> <span class="k">as</span> <span class="nn">hw</span>  <span class="c1"># Import the scanner hardware config</span>
+<span class="kn">import</span> <span class="nn">configs.units</span> <span class="k">as</span> <span class="nn">units</span>
+<span class="kn">import</span> <span class="nn">seq.mriBlankSeq</span> <span class="k">as</span> <span class="nn">blankSeq</span>  <span class="c1"># Import the mriBlankSequence for any new sequence.</span>
+<span class="kn">from</span> <span class="nn">marga_pulseq.interpreter</span> <span class="kn">import</span> <span class="n">PSInterpreter</span>  <span class="c1"># Import the flocra-pulseq interpreter</span>
+<span class="kn">import</span> <span class="nn">pypulseq</span> <span class="k">as</span> <span class="nn">pp</span>  <span class="c1"># Import PyPulseq</span>
+
+<span class="c1"># Template Class for MRI Sequences</span>
+<div class="viewcode-block" id="SEQUENCE_TEMPLATE">
+<a class="viewcode-back" href="../../seq.html#seq.sequence_template.SEQUENCE_TEMPLATE">[docs]</a>
+<span class="k">class</span> <span class="nc">SEQUENCE_TEMPLATE</span><span class="p">(</span><span class="n">blankSeq</span><span class="o">.</span><span class="n">MRIBLANKSEQ</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines the parameters for the sequence.</span>
+
+<span class="sd">        Instructions for students:</span>
+<span class="sd">        - Each parameter is defined using the `addParameter` method, which takes the following arguments:</span>
+<span class="sd">          - key (str): A unique identifier for the parameter. This will be used to reference the value in other parts of the sequence.</span>
+<span class="sd">          - string (str): A human-readable description of the parameter. This should clearly describe what the value represents.</span>
+<span class="sd">          - val (int/float/str/list): The default value for the parameter. It can be a number, string, or list depending on the requirement.</span>
+<span class="sd">          - units (optional): Units associated with the parameter (e.g., ms, cm, etc.). Use the `configs.units` module for common units.</span>
+<span class="sd">          - field (str): The category to which the parameter belongs. It can be:</span>
+<span class="sd">            - &#39;RF&#39;: Radio Frequency (parameters related to RF pulses).</span>
+<span class="sd">            - &#39;IM&#39;: Imaging (parameters related to image acquisition).</span>
+<span class="sd">            - &#39;SEQ&#39;: Sequence (parameters related to the sequence structure).</span>
+<span class="sd">            - &#39;OTH&#39;: Other parameters that don&#39;t fit into the above categories.</span>
+<span class="sd">          - tip (optional): Additional tips or information about the parameter, such as recommendations or constraints.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SEQUENCE_TEMPLATE</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1"># Sequence name (Do not include &#39;field&#39;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;seqName&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Sequence Name&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="s1">&#39;Default_SeqName&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;The identifier name for the sequence.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Number of scans</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nScans&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Number of scans&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;IM&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;Number of repetitions of the full scan.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Number of repetitions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nRepetitions&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Number of repetitions&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;Number of repetitions.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Excitation flip angle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfExFA&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Excitation Flip Angle (degrees)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">90.0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;Flip angle of the excitation RF pulse in degrees. Common values are 90 or 180 degrees.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Excitation time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfExTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Excitation Pulse Duration (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">us</span><span class="p">,</span>
+                          <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;Duration of the RF excitation pulse in microseconds (us).&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Number of acquired points</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nPoints&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Number of Acquired Points&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;IM&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;Number of points acquired during the readout gradient (frequency-encoding).&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Acquisition bandwidth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;bandwidth&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Acquisition Bandwidth (kHz)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">kHz</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;IM&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;The bandwidth of the acquisition (kHz9. This value affects resolution and SNR.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Repetition time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;repetitionTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Repetition Time (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;The time between successive excitation pulses, in milliseconds.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Dummy pulses</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;dummyPulses&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Number of dummy pulses&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s1">&#39;Number of dummy pulses at the beginning of each batch.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;shimming&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Shimming&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SEQUENCE_TEMPLATE.sequenceInfo">
+<a class="viewcode-back" href="../../seq.html#seq.sequence_template.SEQUENCE_TEMPLATE.sequenceInfo">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Description of the sequence. Students should customize this.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[Sequence Name] sequence&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Author: [Student&#39;s Name]&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Lab or Institution Name</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;More information&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SEQUENCE_TEMPLATE.sequenceTime">
+<a class="viewcode-back" href="../../seq.html#seq.sequence_template.SEQUENCE_TEMPLATE.sequenceTime">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceTime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the sequence time based on its parameters.</span>
+<span class="sd">        Students can extend this method as needed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nScans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nScans&#39;</span><span class="p">]</span>
+        <span class="n">repetitionTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;repetitionTime&#39;</span><span class="p">]</span>
+
+        <span class="n">seqTime</span> <span class="o">=</span> <span class="n">nScans</span> <span class="o">*</span> <span class="n">repetitionTime</span> <span class="o">*</span> <span class="mf">1e-3</span> <span class="o">/</span> <span class="mi">60</span>  <span class="c1"># conversion to minutes</span>
+        <span class="n">seqTime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">seqTime</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">seqTime</span>  <span class="c1"># minutes</span></div>
+
+
+<div class="viewcode-block" id="SEQUENCE_TEMPLATE.sequenceAtributes">
+<a class="viewcode-back" href="../../seq.html#seq.sequence_template.SEQUENCE_TEMPLATE.sequenceAtributes">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceAtributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Additional sequence attributes or parameters.</span>
+<span class="sd">        Extend this method with specific calculations or modifications.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sequenceAtributes</span><span class="p">()</span>
+        <span class="c1"># Add more attributes or modifications as required.</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="SEQUENCE_TEMPLATE.sequenceRun">
+<a class="viewcode-back" href="../../seq.html#seq.sequence_template.SEQUENCE_TEMPLATE.sequenceRun">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceRun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plotSeq</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">demo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the MRI sequence.</span>
+
+<span class="sd">        This method initializes batches and creates the full sequence by iterating through slices and phase-encoding steps.</span>
+
+<span class="sd">        Instructions for students:</span>
+<span class="sd">        - Batches divide the sequence into smaller, hardware-manageable sections.</span>
+<span class="sd">        - `initializeBatch` sets up new sequence batches, while `createBatches` iterates through slices and phase-encoding to create the full sequence.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plotSeq (bool): If True, plots the sequence.</span>
+<span class="sd">            demo (bool): If True, runs in demo mode.</span>
+<span class="sd">            standalone (bool): If True, runs the sequence independently.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: Indicates success or failure of the sequence run.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">demo</span> <span class="o">=</span> <span class="n">demo</span>  <span class="c1"># Set demo mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotSeq</span> <span class="o">=</span> <span class="n">plotSeq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">standalone</span> <span class="o">=</span> <span class="n">standalone</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Step 1: Define the interpreter for FloSeq/PSInterpreter.</span>
+<span class="sd">        The interpreter is responsible for converting the high-level pulse sequence description into low-level</span>
+<span class="sd">        instructions for the scanner hardware.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">flo_interpreter</span> <span class="o">=</span> <span class="n">PSInterpreter</span><span class="p">(</span>
+            <span class="n">tx_warmup</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span><span class="p">,</span>  <span class="c1"># Transmit chain warm-up time (us)</span>
+            <span class="n">rf_center</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">larmorFreq</span> <span class="o">*</span> <span class="mf">1e6</span><span class="p">,</span>  <span class="c1"># Larmor frequency (Hz)</span>
+            <span class="n">rf_amp_max</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">b1Efficiency</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e6</span><span class="p">,</span>  <span class="c1"># Maximum RF amplitude (Hz)</span>
+            <span class="n">gx_max</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">gFactor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">gammaB</span><span class="p">,</span>  <span class="c1"># Maximum gradient amplitude for X (Hz/m)</span>
+            <span class="n">gy_max</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">gFactor</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">gammaB</span><span class="p">,</span>  <span class="c1"># Maximum gradient amplitude for Y (Hz/m)</span>
+            <span class="n">gz_max</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">gFactor</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">gammaB</span><span class="p">,</span>  <span class="c1"># Maximum gradient amplitude for Z (Hz/m)</span>
+            <span class="n">grad_max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">hw</span><span class="o">.</span><span class="n">gFactor</span><span class="p">)</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">gammaB</span><span class="p">,</span>  <span class="c1"># Maximum gradient amplitude (Hz/m)</span>
+            <span class="n">grad_t</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">grad_raster_time</span> <span class="o">*</span> <span class="mf">1e6</span><span class="p">,</span>  <span class="c1"># Gradient raster time (us)</span>
+        <span class="p">)</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Step 2: Define system properties using PyPulseq (pp.Opts).</span>
+<span class="sd">        These properties define the hardware capabilities of the MRI scanner, such as maximum gradient strengths,</span>
+<span class="sd">        slew rates, and dead times. They are typically set based on the hardware configuration file (`hw_config`).</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">system</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">Opts</span><span class="p">(</span>
+            <span class="n">rf_dead_time</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span> <span class="o">*</span> <span class="mf">1e-6</span><span class="p">,</span>  <span class="c1"># Dead time between RF pulses (s)</span>
+            <span class="n">max_grad</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">hw</span><span class="o">.</span><span class="n">gFactor</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">,</span>  <span class="c1"># Maximum gradient strength (mT/m)</span>
+            <span class="n">grad_unit</span><span class="o">=</span><span class="s1">&#39;mT/m&#39;</span><span class="p">,</span>  <span class="c1"># Units of gradient strength</span>
+            <span class="n">max_slew</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">max_slew_rate</span><span class="p">,</span>  <span class="c1"># Maximum gradient slew rate (mT/m/ms)</span>
+            <span class="n">slew_unit</span><span class="o">=</span><span class="s1">&#39;mT/m/ms&#39;</span><span class="p">,</span>  <span class="c1"># Units of gradient slew rate</span>
+            <span class="n">grad_raster_time</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">grad_raster_time</span><span class="p">,</span>  <span class="c1"># Gradient raster time (s)</span>
+            <span class="n">rise_time</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">grad_rise_time</span><span class="p">,</span>  <span class="c1"># Gradient rise time (s)</span>
+            <span class="n">rf_raster_time</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+            <span class="n">block_duration_raster</span><span class="o">=</span><span class="mf">1e-6</span>
+        <span class="p">)</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Step 3: Perform any calculations required for the sequence.</span>
+<span class="sd">        In this step, students can implement the necessary calculations, such as timing calculations, RF amplitudes, and</span>
+<span class="sd">        gradient strengths, before defining the sequence blocks.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">bw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bandwidth</span> <span class="o">*</span> <span class="mf">1e-6</span> <span class="c1"># MHz</span>
+        <span class="n">sampling_period</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">bw</span>  <span class="c1"># us</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Step 4: Define the experiment to get the true bandwidth</span>
+<span class="sd">        In this step, student needs to get the real bandwidth used in the experiment. To get this bandwidth, an</span>
+<span class="sd">        experiment must be defined and the sampling period should be obtained using get_</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">:</span>
+            <span class="n">expt</span> <span class="o">=</span> <span class="n">ex</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+                <span class="n">lo_freq</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">larmorFreq</span><span class="p">,</span>  <span class="c1"># Larmor frequency in MHz</span>
+                <span class="n">rx_t</span><span class="o">=</span><span class="n">sampling_period</span><span class="p">,</span>  <span class="c1"># Sampling time in us</span>
+                <span class="n">init_gpa</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Whether to initialize GPA board (False for True)</span>
+                <span class="n">gpa_fhdo_offset_time</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">0.2</span> <span class="o">/</span> <span class="mf">3.1</span><span class="p">),</span>  <span class="c1"># GPA offset time calculation</span>
+                <span class="n">auto_leds</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># Automatic control of LEDs (False or True)</span>
+            <span class="p">)</span>
+            <span class="n">sampling_period</span> <span class="o">=</span> <span class="n">expt</span><span class="o">.</span><span class="n">get_sampling_period</span><span class="p">()</span>  <span class="c1"># us</span>
+            <span class="n">bw</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sampling_period</span>  <span class="c1"># MHz</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Acquisition bandwidth fixed to: </span><span class="si">%0.3f</span><span class="s2"> kHz&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">bw</span> <span class="o">*</span> <span class="mf">1e3</span><span class="p">))</span>
+            <span class="n">expt</span><span class="o">.</span><span class="fm">__del__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;bw_MHz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;sampling_period_us&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampling_period</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Step 5: Define sequence blocks.</span>
+<span class="sd">        In this step, you will define the building blocks of the MRI sequence, including the RF pulses, gradient pulses,</span>
+<span class="sd">        and ADC blocks.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1">## Excitation pulse</span>
+        <span class="c1"># Define the RF excitation pulse using PyPulseq. The flip angle is typically in radians.</span>
+        <span class="n">flip_ex</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfExFA</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span>  <span class="c1"># Convert flip angle from degrees to radians</span>
+        <span class="n">rf_ex</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_block_pulse</span><span class="p">(</span>
+            <span class="n">flip_angle</span><span class="o">=</span><span class="n">flip_ex</span><span class="p">,</span>  <span class="c1"># Set the flip angle for the RF pulse</span>
+            <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>  <span class="c1"># Use the system properties defined earlier</span>
+            <span class="n">duration</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rfExTime</span><span class="p">,</span>  <span class="c1"># Set the RF pulse duration</span>
+            <span class="n">delay</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>  <span class="c1"># Delay before the RF pulse (if any)</span>
+            <span class="n">phase_offset</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>  <span class="c1"># Set the phase offset for the pulse (0 by default)</span>
+        <span class="p">)</span>
+
+        <span class="c1">## ADC block</span>
+        <span class="c1"># Define the ADC block using PyPulseq. You need to specify number of samples and delay.</span>
+        <span class="n">adc</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_adc</span><span class="p">(</span>
+            <span class="n">num_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span><span class="p">,</span>
+            <span class="n">dwell</span><span class="o">=</span><span class="n">sampling_period</span> <span class="o">*</span> <span class="mf">1e-6</span><span class="p">,</span>
+            <span class="n">delay</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span><span class="o">*</span><span class="mf">1e-6</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfExTime</span> <span class="o">+</span> <span class="n">hw</span><span class="o">.</span><span class="n">deadTime</span><span class="o">*</span><span class="mf">1e-6</span>
+        <span class="p">)</span>
+
+        <span class="c1">## Repetition delay</span>
+        <span class="c1"># Define the delay for repetition.</span>
+        <span class="n">delay_repetition</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">make_delay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">repetitionTime</span><span class="p">)</span>
+
+        <span class="c1"># Additional considerations for students:</span>
+        <span class="c1"># - Make sure timing calculations account for hardware limitations, such as gradient raster time and dead time.</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Step 6: Define your initializeBatch according to your sequence.</span>
+<span class="sd">        In this step, you will create the initializeBatch method to create dummy pulses that will be initialized for</span>
+<span class="sd">        each new batch.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">def</span> <span class="nf">initializeBatch</span><span class="p">():</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Initializes a batch of MRI sequence blocks using PyPulseq for a given experimental configuration.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">            --------</span>
+<span class="sd">            tuple</span>
+<span class="sd">                - batch (pp.Sequence): A PyPulseq sequence object containing the configured sequence blocks.</span>
+<span class="sd">                - n_rd_points (int): Total number of readout points in the batch.</span>
+<span class="sd">                - n_adc (int): Total number of ADC acquisitions in the batch.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+
+            <span class="c1"># Instantiate pypulseq sequence object</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">Sequence</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+            <span class="n">n_rd_points</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">n_adc</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># Add dummy pulses to batch</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dummyPulses</span><span class="p">):</span>
+                <span class="n">batch</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">rf_ex</span><span class="p">,</span> <span class="n">delay_repetition</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">batch</span><span class="p">,</span> <span class="n">n_rd_points</span><span class="p">,</span> <span class="n">n_adc</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Step 7: Define your createBatches method.</span>
+<span class="sd">        In this step you will populate the batches adding the blocks previously defined in step 4, and accounting for</span>
+<span class="sd">        number of acquired points to check if a new batch is required.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">def</span> <span class="nf">createBatches</span><span class="p">():</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Create batches for the full pulse sequence.</span>
+
+<span class="sd">            Instructions:</span>
+<span class="sd">            - This function creates the complete pulse sequence by iterating through repetitions.</span>
+<span class="sd">            - Each iteration adds new blocks to the sequence, including the RF pulse, ADC block, and repetition delay.</span>
+<span class="sd">            - If a batch exceeds the maximum number of readout points, a new batch is started.</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">                waveforms (dict): Contains the waveforms for each batch.</span>
+<span class="sd">                n_rd_points_dict (dict): Dictionary of readout points per batch.</span>
+<span class="sd">                n_adc (int): Total number of ADC acquisitions across all batches</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">batches</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Dictionary to save batches PyPulseq sequences</span>
+            <span class="n">waveforms</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Dictionary to store generated waveforms per each batch</span>
+            <span class="n">n_rd_points_dict</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Dictionary to track readout points for each batch</span>
+            <span class="n">n_rd_points</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># To account for number of acquired rd points</span>
+            <span class="n">seq_idx</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Sequence batch index</span>
+            <span class="n">n_adc</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># To account for number of adc windows</span>
+            <span class="n">batch_num</span> <span class="o">=</span> <span class="s2">&quot;batch_0&quot;</span>  <span class="c1"># Initial batch name</span>
+
+            <span class="c1"># Loop through all repetitions (e.g., slices)</span>
+            <span class="k">for</span> <span class="n">repetition</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nRepetitions</span><span class="p">):</span>
+                <span class="c1"># Check if a new batch is needed (either first batch or exceeding readout points limit)</span>
+                <span class="k">if</span> <span class="n">seq_idx</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">n_rd_points</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span> <span class="o">&gt;</span> <span class="n">hw</span><span class="o">.</span><span class="n">maxRdPoints</span><span class="p">:</span>
+                    <span class="c1"># If a previous batch exists, write and interpret it</span>
+                    <span class="k">if</span> <span class="n">seq_idx</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">batches</span><span class="p">[</span><span class="n">batch_num</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">batch_num</span> <span class="o">+</span> <span class="s2">&quot;.seq&quot;</span><span class="p">)</span>
+                        <span class="n">waveforms</span><span class="p">[</span><span class="n">batch_num</span><span class="p">],</span> <span class="n">param_dict</span> <span class="o">=</span> <span class="n">flo_interpreter</span><span class="o">.</span><span class="n">interpret</span><span class="p">(</span><span class="n">batch_num</span> <span class="o">+</span> <span class="s2">&quot;.seq&quot;</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">batch_num</span><span class="si">}</span><span class="s2">.seq ready!&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Update to the next batch</span>
+                    <span class="n">seq_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">n_rd_points_dict</span><span class="p">[</span><span class="n">batch_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_rd_points</span>  <span class="c1"># Save readout points count</span>
+                    <span class="n">n_rd_points</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">batch_num</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;batch_</span><span class="si">{</span><span class="n">seq_idx</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="n">batches</span><span class="p">[</span><span class="n">batch_num</span><span class="p">],</span> <span class="n">n_rd_points</span><span class="p">,</span> <span class="n">n_adc_0</span> <span class="o">=</span> <span class="n">initializeBatch</span><span class="p">()</span>  <span class="c1"># Initialize new batch</span>
+                    <span class="n">n_adc</span> <span class="o">+=</span> <span class="n">n_adc_0</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating </span><span class="si">{</span><span class="n">batch_num</span><span class="si">}</span><span class="s2">.seq...&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Add sequence blocks (RF, ADC, repetition delay) to the current batch</span>
+                <span class="n">batches</span><span class="p">[</span><span class="n">batch_num</span><span class="p">]</span><span class="o">.</span><span class="n">add_block</span><span class="p">(</span><span class="n">rf_ex</span><span class="p">,</span> <span class="n">adc</span><span class="p">,</span> <span class="n">delay_repetition</span><span class="p">)</span>
+                <span class="n">n_rd_points</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span>  <span class="c1"># Accounts for additional acquired points in each adc block</span>
+                <span class="n">n_adc</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c1"># After final repetition, save and interpret the last batch</span>
+            <span class="n">batches</span><span class="p">[</span><span class="n">batch_num</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">batch_num</span> <span class="o">+</span> <span class="s2">&quot;.seq&quot;</span><span class="p">)</span>
+            <span class="n">waveforms</span><span class="p">[</span><span class="n">batch_num</span><span class="p">],</span> <span class="n">param_dict</span> <span class="o">=</span> <span class="n">flo_interpreter</span><span class="o">.</span><span class="n">interpret</span><span class="p">(</span><span class="n">batch_num</span> <span class="o">+</span> <span class="s2">&quot;.seq&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">batch_num</span><span class="si">}</span><span class="s2">.seq ready!&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">batches</span><span class="p">)</span><span class="si">}</span><span class="s2"> batches created. Sequence ready!&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Update the number of acquired ponits in the last batch</span>
+            <span class="n">n_rd_points_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;batch_0&#39;</span><span class="p">)</span>
+            <span class="n">n_rd_points_dict</span><span class="p">[</span><span class="n">batch_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_rd_points</span>
+
+            <span class="k">return</span> <span class="n">waveforms</span><span class="p">,</span> <span class="n">n_rd_points_dict</span><span class="p">,</span> <span class="n">n_adc</span>
+
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Step 8: Run the batches</span>
+<span class="sd">        This step will handle the different batches, run it and get the resulting data. This should not be modified.</span>
+<span class="sd">        Oversampled data will be available in self.mapVals[&#39;data_over&#39;]</span>
+<span class="sd">        Decimated data will be available in self.mapVals[&#39;data_decimated&#39;]</span>
+<span class="sd">        The decimated data is shifted to account for CIC delay, so data is synchronized with real-time signal</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">waveforms</span><span class="p">,</span> <span class="n">n_readouts</span><span class="p">,</span> <span class="n">n_adc</span> <span class="o">=</span> <span class="n">createBatches</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">runBatches</span><span class="p">(</span><span class="n">waveforms</span><span class="o">=</span><span class="n">waveforms</span><span class="p">,</span>
+                               <span class="n">n_readouts</span><span class="o">=</span><span class="n">n_readouts</span><span class="p">,</span>
+                               <span class="n">n_adc</span><span class="o">=</span><span class="n">n_adc</span><span class="p">,</span>
+                               <span class="n">frequency</span><span class="o">=</span><span class="n">hw</span><span class="o">.</span><span class="n">larmorFreq</span><span class="p">,</span>  <span class="c1"># MHz</span>
+                               <span class="n">bandwidth</span><span class="o">=</span><span class="n">bw</span><span class="p">,</span>  <span class="c1"># MHz</span>
+                               <span class="n">decimate</span><span class="o">=</span><span class="s1">&#39;Normal&#39;</span><span class="p">,</span>
+                               <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SEQUENCE_TEMPLATE.sequenceAnalysis">
+<a class="viewcode-back" href="../../seq.html#seq.sequence_template.SEQUENCE_TEMPLATE.sequenceAnalysis">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+
+        <span class="c1"># create self.out to run in iterative mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># save data once self.output is created</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveRawData</span><span class="p">()</span>
+
+        <span class="c1"># Plot result in standalone execution</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;Standalone&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotResults</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span></div>
+</div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># main(plot=True, write_seq=True)</span>
+
+    <span class="n">seq</span> <span class="o">=</span> <span class="n">SEQUENCE_TEMPLATE</span><span class="p">()</span>
+    <span class="n">seq</span><span class="o">.</span><span class="n">sequenceAtributes</span><span class="p">()</span>
+    <span class="n">seq</span><span class="o">.</span><span class="n">sequenceRun</span><span class="p">(</span><span class="n">plotSeq</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">demo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># seq.sequenceAnalysis(mode=&#39;standalone&#39;)</span>
+    <span class="c1"># seq.plotResults()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, J.M. Algarín.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
