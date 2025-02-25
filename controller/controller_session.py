@@ -173,19 +173,19 @@ class SessionController(SessionWindow):
         Updates the session dictionary with the current session information.
         """
         self.session = {
-            'project': self.project_combo_box.currentText(),
-            'study': self.study_combo_box.currentText(),
-            'side': self.side_combo_box.currentText(),
-            'orientation': self.orientation_combo_box.currentText(),
-            'subject_id': self.id_line_edit.text(),
-            'study_id': self.idS_line_edit.text(),
-            'subject_name': self.name_line_edit.text(),
-            'subject_surname': self.surname_line_edit.text(),
-            'subject_birthday': self.birthday_line_edit.text(),
-            'subject_weight': self.weight_line_edit.text(),
-            'subject_height': self.height_line_edit.text(),
-            'scanner': self.scanner_line_edit.text(),
-            'rf_coil': self.rf_coil_combo_box.currentText(),
+            'project': self.tab_session.project_combo_box.currentText(),
+            'study': self.tab_session.study_combo_box.currentText(),
+            'side': self.tab_session.side_combo_box.currentText(),
+            'orientation': self.tab_session.orientation_combo_box.currentText(),
+            'subject_id': self.tab_session.id_line_edit.text(),
+            'study_id': self.tab_session.idS_line_edit.text(),
+            'subject_name': self.tab_session.name_line_edit.text(),
+            'subject_surname': self.tab_session.surname_line_edit.text(),
+            'subject_birthday': self.tab_session.birthday_line_edit.text(),
+            'subject_weight': self.tab_session.weight_line_edit.text(),
+            'subject_height': self.tab_session.height_line_edit.text(),
+            'scanner': self.tab_session.scanner_line_edit.text(),
+            'rf_coil': self.tab_session.rf_coil_combo_box.currentText(),
             'seriesNumber': 0,
         }
         hw.b1Efficiency = hw.antenna_dict[self.session['rf_coil']]
