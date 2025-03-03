@@ -1,7 +1,10 @@
 import sys
 import qdarkstyle
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QTabWidget, QStatusBar, QToolBar, QAction
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QTabWidget, QStatusBar, QToolBar, QAction, \
+    QHBoxLayout, QGroupBox, QCheckBox
+
+from controller.controller_console import ConsoleController
 from widgets.widget_hw_console import ConsoleWidget
 from widgets.widget_hw_others import OthersWidget
 from widgets.widget_hw_gradients import GradientsWidget
@@ -19,6 +22,50 @@ class SessionWindow(QMainWindow):
         # Set stylesheet
         self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
         self.setStyleSheet(self.styleSheet)
+
+        # Main layout
+        widget_main = QWidget()
+        layout_main = QHBoxLayout()
+        widget_main.setLayout(layout_main)
+        self.setCentralWidget(widget_main)
+        layout_left = QVBoxLayout()
+        layout_main.addLayout(layout_left)
+
+        # checks
+        checks = QGroupBox("Scanner checks")
+        layout = QVBoxLayout()
+        checks.setLayout(layout)
+        layout_left.addWidget(checks)
+
+        self.check_projects = QCheckBox("Projects")
+        self.check_projects.setDisabled(True)
+        layout.addWidget(self.check_projects)
+        self.check_study= QCheckBox("Study cases")
+        self.check_study.setDisabled(True)
+        layout.addWidget(self.check_study)
+        self.check_gradients = QCheckBox("Gradient hardware")
+        self.check_gradients.setDisabled(True)
+        layout.addWidget(self.check_gradients)
+        self.check_redpitayas = QCheckBox("MaRCoS")
+        self.check_redpitayas.setDisabled(True)
+        layout.addWidget(self.check_redpitayas)
+        self.check_rf = QCheckBox("RFs")
+        self.check_rf.setDisabled(True)
+        layout.addWidget(self.check_rf)
+        self.check_rp_ips = QCheckBox("RP IPs")
+        self.check_rp_ips.setDisabled(True)
+        layout.addWidget(self.check_rp_ips)
+        self.check_rf_coils = QCheckBox("RF coils")
+        self.check_rf_coils.setDisabled(True)
+        layout.addWidget(self.check_rf_coils)
+        self.check_others = QCheckBox("Others")
+        self.check_others.setDisabled(True)
+        layout.addWidget(self.check_others)
+
+
+        # Define console
+        self.console = ConsoleController()
+        layout_left.addWidget(self.console)
 
         # Add toolbar
         self.toolbar = QToolBar("Session toolbar")
@@ -49,6 +96,7 @@ class SessionWindow(QMainWindow):
 
         # Create a QTabWidget
         self.tabs = QTabWidget()
+        layout_main.addWidget(self.tabs)
 
         # Create the individual tabs
         self.tab_session = SessionWidget()
@@ -63,9 +111,6 @@ class SessionWindow(QMainWindow):
         self.tabs.addTab(self.tab_gradients, "Gradients")
         self.tabs.addTab(self.tab_rf, "RF")
         self.tabs.addTab(self.tab_others, "Others")
-
-        # Set the central widget of the main window to be the tabs
-        self.setCentralWidget(self.tabs)
 
         # Status bar
         self.setStatusBar(QStatusBar(self))

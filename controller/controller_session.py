@@ -42,27 +42,44 @@ class SessionController(SessionWindow):
         if not os.path.exists("configs/sys_projects.csv"):
             print("ERROR: Projects not configured. Add at least one project.")
             check = False
+        else:
+            self.check_projects.setChecked(True)
         if not os.path.exists("configs/sys_study.csv"):
             print("ERROR: Study cases not configured. Add at least one study case.")
             check = False
+        else:
+            self.check_study.setChecked(True)
         if not os.path.exists("configs/hw_gradients.csv"):
             print("ERROR: Gradient hardware not configured. Go to hardware config.")
             check = False
+        else:
+            self.check_gradients.setChecked(True)
         if not os.path.exists("configs/hw_others.csv"):
             print("ERROR: Other hardware not configured. Go to hardware config.")
             check = False
+        else:
+            self.check_others.setChecked(True)
         if not os.path.exists("configs/hw_redpitayas.csv"):
             print("ERROR: Red Pitayas not configured. Go to hardware config.")
             check = False
+        else:
+            self.check_redpitayas.setChecked(True)
         if not os.path.exists("configs/hw_rf.csv"):
             print("ERROR: RF hardware not configured. Go to hardware config.")
             check = False
+        else:
+            self.check_rf.setChecked(True)
         if len(hw.rp_ip_list) == 0:
             print("ERROR: Red pitaya ip address required. Go to hardware config.")
             check = False
+        else:
+            self.check_rp_ips.setChecked(True)
         if len(hw.antenna_dict) == 0:
             print("ERROR: Antenna definition required. Go to hardware config.")
             check = False
+        else:
+            self.check_rf_coils.setChecked(True)
+
 
         if check:
             print("System configuration ready.")
@@ -71,6 +88,7 @@ class SessionController(SessionWindow):
 
     def update_hardware(self):
         self.tab_session.rf_coil_combo_box.addItems(hw.antenna_dict.keys())
+        self.check_system()
 
     def runMainGui(self):
         """
@@ -172,20 +190,26 @@ class SessionController(SessionWindow):
         """
         Updates the session dictionary with the current session information.
         """
+
+        def get_text_or_placeholder(widget):
+            return widget.text() if widget.text() else widget.placeholderText()
+
         self.session = {
             'project': self.tab_session.project_combo_box.currentText(),
             'study': self.tab_session.study_combo_box.currentText(),
             'side': self.tab_session.side_combo_box.currentText(),
             'orientation': self.tab_session.orientation_combo_box.currentText(),
-            'subject_id': self.tab_session.id_line_edit.text(),
-            'study_id': self.tab_session.idS_line_edit.text(),
-            'subject_name': self.tab_session.name_line_edit.text(),
-            'subject_surname': self.tab_session.surname_line_edit.text(),
-            'subject_birthday': self.tab_session.birthday_line_edit.text(),
-            'subject_weight': self.tab_session.weight_line_edit.text(),
-            'subject_height': self.tab_session.height_line_edit.text(),
-            'scanner': self.tab_session.scanner_line_edit.text(),
+            'subject_id': get_text_or_placeholder(self.tab_session.id_line_edit),
+            'study_id': get_text_or_placeholder(self.tab_session.idS_line_edit),
+            'subject_name': get_text_or_placeholder(self.tab_session.name_line_edit),
+            'subject_surname': get_text_or_placeholder(self.tab_session.surname_line_edit),
+            'subject_birthday': get_text_or_placeholder(self.tab_session.birthday_line_edit),
+            'subject_weight': get_text_or_placeholder(self.tab_session.weight_line_edit),
+            'subject_height': get_text_or_placeholder(self.tab_session.height_line_edit),
+            'scanner': get_text_or_placeholder(self.tab_session.scanner_line_edit),
             'rf_coil': self.tab_session.rf_coil_combo_box.currentText(),
             'seriesNumber': 0,
         }
+
         hw.b1Efficiency = hw.antenna_dict[self.session['rf_coil']]
+

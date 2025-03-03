@@ -738,7 +738,6 @@ class HistoryListControllerPos(HistoryListWidget):
         print(f'{path + "_" + name_string + ".dcm"} saved!')
 
         """Save NIFTI"""
-        orientation = self.image_orientation[self.image_key]
         image = self.image_hist[self.image_key]
         n_points = image.shape
         n_points = n_points[::-1]
