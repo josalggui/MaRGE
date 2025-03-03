@@ -178,7 +178,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         figure = image / np.max(np.abs(image)) * 100
         
-        orientation=None
+        orientation = None
         if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
             orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
 

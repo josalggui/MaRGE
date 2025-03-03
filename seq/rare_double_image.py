@@ -24,17 +24,12 @@ for subdir in subdirs:
 #******************************************************************************
 import numpy as np
 import controller.experiment_gui as ex
-import scipy.signal as sig
-from scipy.stats import linregress
 import configs.hw_config as hw  # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 
-from datetime import datetime
 import ismrmrd
 import ismrmrd.xsd
-import datetime
-import ctypes
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 
