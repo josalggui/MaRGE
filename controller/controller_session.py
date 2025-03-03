@@ -4,6 +4,9 @@
 :affiliation: MRILab, i3M, CSIC, Valencia, Spain
 
 """
+import csv
+import shutil
+
 import configs.hw_config as hw
 from controller.controller_main import MainController
 import os
@@ -82,7 +85,7 @@ class SessionController(SessionWindow):
 
 
         if check:
-            print("System configuration ready.")
+            print("READY: System configuration checks succeeded.")
             self.launch_gui_action.setDisabled(False)
             self.demo_gui_action.setDisabled(False)
 
@@ -103,6 +106,20 @@ class SessionController(SessionWindow):
             self.session['project'], self.session['subject_id'], self.session['study'], self.session['side'])
         if not os.path.exists(self.session['directory']):
             os.makedirs(self.session['directory'])
+
+        # Save session in csv and a copy of the configuration files into the directory
+        with open(self.session['directory'] + "/session.csv", mode="w", newline="") as file:
+            writer = csv.writer(file)
+
+            # Write each key-value pair in separate rows
+            for key, value in self.session.items():
+                writer.writerow([key, value])
+        shutil.copy2("configs/hw_gradients.csv", self.session["directory"]+"/hw_gradients.csv")
+        shutil.copy2("configs/hw_others.csv", self.session["directory"] + "/hw_others.csv")
+        shutil.copy2("configs/hw_redpitayas.csv", self.session["directory"] + "/hw_redpitayas.csv")
+        shutil.copy2("configs/hw_rf.csv", self.session["directory"] + "/hw_rf.csv")
+        shutil.copy2("configs/sys_projects.csv", self.session["directory"] + "/sys_projects.csv")
+        shutil.copy2("configs/sys_study.csv", self.session["directory"] + "/sys_study.csv")
 
         # Open the main gui
         if self.main_gui is None:
@@ -129,6 +146,20 @@ class SessionController(SessionWindow):
             self.session['project'], self.session['subject_id'], self.session['study'], self.session['side'])
         if not os.path.exists(self.session['directory']):
             os.makedirs(self.session['directory'])
+
+        # Save session in csv and a copy of the configuration files into the directory
+        with open(self.session['directory'] + "/session.csv", mode="w", newline="") as file:
+            writer = csv.writer(file)
+
+            # Write each key-value pair in separate rows
+            for key, value in self.session.items():
+                writer.writerow([key, value])
+        shutil.copy2("configs/hw_gradients.csv", self.session["directory"]+"/hw_gradients.csv")
+        shutil.copy2("configs/hw_others.csv", self.session["directory"] + "/hw_others.csv")
+        shutil.copy2("configs/hw_redpitayas.csv", self.session["directory"] + "/hw_redpitayas.csv")
+        shutil.copy2("configs/hw_rf.csv", self.session["directory"] + "/hw_rf.csv")
+        shutil.copy2("configs/sys_projects.csv", self.session["directory"] + "/sys_projects.csv")
+        shutil.copy2("configs/sys_study.csv", self.session["directory"] + "/sys_study.csv")
 
         # Open the main gui
         if self.main_gui is None:
