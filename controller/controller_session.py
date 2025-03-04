@@ -123,7 +123,7 @@ class SessionController(SessionWindow):
         shutil.copy2("configs/sys_study.csv", self.session["directory"] + "/sys_study.csv")
 
         # Add seriesNumber = 0 to session for dicom purposes
-        self.session['serialNumber'] = 0
+        self.session['seriesNumber'] = 0
 
         # Open the main gui
         if self.main_gui is None:
@@ -166,7 +166,7 @@ class SessionController(SessionWindow):
         shutil.copy2("configs/sys_study.csv", self.session["directory"] + "/sys_study.csv")
 
         # Add seriesNumber = 0 to session for dicom purposes
-        self.session['serialNumber'] = 0
+        self.session['seriesNumber'] = 0
 
         # Open the main gui
         if self.main_gui is None:
