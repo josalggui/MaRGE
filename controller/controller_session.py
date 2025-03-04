@@ -28,6 +28,7 @@ class SessionController(SessionWindow):
         Initializes the SessionController.
         """
         super().__init__()
+        self.session = None
         self.main_gui = None
         self.tab_session.rf_coil_combo_box.addItems(hw.antenna_dict.keys())
 
@@ -225,6 +226,15 @@ class SessionController(SessionWindow):
         def get_text_or_placeholder(widget):
             return widget.text() if widget.text() else widget.placeholderText()
 
+        # Get repo version
+        try:
+            tag = subprocess.check_output(['git', 'describe', '--tags'], stderr=subprocess.STDOUT).strip().decode(
+                'utf-8')
+        except subprocess.CalledProcessError as e:
+            print(f"Error getting Git tag: {e.output.decode('utf-8')}")
+            tag = ""
+
+
         self.session = {
             'project': self.tab_session.project_combo_box.currentText(),
             'study': self.tab_session.study_combo_box.currentText(),
@@ -239,6 +249,7 @@ class SessionController(SessionWindow):
             'subject_height': get_text_or_placeholder(self.tab_session.height_line_edit),
             'scanner': get_text_or_placeholder(self.tab_session.scanner_line_edit),
             'rf_coil': self.tab_session.rf_coil_combo_box.currentText(),
+            'software_version': tag,
             'seriesNumber': 0,
         }
 
