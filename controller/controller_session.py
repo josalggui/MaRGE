@@ -122,6 +122,9 @@ class SessionController(SessionWindow):
         shutil.copy2("configs/sys_projects.csv", self.session["directory"] + "/sys_projects.csv")
         shutil.copy2("configs/sys_study.csv", self.session["directory"] + "/sys_study.csv")
 
+        # Add seriesNumber = 0 to session for dicom purposes
+        self.session['serialNumber'] = 0
+
         # Open the main gui
         if self.main_gui is None:
             self.main_gui = MainController(session=self.session, demo=False, parent=self)
@@ -161,6 +164,9 @@ class SessionController(SessionWindow):
         shutil.copy2("configs/hw_rf.csv", self.session["directory"] + "/hw_rf.csv")
         shutil.copy2("configs/sys_projects.csv", self.session["directory"] + "/sys_projects.csv")
         shutil.copy2("configs/sys_study.csv", self.session["directory"] + "/sys_study.csv")
+
+        # Add seriesNumber = 0 to session for dicom purposes
+        self.session['serialNumber'] = 0
 
         # Open the main gui
         if self.main_gui is None:
@@ -250,7 +256,6 @@ class SessionController(SessionWindow):
             'scanner': get_text_or_placeholder(self.tab_session.scanner_line_edit),
             'rf_coil': self.tab_session.rf_coil_combo_box.currentText(),
             'software_version': tag,
-            'seriesNumber': 0,
         }
 
         hw.b1Efficiency = hw.antenna_dict[self.session['rf_coil']]
