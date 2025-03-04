@@ -25,14 +25,14 @@ class SessionWidget(QWidget):
         # Create QComboBox for project
         row = 0
         self.main_layout.addWidget(QLabel("Project"), row, 0)
-        self.project_combo_box = DynamicComboBox("configs/sys_projects.csv")
+        self.project_combo_box = DynamicComboBox("configs/sys_projects.csv", title="Add/Delete Project")
         self.project_combo_box.setStatusTip("Select the project")
         self.main_layout.addWidget(self.project_combo_box, row, 1)
 
         # Create QComboBox for study case
         row += 1
         self.main_layout.addWidget(QLabel("Study"), row, 0)
-        self.study_combo_box = DynamicComboBox("configs/sys_study.csv")
+        self.study_combo_box = DynamicComboBox("configs/sys_study.csv", title="Add/Delete Study")
         self.study_combo_box.setStatusTip("Select the study")
         self.main_layout.addWidget(self.study_combo_box, row, 1)
 
@@ -139,9 +139,10 @@ class SessionWidget(QWidget):
         self.session = {}
 
 class DynamicComboBox(QComboBox):
-    def __init__(self, file_name):
+    def __init__(self, file_name, title="Add/Delete Project"):
         super().__init__()
         self.file_name = file_name
+        self.title = title
 
         # Load items from CSV
         self.load_items()
@@ -152,7 +153,7 @@ class DynamicComboBox(QComboBox):
 
     def check_add_new(self, index):
         if self.itemText(index) == "Add/Delete...":
-            new_item, ok = QInputDialog.getText(self, "Modify List", "Enter new item to add/remove:")
+            new_item, ok = QInputDialog.getText(self, self.title, "Enter new item:")
 
             if ok and new_item:
                 existing_index = self.findText(new_item)
