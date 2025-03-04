@@ -23,6 +23,7 @@ from skimage.measure import shannon_entropy
 # Import dicom saver
 from manager.dicommanager import DICOMImage
 import shutil
+import nibabel as nib
 
 class MRIBLANKSEQ:
     """
@@ -1602,11 +1603,12 @@ class MRIBLANKSEQ:
         """
         Save the rawData.
 
-        This method saves the rawData to various formats including .mat, .csv, .dcm and .h5.
+        This method saves the rawData to various formats including .mat, .csv, .dcm, .nii and .h5.
 
         The .mat file contains the rawData.
         The .csv file contains only the input parameters.
         The .dcm file is the DICOM image.
+        The .nii file is the nifti image
         The .h5 file is the ISMRMRD format.
         
 
@@ -1629,6 +1631,7 @@ class MRIBLANKSEQ:
         directory_mat = directory + '/mat'
         directory_csv = directory + '/csv'
         directory_dcm = directory + '/dcm'
+        directory_nii = directory + '/nii'
         directory_ismrmrd = directory + '/ismrmrd'
         
         if not os.path.exists(directory + '/mat'):
@@ -1637,6 +1640,8 @@ class MRIBLANKSEQ:
             os.makedirs(directory_csv)
         if not os.path.exists(directory + '/dcm'):
             os.makedirs(directory_dcm)
+        if not os.path.exists(directory + '/nii'):
+            os.makedirs(directory_nii)
         if not os.path.exists(directory + '/ismrmrd'):
             os.makedirs(directory_ismrmrd)
 
@@ -1658,6 +1663,9 @@ class MRIBLANKSEQ:
         # Save mat file with the outputs
         savemat("%s/%s.mat" % (directory_mat, file_name), self.mapVals) # au format savemat(chemin_fichier_mat, {"data" : data}), avec data contient les données brute à sauvegarder
 
+        # Save nifti
+        self.save_nifti("%s/%s.nii" % (directory_nii, file_name))
+
         # Save csv with input parameters
         with open('%s/%s.csv' % (directory_csv, file_name), 'w') as csvfile: # ouvrir le fichier csv en mode écriture au format with open(chemin_fichier_csv, 'w', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys) # mapKeys contient les noms des colonnes du fichier csv que l'on veut sauvegarder 
@@ -1673,6 +1681,49 @@ class MRIBLANKSEQ:
 
         # Move seq files
         self.move_batch_files(destination_folder=directory, file_name=file_name)
+
+    def save_nifti(self, file_path):
+        axes_orientation = self.mapVals['axesOrientation']
+        n_points = self.mapVals['nPoints']
+        n_xyz = [0, 0, 0]
+        reorder = [0, 0, 0]
+        for i, axis in enumerate(axes_orientation):
+            n_xyz[axis] = n_points[i]
+            reorder[axis] = i
+        fov = np.array(self.mapVals['fov'])  # cm
+        dfov = np.array(self.mapVals['dfov'])  # mm
+        resolution = fov / n_xyz * 10  # mm
+        image = self.mapVals['image3D']
+        image = np.transpose(image, axes=(2, 1, 0))
+        image = np.transpose(image, reorder)
+        image = np.transpose(image, axes=(2, 1, 0))
+        image = image[::-1, ::-1, ::-1]
+        image = image / np.max(image)
+
+        orientation = 'FFS'
+
+        # Create afine matrix
+        if orientation == 'FFS':
+            affine = np.zeros((4, 4))
+            affine[0, 0] = resolution[2]
+            affine[1, 1] = resolution[1]
+            affine[2, 2] = resolution[0]
+            affine[0, 3] = dfov[2]
+            affine[1, 3] = - dfov[1]
+            affine[2, 3] = dfov[0]
+            affine[3, 3] = 1
+        elif orientation == 'HFS':
+            print("Affine matrix not ready.")
+        elif orientation == 'FFP':
+            print("Affine matrix not ready.")
+        elif orientation == 'HFP':
+            print("Affine matrix not ready.")
+
+        # Create the NIfTI image
+        nifti_img = nib.Nifti1Image(np.abs(image), affine)
+
+        # Save the NIfTI file
+        nib.save(nifti_img, file_path)
 
     @staticmethod
     def move_batch_files(destination_folder, file_name):
