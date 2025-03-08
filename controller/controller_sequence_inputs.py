@@ -58,10 +58,16 @@ class SequenceInputsController(SequenceInputsWidget):
             input_widgets_4 = self.createTab(props, tips)
             self.addTab(input_widgets_4, "Others")
 
+        if hasattr(defaultsequences[self.seq_name], 'PROproperties'):
+            props, tips = defaultsequences[self.seq_name].PROproperties
+            input_widgets_5 = self.createTab(props, tips)
+            self.addTab(input_widgets_5, "Processing")
+
     def removeTabs(self):
         """
         Removes all the tabs from the sequence inputs widget.
         """
+        self.removeTab(0)
         self.removeTab(0)
         self.removeTab(0)
         self.removeTab(0)

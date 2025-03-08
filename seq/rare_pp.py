@@ -110,6 +110,18 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
+        self.addParameter(key='bm4d', string='BM4D std', val=-1, field='PRO',
+                          tip='Perform BM4D filter: -1 -> do not apply, 0 -> automatic std calculation, >0 to use manual'
+                              ' std value.')
+        self.addParameter(key='cosbell_factor', string='Cosbell factor', val=0, field='PRO',
+                          tip='Perform cosbell filter in k-space')
+        self.addParameter(key='padding', string='Final size (rd, ph, sl)' , val=[0, 0, 0], field='PRO',
+                          tip='Final matrix size after processing zero padding')
+        self.addParameter(key='partial_method', string='Partial recon method', val='POCS', field='PRO',
+                          tip="'zero' -> zero padding, pocs -> Projection Onto Convex Sets")
+        self.addParameter(key='angulation', string='Angulation', val=1, field='OTH',
+                          tip='1: Consider FOV angulation. 0: Keep the image unangled (it reduced the number of instructions).')
+
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
         self.header = ismrmrd.xsd.ismrmrdHeader()

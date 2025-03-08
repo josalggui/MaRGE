@@ -173,6 +173,25 @@ class MRIBLANKSEQ:
                 tips[self.mapNmspc[key]] = [self.mapTips[key]]
         return out, tips
 
+    @property
+    def PROproperties(self) -> dict:
+        """
+        Retrieve PRO-related properties.
+
+        Automatically selects the inputs related to PRO fields and returns them along with their corresponding tips.
+
+        Returns:
+            dict: A dictionary containing PRO-related properties.
+            dict: A dictionary containing tips for PRO-related properties.
+        """
+        out = {}
+        tips = {}
+        for key in self.mapKeys:
+            if self.mapFields[key] == 'PRO':
+                out[self.mapNmspc[key]] = [self.mapVals[key]]
+                tips[self.mapNmspc[key]] = [self.mapTips[key]]
+        return out, tips
+
     def rotate_waveforms(self, waveforms):
         # Get the waveforms
         gx = waveforms['grad_vx']

@@ -324,3 +324,124 @@ def run_zero_padding(k_space, new_size):
                                                                                         ]
 
     return image_matrix
+
+def hanning_filter(kSpace, mm, nb_point):
+    """
+    Apply a Hanning filter to the k-space data.
+
+    Args:
+        kSpace (ndarray): K-space data.
+        n (int): Number of zero-filled points in k-space.
+        m (int): Number of acquired points in k-space.
+        nb_point (int): Number of points before m+n where reconstruction begins to go to zero.
+
+    Returns:
+        ndarray: K-space data with the Hanning filter applied.
+    """
+    kSpace_hanning = np.copy(kSpace)
+    kSpace_hanning[mm[0]::, :, :] = 0.0
+    kSpace_hanning[:, mm[1]::, :] = 0.0
+    kSpace_hanning[:, :, mm[2]::] = 0.0
+
+    # Calculate the Hanning window
+    hanning_window = np.hanning(nb_point * 2)
+    hanning_window = hanning_window[int(len(hanning_window)/2)::]
+
+    if not mm[0] == np.size(kSpace, 0):
+        for ii in range(nb_point):
+            kSpace_hanning[mm[0]-nb_point+ii+1, :, :] *= hanning_window[ii]
+    if not mm[1] == np.size(kSpace, 1):
+        for ii in range(nb_point):
+            kSpace_hanning[:, mm[1]-nb_point+ii+1, :] *= hanning_window[ii]
+    if not mm[2] == np.size(kSpace, 2):
+        for ii in range(nb_point):
+            kSpace_hanning[:, :, mm[2]-nb_point+ii+1] *= hanning_window[ii]
+
+    return kSpace_hanning
+
+def run_pocs_reconstruction(n_points, factors, k_space_ref):
+    """
+    Perform POCS reconstruction.
+
+    Retrieves the number of points before m+n where reconstruction begins to go to zero.
+    Retrieves the correlation threshold for stopping the iterations.
+    Computes the partial image and full image for POCS reconstruction.
+    Applies the iterative reconstruction with phase correction.
+    Updates the main matrix of the image view widget with the interpolated image.
+    Adds the "POCS" operation to the history widget and updates the history dictionary and operations history.
+    """
+
+    def getCenterKSpace(k_space, m_vec):
+        # fix n_vec
+        output = np.zeros(np.shape(k_space), dtype=complex)
+        n_vec = np.array(np.shape(k_space))
+
+        # fill with zeros
+        idx0 = n_vec // 2 - m_vec
+        idx1 = n_vec // 2 + m_vec
+        output[idx0[0]:idx1[0], idx0[1]:idx1[1], idx0[2]:idx1[2]] = \
+            k_space[idx0[0]:idx1[0], idx0[1]:idx1[1], idx0[2]:idx1[2]]
+
+        return output
+
+    # Get n and m
+    factors = [float(num) for num in factors][-1::-1]
+    mm = np.array([int(num) for num in (n_points * factors)])
+    m = np.array([int(num) for num in (n_points * factors - n_points / 2)])
+
+    # Get the reference image
+    img_ref = np.abs(run_ifft(k_space_ref))
+
+    # Create a copy with the center of k-space
+    k_space_center = getCenterKSpace(k_space_ref, m)
+
+    # Number of points before m+n where we begin to go to zero
+    nb_point = 2
+
+    # Set the correlation threshold for stopping the iterations
+    threshold = 1e-6
+
+    # Get image phase
+    img_center = run_ifft(k_space_center)
+    phase = img_center / abs(img_center)
+
+    # Generate the corresponding image with the Hanning filter
+    k_space_hanning = hanning_filter(k_space_ref, mm, nb_point)
+    img_hanning = np.abs(run_ifft(k_space_hanning))
+
+    num_iterations = 0  # Initialize the iteration counter
+    previous_img = img_hanning.copy()  # you have the choice between img_hanning or img_ramp
+
+    while True:
+        # Iterative reconstruction
+        img_iterative = previous_img * phase
+        k_space_new = run_dfft(img_iterative)
+
+        # Apply constraint: Keep the region of k-space from n+m onwards and restore the rest
+        k_space_new[0:mm[0], 0:mm[1], 0:mm[2]] = k_space_ref[0:mm[0], 0:mm[1], 0:mm[2]]
+
+        # Reconstruct the image from the modified k-space
+        img_reconstructed = np.abs(run_ifft(k_space_new))
+
+        # Compute correlation between consecutive reconstructed images
+        correlation = np.corrcoef(previous_img.flatten(), img_reconstructed.flatten())[0, 1]
+
+        # Display correlation and current iteration number
+        print("Iteration: %i, Convergence: %0.2e" % (num_iterations, (1-correlation)))
+
+        # Check if correlation reaches the desired threshold
+        if (1-correlation) <= threshold or num_iterations >= 100:
+            break
+
+        # Update previous_img for the next iteration
+        previous_img = img_reconstructed.copy()
+
+        # Increment the iteration counter
+        num_iterations += 1
+
+    # Get correlation with reference image
+    correlation = np.corrcoef(img_ref.flatten(), img_reconstructed.flatten())[0, 1]
+    print("Respect the reference image:")
+    print("Convergence: %0.2e" % (1 - correlation))
+
+    return img_reconstructed

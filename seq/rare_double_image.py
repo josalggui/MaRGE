@@ -119,7 +119,16 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
                           tip="'True' or 'False' to plot odd and even images separately")
         self.addParameter(key='angulation', string='Angulation', val=1, field='OTH',
-                          tip='1: Consider FOV angulation. 0: Keep the image unangled.')
+                          tip='1: Consider FOV angulation. 0: Keep the image unangled (it reduced the number of instructions).')
+        self.addParameter(key='bm4d', string='BM4D std', val=-1, field='PRO',
+                          tip='Perform BM4D filter: -1 -> do not apply, 0 -> automatic std calculation, >0 to use manual'
+                              ' std value.')
+        self.addParameter(key='cosbell_factor', string='Cosbell factor', val=0, field='PRO',
+                          tip='Perform cosbell filter in k-space')
+        self.addParameter(key='padding', string='Final size (rd, ph, sl)', val=[0, 0, 0], field='PRO',
+                          tip='Final matrix size after processing zero padding')
+        self.addParameter(key='partial_method', string='Partial recon method', val='POCS', field='PRO',
+                          tip="'zero' -> zero padding, pocs -> Projection Onto Convex Sets")
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
         self.header = ismrmrd.xsd.ismrmrdHeader()
