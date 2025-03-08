@@ -62,14 +62,37 @@ class PreProcessingTabController(PreProcessingTabWidget):
         print(" Selected scans: " + str(scans))
         scans = parse_indexes(scans, n_scans)
 
-        # Get the selected scans from dataFull and average
-        data_full = mat_data['dataFull'][scans, :, :, :]
-        s_scans, n_sl, n_ph, n_rd = np.shape(data_full)
-        n_points = np.reshape(mat_data['nPoints'], -1)
-        data_temp = np.zeros((len(scans), n_points[2], n_points[1], n_points[0]), dtype=complex)
-        data_temp[:, 0:n_sl, :, :] = data_full
-        data_temp = np.average(data_temp, axis=0)
-        data = np.reshape(data_temp, (1, n_points[0] * n_points[1] * n_points[2]))
+        # Generate artifitial data_full for RareDoubleImage
+        if mat_data['seqName'] == 'RareDoubleImage':
+            data_odd = mat_data['data_full_odd_echoes']
+            data_even = mat_data['data_full_even_echoes']
+            s_scans, n_sl, n_ph, n_rd = np.shape(data_odd)
+            n_points = np.reshape(mat_data['nPoints'], -1)
+
+            # Process odd data
+            data_odd_temp = np.zeros((len(scans), n_points[2], n_points[1], n_points[0]), dtype=complex)
+            data_odd_temp[:, 0:n_sl, :, :] = data_odd[scans, :, :, :]
+            data_odd = np.average(data_odd_temp, axis=0)
+            img_odd = np.fft.ifftshift(np.fft.ifftn(np.fft.fftshift(data_odd)))
+
+            # Process even data
+            data_even_temp = np.zeros((len(scans), n_points[2], n_points[1], n_points[0]), dtype=complex)
+            data_even_temp[:, 0:n_sl, :, :] = data_even[scans, :, :, :]
+            data_even = np.average(data_even_temp, axis=0)
+            img_even = np.fft.ifftshift(np.fft.ifftn(np.fft.fftshift(data_even)))
+
+            # Get average k-space from odd and even image
+            img = (np.abs(img_odd) + np.abs(img_even)) / 2
+            data = np.fft.fftshift(np.fft.fftn(np.fft.ifftshift(img)))
+        else:
+            # Get the selected scans from dataFull and average
+            data_full = mat_data['dataFull'][scans, :, :, :]
+            s_scans, n_sl, n_ph, n_rd = np.shape(data_full)
+            n_points = np.reshape(mat_data['nPoints'], -1)
+            data_temp = np.zeros((len(scans), n_points[2], n_points[1], n_points[0]), dtype=complex)
+            data_temp[:, 0:n_sl, :, :] = data_full
+            data_temp = np.average(data_temp, axis=0)
+            data = np.reshape(data_temp, (1, n_points[0] * n_points[1] * n_points[2]))
 
         # Input the resulting data into the k-space
         self.main.toolbar_image.k_space_raw[:, 3] = np.reshape(data, -1)
