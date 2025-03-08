@@ -22,6 +22,7 @@ from skimage.measure import shannon_entropy
 
 # Import dicom saver
 from manager.dicommanager import DICOMImage
+from marge_utils import utils
 import shutil
 import nibabel as nib
 
@@ -1663,9 +1664,6 @@ class MRIBLANKSEQ:
         # Save mat file with the outputs
         savemat("%s/%s.mat" % (directory_mat, file_name), self.mapVals) # au format savemat(chemin_fichier_mat, {"data" : data}), avec data contient les données brute à sauvegarder
 
-        # Save nifti
-        self.save_nifti("%s/%s.nii" % (directory_nii, file_name))
-
         # Save csv with input parameters
         with open('%s/%s.csv' % (directory_csv, file_name), 'w') as csvfile: # ouvrir le fichier csv en mode écriture au format with open(chemin_fichier_csv, 'w', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=self.mapKeys) # mapKeys contient les noms des colonnes du fichier csv que l'on veut sauvegarder 
@@ -1675,55 +1673,18 @@ class MRIBLANKSEQ:
                 mapVals[key] = self.mapVals[key] # copie les donnée de l'acquisition stockées dans self.mapVals dans mapVals
             writer.writerows([self.mapNmspc, mapVals]) # écrire les données dans le fichier csv
 
-        # Save dcm with the final image
+        # Save dcm and nifti with the final image
         if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode is None): ##verify if output is an image
             self.image2Dicom(fileName="%s/%s.dcm" % (directory_dcm, file_name))
+            utils.save_nifti(axes_orientation=self.mapVals['axesOrientation'],
+                             n_points=self.mapVals['nPoints'],
+                             fov=self.mapVals['fov'],
+                             dfov=self.mapVals['dfov'],
+                             image=self.mapVals['image3D'],
+                             file_path=f"{directory_nii}/{file_name}.nii")
 
         # Move seq files
         self.move_batch_files(destination_folder=directory, file_name=file_name)
-
-    def save_nifti(self, file_path):
-        axes_orientation = self.mapVals['axesOrientation']
-        n_points = self.mapVals['nPoints']
-        n_xyz = [0, 0, 0]
-        reorder = [0, 0, 0]
-        for i, axis in enumerate(axes_orientation):
-            n_xyz[axis] = n_points[i]
-            reorder[axis] = i
-        fov = np.array(self.mapVals['fov'])  # cm
-        dfov = np.array(self.mapVals['dfov'])  # mm
-        resolution = fov / n_xyz * 10  # mm
-        image = self.mapVals['image3D']
-        image = np.transpose(image, axes=(2, 1, 0))
-        image = np.transpose(image, reorder)
-        image = np.transpose(image, axes=(2, 1, 0))
-        image = image[::-1, ::-1, ::-1]
-        image = image / np.max(image)
-
-        orientation = 'FFS'
-
-        # Create afine matrix
-        if orientation == 'FFS':
-            affine = np.zeros((4, 4))
-            affine[0, 0] = resolution[2]
-            affine[1, 1] = resolution[1]
-            affine[2, 2] = resolution[0]
-            affine[0, 3] = dfov[2]
-            affine[1, 3] = - dfov[1]
-            affine[2, 3] = dfov[0]
-            affine[3, 3] = 1
-        elif orientation == 'HFS':
-            print("Affine matrix not ready.")
-        elif orientation == 'FFP':
-            print("Affine matrix not ready.")
-        elif orientation == 'HFP':
-            print("Affine matrix not ready.")
-
-        # Create the NIfTI image
-        nifti_img = nib.Nifti1Image(np.abs(image), affine)
-
-        # Save the NIfTI file
-        nib.save(nifti_img, file_path)
 
     @staticmethod
     def move_batch_files(destination_folder, file_name):
@@ -1996,6 +1957,12 @@ class MRIBLANKSEQ:
                 - 'title': A string representing the title of the visualization (e.g., "Sagittal").
             image (np.ndarray): Reoriented 3D image array
         """
+
+        # Get patient orientation
+        if 'orienation' in self.session.keys():
+            orientation = self.session['orientation']
+        else:
+            orientation = 'FFS'
 
         # Get axes in strings
         axes_dict = {'x': 0, 'y': 1, 'z': 2}
