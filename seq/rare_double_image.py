@@ -24,29 +24,26 @@ for subdir in subdirs:
 #******************************************************************************
 import numpy as np
 import controller.experiment_gui as ex
-import scipy.signal as sig
-from scipy.stats import linregress
 import configs.hw_config as hw  # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 
-from datetime import datetime
 import ismrmrd
 import ismrmrd.xsd
-import datetime
-import ctypes
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
+from marge_utils import utils
 
 
 #*********************************************************************************
 #*********************************************************************************
 #*********************************************************************************
 
-class RarePyPulseq(blankSeq.MRIBLANKSEQ):
+class RareDoubleImage(blankSeq.MRIBLANKSEQ):
     def __init__(self):
-        super(RarePyPulseq, self).__init__()
+        super(RareDoubleImage, self).__init__()
         # Input the parameters
+        self.image_orientation_dicom = None
         self.angulation = None
         self.full_plot = None
         self.sequence_list = None
@@ -954,19 +951,19 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         if self.full_plot is True or self.full_plot == 'True':
             # Image plot
-            result_mag_odd, img_mag_odd = self.fix_image_orientation(img_mag_odd, axes=self.axesOrientation)
+            result_mag_odd, img_mag_odd, _ = utils.fix_image_orientation(img_mag_odd, axes=self.axesOrientation)
             result_mag_odd['row'] = 0
             result_mag_odd['col'] = 0
 
-            result_mag_eve, img_mag_eve = self.fix_image_orientation(img_mag_eve, axes=self.axesOrientation)
+            result_mag_eve, img_mag_eve, _ = utils.fix_image_orientation(img_mag_eve, axes=self.axesOrientation)
             result_mag_eve['row'] = 1
             result_mag_eve['col'] = 0
 
-            result_pha_odd, img_pha_odd = self.fix_image_orientation(img_pha_odd, axes=self.axesOrientation)
+            result_pha_odd, img_pha_odd, _ = utils.fix_image_orientation(img_pha_odd, axes=self.axesOrientation)
             result_pha_odd['row'] = 0
             result_pha_odd['col'] = 1
 
-            result_pha_eve, img_pha_eve = self.fix_image_orientation(img_pha_eve, axes=self.axesOrientation)
+            result_pha_eve, img_pha_eve, self.image_orientation_dicom = utils.fix_image_orientation(img_pha_eve, axes=self.axesOrientation)
             result_pha_eve['row'] = 1
             result_pha_eve['col'] = 1
 
@@ -996,12 +993,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
             # Add results into the output attribute (result_1 must be the image to save in dicom)
             self.output = [result_mag_odd, result_pha_odd, result_k_odd, result_mag_eve, result_pha_eve, result_k_eve]
-
-            # For dicom
-            _, img = self.fix_image_orientation(img, axes=self.axesOrientation)
         else:
             # Image plot
-            result, img = self.fix_image_orientation(img, axes=self.axesOrientation)
+            result, img, self.image_orientation_dicom = utils.fix_image_orientation(img, axes=self.axesOrientation)
             result['row'] = 0
             result['col'] = 0
 
@@ -1062,9 +1056,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         return self.output
 
-
 if __name__ == '__main__':
-    seq = RarePyPulseq()
+    seq = RareDoubleImage()
     seq.sequenceAtributes()
     seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
     seq.sequenceAnalysis(mode='Standalone')
