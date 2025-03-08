@@ -165,42 +165,47 @@ class PreProcessingTabController(PreProcessingTabWidget):
         Updates the main matrix of the image view widget with the padded image, adds the operation to the history
         widget, and updates the operations history.
         """
-        # Zero-padding order for each dimension from the text field
-        zero_padding_order = self.zero_padding_order_field.text().split(',')
-        rd_order = int(zero_padding_order[0])
-        ph_order = int(zero_padding_order[1])
-        sl_order = int(zero_padding_order[2])
-
         # Get the k_space data and its shape
         k_space = self.main.image_view_widget.main_matrix.copy()
-        current_shape = k_space.shape
+        shape_0 = k_space.shape
 
         # Determine the new shape after zero-padding
-        new_shape = current_shape[0] * sl_order, current_shape[1] * ph_order, current_shape[2] * rd_order
+        matrix_size = self.zero_padding_order_field.text().split(',')
+        n_rd = int(matrix_size[0])
+        n_ph = int(matrix_size[1])
+        n_sl = int(matrix_size[2])
+        shape_1 = n_sl, n_ph, n_rd
 
         # Create an image matrix filled with zeros
-        image_matrix = np.zeros(new_shape, dtype=complex)
-
-        # Get the dimensions of the current image
-        image_height = current_shape[0]
-        image_width = current_shape[1]
-        image_depth = current_shape[2]
+        image_matrix = np.zeros(shape_1, dtype=complex)
 
         # Calculate the centering offsets for each dimension
-        col_offset = (new_shape[0] - image_height) // 2
-        row_offset = (new_shape[1] - image_width) // 2
-        depth_offset = (new_shape[2] - image_depth) // 2
+        offset_0 = (shape_1[0] - shape_0[0]) // 2
+        offset_1 = (shape_1[1] - shape_0[1]) // 2
+        offset_2 = (shape_1[2] - shape_0[2]) // 2
 
-        # Calculate the start and end indices to center the k_space within the image_matrix
-        col_start = col_offset
-        col_end = col_start + image_height
-        row_start = row_offset
-        row_end = row_start + image_width
-        depth_start = depth_offset
-        depth_end = depth_start + image_depth
+        # Calculate the start and end indices to center the k_space within the new image_matrix
+        new_start_0 = offset_0 if offset_0 >= 0 else 0
+        new_start_1 = offset_1 if offset_1 >= 0 else 0
+        new_start_2 = offset_2 if offset_2 >= 0 else 0
+        new_end_0 = new_start_0 + shape_0[0] if offset_0 > 0 else shape_1[0]
+        new_end_1 = new_start_1 + shape_0[1] if offset_1 > 0 else shape_1[1]
+        new_end_2 = new_start_2 + shape_0[2] if offset_2 > 0 else shape_1[2]
+
+        # Calculate the start and end indices of old matrix
+        old_start_0 = 0 if offset_0 >= 0 else -offset_0
+        old_start_1 = 0 if offset_1 >= 0 else -offset_1
+        old_start_2 = 0 if offset_2 >= 0 else -offset_2
+        old_end_0 = shape_0[0] if offset_0 >=0 else old_start_0 + shape_1[0]
+        old_end_1 = shape_0[1] if offset_1 >=0 else old_start_1 + shape_1[1]
+        old_end_2 = shape_0[2] if offset_2 >=0 else old_start_2 + shape_1[2]
 
         # Copy the k_space into the image_matrix at the center
-        image_matrix[col_start:col_end, row_start:row_end, depth_start:depth_end] = k_space
+        image_matrix[new_start_0:new_end_0, new_start_1:new_end_1, new_start_2:new_end_2] = k_space[
+                                                                                            old_start_0:old_end_0,
+                                                                                            old_start_1:old_end_1,
+                                                                                            old_start_2:old_end_2
+                                                                                            ]
 
         # Update the main matrix of the image view widget with the padded image
         self.main.image_view_widget.main_matrix = image_matrix.copy()
@@ -209,8 +214,8 @@ class PreProcessingTabController(PreProcessingTabWidget):
         self.main.history_list.addNewItem(stamp="Zero Padding",
                                           image=self.main.image_view_widget.main_matrix,
                                           orientation=self.main.toolbar_image.mat_data['axesOrientation'][0],
-                                          operation="Zero Padding - RD: " + str(rd_order) + ", PH: "
-                                                    + str(ph_order) + ", SL: " + str(sl_order),
+                                          operation="Zero Padding - RD: " + str(n_rd) + ", PH: "
+                                                    + str(n_ph) + ", SL: " + str(n_sl),
                                           space="k",
                                           image_key=self.main.image_view_widget.image_key)
 

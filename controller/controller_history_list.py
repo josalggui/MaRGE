@@ -16,7 +16,10 @@ from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QMenu, QAction
 from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from controller.controller_plot1d import Plot1DController as SpectrumPlot
 from controller.controller_smith_chart import PlotSmithChartController as SmithChart
-from seq.sequences import defaultsequences
+try:
+    from seq.sequences import defaultsequences
+except:
+    pass
 from widgets.widget_history_list import HistoryListWidget
 from manager.dicommanager import DICOMImage
 import numpy as np

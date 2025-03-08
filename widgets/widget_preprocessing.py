@@ -79,7 +79,7 @@ class PreProcessingTabWidget(QWidget):
         # ***********************
         # Zero Padding
         # ***********************
-        self.zero_padding_order_label = QLabel('Order')
+        self.zero_padding_order_label = QLabel('Matrix Size')
         self.zero_padding_order_field = QLineEdit()
         self.zero_padding_order_field.setPlaceholderText("Readout, Phase, Slice")
         self.zero_padding_order_field.setStatusTip('Must be integer numbers')

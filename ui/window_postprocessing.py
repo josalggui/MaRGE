@@ -124,6 +124,8 @@ class MainWindow(QMainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    ui = MainWindow()
+    session = {'directory': '../test'}
+    ui = MainWindow(session=session, main=None)
+    ui.show()
 
     sys.exit(app.exec())
