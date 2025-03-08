@@ -22,6 +22,7 @@ except:
     pass
 from widgets.widget_history_list import HistoryListWidget
 from manager.dicommanager import DICOMImage
+from marge_utils import utils
 import numpy as np
 import configs.hw_config as hw
 
@@ -735,7 +736,19 @@ class HistoryListControllerPos(HistoryListWidget):
         # Save dicom file
         dicom_image.save(path + "_" + name_string + ".dcm")
 
-        print('Image saved into dicom format')
+        print("Dicom image saved")
+
+        # Save nifti
+        path = self.main.session['directory'] + "/nii/" + self.main.file_name[0:-4]
+        if not os.path.exists(self.main.session['directory'] + "/nii/"):
+            os.makedirs(self.main.session['directory'] + "/nii/")
+        utils.save_nifti(axes_orientation = self.main.toolbar_image.mat_data['axesOrientation'][0],
+                         n_points = list(image.shape)[::-1],
+                         fov = self.main.toolbar_image.mat_data['fov'][0],
+                         dfov = self.main.toolbar_image.mat_data['dfov'][0],
+                         image = image,
+                         file_path = path + "_" + name_string + ".nii")
+        print("Nifti image saved")
 
         return 0
 
