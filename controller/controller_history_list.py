@@ -16,9 +16,13 @@ from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QMenu, QAction
 from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from controller.controller_plot1d import Plot1DController as SpectrumPlot
 from controller.controller_smith_chart import PlotSmithChartController as SmithChart
-from seq.sequences import defaultsequences
+try:
+    from seq.sequences import defaultsequences
+except:
+    pass
 from widgets.widget_history_list import HistoryListWidget
 from manager.dicommanager import DICOMImage
+from marge_utils import utils
 import numpy as np
 import configs.hw_config as hw
 import nibabel as nib
@@ -616,12 +620,12 @@ class HistoryListControllerPos(HistoryListWidget):
             item (QListWidgetItem): The selected item in the history list.
         """
 
-        self.image_key = item.text()
-        if self.image_key in self.image_hist.keys():
-            self.main.image_view_widget.main_matrix = self.image_hist[self.image_key]
-            self.main.image_view_widget.image_key = self.image_key
-            orientation = self.image_orientation[self.image_key]
-            if self.space[self.image_key] == 'k':
+        image_key = item.text()
+        if image_key in self.image_hist.keys():
+            self.main.image_view_widget.main_matrix = self.image_hist[image_key]
+            self.main.image_view_widget.image_key = image_key
+            orientation = self.image_orientation[image_key]
+            if self.space[image_key] == 'k':
                 image = np.log10(np.abs(self.main.image_view_widget.main_matrix))
                 image[image == -np.inf] = np.inf
                 val = np.min(image[:])
@@ -637,7 +641,7 @@ class HistoryListControllerPos(HistoryListWidget):
             label.setAlignment(QtCore.Qt.AlignCenter)
             label.setStyleSheet("background-color: black;color: white")
             self.main.image_view_widget.addWidget(label, row=0, col=0, colspan=2)
-            label.setText(self.image_key)
+            label.setText(image_key)
 
             # Create image_widget
             image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(image, orientation=orientation)
@@ -700,10 +704,7 @@ class HistoryListControllerPos(HistoryListWidget):
             del dictionary[key]
             dictionary[key] = values
 
-    def saveImage(self, item):
-        """Save image in dicom and nifti"""
-
-        """ Save DICOM"""
+    def saveImage(self):
         # Path to the DICOM file
         path = self.main.session['directory'] + "/dcm/" + self.main.file_name[0:-4]
         if not os.path.exists(self.main.session['directory'] + "/dcm/"):
@@ -735,57 +736,19 @@ class HistoryListControllerPos(HistoryListWidget):
         # Save dicom file
         dicom_image.save(path + "_" + name_string + ".dcm")
 
-        print(f'{path + "_" + name_string + ".dcm"} saved!')
+        print("Dicom image saved")
 
-        """Save NIFTI"""
-        image = self.image_hist[self.image_key]
-        n_points = image.shape
-        n_points = n_points[::-1]
-        fov = self.main.toolbar_image.mat_data['fov'][0]
-        dfov = self.main.toolbar_image.mat_data['dfov'][0]
-        axes_orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
-        n_xyz = [0, 0, 0]
-        reorder = [0, 0, 0]
-        for i, axis in enumerate(axes_orientation):
-            n_xyz[axis] = n_points[i]
-            reorder[axis] = i
-        resolution = fov / n_xyz * 10  # mm
-        image = np.transpose(image, axes=(2, 1, 0))
-        image = np.transpose(image, reorder)
-        image = np.transpose(image, axes=(2, 1, 0))
-        image = image[::-1, ::-1, ::-1]
-        image = image / np.max(image)
-
-        # Create afine matrix
-        orientation = 'FFS'
-        if orientation == 'FFS':
-            affine = np.zeros((4, 4))
-            affine[0, 0] = resolution[2]
-            affine[1, 1] = resolution[1]
-            affine[2, 2] = resolution[0]
-            affine[0, 3] = dfov[2]
-            affine[1, 3] = - dfov[1]
-            affine[2, 3] = dfov[0]
-            affine[3, 3] = 1
-        elif orientation == 'HFS':
-            print("Affine matrix not ready.")
-            return
-        elif orientation == 'FFP':
-            print("Affine matrix not ready.")
-            return
-        elif orientation == 'HFP':
-            print("Affine matrix not ready.")
-            return
-
-        name = path + "_" + name_string + ".nii"
-
-        # Create the NIfTI image
-        nifti_img = nib.Nifti1Image(np.abs(image), affine)
-
-        # Save the NIfTI file
-        nib.save(nifti_img, name)
-
-        print(f"{name} saved!")
+        # Save nifti
+        path = self.main.session['directory'] + "/nii/" + self.main.file_name[0:-4]
+        if not os.path.exists(self.main.session['directory'] + "/nii/"):
+            os.makedirs(self.main.session['directory'] + "/nii/")
+        utils.save_nifti(axes_orientation = self.main.toolbar_image.mat_data['axesOrientation'][0],
+                         n_points = list(image.shape)[::-1],
+                         fov = self.main.toolbar_image.mat_data['fov'][0],
+                         dfov = self.main.toolbar_image.mat_data['dfov'][0],
+                         image = image,
+                         file_path = path + "_" + name_string + ".nii")
+        print("Nifti image saved")
 
         return 0
 

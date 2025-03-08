@@ -49,7 +49,10 @@ class FiguresLayoutController(FiguresLayoutWidget):
         Note:
             The method does not return any value.
         """
-        logo = imageio.imread("resources/images/logo.png")
+        try:
+            logo = imageio.imread("resources/images/logo.png")
+        except:
+            logo = imageio.imread("../resources/images/logo.png")
         self.clearFiguresLayout()
         welcome = Spectrum3DPlot(main=self, data=logo.transpose([1, 0, 2]),
                                  title='Institute for Instrumentation in Molecular Imaging (i3M)')

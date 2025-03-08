@@ -29,6 +29,9 @@ import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new se
 from marga_pulseq.interpreter import PSInterpreter  # Import the marga_pulseq interpreter
 import pypulseq as pp  # Import PyPulseq
 from skimage.restoration import unwrap_phase as unwrap
+from sklearn.preprocessing import PolynomialFeatures
+from numpy.linalg import lstsq
+from scipy.optimize import curve_fit
 
 
 # Template Class for MRI Sequences
@@ -62,25 +65,25 @@ class spds(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='pypulseq', string='PyPulseq', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM',
                           tip='Number of repetitions of the full scan.')
-        self.addParameter(key='FreqOffset', string='Frequency offset (kHz)', val=0, units=units.kHz, field='RF',
-                          tip='Frequency offset respect Larmor.')
-        self.addParameter(key='rfExFA', string='Excitation Flip Angle (degrees)', val=45.0, field='RF',
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.055, field='RF',
+                          tip='Larmor frequency.')
+        self.addParameter(key='rfExFA', string='Excitation Flip Angle (degrees)', val=90.0, field='RF',
                           tip="Flip angle of the excitation RF pulse in degrees")
-        self.addParameter(key='rfExTime', string='Excitation time (us)', val=50.0, units=units.us, field='RF',
+        self.addParameter(key='rfExTime', string='Excitation time (us)', val=15.0, units=units.us, field='RF',
                           tip="Duration of the RF excitation pulse in microseconds (us).")
-        self.addParameter(key='nPoints', string='Matrix size [rd, ph, sl]', val=[10, 10, 1], field='IM',
+        self.addParameter(key='nPoints', string='Matrix size [rd, ph, sl]', val=[2, 2, 1], field='IM',
                           tip='Matrix size for the acquired images.')
-        self.addParameter(key='fov', string='Field of View (cm)', val=[15.0, 15.0, 15.0], units=units.cm, field='IM',
+        self.addParameter(key='fov', string='Field of View (cm)', val=[24.0, 24.0, 24.0], units=units.cm, field='IM',
                           tip='Field of View (cm).')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
                           tip="Position of the gradient isocenter")
-        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM',
+        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM',
                           tip="0=x, 1=y, 2=z")
-        self.addParameter(key='repetitionTime', string='Repetition Time (ms)', val=50.0, units=units.ms, field='SEQ',
+        self.addParameter(key='repetitionTime', string='Repetition Time (ms)', val=30.0, units=units.ms, field='SEQ',
                           tip="The time between successive excitation pulses, in milliseconds (ms).")
-        self.addParameter(key='deadTime', string='Dead times (us)', val=[500.0, 550.0], units=units.us, field='SEQ',
+        self.addParameter(key='deadTime', string='Dead times (us)', val=[350.0, 450.0], units=units.us, field='SEQ',
                           tip='Dead time for the two acquisitions in microseconds (us).')
-        self.addParameter(key='dummyPulses', string='Number of dummy pulses', val=1, field='SEQ',
+        self.addParameter(key='dummyPulses', string='Number of dummy pulses', val=5, field='SEQ',
                           tip='Number of dummy pulses at the beginning of each batch.')
         self.addParameter(key='shimming', string='Shimming', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH',
                           tip='Shimming parameter to compensate B0 linear inhomogeneity.')
@@ -90,6 +93,12 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip='Angle in degrees to rotate the fov')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM',
                           tip='Axis of rotation')
+        self.addParameter(key='interpOrder', string='Zero Padding Order', val=3, field='IM',
+                          tip='Zero Padding Order')
+        self.addParameter(key='fittingOrder', string='Poly Fitting Order', val=4, field='IM',
+                          tip='Polynomics fitting order')
+        self.addParameter(key='thresholdMask', string='% Threshold Mask', val=10, field='IM',
+                          tip='% Threshold Mask')
 
 
     def sequenceInfo(self):
@@ -103,6 +112,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         print("mriLab @ i3M, CSIC, Spain \n")
         print("Single Point Double Shot protocol to measure B0 map")
 
+
     def sequenceTime(self):
         """
         Calculate the sequence time based on its parameters.
@@ -115,7 +125,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         nPoints = self.mapVals['nPoints']
         kx = np.linspace(start=-1, stop=1, endpoint=False, num=nPoints[0])
         ky = np.linspace(start=-1, stop=1, endpoint=False, num=nPoints[1])
-        if nPoints > 1:
+        if nPoints[2] > 1:
             kz = np.linspace(start=-1, stop=1, endpoint=False, num=nPoints[2])
         else:
             kz = np.array([0.0])
@@ -170,12 +180,12 @@ class spds(blankSeq.MRIBLANKSEQ):
 
         flo_interpreter = PSInterpreter(
             tx_warmup=hw.blkTime,  # Transmit chain warm-up time (us)
-            rf_center=hw.larmorFreq * 1e6,  # Larmor frequency (Hz)
+            rf_center=self.mapVals['larmorFreq']* 1e6,  # Larmor frequency (Hz)
             rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Maximum RF amplitude (Hz)
             gx_max=hw.gFactor[0] * hw.gammaB,  # Maximum gradient amplitude for X (Hz/m)
             gy_max=hw.gFactor[1] * hw.gammaB,  # Maximum gradient amplitude for Y (Hz/m)
             gz_max=hw.gFactor[2] * hw.gammaB,  # Maximum gradient amplitude for Z (Hz/m)
-            grad_max=np.max(hw.gFactor) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
+            grad_max=np.max(np.abs(hw.gFactor)) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
             grad_t=hw.grad_raster_time * 1e6,  # Gradient raster time (us)
         )
 
@@ -187,7 +197,7 @@ class spds(blankSeq.MRIBLANKSEQ):
 
         system = pp.Opts(
             rf_dead_time=hw.blkTime * 1e-6,  # Dead time between RF pulses (s)
-            max_grad=np.max(hw.gFactor) * 1e3,  # Maximum gradient strength (mT/m)
+            max_grad=np.max(np.abs(hw.gFactor)) * 1e3,  # Maximum gradient strength (mT/m)
             grad_unit='mT/m',  # Units of gradient strength
             max_slew=hw.max_slew_rate,  # Maximum gradient slew rate (mT/m/ms)
             slew_unit='mT/m/ms',  # Units of gradient slew rate
@@ -218,6 +228,12 @@ class spds(blankSeq.MRIBLANKSEQ):
         bw_a = self.bw  # Hz
         bw_b = self.bw  # Hz
         n_rd = 1 + 2 * hw.addRdPoints
+
+        # Fix excitation time to avoid rounding issues
+        rfExTime = 2 * system.block_duration_raster * np.ceil(self.rfExTime / 2 / system.block_duration_raster)
+        if rfExTime != self.rfExTime:
+            print(f"WARNING: Excitation time fixed to {rfExTime}.")
+            self.rfExTime = rfExTime
 
         # Get timing parameters
         time_acq_a = n_rd / bw_a  # s
@@ -272,7 +288,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         # Experiment A
         if not demo:
             expt = ex.Experiment(
-                lo_freq=hw.larmorFreq,  # Larmor frequency in MHz
+                lo_freq=self.mapVals['larmorFreq'],  # Larmor frequency in MHz
                 rx_t=1e6 / bw_a,  # Sampling time in us
                 init_gpa=False,  # Whether to initialize GPA board (False for True)
                 gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
@@ -289,7 +305,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         # Experiment B
         if not demo:
             expt = ex.Experiment(
-                lo_freq=hw.larmorFreq,  # Larmor frequency in MHz
+                lo_freq=self.mapVals['larmorFreq'],  # Larmor frequency in MHz
                 rx_t=1e6 / bw_b,  # Sampling time in us
                 init_gpa=False,  # Whether to initialize GPA board (False for True)
                 gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
@@ -452,7 +468,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         if self.runBatches(waveforms=waveforms_a,
                                n_readouts=n_readouts_a,
                                n_adc=n_adc_a,
-                               frequency=hw.larmorFreq,  # MHz
+                               frequency=self.mapVals['larmorFreq'],  # MHz
                                bandwidth=bw_a,  # MHz
                                decimate='Normal',
                                hardware=True,
@@ -466,7 +482,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         return self.runBatches(waveforms=waveforms_b,
                                n_readouts=n_readouts_b,
                                n_adc=n_adc_b,
-                               frequency=hw.larmorFreq,  # MHz
+                               frequency=self.mapVals['larmorFreq'],  # MHz
                                bandwidth=bw_b,  # MHz
                                decimate='Normal',
                                hardware=True,
@@ -500,6 +516,27 @@ class spds(blankSeq.MRIBLANKSEQ):
         - Assumes that the k-space mask and orientation settings are correctly preconfigured.
         """
 
+        def zero_padding(data, order):
+            original_shape = data.shape
+            if len(original_shape) == 3:
+                if original_shape[0] == 1:
+                    new_shape = (1, original_shape[1] * order, original_shape[2] * order)
+                else:
+                    new_shape = tuple(dim * order for dim in original_shape)
+            else:
+                raise ValueError("Error of matrix shape")
+
+            k_dataZP_a = np.zeros(new_shape, dtype=data.dtype)
+            start_indices = tuple((new_dim - old_dim) // 2 for new_dim, old_dim in zip(new_shape, original_shape))
+            end_indices = tuple(start + old_dim for start, old_dim in zip(start_indices, original_shape))
+            if original_shape[0] == 1:
+                k_dataZP_a[0, start_indices[1]:end_indices[1], start_indices[2]:end_indices[2]] = data[0]
+            else:
+                k_dataZP_a[start_indices[0]:end_indices[0], start_indices[1]:end_indices[1],
+                start_indices[2]:end_indices[2]] = data
+
+            return k_dataZP_a
+
         # Pass mode to the self, it will be required by the mriBlankSeq
         self.mode = mode
 
@@ -526,8 +563,11 @@ class spds(blankSeq.MRIBLANKSEQ):
                 jj += 1
 
         # Get images
-        k_data_a = np.reshape(k_data_a, (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
-        k_data_b = np.reshape(k_data_b, (self.nPoints[2], self.nPoints[1], self.nPoints[0]))
+        k_data_a_raw = (np.reshape(k_data_a, (self.nPoints[2], self.nPoints[1], self.nPoints[0])))
+        k_data_b_raw = (np.reshape(k_data_b, (self.nPoints[2], self.nPoints[1], self.nPoints[0])))
+        k_data_a = zero_padding(k_data_a_raw, self.mapVals['interpOrder'])
+        k_data_b = zero_padding(k_data_b_raw, self.mapVals['interpOrder'])
+
         i_data_a = self.runIFFT(k_data_a)
         i_data_b = self.runIFFT(k_data_b)
         self.mapVals['space_k_a'] = k_data_a
@@ -535,61 +575,296 @@ class spds(blankSeq.MRIBLANKSEQ):
         self.mapVals['space_i_a'] = i_data_a
         self.mapVals['space_i_b'] = i_data_b
 
-        # Generate mask
-        p_max = np.max(np.abs(i_data_a))
-        mask = np.abs(i_data_a) < p_max/3
+        # Plots in GUI
+        if self.nPoints[2] == 1:
+            i_data_a = np.squeeze(i_data_a)
+            i_data_b = np.squeeze(i_data_b)
 
-        # Get phase
-        i_phase_a = unwrap(np.angle(i_data_a))
-        i_phase_b = unwrap(np.angle(i_data_b))
+            # Generate mask
+            p_max = np.max(np.abs(i_data_a))
+            mask = np.abs(i_data_a) < p_max * self.mapVals['thresholdMask']/100
 
-        # Get magnetic field
-        b_field = (i_phase_b - i_phase_a) / (2 * np.pi * hw.gammaB * (self.deadTime[1] - self.deadTime[0]))
-        b_field[mask] = 0
-        self.mapVals['b_field'] = b_field
+            # Get phase
+            raw_phase_1 = np.angle(i_data_a)
+            raw_phase_1[mask] = 0
+            raw_phase_2 = np.angle(i_data_b)
+            raw_phase_2[mask] = 0
 
-        axes_map = {0: "x", 1: "y", 2: "z"}
-        rd_channel = axes_map.get(self.axesOrientation[0], "")
-        ph_channel = axes_map.get(self.axesOrientation[1], "")
-        sl_channel = axes_map.get(self.axesOrientation[2], "")
+            i_phase_a = unwrap(raw_phase_1)
+            i_phase_b = unwrap(raw_phase_2)
 
-        # Create the outputs to be plotted
-        output_0, _ = self.fix_image_orientation(b_field, axes=self.axesOrientation)
-        output_0['row'] = 0
-        output_0['col'] = 0
+            # Get magnetic field
+            b_field = ((i_phase_b - i_phase_a) / (2 * np.pi * hw.gammaB * (self.deadTime[1] - self.deadTime[0])))
+            b_field[mask] = 0
+            self.mapVals['b_field'] = b_field
 
-        # Create the outputs to be plotted
-        output_1, _ = self.fix_image_orientation(np.abs(i_data_a), axes=self.axesOrientation)
-        output_1['row'] = 0
-        output_1['col'] = 1
+            nx = self.nPoints[0]*self.mapVals['interpOrder']
+            ny = self.nPoints[1]*self.mapVals['interpOrder']
+            dx = self.fov[0] / nx
+            dy = self.fov[1] / ny
 
-        # Create the outputs to be plotted
-        output_2, _ = self.fix_image_orientation(np.abs(i_data_b), axes=self.axesOrientation)
-        output_2['row'] = 0
-        output_2['col'] = 2
+            # Here we define the grid of the full FOV and select the indexs where B0 is no null
+            ii, jj = np.meshgrid(np.arange(nx), np.arange(ny), indexing='ij')
+            condition = b_field != 0
+            ii = ii[condition]
+            jj = jj[condition]
 
-        output_3 = {
-            'widget': 'image',
-            'data': np.abs(k_data_a),
-            'xLabel': ph_channel,
-            'yLabel': rd_channel,
-            'title': 'k-space A',
-            'row': 1,
-            'col': 1,
-        }
+            # Here we define the coordinates of the FOV where the B0 is no null
+            x = (-(nx - 1) / 2 + ii) * dx
+            y = (-(ny - 1) / 2 + jj) * dy
 
-        output_4 = {
-            'widget': 'image',
-            'data': np.abs(k_data_b),
-            'xLabel': ph_channel,
-            'yLabel': rd_channel,
-            'title': 'k-space B',
-            'row': 1,
-            'col': 2,
-        }
+            # Store in values the B0 value in the indexs that accomplishes B0 different of 0
+            values = b_field[condition]
 
-        # create self.out to run in iterative mode
-        self.output = [output_0, output_1, output_2, output_3, output_4]
+            # Save in map_list all the {╥x,y,z,B0} data where B0 is no null
+            map_list = np.column_stack((x, y, values))
+            self.mapVals['mapList']=map_list
+
+            # And now we proceed with the fitting
+            x_fit = map_list[:, 0]
+            y_fit = map_list[:, 1]
+            b_fit = map_list[:, 2]
+            degree = self.mapVals['fittingOrder']
+            poly = PolynomialFeatures(degree)
+            coords = np.vstack((x_fit, y_fit)).T  # Combinamos x, y como entrada para PolynomialFeatures
+            x_poly = poly.fit_transform(coords)  # Genera todas las combinaciones polinómicas hasta grado 4
+            coeffs, _, _, _ = lstsq(x_poly, b_fit, rcond=None)
+            terms = terms = poly.powers_
+            polynomial_expression = ""
+            for i, coeff in enumerate(coeffs):
+                if coeff != 0:  # Ignore null coefficients
+                    powers = terms[i]  # Powers (x**i, y**j)
+                    term = f"{coeff}"
+                    if any(powers):
+                        if powers[0] > 0:
+                            term += f"*(x**{powers[0]})"
+                        if powers[1] > 0:
+                            term += f"*(y**{powers[1]})"
+                    polynomial_expression += f" + {term}" if coeff > 0 and i > 0 else f" {term}"
+
+            print("B0 fitting:")
+            print(polynomial_expression)
+
+            # Export in txt the model fitted
+            output_file = "B0modelledBySPDS.txt"
+            with open(output_file, "w") as f:
+                f.write(polynomial_expression + "\n")
+            print(f"Fitting exported to '{output_file}'")
+
+            result1 = {}
+            result1['widget'] = 'image'
+            result1['data'] = np.real(b_field.reshape(1, nx, ny))
+            result1['xLabel'] = "xx"
+            result1['yLabel'] = "xx"
+            result1['title'] = "B0 field"
+            result1['row'] = 0
+            result1['col'] = 3
+
+            result4 = {}
+            result4['widget'] = 'image'
+            result4['data'] = np.real(raw_phase_1.reshape(1, nx, ny))
+            result4['xLabel'] = "xx"
+            result4['yLabel'] = "xx"
+            result4['title'] = "Raw Phase Image Td1"
+            result4['row'] = 0
+            result4['col'] = 1
+
+            result5 = {}
+            result5['widget'] = 'image'
+            result5['data'] = np.real(raw_phase_2.reshape(1, nx, ny))
+            result5['xLabel'] = "xx"
+            result5['yLabel'] = "xx"
+            result5['title'] = "Raw Phase Image Td2"
+            result5['row'] = 1
+            result5['col'] = 1
+
+            result2 = {}
+            result2['widget'] = 'image'
+            result2['data'] = np.real(i_phase_a.reshape(1, nx, ny))
+            result2['xLabel'] = "xx"
+            result2['yLabel'] = "xx"
+            result2['title'] = "Unwrapped Phase Image Td1"
+            result2['row'] = 0
+            result2['col'] = 2
+
+            result3 = {}
+            result3['widget'] = 'image'
+            result3['data'] = np.real(i_phase_b.reshape(1, nx, ny))
+            result3['xLabel'] = "xx"
+            result3['yLabel'] = "xx"
+            result3['title'] = "Unwrapped Phase Image Td2"
+            result3['row'] = 1
+            result3['col'] = 2
+
+            result6 = {}
+            result6['widget'] = 'image'
+            result6['data'] = np.abs(i_data_a.reshape(1, nx, ny))
+            result6['xLabel'] = "xx"
+            result6['yLabel'] = "xx"
+            result6['title'] = "Raw Abs Image Td1"
+            result6['row'] = 0
+            result6['col'] = 0
+
+            result7 = {}
+            result7['widget'] = 'image'
+            result7['data'] = np.abs(i_data_b.reshape(1, nx, ny))
+            result7['xLabel'] = "xx"
+            result7['yLabel'] = "xx"
+            result7['title'] = "Raw Abs Image Td2"
+            result7['row'] = 1
+            result7['col'] = 0
+
+            self.output = [result1, result2, result3, result4, result5, result6, result7]
+
+        if self.nPoints[0] > 1 and self.nPoints[1] > 1 and self.nPoints[2] > 1:
+            # Generate mask
+            p_max = np.max(np.abs(i_data_a))
+            mask = np.abs(i_data_a) < p_max * self.mapVals['thresholdMask']/100
+
+            # Get phase
+            raw_phase_1 = np.angle(i_data_a)
+            raw_phase_1[mask] = 0
+            raw_phase_2 = np.angle(i_data_b)
+            raw_phase_2[mask] = 0
+
+            i_phase_a = unwrap(raw_phase_1)
+            i_phase_b = unwrap(raw_phase_2)
+
+            # Get magnetic field
+            b_field = -(i_phase_b - i_phase_a) / (2 * np.pi * hw.gammaB * (self.deadTime[1] - self.deadTime[0]))
+            b_field[mask] = 0
+            self.mapVals['b_field'] = b_field
+            b0_map_reorganized = np.flip(np.flip(np.flip(np.transpose(b_field, (2, 1, 0)), axis=0), axis=1), axis=2)
+            self.mapVals['B0mapReorganized'] = b0_map_reorganized
+
+            nx = self.nPoints[0]*self.mapVals['interpOrder']
+            ny = self.nPoints[1] * self.mapVals['interpOrder']
+            NZ = self.nPoints[2] * self.mapVals['interpOrder']
+            dx = self.fov[0] / nx
+            dy = self.fov[1] / ny
+            dz = self.fov[2] / NZ
+
+            map_list = []
+            cont = 0
+
+            for ii in range(nx):
+                for jj in range(nx):
+                    for kk in range(nx):
+                        if b0_map_reorganized[ii, jj, kk] != 0:
+                            z_coord = (-(NZ - 1) / 2 + kk) * dz
+                            y_coord = (-(ny - 1) / 2 + jj) * dy
+                            x_coord = (-(nx - 1) / 2 + ii) * dx
+                            value = b0_map_reorganized[ii, jj, kk]
+
+                            map_list.append([x_coord, y_coord, z_coord, value])
+                            cont += 1
+
+            map_list = np.array(map_list)
+
+            # And now we proceed with the fitting
+            x_fit = map_list[:, 0]
+            y_fit = map_list[:, 1]
+            z_fit = map_list[:, 2]
+            b_fit = map_list[:, 3]
+            degree = self.mapVals['fittingOrder']
+            poly = PolynomialFeatures(degree)
+            coords = np.vstack((x_fit, y_fit, z_fit)).T
+            x_poly = poly.fit_transform(coords)
+            coeffs, _, _, _ = lstsq(x_poly, b_fit, rcond=None)
+            terms = poly.powers_
+            polynomial_expression = ""
+            polynomial_expression_gui = ""
+            for i, coeff in enumerate(coeffs):
+                if coeff != 0:  # Ignore null coefficients
+                    powers = terms[i]  # Powers (x**i, y**j, z**k)
+                    term = f"{coeff}"
+                    term_gui = f"{coeff}"
+                    if any(powers):
+                        if powers[2] > 0:
+                            term += f"*(z**{powers[2]})"
+                            term_gui += f"*(z^{powers[2]})"
+                        if powers[1] > 0:
+                            term += f"*(y**{powers[1]})"
+                            term_gui += f"*(y^{powers[1]})"
+                        if powers[0] > 0:
+                            term += f"*(x**{powers[0]})"
+                            term_gui += f"*(x^{powers[0]})"
+                    polynomial_expression += f" + {term}" if coeff > 0 and i > 0 else f" {term}"
+                    polynomial_expression_gui += f" + {term_gui}" if coeff > 0 and i > 0 else f" {term_gui}"
+
+            print("B0 fitting:")
+            print(polynomial_expression_gui)
+
+            # Export in txt the model fitted
+            output_file = "B0modelledBySPDS.txt"
+            with open(output_file, "w") as f:
+                f.write(polynomial_expression + "\n")
+            print(f"Fitting exported to '{output_file}'")
+
+            result1 = {}
+            result1['widget'] = 'image'
+            result1['data'] = np.real(b_field)
+            result1['xLabel'] = "xx"
+            result1['yLabel'] = "xx"
+            result1['title'] = "B0 field"
+            result1['row'] = 0
+            result1['col'] = 3
+
+            result4 = {}
+            result4['widget'] = 'image'
+            result4['data'] = np.real(raw_phase_1)
+            result4['xLabel'] = "xx"
+            result4['yLabel'] = "xx"
+            result4['title'] = "Raw Phase Image Td1"
+            result4['row'] = 0
+            result4['col'] = 1
+
+            result5 = {}
+            result5['widget'] = 'image'
+            result5['data'] = np.real(raw_phase_2)
+            result5['xLabel'] = "xx"
+            result5['yLabel'] = "xx"
+            result5['title'] = "Raw Phase Image Td2"
+            result5['row'] = 1
+            result5['col'] = 1
+
+            result2 = {}
+            result2['widget'] = 'image'
+            result2['data'] = np.real(i_phase_a)
+            result2['xLabel'] = "xx"
+            result2['yLabel'] = "xx"
+            result2['title'] = "Unwrapped Phase Image Td1"
+            result2['row'] = 0
+            result2['col'] = 2
+
+            result3 = {}
+            result3['widget'] = 'image'
+            result3['data'] = np.real(i_phase_b)
+            result3['xLabel'] = "xx"
+            result3['yLabel'] = "xx"
+            result3['title'] = "Unwrapped Phase Image Td2"
+            result3['row'] = 1
+            result3['col'] = 2
+
+            result6 = {}
+            result6['widget'] = 'image'
+            result6['data'] = np.abs(i_data_a)
+            result6['xLabel'] = "xx"
+            result6['yLabel'] = "xx"
+            result6['title'] = "Raw Abs Image Td1"
+            result6['row'] = 0
+            result6['col'] = 0
+
+            result7 = {}
+            result7['widget'] = 'image'
+            result7['data'] = np.abs(i_data_b)
+            result7['xLabel'] = "xx"
+            result7['yLabel'] = "xx"
+            result7['title'] = "Raw Abs Image Td2"
+            result7['row'] = 1
+            result7['col'] = 0
+
+            self.output = [result1, result2, result3, result4, result5, result6, result7]
 
         # save data once self.output is created
         self.saveRawData()
@@ -599,7 +874,6 @@ class spds(blankSeq.MRIBLANKSEQ):
             self.plotResults()
 
         return self.output
-
 
 if __name__ == "__main__":
     seq = spds()
