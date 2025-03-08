@@ -44,6 +44,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RarePyPulseq, self).__init__()
         # Input the parameters
+        self.angulation = None
         self.image_orientation_dicom = None
         self.sequence_list = None
         self.unlock_orientation = None
@@ -842,6 +843,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                                bandwidth=bw,  # MHz
                                decimate='Normal',
                                hardware=True,
+                               angulation=self.angulation
                                )
 
     def sequenceAnalysis(self, mode=None):

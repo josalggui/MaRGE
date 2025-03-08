@@ -100,7 +100,7 @@ class RfWidget(QWidget):
         hw.deadTime = float(self.input_boxes["RF dead time (us)"].text())
         hw.gammaB = float(self.input_boxes["Gyromagnetic ratio (MHz/T)"].text()) * 1e6
         hw.larmorFreq = float(self.input_boxes["Larmor frequency (MHz)"].text())
-        hw.oversamplingFactor = int(self.input_boxes["RF dead time (us)"].text())
+        hw.oversamplingFactor = int(self.input_boxes["Oversampling factor"].text())
         hw.maxRdPoints = int(float(self.input_boxes["Max readout points"].text()))
         hw.addRdPoints = int(self.input_boxes["Add readout points"].text())
         hw.reference_time = float(self.input_boxes["Reference time (us)"].text())
