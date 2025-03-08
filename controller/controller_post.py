@@ -79,6 +79,9 @@ class PostProcessingTabController(PostProcessingTabWidget):
             # Calculate the standard deviation for each block
             block_std_devs = np.std(blocks_r, axis=(3, 4, 5))
 
+            # Calculate the average value for each block
+            block_mean = np.mean(blocks_r, axis=(3, 4, 5))
+
             # Calculate entropy for each block
             block_entropies = np.zeros_like(blocks_q[:, :, :, 0, 0, 0], dtype=np.float32)
             for ii in range(blocks_q.shape[0]):
@@ -91,8 +94,11 @@ class PostProcessingTabController(PostProcessingTabWidget):
             # Find the indices of the block with the highest entropy
             max_entropy_index = np.unravel_index(np.argmax(block_entropies), block_entropies.shape)
 
+            # Find the indices of the block with the minimum mean
+            min_mean_index = np.unravel_index(np.argmin(block_mean), block_mean.shape)
+
             # Extract the block with the highest entropy from the block_std_devs array
-            std = 4.5 * block_std_devs[max_entropy_index]
+            std = 3 * block_std_devs[min_mean_index]
             print("Standard deviation for BM4D: %0.2f" % std)
 
         else:
