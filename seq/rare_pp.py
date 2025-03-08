@@ -26,6 +26,7 @@ import controller.experiment_gui as ex
 import configs.hw_config as hw # Import the scanner hardware config
 import configs.units as units
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+from marge_utils import utils
 
 from datetime import datetime
 import ismrmrd
@@ -43,6 +44,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RarePyPulseq, self).__init__()
         # Input the parameters
+        self.image_orientation_dicom = None
         self.sequence_list = None
         self.unlock_orientation = None
         self.rdDephTime = None
@@ -1040,7 +1042,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
             # Image plot
             if self.mapVals['unlock_orientation'] == 0:
-                result_1, image = self.fix_image_orientation(image, axes=self.axesOrientation)
+                result_1, image, self.image_orientation_dicom = utils.fix_image_orientation(image, axes=self.axesOrientation)
                 result_1['row'] = 0
                 result_1['col'] = 0
             else:
