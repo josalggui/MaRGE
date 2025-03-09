@@ -145,12 +145,12 @@ class FiguresControllerPos(FiguresToolBar):
             self.main.history_list.hide()
             self.main.methods_list.hide()
             self.main.tab_controller.hide()
-            self.main.console.hide()
+            self.main.main.console.hide()
         else:
             self.main.history_list.show()
             self.main.methods_list.show()
             self.main.tab_controller.show()
-            self.main.console.show()
+            self.main.main.console.show()
 
     def doScreenshot(self):
         """
