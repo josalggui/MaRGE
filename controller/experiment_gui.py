@@ -5,6 +5,8 @@ MRILAB @ I3M
 
 import os
 import sys
+import time
+
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))
@@ -128,7 +130,10 @@ class Experiment(ex.Experiment):
         """
 
         if not self._seq_compiled:
+            t1 = time.time()
             self.compile()
+            t2 = time.time()
+            print(f"Compilation time: {round(t2-t1, 1)} s")
 
         if self._flush_old_rx:
             rx_data_old, _ = sc.command({'read_rx': 0}, self._s)
