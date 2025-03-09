@@ -6,7 +6,6 @@ from widgets.widget_reconstruction import ReconstructionTabWidget
 from marge_utils import utils
 try:
     import cupy as cp
-    print("GPU will be used for ART reconstruction")
 except ImportError:
     pass
 
@@ -285,25 +284,31 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Launch the GPU function
         rho = np.reshape(np.zeros((nPoints[0] * nPoints[1] * nPoints[2]), dtype=complex), (-1, 1))
         start = time.time()
+
+        gpu_ready = False
         if 'cp' in globals():
-            print('Executing ART in GPU...')
+            try:
+                print('Executing ART in GPU...')
 
-            # Transfer numpy arrays to cupy arrays
-            kx_gpu = cp.asarray(kx)
-            ky_gpu = cp.asarray(ky)
-            kz_gpu = cp.asarray(kz)
-            x_gpu = cp.asarray(x)
-            y_gpu = cp.asarray(y)
-            z_gpu = cp.asarray(z)
-            s_gpu = cp.asarray(s)
-            index = cp.asarray(index)
-            rho_gpu = cp.asarray(rho)
+                # Transfer numpy arrays to cupy arrays
+                kx_gpu = cp.asarray(kx)
+                ky_gpu = cp.asarray(ky)
+                kz_gpu = cp.asarray(kz)
+                x_gpu = cp.asarray(x)
+                y_gpu = cp.asarray(y)
+                z_gpu = cp.asarray(z)
+                s_gpu = cp.asarray(s)
+                index = cp.asarray(index)
+                rho_gpu = cp.asarray(rho)
 
-            # Execute ART
-            rho_gpu = iterative_process_gpu(kx_gpu, ky_gpu, kz_gpu, x_gpu, y_gpu, z_gpu, s_gpu, rho_gpu, lbda, n_iter,
-                                            index)
-            rho = cp.asnumpy(rho_gpu)
-        else:
+                # Execute ART
+                rho_gpu = iterative_process_gpu(kx_gpu, ky_gpu, kz_gpu, x_gpu, y_gpu, z_gpu, s_gpu, rho_gpu, lbda, n_iter,
+                                                index)
+                rho = cp.asnumpy(rho_gpu)
+                gpu_ready = True
+            except:
+                print("GPU not available...")
+        if not gpu_ready:
             print('Executing ART in CPU...')
 
             rho = iterative_process_cpu(kx, ky, kz, x, y, z, s, rho, lbda, n_iter,
