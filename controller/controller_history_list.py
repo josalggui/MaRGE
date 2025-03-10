@@ -100,7 +100,7 @@ class HistoryListController(HistoryListWidget):
 
         This method removes the currently selected task item from the list widget.
         """
-        if item_number is None:
+        if item_number is None or item_number is False:
             item = self.currentItem()
         else:
             item = self.item(item_number)
