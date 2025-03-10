@@ -1,5 +1,6 @@
 import csv
 import os
+import subprocess
 import sys
 from datetime import datetime
 
@@ -119,14 +120,6 @@ class SessionWidget(QWidget):
         self.height_line_edit.setStatusTip("Write the subject height")
         self.main_layout.addWidget(self.height_line_edit, row, 1)
 
-        # Create QLineEdit for subject scanner
-        row += 1
-        self.main_layout.addWidget(QLabel("Scanner"), row, 0)
-        self.scanner_line_edit = QLineEdit(hw_config.scanner_name)
-        self.scanner_line_edit.setDisabled(True)
-        self.scanner_line_edit.setStatusTip("Scanner version")
-        self.main_layout.addWidget(self.scanner_line_edit, row, 1)
-
         # Create QComboBox for RF coil
         row += 1
         self.main_layout.addWidget(QLabel("RF coil"), row, 0)
@@ -134,6 +127,29 @@ class SessionWidget(QWidget):
         self.rf_coil_combo_box.setStatusTip("Select the rf coil")
         self.rf_coil_combo_box.addItems(hw_config.antenna_dict.keys())
         self.main_layout.addWidget(self.rf_coil_combo_box, row, 1)
+
+        # Create QLineEdit for scanner
+        row += 1
+        self.main_layout.addWidget(QLabel("Scanner"), row, 0)
+        self.scanner_line_edit = QLineEdit(hw_config.scanner_name)
+        self.scanner_line_edit.setDisabled(True)
+        self.scanner_line_edit.setStatusTip("Scanner version")
+        self.main_layout.addWidget(self.scanner_line_edit, row, 1)
+
+        # Create QLineEdit for software version
+        # Get repo version
+        try:
+            tag = subprocess.check_output(['git', 'describe', '--tags'], stderr=subprocess.STDOUT).strip().decode(
+                'utf-8')
+        except subprocess.CalledProcessError as e:
+            print(f"Error getting Git tag: {e.output.decode('utf-8')}")
+            tag = ""
+        row += 1
+        self.main_layout.addWidget(QLabel("Software version"), row, 0)
+        self.software_line_edit = QLineEdit(tag)
+        self.software_line_edit.setDisabled(True)
+        self.software_line_edit.setStatusTip("Software version")
+        self.main_layout.addWidget(self.software_line_edit, row, 1)
 
         # Session dictionary
         self.session = {}
