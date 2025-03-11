@@ -126,11 +126,14 @@ class Noise(blankSeq.MRIBLANKSEQ):
         noiserms = np.std(self.dataTime[1])
         self.mapVals['RMS noise'] = noiserms
         self.mapVals['sampledPoint'] = noiserms # for sweep method
-        noiserms = noiserms*1e3
-        print('rms noise: %0.5f uV' % noiserms)
-        bw = self.mapVals['bw']*1e3 # Hz
-        johnson = np.sqrt(2 * 50 * hw.temperature * bw * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e6  # uV
-        print('Expected by Johnson: %0.5f uV' % johnson)
+        bw = self.mapVals['bw'] * 1e3  # Hz
+        noiserms = noiserms / np.sqrt(bw) * 1e6  # nV/sqrt(Hz)
+        print('rms noise: %0.1f nV/Hz^(-1/2)' % noiserms)
+        johnson = np.sqrt(2 * 50 * hw.temperature * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e9  # nV/sqrt(Hz)
+        print('Expected by Johnson: %0.1f nV/Hz^(-1/2)' % johnson)
+        print('Noise factor: %0.1f johnson' % (noiserms / johnson))
+        if noiserms / johnson > 3:
+            print("WARNING: Noise is too high")
 
         # Plot signal versus time
         result1 = {'widget': 'curve',
@@ -160,12 +163,6 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
         if self.mode == 'Standalone':
             self.plotResults()
-
-        # ####################
-        # dataOver = self.mapVals['dataOver']
-        # plt.plot(np.real(dataOver))
-        # plt.plot(np.imag(dataOver))
-        # plt.show()
 
         return self.output
 
