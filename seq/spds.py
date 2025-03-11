@@ -33,13 +33,13 @@ from marge_utils import utils
 from sklearn.preprocessing import PolynomialFeatures
 
 
-
 # Template Class for MRI Sequences
 class spds(blankSeq.MRIBLANKSEQ):
     """
     Executes the SPDS (Single Point Double Shot) sequence, designed to estimate the B₀ map by acquiring data with two
     distinct acquisition windows.
     """
+
     def __init__(self):
         """
         Defines the parameters for the sequence.
@@ -98,10 +98,8 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip='Polynomics fitting order')
         self.addParameter(key='thresholdMask', string='% Threshold Mask', val=10, field='IM',
                           tip='% Threshold Mask')
-        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0],
+        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2],
                           tip="0=x, 1=y, 2=z")
-        self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH',
-                          tip='0: Images oriented according to standard. 1: Image raw orientation')
 
     def sequenceInfo(self):
         """
@@ -113,7 +111,6 @@ class spds(blankSeq.MRIBLANKSEQ):
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain \n")
         print("Single Point Double Shot protocol to measure B0 map")
-
 
     def sequenceTime(self):
         """
@@ -183,7 +180,7 @@ class spds(blankSeq.MRIBLANKSEQ):
 
         flo_interpreter = PSInterpreter(
             tx_warmup=hw.blkTime,  # Transmit chain warm-up time (us)
-            rf_center=self.mapVals['larmorFreq']* 1e6,  # Larmor frequency (Hz)
+            rf_center=self.mapVals['larmorFreq'] * 1e6,  # Larmor frequency (Hz)
             rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Maximum RF amplitude (Hz)
             gx_max=hw.gFactor[0] * hw.gammaB,  # Maximum gradient amplitude for X (Hz/m)
             gy_max=hw.gFactor[1] * hw.gammaB,  # Maximum gradient amplitude for Y (Hz/m)
@@ -476,7 +473,7 @@ class spds(blankSeq.MRIBLANKSEQ):
                            decimate='Normal',
                            hardware=True,
                            output='a',
-                           angulation=self.angulation, 
+                           angulation=self.angulation,
                            ):
             pass
         else:
@@ -623,10 +620,10 @@ class spds(blankSeq.MRIBLANKSEQ):
         y = y.ravel()
         z = z.ravel()
         b = b_field.ravel()
-        x = x[b!=0]
-        y = y[b!=0]
-        z = z[b!=0]
-        b = b[b!=0]
+        x = x[b != 0]
+        y = y[b != 0]
+        z = z[b != 0]
+        b = b[b != 0]
         map_array = np.vstack((x, y, z, b)).T
         self.mapVals['mapList'] = map_array
 
@@ -655,72 +652,34 @@ class spds(blankSeq.MRIBLANKSEQ):
         print(polynomial_expression)
 
         # Export in txt the model fitted
-        output_file = "B0modelledBySPDS.txt"
-        with open(output_file, "w") as f:
-            f.write(polynomial_expression + "\n")
-        print(f"Fitting exported to '{output_file}'")
+        print(f"Fitting saved in raw data")
+        self.mapVals['polynomial_expression'] = polynomial_expression
 
         # Image plot
         b_field[mask] = np.min(b_field)
         self.mapVals['b_field'] = b_field
         self.mapVals['image3D'] = b_field
 
-        if self.mapVals['unlock_orientation'] == 0:  # Get image in radiology standard
-            result_1, _, _ = utils.fix_image_orientation(image=b_field, axes=self.axesOrientation)
-            result_1['row'] = 0
-            result_1['col'] = 3
-        else:  # Get image according to scanner axes
-            result_1 = {'widget': 'image', 'data': b_field, 'xLabel': "%s" % axes_str[1],
-                        'yLabel': "%s" % axes_str[0], 'title': "B0 map", 'row': 0, 'col': 0}
+        result_1 = {'widget': 'image', 'data': b_field, 'xLabel': "%s" % axes_str[1],
+                    'yLabel': "%s" % axes_str[0], 'title': "B0 map", 'row': 0, 'col': 3}
 
-        if self.mapVals['unlock_orientation'] == 0:  # Get image in radiology standard
-            result_2, _, _ = utils.fix_image_orientation(image=np.abs(i_data_a), axes=self.axesOrientation)
-            result_2['row'] = 0
-            result_2['col'] = 0
-        else:  # Get image according to scanner axes
-            result_2 = {'widget': 'image', 'data': np.abs(i_data_a), 'xLabel': "%s" % axes_str[1],
-                        'yLabel': "%s" % axes_str[0], 'title': "Image A", 'row': 0, 'col': 1}
+        result_2 = {'widget': 'image', 'data': np.abs(i_data_a), 'xLabel': "%s" % axes_str[1],
+                    'yLabel': "%s" % axes_str[0], 'title': "Image A", 'row': 0, 'col': 0}
 
-        if self.mapVals['unlock_orientation'] == 0:  # Get image in radiology standard
-            result_3, _, _ = utils.fix_image_orientation(image=np.abs(i_data_b), axes=self.axesOrientation)
-            result_3['row'] = 1
-            result_3['col'] = 0
-        else:  # Get image according to scanner axes
-            result_3 = {'widget': 'image', 'data': np.abs(i_data_b), 'xLabel': "%s" % axes_str[1],
-                        'yLabel': "%s" % axes_str[0], 'title': "Image B", 'row': 0, 'col': 2}
+        result_3 = {'widget': 'image', 'data': np.abs(i_data_b), 'xLabel': "%s" % axes_str[1],
+                    'yLabel': "%s" % axes_str[0], 'title': "Image B", 'row': 1, 'col': 0}
 
-        if self.mapVals['unlock_orientation'] == 0:  # Get image in radiology standard
-            result_4, _, _ = utils.fix_image_orientation(image=raw_phase_1, axes=self.axesOrientation)
-            result_4['row'] = 0
-            result_4['col'] = 1
-        else:  # Get image according to scanner axes
-            result_4 = {'widget': 'image', 'data': raw_phase_1, 'xLabel': "%s" % axes_str[1],
-                        'yLabel': "%s" % axes_str[0], 'title': "Raw Phase A", 'row': 0, 'col': 1}
+        result_4 = {'widget': 'image', 'data': raw_phase_1, 'xLabel': "%s" % axes_str[1],
+                    'yLabel': "%s" % axes_str[0], 'title': "Raw Phase A", 'row': 0, 'col': 1}
 
-        if self.mapVals['unlock_orientation'] == 0:  # Get image in radiology standard
-            result_5, _, _ = utils.fix_image_orientation(image=raw_phase_2, axes=self.axesOrientation)
-            result_5['row'] = 1
-            result_5['col'] = 1
-        else:  # Get image according to scanner axes
-            result_5 = {'widget': 'image', 'data': raw_phase_2, 'xLabel': "%s" % axes_str[1],
-                        'yLabel': "%s" % axes_str[0], 'title': "Raw Phase B", 'row': 1, 'col': 1}
+        result_5 = {'widget': 'image', 'data': raw_phase_2, 'xLabel': "%s" % axes_str[1],
+                    'yLabel': "%s" % axes_str[0], 'title': "Raw Phase B", 'row': 1, 'col': 1}
 
-        if self.mapVals['unlock_orientation'] == 0:  # Get image in radiology standard
-            result_6, _, _ = utils.fix_image_orientation(image=i_phase_a, axes=self.axesOrientation)
-            result_6['row'] = 0
-            result_6['col'] = 2
-        else:  # Get image according to scanner axes
-            result_6 = {'widget': 'image', 'data': i_phase_a, 'xLabel': "%s" % axes_str[1],
-                        'yLabel': "%s" % axes_str[0], 'title': "Phase A", 'row': 1, 'col': 1}
+        result_6 = {'widget': 'image', 'data': i_phase_a, 'xLabel': "%s" % axes_str[1],
+                    'yLabel': "%s" % axes_str[0], 'title': "Phase A", 'row': 0, 'col': 2}
 
-        if self.mapVals['unlock_orientation'] == 0:  # Get image in radiology standard
-            result_7, _, _ = utils.fix_image_orientation(image=i_phase_b, axes=self.axesOrientation)
-            result_7['row'] = 1
-            result_7['col'] = 2
-        else:  # Get image according to scanner axes
-            result_7 = {'widget': 'image', 'data': i_phase_b, 'xLabel': "%s" % axes_str[1],
-                        'yLabel': "%s" % axes_str[0], 'title': "Phase B", 'row': 1, 'col': 1}
-
+        result_7 = {'widget': 'image', 'data': i_phase_b, 'xLabel': "%s" % axes_str[1],
+                    'yLabel': "%s" % axes_str[0], 'title': "Phase B", 'row': 1, 'col': 2}
 
         self.output = [result_1, result_2, result_3, result_4, result_5, result_6, result_7]
 
@@ -732,6 +691,7 @@ class spds(blankSeq.MRIBLANKSEQ):
             self.plotResults()
 
         return self.output
+
 
 if __name__ == "__main__":
     seq = spds()
