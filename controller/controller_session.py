@@ -84,13 +84,13 @@ class SessionController(SessionWindow):
         else:
             self.check_rf_coils.setChecked(True)
 
-
         if check:
             print("READY: System configuration checks succeeded.")
             self.launch_gui_action.setDisabled(False)
             self.demo_gui_action.setDisabled(False)
 
     def update_hardware(self):
+        self.tab_session.rf_coil_combo_box.clear()
         self.tab_session.rf_coil_combo_box.addItems(hw.antenna_dict.keys())
         self.check_system()
 

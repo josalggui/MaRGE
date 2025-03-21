@@ -84,8 +84,7 @@ class SessionWindow(QMainWindow):
         self.demo_gui_action.setDisabled(True)
 
         # demo gui action
-        self.update_action = QAction(QIcon("resources/icons/arrow-sync.svg"), "Update scanner hardware",
-                                             self)
+        self.update_action = QAction(QIcon("resources/icons/arrow-sync.svg"), "Update scanner hardware", self)
         self.update_action.setStatusTip("Update scanner hardware")
         self.toolbar.addAction(self.update_action)
 
