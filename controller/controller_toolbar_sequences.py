@@ -267,10 +267,7 @@ class SequenceController(SequenceToolBar):
             name = str(datetime.now())[11:23] + " | " + item_name
         self.main.history_list.addItem(name)
 
-        sequence = copy.copy(defaultsequences[seq_name])
-        # sequence.mapVals['larmorFreq'] = hw.larmorFreq
-        # sequence.mapVals['fov'] = hw.fov
-        # sequence.mapVals['dfov'] = hw.dfov
+        sequence = copy.deepcopy(defaultsequences[seq_name])
         if map_nmspc is None and map_vals is None:
             map_nmspc = list(sequence.mapNmspc.values())
             map_vals = list(sequence.mapVals.values())
@@ -279,12 +276,8 @@ class SequenceController(SequenceToolBar):
         self.main.history_list.inputs[name] = [map_nmspc, map_vals]
         self.main.history_list.pending_inputs[name] = [map_nmspc, map_vals]
 
-        # Set hw.dfov = 0 if sequence is image
-        if 'dfov' in defaultsequences[seq_name].mapVals:
-            hw.dfov = [0.0, 0.0, 0.0]
-            defaultsequences[seq_name].mapVals['dfov'] = [0.0, 0.0, 0.0]
-
         # Set to zero the dfov and angle for next figures
+        hw.dfov = [0.0, 0.0, 0.0]
         for sequence in defaultsequences.values():
             if 'dfov' in sequence.mapKeys:
                 sequence.mapVals['dfov'] = [0.0, 0.0, 0.0]   # mm
