@@ -127,12 +127,12 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.mapVals['RMS noise'] = noiserms
         self.mapVals['sampledPoint'] = noiserms # for sweep method
         bw = self.mapVals['bw'] * 1e3  # Hz
-        noiserms = noiserms / np.sqrt(bw) * 1e6  # nV/sqrt(Hz)
-        print('rms noise: %0.1f nV/Hz^(-1/2)' % noiserms)
-        johnson = np.sqrt(2 * 50 * hw.temperature * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e9  # nV/sqrt(Hz)
-        print('Expected by Johnson: %0.1f nV/Hz^(-1/2)' % johnson)
+        noiserms = noiserms * 1e3  # uV
+        print('rms noise: %0.1f uV @ %0.1f kHz' % (noiserms, bw * 1e-3))
+        johnson = np.sqrt(2 * 50 * hw.temperature * bw * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e6  # uV
+        print('Expected by Johnson: %0.1f uV @ %0.1f kHz' % (johnson, bw * 1e-3))
         print('Noise factor: %0.1f johnson' % (noiserms / johnson))
-        if noiserms / johnson > 3:
+        if noiserms / johnson > 4:
             print("WARNING: Noise is too high")
 
         # Plot signal versus time
