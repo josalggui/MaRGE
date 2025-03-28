@@ -3,6 +3,12 @@ import numpy as np
 import nibabel as nib
 from skimage.util import view_as_blocks
 
+import scipy as sp
+from manager.dicommanager import DICOMImage
+import pydicom
+from pydicom.dataset import Dataset, FileDataset
+from datetime import date, datetime
+
 
 def fix_image_orientation(image, axes, orientation='FFS'):
     """
@@ -85,6 +91,98 @@ def fix_image_orientation(image, axes, orientation='FFS'):
     }
 
     return output, image, image_orientation_dicom
+
+def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data={}):
+    axes_orientation = np.array(axes_orientation)
+    n_xyz = [0, 0, 0]
+    reorder = [0, 0, 0]
+
+    # Determine correct dimension ordering
+    for i, axis in enumerate(axes_orientation):
+        n_xyz[axis] = n_points[i]
+        reorder[axis] = i
+
+    fov = np.array(fov)  # cm
+    fov = fov[axes_orientation]
+    resolution = fov / n_points * 10  # Convert cm to mm
+
+    # DICOM TAGS
+    if (axes_orientation == [0, 1, 2]).all():
+        meta_data["ImageOrientationPatient"] = [0.0, 0.0, -1.0, 0.0, 1.0, 0.0]
+        meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
+        meta_data['SliceThickness'] = resolution[2]
+    elif (axes_orientation == [1, 0, 2]).all():
+        meta_data["ImageOrientationPatient"] = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
+        meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
+        meta_data['SliceThickness'] = resolution[2]
+    elif (axes_orientation == [1, 2, 0]).all():
+        image = image[::-1, : ,:]
+        meta_data["ImageOrientationPatient"] = [0.0, 1.0, 0.0, 1.0, 0.0, 0.0]
+        meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
+        meta_data['SliceThickness'] = resolution[2]
+    elif (axes_orientation == [2, 1, 0]).all():
+        image = image[::-1, : ,:]
+        meta_data["ImageOrientationPatient"] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+        meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
+        meta_data['SliceThickness'] = resolution[2]
+    elif (axes_orientation == [2, 0, 1]).all():
+        meta_data["ImageOrientationPatient"] = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
+        meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
+        meta_data['SliceThickness'] = resolution[2]
+    elif (axes_orientation == [0, 2, 1]).all():
+        meta_data["ImageOrientationPatient"] = [0.0, 0.0, -1.0, 1.0, 0.0, 0.0]
+        meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
+        meta_data['SliceThickness'] = resolution[2]
+
+    # Normalize to 16-bit (0 - 65535)
+    image = (image - np.min(image)) / (np.max(image) - np.min(image)) * (2 ** 15 - 1)
+    image = image.astype(np.uint16)
+
+    # Create metadata
+    if len(image.shape) > 2:
+        # Obtener dimensiones
+        slices, rows, columns = image.shape
+        meta_data["Columns"] = columns
+        meta_data["Rows"] = rows
+        meta_data["NumberOfSlices"] = slices
+        meta_data["NumberOfFrames"] = slices
+    # if it is a 2d image
+    else:
+        # Obtener dimensiones
+        rows, columns = image.shape
+        slices = 1
+        meta_data["Columns"] = columns
+        meta_data["Rows"] = rows
+        meta_data["NumberOfSlices"] = 1
+        meta_data["NumberOfFrames"] = 1
+
+    meta_data["PixelData"] = image.tobytes()
+    meta_data["WindowWidth"] = 26373
+    meta_data["WindowCenter"] = 13194
+
+    # Create DICOM object
+    dicom_image = DICOMImage()
+
+    # Save image into DICOM object
+    dicom_image.meta_data["PixelData"] = meta_data["PixelData"]
+
+    # Date and time
+    current_time = datetime.now()
+    meta_data["StudyDate"] = current_time.strftime("%Y%m%d")
+    meta_data["StudyTime"] = current_time.strftime("%H%M%S")
+
+    # Update the DICOM metadata
+    dicom_image.meta_data.update(meta_data)
+
+    # Save metadata dictionary into DICOM object metadata (Standard DICOM 3.0)
+    dicom_image.image2Dicom()
+
+    # Save DICOM file
+    dicom_image.save(f"{file_path}")
+    
+    # Save the DICOM file
+    print(f"DICOM saved: {file_path}")
+
 
 def save_nifti(axes_orientation, n_points, fov, dfov, image, file_path):
     axes_orientation = np.array(axes_orientation)
@@ -445,3 +543,30 @@ def run_pocs_reconstruction(n_points, factors, k_space_ref):
     print("Convergence: %0.2e" % (1 - correlation))
 
     return img_reconstructed
+
+if __name__ == "__main__":
+    # mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.10.03.769.mat")
+    # mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.10.44.360.mat")
+    # mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.11.22.935.mat")
+    # mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.12.09.496.mat")
+    # mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.12.52.711.mat")
+    mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.13.29.064.mat")
+    image = np.abs(mat_data['image3D'])
+    fov = mat_data['fov'][0]
+    n_points = mat_data['nPoints'][0]
+    dfov = mat_data['dfov'][0]
+    axes_orientation = mat_data['axesOrientation'][0]
+    file_path = "/home/physio/git_repos/Results/Dicom/new_dicom.dcm"
+    save_dicom(axes_orientation, n_points, fov, image, file_path)
+
+    # image = np.zeros((10, 12, 14))
+    # image[0:3, 0, 0] = 1
+    # image[0, 0:5, 0] = 1
+    # image[0, 0, 0:7] = 1
+    # fov = np.array([10, 12, 14])
+    # n_points = np.array([14, 12, 10])
+    # dfov = np.array([0.0, 0.0, 0.0])
+    # axes_orientation = np.array([0, 1, 2])
+    # file_path = "/home/physio/git_repos/Results/Dicom/new_dicom_1.dcm"
+    # save_dicom(axes_orientation, n_points, fov, dfov, image, file_path)
+

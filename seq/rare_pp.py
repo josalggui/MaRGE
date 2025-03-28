@@ -1056,7 +1056,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
             # Image plot
             if self.mapVals['unlock_orientation'] == 0:
-                result_1, image, self.image_orientation_dicom = utils.fix_image_orientation(image, axes=self.axesOrientation)
+                result_1, _, _ = utils.fix_image_orientation(image, axes=self.axesOrientation)
                 result_1['row'] = 0
                 result_1['col'] = 0
             else:
@@ -1075,44 +1075,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             result_2['row'] = 0
             result_2['col'] = 1
 
-            # DICOM TAGS
-            if self.axesOrientation[2]==2:
-                image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
-            elif self.axesOrientation[2]==1:
-                image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
-            elif self.axesOrientation[2]==0:
-                image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
-
             # Image
-            image_dicom = np.transpose(image, (0, 2, 1))
-            # If it is a 3d image
-            if len(image_dicom.shape) > 2:
-                # Obtener dimensiones
-                slices, rows, columns = image_dicom.shape
-                self.meta_data["Columns"] = columns
-                self.meta_data["Rows"] = rows
-                self.meta_data["NumberOfSlices"] = slices
-                self.meta_data["NumberOfFrames"] = slices
-            # if it is a 2d image
-            else:
-                # Obtener dimensiones
-                rows, columns = image_dicom.shape
-                slices = 1
-                self.meta_data["Columns"] = columns
-                self.meta_data["Rows"] = rows
-                self.meta_data["NumberOfSlices"] = 1
-                self.meta_data["NumberOfFrames"] = 1
-            img_full_abs = np.abs(image_dicom) * (2 ** 15 - 1) / np.amax(np.abs(image_dicom))
-            img_full_int = np.int16(np.abs(img_full_abs))
-            img_full_int = np.reshape(img_full_int, (slices, rows, columns))
-            arr = img_full_int
-            self.meta_data["PixelData"] = arr.tobytes()
             self.meta_data["WindowWidth"] = 26373
             self.meta_data["WindowCenter"] = 13194
-            self.meta_data["ImageOrientationPatient"] = image_orientation_dicom
-            resolution = self.mapVals['resolution'] * 1e3
-            self.meta_data["PixelSpacing"] = [resolution[0], resolution[1]]
-            self.meta_data["SliceThickness"] = resolution[2]
             # Sequence parameters
             self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
             self.meta_data["EchoTime"] = self.mapVals['echoSpacing']

@@ -9,6 +9,8 @@ import os
 
 import bm4d
 import numpy as np
+from sympy.utilities.mathml import apply_xsl
+
 import configs.hw_config as hw
 from datetime import date, datetime
 from scipy.io import savemat, loadmat
@@ -1694,13 +1696,20 @@ class MRIBLANKSEQ:
 
         # Save dcm and nifti with the final image
         if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode is None): ##verify if output is an image
-            self.image2Dicom(fileName="%s/%s.dcm" % (directory_dcm, file_name))
+            utils.save_dicom(axes_orientation=self.mapVals['axesOrientation'],
+                             n_points=self.mapVals['nPoints'],
+                             fov=self.mapVals['fov'],
+                             image=self.mapVals['image3D'],
+                             file_path=f"{directory_dcm}/{file_name}.dcm",
+                             meta_data = self.meta_data,
+                             )
             utils.save_nifti(axes_orientation=self.mapVals['axesOrientation'],
                              n_points=self.mapVals['nPoints'],
                              fov=self.mapVals['fov'],
                              dfov=self.mapVals['dfov'],
                              image=self.mapVals['image3D'],
-                             file_path=f"{directory_nii}/{file_name}.nii")
+                             file_path=f"{directory_nii}/{file_name}.nii"
+                             )
 
         # Move seq files
         self.move_batch_files(destination_folder=directory, file_name=file_name)
