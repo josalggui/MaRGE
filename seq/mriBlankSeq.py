@@ -1625,6 +1625,7 @@ class MRIBLANKSEQ:
             dt2 = date.today()
             date_string = dt2.strftime("%Y.%m.%d")
             directory = 'experiments/acquisitions/%s' % (date_string)
+            self.session['directory'] = directory
         if not os.path.exists(directory):
             os.makedirs(directory)
 

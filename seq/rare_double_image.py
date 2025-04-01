@@ -1,5 +1,5 @@
 """
-Created on Thu June 2 2022
+Created on Thu June 2, 2022
 @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
 @email: josalggui@i3m.upv.es
 @Summary: rare sequence class
@@ -33,6 +33,7 @@ import ismrmrd.xsd
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 from marge_utils import utils
+import nibabel as nib
 
 
 #*********************************************************************************
@@ -95,7 +96,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
                           tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 10], field='IM')
         self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
         self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ')
@@ -937,19 +938,19 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             axesStr[n] = axesKeys[index]
             n += 1
 
-        # Plot image
-        img_mag_odd = np.abs(img_odd)
-        img_mag_eve = np.abs(img_eve)
-        img_pha_odd = np.angle(img_odd)
-        mask_odd = img_mag_odd > 0.3 * np.max(img_mag_odd)
-        mean_phase_odd = np.mean(img_pha_odd[mask_odd])
-        img_pha_odd[~mask_odd] = mean_phase_odd
-        img_pha_eve = np.angle(img_eve)
-        mask_eve = img_mag_eve > 0.3 * np.max(img_mag_eve)
-        mean_phase_eve = np.mean(img_pha_eve[mask_eve])
-        img_pha_eve[~mask_eve] = mean_phase_eve
-
         if self.full_plot is True or self.full_plot == 'True':
+            # Plot image
+            img_mag_odd = np.abs(img_odd)
+            img_mag_eve = np.abs(img_eve)
+            img_pha_odd = np.angle(img_odd)
+            mask_odd = img_mag_odd > 0.3 * np.max(img_mag_odd)
+            mean_phase_odd = np.mean(img_pha_odd[mask_odd])
+            img_pha_odd[~mask_odd] = mean_phase_odd
+            img_pha_eve = np.angle(img_eve)
+            mask_eve = img_mag_eve > 0.3 * np.max(img_mag_eve)
+            mean_phase_eve = np.mean(img_pha_eve[mask_eve])
+            img_pha_eve[~mask_eve] = mean_phase_eve
+
             # Image plot
             result_mag_odd, img_mag_odd, _ = utils.fix_image_orientation(img_mag_odd, axes=self.axesOrientation)
             result_mag_odd['row'] = 0
@@ -1042,6 +1043,49 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         # Save results
         self.saveRawData()
 
+        # Post-processing
+        print("Image post-processing")
+        data = np.reshape(data, newshape=(self.nPoints[::-1]))
+        data = utils.run_cosbell_filter(sampled=self.mapVals['sampled'][:, 0:3], data=data,
+                                        cosbell_order=[0.5, 0.5, 0.5])
+        data = utils.run_zero_padding(data, [140, 140, 120])
+        image = np.abs(utils.run_ifft(data))
+
+        # Fix distortions
+        print("Fixing distortions...")
+        nifti_path = self.session['directory'] + '/nii/' + self.mapVals['fileName'][0:-4]
+        utils.save_nifti(axes_orientation=self.mapVals['axesOrientation'],
+                         n_points=[140, 140, 120],
+                         fov=self.mapVals['fov'],
+                         dfov=self.mapVals['dfov'],
+                         image=image,
+                         file_path=f"{nifti_path}_post.nii")
+        try:
+            nifti_file = nib.load(f"{nifti_path}_post.nii")
+        except:
+            nifti_file = nib.load(f"../{nifti_path}_post.nii")
+        nifti_image = np.array(nifti_file.get_fdata(), dtype=np.float32)  # Convert to numpy array
+        nifti_image = np.transpose(nifti_image, axes=(2, 1, 0))
+
+        # First distortion iteration
+        for ii in range(4):
+            print(f"Iteration {ii+1}...")
+            try:
+                dx = np.load(f"maps/dx_{ii + 1}.npy")
+                dy = np.load(f"maps/dy_{ii + 1}.npy")
+                dz = np.load(f"maps/dz_{ii + 1}.npy")
+            except:
+                dx = np.load(f"../maps/dx_{ii + 1}.npy")
+                dy = np.load(f"../maps/dy_{ii + 1}.npy")
+                dz = np.load(f"../maps/dz_{ii + 1}.npy")
+            nifti_image = utils.run_distortion_correction(nifti_image, dx, dy, dz)
+
+        # Save nifti
+        nifti_image = np.transpose(nifti_image, axes=(2, 1, 0))
+        nifti_file = nib.Nifti1Image(nifti_image, nifti_file.affine)
+        nib.save(nifti_file, f"{nifti_path}_corrected.nii")
+
+        # Fix dfov
         self.mapVals['angle'] = 0.0
         self.mapVals['dfov'] = [0.0, 0.0, 0.0]
         try:

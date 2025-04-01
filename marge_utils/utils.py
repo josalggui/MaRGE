@@ -2,7 +2,38 @@ import bm4d
 import numpy as np
 import nibabel as nib
 from skimage.util import view_as_blocks
+from scipy.ndimage import map_coordinates
 
+
+def run_distortion_correction(image, dx, dy, dz):
+    """
+    Apply a warp to a 3D image using displacement fields dx, dy, dz.
+
+    Parameters:
+        image (numpy.ndarray): 3D input image.
+        dx (numpy.ndarray): Displacement in x-direction (same shape as image).
+        dy (numpy.ndarray): Displacement in y-direction (same shape as image).
+        dz (numpy.ndarray): Displacement in z-direction (same shape as image).
+
+    Returns:
+        numpy.ndarray: Warped 3D image.
+    """
+    depth, rows, cols = image.shape  # Get dimensions
+
+    # Create coordinate grids
+    z, y, x = np.meshgrid(
+        np.arange(depth), np.arange(rows), np.arange(cols), indexing="ij"
+    )
+
+    # Apply displacement and clip to valid indices
+    x_new = np.clip(x + dx, 0, cols - 1)
+    y_new = np.clip(y + dy, 0, rows - 1)
+    z_new = np.clip(z + dz, 0, depth - 1)
+
+    # Interpolate new coordinates
+    warped_image = map_coordinates(image, [z_new.ravel(), y_new.ravel(), x_new.ravel()], order=1)
+
+    return warped_image.reshape(image.shape)
 
 def fix_image_orientation(image, axes, orientation='FFS'):
     """
