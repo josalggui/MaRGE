@@ -1008,39 +1008,13 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             result['row'] = 0
             result['col'] = 0
 
+            # Dicom parameters
+            self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
+            self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
+            self.meta_data["EchoTrainLength"] = self.mapVals['etl']
+
             # Add results into the output attribute (result_1 must be the image to save in dicom)
             self.output = [result]
-
-        # Add dicom information
-        image_dicom = np.transpose(img, (0, 2, 1))
-        if len(image_dicom.shape) > 2:
-            slices, rows, columns = image_dicom.shape
-            self.meta_data["Columns"] = columns
-            self.meta_data["Rows"] = rows
-            self.meta_data["NumberOfSlices"] = slices
-            self.meta_data["NumberOfFrames"] = slices
-        else:
-            rows, columns = image_dicom.shape
-            slices = 1
-            self.meta_data["Columns"] = columns
-            self.meta_data["Rows"] = rows
-            self.meta_data["NumberOfSlices"] = 1
-            self.meta_data["NumberOfFrames"] = 1
-        img_full_abs = np.abs(image_dicom) * (2 ** 15 - 1) / np.amax(np.abs(image_dicom))
-        img_full_int = np.int16(np.abs(img_full_abs))
-        img_full_int = np.reshape(img_full_int, (slices, rows, columns))
-        arr = img_full_int
-        self.meta_data["PixelData"] = arr.tobytes()
-        self.meta_data["WindowWidth"] = 26373
-        self.meta_data["WindowCenter"] = 13194
-        self.meta_data["ImageOrientationPatient"] = self.image_orientation_dicom
-        resolution = self.mapVals['resolution'] * 1e3
-        self.meta_data["PixelSpacing"] = [resolution[0], resolution[1]]
-        self.meta_data["SliceThickness"] = resolution[2]
-        # Sequence parameters
-        self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
-        self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
-        self.meta_data["EchoTrainLength"] = self.mapVals['etl']
 
         # Reset rotation angle and dfov to zero
         self.mapVals['angle'] = self.angle

@@ -1075,10 +1075,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             result_2['row'] = 0
             result_2['col'] = 1
 
-            # Image
-            self.meta_data["WindowWidth"] = 26373
-            self.meta_data["WindowCenter"] = 13194
-            # Sequence parameters
+            # Dicom parameters
             self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
             self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
             self.meta_data["EchoTrainLength"] = self.mapVals['etl']
