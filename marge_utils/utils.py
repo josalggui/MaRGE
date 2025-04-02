@@ -93,6 +93,7 @@ def fix_image_orientation(image, axes, orientation='FFS'):
     return output, image, image_orientation_dicom
 
 def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data={}):
+    image = np.abs(image)
     axes_orientation = np.array(axes_orientation)
     n_xyz = [0, 0, 0]
     reorder = [0, 0, 0]

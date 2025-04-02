@@ -9,7 +9,6 @@ import os
 
 import bm4d
 import numpy as np
-from sympy.utilities.mathml import apply_xsl
 
 import configs.hw_config as hw
 from datetime import date, datetime
