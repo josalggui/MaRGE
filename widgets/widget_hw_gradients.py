@@ -30,6 +30,8 @@ class GradientsWidget(QWidget):
         self.add_input(label="Gradient rise time (us)", value="400", tip="Time to reach maximum gradient amplitude")
         self.add_input(label="Gradient steps", value="16", tip="Number of steps for gradient transition")
         self.add_input(label="Gradient delay (us)", value="9", tip="Delay before gradient application")
+        self.add_input(label="GPA model", value="None",
+                       tip="GPA model: Only 'Barthel' is supported; otherwise, leave it empty.")
 
         # Dictionary to store references to input fields
         self.input_boxes = {}
@@ -78,6 +80,7 @@ class GradientsWidget(QWidget):
         hw.grad_rise_time = float(self.input_boxes["Gradient rise time (us)"].text()) * 1e-6  # s
         hw.grad_steps = int(self.input_boxes["Gradient steps"].text())
         hw.gradDelay = int(self.input_boxes["Gradient delay (us)"].text())
+        hw.gpa_model = self.input_boxes["GPA model"].text()
 
     def save_gradient_entries(self):
         file_name = "configs/hw_gradients.csv"

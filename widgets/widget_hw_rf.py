@@ -36,6 +36,7 @@ class RfWidget(QWidget):
         self.add_input(label="LNA gain (dB)", value="45", tip="Low-noise amplifier gain in dB")
         self.add_input(label="RF gain min (dB)", value="45", tip="Minimum RF amplifier gain in dB")
         self.add_input(label="RF gain max (dB)", value="76", tip="Maximum RF amplifier gain in dB")
+        self.add_input(label="RFPA model", value="None", tip="RFPA model: Only 'Barthel' is supported; otherwise, leave it empty.")
 
         # Dictionary to store references to input fields
         self.input_boxes = {}
@@ -107,6 +108,7 @@ class RfWidget(QWidget):
         hw.lnaGain = float(self.input_boxes["LNA gain (dB)"].text())
         hw.rf_min_gain = int(self.input_boxes["RF gain min (dB)"].text())
         hw.rf_max_gain = int(self.input_boxes["RF gain max (dB)"].text())
+        hw.rfpa_model = self.input_boxes["RFPA model"].text()
         hw.antenna_dict = {}
         for rf_id, rf_eff in self.added_rfs:
             rf_name = rf_id
