@@ -141,9 +141,12 @@ def save_nifti(axes_orientation, n_points, fov, dfov, image, file_path):
         affine[0, 0] = resolution[2]
         affine[1, 1] = resolution[1]
         affine[2, 2] = resolution[0]
-        affine[0, 3] = dfov[2]
-        affine[1, 3] = - dfov[1]
-        affine[2, 3] = dfov[0]
+
+        # Set the origin at the center of the image
+        center_voxel = np.array(n_xyz[::-1]) / 2  # Reverse order to match data axes
+        origin_mm = -center_voxel * resolution[::-1]  # Reverse resolution to match
+        affine[:3, 3] = origin_mm
+
         affine[3, 3] = 1
     elif orientation == 'HFS':
         print("Affine matrix not ready.")
