@@ -1,0 +1,23 @@
+job:
+  codespec:
+    image: test_may3:latest
+    buffers:
+      inputs:
+        - input
+      outputs:
+        - output
+    args:
+      - python3
+      - stream_recon_i3m_RARE_may.py
+      - -i
+      - $(INPUT_PIPE)
+      - -o
+      - $(OUTPUT_PIPE) 
+      - -r
+      - 'art'
+      - -artMode
+      - 'artPK'
+    resources:
+      requests:
+        cpu: 1
+      gpu: 1

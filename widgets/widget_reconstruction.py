@@ -115,21 +115,25 @@ class ReconstructionTabWidget(QWidget):
         # Define new buttons here
         self.tyger_ifft_button = QPushButton('Python iFFT')
         self.tyger_art_button = QPushButton('Python ART')
-        self.tyger_artpk_button = QPushButton('Python ART PK')
+        self.tyger_artpk_button = QPushButton('Python ART Grad PK')
         self.tyger_ifft_bart_button = QPushButton('BART iFFT')
         self.tyger_ifftus_bart_button = QPushButton('BART iFFT us')
         self.tyger_cs_bart_button = QPushButton('BART CS')
         self.tyger_pix2pix_button = QPushButton('Pix2Pix Net Knee')
-
+        self.tyger_CP_spds_button = QPushButton('CP SPDS')
+        self.tyger_artpkB_button = QPushButton('Python ART Bo PK')
+        
         # Add defined buttons to the layout
         tyger_layout.addWidget(self.tyger_ifft_button, 0, 0)
         tyger_layout.addWidget(self.tyger_art_button,0,1)
         tyger_layout.addWidget(self.tyger_artpk_button,0,2)
-        tyger_layout.addWidget(self.tyger_ifft_bart_button,1,0)
-        tyger_layout.addWidget(self.tyger_ifftus_bart_button,1,1)
-        tyger_layout.addWidget(self.tyger_cs_bart_button,1,2)
-        tyger_layout.addWidget(self.tyger_pix2pix_button,2,0)
-
+        tyger_layout.addWidget(self.tyger_ifft_bart_button,2,0)
+        tyger_layout.addWidget(self.tyger_ifftus_bart_button,2,1)
+        tyger_layout.addWidget(self.tyger_cs_bart_button,2,2)
+        tyger_layout.addWidget(self.tyger_pix2pix_button,1,0)
+        tyger_layout.addWidget(self.tyger_CP_spds_button,1,1)
+        tyger_layout.addWidget(self.tyger_artpkB_button,1,2)
+        
         # Define the group box
         tyger_group = QGroupBox('TYGER')
         tyger_group.setLayout(tyger_layout)
