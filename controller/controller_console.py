@@ -6,6 +6,8 @@
 """
 import datetime
 import sys
+import os
+
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from widgets.widget_console import ConsoleWidget
 
@@ -27,6 +29,14 @@ class ConsoleController(ConsoleWidget):
 
     def __init__(self):
         super().__init__()
+
+        # Create 'logs' folder if it doesn't exist
+        log_folder = "logs"
+        if not os.path.exists(log_folder):
+            os.makedirs(log_folder)
+            print(f"[ConsoleController] Created log folder at: {log_folder}")
+        else:
+            print(f"[ConsoleController] Log folder already exists at: {log_folder}")
 
         # Redirect the output of print to the console widget
         sys.stdout = EmittingStream(textWritten=self.write_console)
