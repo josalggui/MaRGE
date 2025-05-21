@@ -1,0 +1,9 @@
+12:40:07 - [ConsoleController] Log folder already exists at: logs
+12:40:07 - 
+
+12:40:07 - [ConsoleController] Logging to file: logs/log_20250521_124007.txt
+12:40:07 - 
+
+12:40:07 - READY: System configuration checks succeeded.
+12:40:07 - 
+

@@ -1,0 +1,140 @@
+13:56:56 - READY - MaRGE has started successfully.
+13:56:56 - 
+13:56:56 - WARNING - This is a test warning message.
+13:56:56 - 
+13:56:56 - ERROR - This is a test error message.
+13:56:56 - 
+13:56:56 - [ConsoleController] Log folder already exists at: logs
+13:56:56 - 
+13:56:56 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+13:56:56 - 
+13:56:56 - READY - MaRGE has started successfully.
+13:56:56 - 
+13:56:56 - WARNING - This is a test warning message.
+13:56:56 - 
+13:56:56 - ERROR - This is a test error message.
+13:56:56 - 
+13:56:56 - READY: System configuration checks succeeded.
+13:56:56 - 
+13:56:59 - [ConsoleController] Log folder already exists at: logs
+13:56:59 - 
+13:56:59 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+13:56:59 - 
+13:56:59 - READY - MaRGE has started successfully.
+13:56:59 - 
+13:56:59 - WARNING - This is a test warning message.
+13:56:59 - 
+13:56:59 - ERROR - This is a test error message.
+13:56:59 - 
+13:56:59 - WARNING: No Arduino found for interlock
+13:56:59 - 
+13:56:59 - Graphical User Interface for MaRCoS
+13:56:59 - 
+13:56:59 - J.M. Algarín, PhD
+13:56:59 - 
+13:56:59 - josalggui@i3m.upv.es
+13:56:59 - 
+13:56:59 - mriLab @ i3M, CSIC, Valencia, Spain
+13:56:59 - 
+13:56:59 - https://github.com/mriLab-i3M/MaRGE
+13:56:59 - 
+13:56:59 - Graphical User Interface for MaRCoS
+13:56:59 - 
+13:56:59 - J.M. Algarín, PhD
+13:56:59 - 
+13:56:59 - josalggui@i3m.upv.es
+13:56:59 - 
+13:56:59 - mriLab @ i3M, CSIC, Valencia, Spain
+13:56:59 - 
+13:56:59 - https://github.com/mriLab-i3M/MaRGE
+13:56:59 - 
+13:56:59 - Sniffer initialized.
+13:56:59 - 
+13:57:24 - READY - MaRGE has started successfully.
+13:57:24 - 
+13:57:24 - WARNING - This is a test warning message.
+13:57:24 - 
+13:57:24 - ERROR - This is a test error message.
+13:57:24 - 
+13:57:24 - [ConsoleController] Log folder already exists at: logs
+13:57:24 - 
+13:57:24 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+13:57:24 - 
+13:57:24 - READY - MaRGE has started successfully.
+13:57:24 - 
+13:57:24 - WARNING - This is a test warning message.
+13:57:24 - 
+13:57:24 - ERROR - This is a test error message.
+13:57:24 - 
+13:57:24 - READY: System configuration checks succeeded.
+13:57:24 - 
+13:57:27 - [ConsoleController] Log folder already exists at: logs
+13:57:27 - 
+13:57:27 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+13:57:27 - 
+13:57:27 - READY - MaRGE has started successfully.
+13:57:27 - 
+13:57:27 - WARNING - This is a test warning message.
+13:57:27 - 
+13:57:27 - ERROR - This is a test error message.
+13:57:27 - 
+13:57:27 - WARNING: No Arduino found for interlock
+13:57:27 - 
+13:57:27 - Graphical User Interface for MaRCoS
+13:57:27 - 
+13:57:27 - J.M. Algarín, PhD
+13:57:27 - 
+13:57:27 - josalggui@i3m.upv.es
+13:57:27 - 
+13:57:27 - mriLab @ i3M, CSIC, Valencia, Spain
+13:57:27 - 
+13:57:27 - https://github.com/mriLab-i3M/MaRGE
+13:57:27 - 
+13:57:27 - Graphical User Interface for MaRCoS
+13:57:27 - 
+13:57:27 - J.M. Algarín, PhD
+13:57:27 - 
+13:57:27 - josalggui@i3m.upv.es
+13:57:27 - 
+13:57:27 - mriLab @ i3M, CSIC, Valencia, Spain
+13:57:27 - 
+13:57:27 - https://github.com/mriLab-i3M/MaRGE
+13:57:27 - 
+13:57:27 - Sniffer initialized.
+13:57:27 - 
+14:01:09 - READY - MaRGE has started successfully.
+14:01:09 - 
+14:01:09 - WARNING - This is a test warning message.
+14:01:09 - 
+14:01:09 - ERROR - This is a test error message.
+14:01:09 - 
+14:01:09 - [ConsoleController] Log folder already exists at: logs
+14:01:09 - 
+14:01:09 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+14:01:09 - 
+14:01:09 - READY - MaRGE has started successfully.
+14:01:09 - 
+14:01:09 - WARNING - This is a test warning message.
+14:01:09 - 
+14:01:09 - ERROR - This is a test error message.
+14:01:09 - 
+14:01:09 - READY: System configuration checks succeeded.
+14:01:09 - 
+14:06:09 - READY - MaRGE has started successfully.
+14:06:09 - 
+14:06:09 - WARNING - This is a test warning message.
+14:06:09 - 
+14:06:09 - ERROR - This is a test error message.
+14:06:09 - 
+14:06:09 - [ConsoleController] Log folder already exists at: logs
+14:06:09 - 
+14:06:09 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+14:06:09 - 
+14:06:09 - READY - MaRGE has started successfully.
+14:06:09 - 
+14:06:09 - WARNING - This is a test warning message.
+14:06:09 - 
+14:06:09 - ERROR - This is a test error message.
+14:06:09 - 
+14:06:09 - READY: System configuration checks succeeded.
+14:06:09 - 

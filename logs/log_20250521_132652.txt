@@ -1,0 +1,30 @@
+13:26:52 - READY - MaRGE has started successfully.
+13:26:52 - 
+13:26:52 - WARNING - This is a test warning message.
+13:26:52 - 
+13:26:52 - ERROR - This is a test error message.
+13:26:52 - 
+13:26:53 - WARNING: No Arduino found for interlock
+13:26:53 - 
+13:26:53 - Graphical User Interface for MaRCoS
+13:26:53 - 
+13:26:53 - J.M. Algarín, PhD
+13:26:53 - 
+13:26:53 - josalggui@i3m.upv.es
+13:26:53 - 
+13:26:53 - mriLab @ i3M, CSIC, Valencia, Spain
+13:26:53 - 
+13:26:53 - https://github.com/mriLab-i3M/MaRGE
+13:26:53 - 
+13:26:53 - Graphical User Interface for MaRCoS
+13:26:53 - 
+13:26:53 - J.M. Algarín, PhD
+13:26:53 - 
+13:26:53 - josalggui@i3m.upv.es
+13:26:53 - 
+13:26:53 - mriLab @ i3M, CSIC, Valencia, Spain
+13:26:53 - 
+13:26:53 - https://github.com/mriLab-i3M/MaRGE
+13:26:53 - 
+13:26:53 - Sniffer initialized.
+13:26:53 - 

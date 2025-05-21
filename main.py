@@ -44,3 +44,5 @@ gui = SessionController()
 gui.show()
 sys.exit(app.exec_())
 
+# Avant de quitter l'application :
+console_controller.close_log()

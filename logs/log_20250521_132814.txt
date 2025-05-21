@@ -1,0 +1,36 @@
+13:28:14 - READY - MaRGE has started successfully.
+13:28:14 - 
+13:28:14 - WARNING - This is a test warning message.
+13:28:14 - 
+13:28:14 - ERROR - This is a test error message.
+13:28:14 - 
+13:28:14 - WARNING: No Arduino found for interlock
+13:28:14 - 
+13:28:14 - Graphical User Interface for MaRCoS
+13:28:14 - 
+13:28:14 - J.M. Algarín, PhD
+13:28:14 - 
+13:28:14 - josalggui@i3m.upv.es
+13:28:14 - 
+13:28:14 - mriLab @ i3M, CSIC, Valencia, Spain
+13:28:14 - 
+13:28:14 - https://github.com/mriLab-i3M/MaRGE
+13:28:14 - 
+13:28:14 - Graphical User Interface for MaRCoS
+13:28:14 - 
+13:28:14 - J.M. Algarín, PhD
+13:28:14 - 
+13:28:14 - josalggui@i3m.upv.es
+13:28:14 - 
+13:28:14 - mriLab @ i3M, CSIC, Valencia, Spain
+13:28:14 - 
+13:28:14 - https://github.com/mriLab-i3M/MaRGE
+13:28:14 - 
+13:28:14 - Sniffer initialized.
+13:28:14 - 
+13:28:14 - Searching for SDRLabs...
+13:28:14 - 
+13:28:14 - Checking ip 192.168.1.101...
+13:28:14 - 
+13:28:18 - READY: SDRLab found at IP 192.168.1.101
+13:28:18 - 

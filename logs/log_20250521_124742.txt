@@ -1,0 +1,18 @@
+12:47:42 - READY - MaRGE a bien démarré.
+12:47:42 - 
+12:47:42 - WARNING - Ceci est un avertissement test.
+12:47:42 - 
+12:47:42 - ERROR - Ceci est une erreur test.
+12:47:42 - 
+12:47:42 - [ConsoleController] Log folder already exists at: logs
+12:47:42 - 
+12:47:42 - [ConsoleController] Logging to file: logs/log_20250521_124742.txt
+12:47:42 - 
+12:47:42 - READY - MaRGE a bien démarré.
+12:47:42 - 
+12:47:42 - WARNING - Ceci est un avertissement test.
+12:47:42 - 
+12:47:42 - ERROR - Ceci est une erreur test.
+12:47:42 - 
+12:47:42 - READY: System configuration checks succeeded.
+12:47:42 - 

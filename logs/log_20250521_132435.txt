@@ -1,0 +1,28 @@
+13:24:35 - READY - MaRGE has started successfully.
+13:24:35 - 
+13:24:35 - WARNING - This is a test warning message.
+13:24:35 - 
+13:24:35 - ERROR - This is a test error message.
+13:24:35 - 
+13:24:35 - [ConsoleController] Log folder already exists at: logs
+13:24:35 - 
+13:24:35 - [ConsoleController] Logging to file: logs/log_20250521_132435.txt
+13:24:35 - 
+13:24:35 - READY - MaRGE has started successfully.
+13:24:35 - 
+13:24:35 - WARNING - This is a test warning message.
+13:24:35 - 
+13:24:35 - ERROR - This is a test error message.
+13:24:35 - 
+13:24:35 - READY: System configuration checks succeeded.
+13:24:35 - 
+13:24:43 - Data saved for gradients.
+13:24:43 - 
+13:24:44 - Data saved for gradients.
+13:24:44 - 
+13:24:45 - Data saved for gradients.
+13:24:45 - 
+13:26:52 - [ConsoleController] Log folder already exists at: logs
+13:26:52 - 
+13:26:52 - [ConsoleController] Logging to file: logs/log_20250521_132652.txt
+13:26:52 - 

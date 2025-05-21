@@ -1,0 +1,22 @@
+13:27:52 - READY - MaRGE has started successfully.
+13:27:52 - 
+13:27:52 - WARNING - This is a test warning message.
+13:27:52 - 
+13:27:52 - ERROR - This is a test error message.
+13:27:52 - 
+13:27:52 - [ConsoleController] Log folder already exists at: logs
+13:27:52 - 
+13:27:52 - [ConsoleController] Logging to file: logs/log_20250521_132752.txt
+13:27:52 - 
+13:27:52 - READY - MaRGE has started successfully.
+13:27:52 - 
+13:27:52 - WARNING - This is a test warning message.
+13:27:52 - 
+13:27:52 - ERROR - This is a test error message.
+13:27:52 - 
+13:27:52 - READY: System configuration checks succeeded.
+13:27:52 - 
+13:28:14 - [ConsoleController] Log folder already exists at: logs
+13:28:14 - 
+13:28:14 - [ConsoleController] Logging to file: logs/log_20250521_132814.txt
+13:28:14 - 
