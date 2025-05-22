@@ -1,17 +1,18 @@
-import datetime
+import  datetime
 import sys
 import os
-
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
-from widgets.widget_console import ConsoleWidget
-
 import atexit
 
-class ConsoleController(ConsoleWidget):
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+from PyQt5.QtWidgets import (
+    QMainWindow, QWidget, QVBoxLayout, QPushButton, QTextEdit
+)
+
+class ConsoleController(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Créer dossier logs si besoin
+        # === LOG SYSTEM: GARDER INTACT ===
         log_folder = "logs"
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)
@@ -19,7 +20,6 @@ class ConsoleController(ConsoleWidget):
         else:
             print(f"[ConsoleController] Log folder already exists at: {log_folder}")
 
-        # Charger ou créer un nom de fichier log unique pour cette session
         session_log_file = os.path.join(log_folder, "current_session_log.txt")
         if os.path.exists(session_log_file):
             with open(session_log_file, "r", encoding="utf-8") as f:
@@ -30,7 +30,6 @@ class ConsoleController(ConsoleWidget):
             with open(session_log_file, "w", encoding="utf-8") as f:
                 f.write(self.log_filename)
 
-        # Ouvrir le fichier log
         try:
             self.log_file = open(self.log_filename, "a", encoding="utf-8")
             print(f"[ConsoleController] Logging to file: {self.log_filename}")
@@ -38,16 +37,34 @@ class ConsoleController(ConsoleWidget):
             self.log_file = None
             print(f"[ConsoleController] Failed to open log file: {e}")
 
-        # Rediriger stdout
         sys.stdout = EmittingStream(textWritten=self.write_console)
+        atexit.register(self.close_log)
 
+        # === GUI CENTRAL WIDGET CORRECTEMENT ===
+        central_widget = QWidget()
+        layout = QVBoxLayout()
+
+        # === CONSOLE ===
+        self.console = QTextEdit()
+        self.console.setReadOnly(True)
+
+        # === BOUTON SWITCH THEME ===
+        self.theme_button = QPushButton("Switch Theme")
+        self.theme_button.clicked.connect(self.toggle_theme)
+        self.dark_mode = True  # Par défaut QDarkStyle est actif
+
+        # Ajouter les widgets dans le layout
+        layout.addWidget(self.theme_button)
+        layout.addWidget(self.console)
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
+
+        # Message d'état initial
         print("READY - MaRGE has started successfully.")
         print("WARNING - This is a test warning message.")
         print("ERROR - This is a test error message.")
-        atexit.register(self.close_log)
 
     def write_console(self, text):
-        # Console GUI
         cursor = self.console.textCursor()
         cursor.movePosition(cursor.End)
 
@@ -99,6 +116,34 @@ class ConsoleController(ConsoleWidget):
     def close_log(self):
         if hasattr(self, 'log_file') and self.log_file and not self.log_file.closed:
             self.log_file.close()
+
+    def toggle_theme(self):
+        if self.dark_mode:
+            # Passer à un thème clair
+            self.setStyleSheet("""
+                QTextEdit {
+                    background-color: white;
+                    color: black;
+                }
+                QPushButton {
+                    background-color: #f0f0f0;
+                    color: black;
+                }
+            """)
+            self.dark_mode = False
+        else:
+            # Revenir à thème sombre (comme QDarkStyle par défaut)
+            self.setStyleSheet("""
+                QTextEdit {
+                    background-color: #2b2b2b;
+                    color: #ffffff;
+                }
+                QPushButton {
+                    background-color: #3c3f41;
+                    color: #ffffff;
+                }
+            """)
+            self.dark_mode = True
 
 
 class EmittingStream(QObject):

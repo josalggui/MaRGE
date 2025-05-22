@@ -270,3 +270,311 @@
 12:03:05 - 
 12:03:05 - Checking ip 192.168.1.101...
 12:03:05 - 
+12:17:46 - READY - MaRGE has started successfully.
+12:17:46 - 
+12:17:46 - WARNING - This is a test warning message.
+12:17:46 - 
+12:17:46 - ERROR - This is a test error message.
+12:17:46 - 
+12:17:46 - [ConsoleController] Log folder already exists at: logs
+12:17:46 - 
+12:17:46 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+12:17:46 - 
+12:17:46 - READY - MaRGE has started successfully.
+12:17:46 - 
+12:17:46 - WARNING - This is a test warning message.
+12:17:46 - 
+12:17:46 - ERROR - This is a test error message.
+12:17:46 - 
+12:17:46 - READY: System configuration checks succeeded.
+12:17:46 - 
+13:29:16 - READY - MaRGE has started successfully.
+13:29:16 - 
+13:29:16 - WARNING - This is a test warning message.
+13:29:16 - 
+13:29:16 - ERROR - This is a test error message.
+13:29:16 - 
+13:29:16 - [ConsoleController] Log folder already exists at: logs
+13:29:16 - 
+13:29:16 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+13:29:16 - 
+13:29:16 - READY - MaRGE has started successfully.
+13:29:16 - 
+13:29:16 - WARNING - This is a test warning message.
+13:29:16 - 
+13:29:16 - ERROR - This is a test error message.
+13:29:16 - 
+13:29:16 - READY: System configuration checks succeeded.
+13:29:16 - 
+13:36:41 - READY - MaRGE has started successfully.
+13:36:41 - 
+13:36:41 - WARNING - This is a test warning message.
+13:36:41 - 
+13:36:41 - ERROR - This is a test error message.
+13:36:41 - 
+13:36:41 - [ConsoleController] Log folder already exists at: logs
+13:36:41 - 
+13:36:41 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+13:36:41 - 
+13:36:41 - READY - MaRGE has started successfully.
+13:36:41 - 
+13:36:41 - WARNING - This is a test warning message.
+13:36:41 - 
+13:36:41 - ERROR - This is a test error message.
+13:36:41 - 
+13:36:41 - READY: System configuration checks succeeded.
+13:36:41 - 
+13:36:43 - Theme switched to Light.
+13:36:43 - 
+13:37:48 - READY - MaRGE has started successfully.
+13:37:48 - 
+13:37:48 - WARNING - This is a test warning message.
+13:37:48 - 
+13:37:48 - ERROR - This is a test error message.
+13:37:48 - 
+13:37:48 - [ConsoleController] Log folder already exists at: logs
+13:37:48 - 
+13:37:48 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+13:37:48 - 
+13:37:48 - READY - MaRGE has started successfully.
+13:37:48 - 
+13:37:48 - WARNING - This is a test warning message.
+13:37:48 - 
+13:37:48 - ERROR - This is a test error message.
+13:37:48 - 
+13:37:48 - READY: System configuration checks succeeded.
+13:37:48 - 
+13:37:49 - Theme switched to Light.
+13:37:49 - 
+13:37:50 - Theme switched to Dark.
+13:37:50 - 
+13:37:50 - Theme switched to Light.
+13:37:50 - 
+13:37:53 - [ConsoleController] Log folder already exists at: logs
+13:37:53 - 
+13:37:53 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+13:37:53 - 
+13:37:53 - READY - MaRGE has started successfully.
+13:37:53 - 
+13:37:53 - WARNING - This is a test warning message.
+13:37:53 - 
+13:37:53 - ERROR - This is a test error message.
+13:37:53 - 
+13:37:53 - WARNING: No Arduino found for interlock
+13:37:53 - 
+13:37:53 - Graphical User Interface for MaRCoS
+13:37:53 - 
+13:37:53 - J.M. Algarín, PhD
+13:37:53 - 
+13:37:53 - josalggui@i3m.upv.es
+13:37:53 - 
+13:37:53 - mriLab @ i3M, CSIC, Valencia, Spain
+13:37:53 - 
+13:37:53 - https://github.com/mriLab-i3M/MaRGE
+13:37:53 - 
+13:37:53 - Graphical User Interface for MaRCoS
+13:37:53 - 
+13:37:53 - J.M. Algarín, PhD
+13:37:53 - 
+13:37:53 - josalggui@i3m.upv.es
+13:37:53 - 
+13:37:53 - mriLab @ i3M, CSIC, Valencia, Spain
+13:37:53 - 
+13:37:53 - https://github.com/mriLab-i3M/MaRGE
+13:37:53 - 
+13:37:53 - Sniffer initialized.
+13:37:53 - 
+13:37:53 - Searching for SDRLabs...
+13:37:53 - 
+13:37:53 - Checking ip 192.168.1.101...
+13:37:53 - 
+13:37:55 - Theme switched to Light.
+13:37:55 - 
+13:37:56 - Theme switched to Dark.
+13:37:56 - 
+13:37:57 - READY: SDRLab found at IP 192.168.1.101
+13:37:57 - 
+13:53:45 - READY - MaRGE has started successfully.
+13:53:45 - 
+13:53:45 - WARNING - This is a test warning message.
+13:53:45 - 
+13:53:45 - ERROR - This is a test error message.
+13:53:45 - 
+13:53:45 - [ConsoleController] Log folder already exists at: logs
+13:53:45 - 
+13:53:45 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+13:53:45 - 
+13:53:45 - READY - MaRGE has started successfully.
+13:53:45 - 
+13:53:45 - WARNING - This is a test warning message.
+13:53:45 - 
+13:53:45 - ERROR - This is a test error message.
+13:53:45 - 
+13:53:45 - READY: System configuration checks succeeded.
+13:53:45 - 
+13:53:47 - Theme switched to Light.
+13:53:47 - 
+13:53:49 - Theme switched to Light.
+13:53:49 - 
+13:53:55 - [ConsoleController] Log folder already exists at: logs
+13:53:55 - 
+13:53:55 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+13:53:55 - 
+13:53:55 - READY - MaRGE has started successfully.
+13:53:55 - 
+13:53:55 - WARNING - This is a test warning message.
+13:53:55 - 
+13:53:55 - ERROR - This is a test error message.
+13:53:55 - 
+13:53:55 - WARNING: No Arduino found for interlock
+13:53:55 - 
+13:53:55 - Graphical User Interface for MaRCoS
+13:53:55 - 
+13:53:55 - J.M. Algarín, PhD
+13:53:55 - 
+13:53:55 - josalggui@i3m.upv.es
+13:53:55 - 
+13:53:55 - mriLab @ i3M, CSIC, Valencia, Spain
+13:53:55 - 
+13:53:55 - https://github.com/mriLab-i3M/MaRGE
+13:53:55 - 
+13:53:55 - Graphical User Interface for MaRCoS
+13:53:55 - 
+13:53:55 - J.M. Algarín, PhD
+13:53:55 - 
+13:53:55 - josalggui@i3m.upv.es
+13:53:55 - 
+13:53:55 - mriLab @ i3M, CSIC, Valencia, Spain
+13:53:55 - 
+13:53:55 - https://github.com/mriLab-i3M/MaRGE
+13:53:55 - 
+13:53:55 - Sniffer initialized.
+13:53:55 - 
+13:53:55 - Searching for SDRLabs...
+13:53:55 - 
+13:53:55 - Checking ip 192.168.1.101...
+13:53:55 - 
+13:53:57 - Theme switched to Light.
+13:53:57 - 
+13:53:58 - Theme switched to Light.
+13:53:58 - 
+13:53:59 - READY: SDRLab found at IP 192.168.1.101
+13:53:59 - 
+13:54:00 - Theme switched to Light.
+13:54:00 - 
+14:03:02 - READY - MaRGE has started successfully.
+14:03:02 - 
+14:03:02 - WARNING - This is a test warning message.
+14:03:02 - 
+14:03:02 - ERROR - This is a test error message.
+14:03:02 - 
+14:03:02 - [ConsoleController] Log folder already exists at: logs
+14:03:02 - 
+14:03:02 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+14:03:02 - 
+14:03:02 - READY - MaRGE has started successfully.
+14:03:02 - 
+14:03:02 - WARNING - This is a test warning message.
+14:03:02 - 
+14:03:02 - ERROR - This is a test error message.
+14:03:02 - 
+14:03:02 - READY: System configuration checks succeeded.
+14:03:02 - 
+14:03:04 - Theme switched to Light.
+14:03:04 - 
+14:08:30 - Theme switched to Light.
+14:08:30 - 
+14:09:24 - READY - MaRGE has started successfully.
+14:09:24 - 
+14:09:24 - WARNING - This is a test warning message.
+14:09:24 - 
+14:09:24 - ERROR - This is a test error message.
+14:09:24 - 
+14:09:24 - [ConsoleController] Log folder already exists at: logs
+14:09:24 - 
+14:09:24 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+14:09:24 - 
+14:09:24 - READY - MaRGE has started successfully.
+14:09:24 - 
+14:09:24 - WARNING - This is a test warning message.
+14:09:24 - 
+14:09:24 - ERROR - This is a test error message.
+14:09:24 - 
+14:09:24 - READY: System configuration checks succeeded.
+14:09:24 - 
+14:10:02 - READY - MaRGE has started successfully.
+14:10:02 - 
+14:10:02 - WARNING - This is a test warning message.
+14:10:02 - 
+14:10:02 - ERROR - This is a test error message.
+14:10:02 - 
+14:10:02 - [ConsoleController] Log folder already exists at: logs
+14:10:02 - 
+14:10:02 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+14:10:02 - 
+14:10:02 - READY - MaRGE has started successfully.
+14:10:02 - 
+14:10:02 - WARNING - This is a test warning message.
+14:10:02 - 
+14:10:02 - ERROR - This is a test error message.
+14:10:02 - 
+14:10:02 - READY: System configuration checks succeeded.
+14:10:02 - 
+14:10:11 - [ConsoleController] Log folder already exists at: logs
+14:10:11 - 
+14:10:11 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+14:10:11 - 
+14:10:11 - READY - MaRGE has started successfully.
+14:10:11 - 
+14:10:11 - WARNING - This is a test warning message.
+14:10:11 - 
+14:10:11 - ERROR - This is a test error message.
+14:10:11 - 
+14:10:11 - WARNING: No Arduino found for interlock
+14:10:11 - 
+14:10:11 - Graphical User Interface for MaRCoS
+14:10:11 - 
+14:10:11 - J.M. Algarín, PhD
+14:10:11 - 
+14:10:11 - josalggui@i3m.upv.es
+14:10:11 - 
+14:10:11 - mriLab @ i3M, CSIC, Valencia, Spain
+14:10:11 - 
+14:10:11 - https://github.com/mriLab-i3M/MaRGE
+14:10:11 - 
+14:10:11 - Graphical User Interface for MaRCoS
+14:10:11 - 
+14:10:11 - J.M. Algarín, PhD
+14:10:11 - 
+14:10:11 - josalggui@i3m.upv.es
+14:10:11 - 
+14:10:11 - mriLab @ i3M, CSIC, Valencia, Spain
+14:10:11 - 
+14:10:11 - https://github.com/mriLab-i3M/MaRGE
+14:10:11 - 
+14:10:11 - Sniffer initialized.
+14:10:11 - 
+14:10:11 - Searching for SDRLabs...
+14:10:11 - 
+14:10:11 - Checking ip 192.168.1.101...
+14:10:11 - 
+14:10:15 - READY: SDRLab found at IP 192.168.1.101
+14:10:15 - 
+14:17:30 - READY - MaRGE has started successfully.
+14:17:30 - 
+14:17:30 - WARNING - This is a test warning message.
+14:17:30 - 
+14:17:30 - ERROR - This is a test error message.
+14:17:30 - 
+14:17:30 - [ConsoleController] Log folder already exists at: logs
+14:17:30 - 
+14:17:30 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+14:17:30 - 
+14:17:30 - READY - MaRGE has started successfully.
+14:17:30 - 
+14:17:30 - WARNING - This is a test warning message.
+14:17:30 - 
+14:17:30 - ERROR - This is a test error message.
+14:17:30 - 
+14:17:30 - READY: System configuration checks succeeded.
+14:17:30 - 
