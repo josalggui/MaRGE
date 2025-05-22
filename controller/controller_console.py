@@ -1,4 +1,4 @@
-import  datetime
+import datetime
 import sys
 import os
 import atexit
@@ -40,7 +40,7 @@ class ConsoleController(QMainWindow):
         sys.stdout = EmittingStream(textWritten=self.write_console)
         atexit.register(self.close_log)
 
-        # === GUI CENTRAL WIDGET CORRECTEMENT ===
+        # === GUI CENTRAL WIDGET ===
         central_widget = QWidget()
         layout = QVBoxLayout()
 
@@ -48,18 +48,21 @@ class ConsoleController(QMainWindow):
         self.console = QTextEdit()
         self.console.setReadOnly(True)
 
-        # === BOUTON SWITCH THEME ===
+        # === BUTTON SWITCH THEME ===
         self.theme_button = QPushButton("Switch Theme")
         self.theme_button.clicked.connect(self.toggle_theme)
-        self.dark_mode = True  # Par défaut QDarkStyle est actif
+        self.dark_mode = True  # Start in dark mode
 
-        # Ajouter les widgets dans le layout
+        # Add widgets to layout
         layout.addWidget(self.theme_button)
         layout.addWidget(self.console)
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
 
-        # Message d'état initial
+        # Apply initial dark theme style
+        self.apply_dark_theme()
+
+        # Initial console messages
         print("READY - MaRGE has started successfully.")
         print("WARNING - This is a test warning message.")
         print("ERROR - This is a test error message.")
@@ -91,7 +94,7 @@ class ConsoleController(QMainWindow):
         self.console.setTextCursor(cursor)
         self.console.ensureCursorVisible()
 
-        # Nettoyage HTML pour le log
+        # Clean text for log file
         clean_text = (
             text.replace("<br>", "\n")
                 .replace("<b>", "")
@@ -119,32 +122,53 @@ class ConsoleController(QMainWindow):
 
     def toggle_theme(self):
         if self.dark_mode:
-            # Passer à un thème clair
-            self.setStyleSheet("""
-                QTextEdit {
-                    background-color: white;
-                    color: black;
-                }
-                QPushButton {
-                    background-color: #f0f0f0;
-                    color: black;
-                }
-            """)
+            self.apply_light_theme()
             self.dark_mode = False
         else:
-            # Revenir à thème sombre (comme QDarkStyle par défaut)
-            self.setStyleSheet("""
-                QTextEdit {
-                    background-color: #2b2b2b;
-                    color: #ffffff;
-                }
-                QPushButton {
-                    background-color: #3c3f41;
-                    color: #ffffff;
-                }
-            """)
+            self.apply_dark_theme()
             self.dark_mode = True
 
+    def apply_dark_theme(self):
+        # Dark mode style for entire window and widgets
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #2b2b2b;
+            }
+            QTextEdit {
+                background-color: #2b2b2b;
+                color: #ffffff;
+            }
+            QPushButton {
+                background-color: #3c3f41;
+                color: #ffffff;
+                border: 1px solid #555555;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: #505354;
+            }
+        """)
+
+    def apply_light_theme(self):
+        # Light mode style for entire window and widgets
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #f0f0f0;
+            }
+            QTextEdit {
+                background-color: white;
+                color: black;
+            }
+            QPushButton {
+                background-color: #e0e0e0;
+                color: black;
+                border: 1px solid #cccccc;
+                padding: 5px;
+            }
+            QPushButton:hover {
+                background-color: #d6d6d6;
+            }
+        """)
 
 class EmittingStream(QObject):
     textWritten = pyqtSignal(str)
@@ -155,3 +179,10 @@ class EmittingStream(QObject):
     @pyqtSlot()
     def flush(self):
         pass
+
+if __name__ == "__main__":
+    from PyQt5.QtWidgets import QApplication
+    app = QApplication(sys.argv)
+    window = ConsoleController()
+    window.show()
+    sys.exit(app.exec_())
