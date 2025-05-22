@@ -138,3 +138,135 @@
 14:06:09 - 
 14:06:09 - READY: System configuration checks succeeded.
 14:06:09 - 
+12:00:39 - READY - MaRGE has started successfully.
+12:00:39 - 
+12:00:39 - WARNING - This is a test warning message.
+12:00:39 - 
+12:00:39 - ERROR - This is a test error message.
+12:00:39 - 
+12:00:39 - [ConsoleController] Log folder already exists at: logs
+12:00:39 - 
+12:00:39 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+12:00:39 - 
+12:00:39 - READY - MaRGE has started successfully.
+12:00:39 - 
+12:00:39 - WARNING - This is a test warning message.
+12:00:39 - 
+12:00:39 - ERROR - This is a test error message.
+12:00:39 - 
+12:00:39 - READY: System configuration checks succeeded.
+12:00:39 - 
+12:00:58 - READY - MaRGE has started successfully.
+12:00:58 - 
+12:00:58 - WARNING - This is a test warning message.
+12:00:58 - 
+12:00:58 - ERROR - This is a test error message.
+12:00:58 - 
+12:00:58 - [ConsoleController] Log folder already exists at: logs
+12:00:58 - 
+12:00:58 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+12:00:58 - 
+12:00:58 - READY - MaRGE has started successfully.
+12:00:58 - 
+12:00:58 - WARNING - This is a test warning message.
+12:00:58 - 
+12:00:58 - ERROR - This is a test error message.
+12:00:58 - 
+12:00:58 - READY: System configuration checks succeeded.
+12:00:58 - 
+12:01:07 - [ConsoleController] Log folder already exists at: logs
+12:01:07 - 
+12:01:07 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+12:01:07 - 
+12:01:07 - READY - MaRGE has started successfully.
+12:01:07 - 
+12:01:07 - WARNING - This is a test warning message.
+12:01:07 - 
+12:01:07 - ERROR - This is a test error message.
+12:01:07 - 
+12:01:07 - WARNING: No Arduino found for interlock
+12:01:07 - 
+12:01:07 - Graphical User Interface for MaRCoS
+12:01:07 - 
+12:01:07 - J.M. Algarín, PhD
+12:01:07 - 
+12:01:07 - josalggui@i3m.upv.es
+12:01:07 - 
+12:01:07 - mriLab @ i3M, CSIC, Valencia, Spain
+12:01:07 - 
+12:01:07 - https://github.com/mriLab-i3M/MaRGE
+12:01:07 - 
+12:01:08 - Graphical User Interface for MaRCoS
+12:01:08 - 
+12:01:08 - J.M. Algarín, PhD
+12:01:08 - 
+12:01:08 - josalggui@i3m.upv.es
+12:01:08 - 
+12:01:08 - mriLab @ i3M, CSIC, Valencia, Spain
+12:01:08 - 
+12:01:08 - https://github.com/mriLab-i3M/MaRGE
+12:01:08 - 
+12:01:08 - Sniffer initialized.
+12:01:08 - 
+12:01:08 - Searching for SDRLabs...
+12:01:08 - 
+12:01:08 - Checking ip 192.168.1.101...
+12:01:08 - 
+12:01:11 - READY: SDRLab found at IP 192.168.1.101
+12:01:11 - 
+12:03:02 - READY - MaRGE has started successfully.
+12:03:02 - 
+12:03:02 - WARNING - This is a test warning message.
+12:03:02 - 
+12:03:02 - ERROR - This is a test error message.
+12:03:02 - 
+12:03:02 - [ConsoleController] Log folder already exists at: logs
+12:03:02 - 
+12:03:02 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+12:03:02 - 
+12:03:02 - READY - MaRGE has started successfully.
+12:03:02 - 
+12:03:02 - WARNING - This is a test warning message.
+12:03:02 - 
+12:03:02 - ERROR - This is a test error message.
+12:03:02 - 
+12:03:02 - READY: System configuration checks succeeded.
+12:03:02 - 
+12:03:05 - [ConsoleController] Log folder already exists at: logs
+12:03:05 - 
+12:03:05 - [ConsoleController] Logging to file: logs/log_20250521_135656.txt
+12:03:05 - 
+12:03:05 - READY - MaRGE has started successfully.
+12:03:05 - 
+12:03:05 - WARNING - This is a test warning message.
+12:03:05 - 
+12:03:05 - ERROR - This is a test error message.
+12:03:05 - 
+12:03:05 - WARNING: No Arduino found for interlock
+12:03:05 - 
+12:03:05 - Graphical User Interface for MaRCoS
+12:03:05 - 
+12:03:05 - J.M. Algarín, PhD
+12:03:05 - 
+12:03:05 - josalggui@i3m.upv.es
+12:03:05 - 
+12:03:05 - mriLab @ i3M, CSIC, Valencia, Spain
+12:03:05 - 
+12:03:05 - https://github.com/mriLab-i3M/MaRGE
+12:03:05 - 
+12:03:05 - Graphical User Interface for MaRCoS
+12:03:05 - 
+12:03:05 - J.M. Algarín, PhD
+12:03:05 - 
+12:03:05 - josalggui@i3m.upv.es
+12:03:05 - 
+12:03:05 - mriLab @ i3M, CSIC, Valencia, Spain
+12:03:05 - 
+12:03:05 - https://github.com/mriLab-i3M/MaRGE
+12:03:05 - 
+12:03:05 - Sniffer initialized.
+12:03:05 - 
+12:03:05 - Searching for SDRLabs...
+12:03:05 - 
+12:03:05 - Checking ip 192.168.1.101...
+12:03:05 - 
