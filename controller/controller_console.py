@@ -1,17 +1,17 @@
 import datetime
 import sys
 import os
+import atexit
 
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from widgets.widget_console import ConsoleWidget
 
-import atexit
 
 class ConsoleController(ConsoleWidget):
-    def __init__(self):
+    def __init__(self, log_name=None):
         super().__init__()
 
-        # Créer dossier logs si besoin
+        # Créer le dossier logs si besoin
         log_folder = "logs"
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)
@@ -19,16 +19,11 @@ class ConsoleController(ConsoleWidget):
         else:
             print(f"[ConsoleController] Log folder already exists at: {log_folder}")
 
-        # Charger ou créer un nom de fichier log unique pour cette session
-        session_log_file = os.path.join(log_folder, "current_session_log.txt")
-        if os.path.exists(session_log_file):
-            with open(session_log_file, "r", encoding="utf-8") as f:
-                self.log_filename = f.read().strip()
+        # Créer un nouveau nom de fichier log à chaque démarrage
+        if log_name is None:
+            pass
         else:
-            now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            self.log_filename = os.path.join(log_folder, f"log_{now}.txt")
-            with open(session_log_file, "w", encoding="utf-8") as f:
-                f.write(self.log_filename)
+            self.log_filename = os.path.join(log_folder, log_name)
 
         # Ouvrir le fichier log
         try:
@@ -36,7 +31,7 @@ class ConsoleController(ConsoleWidget):
             print(f"[ConsoleController] Logging to file: {self.log_filename}")
         except Exception as e:
             self.log_file = None
-            print(f"[ConsoleController] Failed to open log file: {e}")
+            # print(f"[ConsoleController] Failed to open log file: {e}")
 
         # Rediriger stdout
         sys.stdout = EmittingStream(textWritten=self.write_console)

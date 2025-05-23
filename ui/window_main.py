@@ -3,6 +3,8 @@
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
+import datetime
+
 from PyQt5.QtWidgets import QMainWindow, QStatusBar, QWidget, QHBoxLayout, QVBoxLayout, QTableWidget, QSizePolicy
 from PyQt5.QtCore import QSize, QThreadPool
 import qdarkstyle
@@ -43,7 +45,9 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(self.styleSheet)
 
         # Create console
-        self.console = ConsoleController()
+        now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_name = f"log_{now}.txt"
+        self.console = ConsoleController(log_name)
 
         # Add marcos toolbar
         self.toolbar_marcos = MarcosController(self, "MaRCoS toolbar")

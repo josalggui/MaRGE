@@ -1,3 +1,0 @@
-12:24:17 - <span style="color:green;">READY</span>: System configuration checks succeeded.12:24:17 - 
-12:24:22 - Data saved for red pitayas12:24:22 - 
-12:24:23 - Data saved for red pitayas12:24:23 - 

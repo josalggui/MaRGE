@@ -25,3 +25,4 @@ sequence.seq
 *.mat
 *.rar
 *.csv
+logs/

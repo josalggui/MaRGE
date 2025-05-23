@@ -1,3 +1,0 @@
-12:23:57 - [ConsoleController] Log folder already exists at: logs12:23:57 - 
-12:23:57 - [ConsoleController] Logging to file: logs/log_20250521_122357.txt12:23:57 - 
-12:23:57 - <span style="color:green;">READY</span>: System configuration checks succeeded.12:23:57 - 
