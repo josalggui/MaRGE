@@ -21,11 +21,9 @@ class SessionWindow(QMainWindow):
         self.setWindowTitle("Session and Hardware Window for MaRGE")
         self.setGeometry(100, 100, 600, 400)
 
-        # Theme flag
-        self.is_dark_theme = True
-
         # Set initial stylesheet
-        self.apply_theme()
+        self.is_dark_theme = True
+        self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
 
         # Main layout
         widget_main = QWidget()
@@ -102,7 +100,6 @@ class SessionWindow(QMainWindow):
         # Add switch theme button
         self.switch_theme_action = QAction("Switch Theme", self)
         self.switch_theme_action.setStatusTip("Switch between Dark and Light theme")
-        self.switch_theme_action.triggered.connect(self.switch_theme)
         self.toolbar.addAction(self.switch_theme_action)
 
         # Tabs
@@ -123,16 +120,6 @@ class SessionWindow(QMainWindow):
 
         # Status bar
         self.setStatusBar(QStatusBar(self))
-
-    def switch_theme(self):
-        self.is_dark_theme = not self.is_dark_theme
-        self.apply_theme()
-
-    def apply_theme(self):
-        if self.is_dark_theme:
-            self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
-        else:
-            self.setStyleSheet("")  # Light theme: default Qt style
 
     def setupTab1(self):
         widget = ConsoleWidget()

@@ -44,7 +44,7 @@ class MainWindow(QMainWindow):
         self.threadpool = QThreadPool()
 
         # Set stylesheet based on theme
-        if self.session.get("theme", "dark") == "dark":
+        if self.session["black_theme"]:
             self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
         else:
             self.styleSheet = ""
@@ -58,11 +58,6 @@ class MainWindow(QMainWindow):
         # Add marcos toolbar
         self.toolbar_marcos = MarcosController(self, "MaRCoS toolbar")
         self.addToolBar(self.toolbar_marcos)
-
-        # Add Switch Theme button to the marcos toolbar
-        switch_theme_action = QAction("Switch Theme", self)
-        switch_theme_action.triggered.connect(self.switch_theme)
-        self.toolbar_marcos.addAction(switch_theme_action)
 
         # Add sequence toolbar
         self.toolbar_sequences = SequenceController(self, "Sequence toolbar")
@@ -145,13 +140,3 @@ class MainWindow(QMainWindow):
 
         # Create the post-processing toolbox
         self.post_gui = ProcessingWindowController(session=self.session, main=self)
-
-    def switch_theme(self):
-        current_theme = self.session.get("theme", "dark")
-        new_theme = "light" if current_theme == "dark" else "dark"
-        self.session["theme"] = new_theme
-
-        if new_theme == "dark":
-            self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
-        else:
-            self.setStyleSheet("")

@@ -9,6 +9,7 @@ import platform
 import subprocess
 from datetime import datetime
 
+import qdarkstyle
 from PyQt5.QtGui import QPixmap
 
 from widgets.widget_toolbar_figures import FiguresToolBar
@@ -40,6 +41,15 @@ class FiguresController(FiguresToolBar):
         self.action_screenshot.triggered.connect(self.doScreenshot)
         self.action_open_directory.triggered.connect(self.open_folder)
         self.action_postprocessing.triggered.connect(self.openPostGui)
+        self.switch_theme_action.triggered.connect(self.switch_theme)
+
+    def switch_theme(self):
+        if not self.main.session["black_theme"]:
+            self.main.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+            self.main.session["black_theme"] = not self.main.session["black_theme"]
+        else:
+            self.main.setStyleSheet("")
+            self.main.session["black_theme"] = not self.main.session["black_theme"]
 
     def openPostGui(self):
         self.main.post_gui.showMaximized()
@@ -134,6 +144,15 @@ class FiguresControllerPos(FiguresToolBar):
         self.action_full_screen.setCheckable(True)
         self.action_full_screen.triggered.connect(self.doFullScreen)
         self.action_screenshot.triggered.connect(self.doScreenshot)
+        self.switch_theme_action.triggered.connect(self.switch_theme)
+
+    def switch_theme(self):
+        if not self.main.session["black_theme"]:
+            self.main.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+            self.main.session["black_theme"] = not self.main.session["black_theme"]
+        else:
+            self.main.setStyleSheet("")
+            self.main.session["black_theme"] = not self.main.session["black_theme"]
 
     def doFullScreen(self):
         """
