@@ -1,12 +1,15 @@
 """
 @author:    José Miguel Algarín
 @email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+@affiliation: MRILab, i3M, CSIC, Valencia, Spain
 """
-import datetime
 
-from PyQt5.QtWidgets import QMainWindow, QStatusBar, QWidget, QHBoxLayout, QVBoxLayout, QTableWidget, QSizePolicy
-from PyQt5.QtCore import QSize, QThreadPool
+import datetime
+from PyQt5.QtWidgets import (
+    QMainWindow, QStatusBar, QWidget, QHBoxLayout, QVBoxLayout, QTableWidget,
+    QSizePolicy, QAction
+)
+from PyQt5.QtCore import QThreadPool
 import qdarkstyle
 
 from controller.controller_console import ConsoleController
@@ -34,14 +37,17 @@ class MainWindow(QMainWindow):
         self.session = session
         self.demo = demo
         self.parent = parent
-        self.setWindowTitle(session['directory'])
+        self.setWindowTitle(session.get('directory', 'MaRGE'))
         self.setGeometry(20, 40, 1680, 720)
 
         # Threadpool for parallel running
         self.threadpool = QThreadPool()
 
-        # Set stylesheet
-        self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
+        # Set stylesheet based on theme
+        if self.session.get("theme", "dark") == "dark":
+            self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
+        else:
+            self.styleSheet = ""
         self.setStyleSheet(self.styleSheet)
 
         # Create console
@@ -52,6 +58,11 @@ class MainWindow(QMainWindow):
         # Add marcos toolbar
         self.toolbar_marcos = MarcosController(self, "MaRCoS toolbar")
         self.addToolBar(self.toolbar_marcos)
+
+        # Add Switch Theme button to the marcos toolbar
+        switch_theme_action = QAction("Switch Theme", self)
+        switch_theme_action.triggered.connect(self.switch_theme)
+        self.toolbar_marcos.addAction(switch_theme_action)
 
         # Add sequence toolbar
         self.toolbar_sequences = SequenceController(self, "Sequence toolbar")
@@ -134,3 +145,13 @@ class MainWindow(QMainWindow):
 
         # Create the post-processing toolbox
         self.post_gui = ProcessingWindowController(session=self.session, main=self)
+
+    def switch_theme(self):
+        current_theme = self.session.get("theme", "dark")
+        new_theme = "light" if current_theme == "dark" else "dark"
+        self.session["theme"] = new_theme
+
+        if new_theme == "dark":
+            self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+        else:
+            self.setStyleSheet("")
