@@ -60,11 +60,6 @@ class ProtocolInputsController(ProtocolInputsWidget):
         if self.clicked_item is not None:
             menu = QMenu(self)
 
-            # Delete action button
-            action1 = QAction("Delete", self)
-            action1.triggered.connect(self.deleteSequence)
-            menu.addAction(action1)
-
             # Show input action button
             action2 = QAction("Show inputs", self)
             action2.triggered.connect(self.showProtocolInputs)
@@ -74,6 +69,11 @@ class ProtocolInputsController(ProtocolInputsWidget):
             action3 = QAction("Load inputs", self)
             action3.triggered.connect(self.loadProtocolInputs)
             menu.addAction(action3)
+
+            # Delete action button
+            action1 = QAction("Delete", self)
+            action1.triggered.connect(self.deleteSequence)
+            menu.addAction(action1)
 
             menu.exec_(self.mapToGlobal(point))
 
