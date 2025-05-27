@@ -140,3 +140,4 @@ class MainWindow(QMainWindow):
 
         # Create the post-processing toolbox
         self.post_gui = ProcessingWindowController(session=self.session, main=self)
+

@@ -98,7 +98,7 @@ class SessionWindow(QMainWindow):
         self.toolbar.addAction(self.close_action)
 
         # Add switch theme button
-        self.switch_theme_action = QAction("Switch Theme", self)
+        self.switch_theme_action = QAction(QIcon("resources/icons/adjust-contrast.svg"), "", self)
         self.switch_theme_action.setStatusTip("Switch between Dark and Light theme")
         self.toolbar.addAction(self.switch_theme_action)
 

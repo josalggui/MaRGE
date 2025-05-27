@@ -1,6 +1,8 @@
 import sys
 import qdarkstyle
 from PyQt5.QtCore import QThreadPool, QSize
+from PyQt5.QtWidgets import QAction
+from PyQt5.QtGui import QIcon
 
 from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApplication, QStatusBar, QMenuBar, \
     QSplitter, QTextEdit, QSizePolicy
@@ -119,6 +121,16 @@ class MainWindow(QMainWindow):
         self.methods_list.setMaximumHeight(200)
         self.methods_list.setMinimumHeight(200)
         self.output_layout_h.addWidget(self.methods_list)
+
+        # Toolbar for figures
+        self.toolbar_image_2 = FiguresControllerPos(self, "Image toolbar 2")
+        self.addToolBar(self.toolbar_image_2)
+
+        # Theme switch action
+        self.switch_theme_action = QAction(QIcon("resources/icons/adjust-contrast.svg"), "", self)
+        self.switch_theme_action.setToolTip("Switch Theme")
+
+
 
 
 if __name__ == '__main__':
