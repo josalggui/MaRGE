@@ -16,7 +16,7 @@ import configs.hw_config as hw
 from controller.controller_main import MainController
 from ui.window_session import SessionWindow
 
-# Je suppose que ConsoleController est défini quelque part
+
 from controller.controller_console import ConsoleController
 
 
