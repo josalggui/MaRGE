@@ -267,7 +267,7 @@ class SequenceController(SequenceToolBar):
             name = str(datetime.now())[11:23] + " | " + item_name
         self.main.history_list.addItem(name)
 
-        sequence = copy.deepcopy(defaultsequences[seq_name])
+        sequence = copy.copy(defaultsequences[seq_name])
         if map_nmspc is None and map_vals is None:
             map_nmspc = list(sequence.mapNmspc.values())
             map_vals = list(sequence.mapVals.values())
