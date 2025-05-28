@@ -46,9 +46,13 @@ class FiguresController(FiguresToolBar):
     def switch_theme(self):
         if not self.main.session["black_theme"]:
             self.main.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+            self.main.post_gui.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+            self.main.parent.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
             self.main.session["black_theme"] = not self.main.session["black_theme"]
         else:
             self.main.setStyleSheet("")
+            self.main.post_gui.setStyleSheet("")
+            self.main.parent.setStyleSheet("")
             self.main.session["black_theme"] = not self.main.session["black_theme"]
 
     def openPostGui(self):
@@ -149,9 +153,13 @@ class FiguresControllerPos(FiguresToolBar):
     def switch_theme(self):
         if not self.main.session["black_theme"]:
             self.main.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+            self.main.main.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+            self.main.main.parent.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
             self.main.session["black_theme"] = not self.main.session["black_theme"]
         else:
             self.main.setStyleSheet("")
+            self.main.main.setStyleSheet("")
+            self.main.main.parent.setStyleSheet("")
             self.main.session["black_theme"] = not self.main.session["black_theme"]
 
     def doFullScreen(self):
