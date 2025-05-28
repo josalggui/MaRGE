@@ -1,6 +1,8 @@
 import sys
 import qdarkstyle
 from PyQt5.QtCore import QThreadPool, QSize
+from PyQt5.QtWidgets import QAction
+from PyQt5.QtGui import QIcon
 
 from PyQt5.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QApplication, QStatusBar, QMenuBar, \
     QSplitter, QTextEdit, QSizePolicy
@@ -56,8 +58,11 @@ class MainWindow(QMainWindow):
         self.session = session
         self.main = main
 
-        # Set stylesheet
-        self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
+        # Set stylesheet based on theme
+        if self.session["black_theme"]:
+            self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
+        else:
+            self.styleSheet = ""
         self.setStyleSheet(self.styleSheet)
 
         # Set window parameters
@@ -119,6 +124,7 @@ class MainWindow(QMainWindow):
         self.methods_list.setMaximumHeight(200)
         self.methods_list.setMinimumHeight(200)
         self.output_layout_h.addWidget(self.methods_list)
+
 
 
 if __name__ == '__main__':

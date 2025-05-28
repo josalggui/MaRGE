@@ -6,14 +6,19 @@
 """
 import csv
 import shutil
-
-import configs.hw_config as hw
-from controller.controller_main import MainController
 import os
 import sys
 import subprocess
 
+import qdarkstyle
+
+import configs.hw_config as hw
+from controller.controller_main import MainController
 from ui.window_session import SessionWindow
+
+
+from controller.controller_console import ConsoleController
+
 
 
 class SessionController(SessionWindow):
@@ -28,6 +33,8 @@ class SessionController(SessionWindow):
         Initializes the SessionController.
         """
         super().__init__()
+        self.console = ConsoleController()  # Initialisation console si nécessaire
+
         self.session = None
         self.main_gui = None
         self.tab_session.rf_coil_combo_box.addItems(hw.antenna_dict.keys())
@@ -37,6 +44,8 @@ class SessionController(SessionWindow):
         self.demo_gui_action.triggered.connect(self.runDemoGui)
         self.update_action.triggered.connect(self.update_hardware)
         self.close_action.triggered.connect(self.close)
+        self.switch_theme_action.triggered.connect(self.switch_theme)
+
 
         # Check if system is ready
         self.check_system()
@@ -97,32 +106,30 @@ class SessionController(SessionWindow):
     def runMainGui(self):
         """
         Runs the main GUI and sets up the session.
-
-        Creates a folder for the session and opens the main GUI.
         """
         self.updateSessionDict()
 
         # Create folder
-        self.session['directory'] = 'experiments/acquisitions/%s/%s/%s/%s' % (
+        self.session['directory'] = os.path.join(
+            'experiments', 'acquisitions',
             self.session['project'], self.session['subject_id'], self.session['study'], self.session['side'])
         if not os.path.exists(self.session['directory']):
             os.makedirs(self.session['directory'])
 
-        # Save session in csv and a copy of the configuration files into the directory
-        with open(self.session['directory'] + "/session.csv", mode="w", newline="") as file:
+        # Save session in csv and copy config files
+        with open(os.path.join(self.session['directory'], "session.csv"), mode="w", newline="") as file:
             writer = csv.writer(file)
-
-            # Write each key-value pair in separate rows
             for key, value in self.session.items():
                 writer.writerow([key, value])
-        shutil.copy2("configs/hw_gradients.csv", self.session["directory"]+"/hw_gradients.csv")
-        shutil.copy2("configs/hw_others.csv", self.session["directory"] + "/hw_others.csv")
-        shutil.copy2("configs/hw_redpitayas.csv", self.session["directory"] + "/hw_redpitayas.csv")
-        shutil.copy2("configs/hw_rf.csv", self.session["directory"] + "/hw_rf.csv")
-        shutil.copy2("configs/sys_projects.csv", self.session["directory"] + "/sys_projects.csv")
-        shutil.copy2("configs/sys_study.csv", self.session["directory"] + "/sys_study.csv")
 
-        # Add seriesNumber = 0 to session for dicom purposes
+        # Copy configuration files to session directory
+        shutil.copy2("configs/hw_gradients.csv", os.path.join(self.session["directory"], "hw_gradients.csv"))
+        shutil.copy2("configs/hw_others.csv", os.path.join(self.session["directory"], "hw_others.csv"))
+        shutil.copy2("configs/hw_redpitayas.csv", os.path.join(self.session["directory"], "hw_redpitayas.csv"))
+        shutil.copy2("configs/hw_rf.csv", os.path.join(self.session["directory"], "hw_rf.csv"))
+        shutil.copy2("configs/sys_projects.csv", os.path.join(self.session["directory"], "sys_projects.csv"))
+        shutil.copy2("configs/sys_study.csv", os.path.join(self.session["directory"], "sys_study.csv"))
+
         self.session['seriesNumber'] = 0
 
         # Open the main gui
@@ -140,32 +147,29 @@ class SessionController(SessionWindow):
     def runDemoGui(self):
         """
         Runs the main GUI in DEMO mode and sets up the session.
-
-        Creates a folder for the session and opens the main GUI.
         """
         self.updateSessionDict()
 
         # Create folder
-        self.session['directory'] = 'experiments/acquisitions/%s/%s/%s/%s' % (
+        self.session['directory'] = os.path.join(
+            'experiments', 'acquisitions',
             self.session['project'], self.session['subject_id'], self.session['study'], self.session['side'])
         if not os.path.exists(self.session['directory']):
             os.makedirs(self.session['directory'])
 
-        # Save session in csv and a copy of the configuration files into the directory
-        with open(self.session['directory'] + "/session.csv", mode="w", newline="") as file:
+        # Save session in csv and copy config files
+        with open(os.path.join(self.session['directory'], "session.csv"), mode="w", newline="") as file:
             writer = csv.writer(file)
-
-            # Write each key-value pair in separate rows
             for key, value in self.session.items():
                 writer.writerow([key, value])
-        shutil.copy2("configs/hw_gradients.csv", self.session["directory"]+"/hw_gradients.csv")
-        shutil.copy2("configs/hw_others.csv", self.session["directory"] + "/hw_others.csv")
-        shutil.copy2("configs/hw_redpitayas.csv", self.session["directory"] + "/hw_redpitayas.csv")
-        shutil.copy2("configs/hw_rf.csv", self.session["directory"] + "/hw_rf.csv")
-        shutil.copy2("configs/sys_projects.csv", self.session["directory"] + "/sys_projects.csv")
-        shutil.copy2("configs/sys_study.csv", self.session["directory"] + "/sys_study.csv")
 
-        # Add seriesNumber = 0 to session for dicom purposes
+        shutil.copy2("configs/hw_gradients.csv", os.path.join(self.session["directory"], "hw_gradients.csv"))
+        shutil.copy2("configs/hw_others.csv", os.path.join(self.session["directory"], "hw_others.csv"))
+        shutil.copy2("configs/hw_redpitayas.csv", os.path.join(self.session["directory"], "hw_redpitayas.csv"))
+        shutil.copy2("configs/hw_rf.csv", os.path.join(self.session["directory"], "hw_rf.csv"))
+        shutil.copy2("configs/sys_projects.csv", os.path.join(self.session["directory"], "sys_projects.csv"))
+        shutil.copy2("configs/sys_study.csv", os.path.join(self.session["directory"], "sys_study.csv"))
+
         self.session['seriesNumber'] = 0
 
         # Open the main gui
@@ -182,7 +186,7 @@ class SessionController(SessionWindow):
 
     def closeEvent(self, event):
         """
-        Event handler for the session window close event.
+        Handle the window close event cleanly.
 
         Args:
             event: The close event.
@@ -193,13 +197,22 @@ class SessionController(SessionWindow):
                 # Close server
                 try:
                     subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                except:
-                    print(
-                        "ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
+                except Exception as e:
+                    print("ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
+                    print(str(e))
 
                 # Disable power modules
-                self.main_gui.toolbar_marcos.arduino.send("GPA_ON 0;")
-                self.main_gui.toolbar_marcos.arduino.send("RFPA_RF 0;")
+                try:
+                    self.main_gui.toolbar_marcos.arduino.send("GPA_ON 0;")
+                    self.main_gui.toolbar_marcos.arduino.send("RFPA_RF 0;")
+                except Exception as e:
+                    print("ERROR: Could not disable power modules.")
+                    print(str(e))
+
+        # Close console logging if exists
+        if hasattr(self, 'console'):
+            self.console.close_log()
+
         print('GUI closed successfully!')
         super().closeEvent(event)
 
@@ -214,15 +227,31 @@ class SessionController(SessionWindow):
                 try:
                     subprocess.run(
                         [hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                except:
-                    print(
-                        "ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
+                except Exception as e:
+                    print("ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
+                    print(str(e))
 
                 # Disable power modules
-                self.main_gui.toolbar_marcos.arduino.send("GPA_ON 0;")
-                self.main_gui.toolbar_marcos.arduino.send("RFPA_RF 0;")
+                try:
+                    self.main_gui.toolbar_marcos.arduino.send("GPA_ON 0;")
+                    self.main_gui.toolbar_marcos.arduino.send("RFPA_RF 0;")
+                except Exception as e:
+                    print("ERROR: Could not disable power modules.")
+                    print(str(e))
+
+        # Close console logging if exists
+        if hasattr(self, 'console'):
+            self.console.close_log()
+
         print('GUI closed successfully!')
         sys.exit()
+
+    def switch_theme(self):
+        self.is_dark_theme = not self.is_dark_theme
+        if self.is_dark_theme:
+            self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
+        else:
+            self.setStyleSheet("")  # Light theme: default Qt style
 
     def updateSessionDict(self):
         """
@@ -232,22 +261,22 @@ class SessionController(SessionWindow):
         def get_text_or_placeholder(widget):
             return widget.text() if widget.text() else widget.placeholderText()
 
-        self.session = {
-            'project': self.tab_session.project_combo_box.currentText(),
-            'study': self.tab_session.study_combo_box.currentText(),
-            'side': self.tab_session.side_combo_box.currentText(),
-            'orientation': self.tab_session.orientation_combo_box.currentText(),
-            'subject_id': get_text_or_placeholder(self.tab_session.id_line_edit),
-            'study_id': get_text_or_placeholder(self.tab_session.idS_line_edit),
-            'subject_name': get_text_or_placeholder(self.tab_session.name_line_edit),
-            'subject_surname': get_text_or_placeholder(self.tab_session.surname_line_edit),
-            'subject_birthday': get_text_or_placeholder(self.tab_session.birthday_line_edit),
-            'subject_weight': get_text_or_placeholder(self.tab_session.weight_line_edit),
-            'subject_height': get_text_or_placeholder(self.tab_session.height_line_edit),
-            'scanner': get_text_or_placeholder(self.tab_session.scanner_line_edit),
-            'rf_coil': self.tab_session.rf_coil_combo_box.currentText(),
-            'software_version': get_text_or_placeholder(self.tab_session.software_line_edit),
-        }
+        self.session = {'project': self.tab_session.project_combo_box.currentText(),
+                        'study': self.tab_session.study_combo_box.currentText(),
+                        'side': self.tab_session.side_combo_box.currentText(),
+                        'orientation': self.tab_session.orientation_combo_box.currentText(),
+                        'subject_id': get_text_or_placeholder(self.tab_session.id_line_edit),
+                        'study_id': get_text_or_placeholder(self.tab_session.idS_line_edit),
+                        'subject_name': get_text_or_placeholder(self.tab_session.name_line_edit),
+                        'subject_surname': get_text_or_placeholder(self.tab_session.surname_line_edit),
+                        'subject_birthday': get_text_or_placeholder(self.tab_session.birthday_line_edit),
+                        'subject_weight': get_text_or_placeholder(self.tab_session.weight_line_edit),
+                        'subject_height': get_text_or_placeholder(self.tab_session.height_line_edit),
+                        'scanner': get_text_or_placeholder(self.tab_session.scanner_line_edit),
+                        'rf_coil': self.tab_session.rf_coil_combo_box.currentText(),
+                        'software_version': get_text_or_placeholder(self.tab_session.software_line_edit),
+                        'black_theme': self.is_dark_theme}
 
-        hw.b1Efficiency = hw.antenna_dict[self.session['rf_coil']]
+        # Save session theme
 
+        hw.b1Efficiency = hw.antenna_dict.get(self.session['rf_coil'], 1.0)

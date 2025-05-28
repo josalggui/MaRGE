@@ -31,3 +31,8 @@ class FiguresToolBar(QToolBar):
         self.action_postprocessing = QAction(QIcon("resources/icons/postprocessing.png"), "Open post-processing GUI", self)
         self.action_postprocessing.setStatusTip("Open the post-processing GUI")
         self.addAction(self.action_postprocessing)
+
+        # Add Switch Theme button to the marcos toolbar
+        self.switch_theme_action = QAction(QIcon("resources/icons/adjust-contrast.svg"), "", self)
+        self.addAction(self.switch_theme_action)
+

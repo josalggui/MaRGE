@@ -1,10 +1,15 @@
 """
 @author:    José Miguel Algarín
 @email:     josalggui@i3m.upv.es
-@affiliation:MRILab, i3M, CSIC, Valencia, Spain
+@affiliation: MRILab, i3M, CSIC, Valencia, Spain
 """
-from PyQt5.QtWidgets import QMainWindow, QStatusBar, QWidget, QHBoxLayout, QVBoxLayout, QTableWidget, QSizePolicy
-from PyQt5.QtCore import QSize, QThreadPool
+
+import datetime
+from PyQt5.QtWidgets import (
+    QMainWindow, QStatusBar, QWidget, QHBoxLayout, QVBoxLayout, QTableWidget,
+    QSizePolicy, QAction
+)
+from PyQt5.QtCore import QThreadPool
 import qdarkstyle
 
 from controller.controller_console import ConsoleController
@@ -32,18 +37,23 @@ class MainWindow(QMainWindow):
         self.session = session
         self.demo = demo
         self.parent = parent
-        self.setWindowTitle(session['directory'])
+        self.setWindowTitle(session.get('directory', 'MaRGE'))
         self.setGeometry(20, 40, 1680, 720)
 
         # Threadpool for parallel running
         self.threadpool = QThreadPool()
 
-        # Set stylesheet
-        self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
+        # Set stylesheet based on theme
+        if self.session["black_theme"]:
+            self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
+        else:
+            self.styleSheet = ""
         self.setStyleSheet(self.styleSheet)
 
         # Create console
-        self.console = ConsoleController()
+        now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_name = f"log_{now}.txt"
+        self.console = ConsoleController(log_name)
 
         # Add marcos toolbar
         self.toolbar_marcos = MarcosController(self, "MaRCoS toolbar")
@@ -130,3 +140,4 @@ class MainWindow(QMainWindow):
 
         # Create the post-processing toolbox
         self.post_gui = ProcessingWindowController(session=self.session, main=self)
+

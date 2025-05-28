@@ -1,8 +1,10 @@
 import sys
 import qdarkstyle
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QTabWidget, QStatusBar, QToolBar, QAction, \
-    QHBoxLayout, QGroupBox, QCheckBox
+from PyQt5.QtWidgets import (
+    QMainWindow, QApplication, QWidget, QVBoxLayout, QTabWidget, QStatusBar, QToolBar,
+    QAction, QHBoxLayout, QGroupBox, QCheckBox
+)
 
 from controller.controller_console import ConsoleController
 from widgets.widget_hw_console import ConsoleWidget
@@ -19,9 +21,9 @@ class SessionWindow(QMainWindow):
         self.setWindowTitle("Session and Hardware Window for MaRGE")
         self.setGeometry(100, 100, 600, 400)
 
-        # Set stylesheet
-        self.styleSheet = qdarkstyle.load_stylesheet_pyqt5()
-        self.setStyleSheet(self.styleSheet)
+        # Set initial stylesheet
+        self.is_dark_theme = True
+        self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
 
         # Main layout
         widget_main = QWidget()
@@ -31,7 +33,7 @@ class SessionWindow(QMainWindow):
         layout_left = QVBoxLayout()
         layout_main.addLayout(layout_left)
 
-        # checks
+        # Scanner checks
         checks = QGroupBox("Scanner checks")
         layout = QVBoxLayout()
         checks.setLayout(layout)
@@ -40,71 +42,76 @@ class SessionWindow(QMainWindow):
         self.check_projects = QCheckBox("Projects")
         self.check_projects.setDisabled(True)
         layout.addWidget(self.check_projects)
-        self.check_study= QCheckBox("Study cases")
+
+        self.check_study = QCheckBox("Study cases")
         self.check_study.setDisabled(True)
         layout.addWidget(self.check_study)
+
         self.check_gradients = QCheckBox("Gradient hardware")
         self.check_gradients.setDisabled(True)
         layout.addWidget(self.check_gradients)
+
         self.check_redpitayas = QCheckBox("MaRCoS")
         self.check_redpitayas.setDisabled(True)
         layout.addWidget(self.check_redpitayas)
+
         self.check_rf = QCheckBox("RFs")
         self.check_rf.setDisabled(True)
         layout.addWidget(self.check_rf)
+
         self.check_rp_ips = QCheckBox("RP IPs")
         self.check_rp_ips.setDisabled(True)
         layout.addWidget(self.check_rp_ips)
+
         self.check_rf_coils = QCheckBox("RF coils")
         self.check_rf_coils.setDisabled(True)
         layout.addWidget(self.check_rf_coils)
+
         self.check_others = QCheckBox("Others")
         self.check_others.setDisabled(True)
         layout.addWidget(self.check_others)
 
-
-        # Define console
+        # Console
         self.console = ConsoleController()
         layout_left.addWidget(self.console)
 
-        # Add toolbar
+        # Toolbar
         self.toolbar = QToolBar("Session toolbar")
         self.addToolBar(self.toolbar)
 
-        # launch gui action
         self.launch_gui_action = QAction(QIcon("resources/icons/home.png"), "Launch GUI", self)
         self.launch_gui_action.setStatusTip("Launch GUI")
-        self.toolbar.addAction(self.launch_gui_action)
         self.launch_gui_action.setDisabled(True)
+        self.toolbar.addAction(self.launch_gui_action)
 
-        # demo gui action
         self.demo_gui_action = QAction(QIcon("resources/icons/demo.png"), "Launch GUI as DEMO", self)
         self.demo_gui_action.setStatusTip("Launch GUI as DEMO")
-        self.toolbar.addAction(self.demo_gui_action)
         self.demo_gui_action.setDisabled(True)
+        self.toolbar.addAction(self.demo_gui_action)
 
-        # demo gui action
         self.update_action = QAction(QIcon("resources/icons/arrow-sync.svg"), "Update scanner hardware", self)
         self.update_action.setStatusTip("Update scanner hardware")
         self.toolbar.addAction(self.update_action)
 
-        # Close button action
         self.close_action = QAction(QIcon("resources/icons/close.png"), "Close GUI", self)
         self.close_action.setStatusTip("Close the GUI")
         self.toolbar.addAction(self.close_action)
 
-        # Create a QTabWidget
+        # Add switch theme button
+        self.switch_theme_action = QAction(QIcon("resources/icons/adjust-contrast.svg"), "", self)
+        self.switch_theme_action.setStatusTip("Switch between Dark and Light theme")
+        self.toolbar.addAction(self.switch_theme_action)
+
+        # Tabs
         self.tabs = QTabWidget()
         layout_main.addWidget(self.tabs)
 
-        # Create the individual tabs
         self.tab_session = SessionWidget()
         self.tab_console = ConsoleWidget()
         self.tab_gradients = GradientsWidget()
         self.tab_rf = RfWidget()
         self.tab_others = OthersWidget()
 
-        # Add the tabs to the QTabWidget
         self.tabs.addTab(self.tab_session, "Session")
         self.tabs.addTab(self.tab_console, "Console")
         self.tabs.addTab(self.tab_gradients, "Gradients")
@@ -138,13 +145,9 @@ class SessionWindow(QMainWindow):
         layout.addWidget(widget)
         self.tab4.setLayout(layout)
 
-if __name__ == '__main__':
-    # Only one QApplication for event loop
-    app = QApplication(sys.argv)
 
-    # Instantiate the window
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
     window = SessionWindow()
     window.show()
-
-    # Start the event loop.
     app.exec()
