@@ -27,6 +27,8 @@ from marge_utils import utils
 import shutil
 import nibabel as nib
 
+import recon.data_processing as dp
+
 class MRIBLANKSEQ:
     """
     Class for representing MRI sequences.
@@ -192,6 +194,18 @@ class MRIBLANKSEQ:
                 out[self.mapNmspc[key]] = [self.mapVals[key]]
                 tips[self.mapNmspc[key]] = [self.mapTips[key]]
         return out, tips
+
+    def sequenceAnalysis(self, mode=None):
+        raw_data_path = self.saveRawDataLite()
+
+        self.output = dp.run_recon(raw_data_path=raw_data_path)
+
+        self.saveRawData()
+
+        if mode == 'Standalone':
+            self.plotResults()
+
+        return self.output
 
     def rotate_waveforms(self, waveforms):
         # Get the waveforms
@@ -1618,6 +1632,28 @@ class MRIBLANKSEQ:
                                    'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
                                    }, rewrite)
         return True
+
+    def saveRawDataLite(self):
+        # Get directory
+        if 'directory' in self.session.keys():
+            directory = self.session['directory']
+        else:
+            dt2 = date.today()
+            date_string = dt2.strftime("%Y.%m.%d")
+            directory = 'experiments/acquisitions/%s' % (date_string)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        # generate directories for mat, csv and dcm files
+        directory_mat = directory + '/mat'
+        if not os.path.exists(directory + '/mat'):
+            os.makedirs(directory_mat)
+
+        # Save mat file with the outputs
+        savemat("%s/temp.mat" % directory_mat,
+                self.mapVals)  # au format savemat(chemin_fichier_mat, {"data" : data}), avec data contient les données brute à sauvegarder
+
+        return "%s/temp.mat" % directory_mat
 
     def saveRawData(self):
         

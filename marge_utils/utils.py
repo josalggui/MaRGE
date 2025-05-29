@@ -184,7 +184,6 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data={}):
     # Save the DICOM file
     print(f"DICOM saved: {file_path}")
 
-
 def save_nifti(axes_orientation, n_points, fov, dfov, image, file_path):
     axes_orientation = np.array(axes_orientation)
     n_xyz = [0, 0, 0]
