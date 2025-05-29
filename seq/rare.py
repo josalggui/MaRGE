@@ -22,7 +22,7 @@ for subdir in subdirs:
     sys.path.append(full_path)
 #******************************************************************************
 import numpy as np
-import experiment as ex
+import marcos.marcos_client.experiment
 import scipy.signal as sig
 from scipy.stats import linregress
 import configs.hw_config as hw # Import the scanner hardware config

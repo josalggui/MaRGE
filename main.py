@@ -5,22 +5,6 @@ import os
 import sys
 from PyQt5.QtWidgets import QApplication
 
-# *****************************************************************************
-# Get the directory of the current script
-main_directory = os.path.dirname(os.path.realpath(__file__))
-
-# Get the parent directory (one level up)
-parent_directory = os.path.dirname(main_directory)
-
-# Define the subdirectories you want to add to sys.path
-subdirs = ['marcos_client']
-
-# Add the subdirectories to sys.path
-for subdir in subdirs:
-    full_path = os.path.join(parent_directory, subdir)
-    sys.path.append(full_path)
-# ******************************************************************************
-
 print("****************************************************************************************")
 print("Graphical User Interface for MaRCoS                                                    *")
 print("Dr. J.M. Algarín, mriLab @ i3M, CSIC, Spain                                            *")

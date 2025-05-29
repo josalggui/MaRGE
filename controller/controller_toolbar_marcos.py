@@ -9,7 +9,7 @@ import time
 from widgets.widget_toolbar_marcos import MarcosToolBar
 import subprocess
 import platform
-import experiment as ex
+import marcos.marcos_client.experiment as ex
 import numpy as np
 import shutil
 import configs.hw_config as hw
@@ -41,11 +41,11 @@ class MarcosController(MarcosToolBar):
         super(MarcosController, self).__init__(*args, **kwargs)
 
         # Copy relevant files from marcos_extras
-        shutil.copy("../marcos_extras/copy_bitstream.sh", "../MaRGE")
-        shutil.copy("../marcos_extras/marcos_fpga_rp-122.bit", "../MaRGE")
-        shutil.copy("../marcos_extras/marcos_fpga_rp-122.bit.bin", "../MaRGE")
-        shutil.copy("../marcos_extras/marcos_fpga_rp-122.dtbo", "../MaRGE")
-        shutil.copy("../marcos_extras/readme.org", "../MaRGE")
+        shutil.copy("marcos/marcos_extras/copy_bitstream.sh", "../MaRGE")
+        shutil.copy("marcos/marcos_extras/marcos_fpga_rp-122.bit", "../MaRGE")
+        shutil.copy("marcos/marcos_extras/marcos_fpga_rp-122.bit.bin", "../MaRGE")
+        shutil.copy("marcos/marcos_extras/marcos_fpga_rp-122.dtbo", "../MaRGE")
+        shutil.copy("marcos/marcos_extras/readme.org", "../MaRGE")
 
         self.action_server.setCheckable(True)
         self.action_start.triggered.connect(self.startMaRCoS)
