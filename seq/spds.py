@@ -31,7 +31,7 @@ import pypulseq as pp  # Import PyPulseq
 from skimage.restoration import unwrap_phase as unwrap
 from sklearn.preprocessing import PolynomialFeatures
 from numpy.linalg import lstsq
-from scipy.optimize import curve_fit
+from marge_utils.utils import run_ifft
 
 
 # Template Class for MRI Sequences
@@ -40,12 +40,14 @@ class spds(blankSeq.MRIBLANKSEQ):
     Executes the SPDS (Single Point Double Shot) sequence, designed to estimate the B₀ map by acquiring data with two
     distinct acquisition windows.
     """
+
     def __init__(self):
         """
         Defines the parameters for the sequence.
         """
         super(spds, self).__init__()
 
+        self.angulation = None
         self.mask = None
         self.axesOrientation = None
         self.rfExFA = None
@@ -100,7 +102,6 @@ class spds(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='thresholdMask', string='% Threshold Mask', val=10, field='IM',
                           tip='% Threshold Mask')
 
-
     def sequenceInfo(self):
         """
         Description of the sequence.
@@ -111,7 +112,6 @@ class spds(blankSeq.MRIBLANKSEQ):
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain \n")
         print("Single Point Double Shot protocol to measure B0 map")
-
 
     def sequenceTime(self):
         """
@@ -171,6 +171,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         self.demo = demo
         self.plotSeq = plotSeq
         self.standalone = standalone
+        self.angulation = 0
 
         '''
         Step 1: Define the interpreter for FloSeq/PSInterpreter.
@@ -180,12 +181,12 @@ class spds(blankSeq.MRIBLANKSEQ):
 
         flo_interpreter = PSInterpreter(
             tx_warmup=hw.blkTime,  # Transmit chain warm-up time (us)
-            rf_center=self.mapVals['larmorFreq']* 1e6,  # Larmor frequency (Hz)
+            rf_center=self.mapVals['larmorFreq'] * 1e6,  # Larmor frequency (Hz)
             rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Maximum RF amplitude (Hz)
             gx_max=hw.gFactor[0] * hw.gammaB,  # Maximum gradient amplitude for X (Hz/m)
             gy_max=hw.gFactor[1] * hw.gammaB,  # Maximum gradient amplitude for Y (Hz/m)
             gz_max=hw.gFactor[2] * hw.gammaB,  # Maximum gradient amplitude for Z (Hz/m)
-            grad_max=np.max(hw.gFactor) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
+            grad_max=np.max(np.abs(hw.gFactor)) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
             grad_t=hw.grad_raster_time * 1e6,  # Gradient raster time (us)
         )
 
@@ -197,7 +198,7 @@ class spds(blankSeq.MRIBLANKSEQ):
 
         system = pp.Opts(
             rf_dead_time=hw.blkTime * 1e-6,  # Dead time between RF pulses (s)
-            max_grad=np.max(hw.gFactor) * 1e3,  # Maximum gradient strength (mT/m)
+            max_grad=np.max(np.abs(hw.gFactor)) * 1e3,  # Maximum gradient strength (mT/m)
             grad_unit='mT/m',  # Units of gradient strength
             max_slew=hw.max_slew_rate,  # Maximum gradient slew rate (mT/m/ms)
             slew_unit='mT/m/ms',  # Units of gradient slew rate
@@ -466,14 +467,15 @@ class spds(blankSeq.MRIBLANKSEQ):
 
         # Run sequence a
         if self.runBatches(waveforms=waveforms_a,
-                               n_readouts=n_readouts_a,
-                               n_adc=n_adc_a,
-                               frequency=self.mapVals['larmorFreq'],  # MHz
-                               bandwidth=bw_a,  # MHz
-                               decimate='Normal',
-                               hardware=True,
-                               output='a'
-                               ):
+                           n_readouts=n_readouts_a,
+                           n_adc=n_adc_a,
+                           frequency=self.mapVals['larmorFreq'],  # MHz
+                           bandwidth=bw_a,  # MHz
+                           decimate='Normal',
+                           hardware=True,
+                           output='a',
+                           angulation=self.angulation,
+                           ):
             pass
         else:
             return False
@@ -486,7 +488,8 @@ class spds(blankSeq.MRIBLANKSEQ):
                                bandwidth=bw_b,  # MHz
                                decimate='Normal',
                                hardware=True,
-                               output='b'
+                               output='b',
+                               angulation=self.angulation,
                                )
 
     def sequenceAnalysis(self, mode=None):
@@ -568,8 +571,8 @@ class spds(blankSeq.MRIBLANKSEQ):
         k_data_a = zero_padding(k_data_aRaw, self.mapVals['interpOrder'])
         k_data_b = zero_padding(k_data_bRaw, self.mapVals['interpOrder'])
 
-        i_data_a = self.runIFFT(k_data_a)
-        i_data_b = self.runIFFT(k_data_b)
+        i_data_a = run_ifft(k_data_a)
+        i_data_b = run_ifft(k_data_b)
         self.mapVals['space_k_a'] = k_data_a
         self.mapVals['space_k_b'] = k_data_b
         self.mapVals['space_i_a'] = i_data_a
@@ -644,12 +647,6 @@ class spds(blankSeq.MRIBLANKSEQ):
 
             print("B0 fitting:")
             print(polynomial_expression)
-
-            # Export in txt the model fitted
-            output_file = "B0modelledBySPDS.txt"
-            with open(output_file, "w") as f:
-                f.write(polynomial_expression + "\n")
-            print(f"Fitting exported to '{output_file}'")
 
             result1 = {}
             result1['widget'] = 'image'
@@ -795,12 +792,6 @@ class spds(blankSeq.MRIBLANKSEQ):
             print("B0 fitting:")
             print(polynomial_expressionGUI)
 
-            # Export in txt the model fitted
-            output_file = "B0modelledBySPDS.txt"
-            with open(output_file, "w") as f:
-                f.write(polynomial_expression + "\n")
-            print(f"Fitting exported to '{output_file}'")
-
             result1 = {}
             result1['widget'] = 'image'
             result1['data'] = np.real(b_field)
@@ -869,6 +860,14 @@ class spds(blankSeq.MRIBLANKSEQ):
         # save data once self.output is created
         self.saveRawData()
 
+        # Export in txt the model fitted
+        if not os.path.exists('b0_maps'):
+            os.makedirs('b0_maps')
+        output_file = "b0_maps/"+self.mapVals['fileName'][:-4]+".txt"
+        with open(output_file, "w") as f:
+            f.write(polynomial_expression + "\n")
+        print(f"Fitting exported to '{output_file}'")
+
         # Plot result in standalone execution
         if self.mode == 'Standalone':
             self.plotResults()
@@ -878,5 +877,5 @@ class spds(blankSeq.MRIBLANKSEQ):
 if __name__ == "__main__":
     seq = spds()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
-    # seq.sequenceAnalysis(mode='Standalone')
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
+    seq.sequenceAnalysis(mode='Standalone')
