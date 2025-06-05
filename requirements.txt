@@ -1,9 +1,9 @@
-matplotlib>=3.3.4
-nibabel>=2.4.0
-pydicom>=1.2.2
-scipy>=1.2.1
+matplotlib
+nibabel
+pydicom
+scipy
 msgpack~=1.0.5
-numpy==1.26.4
+numpy
 PyQt5~=5.15.10
 pyqtgraph~=0.13.3
 QDarkStyle>=3.2.3
@@ -11,10 +11,10 @@ bm4d>=4.2.3
 phantominator>=0.7.0
 pyserial>=3.5
 ismrmrd==1.14.1
-cupy-cuda12x>=13.0.0
 pypulseq==1.4.2
 marga_pulseq>=0.2.2
 scikit-learn>=1.6.1
 scikit-image~=0.23.2
 imageio~=2.34.1
 h5py~=3.11.0
+cupy-cuda12x>=13.0.0
