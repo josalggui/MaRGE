@@ -10,7 +10,7 @@ import time
 import datetime as dt
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QMenu, QAction
 
 from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
@@ -32,6 +32,7 @@ class HistoryListController(HistoryListWidget):
     """
 
     sequence_ready_signal = QtCore.pyqtSignal(object)
+    figure_ready_signal = QtCore.pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         """
@@ -317,6 +318,8 @@ class HistoryListController(HistoryListWidget):
                 self.main.figures_layout.addWidget(plot, row=item['row'] + 1, col=item['col'])
         self.main.figures_layout.addWidget(label, row=0, col=0, colspan=n_columns)
 
+        QTimer.singleShot(0, self.figure_ready_signal.emit)
+
     def waitingForRun(self):
         """
         Wait for the run to start.
@@ -380,7 +383,7 @@ class HistoryListController(HistoryListWidget):
                         # self.main.sequence_list.updateSequence()
                         print("READY: " + key + "\n")
                         self.sequence_ready_signal.emit(self.item(key_index))
-                    time.sleep(0.5)
+                    time.sleep(0.1)
                 # Enable acquire button
                 if self.main.toolbar_marcos.action_server.isChecked():
                     self.main.toolbar_sequences.action_acquire.setEnabled(True)
