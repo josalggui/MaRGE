@@ -25,12 +25,13 @@ from manager.dicommanager import DICOMImage
 from marge_utils import utils
 import numpy as np
 import configs.hw_config as hw
-import nibabel as nib
 
 class HistoryListController(HistoryListWidget):
     """
     Controller for the history list.
     """
+
+    sequence_ready_signal = QtCore.pyqtSignal(object)
 
     def __init__(self, *args, **kwargs):
         """
@@ -238,7 +239,7 @@ class HistoryListController(HistoryListWidget):
             new_item = QTableWidgetItem(str(item))
             self.main.input_table.setItem(m, 0, new_item)
 
-    def updateHistoryFigure(self, item):
+    def updateHistoryFigure(self, item=None):
         """
         Updates the history figure based on the selected item.
 
@@ -255,6 +256,8 @@ class HistoryListController(HistoryListWidget):
         """
 
         # Get the corresponding key to get access to the history dictionary
+        if item is None:
+            item = self.item(self.count() - 1)
         item_time = item.text().split(' | ')[0]
         item_name = item.text().split(' | ')[1].split('.')[0]
         self.current_output = item_time + " | " + item_name
@@ -376,7 +379,8 @@ class HistoryListController(HistoryListWidget):
                         sequence.resetMapVals()
                         # self.main.sequence_list.updateSequence()
                         print("READY: " + key + "\n")
-                    time.sleep(0.1)
+                        self.sequence_ready_signal.emit(self.item(key_index))
+                    time.sleep(0.5)
                 # Enable acquire button
                 if self.main.toolbar_marcos.action_server.isChecked():
                     self.main.toolbar_sequences.action_acquire.setEnabled(True)

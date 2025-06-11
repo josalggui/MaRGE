@@ -22,6 +22,8 @@ class MainController(MainWindow):
 
         self.initializeThread()
 
+        self.history_list.sequence_ready_signal.connect(self.history_list.updateHistoryFigure)
+
     def set_demo(self, demo):
         self.demo = demo
 
