@@ -318,7 +318,86 @@ class HistoryListController(HistoryListWidget):
                 self.main.figures_layout.addWidget(plot, row=item['row'] + 1, col=item['col'])
         self.main.figures_layout.addWidget(label, row=0, col=0, colspan=n_columns)
 
-        QTimer.singleShot(0, self.figure_ready_signal.emit)
+    def updateHistoryFigure2(self, item=None):
+        """
+        Updates the history figure based on the selected item.
+
+        This method takes an item as input, retrieves the corresponding key from the item's text, and assigns it to `self.current_output`.
+        It accesses the history dictionary using `self.current_output` to retrieve the output widget information.
+        If available, it also retrieves the rotations, shifts, and field of views (fovs) from the history.
+        The method then clears the plot view by calling `self.main.figures_layout.clearFiguresLayout()`.
+        It adds a label to show the rawData corresponding to the selected item at the top of the figures layout.
+        Finally, it iterates through the output items, adds either a Spectrum3DPlot or SpectrumPlot widget to the figures layout based on the item's widget type and populates it with the relevant data and configurations.
+
+        Note: The figures layout is assumed to be available as `self.main.figures_layout`.
+
+        :param item: The selected item from which to retrieve the corresponding output information.
+        """
+
+        # Get the corresponding key to get access to the history dictionary
+        if item is None:
+            item = self.item(self.count() - 1)
+        item_time = item.text().split(' | ')[0]
+        item_name = item.text().split(' | ')[1].split('.')[0]
+        self.current_output = item_time + " | " + item_name
+
+        # Get the widget from history
+        output = self.outputs[self.current_output]
+
+        # Get rotations and shifts from history
+        try:
+            rotations = self.rotations[self.current_output]
+            shifts = self.shifts[self.current_output]
+            fovs = self.fovs[self.current_output]
+            for sequence in defaultsequences.values():
+                sequence.rotations = rotations.copy()
+                sequence.dfovs = shifts.copy()
+                sequence.fovs = fovs.copy()
+        except:
+            pass
+
+        # Clear the plotview
+        self.main.figures_layout.clearFiguresLayout()
+
+        # Add label to show rawData self.current_output
+        label = QLabel()
+        label.setAlignment(QtCore.Qt.AlignCenter)
+        label.setStyleSheet("background-color: black;color: white")
+        self.main.figures_layout.addWidget(label, row=0, col=0, colspan=2)
+        label.setText(item.text().split(' | ')[1])
+
+        # Add plots to the plotview_layout
+        n_columns = 1
+        for item in output:
+            if item['col'] + 1 > n_columns:
+                n_columns = item['col'] + 1
+            if item['widget'] == 'image':
+                image = Spectrum3DPlot(main=self.main,
+                                       data=item['data'],
+                                       x_label=item['xLabel'],
+                                       y_label=item['yLabel'],
+                                       title=item['title'])
+                self.main.figures_layout.addWidget(image, row=item['row'] + 1, col=item['col'])
+            elif item['widget'] == 'curve':
+                plot = SpectrumPlot(x_data=item['xData'],
+                                    y_data=item['yData'],
+                                    legend=item['legend'],
+                                    x_label=item['xLabel'],
+                                    y_label=item['yLabel'],
+                                    title=item['title'])
+                self.main.figures_layout.addWidget(plot, row=item['row'] + 1, col=item['col'])
+            elif item['widget'] == 'smith':
+                plot = SmithChart(x_data=item['xData'],
+                                  y_data=item['yData'],
+                                  legend=item['legend'],
+                                  x_label=item['xLabel'],
+                                  y_label=item['yLabel'],
+                                  title=item['title'])
+                self.main.figures_layout.addWidget(plot, row=item['row'] + 1, col=item['col'])
+        self.main.figures_layout.addWidget(label, row=0, col=0, colspan=n_columns)
+
+        if 'Calibration' in item_name:
+            QTimer.singleShot(0, self.figure_ready_signal.emit)
 
     def waitingForRun(self):
         """
@@ -383,7 +462,7 @@ class HistoryListController(HistoryListWidget):
                         # self.main.sequence_list.updateSequence()
                         print("READY: " + key + "\n")
                         self.sequence_ready_signal.emit(self.item(key_index))
-                    time.sleep(0.1)
+                    time.sleep(0.5)
                 # Enable acquire button
                 if self.main.toolbar_marcos.action_server.isChecked():
                     self.main.toolbar_sequences.action_acquire.setEnabled(True)

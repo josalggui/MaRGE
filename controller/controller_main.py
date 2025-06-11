@@ -22,7 +22,7 @@ class MainController(MainWindow):
 
         self.initializeThread()
 
-        self.history_list.sequence_ready_signal.connect(self.history_list.updateHistoryFigure)
+        self.history_list.sequence_ready_signal.connect(self.history_list.updateHistoryFigure2)
         self.history_list.figure_ready_signal.connect(self.toolbar_figures.doScreenshot)
 
     def set_demo(self, demo):
