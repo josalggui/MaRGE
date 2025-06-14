@@ -43,9 +43,10 @@ def run_recon(raw_data_path=None, mode=None):
             output = recon(raw_data_path=raw_data_path)
         else:
             print(f"Recon for '{seq}' not found.")
-            return None
+            return False
     else:
-        raise ValueError(f"Unknown or unimplemented sequence: {seq}")
+        print(f"Unknown or unimplemented sequence: {seq}")
+        return False
 
     if mode == 'Standalone':
         file_name = mat_data['fileName'][0]

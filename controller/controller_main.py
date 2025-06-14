@@ -40,6 +40,8 @@ class MainController(MainWindow):
         # Start the sniffer
         thread = threading.Thread(target=self.history_list.waitingForRun)
         thread.start()
+        thread = threading.Thread(target=self.history_list.waitingForRecon)
+        thread.start()
         print("Sniffer initialized.\n")
 
     def set_console(self):

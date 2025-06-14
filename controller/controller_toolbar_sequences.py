@@ -267,14 +267,23 @@ class SequenceController(SequenceToolBar):
             name = str(datetime.now())[11:23] + " | " + item_name
         self.main.history_list.addItem(name)
 
-        sequence = copy.copy(defaultsequences[seq_name])
-        if map_nmspc is None and map_vals is None:
+        # Get sequence to run
+        sequence = copy.deepcopy(defaultsequences[seq_name])
+
+        # Modify input parameters of the sequence according to current item
+        if map_nmspc and map_vals:
+            n = 0
+            for keyParam in sequence.mapKeys:
+                sequence.mapVals[keyParam] = map_vals[n]
+                n += 1
+            pass
+        else:
             map_nmspc = list(sequence.mapNmspc.values())
             map_vals = list(sequence.mapVals.values())
 
         # Save results into the history
         self.main.history_list.inputs[name] = [map_nmspc, map_vals]
-        self.main.history_list.pending_inputs[name] = [map_nmspc, map_vals]
+        self.main.history_list.pending_runs[name] = sequence
 
         # Set to zero the dfov and angle for next figures
         hw.dfov = [0.0, 0.0, 0.0]
