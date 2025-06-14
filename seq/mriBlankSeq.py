@@ -1731,20 +1731,23 @@ class MRIBLANKSEQ:
 
         # Save dcm and nifti with the final image
         if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode is None): ##verify if output is an image
-            utils.save_dicom(axes_orientation=self.mapVals['axesOrientation'],
-                             n_points=self.mapVals['nPoints'],
-                             fov=self.mapVals['fov'],
-                             image=self.mapVals['image3D'],
-                             file_path=f"{directory_dcm}/{file_name}.dcm",
-                             meta_data = self.meta_data,
-                             )
-            utils.save_nifti(axes_orientation=self.mapVals['axesOrientation'],
-                             n_points=self.mapVals['nPoints'],
-                             fov=self.mapVals['fov'],
-                             dfov=self.mapVals['dfov'],
-                             image=self.mapVals['image3D'],
-                             file_path=f"{directory_nii}/{file_name}.nii"
-                             )
+            try:
+                utils.save_dicom(axes_orientation=self.mapVals['axesOrientation'],
+                                 n_points=self.mapVals['nPoints'],
+                                 fov=self.mapVals['fov'],
+                                 image=self.mapVals['image3D'],
+                                 file_path=f"{directory_dcm}/{file_name}.dcm",
+                                 meta_data = self.meta_data,
+                                 )
+                utils.save_nifti(axes_orientation=self.mapVals['axesOrientation'],
+                                 n_points=self.mapVals['nPoints'],
+                                 fov=self.mapVals['fov'],
+                                 dfov=self.mapVals['dfov'],
+                                 image=self.mapVals['image3D'],
+                                 file_path=f"{directory_nii}/{file_name}.nii"
+                                 )
+            except:
+                pass
 
         # Move seq files
         self.move_batch_files(destination_folder=directory, file_name=file_name)
@@ -1932,9 +1935,9 @@ class MRIBLANKSEQ:
         rows = 1
         for item in self.output:
             if item['row'] + 1 > rows:
-                rows += 1
+                rows = item['row'] + 1
             if item['col'] + 1 > cols:
-                cols += 1
+                cols = item['col'] + 1
 
         # Create the plot window
         fig, axes = plt.subplots(rows, cols, figsize=(10, 5))

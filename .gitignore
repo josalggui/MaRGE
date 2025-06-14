@@ -4,6 +4,7 @@ sphinx/_build/
 experiments
 calibration
 protocols
+b0_maps/
 .idea/
 configs/units.py
 configs/hw_config.py
