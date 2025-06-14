@@ -100,11 +100,11 @@ class ProtocolInputsController(ProtocolInputsWidget):
         file = protocol_item + ".csv"
         seq_name = protocol_item.split('_')[0]
 
-        sequence = copy.copy(defaultsequences[seq_name])
+        sequence = copy.deepcopy(defaultsequences[seq_name])
 
         # Pick the shimming from sequence, as it was set up by autocalibration
         try:
-            shimming = copy.copy(sequence.mapVals['shimming'])
+            shimming = copy.deepcopy(sequence.mapVals['shimming'])
         except:
             pass
 
