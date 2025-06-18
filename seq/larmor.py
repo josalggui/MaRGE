@@ -239,6 +239,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         fCentral = fVector[idf] * 1e-3  # MHz
         hw.larmorFreq = self.mapVals['larmorFreq'] + fCentral
         print('Larmor frequency: %1.5f MHz' % hw.larmorFreq)
+        self.mapVals['fCentral'] = fCentral
         self.mapVals['larmorFreq0'] = hw.larmorFreq
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
