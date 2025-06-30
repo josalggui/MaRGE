@@ -128,6 +128,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
             # Rx gate
             t0 = t_ex + echo_time - acq_time / 2
+            self.ttlOffRecPulse(t0, acq_time)
             self.rxGateSync(t0, acq_time)
             rd_points += n_points
 

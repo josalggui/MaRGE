@@ -93,6 +93,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
             # SEQUENCE
             self.iniSequence(20, np.array((0, 0, 0)))
             t0 = 30 + hw.addRdPoints*hw.oversamplingFactor/self.bw
+            self.ttlOffRecPulse(t0, acqTime)
             self.rxGateSync(t0, acqTime, channel=self.rxChannel)
             t0 = t0 + acqTime + hw.addRdPoints*hw.oversamplingFactor/self.bw
             if t0 < self.repetitionTime:
@@ -132,7 +133,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         johnson = np.sqrt(2 * 50 * hw.temperature * bw * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e6  # uV
         print('Expected by Johnson: %0.1f uV @ %0.1f kHz' % (johnson, bw * 1e-3))
         print('Noise factor: %0.1f johnson' % (noiserms / johnson))
-        if noiserms / johnson > 4:
+        if noiserms / johnson > 6:
             print("WARNING: Noise is too high")
 
         # Plot signal versus time
