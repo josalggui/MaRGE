@@ -37,8 +37,8 @@ class ConsoleController(ConsoleWidget):
         sys.stdout = EmittingStream(textWritten=self.write_console)
 
         print("READY - MaRGE has started successfully.")
-        print("WARNING - This is a test warning message.")
-        print("ERROR - This is a test error message.")
+        # print("WARNING - This is a test warning message.")
+        # print("ERROR - This is a test error message.")
         atexit.register(self.close_log)
 
     def write_console(self, text):
