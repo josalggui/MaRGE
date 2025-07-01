@@ -14,7 +14,7 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
         super(B1calibration, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='B1calibration', val='B1calibration')
-        self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='toMaRGE', val=False)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='RF')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
         self.addParameter(key='rfExAmpInit', string='RF initial amplitude (a.u.)', val=0.2, field='RF')

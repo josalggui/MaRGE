@@ -1632,7 +1632,8 @@ class MRIBLANKSEQ:
                                    'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
                                    'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
                                    'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
-                                   'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
+                                #    'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
+                                   'rx_gate': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
                                    }, rewrite)
         return True
 

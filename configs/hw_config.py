@@ -13,7 +13,7 @@ import numpy as np
 gFactor = np.array([0.0106, 0.0129, 0.0113]) # (X, Y, Z) in T/m/o.u.
 max_grad = 40  # mT/m
 max_slew_rate = 150e-3  # mT/m/ms
-grad_raster_time = 10e-6  # s
+grad_raster_time = 25e-6  # s
 grad_rise_time = 400e-6 # s, time for gradient ramps
 grad_steps = 16 # steps to gradient ramps
 gammaB = 42.57747892e6 # Hz/T, Gyromagnetic ratio
