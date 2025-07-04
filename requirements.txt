@@ -18,3 +18,4 @@ scikit-learn>=1.6.1
 scikit-image~=0.23.2
 imageio~=2.34.1
 h5py~=3.11.0
+mrd-python==2.0.0

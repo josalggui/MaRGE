@@ -35,6 +35,8 @@ import datetime
 import ctypes
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
+from marge_tyger import tyger_rare
+import marge_tyger.tyger_config as tyger_conf
 
 #*********************************************************************************
 #*********************************************************************************
@@ -111,17 +113,23 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
-        self.addParameter(key='bm4d', string='BM4D std', val=-1, field='PRO',
-                          tip='Perform BM4D filter: -1 -> do not apply, 0 -> automatic std calculation, >0 to use manual'
-                              ' std value.')
-        self.addParameter(key='cosbell_factor', string='Cosbell factor', val=0, field='PRO',
-                          tip='Perform cosbell filter in k-space')
-        self.addParameter(key='padding', string='Final size (rd, ph, sl)' , val=[0, 0, 0], field='PRO',
-                          tip='Final matrix size after processing zero padding')
-        self.addParameter(key='partial_method', string='Partial recon method', val='POCS', field='PRO',
-                          tip="'zero' -> zero padding, pocs -> Projection Onto Convex Sets")
         self.addParameter(key='angulation', string='Angulation', val=1, field='OTH',
                           tip='1: Consider FOV angulation. 0: Keep the image unangled (it reduced the number of instructions).')
+        self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
+                          tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
+        self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',
+                          tip='Options: cp, art, artpk, fft.')
+        self.addParameter(key='boFit_file', string='Bo Fit file', val='boFit_default.txt', field='PRO',
+                          tip='Path to the Bo Fit file inside [b0_maps] folder.')
+        # self.addParameter(key='bm4d', string='BM4D std', val=-1, field='PRO',
+        #                   tip='Perform BM4D filter: -1 -> do not apply, 0 -> automatic std calculation, >0 to use manual'
+        #                       ' std value.')
+        # self.addParameter(key='cosbell_factor', string='Cosbell factor', val=0, field='PRO',
+        #                   tip='Perform cosbell filter in k-space')
+        # self.addParameter(key='padding', string='Final size (rd, ph, sl)' , val=[0, 0, 0], field='PRO',
+        #                   tip='Final matrix size after processing zero padding')
+        # self.addParameter(key='partial_method', string='Partial recon method', val='POCS', field='PRO',
+        #                   tip="'zero' -> zero padding, pocs -> Projection Onto Convex Sets")
 
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
@@ -1001,7 +1009,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
         self.mapVals['sampledCartesian'] = self.mapVals['sampled']  # To sweep
         data = np.reshape(data, newshape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]))
-
+        
         axes_enable = self.mapVals['axes_enable']
 
         # Get axes in strings
@@ -1017,7 +1025,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             n += 1
 
         if (axes_enable[1] == 0 and axes_enable[2] == 0):
-            bw = self.mapVals['bw']*1e-3 # kHz
+            bw = self.mapVals['bw_MHz']*1e-3 # kHz
             acqTime = self.mapVals['acqTime'] # ms
             tVector = np.linspace(-acqTime/2, acqTime/2, self.nPoints[0])
             sVector = self.mapVals['sampled'][:, 3]
@@ -1059,6 +1067,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 result_1, _, _ = utils.fix_image_orientation(image, axes=self.axesOrientation)
                 result_1['row'] = 0
                 result_1['col'] = 0
+                result_1['title'] = 'Original'
             else:
                 result_1 = {'widget': 'image', 'data': image, 'xLabel': "%s" % axesStr[1],
                             'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
@@ -1102,6 +1111,47 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             pass
         hw.dfov = [0.0, 0.0, 0.0]
 
+        ## Tyger Reconstruction
+        if axes_enable == [1,1,1] and self.tyger_recon == 1:
+            print('Preparing Tyger enviroment...')
+            rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
+            sign_rarepp = [-1,-1,-1,1,1,1,1,1, tyger_conf.cp_batchsize_RARE]
+            if self.recon_type == 'cp':
+                output_field = 'imgTygerCP'
+            elif self.recon_type == 'art':
+                output_field = 'imgTygerART'  
+            elif self.recon_type == 'artpk':
+                output_field = 'imgTygerARTPK'
+            elif self.recon_type == 'fft':
+                output_field = 'imgTygerFFT' 
+            else: 
+                print('Reconstruction type not available in tyger. Reassigned to FFT.')
+                self.recon_type == 'fft'
+                output_field = 'imgTygerFFT'
+            boFit_path = 'b0_maps/' + self.boFit_file
+            
+            try:
+                imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp, output_field)
+                imageTyger = np.abs(imgTyger[0])
+                imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
+
+                ## Image plot
+                # Tyger
+                if self.mapVals['unlock_orientation'] == 0:
+                    result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
+                    result_Tyger['row'] = 0
+                    result_Tyger['col'] = 1
+                    result_Tyger['title'] = "Tyger recon"
+                else:
+                    result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
+                                'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
+                
+                self.output = [result_1, result_Tyger]
+            except Exception as e:
+                print('Tyger reconstruction failed.')
+                print(f'Error: {e}')
+        
+        
         if self.mode == 'Standalone':
             self.plotResults()
 

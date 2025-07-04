@@ -1684,6 +1684,7 @@ class MRIBLANKSEQ:
         if not os.path.exists(directory + '/ismrmrd'):
             os.makedirs(directory_ismrmrd)
 
+        self.directory_mat = directory_mat
         self.directory_rmd=directory_ismrmrd 
         
         # Generate filename
@@ -1698,7 +1699,7 @@ class MRIBLANKSEQ:
         self.mapVals['fileName'] = "%s.mat" % file_name
         # Generate filename for ismrmrd
         self.mapVals['fileNameIsmrmrd'] = "%s.h5" % file_name
-        
+        self.file_name = file_name
         # Save mat file with the outputs
         savemat("%s/%s.mat" % (directory_mat, file_name), self.mapVals) # au format savemat(chemin_fichier_mat, {"data" : data}), avec data contient les données brute à sauvegarder
 
