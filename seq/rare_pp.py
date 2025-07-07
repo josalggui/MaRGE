@@ -1141,7 +1141,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                     result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
                     result_Tyger['row'] = 0
                     result_Tyger['col'] = 1
-                    result_Tyger['title'] = "Tyger recon"
+                    result_Tyger['title'] = "Tyger"
                 else:
                     result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
                                 'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}

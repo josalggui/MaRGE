@@ -79,8 +79,8 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip='Field of View (cm).')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
                           tip="Position of the gradient isocenter")
-        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM',
-                          tip="0=x, 1=y, 2=z")
+        # self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM',       #TGN
+        #                   tip="0=x, 1=y, 2=z")
         self.addParameter(key='repetitionTime', string='Repetition Time (ms)', val=30.0, units=units.ms, field='SEQ',
                           tip="The time between successive excitation pulses, in milliseconds (ms).")
         self.addParameter(key='deadTime', string='Dead times (us)', val=[350.0, 450.0], units=units.us, field='SEQ',
@@ -215,6 +215,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         '''
 
         # Set the fov
+        self.axesOrientation = [0,1,2]      # TGN
         self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
@@ -548,7 +549,6 @@ class spds(blankSeq.MRIBLANKSEQ):
         data_b = self.mapVals['data_decimated_b']
         k_points = self.mapVals['k_cartesian']
         mask = self.mask
-
         # Delete the addRdPoints and last readout
         data_a = np.reshape(data_a, (-1, 1 + 2 * hw.addRdPoints))
         data_b = np.reshape(data_b, (-1, 1 + 2 * hw.addRdPoints))
@@ -570,7 +570,6 @@ class spds(blankSeq.MRIBLANKSEQ):
         k_data_bRaw = (np.reshape(k_data_b, (self.nPoints[2], self.nPoints[1], self.nPoints[0])))
         k_data_a = zero_padding(k_data_aRaw, self.mapVals['interpOrder'])
         k_data_b = zero_padding(k_data_bRaw, self.mapVals['interpOrder'])
-
         i_data_a = run_ifft(k_data_a)
         i_data_b = run_ifft(k_data_b)
         self.mapVals['space_k_a'] = k_data_a
@@ -745,8 +744,8 @@ class spds(blankSeq.MRIBLANKSEQ):
             cont = 0
 
             for ii in range(NX):
-                for jj in range(NX):
-                    for kk in range(NX):
+                for jj in range(NY):        # TGN NX -> NY
+                    for kk in range(NZ):    # TGN NX -> NZ
                         if B0mapReorganized[ii, jj, kk] != 0:
                             z_coord = (-(NZ - 1) / 2 + kk) * dz
                             y_coord = (-(NY - 1) / 2 + jj) * dy
@@ -757,7 +756,7 @@ class spds(blankSeq.MRIBLANKSEQ):
                             cont += 1
 
             mapList = np.array(mapList)
-
+            self.mapVals['mapList'] = mapList     # TGN
             # And now we proceed with the fitting
             x_fit = mapList[:, 0]
             y_fit = mapList[:, 1]
@@ -861,12 +860,14 @@ class spds(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         # Export in txt the model fitted
-        if not os.path.exists('b0_maps'):
-            os.makedirs('b0_maps')
-        output_file = "b0_maps/"+self.mapVals['fileName'][:-4]+".txt"
+        if not os.path.exists('b0_maps/fits'):
+            os.makedirs('b0_maps/fits')
+        output_file = "b0_maps/fits/"+self.mapVals['fileName'][:-4]+".txt"
         with open(output_file, "w") as f:
             f.write(polynomial_expression + "\n")
         print(f"Fitting exported to '{output_file}'")
+        if not os.path.exists('b0_maps/mat'):
+            os.makedirs('b0_maps/mat')
 
         # Plot result in standalone execution
         if self.mode == 'Standalone':
