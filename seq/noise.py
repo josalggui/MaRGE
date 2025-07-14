@@ -134,6 +134,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         print('Noise factor: %0.1f johnson' % (noiserms / johnson))
         if noiserms / johnson > 4:
             print("WARNING: Noise is too high")
+        self.mapVals['noise_spectrum'] = [np.abs(self.dataSpec[1])]
 
         # Plot signal versus time
         result1 = {'widget': 'curve',
