@@ -95,6 +95,7 @@ class TSE(blankSeq.MRIBLANKSEQ):
 
                     # Rx gate
                     t0 = tEcho - self.acqTime / 2
+                    self.ttlOffRecPulse(t0, self.acqTime)
                     self.rxGate(t0, self.acqTime)
                     acq_points += self.nPoints
 

@@ -43,6 +43,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='bw', string='Acquisition bandwidth (kHz)', val=50.0, units=units.kHz, field='RF')
         self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500.0, field='RF', units=units.ms)
+        self.addParameter(key='sleepTime', string='Sleep Time (s)', val=0.0, field='OTH')
 
     def sequenceInfo(self):
         
@@ -164,6 +165,9 @@ class Noise(blankSeq.MRIBLANKSEQ):
 
         if self.mode == 'Standalone':
             self.plotResults()
+
+        print('Sleep Time...')
+        time.sleep(self.mapVals['sleepTime'])
 
         return self.output
 

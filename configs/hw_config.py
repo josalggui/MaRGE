@@ -18,7 +18,7 @@ grad_rise_time = 400e-6 # s, time for gradient ramps
 grad_steps = 16 # steps to gradient ramps
 gammaB = 42.57747892e6 # Hz/T, Gyromagnetic ratio
 blkTime = 15 # us, blanking time of Barthel's RFPA
-blkOffTime = 400 # us, blanking time of RFPA when turned off
+blkOffTime = 1000 # us, blanking time of RFPA when turned off
 gradDelay = 9 # Gradient amplifier delay (us)
 oversamplingFactor = 5 # Rx oversampling
 maxRdPoints = 2**17 # Maximum number of points to be acquired by the red pitaya
@@ -31,7 +31,7 @@ addRdPoints = 20 # to account for wrong first points after decimation (50)
 scanner_name = "MUST"
 antenna_dict = {}
 reference_time = 100  # us
-fov = [18.0, 16.0, 16.0] # cm
+fov = [20,20,20] # cm
 dfov = [0.0, 0.0, 0.0] # mm
 
 # To change the original reference system. Check in MaRGE wiki for more info.
