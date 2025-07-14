@@ -1917,11 +1917,15 @@ class MRIBLANKSEQ:
                 plt.subplot(rows, cols, plot + 1)
                 n = 0
                 for y_data in item['yData']:
-                    plt.plot(item['xData'], y_data, label=item['legend'][n])
+                    if isinstance(item['xData'], list):
+                        plt.plot(item['xData'][n], y_data, label=item['legend'][n])
+                    else:
+                        plt.plot(item['xData'], y_data, label=item['legend'][n])
                     n += 1
                 plt.title(item['title'])
                 plt.xlabel(item['xLabel'])
                 plt.ylabel(item['yLabel'])
+                plt.legend()
             plot += 1
 
         # Set the figure title
