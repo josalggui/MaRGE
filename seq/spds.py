@@ -47,9 +47,9 @@ class spds(blankSeq.MRIBLANKSEQ):
         """
         super(spds, self).__init__()
 
-        self.angulation = None
+        # self.angulation = None        # TGN
         self.mask = None
-        self.axesOrientation = None
+        # self.axesOrientation = None   # TGN
         self.rfExFA = None
         self.standalone = None
         self.dummyPulses = None
@@ -58,7 +58,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         self.deadTime = None
         self.nPoints = None
         self.fov = None
-        self.dfov = None
+        # self.dfov = None  # TGN
         self.bw = None
         self.plotSeq = None
         self.addParameter(key='seqName', string='Sequence Name', val='SPDS',
@@ -77,8 +77,8 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip='Matrix size for the acquired images.')
         self.addParameter(key='fov', string='Field of View (cm)', val=[24.0, 24.0, 24.0], units=units.cm, field='IM',
                           tip='Field of View (cm).')
-        self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
-                          tip="Position of the gradient isocenter")
+        # self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', # TGN
+        #                   tip="Position of the gradient isocenter")
         # self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM',       #TGN
         #                   tip="0=x, 1=y, 2=z")
         self.addParameter(key='repetitionTime', string='Repetition Time (ms)', val=30.0, units=units.ms, field='SEQ',
@@ -91,10 +91,10 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip='Shimming parameter to compensate B0 linear inhomogeneity.')
         self.addParameter(key='bw', string='Bandwidth (kHz)', val=50.0, units=units.kHz, field='IMG',
                           tip='Set acquisition bandwidth in kilohertz (kHz).')
-        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM',
-                          tip='Angle in degrees to rotate the fov')
-        self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM',
-                          tip='Axis of rotation')
+        # self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM',                       # TGN
+        #                   tip='Angle in degrees to rotate the fov')
+        # self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM',      # TGN
+        #                   tip='Axis of rotation')
         self.addParameter(key='interpOrder', string='Zero Padding Order', val=3, field='IM',
                           tip='Zero Padding Order')
         self.addParameter(key='fittingOrder', string='Poly Fitting Order', val=4, field='IM',
@@ -216,8 +216,8 @@ class spds(blankSeq.MRIBLANKSEQ):
 
         # Set the fov
         self.axesOrientation = [0,1,2]      # TGN
-        self.dfov = self.getFovDisplacement()
-        self.dfov = self.dfov[self.axesOrientation]
+        # self.dfov = self.getFovDisplacement()            # TGN
+        # self.dfov = self.dfov[self.axesOrientation]      # TGN
         self.fov = self.fov[self.axesOrientation]
 
         # Get k-space info

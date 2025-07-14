@@ -1128,7 +1128,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 print('Reconstruction type not available in tyger. Reassigned to FFT.')
                 self.recon_type == 'fft'
                 output_field = 'imgTygerFFT'
-            boFit_path = 'b0_maps/' + self.boFit_file
+            boFit_path = 'b0_maps/fits/' + self.boFit_file
             
             try:
                 imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp, output_field)
