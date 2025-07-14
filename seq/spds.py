@@ -47,7 +47,6 @@ class spds(blankSeq.MRIBLANKSEQ):
         """
         super(spds, self).__init__()
 
-        self.angulation = None
         self.mask = None
         self.axesOrientation = None
         self.rfExFA = None
@@ -91,10 +90,6 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip='Shimming parameter to compensate B0 linear inhomogeneity.')
         self.addParameter(key='bw', string='Bandwidth (kHz)', val=50.0, units=units.kHz, field='IMG',
                           tip='Set acquisition bandwidth in kilohertz (kHz).')
-        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM',
-                          tip='Angle in degrees to rotate the fov')
-        self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM',
-                          tip='Axis of rotation')
         self.addParameter(key='interpOrder', string='Zero Padding Order', val=3, field='IM',
                           tip='Zero Padding Order')
         self.addParameter(key='fittingOrder', string='Poly Fitting Order', val=4, field='IM',
@@ -171,7 +166,6 @@ class spds(blankSeq.MRIBLANKSEQ):
         self.demo = demo
         self.plotSeq = plotSeq
         self.standalone = standalone
-        self.angulation = 0
 
         '''
         Step 1: Define the interpreter for FloSeq/PSInterpreter.
@@ -215,7 +209,6 @@ class spds(blankSeq.MRIBLANKSEQ):
         '''
 
         # Set the fov
-        self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
 
@@ -474,7 +467,6 @@ class spds(blankSeq.MRIBLANKSEQ):
                            decimate='Normal',
                            hardware=True,
                            output='a',
-                           angulation=self.angulation,
                            ):
             pass
         else:
@@ -489,7 +481,6 @@ class spds(blankSeq.MRIBLANKSEQ):
                                decimate='Normal',
                                hardware=True,
                                output='b',
-                               angulation=self.angulation,
                                )
 
     def sequenceAnalysis(self, mode=None):

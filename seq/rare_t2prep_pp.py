@@ -73,7 +73,7 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
         self.angle = None
         self.axesOrientation = None
         self.addParameter(key='seqName', string='RAREInfo', val='RARE_T2prep_pp')
-        self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
+        self.addParameter(key='toMaRGE', string='to MaRGE', val=False)
         self.addParameter(key='pypulseq', string='PyPulseq', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
@@ -87,8 +87,6 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[60, 60, 1], field='IM')
-        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
-        self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=6, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
@@ -190,7 +188,6 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
         '''
 
         # Set the fov
-        self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
 
@@ -287,13 +284,6 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
             phGradients /= phGradAmplitude
         if slGradAmplitude != 0:
             slGradients /= slGradAmplitude
-
-        # Get the rotation matrix
-        rot = self.getRotationMatrix()
-        gradAmp = np.array([0.0, 0.0, 0.0])
-        gradAmp[self.axesOrientation[0]] = 1
-        gradAmp = np.reshape(gradAmp, (3, 1))
-        result = np.dot(rot, gradAmp)
 
         # Map the axis to "x", "y", and "z" according ot axesOrientation
         axes_map = {0: "x", 1: "y", 2: "z"}
@@ -971,25 +961,9 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
             # Add results into the output attribute (result1 must be the image to save in dicom)
             self.output = [result1, result2]
 
-        # Reset rotation angle and dfov to zero
-        self.mapVals['angle'] = self.angle
-        self.mapVals['dfov'] = np.array(self.mapVals['dfov'])
-        self.mapVals['dfov'][self.axesOrientation] = self.dfov.reshape(-1)
-        self.mapVals['dfov'] = list(self.mapVals['dfov'])
-
         # Save results
         self.saveRawData()
         self.save_ismrmrd()
-        
-
-        self.mapVals['angle'] = 0.0
-        self.mapVals['dfov'] = [0.0, 0.0, 0.0]
-        try:
-            self.sequence_list['RARE'].mapVals['angle'] = 0.0
-            self.sequence_list['RARE'].mapVals['dfov'] = [0.0, 0.0, 0.0]
-        except:
-            pass
-        hw.dfov = [0.0, 0.0, 0.0]
 
         if self.mode == 'Standalone':
             self.plotResults()

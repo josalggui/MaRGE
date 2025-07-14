@@ -44,7 +44,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         super(RareDoubleImage, self).__init__()
         # Input the parameters
         self.image_orientation_dicom = None
-        self.angulation = None
         self.full_plot = None
         self.sequence_list = None
         self.unlock_orientation = None
@@ -72,9 +71,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.dfov = None
         self.fov = None
         self.system = None
-        self.rotationAxis = None
-        self.rotation = None
-        self.angle = None
         self.axesOrientation = None
         self.rdPreemphasis = None
         self.addParameter(key='seqName', string='RAREInfo', val='RareDoubleImage')
@@ -96,8 +92,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
                           tip="Position of the gradient isocenter")
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
-        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
-        self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM',
@@ -118,8 +112,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
         self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
                           tip="'True' or 'False' to plot odd and even images separately")
-        self.addParameter(key='angulation', string='Angulation', val=1, field='OTH',
-                          tip='1: Consider FOV angulation. 0: Keep the image unangled (it reduced the number of instructions).')
         self.addParameter(key='bm4d', string='BM4D std', val=-1, field='PRO',
                           tip='Perform BM4D filter: -1 -> do not apply, 0 -> automatic std calculation, >0 to use manual'
                               ' std value.')
@@ -163,19 +155,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         return seq_time  # minutes, scanTime
 
         # TODO: check for min and max values for all fields
-
-    def sequenceAtributes(self):
-        super().sequenceAtributes()
-
-        # Conversion of variables to non-multiplied units
-        self.angle = self.angle * np.pi / 180  # rads
-
-        # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.tolist()
-        self.rotation.append(self.angle)
-        self.rotations.append(self.rotation)
-        self.dfovs.append(self.dfov.tolist())
-        self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plotSeq=False, demo=False, standalone=False):
         """
@@ -247,7 +226,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         '''
 
         # Set the fov
-        self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
 
@@ -345,13 +323,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             ph_gradients /= ph_grad_amplitude
         if sl_grad_amplitude != 0:
             sl_gradients /= sl_grad_amplitude
-
-        # Get the rotation matrix
-        rot = self.getRotationMatrix()
-        grad_amp = np.array([0.0, 0.0, 0.0])
-        grad_amp[self.axesOrientation[0]] = 1
-        grad_amp = np.reshape(grad_amp, (3, 1))
-        result = np.dot(rot, grad_amp)
 
         # Map the axis to "x", "y", and "z" according ot axesOrientation
         axes_map = {0: "x", 1: "y", 2: "z"}
@@ -748,7 +719,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                                frequency=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
                                bandwidth=bw,  # MHz
                                decimate='Normal',
-                               angulation=self.angulation,
                                )
 
     def sequenceAnalysis(self, mode=None):
@@ -1016,23 +986,8 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             # Add results into the output attribute (result_1 must be the image to save in dicom)
             self.output = [result]
 
-        # Reset rotation angle and dfov to zero
-        self.mapVals['angle'] = self.angle
-        self.mapVals['dfov'] = np.array(self.mapVals['dfov'])
-        self.mapVals['dfov'][self.axesOrientation] = self.dfov.reshape(-1)
-        self.mapVals['dfov'] = list(self.mapVals['dfov'])
-
         # Save results
         self.saveRawData()
-
-        self.mapVals['angle'] = 0.0
-        self.mapVals['dfov'] = [0.0, 0.0, 0.0]
-        try:
-            self.sequence_list['RareDoubleImage'].mapVals['angle'] = 0.0
-            self.sequence_list['RareDoubleImage'].mapVals['dfov'] = [0.0, 0.0, 0.0]
-        except:
-            pass
-        hw.dfov = [0.0, 0.0, 0.0]
 
         if self.mode == 'Standalone':
             self.plotResults()

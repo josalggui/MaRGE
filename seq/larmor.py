@@ -159,7 +159,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         # Create the sequence and add instructions to the experiment
         acq_points = createSequence()
-        if self.floDict2Exp(demo=self.demo):
+        if self.floDict2Exp():
             print("Sequence waveforms loaded successfully")
             pass
         else:

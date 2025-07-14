@@ -719,11 +719,6 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             result2['row'] = 0
             result2['col'] = 1
 
-            # Reset rotation angle and dfov to zero
-            self.mapVals['angle'] = 0.0
-            self.mapVals['dfov'] = [0.0, 0.0, 0.0]
-            hw.dfov = [0.0, 0.0, 0.0]
-
             # DICOM TAGS
             # Image
             imageDICOM = np.transpose(image, (0,2,1))
