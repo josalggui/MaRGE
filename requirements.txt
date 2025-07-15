@@ -16,5 +16,5 @@ marga_pulseq>=0.2.2
 scikit-learn
 scikit-image
 imageio~=2.34.1
-h5py~=3.11.0
+h5py
 cupy-cuda12x>=13.0.0

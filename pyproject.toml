@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "marge-mri-example"
+version = "0.0.1"
+authors = [
+    { name = "Nihal", email = "votre.email@example.com" },
+]
+description = "Une description courte de votre projet"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "requests >= 2.25.1",
+    "numpy >= 1.20.0",
+    "matplotlib",
+    "nibabel",
+    "pydicom",
+    "scipy",
+    "msgpack",
+    "PyQt5",
+    "pyqtgraph",
+    "QDarkStyle",
+    "bm4d",
+    "phantominator",
+    "pyserial",
+    "ismrmrd",
+    "pypulseq",
+    "marga_pulseq",
+    "scikit-learn",
+    "scikit-image",
+    "imageio",
+    "h5py",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/marge"]
