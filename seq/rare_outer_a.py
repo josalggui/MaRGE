@@ -38,6 +38,7 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RareOuter, self).__init__()
         # Input the parameters
+        self.par_fourier_ph = None
         self.nPoints0 = None
         self.angulation = None
         self.image_orientation_dicom = None
@@ -99,9 +100,9 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
-        self.addParameter(key='par_fourier_ph', string='Partial fourier in phase', val=0, field='OTH',
+        self.addParameter(key='par_fourier_ph', string='Partial fourier in phase', val=1, field='OTH',
                           tip="Acquires only half of phase encoding lines")
-        self.addParameter(key='par_fourier_sl', string='Partial fourier in slice', val=0, field='OTH',
+        self.addParameter(key='par_fourier_sl', string='Partial fourier in slice', val=1, field='OTH',
                           tip="Acquires only half of slice encoding lines")
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH',
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
@@ -920,8 +921,11 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
                 for jj in range(ph_steps):
                     ph_p_reordered.append(ph_p_partial[jj])
                     ph_n_reordered.append(ph_n_partial[jj])
-            ph_reordered = ph_p_reordered
-            ph_reordered.extend(ph_n_reordered)
+            ph_reordered = ph_n_reordered
+            if self.par_fourier_ph:
+                pass
+            else:
+                ph_reordered.extend(ph_p_reordered)
         else:
             ph_reordered = [0]
 
@@ -931,6 +935,9 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
             start = (self.nPoints[2] - self.nPoints0[2]) // 2
             end = start + self.nPoints0[2]
             sl_idx = np.delete(sl_idx, np.s_[start:end])
+            n_sl = sl_idx.size
+            if self.par_fourier_sl:
+                sl_idx = sl_idx[:n_sl // 2]
         else:
             sl_idx = [0]
 

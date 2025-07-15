@@ -1114,11 +1114,17 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         if n_ph1 == 1 or n_ph0 == 1:
             n_ph = 1
         else:
-            n_ph = n_ph1 - n_ph0
+            if mat_data['par_fourier_ph']:
+                n_ph = (n_ph1 - n_ph0) // 2
+            else:
+                n_ph = n_ph1 - n_ph0
         if n_sl1 == 1 or n_sl0 == 1:
             n_sl = 1
         else:
-            n_sl = n_sl1 - n_sl0
+            if mat_data['par_fourier_sl']:
+                n_sl = (n_sl1 - n_sl0) // 2
+            else:
+                n_sl = n_sl1 - n_sl0
         n_rd = n_rd + 2 * hw.addRdPoints
         n_batches = mat_data['n_batches'][0][0]
         n_readouts = mat_data['n_readouts'][0][0]
