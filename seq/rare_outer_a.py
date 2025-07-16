@@ -292,17 +292,20 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
         sl_gradients = np.linspace(-sl_grad_amplitude,sl_grad_amplitude,num=n_sl,endpoint=False)
 
         # Set phase vector to given sweep mode
-        ind_ph, ind_sl = self.get_sweep_order()
-        self.mapVals['phase_sweep_order'] = ind_ph
+        ind_ph_outer, ind_ph_inner, ind_sl = self.get_sweep_order()
+        self.mapVals['phase_sweep_order_outer'] = ind_ph_outer
+        self.mapVals['phase_sweep_order_inner'] = ind_ph_inner
         self.mapVals['slice_sweep_order'] = ind_sl
-        ph_gradients = ph_gradients[ind_ph]
-        sl_gradients = sl_gradients[ind_sl]
-        self.mapVals['ph_gradients'] = ph_gradients.copy()
+        ph_gradients_outer = ph_gradients[ind_ph_outer]
+        ph_gradients_inner = ph_gradients[ind_ph_inner]
+        self.mapVals['ph_gradients_outer'] = ph_gradients_outer.copy()
+        self.mapVals['ph_gradients_inner'] = ph_gradients_inner.copy()
         self.mapVals['sl_gradients'] = sl_gradients.copy()
 
         # Normalize gradient list
         if ph_grad_amplitude != 0:
-            ph_gradients /= ph_grad_amplitude
+            ph_gradients_outer /= ph_grad_amplitude
+            ph_gradients_inner /= ph_grad_amplitude
         if sl_grad_amplitude != 0:
             sl_gradients /= sl_grad_amplitude
 
@@ -684,8 +687,8 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
             # Slice sweep
             for sl_idx in range(np.size(sl_gradients)):
                 ph_idx = 0
-                # Phase sweep
-                while ph_idx < np.size(ph_gradients):
+                # Phase sweep for outer
+                while ph_idx < np.size(ph_gradients_outer) and ind_sl[sl_idx]:
                     # Check if a new batch is needed (either first batch or exceeding readout points limit)
                     if seq_idx == 0 or n_rd_points + n_rd_points_per_train > hw.maxRdPoints:
                         # If a previous batch exists, write and interpret it
@@ -725,9 +728,9 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
                     # Add echo train
                     for echo in range(self.etl):
                         # Fix the phase and slice amplitude
-                        gr_ph_deph = pp.scale_grad(block_gr_ph_deph, ph_gradients[ph_idx])
+                        gr_ph_deph = pp.scale_grad(block_gr_ph_deph, ph_gradients_outer[ph_idx])
                         gr_sl_deph = pp.scale_grad(block_gr_sl_deph, sl_gradients[sl_idx])
-                        gr_ph_reph = pp.scale_grad(block_gr_ph_reph, - ph_gradients[ph_idx])
+                        gr_ph_reph = pp.scale_grad(block_gr_ph_reph, - ph_gradients_outer[ph_idx])
                         gr_sl_reph = pp.scale_grad(block_gr_sl_reph, - sl_gradients[sl_idx])
 
                         # Add blocks
@@ -776,6 +779,112 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
                             n_adc += 1
                             ph_idx += 1
                         elif self.echoMode=='Even' and echo%2==0:
+                            batches[batch_num].add_block(block_rf_refocusing,
+                                                         block_gr_rd_reph,
+                                                         gr_ph_deph,
+                                                         gr_sl_deph,
+                                                         delay_reph)
+                            batches[batch_num].add_block(gr_ph_reph,
+                                                         gr_sl_reph)
+
+                        if ph_idx == n_ph:
+                            break
+
+                    # Add time delay to next repetition
+                    batches[batch_num].add_block(delay_tr)
+
+                # Phase sweep for iner
+                while ph_idx < np.size(ph_gradients_inner) and not ind_sl[sl_idx]:
+                    # Check if a new batch is needed (either first batch or exceeding readout points limit)
+                    if seq_idx == 0 or n_rd_points + n_rd_points_per_train > hw.maxRdPoints:
+                        # If a previous batch exists, write and interpret it
+                        if seq_idx > 0:
+                            batches[batch_num].write(batch_num + ".seq")
+                            waveforms[batch_num], param_dict = flo_interpreter.interpret(batch_num + ".seq")
+                            print(f"{batch_num}.seq ready!")
+
+                        # Update to the next batch
+                        seq_idx += 1
+                        n_rd_points_dict[batch_num] = n_rd_points  # Save readout points count
+                        n_rd_points = 0
+                        batch_num = f"batch_{seq_idx}"
+                        batches[batch_num], n_rd_points, n_adc_0 = initialize_batch()  # Initialize new batch
+                        n_adc += n_adc_0
+                        print(f"Creating {batch_num}.seq...")
+
+                    # Pre-excitation pulse
+                    if self.preExTime > 0:
+                        gr_rd_preex = pp.scale_grad(block_gr_rd_preph, scale=+1.0)
+                        batches[batch_num].add_block(block_rf_pre_excitation,
+                                                     gr_rd_preex,
+                                                     delay_pre_excitation)
+
+                    # Inversion pulse
+                    if self.inversionTime > 0:
+                        gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
+                        batches[batch_num].add_block(block_rf_inversion,
+                                                     gr_rd_inv,
+                                                     delay_inversion)
+
+                    # Add excitation pulse and readout de-phasing gradient
+                    batches[batch_num].add_block(block_gr_rd_preph,
+                                                 block_rf_excitation,
+                                                 delay_preph)
+
+                    # Add echo train
+                    for echo in range(self.etl):
+                        # Fix the phase and slice amplitude
+                        gr_ph_deph = pp.scale_grad(block_gr_ph_deph, ph_gradients_inner[ph_idx])
+                        gr_sl_deph = pp.scale_grad(block_gr_sl_deph, sl_gradients[sl_idx])
+                        gr_ph_reph = pp.scale_grad(block_gr_ph_reph, - ph_gradients_inner[ph_idx])
+                        gr_sl_reph = pp.scale_grad(block_gr_sl_reph, - sl_gradients[sl_idx])
+
+                        # Add blocks
+                        if self.echoMode == 'All':
+                            batches[batch_num].add_block(block_rf_refocusing,
+                                                         block_gr_rd_reph,
+                                                         gr_ph_deph,
+                                                         gr_sl_deph,
+                                                         block_adc_signal,
+                                                         delay_reph)
+                            batches[batch_num].add_block(gr_ph_reph,
+                                                         gr_sl_reph)
+                            n_rd_points += n_rd
+                            n_adc += 1
+                            ph_idx += 1
+                        elif self.echoMode == 'Odd' and echo % 2 == 0:
+                            batches[batch_num].add_block(block_rf_refocusing,
+                                                         block_gr_rd_reph,
+                                                         gr_ph_deph,
+                                                         gr_sl_deph,
+                                                         block_adc_signal,
+                                                         delay_reph)
+                            batches[batch_num].add_block(gr_ph_reph,
+                                                         gr_sl_reph)
+                            n_rd_points += n_rd
+                            n_adc += 1
+                            ph_idx += 1
+                        elif self.echoMode == 'Odd' and echo % 2 == 1:
+                            batches[batch_num].add_block(block_rf_refocusing,
+                                                         block_gr_rd_reph,
+                                                         gr_ph_deph,
+                                                         gr_sl_deph,
+                                                         delay_reph)
+                            batches[batch_num].add_block(gr_ph_reph,
+                                                         gr_sl_reph)
+                        elif self.echoMode == 'Even' and echo % 2 == 1:
+                            batches[batch_num].add_block(block_rf_refocusing,
+                                                         block_gr_rd_reph,
+                                                         gr_ph_deph,
+                                                         gr_sl_deph,
+                                                         block_adc_signal,
+                                                         delay_reph)
+                            batches[batch_num].add_block(gr_ph_reph,
+                                                         gr_sl_reph)
+                            n_rd_points += n_rd
+                            n_adc += 1
+                            ph_idx += 1
+                        elif self.echoMode == 'Even' and echo % 2 == 0:
                             batches[batch_num].add_block(block_rf_refocusing,
                                                          block_gr_rd_reph,
                                                          gr_ph_deph,
@@ -902,6 +1011,30 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
     def get_sweep_order(self):
         # Phase index
         if self.nPoints[1]>1:
+            # Get phases for outer slices
+            ph_idx = np.arange(self.nPoints[1])
+            n = np.size(ph_idx)
+            ph_p = ph_idx[n // 2:]
+            ph_n = ph_idx[:n // 2]
+            ph_n = ph_n[::-1]
+            n = np.size(ph_p)
+            n_trains = n // self.etl
+            ph_steps = n // n_trains
+            ph_p_reordered = []
+            ph_n_reordered = []
+            for ii in range(n_trains):
+                ph_p_partial = ph_p[ii::n_trains]
+                ph_n_partial = ph_n[ii::n_trains]
+                for jj in range(ph_steps):
+                    ph_p_reordered.append(ph_p_partial[jj])
+                    ph_n_reordered.append(ph_n_partial[jj])
+            ph_reordered_1 = ph_n_reordered
+            if self.par_fourier_ph:
+                pass
+            else:
+                ph_reordered_1.extend(ph_p_reordered)
+
+            # Get phases for inner slices
             ph_idx = np.arange(self.nPoints[1])
             start = (self.nPoints[1] - self.nPoints0[1]) // 2
             end = start + self.nPoints0[1]
@@ -921,13 +1054,14 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
                 for jj in range(ph_steps):
                     ph_p_reordered.append(ph_p_partial[jj])
                     ph_n_reordered.append(ph_n_partial[jj])
-            ph_reordered = ph_n_reordered
+            ph_reordered_2 = ph_n_reordered
             if self.par_fourier_ph:
                 pass
             else:
-                ph_reordered.extend(ph_p_reordered)
+                ph_reordered_2.extend(ph_p_reordered)
         else:
-            ph_reordered = [0]
+            ph_reordered_1 = [0]
+            ph_reordered_2 = [0]
 
         # Slice index
         if self.nPoints[2]>1:
@@ -940,12 +1074,14 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
                 sl_idx = sl_idx[:n_sl // 2]
         else:
             sl_idx = [0]
+        sl_reordered = np.zeros(self.nPoints[2])
+        sl_reordered[sl_idx] = 1
 
-        return ph_reordered, sl_idx
+        return ph_reordered_1, ph_reordered_2, sl_reordered
 
 if __name__ == '__main__':
     seq = RareOuter()
     seq.sequenceAtributes()
-    # ind_ph, ind_sl = seq.get_sweep_order()
+    # ind_ph_1, ind_ph_2, ind_sl = seq.get_sweep_order()
     seq.sequenceRun(plot_seq=False, demo=True, standalone=True)
     seq.sequenceAnalysis(mode='Standalone')
