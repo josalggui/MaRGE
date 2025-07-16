@@ -624,30 +624,17 @@ def analyze_rabi_curve(data=None, method='ECHO', discriminator='min'):
     # Analyze curve
     n_steps = np.size(time_new)
     test = True
-    n = 1
-    while test:
-        if n >= n_steps:
-            print("WARNING: Rabi may be not properly calibrated")
-            break
-        d = np.abs(amplitude_smooth[n]) - np.abs(amplitude_smooth[n - 1])
-        n += 1
-        if d < 0:
-            test = False
+    n = np.argmax(np.abs(amplitude_smooth))
     if discriminator == 'min':
-        test = True
-        while test:
-            if n >= n_steps:
-                print("WARNING: Rabi may be not properly calibrated")
-                break
-            d = np.abs(amplitude_smooth[n]) - np.abs(amplitude_smooth[n - 1])
-            n += 1
-            if d > 0:
-                test = False
+        amplitude_prov = amplitude_smooth[n:]
+        idx = np.argmin(np.abs(amplitude_prov))
+        n = n + idx
+        print(f"Minimum at {n}")
 
     if discriminator == 'max':
-        pi_half_time = time_new[n - 2] * 1e6  # us
+        pi_half_time = time_new[n] * 1e6  # us
     elif discriminator == 'min':
-        pi_half_time = time_new[n - 2] * 1e6 / 2 # us
+        pi_half_time = time_new[n] * 1e6 / 2 # us
     else:
         return
 

@@ -320,7 +320,7 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
         '''
 
         if not self.demo:
-            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
+            self.expt = ex.Experiment(lo_freq=hw.larmorFreq,  # MHz
                                       rx_t=sampling_period,  # us
                                       init_gpa=False,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
