@@ -92,8 +92,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints0', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
-        self.addParameter(key='nPoints', string='nPoints0[rd, ph, sl]', val=[40, 8, 1], field='IM')
+        self.addParameter(key='nPoints0', string='nPoints[rd, ph, sl]', val=[200, 120, 20], field='IM')
+        self.addParameter(key='nPoints', string='nPoints0[rd, ph, sl]', val=[200, 24, 6], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ') ## nm of peaks in 1 repetition
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
@@ -1101,13 +1101,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             mat_data = sp.io.loadmat(str(mat_file))
             if mat_data['seqName'] == 'Rare Outer A':
                 break
-        #
-        #
-        # try:
-        #     mat_data = sp.io.loadmat("../raw_data.2025.07.15.15.25.08.585.mat")
-        # except:
-        #     mat_data = sp.io.loadmat("raw_data.2025.07.15.15.25.08.585.mat")
-        data_signal = mat_data['data_signal']
+
+        data_signal = mat_data['data_signal'][0]
         n_rd1, n_ph1, n_sl1 = self.nPoints0
         n_rd0, n_ph0, n_sl0 = self.nPoints
         n_rd = n_rd1
@@ -1126,35 +1121,36 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             else:
                 n_sl = n_sl1 - n_sl0
         n_rd = n_rd + 2 * hw.addRdPoints
-        n_batches = mat_data['n_batches'][0][0]
-        n_readouts = mat_data['n_readouts'][0][0]
+        n_batches = int(mat_data['n_batches'][0][0])
+        n_readouts = mat_data['n_readouts'][0]
         ind_ph = mat_data['phase_sweep_order'][0]
         ind_sl = mat_data['slice_sweep_order'][0]
+        n_scans = int(mat_data['nScans'][0][0])
 
         # Decimate data to get signal in desired bandwidth
         data_full = data_signal
 
         # Reorganize data_full
-        data_prov = np.zeros(shape=[mat_data['nScans'][0][0], n_sl * n_ph * n_rd], dtype=complex)
+        data_prov = np.zeros(shape=[n_scans, n_sl * n_ph * n_rd], dtype=complex)
         if n_batches > 1:
-            data_full_a = data_full[0:sum(n_readouts[0:-1]) * mat_data['nScans'][0][0]]
-            data_full_b = data_full[sum(n_readouts[0:-1]) * mat_data['nScans'][0][0]:]
-            data_full_a = np.reshape(data_full_a, newshape=(n_batches - 1, mat_data['nScans'][0][0], -1, n_rd))
-            data_full_b = np.reshape(data_full_b, newshape=(1, mat_data['nScans'][0][0], -1, n_rd))
-            for scan in range(mat_data['nScans'][0][0]):
+            data_full_a = data_full[0:sum(n_readouts[0:-1]) * n_scans]
+            data_full_b = data_full[sum(n_readouts[0:-1]) * n_scans:]
+            data_full_a = np.reshape(data_full_a, newshape=(n_batches - 1, n_scans, -1, n_rd))
+            data_full_b = np.reshape(data_full_b, newshape=(1, n_scans, -1, n_rd))
+            for scan in range(n_scans):
                 data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
                 data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
                 data_prov[scan, :] = np.concatenate((data_scan_a, data_scan_b), axis=0)
         else:
-            data_full = np.reshape(data_full, newshape=(1, mat_data['nScans'][0][0], -1, n_rd))
-            for scan in range(mat_data['nScans'][0][0]):
+            data_full = np.reshape(data_full, newshape=(1, n_scans, -1, n_rd))
+            for scan in range(n_scans):
                 data_prov[scan, :] = np.reshape(data_full[:, scan, :, :], -1)
         data_full = np.reshape(data_prov, -1)
 
         # Get central k-space and organize phase lines
-        data_full = np.reshape(data_full, newshape=(mat_data['nScans'][0][0], n_sl, n_ph, n_rd))
+        data_full = np.reshape(data_full, newshape=(n_scans, n_sl, n_ph, n_rd))
         data_full = data_full[:, :, :, ind_krd_0 - int(self.nPoints[0] / 2):ind_krd_0 + int(self.nPoints[0] / 2)]
-        data_temp = np.zeros(shape=(mat_data['nScans'][0][0], n_sl1, n_ph1, n_rd1), dtype=complex)
+        data_temp = np.zeros(shape=(n_scans, n_sl1, n_ph1, n_rd1), dtype=complex)
         for ii in range(n_ph):
             for jj in range(n_sl):
                 data_temp[:, ind_sl[jj], ind_ph[ii], :] = data_full[:, jj, ii, :]

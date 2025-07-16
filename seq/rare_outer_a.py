@@ -76,7 +76,7 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='RAREInfo', val='Rare Outer A')
         self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
         self.addParameter(key='pypulseq', string='PyPulseq', val=True)
-        self.addParameter(key='nScans', string='Number of scans', val=10, field='IM') ## number of scans
+        self.addParameter(key='nScans', string='Number of scans', val=1, field='IM') ## number of scans
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=50.0, units=units.us, field='RF')
@@ -88,8 +88,8 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
-        self.addParameter(key='nPoints0', string='nPoints0[rd, ph, sl]', val=[40, 8, 1], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[200, 120, 20], field='IM')
+        self.addParameter(key='nPoints0', string='nPoints0[rd, ph, sl]', val=[200, 24, 6], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ') ## nm of peaks in 1 repetition
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
@@ -100,9 +100,9 @@ class RareOuter(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
-        self.addParameter(key='par_fourier_ph', string='Partial fourier in phase', val=1, field='OTH',
+        self.addParameter(key='par_fourier_ph', string='Partial fourier in phase', val=0, field='OTH',
                           tip="Acquires only half of phase encoding lines")
-        self.addParameter(key='par_fourier_sl', string='Partial fourier in slice', val=1, field='OTH',
+        self.addParameter(key='par_fourier_sl', string='Partial fourier in slice', val=0, field='OTH',
                           tip="Acquires only half of slice encoding lines")
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH',
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
