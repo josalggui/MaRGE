@@ -57,8 +57,8 @@ class MarcosController(MarcosToolBar):
         thread.start()
 
         # Arduino to control the interlock
-        self.arduino = autotuning.Arduino(baudrate=19200, name="interlock", serial_number=hw.ard_sn_interlock)
-        self.arduino.connect()
+        self.arduino = autotuning.Arduino(baudrate=19200, name="interlock")
+        self.arduino.connect(serial_number=hw.ard_sn_interlock)
 
     def search_sdrlab(self):
         # Get the IP of the SDRLab
