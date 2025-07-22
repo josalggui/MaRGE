@@ -5,7 +5,7 @@
 
 """
 import imageio.v2 as imageio
-
+from importlib import resources
 from marge.controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from marge.widgets.widget_figures import FiguresLayoutWidget
 
@@ -50,12 +50,20 @@ class FiguresLayoutController(FiguresLayoutWidget):
             The method does not return any value.
         """
         try:
-            logo = imageio.imread("resources/images/logo.png")
-        except:
-            logo = imageio.imread("../../resources/images/logo.png")
+            with resources.path("marge.resources.images", "logo.png") as logo_path:
+                logo = imageio.imread(str(logo_path))
+        except FileNotFoundError:
+            logo = None
+
         self.clearFiguresLayout()
-        welcome = Spectrum3DPlot(main=self, data=logo.transpose([1, 0, 2]),
-                                 title='Institute for Instrumentation in Molecular Imaging (i3M)')
+
+        if logo is not None:
+            welcome = Spectrum3DPlot(
+                main=self,
+                data=logo.transpose([1, 0, 2]),
+                title='Institute for Instrumentation in Molecular Imaging (i3M)'
+            )
+
         welcome.hideAxis('bottom')
         welcome.hideAxis('left')
         welcome.showHistogram(False)

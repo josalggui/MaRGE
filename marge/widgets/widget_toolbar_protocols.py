@@ -5,6 +5,7 @@
 """
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QToolBar, QAction
+from importlib import resources
 
 
 class ProtocolsToolBar(QToolBar):
@@ -13,21 +14,25 @@ class ProtocolsToolBar(QToolBar):
         self.main = main
 
         # New protocol
-        self.action_new_protocol = QAction(QIcon("resources/icons/addProtocol.png"), "New Protocol", self)
+        with resources.path("marge.resources.icons", "addProtocol.png") as path_add_protocol:
+            self.action_new_protocol = QAction(QIcon(str(path_add_protocol)), "New Protocol", self)
         self.action_new_protocol.setStatusTip("Create a new protocol")
         self.addAction(self.action_new_protocol)
 
         # Del protocol
-        self.action_del_protocol = QAction(QIcon("resources/icons/deleteProtocol.png"), "Remove Protocol", self)
+        with resources.path("marge.resources.icons", "deleteProtocol.png") as path_del_protocol:
+            self.action_del_protocol = QAction(QIcon(str(path_del_protocol)), "Remove Protocol", self)
         self.action_del_protocol.setStatusTip("Remove a protocol")
         self.addAction(self.action_del_protocol)
 
         # New sequence
-        self.action_new_sequence = QAction(QIcon("resources/icons/addSequence.png"), "New Sequence", self)
+        with resources.path("marge.resources.icons", "addSequence.png") as path_add_sequence:
+            self.action_new_sequence = QAction(QIcon(str(path_add_sequence)), "New Sequence", self)
         self.action_new_sequence.setStatusTip("Create a new sequence")
         self.addAction(self.action_new_sequence)
 
         # Del sequence
-        self.action_del_sequence = QAction(QIcon("resources/icons/deleteSequence.png"), "Remove Sequence", self)
+        with resources.path("marge.resources.icons", "deleteSequence.png") as path_del_sequence:
+            self.action_del_sequence = QAction(QIcon(str(path_del_sequence)), "Remove Sequence", self)
         self.action_del_sequence.setStatusTip("Remove a sequence from protocol")
         self.addAction(self.action_del_sequence)

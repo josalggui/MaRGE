@@ -5,6 +5,7 @@
 """
 from PyQt5.QtWidgets import QToolBar, QAction
 from PyQt5.QtGui import QIcon
+from importlib import resources
 
 class MarcosToolBar(QToolBar):
     def __init__(self, main, *args, **kwargs):
@@ -12,22 +13,25 @@ class MarcosToolBar(QToolBar):
         self.main = main
 
         # Setup all
-        self.action_start = QAction(QIcon("resources/icons/initGPA.png"), "Setup MaRCoS", self)
+        with resources.path("marge.resources.icons", "initGPA.png") as path_init_gpa:
+            self.action_start = QAction(QIcon(str(path_init_gpa)), "Setup MaRCoS", self)
         self.action_start.setStatusTip("Setup MaRCoS")
         self.addAction(self.action_start)
 
         # Setup MaRCoS
-        self.action_copybitstream = QAction(QIcon("resources/icons/M.png"), "MaRCoS init", self)
+        with resources.path("marge.resources.icons", "M.png") as path_m:
+            self.action_copybitstream = QAction(QIcon(str(path_m)), "MaRCoS init", self)
         self.action_copybitstream.setStatusTip("Install MaRCoS into Red Pitaya")
         self.addAction(self.action_copybitstream)
 
         # Connect to the server
-        self.action_server = QAction(QIcon("resources/icons/server-light.png"), "MaRCoS server", self)
+        with resources.path("marge.resources.icons", "server-light.png") as path_server:
+            self.action_server = QAction(QIcon(str(path_server)), "MaRCoS server", self)
         self.action_server.setStatusTip("Connect to server")
         self.addAction(self.action_server)
 
         # Setup GPA board
-        self.action_gpa_init = QAction(QIcon("resources/icons/gpa.png"), "Init power modules", self)
+        with resources.path("marge.resources.icons", "gpa.png") as path_gpa:
+            self.action_gpa_init = QAction(QIcon(str(path_gpa)), "Init power modules", self)
         self.action_gpa_init.setStatusTip("Init GPA board")
         self.addAction(self.action_gpa_init)
-        

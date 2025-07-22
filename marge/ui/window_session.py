@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QApplication, QWidget, QVBoxLayout, QTabWidget, QStatusBar, QToolBar,
     QAction, QHBoxLayout, QGroupBox, QCheckBox
 )
+import importlib.resources as resources
 
 from marge.controller.controller_console import ConsoleController
 from marge.widgets.widget_hw_console import ConsoleWidget
@@ -79,26 +80,33 @@ class SessionWindow(QMainWindow):
         self.toolbar = QToolBar("Session toolbar")
         self.addToolBar(self.toolbar)
 
-        self.launch_gui_action = QAction(QIcon("resources/icons/home.png"), "Launch GUI", self)
+        with resources.path("marge.resources.icons", "home.png") as icon_path:
+            self.launch_gui_action = QAction(QIcon(str(icon_path)), "Launch GUI", self)
         self.launch_gui_action.setStatusTip("Launch GUI")
         self.launch_gui_action.setDisabled(True)
         self.toolbar.addAction(self.launch_gui_action)
 
-        self.demo_gui_action = QAction(QIcon("resources/icons/demo.png"), "Launch GUI as DEMO", self)
+        with resources.path("marge.resources.icons", "demo.png") as icon_path:
+            self.demo_gui_action = QAction(QIcon(str(icon_path)), "Launch GUI as DEMO", self)
         self.demo_gui_action.setStatusTip("Launch GUI as DEMO")
         self.demo_gui_action.setDisabled(True)
         self.toolbar.addAction(self.demo_gui_action)
 
-        self.update_action = QAction(QIcon("resources/icons/arrow-sync.svg"), "Update scanner hardware", self)
+
+        with resources.path("marge.resources.icons", "arrow-sync.svg") as icon_path:
+            self.update_action = QAction(QIcon(str(icon_path)), "Update scanner hardware", self)
         self.update_action.setStatusTip("Update scanner hardware")
         self.toolbar.addAction(self.update_action)
 
-        self.close_action = QAction(QIcon("resources/icons/close.png"), "Close GUI", self)
+
+        with resources.path("marge.resources.icons", "close.png") as icon_path:
+            self.close_action = QAction(QIcon(str(icon_path)), "Close GUI", self)
         self.close_action.setStatusTip("Close the GUI")
         self.toolbar.addAction(self.close_action)
 
         # Add switch theme button
-        self.switch_theme_action = QAction(QIcon("resources/icons/adjust-contrast.svg"), "", self)
+        with resources.path("marge.resources.icons", "adjust-contrast.svg") as icon_path:
+            self.switch_theme_action = QAction(QIcon(str(icon_path)), "", self)
         self.switch_theme_action.setStatusTip("Switch between Dark and Light theme")
         self.toolbar.addAction(self.switch_theme_action)
 

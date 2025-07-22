@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "marge-mri-example"
-version = "0.0.5"
+version = "0.0.18"
 authors = [
     { name = "Nihal", email = "votre.email@example.com" },
 ]
@@ -17,6 +17,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "resources",
     "requests >= 2.25.1",
     "numpy >= 1.20.0",
     "matplotlib",
@@ -41,3 +42,10 @@ dependencies = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/marge"]
+
+[tools.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"marge.resources.icons" = ["*.png", "*.svg"]
+"marge.resources.images" = ["*.png"]

@@ -17,4 +17,5 @@ scikit-learn
 scikit-image
 imageio~=2.34.1
 h5py
+resources
 cupy-cuda12x>=13.0.0
