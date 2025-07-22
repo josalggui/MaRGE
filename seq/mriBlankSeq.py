@@ -61,6 +61,9 @@ class MRIBLANKSEQ:
 
         This method initializes the instance attributes.
         """
+        self.nScans = None
+        self.standalone = None
+        self.plotSeq = None
         self.mapKeys = []
         self.mapNmspc = {}
         self.mapVals = {}
@@ -88,8 +91,6 @@ class MRIBLANKSEQ:
                          'ttl1': [[],[]],}
 
         self.addParameter(key='seqName', val='blankSeq')
-        self.addParameter(key='angle', val=0)
-        self.addParameter(key='rotationAxis', val=[0, 0, 1])
         self.addParameter(key='dfov', val=[0.0, 0.0, 0.0])
         self.addParameter(key='fov', val=[0.0, 0.0, 0.0])
         self.addParameter(key='pypulseq', val=False)
@@ -208,6 +209,33 @@ class MRIBLANKSEQ:
         return self.output
 
     def rotate_waveforms(self, waveforms):
+        """
+        Rotate and reformat gradient waveforms according to the current rotation matrix.
+
+        This method takes the input gradient waveforms for the x, y, and z axes,
+        merges them into a unified time sequence, sorts and aligns the amplitudes,
+        and then applies the current rotation matrix to rotate the gradient directions.
+        After rotation, it rescales the gradients using the hardware gradient factors
+        and updates the original waveform dictionary with the rotated waveforms.
+
+        If plotting is enabled (`self.plotSeq` is True), the last elements of the
+        fields-of-view (FOVs), differential FOVs, and rotation lists are removed
+        to maintain consistency with the sequence visualization.
+
+        Parameters
+        ----------
+        waveforms : dict
+            Dictionary containing the gradient waveforms for each axis:
+                - 'grad_vx': list with [time array, amplitude array] for x-gradient
+                - 'grad_vy': list with [time array, amplitude array] for y-gradient
+                - 'grad_vz': list with [time array, amplitude array] for z-gradient
+
+        Returns
+        -------
+        dict
+            Updated dictionary containing the rotated and reformatted gradient waveforms
+            for 'grad_vx', 'grad_vy', and 'grad_vz'.
+        """
         # Get the waveforms
         gx = waveforms['grad_vx']
         gy = waveforms['grad_vy']
@@ -321,7 +349,6 @@ class MRIBLANKSEQ:
                    hardware=True,
                    output='',
                    channels=[0],
-                   angulation=1,
                    ):
         """
         Execute multiple batches of MRI waveforms, manage data acquisition, and store oversampled data.
@@ -350,8 +377,6 @@ class MRIBLANKSEQ:
             String to add to the output keys saved in the mapVals parameter.
         channels : list, optional
             List of channels used for Rx
-        angulation : bool, optional
-            Bool parameter to work with angulation (1) or without angulation (0)
 
         Returns:
         --------
@@ -376,10 +401,6 @@ class MRIBLANKSEQ:
 
         # Iterate through each batch of waveforms
         for seq_num in waveforms.keys():
-            # Rotate the waveforms to given reference system
-            if angulation:
-                waveforms[seq_num] = self.rotate_waveforms(waveforms[seq_num])
-
             # Initialize the experiment if not in demo mode
             if not self.demo:
                 self.expt = ex.Experiment(
@@ -425,7 +446,7 @@ class MRIBLANKSEQ:
 
                         # Check if acquired points coincide with expected points
                         if acquired_points != expected_points:
-                            print("WARNING: data apoints lost!")
+                            print("WARNING: data points lost!")
                             print("Repeating batch...")
 
                     # Concatenate acquired data into the oversampled data array
@@ -1596,7 +1617,7 @@ class MRIBLANKSEQ:
         self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], np.array([t0])), axis=0)
         self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], np.array([gAmp])), axis=0)
 
-    def floDict2Exp(self, rewrite=True, demo=False):
+    def floDict2Exp(self, rewrite=True):
         """
         Check for errors and add instructions to Red Pitaya if no errors are found.
 
@@ -1906,16 +1927,7 @@ class MRIBLANKSEQ:
             else:
                 setattr(self, key, self.mapVals[key] * self.map_units[key])
 
-        # Conversion of variables to non-multiplied units
-        if self.pypulseq:
-            self.angle = - self.angle * np.pi / 180  # rads
-        else:
-            self.angle = + self.angle * np.pi / 180
-
         # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.tolist()
-        self.rotation.append(self.angle)
-        self.rotations.append(self.rotation)
         self.dfovs.append(self.dfov.tolist())
         self.fovs.append(self.fov.tolist())
 
@@ -1956,11 +1968,15 @@ class MRIBLANKSEQ:
                 plt.subplot(rows, cols, plot + 1)
                 n = 0
                 for y_data in item['yData']:
-                    plt.plot(item['xData'], y_data, label=item['legend'][n])
+                    if isinstance(item['xData'], list):
+                        plt.plot(item['xData'][n], y_data, label=item['legend'][n])
+                    else:
+                        plt.plot(item['xData'], y_data, label=item['legend'][n])
                     n += 1
                 plt.title(item['title'])
                 plt.xlabel(item['xLabel'])
                 plt.ylabel(item['yLabel'])
+                plt.legend()
             plot += 1
 
         # Set the figure title

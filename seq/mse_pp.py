@@ -195,7 +195,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         )
 
         # Get Parameters
-        self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
         resolution = self.fov / self.nPoints

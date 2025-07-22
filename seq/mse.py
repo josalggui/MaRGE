@@ -54,8 +54,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[60, 60, 10], field='IM')
-        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
-        self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=20, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
@@ -111,7 +109,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.demo = demo
 
         # Set the fov
-        self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
 
@@ -191,13 +188,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.mapVals['phGradients'] = phGradients
         self.mapVals['slGradients'] = slGradients
 
-        # Get the rotation matrix
-        rot = self.getRotationMatrix()
-        gradAmp = np.array([0.0, 0.0, 0.0])
-        gradAmp[self.axesOrientation[0]] = 1
-        gradAmp = np.reshape(gradAmp, (3, 1))
-        result = np.dot(rot, gradAmp)
-
         # Initialize k-vectors
         k_ph_sl_xyz = np.ones((3, self.nPoints[0]*self.nPoints[1]*nSL))*hw.gammaB*(self.phGradTime+hw.grad_rise_time)
         k_rd_xyz = np.ones((3, self.nPoints[0]*self.nPoints[1]*nSL))*hw.gammaB
@@ -256,7 +246,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
                 # Dephasing readout
                 gradAmp = np.array([0.0, 0.0, 0.0])
                 gradAmp[self.axesOrientation[0]] = rdDephAmplitude
-                gradAmp = np.dot(rot, np.reshape(gradAmp, (3, 1)))
                 if repeIndex==(self.dummyPulses-1) or repeIndex>=self.dummyPulses:
                     t0 = tEx+self.rfExTime/2-hw.gradDelay
                     self.gradTrap(t0, gradRiseTime, self.rdDephTime, gradAmp[0] * self.rdPreemphasis, gSteps,
@@ -292,7 +281,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     gradAmp = np.array([0.0, 0.0, 0.0])
                     gradAmp[self.axesOrientation[1]] = phGradients[phIndex]
                     gradAmp[self.axesOrientation[2]] = slGradients[slIndex]
-                    gradAmp = np.dot(rot, np.reshape(gradAmp, (3, 1)))
                     if repeIndex>=self.dummyPulses:         # This is to account for dummy pulses
                         t0 = tEcho-self.echoSpacing/2+self.rfReTime/2-hw.gradDelay
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, gradAmp[0], gSteps, 0, self.shimming)
@@ -308,7 +296,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     # Readout gradient
                     gradAmp = np.array([0.0, 0.0, 0.0])
                     gradAmp[self.axesOrientation[0]] = rdGradAmplitude
-                    gradAmp = np.dot(rot, np.reshape(gradAmp, (3, 1)))
                     if repeIndex==(self.dummyPulses-1) or repeIndex>=self.dummyPulses:         # This is to account for dummy pulses
                         t0 = tEcho-self.rdGradTime/2-gradRiseTime-hw.gradDelay+self.echo_shift
                         self.gradTrap(t0, gradRiseTime, self.rdGradTime, gradAmp[0], gSteps, 0, self.shimming)
@@ -332,7 +319,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
                     gradAmp = np.array([0.0, 0.0, 0.0])
                     gradAmp[self.axesOrientation[1]] = phGradients[phIndex]
                     gradAmp[self.axesOrientation[2]] = slGradients[slIndex]
-                    gradAmp = np.dot(rot, np.reshape(gradAmp, (3, 1)))
                     t0 = tEcho+self.rdGradTime/2+gradRiseTime-hw.gradDelay+self.echo_shift
                     if (echoIndex<self.etl-1 and repeIndex>=self.dummyPulses):
                         self.gradTrap(t0, gradRiseTime, self.phGradTime, -gradAmp[0], gSteps, 0, self.shimming)
@@ -719,12 +705,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
             result2['title'] = "k-Space"
             result2['row'] = 0
             result2['col'] = 1
-
-
-            # Reset rotation angle and dfov to zero
-            self.mapVals['angle'] = 0.0
-            self.mapVals['dfov'] = [0.0, 0.0, 0.0]
-            hw.dfov = [0.0, 0.0, 0.0]
 
             # DICOM TAGS
             # Image

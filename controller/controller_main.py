@@ -4,7 +4,6 @@
 :affiliation: MRILab, i3M, CSIC, Valencia, Spain
 
 """
-import subprocess
 import sys
 import threading
 

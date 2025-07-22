@@ -489,6 +489,13 @@ class HistoryListController(HistoryListWidget):
         self.shifts[key] = sequence.dfovs.copy()
         self.fovs[key] = sequence.fovs.copy()
 
+        # Update dfov and fov for all sequences
+        for seq in defaultsequences.values():
+            if 'dfov' in seq.mapKeys:
+                seq.mapVals['dfov'] = sequence.mapVals['dfov']
+            if 'fov' in seq.mapKeys:
+                seq.mapVals['fov'] = sequence.mapVals['fov']
+
         # Create and execute selected sequence
         try:
             if sequence.sequenceRun(0, self.main.demo):
@@ -509,7 +516,8 @@ class HistoryListController(HistoryListWidget):
         try:
             output = sequence.sequenceAnalysis()
         except Exception as e:
-            print(f"An error ocurred in sequenceAnalysis method: {e}")
+            print(f"ERROR: An error occurred in sequenceAnalysis method: {e}")
+            del self.pending_recons[key]
             return False
 
         if output:

@@ -7,6 +7,9 @@ Created on Thu June 2 2022
 
 import os
 import sys
+
+from phantominator import shepp_logan
+
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))
@@ -44,7 +47,6 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RarePyPulseq, self).__init__()
         # Input the parameters
-        self.angulation = None
         self.image_orientation_dicom = None
         self.sequence_list = None
         self.unlock_orientation = None
@@ -72,9 +74,6 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.dfov = None
         self.fov = None
         self.system = None
-        self.rotationAxis = None
-        self.rotation = None
-        self.angle = None
         self.echoMode = None
         self.axesOrientation = None
         self.addParameter(key='seqName', string='RAREInfo', val='RarePyPulseq')
@@ -93,9 +92,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
-        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
-        self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 10], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ') ## nm of peaks in 1 repetition
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
@@ -120,13 +117,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                           tip='Final matrix size after processing zero padding')
         self.addParameter(key='partial_method', string='Partial recon method', val='POCS', field='PRO',
                           tip="'zero' -> zero padding, pocs -> Projection Onto Convex Sets")
-        self.addParameter(key='angulation', string='Angulation', val=1, field='OTH',
-                          tip='1: Consider FOV angulation. 0: Keep the image unangled (it reduced the number of instructions).')
-
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
         self.header = ismrmrd.xsd.ismrmrdHeader()
-        
        
     def sequenceInfo(self):
         print("3D RARE sequence powered by PyPulseq")
@@ -228,7 +221,6 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         '''
 
         # Set the fov
-        self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
 
@@ -843,7 +835,6 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                                bandwidth=bw,  # MHz
                                decimate='Normal',
                                hardware=True,
-                               angulation=self.angulation
                                )
 
     def sequenceAnalysis(self, mode=None):
@@ -925,14 +916,14 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         if n_batches > 1:
             data_full_a = data_full[0:sum(n_readouts[0:-1]) * self.nScans]
             data_full_b = data_full[sum(n_readouts[0:-1]) * self.nScans:]
-            data_full_a = np.reshape(data_full_a, newshape=(n_batches - 1, self.nScans, -1, n_rd))
-            data_full_b = np.reshape(data_full_b, newshape=(1, self.nScans, -1, n_rd))
+            data_full_a = np.reshape(data_full_a, shape=(n_batches - 1, self.nScans, -1, n_rd))
+            data_full_b = np.reshape(data_full_b, shape=(1, self.nScans, -1, n_rd))
             for scan in range(self.nScans):
                 data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
                 data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
                 data_prov[scan, :] = np.concatenate((data_scan_a, data_scan_b), axis=0)
         else:
-            data_full = np.reshape(data_full, newshape=(1, self.nScans, -1, n_rd))
+            data_full = np.reshape(data_full, shape=(1, self.nScans, -1, n_rd))
             for scan in range(self.nScans):
                 data_prov[scan, :] = np.reshape(data_full[:, scan, :, :], -1)
         data_full = np.reshape(data_prov, -1)
@@ -942,10 +933,10 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         # Get index for krd = 0
         # Average data
-        data_prov = np.reshape(data_full, newshape=(self.nScans, n_rd * n_ph * n_sl))
+        data_prov = np.reshape(data_full, shape=(self.nScans, n_rd * n_ph * n_sl))
         data_prov = np.average(data_prov, axis=0)
         # Reorganize the data according to sweep mode
-        data_prov = np.reshape(data_prov, newshape=(n_sl, n_ph, n_rd))
+        data_prov = np.reshape(data_prov, shape=(n_sl, n_ph, n_rd))
         data_temp = np.zeros_like(data_prov)
         for ii in range(n_ph):
             data_temp[:, ind[ii], :] = data_prov[:, ii, :]
@@ -957,7 +948,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             ind_krd_0 = int(n_rd / 2)
 
         # Get individual images
-        data_full = np.reshape(data_full, newshape=(self.nScans, n_sl, n_ph, n_rd))
+        data_full = np.reshape(data_full, shape=(self.nScans, n_sl, n_ph, n_rd))
         data_full = data_full[:, :, :, ind_krd_0 - int(self.nPoints[0] / 2):ind_krd_0 + int(self.nPoints[0] / 2)]
         data_temp = np.zeros_like(data_full)
         for ii in range(n_ph):
@@ -971,7 +962,13 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         # Do zero padding
         data_temp = np.zeros(shape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]), dtype=complex)
         data_temp[0:n_sl, :, :] = data
-        data = np.reshape(data_temp, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        if self.demo:
+            phantom_image = shepp_logan((self.nPoints[0], self.nPoints[1], self.nPoints[2]))
+            phantom_image = np.transpose(phantom_image, (2, 1, 0))
+            if self.nPoints[2]==1:
+                phantom_image[0, :, :] = shepp_logan((self.nPoints[1], self.nPoints[0]))
+            data_temp = np.fft.fftshift(np.fft.fftn(np.fft.ifftshift(phantom_image)))
+        data = np.reshape(data_temp, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
 
         # Fix the position of the sample according to dfov
         bw = self.getParameter('bw_MHz')
@@ -982,25 +979,25 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         kPH = np.linspace(-kMax[1], kMax[1], num=self.nPoints[1], endpoint=False)
         kSL = np.linspace(-kMax[2], kMax[2], num=self.nPoints[2], endpoint=False)
         kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
-        kRD = np.reshape(kRD, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        kPH = np.reshape(kPH, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        kSL = np.reshape(kSL, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        kRD = np.reshape(kRD, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        kPH = np.reshape(kPH, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        kSL = np.reshape(kSL, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
         dPhase = np.exp(2 * np.pi * 1j * (self.dfov[0] * kRD + self.dfov[1] * kPH + self.dfov[2] * kSL))
-        data = np.reshape(data * dPhase, newshape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]))
+        data = np.reshape(data * dPhase, shape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]))
         self.mapVals['kSpace3D'] = data
         img = np.fft.ifftshift(np.fft.ifftn(np.fft.fftshift(data)))
         self.mapVals['image3D'] = img
-        data = np.reshape(data, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        data = np.reshape(data, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
 
         # Create sampled data
-        kRD = np.reshape(kRD, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        kPH = np.reshape(kPH, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        kSL = np.reshape(kSL, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        data = np.reshape(data, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
+        kRD = np.reshape(kRD, shape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
+        kPH = np.reshape(kPH, shape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
+        kSL = np.reshape(kSL, shape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
+        data = np.reshape(data, shape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
         self.mapVals['kMax_1/m'] = kMax
         self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
         self.mapVals['sampledCartesian'] = self.mapVals['sampled']  # To sweep
-        data = np.reshape(data, newshape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]))
+        data = np.reshape(data, shape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]))
 
         axes_enable = self.mapVals['axes_enable']
 
@@ -1083,24 +1080,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             # Add results into the output attribute (result_1 must be the image to save in dicom)
             self.output = [result_1, result_2]
 
-        # Reset rotation angle and dfov to zero
-        self.mapVals['angle'] = self.angle
-        self.mapVals['dfov'] = np.array(self.mapVals['dfov'])
-        self.mapVals['dfov'][self.axesOrientation] = self.dfov.reshape(-1)
-        self.mapVals['dfov'] = list(self.mapVals['dfov'])
-
         # Save results
         self.saveRawData()
         self.save_ismrmrd()
-
-        self.mapVals['angle'] = 0.0
-        self.mapVals['dfov'] = [0.0, 0.0, 0.0]
-        try:
-            self.sequence_list['RarePyPulseq'].mapVals['angle'] = 0.0
-            self.sequence_list['RarePyPulseq'].mapVals['dfov'] = [0.0, 0.0, 0.0]
-        except:
-            pass
-        hw.dfov = [0.0, 0.0, 0.0]
 
         if self.mode == 'Standalone':
             self.plotResults()

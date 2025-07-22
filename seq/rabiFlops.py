@@ -9,6 +9,9 @@
 """
 import os
 import sys
+
+from marge_utils import utils
+
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))
@@ -34,6 +37,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RabiFlops, self).__init__()
         # Input the parameters
+        self.discriminator = None
         self.cal_method = None
         self.addParameter(key='seqName', string='RabiFlopsInfo', val='RabiFlops')
         self.addParameter(key='toMaRGE', val=True)
@@ -55,9 +59,10 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='method', string='Rephasing method: 0->Amp, 1->Time', val=0, field='RF')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ')
         self.addParameter(key='cal_method', string='Calibration method', val='FID', tip='FID or ECHO', field='OTH')
+        self.addParameter(key='discriminator', string='Calibration point', val='min', field='OTH',
+                          tip="'max' to use maximum for 90º or 'min' to use zero-crossing for 180º")
 
     def sequenceInfo(self):
-        
         print("Rabi Flops")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
@@ -150,7 +155,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                             t0 = tEx + echoTime - acqTime / 2
                             self.rxGate(t0, acqTime)
 
-                        # Update exitation time for next repetition
+                        # Update excitation time for next repetition
                         tEx += repetitionTime
 
             # Turn off the gradients after the end of the batch
@@ -174,7 +179,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
         # Execute the experiment
         createSequence()
-        if self.floDict2Exp(demo=self.demo):
+        if self.floDict2Exp():
             print("Sequence waveforms loaded successfully")
             pass
         else:
@@ -218,22 +223,13 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         rabiEcho = dataEchoAvg[:, int(nPoints / 2)]
         self.mapVals['rabiEcho'] = rabiEcho
 
-        # Get values for pi/2 and pi pulses
-        test = True
-        n = 1
-        while test:
-            if n >= nSteps:
-                break
-            if self.cal_method == 'FID':
-                d = np.abs(rabiFID[n]) - np.abs(rabiFID[n - 1])
-            elif self.cal_method == 'ECHO':
-                d = np.abs(rabiEcho[n]) - np.abs(rabiEcho[n - 1])
-            else:
-                break
-            n += 1
-            if d < 0:
-                test = False
-        piHalfTime = timeVector[n - 2] * 1e6  # us
+        if self.demo:
+            timeVector = np.linspace(0, 100e-6, 10)
+            rabiFID = np.sin(2 * timeVector / 100e-6 * np.pi)
+            rabiEcho = rabiFID
+            piHalfTime, interpolations = utils.analyze_rabi_curve(data=[timeVector, rabiFID, rabiEcho], method=self.cal_method, discriminator=self.discriminator)
+        else:
+            piHalfTime, interpolations = utils.analyze_rabi_curve(data=[timeVector, rabiFID, rabiEcho], method=self.cal_method, discriminator=self.discriminator)
         self.mapVals['piHalfTime'] = piHalfTime
         print("pi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us" % (self.mapVals['rfExAmp'],
                                                                                    self.mapVals['piHalfTime']))
@@ -241,22 +237,26 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
         # Signal vs rf time
         result1 = {'widget': 'curve',
-                   'xData': timeVector * 1e6,
-                   'yData': [np.abs(rabiFID), np.real(rabiFID), np.imag(rabiFID)],
+                   'xData': [timeVector * 1e6, timeVector * 1e6, timeVector * 1e6,
+                             interpolations[0] * 1e6, interpolations[0] * 1e6, interpolations[0] * 1e6],
+                   'yData': [np.abs(rabiFID), np.real(rabiFID), np.imag(rabiFID),
+                             np.abs(interpolations[1]), np.real(interpolations[1]), np.imag(interpolations[1])],
                    'xLabel': 'Time (us)',
                    'yLabel': 'Signal amplitude (mV)',
                    'title': 'Rabi Flops with FID',
-                   'legend': ['abs', 'real', 'imag'],
+                   'legend': ['abs', 'real', 'imag', 'abs spline', 'real spline', 'imag spline'],
                    'row': 0,
                    'col': 0}
 
         result2 = {'widget': 'curve',
-                   'xData': timeVector * 1e6,
-                   'yData': [np.abs(rabiEcho), np.real(rabiEcho), np.imag(rabiEcho)],
+                   'xData': [timeVector * 1e6, timeVector * 1e6, timeVector * 1e6,
+                             interpolations[0] * 1e6, interpolations[0] * 1e6, interpolations[0] * 1e6],
+                   'yData': [np.abs(rabiEcho), np.real(rabiEcho), np.imag(rabiEcho),
+                             np.abs(interpolations[2]), np.real(interpolations[2]), np.imag(interpolations[2])],
                    'xLabel': 'Time (us)',
                    'yLabel': 'Signal amplitude (mV)',
                    'title': 'Rabi Flops with Spin Echo',
-                   'legend': ['abs', 'real', 'imag'],
+                   'legend': ['abs', 'real', 'imag', 'abs spline', 'real spline', 'imag spline'],
                    'row': 1,
                    'col': 0}
 

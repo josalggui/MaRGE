@@ -266,7 +266,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         # Create sequence and load it to red pitaya
         self.createSequence()
-        if self.floDict2Exp(demo=self.demo):
+        if self.floDict2Exp():
             print("Sequence waveforms loaded successfully")
             pass
         else:
