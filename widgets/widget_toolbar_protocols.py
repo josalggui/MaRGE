@@ -13,21 +13,21 @@ class ProtocolsToolBar(QToolBar):
         self.main = main
 
         # New protocol
-        self.action_new_protocol = QAction(QIcon("resources/icons/addProtocol.png"), "New Protocol", self)
+        self.action_new_protocol = QAction(QIcon("MaRGE/resources/icons/addProtocol.png"), "New Protocol", self)
         self.action_new_protocol.setStatusTip("Create a new protocol")
         self.addAction(self.action_new_protocol)
 
         # Del protocol
-        self.action_del_protocol = QAction(QIcon("resources/icons/deleteProtocol.png"), "Remove Protocol", self)
+        self.action_del_protocol = QAction(QIcon("MaRGE/resources/icons/deleteProtocol.png"), "Remove Protocol", self)
         self.action_del_protocol.setStatusTip("Remove a protocol")
         self.addAction(self.action_del_protocol)
 
         # New sequence
-        self.action_new_sequence = QAction(QIcon("resources/icons/addSequence.png"), "New Sequence", self)
+        self.action_new_sequence = QAction(QIcon("MaRGE/resources/icons/addSequence.png"), "New Sequence", self)
         self.action_new_sequence.setStatusTip("Create a new sequence")
         self.addAction(self.action_new_sequence)
 
         # Del sequence
-        self.action_del_sequence = QAction(QIcon("resources/icons/deleteSequence.png"), "Remove Sequence", self)
+        self.action_del_sequence = QAction(QIcon("MaRGE/resources/icons/deleteSequence.png"), "Remove Sequence", self)
         self.action_del_sequence.setStatusTip("Remove a sequence from protocol")
         self.addAction(self.action_del_sequence)

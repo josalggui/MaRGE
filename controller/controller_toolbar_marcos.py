@@ -41,11 +41,11 @@ class MarcosController(MarcosToolBar):
         super(MarcosController, self).__init__(*args, **kwargs)
 
         # Copy relevant files from marcos_extras
-        shutil.copy("../marcos_extras/copy_bitstream.sh", "../MaRGE")
-        shutil.copy("../marcos_extras/marcos_fpga_rp-122.bit", "../MaRGE")
-        shutil.copy("../marcos_extras/marcos_fpga_rp-122.bit.bin", "../MaRGE")
-        shutil.copy("../marcos_extras/marcos_fpga_rp-122.dtbo", "../MaRGE")
-        shutil.copy("../marcos_extras/readme.org", "../MaRGE")
+        shutil.copy("/home/bryant/Desktop/MaRGE_gui2/marcos_extras/copy_bitstream.sh", "../MaRGE")
+        shutil.copy("/home/bryant/Desktop/MaRGE_gui2/marcos_extras/marcos_fpga_rp-122.bit", "../MaRGE")
+        shutil.copy("/home/bryant/Desktop/MaRGE_gui2/marcos_extras/marcos_fpga_rp-122.bit.bin", "../MaRGE")
+        shutil.copy("/home/bryant/Desktop/MaRGE_gui2/marcos_extras/marcos_fpga_rp-122.dtbo", "../MaRGE")
+        shutil.copy("/home/bryant/Desktop/MaRGE_gui2/marcos_extras/readme.org", "../MaRGE")
 
         self.action_server.setCheckable(True)
         self.action_start.triggered.connect(self.startMaRCoS)

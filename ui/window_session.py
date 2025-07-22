@@ -33,17 +33,17 @@ class SessionWindow(QMainWindow):
         self.addToolBar(self.toolbar)
 
         # launch gui action
-        self.launch_gui_action = QAction(QIcon("resources/icons/home.png"), "Launch GUI", self)
+        self.launch_gui_action = QAction(QIcon("MaRGE/resources/icons/home.png"), "Launch GUI", self)
         self.launch_gui_action.setStatusTip("Launch GUI")
         self.toolbar.addAction(self.launch_gui_action)
 
         # demo gui action
-        self.demo_gui_action = QAction(QIcon("resources/icons/demo.png"), "Launch GUI as DEMO", self)
+        self.demo_gui_action = QAction(QIcon("MaRGE/resources/icons/demo.png"), "Launch GUI as DEMO", self)
         self.demo_gui_action.setStatusTip("Launch GUI as DEMO")
         self.toolbar.addAction(self.demo_gui_action)
 
         # Close button action
-        self.close_action = QAction(QIcon("resources/icons/close.png"), "Close GUI", self)
+        self.close_action = QAction(QIcon("MaRGE/resources/icons/close.png"), "Close GUI", self)
         self.close_action.setStatusTip("Close the GUI")
         self.toolbar.addAction(self.close_action)
 

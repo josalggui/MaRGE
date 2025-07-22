@@ -12,22 +12,22 @@ class FiguresToolBar(QToolBar):
         self.main = main
 
         # Expand figure
-        self.action_full_screen = QAction(QIcon("resources/icons/expand.png"), "Full sreen", self)
+        self.action_full_screen = QAction(QIcon("MaRGE/resources/icons/expand.png"), "Full sreen", self)
         self.action_full_screen.setStatusTip("Figure layout in full screen")
         self.addAction(self.action_full_screen)
 
         # Action button to do a screenshot
-        self.action_screenshot = QAction(QIcon("resources/icons/screenshot.png"), "Screenshot", self)
+        self.action_screenshot = QAction(QIcon("MaRGE/resources/icons/screenshot.png"), "Screenshot", self)
         self.action_screenshot.setStatusTip("Save screenshot in the session folder")
         self.addAction(self.action_screenshot)
 
         # Action button to open postprocessing gui
-        self.action_open_directory = QAction(QIcon("resources/icons/open_directory.png"), "Open main directory",
+        self.action_open_directory = QAction(QIcon("MaRGE/resources/icons/open_directory.png"), "Open main directory",
                                              self)
         self.action_open_directory.setStatusTip("Open main directory")
         self.addAction(self.action_open_directory)
 
         # Action button to open postprocessing gui
-        self.action_postprocessing = QAction(QIcon("resources/icons/postprocessing.png"), "Open post-processing GUI", self)
+        self.action_postprocessing = QAction(QIcon("MaRGE/resources/icons/postprocessing.png"), "Open post-processing GUI", self)
         self.action_postprocessing.setStatusTip("Open the post-processing GUI")
         self.addAction(self.action_postprocessing)
