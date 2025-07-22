@@ -1671,8 +1671,14 @@ class MRIBLANKSEQ:
             None
 
         """
-        if key is not self.mapVals.keys():
-            self.mapKeys.append(key)
+
+        # this if statement is likely incorrect 
+        # if key is not self.mapVals.keys():
+        #     self.mapKeys.append(key)
+        # I suppose it should be
+        if key not in self.mapVals.keys():
+          self.mapKeys.append(key)
+
         self.mapNmspc[key] = string
         self.mapVals[key] = val
         self.mapFields[key] = field
