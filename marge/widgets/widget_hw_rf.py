@@ -32,7 +32,7 @@ class RfWidget(QWidget):
         self.add_input(label="Reference time (us)", value="70", tip="Reference time used in efficiency calibration")
         self.add_input(label="Oversampling factor", value="5", tip="Factor by which data is oversampled")
         self.add_input(label="Max readout points", value="1e5", tip="Maximum number of readout points")
-        self.add_input(label="Add readout points", value="5", tip="Additional readout points for processing")
+        self.add_input(label="Add readout points", value="10", tip="Additional readout points for processing")
         self.add_input(label="LNA gain (dB)", value="45", tip="Low-noise amplifier gain in dB")
         self.add_input(label="RF gain min (dB)", value="45", tip="Minimum RF amplifier gain in dB")
         self.add_input(label="RF gain max (dB)", value="76", tip="Maximum RF amplifier gain in dB")

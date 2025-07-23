@@ -91,7 +91,7 @@ class ProtocolsController(ProtocolsToolBar):
             # Check if the folder is the good one
             directory = os.path.dirname(file_name).split('/')[-1]
             protocol = file_name.split('/')[-1]
-            if directory != 'protocols':
+            if directory != 'marge/protocols':
                 print("Error. New protocols should be in 'protocols' folder.")
                 return
 
