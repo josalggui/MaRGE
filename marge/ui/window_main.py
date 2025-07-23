@@ -7,8 +7,9 @@
 import datetime
 from PyQt5.QtWidgets import (
     QMainWindow, QStatusBar, QWidget, QHBoxLayout, QVBoxLayout, QTableWidget,
-    QSizePolicy
+    QSizePolicy, QAction
 )
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QThreadPool
 import qdarkstyle
 
@@ -58,6 +59,12 @@ class MainWindow(QMainWindow):
         # Add marcos toolbar
         self.toolbar_marcos = MarcosController(self, "MaRCoS toolbar")
         self.addToolBar(self.toolbar_marcos)
+
+        # 👉 Add Little Version button
+        self.action_little_version = QAction(QIcon("resources/icons/arrow-minimise.svg"), "Little Version", self)
+        self.action_little_version.setStatusTip("Activer la version allégée de l'interface")
+        self.action_little_version.triggered.connect(self.toggle_little_version)
+        self.toolbar_marcos.addAction(self.action_little_version)
 
         # Add sequence toolbar
         self.toolbar_sequences = SequenceController(self, "Sequence toolbar")
@@ -141,3 +148,6 @@ class MainWindow(QMainWindow):
         # Create the post-processing toolbox
         self.post_gui = ProcessingWindowController(session=self.session, main=self)
 
+    def toggle_little_version(self):
+        print("Little Version button clicked")
+        # Tu pourras ici cacher certains widgets pour une vue simplifiée

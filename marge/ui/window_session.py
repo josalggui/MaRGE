@@ -92,12 +92,10 @@ class SessionWindow(QMainWindow):
         self.demo_gui_action.setDisabled(True)
         self.toolbar.addAction(self.demo_gui_action)
 
-
         with resources.path("marge.resources.icons", "arrow-sync.svg") as icon_path:
             self.update_action = QAction(QIcon(str(icon_path)), "Update scanner hardware", self)
         self.update_action.setStatusTip("Update scanner hardware")
         self.toolbar.addAction(self.update_action)
-
 
         with resources.path("marge.resources.icons", "close.png") as icon_path:
             self.close_action = QAction(QIcon(str(icon_path)), "Close GUI", self)
@@ -109,6 +107,13 @@ class SessionWindow(QMainWindow):
             self.switch_theme_action = QAction(QIcon(str(icon_path)), "", self)
         self.switch_theme_action.setStatusTip("Switch between Dark and Light theme")
         self.toolbar.addAction(self.switch_theme_action)
+
+        # 👉 Add Little Version button
+        with resources.path("marge.resources.icons", "arrow-minimise.svg") as icon_path:
+            self.little_version_action = QAction(QIcon(str(icon_path)), "Little Version", self)
+        self.little_version_action.setStatusTip("Activer la version allégée de l'interface")
+        self.little_version_action.triggered.connect(self.toggle_little_version)
+        self.toolbar.addAction(self.little_version_action)
 
         # Tabs
         self.tabs = QTabWidget()
@@ -128,6 +133,10 @@ class SessionWindow(QMainWindow):
 
         # Status bar
         self.setStatusBar(QStatusBar(self))
+
+    def toggle_little_version(self):
+        print("Little Version clicked in Session Window")
+        # Tu peux ici masquer des éléments si tu veux alléger l’interface
 
     def setupTab1(self):
         widget = ConsoleWidget()
