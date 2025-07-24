@@ -59,11 +59,6 @@ class MRIBLANKSEQ:
 
         This method initializes the instance attributes.
         """
-        print("MRIBLANKSEQ initialized")
-
-        def run(self):
-            print("Running blank MRI sequence...")
-
         self.mapKeys = []
         self.mapNmspc = {}
         self.mapVals = {}

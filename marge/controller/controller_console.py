@@ -15,9 +15,6 @@ class ConsoleController(ConsoleWidget):
         log_folder = "logs"
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)
-            print(f"[ConsoleController] Created log folder at: {log_folder}")
-        else:
-            print(f"[ConsoleController] Log folder already exists at: {log_folder}")
 
         # Créer un nouveau nom de fichier log à chaque démarrage
         if log_name is None:
@@ -37,8 +34,6 @@ class ConsoleController(ConsoleWidget):
         sys.stdout = EmittingStream(textWritten=self.write_console)
 
         print("READY - MaRGE has started successfully.")
-        print("WARNING - This is a test warning message.")
-        print("ERROR - This is a test error message.")
         atexit.register(self.close_log)
 
     def write_console(self, text):
