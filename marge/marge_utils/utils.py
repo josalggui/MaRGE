@@ -8,8 +8,6 @@ from marge.manager.dicommanager import DICOMImage
 import pydicom
 from pydicom.dataset import Dataset, FileDataset
 from datetime import datetime
-from manager.dicommanager import DICOMImage
-from datetime import datetime
 from scipy.interpolate import make_interp_spline
 import matplotlib.pyplot as plt
 
