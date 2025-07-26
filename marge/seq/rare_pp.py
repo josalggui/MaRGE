@@ -29,7 +29,7 @@ import marge.controller.experiment_gui as ex
 import marge.configs.hw_config as hw # Import the scanner hardware config
 import marge.configs.units as units
 import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-from marge_utils import utils
+from marge.marge_utils import utils
 
 from datetime import datetime
 import ismrmrd

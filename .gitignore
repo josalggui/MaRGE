@@ -4,6 +4,7 @@ sphinx/_build/
 marge/experiments
 marge/calibration
 marge/protocols
+marge/seq/experiments
 .idea/
 marge/configs/units.py
 marge/configs/hw_config.py

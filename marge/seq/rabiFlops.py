@@ -10,7 +10,7 @@
 import os
 import sys
 
-from marge_utils import utils
+from marge.marge_utils import utils
 
 #*****************************************************************************
 # Get the directory of the current script

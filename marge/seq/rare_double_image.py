@@ -32,7 +32,7 @@ import ismrmrd
 import ismrmrd.xsd
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
-from marge_utils import utils
+from marge.marge_utils import utils
 
 
 #*********************************************************************************

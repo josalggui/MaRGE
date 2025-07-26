@@ -31,7 +31,7 @@ import pypulseq as pp  # Import PyPulseq
 from skimage.restoration import unwrap_phase as unwrap
 from sklearn.preprocessing import PolynomialFeatures
 from numpy.linalg import lstsq
-from marge_utils.utils import run_ifft
+from marge.marge_utils.utils import run_ifft
 
 
 # Template Class for MRI Sequences
