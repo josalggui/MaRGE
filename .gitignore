@@ -15,10 +15,11 @@ venv/
 logs/
 dist/
 *.egg-info
-marcos_fpga_rp-122.bit
-marcos_fpga_rp-122.bit.bin
-marcos_fpga_rp-122.dtbo
-readme.org
+marge/marcos_fpga_rp-122.bit
+marge/marcos_fpga_rp-122.bit.bin
+marge/marcos_fpga_rp-122.dtbo
+marge/copy_bitstream.sh
+marge/readme.org
 marge/autotuning/autotuning_arduino/autotuning_arduino.ino
 *.seq
 *.log

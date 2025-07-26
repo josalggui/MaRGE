@@ -1,0 +1,5 @@
+recursive-include marge/marcos/marcos_extras *
+recursive-include marge/marcos/marcos_server *
+recursive-include marge/marcos/marcos_client *
+recursive-include marge/resources *
+include marge/communicateRP.sh

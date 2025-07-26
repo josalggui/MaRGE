@@ -28,23 +28,21 @@ class MarcosController(MarcosToolBar):
 
         # Copy relevant files from marcos_extras
         extras_path = os.path.join(os.path.dirname(__file__), "..", "marcos", "marcos_extras")
-        dst = os.path.join(os.path.dirname(__file__), "..")
+        dst = os.getcwd()
         os.makedirs(dst, exist_ok=True)
-
-        files_to_copy = [
-            "copy_bitstream.sh",
-            "marcos_fpga_rp-122.bit",
-            "marcos_fpga_rp-122.bit.bin",
-            "marcos_fpga_rp-122.dtbo",
-            "readme.org"
-        ]
-
+        files_to_copy = ["copy_bitstream.sh", "marcos_fpga_rp-122.bit", "marcos_fpga_rp-122.bit.bin",
+            "marcos_fpga_rp-122.dtbo", "readme.org"]
         for fname in files_to_copy:
             src_file = os.path.join(extras_path, fname)
             if os.path.exists(src_file):
                 shutil.copy(src_file, dst)
             else:
                 print(f"[WARNING] File not found and not copied: {src_file}")
+
+        # Communicate with RP
+        comm_path = os.path.dirname(__file__)
+        src_file = os.path.join(comm_path, "../communicateRP.sh")
+        shutil.copy(src_file, dst)
 
         self.action_server.setCheckable(True)
         self.action_start.triggered.connect(self.startMaRCoS)

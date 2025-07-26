@@ -23,11 +23,13 @@ if not os.path.exists('protocols'):
 from marge.controller.controller_session import SessionController
 
 
-# Run the gui
-app = QApplication(sys.argv)
-gui = SessionController()
-gui.show()
-sys.exit(app.exec_())
+def MaRGE():
+    # Run the gui
+    app = QApplication(sys.argv)
+    gui = SessionController()
+    gui.show()
+    sys.exit(app.exec_())
+    console_controller.close_log()
 
-# Avant de quitter l'application :
-console_controller.close_log()
+if __name__ == "__main__":
+    MaRGE()

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "marge-mri"
-version = "0.0.1.c"
+version = "0.0.2.beta1"
 authors = [
     { name = "José Miguel Algarín", email = "josalggui@i3m.upv.es" },
 ]
@@ -45,10 +45,3 @@ packages = ["src/marge"]
 
 [tools.setuptools]
 include-package-data = true
-
-[tool.setuptools.package-data]
-"marge.resources.icons" = ["*"]
-"marge.resources.images" = ["*"]
-"marge.marcos.marcos_extras" = ["*"]
-"marge.marcos.marcos_server" = ["*"]
-"marge.marcos.marcos_client" = ["*"]
