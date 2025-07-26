@@ -27,11 +27,24 @@ class MarcosController(MarcosToolBar):
         super(MarcosController, self).__init__(*args, **kwargs)
 
         # Copy relevant files from marcos_extras
-        shutil.copy("marcos/marcos_extras/copy_bitstream.sh", "../marge")
-        shutil.copy("marcos/marcos_extras/marcos_fpga_rp-122.bit", "../marge")
-        shutil.copy("marcos/marcos_extras/marcos_fpga_rp-122.bit.bin", "../marge")
-        shutil.copy("marcos/marcos_extras/marcos_fpga_rp-122.dtbo", "../marge")
-        shutil.copy("marcos/marcos_extras/readme.org", "../marge")
+        extras_path = os.path.join(os.path.dirname(__file__), "..", "marcos", "marcos_extras")
+        dst = os.path.join(os.path.dirname(__file__), "..")
+        os.makedirs(dst, exist_ok=True)
+
+        files_to_copy = [
+            "copy_bitstream.sh",
+            "marcos_fpga_rp-122.bit",
+            "marcos_fpga_rp-122.bit.bin",
+            "marcos_fpga_rp-122.dtbo",
+            "readme.org"
+        ]
+
+        for fname in files_to_copy:
+            src_file = os.path.join(extras_path, fname)
+            if os.path.exists(src_file):
+                shutil.copy(src_file, dst)
+            else:
+                print(f"[WARNING] File not found and not copied: {src_file}")
 
         self.action_server.setCheckable(True)
         self.action_start.triggered.connect(self.startMaRCoS)

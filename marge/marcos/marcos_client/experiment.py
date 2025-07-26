@@ -6,7 +6,7 @@ import socket, time, warnings
 import numpy as np
 import matplotlib.pyplot as plt
 
-from marcos.marcos_client.local_config import ip_address, port, fpga_clk_freq_MHz, grad_board
+from marge.marcos.marcos_client.local_config import ip_address, port, fpga_clk_freq_MHz, grad_board
 import marcos.marcos_client.grad_board as gb
 import marcos.marcos_client.server_comms as sc
 import marcos.marcos_client.marcompile as fc

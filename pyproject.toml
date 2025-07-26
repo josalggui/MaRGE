@@ -3,12 +3,12 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "marge-mri-example"
-version = "0.0.18"
+name = "marge-mri"
+version = "0.0.1.c"
 authors = [
-    { name = "Nihal", email = "votre.email@example.com" },
+    { name = "José Miguel Algarín", email = "josalggui@i3m.upv.es" },
 ]
-description = "Une description courte de votre projet"
+description = "MaRCoS Graphical Environment (MaRGE)"
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
@@ -19,7 +19,7 @@ classifiers = [
 dependencies = [
     "resources",
     "requests >= 2.25.1",
-    "numpy >= 1.20.0",
+    "numpy",
     "matplotlib",
     "nibabel",
     "pydicom",
@@ -47,5 +47,8 @@ packages = ["src/marge"]
 include-package-data = true
 
 [tool.setuptools.package-data]
-"marge.resources.icons" = ["*.png", "*.svg"]
-"marge.resources.images" = ["*.png"]
+"marge.resources.icons" = ["*"]
+"marge.resources.images" = ["*"]
+"marge.marcos.marcos_extras" = ["*"]
+"marge.marcos.marcos_server" = ["*"]
+"marge.marcos.marcos_client" = ["*"]

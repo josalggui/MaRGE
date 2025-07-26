@@ -2,7 +2,7 @@
 
 import msgpack, warnings
 
-from marcos.marcos_client.marmachine import MarServerWarning
+from marge.marcos.marcos_client.marmachine import MarServerWarning
 
 version_major = 1
 version_minor = 0

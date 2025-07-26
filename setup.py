@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="marge-mri-example",
-    version="0.0.5",
+    name="marge-mri",
+    version="0.0.1.c",
     packages=find_packages(),
     install_requires=[],
-    author="Nihal Ouahabi",
-    description="Une description de ton package MaRGE",
+    author="José Miguel Algarín",
+    description="MaRCoS Graphical Environment (MaRGE)",
 )
 

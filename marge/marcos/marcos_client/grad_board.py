@@ -42,7 +42,7 @@ import numpy as np
 from numpy.polynomial import Polynomial
 import time, warnings
 import matplotlib.pyplot as plt
-import marcos.marcos_client.local_config as lc
+import marge.marcos.marcos_client.local_config as lc
 
 import pdb
 st = pdb.set_trace
