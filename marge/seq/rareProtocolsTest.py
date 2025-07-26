@@ -23,8 +23,8 @@ for subdir in subdirs:
 import numpy as np
 import marcos.marcos_client.experiment
 import scipy.signal as sig
-import configs.hw_config as hw # Import the scanner hardware config
-import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+import marge.configs.hw_config as hw # Import the scanner hardware config
+import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import pyqtgraph as pg
 import time
 

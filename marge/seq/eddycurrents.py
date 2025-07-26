@@ -1,25 +1,11 @@
 import os
 import sys
 
-#*****************************************************************************
-# Get the directory of the current script
-main_directory = os.path.dirname(os.path.realpath(__file__))
-parent_directory = os.path.dirname(main_directory)
-parent_directory = os.path.dirname(parent_directory)
-
-# Define the subdirectories you want to add to sys.path
-subdirs = ['MaRGE', 'marcos_client']
-
-# Add the subdirectories to sys.path
-for subdir in subdirs:
-    full_path = os.path.join(parent_directory, subdir)
-    sys.path.append(full_path)
-#******************************************************************************
-import controller.experiment_gui as ex
+import marge.controller.experiment_gui as ex
 import numpy as np
-import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import configs.hw_config as hw
-import configs.units as units
+import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+import marge.configs.hw_config as hw
+import marge.configs.units as units
 
 class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):
     def __init__(self):

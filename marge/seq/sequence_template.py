@@ -21,10 +21,10 @@ for subdir in subdirs:
     sys.path.append(full_path)
 #******************************************************************************
 import numpy as np
-import controller.experiment_gui as ex
-import configs.hw_config as hw  # Import the scanner hardware config
-import configs.units as units
-import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+import marge.controller.experiment_gui as ex
+import marge.configs.hw_config as hw  # Import the scanner hardware config
+import marge.configs.units as units
+import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 from marga_pulseq.interpreter import PSInterpreter  # Import the flocra-pulseq interpreter
 import pypulseq as pp  # Import PyPulseq
 

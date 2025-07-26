@@ -31,9 +31,9 @@ import scipy.signal as sig
 import pypulseq as pp
 
 import marcos.marcos_client.experiment
-import configs.hw_config as hw
-import configs.units as units
-import seq.mriBlankSeq as blankSeq
+import marge.configs.hw_config as hw
+import marge.configs.units as units
+import marge.seq.mriBlankSeq as blankSeq
 from marga_pulseq.interpreter import PSInterpreter
 
 

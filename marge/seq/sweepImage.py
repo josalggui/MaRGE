@@ -22,7 +22,7 @@ for subdir in subdirs:
     sys.path.append(full_path)
 #******************************************************************************
 import numpy as np
-import seq.mriBlankSeq as blankSeq
+import marge.seq.mriBlankSeq as blankSeq
 
 class SweepImage(blankSeq.MRIBLANKSEQ):
     def __init__(self):

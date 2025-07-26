@@ -21,7 +21,7 @@ for subdir in subdirs:
     full_path = os.path.join(parent_directory, subdir)
     sys.path.append(full_path)
 #******************************************************************************
-import seq.rare as rare
+import marge.seq.rare as rare
 
 class Localizer(rare.RARE):
     def __init__(self):

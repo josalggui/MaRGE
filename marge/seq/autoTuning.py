@@ -27,10 +27,10 @@ for subdir in subdirs:
     sys.path.append(full_path)
 #******************************************************************************
 import numpy as np
-import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import configs.hw_config as hw
-import autotuning.autotuning as autotuning
-import configs.units as units
+import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+import marge.configs.hw_config as hw
+import marge.autotuning.autotuning as autotuning
+import marge.configs.units as units
 
 
 class AutoTuning(blankSeq.MRIBLANKSEQ):

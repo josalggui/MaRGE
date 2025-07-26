@@ -25,9 +25,9 @@ import numpy as np
 import marcos.marcos_client.experiment
 import scipy.signal as sig
 from scipy.stats import linregress
-import configs.hw_config as hw # Import the scanner hardware config
-import configs.units as units
-import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+import marge.configs.hw_config as hw # Import the scanner hardware config
+import marge.configs.units as units
+import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 
 from datetime import date
 from datetime import datetime

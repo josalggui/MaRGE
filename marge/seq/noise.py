@@ -26,8 +26,8 @@ for subdir in subdirs:
 import marge.controller.experiment_gui as ex
 import numpy as np
 from marge.seq.mriBlankSeq import MRIBLANKSEQ
-import configs.hw_config as hw
-import configs.units as units
+import marge.configs.hw_config as hw
+import marge.configs.units as units
 
 class Noise(MRIBLANKSEQ):
     def __init__(self):

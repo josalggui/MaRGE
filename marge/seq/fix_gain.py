@@ -18,8 +18,8 @@ for subdir in subdirs:
     sys.path.append(full_path)
 # ******************************************************************************
 
-import seq.larmor as larmor
-import configs.hw_config as hw
+import marge.seq.larmor as larmor
+import marge.configs.hw_config as hw
 import autotuning.autotuning as autotuning
 
 
