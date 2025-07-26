@@ -22,7 +22,7 @@ for subdir in subdirs:
     sys.path.append(full_path)
 #******************************************************************************
 import numpy as np
-import marcos.marcos_client.experiment
+import marge.marcos.marcos_client.experiment
 import scipy.signal as sig
 import marge.configs.hw_config as hw # Import the scanner hardware config
 import marge.configs.units as units

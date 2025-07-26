@@ -26,7 +26,7 @@ import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any 
 import scipy.signal as sig
 import marge.configs.hw_config as hw
 import marge.configs.units as units
-import marcos.marcos_client.experiment
+import marge.marcos.marcos_client.experiment
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 

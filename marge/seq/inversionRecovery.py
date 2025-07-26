@@ -7,7 +7,7 @@ MRILAB @ I3M
 """
 
 
-import marcos.marcos_client.experiment
+import marge.marcos.marcos_client.experiment
 import numpy as np
 import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig

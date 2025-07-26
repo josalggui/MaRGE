@@ -136,13 +136,21 @@ class SessionWidget(QWidget):
         self.main_layout.addWidget(self.scanner_line_edit, row, 1)
 
         # Create QLineEdit for software version
-        # Get repo version
+        # Get repo or pypi version
         try:
-            tag = subprocess.check_output(['git', 'describe', '--tags'], stderr=subprocess.STDOUT).strip().decode(
-                'utf-8')
+            tag = subprocess.check_output(
+                ['git', 'describe', '--tags'],
+                stderr=subprocess.STDOUT
+            ).strip().decode('utf-8')
         except subprocess.CalledProcessError as e:
             print(f"Error getting Git tag: {e.output.decode('utf-8')}")
-            tag = ""
+            from importlib.metadata import version
+
+            try:
+                tag = version("marge-mri")  # Replace with your actual PyPI package name
+            except Exception as e2:
+                print(f"Error getting PyPI version: {e2}")
+                tag = "unknown"
         row += 1
         self.main_layout.addWidget(QLabel("Software version"), row, 0)
         self.software_line_edit = QLineEdit(tag)
