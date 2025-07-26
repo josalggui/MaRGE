@@ -53,7 +53,7 @@ class ProtocolsController(ProtocolsToolBar):
 
         if folder_name:
             shutil.rmtree(folder_name)
-            print("Protocol removed")
+            print(f"Protocol {folder_name} removed")
             self.main.protocol_list.updateProtocolList()
 
     def delSequence(self):
@@ -67,12 +67,12 @@ class ProtocolsController(ProtocolsToolBar):
 
         # Open a file dialog to get the filename to save to
         directory = 'protocols/%s' % protocol
-        file_name, _ = QFileDialog.getOpenFileName(self.main, 'Remove sequence from protocol', directory, '(*.csv)')
+        file_name, _ = QFileDialog.getOpenFileName(None, 'Remove sequence from protocol', directory, options = QFileDialog.Options())
 
         # Delete protocol
         if file_name:
             os.remove(file_name)
-            print("Protocol removed")
+            print(f"Sequence {file_name} removed from protocol {protocol}")
             self.main.protocol_inputs.updateProtocolInputs()
 
     def newProtocol(self):
@@ -91,7 +91,7 @@ class ProtocolsController(ProtocolsToolBar):
             # Check if the folder is the good one
             directory = os.path.dirname(file_name).split('/')[-1]
             protocol = file_name.split('/')[-1]
-            if directory != 'marge/protocols':
+            if directory != 'protocols':
                 print("Error. New protocols should be in 'protocols' folder.")
                 return
 
