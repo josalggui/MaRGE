@@ -49,6 +49,7 @@ shimming_factor = 1e-4
 rf_min_gain = 35
 rf_max_gain = 50
 
+tyger_server = "localhost"
 
 # Arduinos
 ard_sn_autotuning = '4423431343435131E180'

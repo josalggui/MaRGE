@@ -28,6 +28,7 @@ class OthersWidget(QWidget):
         self.add_input(label="FOVz (cm)", value="20.0", tip="Field of View in the Z direction")
         self.add_input(label="Shimming factor", value="1e-5", tip="Factor used for shimming adjustments")
         self.add_input(label="Bash path", value="gnome-terminal", tip="Path for executing bash commands")
+        self.add_input(label="Tyger server", value="localhost", tip="Tyger server")
         self.add_input(label="Arduino autotuning", value="242353133363518050E0",
                        tip="Arduino serial number for autotuning")
         self.add_input(label="Arduino interlock", value="242353133363518050E1",
