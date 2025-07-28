@@ -96,6 +96,7 @@ class MRIBLANKSEQ:
         self.addParameter(key='dfov', val=[0.0, 0.0, 0.0])
         self.addParameter(key='fov', val=[0.0, 0.0, 0.0])
         self.addParameter(key='pypulseq', val=False)
+        self.addParameter(key='toLittle', val=False)
 
     # *********************************************************************************
     # *********************************************************************************

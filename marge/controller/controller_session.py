@@ -15,10 +15,7 @@ import qdarkstyle
 import marge.configs.hw_config as hw
 from .controller_main import MainController
 from marge.ui.window_session import SessionWindow
-
-
 from marge.controller.controller_console import ConsoleController
-
 
 
 class SessionController(SessionWindow):
@@ -33,8 +30,7 @@ class SessionController(SessionWindow):
         Initializes the SessionController.
         """
         super().__init__()
-        self.console = ConsoleController()  # Initialisation console si nécessaire
-
+        self.console = ConsoleController()
         self.session = None
         self.main_gui = None
         self.tab_session.rf_coil_combo_box.addItems(hw.antenna_dict.keys())
@@ -45,9 +41,8 @@ class SessionController(SessionWindow):
         self.update_action.triggered.connect(self.update_hardware)
         self.close_action.triggered.connect(self.close)
         self.switch_theme_action.triggered.connect(self.switch_theme)
+        self.little_version_action.triggered.connect(self.runLitleGui)
 
-
-        # Check if system is ready
         self.check_system()
 
     def check_system(self):
@@ -104,25 +99,20 @@ class SessionController(SessionWindow):
         self.check_system()
 
     def runMainGui(self):
-        """
-        Runs the main GUI and sets up the session.
-        """
         self.updateSessionDict()
+        self.session['little_version'] = False
 
-        # Create folder
         self.session['directory'] = os.path.join(
             'experiments', 'acquisitions',
             self.session['project'], self.session['subject_id'], self.session['study'], self.session['side'])
         if not os.path.exists(self.session['directory']):
             os.makedirs(self.session['directory'])
 
-        # Save session in csv and copy config files
         with open(os.path.join(self.session['directory'], "session.csv"), mode="w", newline="") as file:
             writer = csv.writer(file)
             for key, value in self.session.items():
                 writer.writerow([key, value])
 
-        # Copy configuration files to session directory
         shutil.copy2("configs/hw_gradients.csv", os.path.join(self.session["directory"], "hw_gradients.csv"))
         shutil.copy2("configs/hw_others.csv", os.path.join(self.session["directory"], "hw_others.csv"))
         shutil.copy2("configs/hw_redpitayas.csv", os.path.join(self.session["directory"], "hw_redpitayas.csv"))
@@ -132,7 +122,6 @@ class SessionController(SessionWindow):
 
         self.session['seriesNumber'] = 0
 
-        # Open the main gui
         if self.main_gui is None:
             self.main_gui = MainController(session=self.session, demo=False, parent=self)
         else:
@@ -145,19 +134,15 @@ class SessionController(SessionWindow):
         self.main_gui.show()
 
     def runDemoGui(self):
-        """
-        Runs the main GUI in DEMO mode and sets up the session.
-        """
         self.updateSessionDict()
+        self.session['little_version'] = False
 
-        # Create folder
         self.session['directory'] = os.path.join(
             'experiments', 'acquisitions',
             self.session['project'], self.session['subject_id'], self.session['study'], self.session['side'])
         if not os.path.exists(self.session['directory']):
             os.makedirs(self.session['directory'])
 
-        # Save session in csv and copy config files
         with open(os.path.join(self.session['directory'], "session.csv"), mode="w", newline="") as file:
             writer = csv.writer(file)
             for key, value in self.session.items():
@@ -172,7 +157,6 @@ class SessionController(SessionWindow):
 
         self.session['seriesNumber'] = 0
 
-        # Open the main gui
         if self.main_gui is None:
             self.main_gui = MainController(session=self.session, demo=True, parent=self)
         else:
@@ -184,24 +168,53 @@ class SessionController(SessionWindow):
         self.hide()
         self.main_gui.show()
 
-    def closeEvent(self, event):
+    def runLitleGui(self):
         """
-        Handle the window close event cleanly.
+        Runs the main GUI in LITTLE version mode and sets up the session.
+        """
+        self.updateSessionDict()
+        self.session['little_version'] = True
 
-        Args:
-            event: The close event.
-        """
+        self.session['directory'] = os.path.join(
+            'experiments', 'acquisitions',
+            self.session['project'], self.session['subject_id'], self.session['study'], self.session['side'])
+        if not os.path.exists(self.session['directory']):
+            os.makedirs(self.session['directory'])
+
+        with open(os.path.join(self.session['directory'], "session.csv"), mode="w", newline="") as file:
+            writer = csv.writer(file)
+            for key, value in self.session.items():
+                writer.writerow([key, value])
+
+        shutil.copy2("configs/hw_gradients.csv", os.path.join(self.session["directory"], "hw_gradients.csv"))
+        shutil.copy2("configs/hw_others.csv", os.path.join(self.session["directory"], "hw_others.csv"))
+        shutil.copy2("configs/hw_redpitayas.csv", os.path.join(self.session["directory"], "hw_redpitayas.csv"))
+        shutil.copy2("configs/hw_rf.csv", os.path.join(self.session["directory"], "hw_rf.csv"))
+        shutil.copy2("configs/sys_projects.csv", os.path.join(self.session["directory"], "sys_projects.csv"))
+        shutil.copy2("configs/sys_study.csv", os.path.join(self.session["directory"], "sys_study.csv"))
+
+        self.session['seriesNumber'] = 0
+
+        if self.main_gui is None:
+            self.main_gui = MainController(session=self.session, demo=False, parent=self)
+        else:
+            self.main_gui.set_session(self.session)
+            self.main_gui.history_list.delete_items()
+            self.main_gui.console.clear_console()
+            self.main_gui.set_demo(False)
+
+        self.hide()
+        self.main_gui.show()
+
+    def closeEvent(self, event):
         if self.main_gui is not None:
             self.main_gui.app_open = False
             if not self.main_gui.demo:
-                # Close server
                 try:
                     subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 except Exception as e:
                     print("ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
                     print(str(e))
-
-                # Disable power modules
                 try:
                     self.main_gui.toolbar_marcos.arduino.send("GPA_ON 0;")
                     self.main_gui.toolbar_marcos.arduino.send("RFPA_RF 0;")
@@ -209,7 +222,6 @@ class SessionController(SessionWindow):
                     print("ERROR: Could not disable power modules.")
                     print(str(e))
 
-        # Close console logging if exists
         if hasattr(self, 'console'):
             self.console.close_log()
 
@@ -217,21 +229,15 @@ class SessionController(SessionWindow):
         super().closeEvent(event)
 
     def close(self):
-        """
-        Closes the session and exits the program.
-        """
         if self.main_gui is not None:
             self.main_gui.app_open = False
             if not self.main_gui.demo:
-                # Close server
                 try:
                     subprocess.run(
                         [hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 except Exception as e:
                     print("ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
                     print(str(e))
-
-                # Disable power modules
                 try:
                     self.main_gui.toolbar_marcos.arduino.send("GPA_ON 0;")
                     self.main_gui.toolbar_marcos.arduino.send("RFPA_RF 0;")
@@ -239,7 +245,6 @@ class SessionController(SessionWindow):
                     print("ERROR: Could not disable power modules.")
                     print(str(e))
 
-        # Close console logging if exists
         if hasattr(self, 'console'):
             self.console.close_log()
 
@@ -251,13 +256,9 @@ class SessionController(SessionWindow):
         if self.is_dark_theme:
             self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
         else:
-            self.setStyleSheet("")  # Light theme: default Qt style
+            self.setStyleSheet("")
 
     def updateSessionDict(self):
-        """
-        Updates the session dictionary with the current session information.
-        """
-
         def get_text_or_placeholder(widget):
             return widget.text() if widget.text() else widget.placeholderText()
 
@@ -276,7 +277,5 @@ class SessionController(SessionWindow):
                         'rf_coil': self.tab_session.rf_coil_combo_box.currentText(),
                         'software_version': get_text_or_placeholder(self.tab_session.software_line_edit),
                         'black_theme': self.is_dark_theme}
-
-        # Save session theme
 
         hw.b1Efficiency = hw.antenna_dict.get(self.session['rf_coil'], 1.0)

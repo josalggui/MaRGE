@@ -48,6 +48,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.nScans = None
         self.addParameter(key='seqName', string='LarmorInfo', val='Larmor')
         self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='toLittle', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.066, units=units.MHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90.0, field='RF')

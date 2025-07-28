@@ -36,6 +36,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # Input the parameters
         self.cal_method = None
         self.addParameter(key='seqName', string='RabiFlopsInfo', val='RabiFlops')
+        self.addParameter(key='toLittle', val=True)
         self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')

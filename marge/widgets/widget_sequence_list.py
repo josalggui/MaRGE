@@ -12,8 +12,17 @@ class SequenceListWidget(QComboBox):
         super(SequenceListWidget, self).__init__(*args, **kwargs)
         self.main = parent
 
-        # Add sequences to sequences list
-        self.addItems(sorted(list(defaultsequences.keys())))
+        toLittle = self.main.session.get("little_version", False)
+
+        # Add sequences to the combo box depending on the mode
+        if toLittle:
+            # Add only sequences with toLittle == True
+            for name, sequence in defaultsequences.items():
+                if sequence.getParameter('toLittle') == True:
+                    self.addItem(name)
+        else:
+            # Add all sequences
+            self.addItems(sorted(list(defaultsequences.keys())))
 
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.setMaximumWidth(400)

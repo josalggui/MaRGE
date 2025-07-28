@@ -150,4 +150,3 @@ class MainWindow(QMainWindow):
 
     def toggle_little_version(self):
         print("Little Version button clicked")
-        # Tu pourras ici cacher certains widgets pour une vue simplifiée
