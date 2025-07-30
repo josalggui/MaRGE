@@ -80,9 +80,15 @@ class Arduino:
 
         :param data: The data to be sent.
         """
+        output = False
         if self.device is not None:
-            self.device.write(data.encode())
-        return self.receive()
+            while output == False:
+                self.device.write(data.encode())
+                output = self.receive()
+                if output == False:
+                    print("WARNING: Arduino communication failed...")
+                    print("Retrying...")
+        return output
 
     def receive(self):
         """
@@ -91,9 +97,18 @@ class Arduino:
         :return: The received data.
         """
         if self.device is not None:
-            while self.device.in_waiting == 0:
+            # Wait for data or timeout
+            t0 = time.time()
+            while self.device.in_waiting == 0 and time.time() - t0 < 2:
                 pass
-            return self.device.readline()
+
+            # If timeout, return False. Otherwise, return received string
+            if time.time() - t0 >= 2:
+                print("Failed to get data...")
+                return False
+            else:
+                print("Data received from Arduino.")
+                return self.device.readline()
         else:
             return "False".encode('utf-8')
 
@@ -182,9 +197,16 @@ if __name__ == "__main__":
     # print(s11)
     # print(z11)
 
-    # # Create an instance of the Arduino class and connect to an Arduino
-    arduino = Arduino()
+    import random
 
-    # Disconnect from the Arduino
-    arduino.connect()
-    arduino.disconnect()
+    # Create an instance of the Arduino class and connect to an Arduino
+    arduino = Arduino()
+    arduino.connect(serial_number='44234313434351416122')
+    n = 0
+    while True:
+        binary_string = ''.join(random.choice('01') for _ in range(17))
+        result = arduino.send(binary_string)
+        n += 1
+        print(f"Iteration {n}")
+
+    # arduino.disconnect()
