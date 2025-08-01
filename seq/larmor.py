@@ -199,13 +199,15 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         return True
 
-    def sequenceAnalysis(self, mode='Standalone'):
-        super().sequenceAnalysis(mode=mode)
+    def sequenceAnalysis(self, mode=None):
+        output = super().sequenceAnalysis(mode=mode)
 
         if mode != 'Standalone':
             for sequence in self.sequence_list.values():
                 if 'larmorFreq' in sequence.mapVals:
                     sequence.mapVals['larmorFreq'] = hw.larmorFreq
+
+        return output
 
 
 if __name__ == '__main__':

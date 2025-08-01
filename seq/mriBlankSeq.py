@@ -197,12 +197,17 @@ class MRIBLANKSEQ:
         return out, tips
 
     def sequenceAnalysis(self, mode=None):
+        # Save little raw data
         raw_data_path = self.saveRawDataLite()
 
-        self.output = dp.run_recon(raw_data_path=raw_data_path)
+        # Get new ouptuts to raw data and output plots
+        output_dict, self.output = dp.run_recon(raw_data_path=raw_data_path)
+        self.mapVals.update(output_dict)
 
+        # Save raw data
         self.saveRawData()
 
+        # Plot if standalone
         if mode == 'Standalone':
             self.plotResults()
 

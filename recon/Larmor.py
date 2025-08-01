@@ -34,26 +34,29 @@ def Larmor(raw_data_path=None):
     # load .mat
     mat_data = sp.io.loadmat(raw_data_path)
 
+    # Create new dictionary to save new outputs
+    output_dict = {}
+
     # Load data
     signal = mat_data['data'][0]
     acq_time = mat_data['acqTime'][0][0] * 1e3  # ms
-    n_points = mat_data['nPoints'][0][0]
+    n_points = mat_data['nPoints'][0][0]  # kHz
     bw = mat_data['bw'][0][0] 
 
     # Generate time and frequency vectors and calcualte the signal spectrum
     tVector = np.linspace(-acq_time / 2, acq_time / 2, n_points)
-    fVector = np.linspace(-bw / 2, bw / 2, n_points) * 1e3  # kHz
+    fVector = np.linspace(-bw / 2, bw / 2, n_points)
     spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal)))
 
     # Get the central frequency
     idf = np.argmax(np.abs(spectrum))
     fCentral = fVector[idf] * 1e-3  # MHz
-    hw.larmorFreq = mat_data['larmorFreq'] + fCentral
+    hw.larmorFreq = mat_data['larmorFreq'][0][0] + fCentral
     print('Larmor frequency: %1.5f MHz' % hw.larmorFreq)
-    mat_data['fCentral'] = fCentral
-    mat_data['larmorFreq0'] = hw.larmorFreq
-    mat_data['signalVStime'] = [tVector, signal]
-    mat_data['spectrum'] = [fVector, spectrum]
+    output_dict['fCentral'] = fCentral
+    output_dict['larmorFreq0'] = hw.larmorFreq
+    output_dict['signalVStime'] = [tVector, signal]
+    output_dict['spectrum'] = [fVector, spectrum]
 
     # Add time signal to the layout
     result1 = {'widget': 'curve',
@@ -77,4 +80,6 @@ def Larmor(raw_data_path=None):
                'row': 1,
                'col': 0}
 
-    return [result1, result2]
+    outputs = [result1, result2]
+
+    return output_dict, outputs

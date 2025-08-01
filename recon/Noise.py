@@ -9,6 +9,7 @@ def Noise(raw_data_path=None):
 
     # load .mat
     mat_data = sp.io.loadmat(raw_data_path)
+    output_dict = {}
 
     # Get data and time vector
     data = mat_data['data']
@@ -54,6 +55,6 @@ def Noise(raw_data_path=None):
                'row': 1,
                'col': 0}
 
-    output = [result1, result2]
+    outputs = [result1, result2]
 
-    return output
+    return output_dict, outputs
