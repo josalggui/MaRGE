@@ -60,7 +60,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='shimming', string='Shimming', val=[-12.5, -12.5, 7.5], field='OTH', units=units.sh)
 
     def sequenceInfo(self):
-        
+
         print("Larmor")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
@@ -199,91 +199,13 @@ class Larmor(blankSeq.MRIBLANKSEQ):
 
         return True
 
-    def sequenceAnalysis(self, mode=None):
-        """
-        Analyzes the acquired data from the Larmor sequence to determine the Larmor frequency
-        and compute the corresponding time-domain signal and frequency spectrum.
-
-        This method processes the acquired data by generating time and frequency vectors,
-        performing a Fourier transform to obtain the signal spectrum, and determining the
-        central frequency. It updates the Larmor frequency and provides the results in both
-        time and frequency domains. The data is then optionally plotted, and the results are
-        saved for further analysis.
-
-        Args:
-            mode (str, optional): The mode of execution. If set to 'Standalone', the results are plotted
-                                   in a standalone manner. Defaults to None.
-
-        Returns:
-            list: A list containing the time-domain signal and frequency spectrum for visualization.
-
-        Notes:
-            - The Larmor frequency is recalculated based on the signal's central frequency from the spectrum.
-            - The time-domain signal and frequency spectrum are both included in the output layout for visualization.
-            - The results are saved as raw data and can be accessed later.
-            - If the mode is not 'Standalone', the Larmor frequency is updated in all sequences in the sequence list.
-        """
-        self.mode = mode
-        # Load data
-        signal = self.mapVals['data']
-        acq_time = self.mapVals['acqTime'] * 1e3  # ms
-        n_points = self.mapVals['nPoints']
-
-        # Generate time and frequency vectors and calcualte the signal spectrum
-        tVector = np.linspace(-acq_time / 2, acq_time / 2, n_points)
-        fVector = np.linspace(-self.bw / 2, self.bw / 2, n_points) * 1e3  # kHz
-        spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal)))
-
-        # Get the central frequency
-        idf = np.argmax(np.abs(spectrum))
-        fCentral = fVector[idf] * 1e-3  # MHz
-        hw.larmorFreq = self.mapVals['larmorFreq'] + fCentral
-        print('Larmor frequency: %1.5f MHz' % hw.larmorFreq)
-        self.mapVals['fCentral'] = fCentral
-        self.mapVals['larmorFreq0'] = hw.larmorFreq
-        self.mapVals['signalVStime'] = [tVector, signal]
-        self.mapVals['spectrum'] = [fVector, spectrum]
+    def sequenceAnalysis(self, mode='Standalone'):
+        super().sequenceAnalysis(mode=mode)
 
         if mode != 'Standalone':
             for sequence in self.sequence_list.values():
                 if 'larmorFreq' in sequence.mapVals:
                     sequence.mapVals['larmorFreq'] = hw.larmorFreq
-
-        # Add time signal to the layout
-        result1 = {'widget': 'curve',
-                   'xData': tVector,
-                   'yData': [np.abs(signal), np.real(signal), np.imag(signal)],
-                   'xLabel': 'Time (ms)',
-                   'yLabel': 'Signal amplitude (mV)',
-                   'title': 'Echo',
-                   'legend': ['abs', 'real', 'imag'],
-                   'row': 0,
-                   'col': 0}
-
-        # Add frequency spectrum to the layout
-        result2 = {'widget': 'curve',
-                   'xData': fVector,
-                   'yData': [np.abs(spectrum)],
-                   'xLabel': 'Frequency (kHz)',
-                   'yLabel': 'Spectrum amplitude (a.u.)',
-                   'title': 'Spectrum',
-                   'legend': [''],
-                   'row': 1,
-                   'col': 0}
-
-        # create self.out to run in iterative mode
-        self.output = [result1, result2]
-
-        # save data once self.output is created
-        self.saveRawData()
-
-        # Plot result in standalone execution
-        if self.mode == 'Standalone':
-            self.plotResults()
-
-        self.mapVals['larmorFreq'] = hw.larmorFreq
-
-        return self.output
 
 
 if __name__ == '__main__':
