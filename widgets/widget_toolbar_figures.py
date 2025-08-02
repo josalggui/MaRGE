@@ -33,9 +33,14 @@ class FiguresToolBar(QToolBar):
         self.addAction(self.action_postprocessing)
 
         # Action button to print results
-        self.action_print_session = QAction(QIcon("resources/icons/printer1.png"), "Print session", self)
-        self.action_print_session.setStatusTip("Print session")
-        self.addAction(self.action_print_session)
+        self.action_print_current_session = QAction(QIcon("resources/icons/printer1.png"), "Report current session", self)
+        self.action_print_current_session.setStatusTip("Report current session")
+        self.addAction(self.action_print_current_session)
+
+        # Action button to print results
+        self.action_print_given_session = QAction(QIcon("resources/icons/printer2.png"), "Report given session", self)
+        self.action_print_given_session.setStatusTip("Report given session")
+        self.addAction(self.action_print_given_session)
 
         # Add Switch Theme button to the marcos toolbar
         self.switch_theme_action = QAction(QIcon("resources/icons/adjust-contrast.svg"), "", self)

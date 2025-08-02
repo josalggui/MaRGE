@@ -15,15 +15,6 @@ class Printer:
     def __init__(self, main=None):
         self.main = main
 
-        # Create a PDF document
-        timestamp = datetime.now().strftime("%y.%m.%d.%H.%M.%S")
-        pdf_filename = f"reports/report.{timestamp}.pdf"
-        self.doc = SimpleDocTemplate(pdf_filename, pagesize=A4)
-
-        # Get some basic styles
-        styles = getSampleStyleSheet()
-        self.story = []
-
     def add_text_to_story(self, text):
         if "ERROR" in text:
             text = f'<font color="red"><b>ERROR</b></font>{text[5:]}'
@@ -53,7 +44,17 @@ class Printer:
         scaled_height = available_width * aspect_ratio
         self.story.append(Image(image, width=available_width, height=scaled_height))
 
-    def create_full_story(self):
+    def create_full_story(self, path=None):
+        # Create a PDF document
+        timestamp = datetime.now().strftime("%y.%m.%d.%H.%M.%S")
+        pdf_filename = f"reports/report.{timestamp}.pdf"
+        self.doc = None
+        self.doc = SimpleDocTemplate(pdf_filename, pagesize=A4)
+
+        # Get some basic styles
+        styles = getSampleStyleSheet()
+        self.story = []
+
         # Connect console text
         try:
             self.main.console.signal_text_ready.connect(self.add_text_to_story)
@@ -61,7 +62,8 @@ class Printer:
             pass
 
         # print session
-        path = self.main.session["directory"] + "/mat"
+        if path is None:
+            path = self.main.session["directory"] + "/mat"
         files = self.get_sorted_mat_files(path)
         for file in files:
             self.story.append(Spacer(1, 12))
@@ -70,7 +72,7 @@ class Printer:
             dp.run_recon(raw_data_path=path + "/" + file, mode="Standalone", printer=self)
 
         try:
-            self.main.console.signal_text_ready.disconnect(self.add_to_story)
+            self.main.console.signal_text_ready.disconnect(self.add_text_to_story)
         except:
             pass
 
