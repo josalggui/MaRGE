@@ -1,14 +1,17 @@
 import importlib
 import os
+from io import BytesIO
 
 import scipy as sp
 import inspect
 from matplotlib import pyplot as plt
+from numpy.testing.print_coercion_tables import print_new_cast_table
+
 import recon
 
 module_path = recon.__path__[0]
 
-def run_recon(raw_data_path=None, mode=None):
+def run_recon(raw_data_path=None, mode=None, printer=None):
     # Load .mat file and get sequence name
     mat_data = sp.io.loadmat(raw_data_path)
     seq = mat_data['seqName'].item()  # Use `.item()` if it's a MATLAB cell
@@ -40,7 +43,7 @@ def run_recon(raw_data_path=None, mode=None):
     if seq in functions.keys():
         recon = functions[seq]
         if recon is not None:
-            output = recon(raw_data_path=raw_data_path)
+            output_dict, output = recon(raw_data_path=raw_data_path)
         else:
             print(f"Recon for '{seq}' not found.")
             return False
@@ -50,11 +53,11 @@ def run_recon(raw_data_path=None, mode=None):
 
     if mode == 'Standalone':
         file_name = mat_data['fileName'][0]
-        plot_results(output=output, title=file_name)
+        plot_results(output=output, title=file_name, printer=printer)
 
-    return output
+    return output_dict, output
 
-def plot_results(output, title=None):
+def plot_results(output, title=None, printer=None):
     """
     Plot results in a standalone window.
 
@@ -104,8 +107,15 @@ def plot_results(output, title=None):
     # Adjust the layout to prevent overlapping titles
     plt.tight_layout()
 
-    # Show the plot
-    plt.show()
+    if printer is not None:
+        # Save the figure to a BytesIO buffer
+        buf = BytesIO()
+        fig.savefig(buf, format='PNG')  # or 'JPEG'
+        plt.close(fig)
+        buf.seek(0)  # Rewind the buffer
+        printer.add_image_to_story(buf)
+    else:
+        plt.show()
 
 if __name__ == '__main__':
     run_recon("../experiments/acquisitions/Example/2025.05.29.16.42/Example/None/mat/Noise.2025.05.29.16.42.11.897.mat",

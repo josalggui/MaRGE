@@ -35,6 +35,8 @@ if not os.path.exists('calibration'):
     os.makedirs('calibration')
 if not os.path.exists('protocols'):
     os.makedirs('protocols')
+if not os.path.exists('reports'):
+    os.makedirs('reports')
 
 from controller.controller_session import SessionController
 

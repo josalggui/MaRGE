@@ -42,6 +42,7 @@ class FiguresController(FiguresToolBar):
         self.action_open_directory.triggered.connect(self.open_folder)
         self.action_postprocessing.triggered.connect(self.openPostGui)
         self.switch_theme_action.triggered.connect(self.switch_theme)
+        self.action_print_session.triggered.connect(self.print_session)
 
     def switch_theme(self):
         if not self.main.session["black_theme"]:
@@ -99,6 +100,9 @@ class FiguresController(FiguresToolBar):
         # Save screenshot and print message
         screenshot.save(screenshot_folder+"/"+file_name)
         print("Screenshot saved in " + screenshot_folder+"/"+file_name)
+
+    def print_session(self):
+        self.main.printer.create_full_story()
 
     def open_folder(self):
         # Get the current operating system

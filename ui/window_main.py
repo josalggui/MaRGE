@@ -16,6 +16,7 @@ from controller.controller_console import ConsoleController
 from controller.controller_figures import FiguresLayoutController
 from controller.controller_history_list import HistoryListController
 from controller.controller_menu import MenuController
+from controller.controller_printer import Printer
 from controller.controller_protocol_inputs import ProtocolInputsController
 from controller.controller_protocol_list import ProtocolListController
 from controller.controller_toolbar_figures import FiguresController
@@ -140,4 +141,7 @@ class MainWindow(QMainWindow):
 
         # Create the post-processing toolbox
         self.post_gui = ProcessingWindowController(session=self.session, main=self)
+
+        # Add printer
+        self.printer = Printer(main=self)
 

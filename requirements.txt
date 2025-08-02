@@ -18,3 +18,5 @@ scikit-learn
 scikit-image
 imageio
 h5py
+reportlab
+pillow

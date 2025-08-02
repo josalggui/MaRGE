@@ -32,6 +32,11 @@ class FiguresToolBar(QToolBar):
         self.action_postprocessing.setStatusTip("Open the post-processing GUI")
         self.addAction(self.action_postprocessing)
 
+        # Action button to print results
+        self.action_print_session = QAction(QIcon("resources/icons/printer1.png"), "Print session", self)
+        self.action_print_session.setStatusTip("Print session")
+        self.addAction(self.action_print_session)
+
         # Add Switch Theme button to the marcos toolbar
         self.switch_theme_action = QAction(QIcon("resources/icons/adjust-contrast.svg"), "", self)
         self.addAction(self.switch_theme_action)
