@@ -69,13 +69,15 @@ def plot_results(output, title=None, printer=None):
 
     """
     # Determine the number of columns and rows for subplots
-    cols = 1
-    rows = 1
+    cols = 0
+    rows = 0
     for item in output:
-        if item['row'] + 1 > rows:
-            rows += 1
-        if item['col'] + 1 > cols:
-            cols += 1
+        if item['row'] > rows:
+            rows = item['row']
+        if item['col'] > cols:
+            cols =item['col']
+    cols = cols + 1
+    rows = rows + 1
 
     # Create the plot window
     fig, axes = plt.subplots(rows, cols, figsize=(10, 5))
