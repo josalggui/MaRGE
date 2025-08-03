@@ -61,9 +61,15 @@ class Printer:
         except:
             pass
 
-        # print session
+        # Check path
         if path is None:
             path = self.main.session["directory"] + "/mat"
+
+        # Create heading
+        full_path = Path(path)
+        id_path = full_path.parents[2].name  # Go up two levels from 'mat'
+        self.add_text_to_story(f"<font color='black' size=16><b>Report for {id_path}</b></font>")
+
         files = self.get_sorted_mat_files(path)
         for file in files:
             self.story.append(Spacer(1, 12))
@@ -78,7 +84,7 @@ class Printer:
 
         self.doc.build(self.story)
 
-        print("Story created!")
+        print("READY: report created!")
 
     @staticmethod
     def get_sorted_mat_files(directory):
