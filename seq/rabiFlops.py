@@ -165,7 +165,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         bw = nPoints / acqTime * hw.oversamplingFactor  # MHz
         samplingPeriod = 1 / bw
         if not self.demo:
-            self.expt = ex.Experiment(lo_freq=larmorFreq,
+            self.expt = ex.Experiment(lo_freq=larmorFreq * 1e6,
                                       rx_t=samplingPeriod,
                                       init_gpa=init_gpa,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
