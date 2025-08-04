@@ -42,7 +42,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='RabiFlopsInfo', val='RabiFlops')
         self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
-        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.06, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
         self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=0.0, field='RF')
@@ -50,7 +50,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
-        self.addParameter(key='shimming', string='Shimming (*1e-4)', val=[-12.5, -12.5, 7.5], field='OTH')
+        self.addParameter(key='shimming', string='Shimming', val=[-12.5, -12.5, 7.5], field='OTH')
         self.addParameter(key='rfExTime0', string='Rf pulse time, Start (us)', val=5.0, field='RF')
         self.addParameter(key='rfExTime1', string='RF pulse time, End (us)', val=100.0, field='RF')
         self.addParameter(key='nSteps', string='Number of steps', val=20, field='RF')
@@ -89,7 +89,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # I do not understand why I cannot create the input parameters automatically
         seqName = self.mapVals['seqName']
         nScans = self.mapVals['nScans']
-        freqOffset = self.mapVals['freqOffset']
+        larmorFreq = self.mapVals['larmorFreq']
         rfExAmp = self.mapVals['rfExAmp']
         rfReAmp = self.mapVals['rfReAmp']
         echoTime = self.mapVals['echoTime']
@@ -107,7 +107,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         dummyPulses = self.mapVals['dummyPulses']
 
         # Time variables in us and MHz
-        freqOffset *= 1e-3
+        larmorFreq *= 1e-6
         echoTime *= 1e3
         repetitionTime *= 1e3
         acqTime *= 1e3
@@ -165,7 +165,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         bw = nPoints / acqTime * hw.oversamplingFactor  # MHz
         samplingPeriod = 1 / bw
         if not self.demo:
-            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + freqOffset,
+            self.expt = ex.Experiment(lo_freq=larmorFreq,
                                       rx_t=samplingPeriod,
                                       init_gpa=init_gpa,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
