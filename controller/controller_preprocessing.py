@@ -194,9 +194,9 @@ class PreProcessingTabController(PreProcessingTabWidget):
 
         # Determine the new shape after zero-padding
         matrix_size = self.zero_padding_order_field.text().split(',')
-        n_rd = int(matrix_size[0])
-        n_ph = int(matrix_size[1])
-        n_sl = int(matrix_size[2])
+        n_rd = int(matrix_size[0]) * shape_0[2]
+        n_ph = int(matrix_size[1]) * shape_0[1]
+        n_sl = int(matrix_size[2]) * shape_0[0]
         shape_1 = n_sl, n_ph, n_rd
 
         # Create an image matrix filled with zeros
