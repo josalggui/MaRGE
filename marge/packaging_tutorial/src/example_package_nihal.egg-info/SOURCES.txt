@@ -1,0 +1,10 @@
+LICENSE
+README.md
+pyproject.toml
+setup.cfg
+src/example_package_nihal/__init__.py
+src/example_package_nihal/example.py
+src/example_package_nihal.egg-info/PKG-INFO
+src/example_package_nihal.egg-info/SOURCES.txt
+src/example_package_nihal.egg-info/dependency_links.txt
+src/example_package_nihal.egg-info/top_level.txt
