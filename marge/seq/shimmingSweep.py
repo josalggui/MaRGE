@@ -66,7 +66,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.plot_seq = plotSeq
         self.demo = demo
 
-        # Calculate the rf amplitudes
+        # Calculate the rf amplitudes # DELETE
         self.rfExAmp = self.rfExFA * np.pi / 180 / (self.rfExTime*1e6 * hw.b1Efficiency)
         self.rfReAmp = self.rfReFA * np.pi / 180 / (self.rfReTime*1e6 * hw.b1Efficiency)
 

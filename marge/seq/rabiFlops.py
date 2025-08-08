@@ -238,7 +238,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.mapVals['piHalfTime'] = piHalfTime
         print("pi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us" % (self.mapVals['rfExAmp'],
                                                                                    self.mapVals['piHalfTime']))
-        hw.b1Efficiency = np.pi / 2 / (self.mapVals['rfExAmp'] * piHalfTime)
+        hw.b1Efficiency = np.pi / 2 / (self.mapVals['rfExAmp'] * piHalfTime) # delete
 
         # Signal vs rf time
         result1 = {'widget': 'curve',

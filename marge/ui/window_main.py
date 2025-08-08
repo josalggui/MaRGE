@@ -60,11 +60,11 @@ class MainWindow(QMainWindow):
         self.toolbar_marcos = MarcosController(self, "MaRCoS toolbar")
         self.addToolBar(self.toolbar_marcos)
 
-        # 👉 Add Little Version button
-        self.action_little_version = QAction(QIcon("resources/icons/arrow-minimise.svg"), "Little Version", self)
-        self.action_little_version.setStatusTip("Activer la version allégée de l'interface")
-        self.action_little_version.triggered.connect(self.toggle_little_version)
-        self.toolbar_marcos.addAction(self.action_little_version)
+        # Add Little Version button
+        #self.action_little_version = QAction(QIcon("resources/icons/power.svg"), "Little Version", self)
+        #self.action_little_version.setStatusTip("Open the little version")
+        #self.action_little_version.triggered.connect(self.toggle_little_version)
+        #self.toolbar_marcos.addAction(self.action_little_version)
 
         # Add sequence toolbar
         self.toolbar_sequences = SequenceController(self, "Sequence toolbar")

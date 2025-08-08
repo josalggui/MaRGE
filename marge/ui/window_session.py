@@ -109,9 +109,9 @@ class SessionWindow(QMainWindow):
         self.toolbar.addAction(self.switch_theme_action)
 
         # 👉 Add Little Version button
-        with resources.path("marge.resources.icons", "arrow-minimise.svg") as icon_path:
+        with resources.path("marge.resources.icons", "power.svg") as icon_path:
             self.little_version_action = QAction(QIcon(str(icon_path)), "Little Version", self)
-        self.little_version_action.setStatusTip("Activer la version allégée de l'interface")
+        self.little_version_action.setStatusTip("Open the little version0")
         self.little_version_action.triggered.connect(self.toggle_little_version)
         self.toolbar.addAction(self.little_version_action)
 

@@ -50,7 +50,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='toLittle', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
-        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.0, units=units.MHz, field='RF')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.066, units=units.MHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90.0, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180.0, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, field='RF', units=units.us)
@@ -245,10 +245,7 @@ class Larmor(blankSeq.MRIBLANKSEQ):
         self.mapVals['spectrum'] = [fVector, spectrum]
 
         # TODO: delete
-        if mode != 'Standalone':
-            for sequence in self.sequence_list.values():
-                if 'larmorFreq' in sequence.mapVals:
-                    sequence.mapVals['larmorFreq'] = hw.larmorFreq
+
 
         # Add time signal to the layout
         result1 = {'widget': 'curve',
