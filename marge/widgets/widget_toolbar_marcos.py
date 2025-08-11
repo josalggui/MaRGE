@@ -3,6 +3,8 @@
 @email:     josalggui@i3m.upv.es
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
+import sys
+
 from PyQt5.QtWidgets import QToolBar, QAction
 from PyQt5.QtGui import QIcon
 from importlib import resources
@@ -23,6 +25,14 @@ class MarcosToolBar(QToolBar):
             self.action_step_2 = QAction(QIcon(str(path_init_gpa)), "Set up server and client", self)
         self.action_step_2.setStatusTip("Set up server and client")
         self.addAction(self.action_step_2)
+
+        # Enable only on Linux
+        if sys.platform.startswith("linux"):
+            self.action_step_1.setEnabled(True)
+            self.action_step_2.setEnabled(True)
+        else:
+            self.action_step_1.setEnabled(False)
+            self.action_step_2.setEnabled(False)
 
         # Setup MaRCoS
         with resources.path("marge.resources.icons", "M.png") as path_m:

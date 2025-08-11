@@ -116,13 +116,13 @@ fi
 echo "[3/4] Remove stale SSH key for Red Pitaya IP (if exists)"
 read -p "Enter the Red Pitaya IP address to clean from known_hosts (e.g., 192.168.1.101): " RP_IP
 KNOWN_HOSTS_FILE="/home/$(logname)/.ssh/known_hosts"
-ssh-keygen -f "$KNOWN_HOSTS_FILE" -R "$RP_IP" || true
+sudo -u "$(logname)" ssh-keygen -f "$KNOWN_HOSTS_FILE" -R "$RP_IP" || true
 echo "✅ Old SSH key for $RP_IP removed (if it existed)."
 echo ""
 
 #*********************************************************************#
 echo "[4/4] Adding Red Pitaya ip address to known_hosts"
-ssh-keyscan $RP_IP >> /home/$(logname)/.ssh/known_hosts
+sudo -u "$(logname)" ssh-keyscan $RP_IP >> /home/$(logname)/.ssh/known_hosts
 echo "✅ $RP_IP added to known_hosts"
 echo ""
 
