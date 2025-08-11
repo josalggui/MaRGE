@@ -42,10 +42,14 @@ class MarcosController(MarcosToolBar):
         # Communicate with RP
         comm_path = os.path.dirname(__file__)
         src_file = os.path.join(comm_path, "../communicateRP.sh")
-        shutil.copy(src_file, dst)
+        try:
+            shutil.copy(src_file, dst)
+        except:
+            pass
 
         self.action_server.setCheckable(True)
-        self.action_start.triggered.connect(self.startMaRCoS)
+        self.action_step_1.triggered.connect(self.marcos_step_1)
+        self.action_step_2.triggered.connect(self.marcos_step_2)
         self.action_server.triggered.connect(self.controlMarcosServer)
         self.action_copybitstream.triggered.connect(self.copyBitStream)
         self.action_gpa_init.triggered.connect(self.initgpa)  # <- Tu as eu l'erreur ici
@@ -102,20 +106,23 @@ class MarcosController(MarcosToolBar):
 
         return ip_addresses
 
-    def startMaRCoS(self):
-        if not self.main.demo:
-            try:
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                subprocess.run([hw.bash_path, "--", "./startRP.sh", hw.rp_ip_address, hw.rp_version])
-                self.initgpa()
-                print("READY: MaRCoS updated, server connected, gpa initialized.")
-            except:
-                print("ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
-        else:
-            print("This is a demo\n")
+    def marcos_step_1(self):
+        try:
+            subprocess.run([
+                "gnome-terminal", "--",
+                "bash", "-c", f"sudo ./marcos_step_1.sh; exec bash"
+            ])
+        except:
+            print("ERROR: Something went wrong.")
 
-        self.action_server.setChecked(True)
-        self.main.toolbar_sequences.serverConnected()
+    def marcos_step_2(self):
+        try:
+            subprocess.run([
+                "gnome-terminal", "--",
+                "bash", "-c", f"sudo ./marcos_step_2.sh; exec bash"
+            ])
+        except:
+            print("ERROR: Something went wrong.")
 
     def controlMarcosServer(self):
         if not self.main.demo:

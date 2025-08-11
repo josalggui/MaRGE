@@ -12,11 +12,17 @@ class MarcosToolBar(QToolBar):
         super(MarcosToolBar, self).__init__(*args, **kwargs)
         self.main = main
 
-        # Setup all
-        with resources.path("marge.resources.icons", "initGPA.png") as path_init_gpa:
-            self.action_start = QAction(QIcon(str(path_init_gpa)), "Setup MaRCoS", self)
-        self.action_start.setStatusTip("Setup MaRCoS")
-        self.addAction(self.action_start)
+        # Prepare your SD card
+        with resources.path("marge.resources.icons", "sd-card.png") as path_init_gpa:
+            self.action_step_1 = QAction(QIcon(str(path_init_gpa)), "Set up sd-card", self)
+        self.action_step_1.setStatusTip("Set up sd-card")
+        self.addAction(self.action_step_1)
+
+        # Prepare your SD card
+        with resources.path("marge.resources.icons", "redpitaya.png") as path_init_gpa:
+            self.action_step_2 = QAction(QIcon(str(path_init_gpa)), "Set up server and client", self)
+        self.action_step_2.setStatusTip("Set up server and client")
+        self.addAction(self.action_step_2)
 
         # Setup MaRCoS
         with resources.path("marge.resources.icons", "M.png") as path_m:
