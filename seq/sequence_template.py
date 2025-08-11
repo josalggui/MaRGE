@@ -54,7 +54,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
                           tip="The identifier name for the sequence.")
 
         # To automatically include the sequence into MaRGE.
-        self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
+        self.addParameter(key='toMaRGE', string='to MaRGE', val=False)
 
         # To let the code know that we are using tools associated to pypulseq
         self.addParameter(key='pypulseq', string='PyPulseq', val=True)

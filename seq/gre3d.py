@@ -44,7 +44,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         super(GRE3D, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='GRE3DInfo', val='GRE3D')
-        self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='toMaRGE', val=False)
         self.addParameter(key='nScans', string='Number of scans', val=2, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz,
                           field='RF')

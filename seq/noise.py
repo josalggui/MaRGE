@@ -43,6 +43,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='bw', string='Acquisition bandwidth (kHz)', val=50.0, units=units.kHz, field='RF')
         self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500.0, field='RF', units=units.ms)
+        self.addParameter(key='sleepTime', string='Sleep Time (s)', val=0.0, field='OTH')
 
     def sequenceInfo(self):
         
@@ -94,6 +95,7 @@ class Noise(blankSeq.MRIBLANKSEQ):
             # SEQUENCE
             self.iniSequence(20, np.array((0, 0, 0)))
             t0 = 30 + hw.addRdPoints*hw.oversamplingFactor/self.bw
+            self.ttlOffRecPulse(t0, acqTime)
             self.rxGateSync(t0, acqTime, channel=self.rxChannel)
             t0 = t0 + acqTime + hw.addRdPoints*hw.oversamplingFactor/self.bw
             if t0 < self.repetitionTime:

@@ -33,7 +33,8 @@ import ismrmrd.xsd
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 from marge_utils import utils
-
+from marge_tyger import tyger_rare
+import marge_tyger.tyger_config as tyger_conf
 
 #*********************************************************************************
 #*********************************************************************************
@@ -112,15 +113,12 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
         self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
                           tip="'True' or 'False' to plot odd and even images separately")
-        self.addParameter(key='bm4d', string='BM4D std', val=-1, field='PRO',
-                          tip='Perform BM4D filter: -1 -> do not apply, 0 -> automatic std calculation, >0 to use manual'
-                              ' std value.')
-        self.addParameter(key='cosbell_factor', string='Cosbell factor', val=0, field='PRO',
-                          tip='Perform cosbell filter in k-space')
-        self.addParameter(key='padding', string='Final size (rd, ph, sl)', val=[0, 0, 0], field='PRO',
-                          tip='Final matrix size after processing zero padding')
-        self.addParameter(key='partial_method', string='Partial recon method', val='POCS', field='PRO',
-                          tip="'zero' -> zero padding, pocs -> Projection Onto Convex Sets")
+        self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
+                          tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
+        self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',
+                          tip='Options: cp, art, artpk, fft.')
+        self.addParameter(key='boFit_file', string='Bo Fit file', val='boFit_default.txt', field='PRO',
+                          tip='Path to the Bo Fit file inside [b0_maps] folder.')
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
         self.header = ismrmrd.xsd.ismrmrdHeader()
@@ -988,6 +986,51 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
 
         # Save results
         self.saveRawData()
+
+        ## Tyger Reconstruction
+        if axes_enable == [1,1,1] and self.tyger_recon == 1:
+            if self.full_plot == 'False' or self.full_plot is False:
+                print('Preparing Tyger enviroment...')
+                rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
+                sign_rarepp = [-1,-1,-1,1,1,1,1,1, tyger_conf.cp_batchsize_RARE]
+                if self.recon_type == 'cp':
+                    output_field = 'imgTygerCP'
+                elif self.recon_type == 'art':
+                    output_field = 'imgTygerART'
+                elif self.recon_type == 'artpk':
+                    output_field = 'imgTygerARTPK'
+                elif self.recon_type == 'fft':
+                    output_field = 'imgTygerFFT'
+                else:
+                    print('Reconstruction type not available in tyger. Reassigned to FFT.')
+                    self.recon_type == 'fft'
+                    output_field = 'imgTygerFFT'
+                boFit_path = 'b0_maps/fits/' + self.boFit_file
+
+                try:
+                    imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp, output_field)
+                    imageTyger = np.abs(imgTyger[0])
+                    imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
+
+                    ## Image plot
+                    # Tyger
+                    if self.mapVals['unlock_orientation'] == 0:
+                        result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
+                        result_Tyger['row'] = 0
+                        result_Tyger['col'] = 1
+                        result_Tyger['title'] = "Tyger"
+                        result['title'] = "Original"
+                    else:
+                        result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
+                                    'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
+
+                    self.output = [result, result_Tyger]
+                except Exception as e:
+                    print('Tyger reconstruction failed.')
+                    print(f'Error: {e}')
+            else:
+                print('Tyger reconstruction not available for Full plot True.')
+                print('Change this input parameter to False.')
 
         if self.mode == 'Standalone':
             self.plotResults()

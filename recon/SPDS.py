@@ -273,8 +273,8 @@ def SPDS(raw_data_path=None):
         cont = 0
 
         for ii in range(NX):
-            for jj in range(NX):
-                for kk in range(NX):
+            for jj in range(NY):
+                for kk in range(NZ):
                     if B0mapReorganized[ii, jj, kk] != 0:
                         z_coord = (-(NZ - 1) / 2 + kk) * dz
                         y_coord = (-(NY - 1) / 2 + jj) * dy
@@ -285,6 +285,7 @@ def SPDS(raw_data_path=None):
                         cont += 1
 
         mapList = np.array(mapList)
+        output_dict['mapList'] = mapList
 
         # And now we proceed with the fitting
         x_fit = mapList[:, 0]

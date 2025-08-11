@@ -48,7 +48,6 @@ class spds(blankSeq.MRIBLANKSEQ):
         super(spds, self).__init__()
 
         self.mask = None
-        self.axesOrientation = None
         self.rfExFA = None
         self.standalone = None
         self.dummyPulses = None
@@ -57,7 +56,6 @@ class spds(blankSeq.MRIBLANKSEQ):
         self.deadTime = None
         self.nPoints = None
         self.fov = None
-        self.dfov = None
         self.bw = None
         self.plotSeq = None
         self.addParameter(key='seqName', string='Sequence Name', val='SPDS',
@@ -72,14 +70,10 @@ class spds(blankSeq.MRIBLANKSEQ):
                           tip="Flip angle of the excitation RF pulse in degrees")
         self.addParameter(key='rfExTime', string='Excitation time (us)', val=15.0, units=units.us, field='RF',
                           tip="Duration of the RF excitation pulse in microseconds (us).")
-        self.addParameter(key='nPoints', string='Matrix size [rd, ph, sl]', val=[10, 10, 10], field='IM',
+        self.addParameter(key='nPoints', string='Matrix size [rd, ph, sl]', val=[2, 2, 1], field='IM',
                           tip='Matrix size for the acquired images.')
         self.addParameter(key='fov', string='Field of View (cm)', val=[24.0, 24.0, 24.0], units=units.cm, field='IM',
                           tip='Field of View (cm).')
-        self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
-                          tip="Position of the gradient isocenter")
-        self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM',
-                          tip="0=x, 1=y, 2=z")
         self.addParameter(key='repetitionTime', string='Repetition Time (ms)', val=30.0, units=units.ms, field='SEQ',
                           tip="The time between successive excitation pulses, in milliseconds (ms).")
         self.addParameter(key='deadTime', string='Dead times (us)', val=[350.0, 450.0], units=units.us, field='SEQ',
@@ -209,7 +203,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         '''
 
         # Set the fov
-        self.dfov = self.dfov[self.axesOrientation]
+        self.axesOrientation = [0,1,2]      # TGN
         self.fov = self.fov[self.axesOrientation]
 
         # Get k-space info
@@ -488,12 +482,14 @@ class spds(blankSeq.MRIBLANKSEQ):
         super().sequenceAnalysis(mode=mode)
 
         # Export in txt the model fitted
-        if not os.path.exists('b0_maps'):
-            os.makedirs('b0_maps')
-        output_file = "b0_maps/" + self.mapVals['fileName'][:-4] + ".txt"
+        if not os.path.exists('b0_maps/fits'):
+            os.makedirs('b0_maps/fits')
+        output_file = "b0_maps/fits/"+self.mapVals['fileName'][:-4]+".txt"
         with open(output_file, "w") as f:
             f.write(self.mapVals['polynomial_expression'] + "\n")
         print(f"Fitting exported to '{output_file}'")
+        if not os.path.exists('b0_maps/mat'):
+            os.makedirs('b0_maps/mat')
 
         return self.output
 

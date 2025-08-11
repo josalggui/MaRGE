@@ -147,6 +147,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             # Acquisition window
             if repeIndex >= self.dummyPulses:
                 t0 = tEx + self.echoTime - self.acqTime / 2
+                self.ttlOffRecPulse(t0, self.acqTime)
                 self.rxGate(t0, self.acqTime)
 
         # End sequence

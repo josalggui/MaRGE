@@ -1319,6 +1319,23 @@ class MRIBLANKSEQ:
         self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
         self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
 
+    def ttlOffRecPulse(self, tStart, rfTime):
+        """
+        Generate an RF pulse with a rectangular pulse shape and the corresponding deblanking signal.
+
+        Args:
+            tStart (float): Start time of the RF pulse.
+            rfTime (float): Duration of the RF pulse.
+            rfAmplitude (float): Amplitude of the RF pulse.
+            rfPhase (float): Phase of the RF pulse in radians. Default is 0.
+            channel (int): Channel index for the RF pulse. Default is 0.
+
+        """
+        txGateTime = np.array([tStart-hw.blkOffTime, tStart + hw.blkOffTime + rfTime])
+        txGateAmp = np.array([1, 0])
+        self.flo_dict['ttl1'][0] = np.concatenate((self.flo_dict['ttl1'][0], txGateTime), axis=0)
+        self.flo_dict['ttl1'][1] = np.concatenate((self.flo_dict['ttl1'][1], txGateAmp), axis=0)
+
     def rfRawPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, channel=0):
         """
         Generate an RF pulse with a rectangular pulse shape.
@@ -1655,7 +1672,8 @@ class MRIBLANKSEQ:
                                    'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
                                    'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
                                    'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
-                                   'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
+                                #    'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
+                                   'rx_gate': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
                                    }, rewrite)
         return True
 
@@ -1728,6 +1746,7 @@ class MRIBLANKSEQ:
         if not os.path.exists(directory + '/ismrmrd'):
             os.makedirs(directory_ismrmrd)
 
+        self.directory_mat = directory_mat
         self.directory_rmd=directory_ismrmrd 
         
         # Generate filename
@@ -1742,7 +1761,7 @@ class MRIBLANKSEQ:
         self.mapVals['fileName'] = "%s.mat" % file_name
         # Generate filename for ismrmrd
         self.mapVals['fileNameIsmrmrd'] = "%s.h5" % file_name
-        
+        self.file_name = file_name
         # Save mat file with the outputs
         savemat("%s/%s.mat" % (directory_mat, file_name), self.mapVals) # au format savemat(chemin_fichier_mat, {"data" : data}), avec data contient les données brute à sauvegarder
 

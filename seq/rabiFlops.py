@@ -132,6 +132,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                         # Rx gate for FID
                         if pulse == dummyPulses:
                             t0 = tEx + rfTime[step] / 2 + deadTime
+                            self.ttlOffRecPulse(t0, acqTime)
                             self.rxGate(t0, acqTime)
 
                         # Refocusing pulse
@@ -153,6 +154,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                         # Rx gate for Echo
                         if pulse == dummyPulses:
                             t0 = tEx + echoTime - acqTime / 2
+                            self.ttlOffRecPulse(t0, acqTime)
                             self.rxGate(t0, acqTime)
 
                         # Update excitation time for next repetition

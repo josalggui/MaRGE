@@ -291,6 +291,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                 # First I do a noise measurement.
                 if repeIndex==(0):
                     t0 = tEx-self.preExTime-self.inversionTime-4*self.acqTime
+                    self.ttlOffRecPulse(t0, self.acqTime+2*addRdPoints/BW)
                     self.rxGate(t0, self.acqTime+2*addRdPoints/BW)
                     acqPoints += nRD
 
@@ -352,6 +353,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                     # Rx gate
                     if (repeIndex==(self.dummyPulses-1) or repeIndex>=self.dummyPulses):
                         t0 = tEcho-self.acqTime/2-addRdPoints/BW
+                        self.ttlOffRecPulse(t0, self.acqTime+2*addRdPoints/BW)
                         self.rxGate(t0, self.acqTime+2*addRdPoints/BW)
                         acqPoints += nRD
 

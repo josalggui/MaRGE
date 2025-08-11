@@ -10,24 +10,24 @@ import numpy as np
 # Y axis: 40 mT/m/o.u., 0.8 mT/m/A, 4.0 mT/m/V
 # Z axis: 35 mT/m/o.u., 0.7 mT/m/A, 3.5 mT/m/V
 
-#gFactor = np.array([0.025, 0.040, 0.035])*2 # (X, Y, Z) in T/m/o.u. GX VIEJO
-gFactor = np.array([0.035, 0.040, 0.035])*2 # (X, Y, Z) in T/m/o.u. GX NUEVO
-max_grad = 80  # mT/m
-max_slew_rate = 50e-3  # mT/m/ms
+gFactor = np.array([0.0106, 0.0129, 0.0113]) # (X, Y, Z) in T/m/o.u.
+max_grad = 40  # mT/m
+max_slew_rate = 150e-3  # mT/m/ms
 grad_raster_time = 25e-6  # s
 grad_rise_time = 400e-6 # s, time for gradient ramps
 grad_steps = 16 # steps to gradient ramps
 gammaB = 42.57747892e6 # Hz/T, Gyromagnetic ratio
 blkTime = 15 # us, blanking time of Barthel's RFPA
+blkOffTime = 400 # us, blanking time of RFPA when turned off
 gradDelay = 9 # Gradient amplifier delay (us)
 oversamplingFactor = 5 # Rx oversampling
 maxRdPoints = 2**17 # Maximum number of points to be acquired by the red pitaya
 maxOrders = 2**14*6 # Maximun number of orders to be processed by the red pitaya
 deadTime = 400 # us, RF coil dead time
-b1Efficiency = np.pi/(1.0*15) # rads / (a.u. * us)
-larmorFreq = 3.053482675254997 # MHz
+b1Efficiency = np.pi/(0.9*150) # rads / (a.u. * us)
+larmorFreq = 1.956 # MHz
 cic_delay_points = 3 # to account for signal delay from red pitaya due to cic filter
-addRdPoints = 10 # to account for wrong first points after decimation (50)
+addRdPoints = 20 # to account for wrong first points after decimation (50)
 scanner_name = "Demo"
 antenna_dict = {}
 reference_time = 100  # us
