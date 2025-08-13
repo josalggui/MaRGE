@@ -15,24 +15,16 @@ class MarcosToolBar(QToolBar):
         self.main = main
 
         # Prepare your SD card
-        with resources.path("marge.resources.icons", "sd-card.png") as path_init_gpa:
-            self.action_step_1 = QAction(QIcon(str(path_init_gpa)), "Set up sd-card", self)
-        self.action_step_1.setStatusTip("Set up sd-card")
-        self.addAction(self.action_step_1)
-
-        # Prepare your SD card
         with resources.path("marge.resources.icons", "redpitaya.png") as path_init_gpa:
-            self.action_step_2 = QAction(QIcon(str(path_init_gpa)), "Set up server and client", self)
-        self.action_step_2.setStatusTip("Set up server and client")
-        self.addAction(self.action_step_2)
+            self.action_marcos_install = QAction(QIcon(str(path_init_gpa)), "Set up server and client", self)
+        self.action_marcos_install.setStatusTip("Set up server and client")
+        self.addAction(self.action_marcos_install)
 
         # Enable only on Linux
         if sys.platform.startswith("linux"):
-            self.action_step_1.setEnabled(True)
-            self.action_step_2.setEnabled(True)
+            self.action_marcos_install.setEnabled(True)
         else:
-            self.action_step_1.setEnabled(False)
-            self.action_step_2.setEnabled(False)
+            self.action_marcos_install.setEnabled(False)
 
         # Setup MaRCoS
         with resources.path("marge.resources.icons", "M.png") as path_m:

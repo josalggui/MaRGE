@@ -47,9 +47,15 @@ class MarcosController(MarcosToolBar):
         except:
             pass
 
+        # MaRCoS installer
+        src_file = os.path.join(comm_path, "../marcos_install.sh")
+        try:
+            shutil.copy(src_file, dst)
+        except:
+            pass
+
         self.action_server.setCheckable(True)
-        self.action_step_1.triggered.connect(self.marcos_step_1)
-        self.action_step_2.triggered.connect(self.marcos_step_2)
+        self.action_marcos_install.triggered.connect(self.marcos_install)
         self.action_server.triggered.connect(self.controlMarcosServer)
         self.action_copybitstream.triggered.connect(self.copyBitStream)
         self.action_gpa_init.triggered.connect(self.initgpa)  # <- Tu as eu l'erreur ici
@@ -106,20 +112,11 @@ class MarcosController(MarcosToolBar):
 
         return ip_addresses
 
-    def marcos_step_1(self):
+    def marcos_install(self):
         try:
             subprocess.run([
                 "gnome-terminal", "--",
-                "bash", "-c", f"sudo ./marcos_step_1.sh; exec bash"
-            ])
-        except:
-            print("ERROR: Something went wrong.")
-
-    def marcos_step_2(self):
-        try:
-            subprocess.run([
-                "gnome-terminal", "--",
-                "bash", "-c", f"sudo ./marcos_step_2.sh; exec bash"
+                "bash", "-c", f"sudo ./marcos_install.sh; exec bash"
             ])
         except:
             print("ERROR: Something went wrong.")

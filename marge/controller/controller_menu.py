@@ -48,8 +48,7 @@ class MenuController:
         self.menu_protocols.addAction(self.main.toolbar_protocols.action_del_sequence)
 
         # Scanner menu
-        self.menu_scanner.addAction(self.main.toolbar_marcos.action_step_1)
-        self.menu_scanner.addAction(self.main.toolbar_marcos.action_step_2)
+        self.menu_scanner.addAction(self.main.toolbar_marcos.action_marcos_install)
         self.menu_scanner.addAction(self.main.toolbar_marcos.action_copybitstream)
         self.menu_scanner.addAction(self.main.toolbar_marcos.action_server)
         self.menu_scanner.addAction(self.main.toolbar_marcos.action_gpa_init)
