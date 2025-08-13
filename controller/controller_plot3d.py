@@ -65,6 +65,18 @@ class Plot3DController(Plot3DWidget):
         # Add image
         self.setImage(data)
 
+    def setImage(self, data, **kwargs):
+        # Call the original setImage method
+        super().setImage(data, **kwargs)
+
+        # Set current index to the middle frame
+        if data.ndim == 3:
+            try:
+                num_frames = data.shape[0]
+                self.setCurrentIndex(num_frames // 2)
+            except:
+                pass
+
     def menuClicked(self):
         """
         Handle the FOV button click event.
