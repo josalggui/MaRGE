@@ -143,7 +143,7 @@ class SessionWidget(QWidget):
                 stderr=subprocess.STDOUT
             ).strip().decode('utf-8')
         except subprocess.CalledProcessError as e:
-            print(f"Error getting Git tag: {e.output.decode('utf-8')}")
+            # print(f"Error getting Git tag: {e.output.decode('utf-8')}")
             from importlib.metadata import version
 
             try:
