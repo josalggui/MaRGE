@@ -45,13 +45,11 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500.0, field='RF', units=units.ms)
 
     def sequenceInfo(self):
-        
         print("Noise")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
         print("Get a noise measurement\n")
-        
 
     def sequenceTime(self):
         return(0)  # minutes, scanTime
@@ -166,7 +164,6 @@ class Noise(blankSeq.MRIBLANKSEQ):
             self.plotResults()
 
         return self.output
-
 
 if __name__=='__main__':
     seq = Noise()

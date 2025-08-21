@@ -311,7 +311,7 @@ def run_bm4d_filter(image_data, std=0):
     blockmatches = (False, False)
 
     # Apply the BM4D filter to the rescaled image
-    denoised_rescaled = bm4d.bm4d(image_rescaled, sigma_psd=5, profile=profile, stage_arg=stage_arg,
+    denoised_rescaled = bm4d.bm4d(image_rescaled, sigma_psd=std, profile=profile, stage_arg=stage_arg,
                                   blockmatches=blockmatches)
 
     # Rescale the denoised image back to its original dimensions
@@ -385,9 +385,9 @@ def run_zero_padding(k_space, new_size):
     shape_0 = k_space.shape
 
     # Determine the new shape after zero-padding
-    n_rd = int(new_size[0])
-    n_ph = int(new_size[1])
-    n_sl = int(new_size[2])
+    n_rd = shape_0[2] * int(new_size[0])
+    n_ph = shape_0[1] * int(new_size[1])
+    n_sl = shape_0[0] * int(new_size[2])
     shape_1 = n_sl, n_ph, n_rd
 
     # Create an image matrix filled with zeros
