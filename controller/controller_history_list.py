@@ -656,8 +656,12 @@ class HistoryListControllerPos(HistoryListWidget):
                 self.main.image_view_widget.addWidget(label, row=2 * (idx // 4) + 1, col=idx % 4)
 
                 # Figure
-                image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(self.figures[n],
-                                                                                       orientation=self.orientations[n])
+                output, image, _ = utils.fix_image_orientation(self.figures[n], axes=self.orientations[n])
+                image2show = output['data']
+                x_label = output['xLabel']
+                y_label = output['yLabel']
+                title = output['title']
+
                 image = Spectrum3DPlot(main=self.main,
                                        data=image2show,
                                        x_label=x_label,
@@ -730,7 +734,11 @@ class HistoryListControllerPos(HistoryListWidget):
             label.setText(image_key)
 
             # Create image_widget
-            image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(image, orientation=orientation)
+            output, image, _ = utils.fix_image_orientation(image, axes=orientation)
+            image2show = output['data']
+            x_label = output['xLabel']
+            y_label = output['yLabel']
+            title = output['title']
             image = Spectrum3DPlot(main=self.main,
                                    data=image2show,
                                    x_label=x_label,
