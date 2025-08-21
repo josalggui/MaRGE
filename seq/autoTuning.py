@@ -120,17 +120,20 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                     break
                 else:
                     counter += 1
-                    print("No nanoVNA found for auto-tuning....\n")
 
             # Check connection with nanoVNA
             if self.vna.device is None:
-                print("No nanoVNA found for auto-tuning. \n")
+                print("ERROR: No nanoVNA found for auto-tuning. \n")
                 return False
 
         if self.test == 'auto':
-            return self.runAutoTuning()
+            output = self.runAutoTuning()
+            self.arduino.disconnect()
+            return output
         elif self.test == 'manual':
-            return self.runManual()
+            output = self.runManual()
+            self.arduino.disconnect()
+            return output
         else:
             print("Incorrect test mode.")
             return False
