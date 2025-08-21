@@ -34,6 +34,8 @@ from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 from marge.marge_utils import utils
 
+from marge_tyger import tyger_rare
+import marge_tyger.tyger_config as tyger_conf
 
 #*********************************************************************************
 #*********************************************************************************
@@ -44,7 +46,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         super(RareDoubleImage, self).__init__()
         # Input the parameters
         self.image_orientation_dicom = None
-        self.angulation = None
         self.full_plot = None
         self.sequence_list = None
         self.unlock_orientation = None
@@ -72,9 +73,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.dfov = None
         self.fov = None
         self.system = None
-        self.rotationAxis = None
-        self.rotation = None
-        self.angle = None
         self.axesOrientation = None
         self.rdPreemphasis = None
         self.addParameter(key='seqName', string='RAREInfo', val='RareDoubleImage')
@@ -96,8 +94,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
                           tip="Position of the gradient isocenter")
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 1], field='IM')
-        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
-        self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM',
@@ -118,17 +114,12 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
         self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
                           tip="'True' or 'False' to plot odd and even images separately")
-        self.addParameter(key='angulation', string='Angulation', val=1, field='OTH',
-                          tip='1: Consider FOV angulation. 0: Keep the image unangled (it reduced the number of instructions).')
-        self.addParameter(key='bm4d', string='BM4D std', val=-1, field='PRO',
-                          tip='Perform BM4D filter: -1 -> do not apply, 0 -> automatic std calculation, >0 to use manual'
-                              ' std value.')
-        self.addParameter(key='cosbell_factor', string='Cosbell factor', val=0, field='PRO',
-                          tip='Perform cosbell filter in k-space')
-        self.addParameter(key='padding', string='Final size (rd, ph, sl)', val=[0, 0, 0], field='PRO',
-                          tip='Final matrix size after processing zero padding')
-        self.addParameter(key='partial_method', string='Partial recon method', val='POCS', field='PRO',
-                          tip="'zero' -> zero padding, pocs -> Projection Onto Convex Sets")
+        self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
+                          tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
+        self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',
+                          tip='Options: cp, art, artpk, fft.')
+        self.addParameter(key='boFit_file', string='Bo Fit file', val='boFit_default.txt', field='PRO',
+                          tip='Path to the Bo Fit file inside [b0_maps] folder.')
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
         self.header = ismrmrd.xsd.ismrmrdHeader()
@@ -163,19 +154,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         return seq_time  # minutes, scanTime
 
         # TODO: check for min and max values for all fields
-
-    def sequenceAtributes(self):
-        super().sequenceAtributes()
-
-        # Conversion of variables to non-multiplied units
-        self.angle = self.angle * np.pi / 180  # rads
-
-        # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.tolist()
-        self.rotation.append(self.angle)
-        self.rotations.append(self.rotation)
-        self.dfovs.append(self.dfov.tolist())
-        self.fovs.append(self.fov.tolist())
 
     def sequenceRun(self, plotSeq=False, demo=False, standalone=False):
         """
@@ -247,7 +225,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         '''
 
         # Set the fov
-        self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
 
@@ -345,13 +322,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             ph_gradients /= ph_grad_amplitude
         if sl_grad_amplitude != 0:
             sl_gradients /= sl_grad_amplitude
-
-        # Get the rotation matrix
-        rot = self.getRotationMatrix()
-        grad_amp = np.array([0.0, 0.0, 0.0])
-        grad_amp[self.axesOrientation[0]] = 1
-        grad_amp = np.reshape(grad_amp, (3, 1))
-        result = np.dot(rot, grad_amp)
 
         # Map the axis to "x", "y", and "z" according ot axesOrientation
         axes_map = {0: "x", 1: "y", 2: "z"}
@@ -748,7 +718,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                                frequency=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
                                bandwidth=bw,  # MHz
                                decimate='Normal',
-                               angulation=self.angulation,
                                )
 
     def sequenceAnalysis(self, mode=None):
@@ -1016,23 +985,53 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             # Add results into the output attribute (result_1 must be the image to save in dicom)
             self.output = [result]
 
-        # Reset rotation angle and dfov to zero
-        self.mapVals['angle'] = self.angle
-        self.mapVals['dfov'] = np.array(self.mapVals['dfov'])
-        self.mapVals['dfov'][self.axesOrientation] = self.dfov.reshape(-1)
-        self.mapVals['dfov'] = list(self.mapVals['dfov'])
-
         # Save results
         self.saveRawData()
 
-        self.mapVals['angle'] = 0.0
-        self.mapVals['dfov'] = [0.0, 0.0, 0.0]
-        try:
-            self.sequence_list['RareDoubleImage'].mapVals['angle'] = 0.0
-            self.sequence_list['RareDoubleImage'].mapVals['dfov'] = [0.0, 0.0, 0.0]
-        except:
-            pass
-        hw.dfov = [0.0, 0.0, 0.0]
+        ## Tyger Reconstruction
+        if axes_enable == [1,1,1] and self.tyger_recon == 1:
+            if self.full_plot == 'False' or self.full_plot is False:
+                print('Preparing Tyger enviroment...')
+                rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
+                sign_rarepp = [-1,-1,-1,1,1,1,1,1, tyger_conf.cp_batchsize_RARE]
+                if self.recon_type == 'cp':
+                    output_field = 'imgTygerCP'
+                elif self.recon_type == 'art':
+                    output_field = 'imgTygerART'
+                elif self.recon_type == 'artpk':
+                    output_field = 'imgTygerARTPK'
+                elif self.recon_type == 'fft':
+                    output_field = 'imgTygerFFT'
+                else:
+                    print('Reconstruction type not available in tyger. Reassigned to FFT.')
+                    self.recon_type == 'fft'
+                    output_field = 'imgTygerFFT'
+                boFit_path = 'b0_maps/fits/' + self.boFit_file
+
+                try:
+                    imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp, output_field)
+                    imageTyger = np.abs(imgTyger[0])
+                    imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
+
+                    ## Image plot
+                    # Tyger
+                    if self.mapVals['unlock_orientation'] == 0:
+                        result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
+                        result_Tyger['row'] = 0
+                        result_Tyger['col'] = 1
+                        result_Tyger['title'] = "Tyger"
+                        result['title'] = "Original"
+                    else:
+                        result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
+                                    'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
+
+                    self.output = [result, result_Tyger]
+                except Exception as e:
+                    print('Tyger reconstruction failed.')
+                    print(f'Error: {e}')
+            else:
+                print('Tyger reconstruction not available for Full plot True.')
+                print('Change this input parameter to False.')
 
         if self.mode == 'Standalone':
             self.plotResults()

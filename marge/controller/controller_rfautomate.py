@@ -13,7 +13,7 @@ from scipy.interpolate import interp1d
 
 import time
 
-from marge.vna import Hardware
+from vna import Hardware
 
 
 class Arduino:
@@ -44,7 +44,7 @@ class Arduino:
                 arduino_port = port.device
 
         if arduino_port is None:
-            # print("WARNING: No Arduino found for " + self.name)
+            print("WARNING: No Arduino found for " + self.name)
             return False
         else:
             return arduino_port
@@ -76,16 +76,17 @@ class Arduino:
 
     def send(self, data):
         """
-        Send data to the Arduino.
+        Send data to the Arduino. Pads the message with '0' up to 32 characters.
 
         :param data: The data to be sent.
         """
+        data = str(data).ljust(32, '0')  # Pad with '0' to length 32
         output = False
         if self.device is not None:
-            while output == False:
+            while not output:
                 self.device.write(data.encode())
                 output = self.receive()
-                if output == False:
+                if not output:
                     print("WARNING: Arduino communication failed...")
                     print("Retrying...")
         return output
@@ -104,9 +105,10 @@ class Arduino:
 
             # If timeout, return False. Otherwise, return received string
             if time.time() - t0 >= 2:
-                print("Failed to get data from Arduino...")
+                print("Failed to get data...")
                 return False
             else:
+                print("Data received from Arduino.")
                 return self.device.readline()
         else:
             return "False".encode('utf-8')
@@ -186,6 +188,8 @@ class VNA:
             z11 = 50 * (1 + s11) / (1 - s11)
 
             return s11, z11
+
+        return None, None
 
 
 

@@ -46,15 +46,14 @@ class Noise(MRIBLANKSEQ):
         self.addParameter(key='bw', string='Acquisition bandwidth (kHz)', val=50.0, units=units.kHz, field='RF')
         self.addParameter(key='rxChannel', string='Rx channel', val=0, field='RF')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500.0, field='RF', units=units.ms)
+        self.addParameter(key='sleepTime', string='Sleep Time (s)', val=0.0, field='OTH')
 
     def sequenceInfo(self):
-        
         print("Noise")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
         print("Get a noise measurement\n")
-        
 
     def sequenceTime(self):
         return(0)  # minutes, scanTime
@@ -75,6 +74,7 @@ class Noise(MRIBLANKSEQ):
             dataC = np.random.randn((self.nPoints + 2 * hw.addRdPoints) * hw.oversamplingFactor)
             data = dataR+1j*dataC
             data = self.decimate(data_over=data, n_adc=1, option='Normal')
+            self.mapVals['data'] = data
             acqTime = self.nPoints/self.bw
             tVector = np.linspace(0, acqTime, num=self.nPoints) * 1e-3  # ms
             spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
@@ -96,6 +96,7 @@ class Noise(MRIBLANKSEQ):
             # SEQUENCE
             self.iniSequence(20, np.array((0, 0, 0)))
             t0 = 30 + hw.addRdPoints*hw.oversamplingFactor/self.bw
+            self.ttlOffRecPulse(t0, acqTime)
             self.rxGateSync(t0, acqTime, channel=self.rxChannel)
             t0 = t0 + acqTime + hw.addRdPoints*hw.oversamplingFactor/self.bw
             if t0 < self.repetitionTime:
@@ -123,52 +124,6 @@ class Noise(MRIBLANKSEQ):
             self.expt.__del__()
 
         return True
-
-    def sequenceAnalysis(self, mode=None):
-        self.mode = mode
-        noiserms = np.std(self.dataTime[1])
-        self.mapVals['RMS noise'] = noiserms
-        self.mapVals['sampledPoint'] = noiserms # for sweep method
-        bw = self.mapVals['bw'] * 1e3  # Hz
-        noiserms = noiserms * 1e3  # uV
-        print('rms noise: %0.1f uV @ %0.1f kHz' % (noiserms, bw * 1e-3))
-        johnson = np.sqrt(2 * 50 * hw.temperature * bw * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e6  # uV
-        print('Expected by Johnson: %0.1f uV @ %0.1f kHz' % (johnson, bw * 1e-3))
-        print('Noise factor: %0.1f johnson' % (noiserms / johnson))
-        if noiserms / johnson > 4:
-            print("WARNING: Noise is too high")
-        self.mapVals['noise_spectrum'] = [np.abs(self.dataSpec[1])]
-
-        # Plot signal versus time
-        result1 = {'widget': 'curve',
-                   'xData': self.dataTime[0],
-                   'yData': [np.abs(self.dataTime[1]), np.real(self.dataTime[1]), np.imag(self.dataTime[1])],
-                   'xLabel': 'Time (ms)',
-                   'yLabel': 'Signal amplitude (mV)',
-                   'title': 'Noise vs time',
-                   'legend': ['abs', 'real', 'imag'],
-                   'row': 0,
-                   'col': 0}
-
-        # Plot spectrum
-        result2 = {'widget': 'curve',
-                   'xData': self.dataSpec[0],
-                   'yData': [np.abs(self.dataSpec[1])],
-                   'xLabel': 'Frequency (kHz)',
-                   'yLabel': 'Mag FFT (a.u.)',
-                   'title': 'Noise spectrum',
-                   'legend': [''],
-                   'row': 1,
-                   'col': 0}
-
-        self.output = [result1, result2]
-
-        self.saveRawData()
-
-        if self.mode == 'Standalone':
-            self.plotResults()
-
-        return self.output
 
 
 if __name__=='__main__':

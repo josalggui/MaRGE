@@ -291,6 +291,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                 # First I do a noise measurement.
                 if repeIndex==(0):
                     t0 = tEx-self.preExTime-self.inversionTime-4*self.acqTime
+                    self.ttlOffRecPulse(t0, self.acqTime+2*addRdPoints/BW)
                     self.rxGate(t0, self.acqTime+2*addRdPoints/BW)
                     acqPoints += nRD
 
@@ -352,6 +353,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                     # Rx gate
                     if (repeIndex==(self.dummyPulses-1) or repeIndex>=self.dummyPulses):
                         t0 = tEcho-self.acqTime/2-addRdPoints/BW
+                        self.ttlOffRecPulse(t0, self.acqTime+2*addRdPoints/BW)
                         self.rxGate(t0, self.acqTime+2*addRdPoints/BW)
                         acqPoints += nRD
 
@@ -718,11 +720,6 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             result2['title'] = "k-Space"
             result2['row'] = 0
             result2['col'] = 1
-
-            # Reset rotation angle and dfov to zero
-            self.mapVals['angle'] = 0.0
-            self.mapVals['dfov'] = [0.0, 0.0, 0.0]
-            hw.dfov = [0.0, 0.0, 0.0]
 
             # DICOM TAGS
             # Image

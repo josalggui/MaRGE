@@ -53,14 +53,12 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='series', string='Series capacitor', val='11011', field='IM')
         self.addParameter(key='tuning', string='Tuning capacitor', val='10000', field='IM')
         self.addParameter(key='matching', string='Matching capacitor', val='10011', field='IM')
-        self.addParameter(key='test', string='Test', val='auto', field='IM',
+        self.addParameter(key='test', string='Test', val='manual', field='IM',
                           tip='Choose one option: auto, manual')
         self.addParameter(key='xyz', string='xyz', val=0.0, field='IM')
 
         # Connect to Arduino and set the initial state
-        self.arduino = autotuning.Arduino(name="auto-tuning", serial_number=hw.ard_sn_autotuning)
-        self.arduino.connect()
-        self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "11")
+        self.arduino = autotuning.Arduino(name="auto-tuning")
 
     def sequenceInfo(self):
         print("RF automatic impedance matching")
@@ -80,6 +78,10 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.states_hist = [[], [], []]
         self.n_aux = [[], [], []]
         self.frequency = hw.larmorFreq + self.freqOffset * 1e-6
+
+        self.arduino.connect(serial_number=hw.ard_sn_autotuning)
+        self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "11")
+
 
         if self.arduino.device is None:
             print("WARNING: No Arduino found for auto-tuning.")
@@ -104,17 +106,22 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                     break
                 else:
                     counter += 1
-                    print("No nanoVNA found for auto-tuning....\n")
 
             # Check connection with nanoVNA
             if self.vna.device is None:
-                print("No nanoVNA found for auto-tuning. \n")
+                print("ERROR: No nanoVNA found for auto-tuning. \n")
                 return False
 
         if self.test == 'auto':
-            return self.runAutoTuning()
+            output = self.runAutoTuning()
+            self.arduino.disconnect()
+            self.vna.interface.close()
+            return output
         elif self.test == 'manual':
-            return self.runManual()
+            output = self.runManual()
+            self.arduino.disconnect()
+            self.vna.interface.close()
+            return output
         else:
             print("Incorrect test mode.")
             return False
@@ -198,7 +205,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             self.states[state] = ''.join('1' if bit == '0' else '0' for bit in prov)
 
         # Series reactance
-        cs = np.array([np.Inf, 8, 3.9, 1.8, 1]) * 1e-9
+        cs = np.array([np.inf, 8, 3.9, 1.8, 1]) * 1e-9
         self.statesCs = np.zeros(2 ** nCap)
         self.statesXs = np.zeros(2 ** nCap)
         for state in range(2 ** nCap):
@@ -206,7 +213,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                 if int(self.states[state][c]) == 0:
                     self.statesCs[state] += cs[c]
             if self.statesCs[state] == 0:
-                self.statesXs[state] = np.Inf
+                self.statesXs[state] = np.inf
             else:
                 self.statesXs[state] = -1 / (2 * np.pi * self.frequency * 1e6 * self.statesCs[state])
 
@@ -219,7 +226,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                     self.statesCt[state] += ct[c]
 
         # Matching capacitors
-        cm = np.array([np.Inf, 500, 262, 142, 75]) * 1e-12
+        cm = np.array([np.inf, 500, 262, 142, 75]) * 1e-12
         self.statesCm = np.zeros(2 ** nCap)
         self.statesXm = np.zeros(2 ** nCap)
         for state in range(2 ** nCap):
@@ -227,7 +234,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                 if int(self.states[state][c]) == 0:
                     self.statesCm[state] += cm[c]
             if self.statesCm[state] == 0:
-                self.statesXm[state] = np.Inf
+                self.statesXm[state] = np.inf
             else:
                 self.statesXm[state] = -1 / (2 * np.pi * self.frequency * 1e6 * self.statesCm[state])
 

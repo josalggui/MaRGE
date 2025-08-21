@@ -49,6 +49,8 @@ class HistoryListController(HistoryListWidget):
         self.outputs = {}
         self.inputs = {}
         self.pending_inputs = {}
+        self.pending_runs = {}
+        self.pending_recons = {}
         self.current_output = None
         self.figures = []
         self.labels = []
@@ -415,21 +417,15 @@ class HistoryListController(HistoryListWidget):
         """
         while self.main.app_open:
             if self.main.toolbar_marcos.action_server.isChecked():
-                pending_keys = list(self.pending_inputs.keys())  # List of elements in the pending sequence list
+                pending_keys = list(self.pending_runs.keys())
                 keys = list(self.inputs.keys())  # List of elements in the sequence history list
                 for key in pending_keys:
                     # Disable acquire button
                     self.main.toolbar_sequences.action_acquire.setEnabled(False)
 
                     # Get the sequence to run
-                    seq_name = self.pending_inputs[key][1][0]
-                    sequence = copy.deepcopy(defaultsequences[seq_name])
-
-                    # Modify input parameters of the sequence according to current item
-                    n = 0
-                    for keyParam in sequence.mapKeys:
-                        sequence.mapVals[keyParam] = self.pending_inputs[key][1][n]
-                        n += 1
+                    sequence = self.pending_runs[key]
+                    seq_name = sequence.mapVals['seqName']
 
                     # Specific tasks for calibration
                     if "Calibration" in key:
@@ -442,27 +438,9 @@ class HistoryListController(HistoryListWidget):
                         if seq_name == 'RabiFlops':
                             sequence.mapVals['shimming'] = defaultsequences['Shimming'].mapVals['shimming']
 
-                    # Run the sequence
-                    key_index = keys.index(key)
+                    # Run the sequenceRun
                     raw_data_name = key.split('|')[1].split(' ')[1]
-                    output = self.runSequenceInlist(sequence=sequence, key=key, raw_data_name=raw_data_name)
-                    if output == 0:
-                        # There is an error
-                        del self.pending_inputs[key]
-                        print("ERROR: " + key + " sequence finished abruptly with error.\n")
-                    else:
-                        # Add item to the history list
-                        file_name = sequence.mapVals['fileName']
-                        date = ".".join(file_name.split('.')[1::])
-                        self.item(key_index).setText(self.item(key_index).text() + "." + date)
-                        # Save results into the history
-                        self.outputs[key] = output
-                        del self.pending_inputs[key]
-                        # Delete outputs from the sequence
-                        sequence.resetMapVals()
-                        # self.main.sequence_list.updateSequence()
-                        print("READY: " + key + "\n")
-                        self.sequence_ready_signal.emit(self.item(key_index))
+                    self.runSequenceInList(sequence=sequence, key=key, raw_data_name=raw_data_name)
                     time.sleep(0.5)
                 # Enable acquire button
                 if self.main.toolbar_marcos.action_server.isChecked():
@@ -470,7 +448,20 @@ class HistoryListController(HistoryListWidget):
             time.sleep(0.1)
         return 0
 
-    def runSequenceInlist(self, sequence=None, key=None, raw_data_name=""):
+    def waitingForRecon(self):
+        while self.main.app_open:
+            if self.main.toolbar_marcos.action_server.isChecked():
+                pending_keys = list(self.pending_recons.keys())
+                keys = list(self.inputs.keys())  # List of elements in the sequence history list
+                for key in pending_keys:
+                    # Get the sequence to run
+                    sequence = self.pending_recons[key]
+                    self.reconSequenceInList(sequence=sequence, key=key)
+                    time.sleep(0.5)
+            time.sleep(0.1)
+        return
+
+    def runSequenceInList(self, sequence=None, key=None, raw_data_name=""):
         """
         Run a sequence in the list.
 
@@ -502,19 +493,45 @@ class HistoryListController(HistoryListWidget):
         # Create and execute selected sequence
         try:
             if sequence.sequenceRun(0, self.main.demo):
-                pass
+                self.pending_recons[key] = sequence
+                del self.pending_runs[key]
+                print("READY: run of " + key + "\n")
+                return True
             else:
-                return 0
+                del self.pending_runs[key]
+                return False
         except Exception as e:
+            del self.pending_runs[key]
             print(f"An error occurred in sequenceRun method: {e}")
-            return 0
+            return False
 
+    def reconSequenceInList(self, sequence=None, key=None):
         # Do sequence analysis and get results
         try:
-            return sequence.sequenceAnalysis()
+            output = sequence.sequenceAnalysis()
         except Exception as e:
-            print(f"An error ocurred in sequenceAnalysis method: {e}")
-            return 0
+            print(f"ERROR: An error occurred in sequenceAnalysis method: {e}")
+            del self.pending_recons[key]
+            return False
+
+        if output:
+            keys = list(self.inputs.keys())  # List of elements in the sequence history list
+            key_index = keys.index(key)
+            # Add item to the history list
+            file_name = sequence.mapVals['fileName']
+            date = ".".join(file_name.split('.')[1::])
+            self.item(key_index).setText(self.item(key_index).text() + "." + date)
+            # Save results into the history
+            self.outputs[key] = output
+            del self.pending_recons[key]
+            # Delete outputs from the sequence
+            sequence.resetMapVals()
+            print("READY: reconstruction of " + key + "\n")
+            self.sequence_ready_signal.emit(self.item(key_index))
+        else:
+            # There is an error
+            del self.pending_recons[key]
+            print("ERROR: " + key + " sequence finished abruptly with error.\n")
 
 
 class HistoryListControllerPos(HistoryListWidget):
@@ -657,8 +674,12 @@ class HistoryListControllerPos(HistoryListWidget):
                 self.main.image_view_widget.addWidget(label, row=2 * (idx // 4) + 1, col=idx % 4)
 
                 # Figure
-                image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(self.figures[n],
-                                                                                       orientation=self.orientations[n])
+                output, image, _ = utils.fix_image_orientation(self.figures[n], axes=self.orientations[n])
+                image2show = output['data']
+                x_label = output['xLabel']
+                y_label = output['yLabel']
+                title = output['title']
+
                 image = Spectrum3DPlot(main=self.main,
                                        data=image2show,
                                        x_label=x_label,
@@ -731,7 +752,11 @@ class HistoryListControllerPos(HistoryListWidget):
             label.setText(image_key)
 
             # Create image_widget
-            image2show, x_label, y_label, title = self.main.toolbar_image.fixImage(image, orientation=orientation)
+            output, image, _ = utils.fix_image_orientation(image, axes=orientation)
+            image2show = output['data']
+            x_label = output['xLabel']
+            y_label = output['yLabel']
+            title = output['title']
             image = Spectrum3DPlot(main=self.main,
                                    data=image2show,
                                    x_label=x_label,

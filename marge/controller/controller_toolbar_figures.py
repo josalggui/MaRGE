@@ -11,6 +11,7 @@ from datetime import datetime
 
 import qdarkstyle
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QFileDialog
 
 from marge.widgets.widget_toolbar_figures import FiguresToolBar
 
@@ -42,6 +43,8 @@ class FiguresController(FiguresToolBar):
         self.action_open_directory.triggered.connect(self.open_folder)
         self.action_postprocessing.triggered.connect(self.openPostGui)
         self.switch_theme_action.triggered.connect(self.switch_theme)
+        self.action_print_current_session.triggered.connect(self.print_current_session)
+        self.action_print_given_session.triggered.connect(self.print_given_session)
 
     def switch_theme(self):
         if not self.main.session["black_theme"]:
@@ -99,6 +102,13 @@ class FiguresController(FiguresToolBar):
         # Save screenshot and print message
         screenshot.save(screenshot_folder+"/"+file_name)
         print("Screenshot saved in " + screenshot_folder+"/"+file_name)
+
+    def print_current_session(self):
+        self.main.printer.create_full_story()
+
+    def print_given_session(self):
+        folder_name = QFileDialog.getExistingDirectory(self.main, "Report session", directory = 'experiments')
+        self.main.printer.create_full_story(path=folder_name)
 
     def open_folder(self):
         # Get the current operating system
