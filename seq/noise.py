@@ -46,13 +46,11 @@ class Noise(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='sleepTime', string='Sleep Time (s)', val=0.0, field='OTH')
 
     def sequenceInfo(self):
-        
         print("Noise")
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
         print("Get a noise measurement\n")
-        
 
     def sequenceTime(self):
         return(0)  # minutes, scanTime
