@@ -104,10 +104,9 @@ class Arduino:
 
             # If timeout, return False. Otherwise, return received string
             if time.time() - t0 >= 2:
-                print("Failed to get data...")
+                print("Failed to get data from Arduino...")
                 return False
             else:
-                print("Data received from Arduino.")
                 return self.device.readline()
         else:
             return "False".encode('utf-8')

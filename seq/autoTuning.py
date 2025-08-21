@@ -129,10 +129,12 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         if self.test == 'auto':
             output = self.runAutoTuning()
             self.arduino.disconnect()
+            self.vna.interface.close()
             return output
         elif self.test == 'manual':
             output = self.runManual()
             self.arduino.disconnect()
+            self.vna.interface.close()
             return output
         else:
             print("Incorrect test mode.")
