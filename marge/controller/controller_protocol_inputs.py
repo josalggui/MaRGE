@@ -116,7 +116,6 @@ class ProtocolInputsController(ProtocolInputsWidget):
         sequence.mapVals['fov'] = hw.fov
         sequence.mapVals['dfov'] = hw.dfov
         sequence.mapVals['shimming'] = shimming
-        hw.dfov = [0.0, 0.0, 0.0]
 
         # Run the sequence
         map_nmspc = list(sequence.mapNmspc.values())

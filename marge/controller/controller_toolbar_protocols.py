@@ -130,7 +130,7 @@ class ProtocolsController(ProtocolsToolBar):
             if platform.system()=='Linux':
                 file_name = "%s_%s.csv" % (seq_name, file_name.split('/')[-1])
             else:
-                file_name = "%s_%s" % (seq_name, file_name.split('/')[-1])
+                file_name = "%s_%s.csv" % (seq_name, file_name.split('/')[-1])
 
             # Save csv with input parameters
             with open('%s/%s' % (directory, file_name), 'w') as csvfile:
