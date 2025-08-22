@@ -296,19 +296,24 @@ class SequenceController(SequenceToolBar):
         """
 
         # Load sequence name
-        self.seq_name = self.main.sequence_list.getCurrentSequence()
+        seq_name = self.main.sequence_list.getCurrentSequence()
 
         # Create sequence to plot
         print('Plot sequence')
-        defaultsequences[self.seq_name].sequenceAtributes()
-        if defaultsequences[self.seq_name].sequenceRun(1, demo=self.main.demo):
-            # Delete previous plots
-            self.main.figures_layout.clearFiguresLayout()
-        else:
-            return 0
+        sequence = copy.deepcopy(defaultsequences[seq_name])
+        sequence.sequenceAtributes()
+        try:
+            if sequence.sequenceRun(1, demo=self.main.demo):
+                # Delete previous plots
+                self.main.figures_layout.clearFiguresLayout()
+            else:
+                return False
+        except Exception as e:
+            print(f"An error occurred in sequence plot: {e}")
+            return False
 
         # Get sequence to plot
-        out = defaultsequences[self.seq_name].sequencePlot()  # Plot results
+        out = sequence.sequencePlot()  # Plot results
 
         # Create plots
         n = 0
