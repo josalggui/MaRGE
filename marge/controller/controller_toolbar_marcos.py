@@ -64,6 +64,12 @@ class MarcosController(MarcosToolBar):
         self.action_gpa_init.triggered.connect(self.initgpa)
         # TODO: connect tyger button to tyger method
 
+        # Unable action buttons
+        if not self.main.demo:
+            self.action_server.setEnabled(False)
+            self.action_copybitstream.setEnabled(False)
+            self.action_gpa_init.setEnabled(False)
+
         thread = threading.Thread(target=self.search_sdrlab)
         thread.start()
 
@@ -86,8 +92,7 @@ class MarcosController(MarcosToolBar):
                     print("ERROR: No communication with SDRLab.")
                     print("ERROR: Try manually.")
 
-    @staticmethod
-    def get_sdrlab_ip():
+    def get_sdrlab_ip(self):
         print("Searching for SDRLabs...")
         ip_addresses = []
         subnet = '192.168.1.'
@@ -116,6 +121,10 @@ class MarcosController(MarcosToolBar):
 
         for ip in ip_addresses:
             print("READY: SDRLab found at IP " + ip)
+
+        self.action_copybitstream.setEnabled(True)
+        self.action_gpa_init.setEnabled(True)
+        self.action_server.setEnabled(True)
 
         return ip_addresses
 
