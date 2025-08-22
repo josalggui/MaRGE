@@ -110,7 +110,7 @@ class RfWidget(QWidget):
         hw.rf_min_gain = int(self.input_boxes["RF gain min (dB)"].text())
         hw.rf_max_gain = int(self.input_boxes["RF gain max (dB)"].text())
         hw.rfpa_model = self.input_boxes["RFPA model"].text()
-        hw.blkOffTime = self.input_boxes["RFPA de-blanking off time (us)"].text()
+        hw.blkOffTime = float(self.input_boxes["RFPA de-blanking off time (us)"].text())
         hw.antenna_dict = {}
         for rf_id, rf_eff in self.added_rfs:
             rf_name = rf_id
