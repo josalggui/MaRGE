@@ -24,6 +24,9 @@ class MarcosController(MarcosToolBar):
     """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initializes the MarcosController.
+        """
         super(MarcosController, self).__init__(*args, **kwargs)
 
         # Copy relevant files from marcos_extras
@@ -58,16 +61,20 @@ class MarcosController(MarcosToolBar):
         self.action_marcos_install.triggered.connect(self.marcos_install)
         self.action_server.triggered.connect(self.controlMarcosServer)
         self.action_copybitstream.triggered.connect(self.copyBitStream)
-        self.action_gpa_init.triggered.connect(self.initgpa)  # <- Tu as eu l'erreur ici
+        self.action_gpa_init.triggered.connect(self.initgpa)
+        # TODO: connect tyger button to tyger method
 
         thread = threading.Thread(target=self.search_sdrlab)
         thread.start()
 
         # Arduino to control the interlock
-        self.arduino = autotuning.Arduino(baudrate=19200, name="interlock", serial_number=hw.ard_sn_interlock)
-        self.arduino.connect()
+        self.arduino = autotuning.Arduino(baudrate=19200, name="interlock")
+        self.arduino.connect(serial_number=hw.ard_sn_interlock)
+
+    # TODO: create tyger method
 
     def search_sdrlab(self):
+        # Get the IP of the SDRLab
         if not self.main.demo:
             try:
                 hw.rp_ip_address = self.get_sdrlab_ip()[0]
@@ -151,6 +158,11 @@ class MarcosController(MarcosToolBar):
             print("This is a demo\n")
 
     def copyBitStream(self):
+        """
+        Copies the MaRCoS bitstream to the Red Pitaya.
+
+        Executes copy_bitstream.sh.
+        """
         if not self.main.demo:
             try:
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
@@ -169,12 +181,96 @@ class MarcosController(MarcosToolBar):
         """
         Initializes the GPA (Gradient Power Amplifier) hardware.
         """
-        if not self.main.demo:
-            try:
-                subprocess.run([hw.bash_path, "--", "./initGPA.sh", hw.rp_ip_address], timeout=10)
-                print("READY: GPA initialized")
-            except subprocess.TimeoutExpired as e:
-                print("ERROR: GPA init timeout")
-                print(e)
-        else:
-            print("This is a demo\n")
+
+        def init_gpa():
+            if self.action_server.isChecked():
+                if not self.main.demo:
+                    link = False
+                    while not link:
+                        try:
+                            # Initialize communication with gpa
+                            if hw.gpa_model=="Barthel":
+                                # Check if GPA available
+                                received_string = self.arduino.send("GPA_VERB 1;").decode()
+                                if received_string[0:4] != ">OK;":
+                                    print("WARNING: GPA not available.")
+                                else:
+                                    print("READY: GPA available.")
+
+                                # Remote communication with GPA
+                                received_string = self.arduino.send("GPA_SPC:CTL 1;").decode()  # Activate remote control
+                                if received_string[0:4] != ">OK;":  # If wrong response
+                                    print("WARNING: Error enabling GPA remote control.")
+                                else:  # If good response
+                                    print("READY: GPA remote communication succeed.")
+
+                                # Disable Interlock
+                                received_string = self.arduino.send("GPA_ERRST;").decode()  # Activate remote control
+                                if received_string[0:4] != ">OK;":  # If wrong response
+                                    print("WARNING: Interlock reset.")
+                                else:  # If good response
+                                    print("READY: Interlock reset done.")
+
+                                # Disable power module
+                                self.arduino.send("GPA_ON 0;")
+
+                            # Initialize communication with rfpa
+                            if hw.rfpa_model == "Barthel":
+                                # Check if RFPA available
+                                received_string = self.arduino.send("RFPA_VERB 1;").decode()
+                                if received_string[0:4] != ">OK;":
+                                    print("WARNING: RFPA not available.")
+                                else:
+                                    print("READY: RFPA available.")
+
+                                # Remote communication with RFPA
+                                received_string = self.arduino.send("RFPA_SPC:CTL 1;").decode()
+                                if received_string[0:4] != ">OK;":
+                                    print("WARNING: Error enabling RFPA remote control.")
+                                else:
+                                    print("READY: RFPA remote communication succeed.")
+
+                                # Disable power module
+                                self.arduino.send("RFPA_RF 0;")
+
+                            # Run init_gpa sequence
+                            if hw.grad_board == "ocra1":
+                                expt = ex.Experiment(init_gpa=True)
+                                expt.add_flodict({
+                                    'grad_vx': (np.array([100]), np.array([0])),
+                                })
+                                expt.run()
+                                expt.__del__()
+                                link = True
+                                print("READY: GPA init done!")
+                            elif hw.grad_board == "gpa-fhdo":
+                                link = True
+                                print("READY: GPA init done!")
+
+                            # Enable gpa power modules
+                            if hw.gpa_model == "Barthel":
+                                # Enable GPA module
+                                received_string = self.arduino.send("GPA_ON 1;").decode()  # Enable power module
+                                if received_string[0:4] != ">OK;":  # If wrong response
+                                    print("WARNING: Error activating GPA power module.")
+                                else:  # If good reponse
+                                    print("READY: GPA power enabled.")
+
+                            # Enable rfpa power module
+                            if hw.rfpa_model == "Barthel":
+                                received_string = self.arduino.send("RFPA_RF 1;").decode()
+                                if received_string[0:4] != ">OK;":
+                                    print("WARNING: Error activating RFPA power module.")
+                                else:
+                                    print("READY: RFPA power enabled.")
+                        except:
+                            link = False
+                            time.sleep(1)
+            else:
+                print("ERROR: No connection to the server")
+                print("Please, connect to MaRCoS server first")
+
+        thread = threading.Thread(target=init_gpa)
+        thread.start()
+
+

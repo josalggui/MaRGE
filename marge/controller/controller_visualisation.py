@@ -38,32 +38,29 @@ class VisualisationTabController(VisualisationTabWidget):
 
         image = self.main.image_view_widget.main_matrix
 
+        # Parse slice range
         slices = self.range_text_field.text().split(',')
-        n0 = int(slices[0])
-        n_end = int(slices[1])
-        # slices_number = n_end - n0 + 1
+        n0, n_end = int(slices[0]), int(slices[1])
         selected_slices = image[n0:n_end + 1]
 
+        # Parse grid layout (first number = columns, second = rows)
         rows_columns = self.column_text_field.text().split(',')
-        rows_number = int(rows_columns[0])
-        columns_number = int(rows_columns[1])
+        columns_number, rows_number = int(rows_columns[0]), int(rows_columns[1])
 
         slice_height, slice_width = image.shape[1], image.shape[2]
 
-        image_matrix = np.zeros((slice_height * columns_number, slice_width * rows_number), dtype=np.complex128)
+        # Build big matrix (rows → height, columns → width)
+        image_matrix = np.zeros((slice_height * rows_number, slice_width * columns_number), dtype=np.float32)
 
-        i = 0
-        while i < len(selected_slices):
-            row = i // columns_number
-            col = i % columns_number
+        for i, slice_img in enumerate(selected_slices):
+            row = i % rows_number
+            col = i // rows_number
             row_start = row * slice_height
             row_end = row_start + slice_height
             col_start = col * slice_width
             col_end = col_start + slice_width
 
-            image_matrix[col_start:col_end, row_start:row_end] = image[i]
-
-            i += 1
+            image_matrix[row_start:row_end, col_start:col_end] = np.abs(slice_img)
 
         # Clean the image_view_widget
         self.main.image_view_widget.clearFiguresLayout()
@@ -74,6 +71,7 @@ class VisualisationTabController(VisualisationTabWidget):
                                x_label='',
                                y_label='',
                                title='')
+
         self.main.image_view_widget.addWidget(image)
 
     def clear2DImage(self):

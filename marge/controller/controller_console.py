@@ -8,6 +8,7 @@ from marge.widgets.widget_console import ConsoleWidget
 
 
 class ConsoleController(ConsoleWidget):
+    signal_text_ready = pyqtSignal(str)
     def __init__(self, log_name=None):
         super().__init__()
 
@@ -37,6 +38,8 @@ class ConsoleController(ConsoleWidget):
         atexit.register(self.close_log)
 
     def write_console(self, text):
+        self.signal_text_ready.emit(text)
+
         # Console GUI
         cursor = self.console.textCursor()
         cursor.movePosition(cursor.End)

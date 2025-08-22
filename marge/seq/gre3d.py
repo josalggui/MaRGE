@@ -44,7 +44,7 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         super(GRE3D, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='GRE3DInfo', val='GRE3D')
-        self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='toMaRGE', val=False)
         self.addParameter(key='nScans', string='Number of scans', val=2, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz,
                           field='RF')
@@ -56,8 +56,6 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
                           tip="Position of the gradient isocenter")
         self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[60, 60, 2], field='IM')
-        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
-        self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='acq_time', string='Acquisition time (ms)', val=1.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[0, 1, 2], field='IM',
                           tip="0=x, 1=y, 2=z")
@@ -103,7 +101,6 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         self.demo = demo
 
         # Set the fov
-        self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
 
@@ -166,13 +163,6 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
         else:
             n_sl = int(self.nPoints[2]/2)+par_acq_lines
         n_repetitions = n_ph*n_sl
-
-        # Get the rotation matrix
-        rot = self.getRotationMatrix()
-        gradAmp = np.array([0.0, 0.0, 0.0])
-        gradAmp[self.axesOrientation[0]] = 1
-        gradAmp = np.reshape(gradAmp, (3, 1))
-        result = np.dot(rot, gradAmp)
 
         print("Readout direction:")
         print(np.reshape(result, (1, 3)))
@@ -619,11 +609,6 @@ class GRE3D(blankSeq.MRIBLANKSEQ):
             result2['title'] = "k-Space"
             result2['row'] = 0
             result2['col'] = 1
-
-            # Reset rotation angle and dfov to zero
-            self.mapVals['angle'] = 0.0
-            self.mapVals['dfov'] = [0.0, 0.0, 0.0]
-            hw.dfov = [0.0, 0.0, 0.0]
 
             # DICOM TAGS
             # Image

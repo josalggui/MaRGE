@@ -43,3 +43,5 @@ class MarcosToolBar(QToolBar):
             self.action_gpa_init = QAction(QIcon(str(path_gpa)), "Init power modules", self)
         self.action_gpa_init.setStatusTip("Init GPA board")
         self.addAction(self.action_gpa_init)
+
+        # TODO: add button for tyger

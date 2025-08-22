@@ -96,7 +96,7 @@ class FID(blankSeq.MRIBLANKSEQ):
                 elif self.readRFpulse == 1:
                     t0 = tEx-rfExTime/2
                 self.rxGateSync(t0, acqTime, channel=rxChannel)
-                # self.ttl(t0, acqTime, channel=1, rewrite=True)
+                self.ttlOffRecPulse(t0, acqTime)
 
             self.endSequence(shimmingTime + repetitionTime*nScans)
 

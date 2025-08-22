@@ -42,7 +42,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='RabiFlopsInfo', val='RabiFlops')
         self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
-        self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, field='RF')
+        self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.06, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
         self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=0.0, field='RF')
@@ -50,7 +50,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=500., field='SEQ')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, field='SEQ')
-        self.addParameter(key='shimming', string='Shimming (*1e-4)', val=[-12.5, -12.5, 7.5], field='OTH')
+        self.addParameter(key='shimming', string='Shimming', val=[-12.5, -12.5, 7.5], field='OTH')
         self.addParameter(key='rfExTime0', string='Rf pulse time, Start (us)', val=5.0, field='RF')
         self.addParameter(key='rfExTime1', string='RF pulse time, End (us)', val=100.0, field='RF')
         self.addParameter(key='nSteps', string='Number of steps', val=20, field='RF')
@@ -89,7 +89,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         # I do not understand why I cannot create the input parameters automatically
         seqName = self.mapVals['seqName']
         nScans = self.mapVals['nScans']
-        freqOffset = self.mapVals['freqOffset']
+        larmorFreq = self.mapVals['larmorFreq']
         rfExAmp = self.mapVals['rfExAmp']
         rfReAmp = self.mapVals['rfReAmp']
         echoTime = self.mapVals['echoTime']
@@ -107,7 +107,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         dummyPulses = self.mapVals['dummyPulses']
 
         # Time variables in us and MHz
-        freqOffset *= 1e-3
+        larmorFreq *= 1e-6
         echoTime *= 1e3
         repetitionTime *= 1e3
         acqTime *= 1e3
@@ -132,6 +132,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                         # Rx gate for FID
                         if pulse == dummyPulses:
                             t0 = tEx + rfTime[step] / 2 + deadTime
+                            self.ttlOffRecPulse(t0, acqTime)
                             self.rxGate(t0, acqTime)
 
                         # Refocusing pulse
@@ -153,6 +154,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                         # Rx gate for Echo
                         if pulse == dummyPulses:
                             t0 = tEx + echoTime - acqTime / 2
+                            self.ttlOffRecPulse(t0, acqTime)
                             self.rxGate(t0, acqTime)
 
                         # Update excitation time for next repetition
@@ -165,7 +167,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         bw = nPoints / acqTime * hw.oversamplingFactor  # MHz
         samplingPeriod = 1 / bw
         if not self.demo:
-            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + freqOffset,
+            self.expt = ex.Experiment(lo_freq=larmorFreq * 1e6,
                                       rx_t=samplingPeriod,
                                       init_gpa=init_gpa,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
@@ -179,7 +181,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
 
         # Execute the experiment
         createSequence()
-        if self.floDict2Exp(demo=self.demo):
+        if self.floDict2Exp():
             print("Sequence waveforms loaded successfully")
             pass
         else:
@@ -196,78 +198,6 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
             rxd['rx0'] = rxd['rx0'] * hw.adcFactor  # Here I normalize to get the result in mV
             self.mapVals['dataOversampled'] = rxd['rx0']
         return True
-
-    def sequenceAnalysis(self, mode=None):
-        self.mode = mode
-        nScans = self.mapVals['nScans']
-        nSteps = self.mapVals['nSteps']
-        nPoints = self.mapVals['nPoints']
-        dataOversampled = self.mapVals['dataOversampled']
-        timeVector = self.mapVals['rfTime']
-
-        # Get FID and Echo
-        dataFull = sig.decimate(dataOversampled, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-        self.mapVals['dataFull'] = dataFull
-        dataFull = np.reshape(dataFull, (nScans, nSteps, 2, -1))
-        dataFID = dataFull[:, :, 0, :]
-        self.mapVals['dataFID'] = dataFID
-        dataEcho = dataFull[:, :, 1, :]
-        self.mapVals['dataEcho'] = dataEcho
-        dataFIDAvg = np.mean(dataFID, axis=0)
-        self.mapVals['dataFIDAvg'] = dataFIDAvg
-        dataEchoAvg = np.mean(dataEcho, axis=0)
-        self.mapVals['dataEchoAvg'] = dataEchoAvg
-
-        rabiFID = dataFIDAvg[:, 10]
-        self.mapVals['rabiFID'] = rabiFID
-        rabiEcho = dataEchoAvg[:, int(nPoints / 2)]
-        self.mapVals['rabiEcho'] = rabiEcho
-
-        if self.demo:
-            timeVector = np.linspace(0, 100e-6, 10)
-            rabiFID = np.sin(2 * timeVector / 100e-6 * np.pi)
-            rabiEcho = rabiFID
-            piHalfTime, interpolations = utils.analyze_rabi_curve(data=[timeVector, rabiFID, rabiEcho], method=self.cal_method, discriminator=self.discriminator)
-        else:
-            piHalfTime, interpolations = utils.analyze_rabi_curve(data=[timeVector, rabiFID, rabiEcho], method=self.cal_method, discriminator=self.discriminator)
-        self.mapVals['piHalfTime'] = piHalfTime
-        print("pi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us" % (self.mapVals['rfExAmp'],
-                                                                                   self.mapVals['piHalfTime']))
-        hw.b1Efficiency = np.pi / 2 / (self.mapVals['rfExAmp'] * piHalfTime)
-
-        # Signal vs rf time
-        result1 = {'widget': 'curve',
-                   'xData': [timeVector * 1e6, timeVector * 1e6, timeVector * 1e6,
-                             interpolations[0] * 1e6, interpolations[0] * 1e6, interpolations[0] * 1e6],
-                   'yData': [np.abs(rabiFID), np.real(rabiFID), np.imag(rabiFID),
-                             np.abs(interpolations[1]), np.real(interpolations[1]), np.imag(interpolations[1])],
-                   'xLabel': 'Time (us)',
-                   'yLabel': 'Signal amplitude (mV)',
-                   'title': 'Rabi Flops with FID',
-                   'legend': ['abs', 'real', 'imag', 'abs spline', 'real spline', 'imag spline'],
-                   'row': 0,
-                   'col': 0}
-
-        result2 = {'widget': 'curve',
-                   'xData': [timeVector * 1e6, timeVector * 1e6, timeVector * 1e6,
-                             interpolations[0] * 1e6, interpolations[0] * 1e6, interpolations[0] * 1e6],
-                   'yData': [np.abs(rabiEcho), np.real(rabiEcho), np.imag(rabiEcho),
-                             np.abs(interpolations[2]), np.real(interpolations[2]), np.imag(interpolations[2])],
-                   'xLabel': 'Time (us)',
-                   'yLabel': 'Signal amplitude (mV)',
-                   'title': 'Rabi Flops with Spin Echo',
-                   'legend': ['abs', 'real', 'imag', 'abs spline', 'real spline', 'imag spline'],
-                   'row': 1,
-                   'col': 0}
-
-        self.output = [result1, result2]
-
-        self.saveRawData()
-
-        if self.mode == 'Standalone':
-            self.plotResults()
-
-        return self.output
 
 if __name__ == '__main__':
     seq = RabiFlops()

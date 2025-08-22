@@ -110,92 +110,15 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         return True
 
-
-
     def sequenceAnalysis(self, mode=None):
-        self.mode = mode
-
-        # Get data
-        data = np.reshape(self.mapVals['data'], (3, self.nShimming, -1))
-
-        def getFHWM(s=None):
-            bw = self.mapVals['bw']*1e-3
-            f_vector = np.linspace(-bw/2, bw/2, self.nPoints)
-            target = np.max(s) / 2
-            p0 = np.argmax(s)
-            f0 = f_vector[p0]
-            s1 = np.abs(s[0:p0]-target)
-            f1 = f_vector[np.argmin(s1)]
-            s2 = np.abs(s[p0::]-target)
-            f2 = f_vector[np.argmin(s2)+p0]
-            return f2-f1
-
-        # Get FFT
-        dataFFT = np.zeros((3, self.nShimming))
-        dataFWHM = np.zeros((3, self.nShimming))
-        for ii in range(3):
-            for jj in range(self.nShimming):
-                spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data[ii, jj, :]))))
-                dataFFT[ii, jj] = np.max(spectrum)
-                dataFWHM[ii, jj] = getFHWM(spectrum)
-        self.mapVals['amplitudeVSshimming'] = dataFFT
-
-        # Get max signal for each excitation
-        sxVector = np.squeeze(self.mapVals['sxVector'])
-        syVector = np.squeeze(self.mapVals['syVector'])
-        szVector = np.squeeze(self.mapVals['szVector'])
-
-        # Get the shimming values
-        sx = sxVector[np.argmax(dataFFT[0, :])]
-        sy = syVector[np.argmax(dataFFT[1, :])]
-        sz = szVector[np.argmax(dataFFT[2, :])]
-        fwhm = dataFWHM[2, np.argmax(dataFFT[2, :])]
-        print("Shimming X = %0.1f" % (sx / units.sh))
-        print("Shimming Y = %0.1f" % (sy / units.sh))
-        print("Shimming Z = %0.1f" % (sz / units.sh))
-        print("FHWM = %0.0f Hz" % (fwhm*1e3))
-        print("Homogeneity = %0.0f ppm" % (fwhm*1e3/hw.larmorFreq))
-        print("Shimming loaded into the sequences.")
-
-        # Shimming plot
-        result1 = {'widget': 'curve',
-                   'xData': [sxVector / units.sh, syVector / units.sh, szVector / units.sh],
-                   'yData': [np.abs(dataFFT[0, :]), np.abs(dataFFT[1, :]), np.abs(dataFFT[2, :])],
-                   'xLabel': 'Shimming',
-                   'yLabel': 'a.u.',
-                   'title': 'Spectrum amplitude',
-                   'legend': ['X', 'Y', 'Z'],
-                   'row': 0,
-                   'col': 0}
-
-        result2 = {'widget': 'curve',
-                   'xData': [sxVector / units.sh, syVector / units.sh, szVector / units.sh],
-                   'yData': [dataFWHM[0, :], dataFWHM[1, :], dataFWHM[2, :]],
-                   'xLabel': 'Shimming',
-                   'yLabel': 'FHWM (kHz)',
-                   'title': 'FWHM',
-                   'legend': ['X', 'Y', 'Z'],
-                   'row': 2,
-                   'col': 0}
+        super().sequenceAnalysis(mode=mode)
 
         # Update the shimming in hw_config
-        if mode != "standalone":
+        if mode != "Standalone":
             for seqName in self.sequence_list:
-                self.sequence_list[seqName].mapVals['shimming'] = [np.round(sx / units.sh, decimals=1),
-                                                                  np.round(sy / units.sh, decimals=1),
-                                                                  np.round(sz / units.sh, decimals=1)]
-        shimming = [np.round(sx / units.sh, decimals=1),
-                    np.round(sy / units.sh, decimals=1),
-                    np.round(sz / units.sh, decimals=1)]
-        self.mapVals['shimming0'] = shimming
-
-        self.output = [result1, result2]
-
-        self.saveRawData()
-
-        if self.mode == 'Standalone':
-            self.plotResults()
-
+                self.sequence_list[seqName].mapVals['shimming'] = [np.round(self.mapVals['shimming0'][0], decimals=1),
+                                                                   np.round(self.mapVals['shimming0'][1], decimals=1),
+                                                                   np.round(self.mapVals['shimming0'][2], decimals=1)]
         return self.output
 
     def createSequence(self):
@@ -224,6 +147,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             # Acquisition window
             if repeIndex >= self.dummyPulses:
                 t0 = tEx + self.echoTime - self.acqTime / 2
+                self.ttlOffRecPulse(t0, self.acqTime)
                 self.rxGate(t0, self.acqTime)
 
         # End sequence
@@ -266,7 +190,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         # Create sequence and load it to red pitaya
         self.createSequence()
-        if self.floDict2Exp(demo=self.demo):
+        if self.floDict2Exp():
             print("Sequence waveforms loaded successfully")
             pass
         else:

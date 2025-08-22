@@ -198,9 +198,7 @@ class SequenceController(SequenceToolBar):
                 [list(defaultsequences[self.seq_name].mapNmspc.values()),
                  list(defaultsequences[self.seq_name].mapVals.values())]
 
-            # Save the rotation and shifts to the history list
-            self.main.history_list.rotations[self.main.history_list.current_output] = \
-                defaultsequences[self.seq_name].rotations.copy()
+            # Save dfov and fov to the history list
             self.main.history_list.shifts[self.main.history_list.current_output] = \
                 defaultsequences[self.seq_name].dfovs.copy()
             self.main.history_list.fovs[self.main.history_list.current_output] = \
@@ -266,23 +264,23 @@ class SequenceController(SequenceToolBar):
             name = str(datetime.now())[11:23] + " | " + item_name
         self.main.history_list.addItem(name)
 
+        # Get sequence to run
         sequence = copy.deepcopy(defaultsequences[seq_name])
-        if map_nmspc is None and map_vals is None:
+
+        # Modify input parameters of the sequence according to current item
+        if map_nmspc and map_vals:
+            n = 0
+            for keyParam in sequence.mapKeys:
+                sequence.mapVals[keyParam] = map_vals[n]
+                n += 1
+            pass
+        else:
             map_nmspc = list(sequence.mapNmspc.values())
             map_vals = list(sequence.mapVals.values())
 
         # Save results into the history
         self.main.history_list.inputs[name] = [map_nmspc, map_vals]
-        self.main.history_list.pending_inputs[name] = [map_nmspc, map_vals]
-
-        # Set to zero the dfov and angle for next figures
-        hw.dfov = [0.0, 0.0, 0.0]
-        for sequence in defaultsequences.values():
-            if 'dfov' in sequence.mapKeys:
-                sequence.mapVals['dfov'] = [0.0, 0.0, 0.0]   # mm
-            if 'angle' in sequence.mapKeys:
-                sequence.mapVals['angle'] = 0.0
-
+        self.main.history_list.pending_runs[name] = sequence
         self.main.sequence_list.updateSequence()
 
     def startSequencePlot(self):

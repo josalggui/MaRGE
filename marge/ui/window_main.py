@@ -16,6 +16,7 @@ from marge.controller.controller_console import ConsoleController
 from marge.controller.controller_figures import FiguresLayoutController
 from marge.controller.controller_history_list import HistoryListController
 from marge.controller.controller_menu import MenuController
+from marge.controller.controller_printer import Printer
 from marge.controller.controller_protocol_inputs import ProtocolInputsController
 from marge.controller.controller_protocol_list import ProtocolListController
 from marge.controller.controller_toolbar_figures import FiguresController
@@ -140,4 +141,7 @@ class MainWindow(QMainWindow):
 
         # Create the post-processing toolbox
         self.post_gui = ProcessingWindowController(session=self.session, main=self)
+
+        # Add printer
+        self.printer = Printer(main=self)
 

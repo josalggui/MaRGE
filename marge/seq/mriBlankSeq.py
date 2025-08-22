@@ -27,6 +27,8 @@ from marge.marge_utils import utils
 import shutil
 import nibabel as nib
 
+import recon.data_processing as dp
+
 class MRIBLANKSEQ:
     """
     Class for representing MRI sequences.
@@ -59,6 +61,9 @@ class MRIBLANKSEQ:
 
         This method initializes the instance attributes.
         """
+        self.nScans = None
+        self.standalone = None
+        self.plotSeq = None
         self.mapKeys = []
         self.mapNmspc = {}
         self.mapVals = {}
@@ -86,8 +91,6 @@ class MRIBLANKSEQ:
                          'ttl1': [[],[]],}
 
         self.addParameter(key='seqName', val='blankSeq')
-        self.addParameter(key='angle', val=0)
-        self.addParameter(key='rotationAxis', val=[0, 0, 1])
         self.addParameter(key='dfov', val=[0.0, 0.0, 0.0])
         self.addParameter(key='fov', val=[0.0, 0.0, 0.0])
         self.addParameter(key='pypulseq', val=False)
@@ -193,7 +196,51 @@ class MRIBLANKSEQ:
                 tips[self.mapNmspc[key]] = [self.mapTips[key]]
         return out, tips
 
+    def sequenceAnalysis(self, mode=None):
+        # Save little raw data
+        raw_data_path = self.saveRawDataLite()
+
+        # Get new ouptuts to raw data and output plots
+        output_dict, self.output = dp.run_recon(raw_data_path=raw_data_path)
+        self.mapVals.update(output_dict)
+
+        # Save raw data
+        self.saveRawData()
+
+        # Plot if standalone
+        if mode == 'Standalone':
+            self.plotResults()
+
+        return self.output
+
     def rotate_waveforms(self, waveforms):
+        """
+        Rotate and reformat gradient waveforms according to the current rotation matrix.
+
+        This method takes the input gradient waveforms for the x, y, and z axes,
+        merges them into a unified time sequence, sorts and aligns the amplitudes,
+        and then applies the current rotation matrix to rotate the gradient directions.
+        After rotation, it rescales the gradients using the hardware gradient factors
+        and updates the original waveform dictionary with the rotated waveforms.
+
+        If plotting is enabled (`self.plotSeq` is True), the last elements of the
+        fields-of-view (FOVs), differential FOVs, and rotation lists are removed
+        to maintain consistency with the sequence visualization.
+
+        Parameters
+        ----------
+        waveforms : dict
+            Dictionary containing the gradient waveforms for each axis:
+                - 'grad_vx': list with [time array, amplitude array] for x-gradient
+                - 'grad_vy': list with [time array, amplitude array] for y-gradient
+                - 'grad_vz': list with [time array, amplitude array] for z-gradient
+
+        Returns
+        -------
+        dict
+            Updated dictionary containing the rotated and reformatted gradient waveforms
+            for 'grad_vx', 'grad_vy', and 'grad_vz'.
+        """
         # Get the waveforms
         gx = waveforms['grad_vx']
         gy = waveforms['grad_vy']
@@ -307,7 +354,6 @@ class MRIBLANKSEQ:
                    hardware=True,
                    output='',
                    channels=[0],
-                   angulation=1,
                    ):
         """
         Execute multiple batches of MRI waveforms, manage data acquisition, and store oversampled data.
@@ -336,8 +382,6 @@ class MRIBLANKSEQ:
             String to add to the output keys saved in the mapVals parameter.
         channels : list, optional
             List of channels used for Rx
-        angulation : bool, optional
-            Bool parameter to work with angulation (1) or without angulation (0)
 
         Returns:
         --------
@@ -362,10 +406,6 @@ class MRIBLANKSEQ:
 
         # Iterate through each batch of waveforms
         for seq_num in waveforms.keys():
-            # Rotate the waveforms to given reference system
-            if angulation:
-                waveforms[seq_num] = self.rotate_waveforms(waveforms[seq_num])
-
             # Initialize the experiment if not in demo mode
             if not self.demo:
                 self.expt = ex.Experiment(
@@ -411,7 +451,7 @@ class MRIBLANKSEQ:
 
                         # Check if acquired points coincide with expected points
                         if acquired_points != expected_points:
-                            print("WARNING: data apoints lost!")
+                            print("WARNING: data points lost!")
                             print("Repeating batch...")
 
                     # Concatenate acquired data into the oversampled data array
@@ -1279,6 +1319,23 @@ class MRIBLANKSEQ:
         self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
         self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
 
+    def ttlOffRecPulse(self, tStart, rfTime):
+        """
+        Generate an RF pulse with a rectangular pulse shape and the corresponding deblanking signal.
+
+        Args:
+            tStart (float): Start time of the RF pulse.
+            rfTime (float): Duration of the RF pulse.
+            rfAmplitude (float): Amplitude of the RF pulse.
+            rfPhase (float): Phase of the RF pulse in radians. Default is 0.
+            channel (int): Channel index for the RF pulse. Default is 0.
+
+        """
+        txGateTime = np.array([tStart-hw.blkOffTime, tStart + hw.blkOffTime + rfTime])
+        txGateAmp = np.array([1, 0])
+        self.flo_dict['ttl1'][0] = np.concatenate((self.flo_dict['ttl1'][0], txGateTime), axis=0)
+        self.flo_dict['ttl1'][1] = np.concatenate((self.flo_dict['ttl1'][1], txGateAmp), axis=0)
+
     def rfRawPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, channel=0):
         """
         Generate an RF pulse with a rectangular pulse shape.
@@ -1582,7 +1639,7 @@ class MRIBLANKSEQ:
         self.flo_dict['g%i' % gAxis][0] = np.concatenate((self.flo_dict['g%i' % gAxis][0], np.array([t0])), axis=0)
         self.flo_dict['g%i' % gAxis][1] = np.concatenate((self.flo_dict['g%i' % gAxis][1], np.array([gAmp])), axis=0)
 
-    def floDict2Exp(self, rewrite=True, demo=False):
+    def floDict2Exp(self, rewrite=True):
         """
         Check for errors and add instructions to Red Pitaya if no errors are found.
 
@@ -1615,9 +1672,32 @@ class MRIBLANKSEQ:
                                    'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
                                    'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
                                    'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
-                                   'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
+                                #    'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
+                                   'rx_gate': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
                                    }, rewrite)
         return True
+
+    def saveRawDataLite(self):
+        # Get directory
+        if 'directory' in self.session.keys():
+            directory = self.session['directory']
+        else:
+            dt2 = date.today()
+            date_string = dt2.strftime("%Y.%m.%d")
+            directory = 'experiments/acquisitions/%s' % (date_string)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        # generate directories for mat, csv and dcm files
+        directory_mat = directory + '/mat'
+        if not os.path.exists(directory + '/mat'):
+            os.makedirs(directory_mat)
+
+        # Save mat file with the outputs
+        savemat("%s/temp.mat" % directory_mat,
+                self.mapVals)  # au format savemat(chemin_fichier_mat, {"data" : data}), avec data contient les données brute à sauvegarder
+
+        return "%s/temp.mat" % directory_mat
 
     def saveRawData(self):
         
@@ -1666,6 +1746,7 @@ class MRIBLANKSEQ:
         if not os.path.exists(directory + '/ismrmrd'):
             os.makedirs(directory_ismrmrd)
 
+        self.directory_mat = directory_mat
         self.directory_rmd=directory_ismrmrd 
         
         # Generate filename
@@ -1680,7 +1761,7 @@ class MRIBLANKSEQ:
         self.mapVals['fileName'] = "%s.mat" % file_name
         # Generate filename for ismrmrd
         self.mapVals['fileNameIsmrmrd'] = "%s.h5" % file_name
-        
+        self.file_name = file_name
         # Save mat file with the outputs
         savemat("%s/%s.mat" % (directory_mat, file_name), self.mapVals) # au format savemat(chemin_fichier_mat, {"data" : data}), avec data contient les données brute à sauvegarder
 
@@ -1870,16 +1951,7 @@ class MRIBLANKSEQ:
             else:
                 setattr(self, key, self.mapVals[key] * self.map_units[key])
 
-        # Conversion of variables to non-multiplied units
-        if self.pypulseq:
-            self.angle = - self.angle * np.pi / 180  # rads
-        else:
-            self.angle = + self.angle * np.pi / 180
-
         # Add rotation, dfov and fov to the history
-        self.rotation = self.rotationAxis.tolist()
-        self.rotation.append(self.angle)
-        self.rotations.append(self.rotation)
         self.dfovs.append(self.dfov.tolist())
         self.fovs.append(self.fov.tolist())
 

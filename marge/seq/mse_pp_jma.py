@@ -58,8 +58,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM',
                           tip="Position of the gradient isocenter")
         self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[50, 50, 10], field='IM')
-        self.addParameter(key='angle', string='Angle (º)', val=0.0, field='IM')
-        self.addParameter(key='rotationAxis', string='Rotation axis', val=[0, 0, 1], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=10, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM',
@@ -149,7 +147,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         )
 
         # Set the fov
-        self.dfov = self.getFovDisplacement()
         self.dfov = self.dfov[self.axesOrientation]
         self.fov = self.fov[self.axesOrientation]
 
@@ -235,11 +232,6 @@ class MSE(blankSeq.MRIBLANKSEQ):
         self.mapVals['sweepOrder'] = ind
         phGradients = phGradients[ind]
         # Get the rotation matrix
-        rot = self.getRotationMatrix()
-        gradAmp = np.array([0.0, 0.0, 0.0])
-        gradAmp[self.axesOrientation[0]] = 1
-        gradAmp = np.reshape(gradAmp, (3, 1))
-        result = np.dot(rot, gradAmp)
 
         # Initialize k-vectors
         k_ph_sl_xyz = np.ones((3, self.nPoints[0]*self.nPoints[1]*nSL))*hw.gammaB*(self.phGradTime+hw.grad_rise_time)

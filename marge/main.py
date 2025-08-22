@@ -21,6 +21,8 @@ def MaRGE():
         os.makedirs('calibration')
     if not os.path.exists('protocols'):
         os.makedirs('protocols')
+    if not os.path.exists('reports'):
+        os.makedirs('reports')
 
     from marge.controller.controller_session import SessionController
 
@@ -28,7 +30,6 @@ def MaRGE():
     gui = SessionController()
     gui.show()
     sys.exit(app.exec_())
-    console_controller.close_log()
 
 if __name__ == "__main__":
     MaRGE()
