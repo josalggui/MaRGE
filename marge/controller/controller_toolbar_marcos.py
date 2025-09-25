@@ -95,11 +95,9 @@ class MarcosController(MarcosToolBar):
     def get_sdrlab_ip(self):
         print("Searching for SDRLabs...")
         ip_addresses = []
-        subnet = '192.168.1.'
         timeout = 0.1
 
-        for i in range(101, 132):
-            ip = subnet + str(i)
+        for ip in hw.rp_ip_list:
             try:
                 if platform.system() == 'Linux':
                     result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)
@@ -115,8 +113,9 @@ class MarcosController(MarcosToolBar):
                     if ssh_result.returncode == 0:
                         ip_addresses.append(ip)
                     else:
-                        print(f"WARNING: No SDRLab found at ip {ip}.")
+                        print(f"WARNING: No SDRLab found at ip {ip}")
             except:
+                print(f"WARNING: No SDRLab found at ip {ip}")
                 continue
 
         for ip in ip_addresses:
