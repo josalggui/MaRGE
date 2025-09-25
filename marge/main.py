@@ -23,6 +23,8 @@ def MaRGE():
         os.makedirs('protocols')
     if not os.path.exists('reports'):
         os.makedirs('reports')
+    if not os.path.exists('configs'):
+        os.makedirs('configs')
 
     from marge.controller.controller_session import SessionController
 

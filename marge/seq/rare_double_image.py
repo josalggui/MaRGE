@@ -34,8 +34,8 @@ from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 from marge.marge_utils import utils
 
-from marge_tyger import tyger_rare
-import marge_tyger.tyger_config as tyger_conf
+from marge.marge_tyger import tyger_rare
+import marge.marge_tyger.tyger_config as tyger_conf
 
 #*********************************************************************************
 #*********************************************************************************
@@ -950,7 +950,9 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             if self.parFourierFraction == 1:
                 result_k_odd['data'] = np.log10(np.abs(self.mapVals['kSpace3D_odd_echoes']))
             else:
-                result_k_odd['data'] = np.abs(self.mapVals['kSpace3D_odd_echoes'])
+                result_k_odd['data'] = np.zeros_like(self.mapVals['kSpace3D_odd_echoes'])
+                result_k_odd['data'][0:n_sl, :, :] = np.log10(np.abs(self.mapVals['kSpace3D_odd_echoes'][0:n_sl, :, :]))
+                # result_k_odd['data'] = np.abs(self.mapVals['kSpace3D_odd_echoes'])
             result_k_odd['xLabel'] = "k%s" % axesStr[1]
             result_k_odd['yLabel'] = "k%s" % axesStr[0]
             result_k_odd['title'] = "k-Space odd echoes"

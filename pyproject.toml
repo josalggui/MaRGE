@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "marge-mri"
-version = "0.0.9"
+version = "0.0.11.b2"
 authors = [
     { name = "José Miguel Algarín", email = "josalggui@i3m.upv.es" },
 ]
@@ -38,6 +38,9 @@ dependencies = [
     "scikit-image",
     "imageio",
     "h5py",
+    "reportlab",
+    "pillow",
+    "mrd-python == 2.0.0",
 ]
 
 [tool.hatch.build.targets.wheel]

@@ -38,8 +38,8 @@ import datetime
 import ctypes
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
-from marge_tyger import tyger_rare
-import marge_tyger.tyger_config as tyger_conf
+from marge.marge_tyger import tyger_rare
+import marge.marge_tyger.tyger_config as tyger_conf
 
 #*********************************************************************************
 #*********************************************************************************

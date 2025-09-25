@@ -544,6 +544,8 @@ def run_pocs_reconstruction(n_points, factors, k_space_ref):
 
     return img_reconstructed
 
+# TODO: include new filters and other methods from Miguel
+
 
 if __name__ == "__main__":
     # mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.10.03.769.mat")

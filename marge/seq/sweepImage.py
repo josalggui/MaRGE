@@ -49,9 +49,9 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         print("mriLab @ i3M, CSIC, Spain\n")
 
     def sequenceTime(self):
-        return(0)  # minutes, scanTime
+        return 0  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq=0, demo=True):
+    def sequenceRun(self, plot_seq=0, demo=True):
         # Inputs
         seqName = self.mapVals['seqNameSweep']
         parameters = [self.mapVals['parameter0'], self.mapVals['parameter1']]
@@ -75,7 +75,7 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
                 seq.mapVals[parameters[0]] = parVector0[step0]
                 seq.mapVals[parameters[1]] = parVector1[step1]
                 seq.sequenceAtributes()
-                seq.sequenceRun(plotSeq=0, demo=demo)
+                seq.sequenceRun(plot_seq=0, demo=demo)
                 seq.sequenceAnalysis()
                 if 'sampledCartesian' in seq.mapVals:
                     sampled.append(seq.mapVals['sampledCartesian']) # sampledCartesian is four column kx, ky, kz and S(kx, ky, kz)
