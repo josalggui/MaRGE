@@ -84,6 +84,7 @@ class Arduino:
         if self.device is not None:
             while output == False:
                 self.device.write(data.encode())
+                time.sleep(0.1)
                 output = self.receive()
                 if output == False:
                     print("WARNING: Arduino communication failed...")
