@@ -28,7 +28,7 @@ def Noise(raw_data_path=None):
     noiserms = noiserms * 1e3  # uV
     print('rms noise: %0.1f uV @ %0.1f kHz' % (noiserms, bw))
     johnson = np.sqrt(2 * 50 * 300 * bw * 1e3 * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e6  # uV
-    print('Expected by Johnson: %0.1f uV @ %0.1f kHz' % (johnson, bw * 1e-3))
+    print('Expected by Johnson: %0.1f uV @ %0.1f kHz' % (johnson, bw))
     print('Noise factor: %0.1f johnson' % (noiserms / johnson))
     if noiserms / johnson > 2:
         print("WARNING: Noise is too high")

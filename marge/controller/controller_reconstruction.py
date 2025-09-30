@@ -134,7 +134,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
         image = self.main.image_view_widget.main_matrix
 
         # Perform direct FFT shift, inverse FFT, and inverse FFT shift to reconstruct the image in the spatial domain
-        k_space = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(image)))
+        k_space = utils.run_dfft(image)
 
         # Update the main matrix of the image view widget with the image fft data
         self.main.image_view_widget.main_matrix = k_space
@@ -172,12 +172,10 @@ class ReconstructionTabController(ReconstructionTabWidget):
         k_space = self.main.image_view_widget.main_matrix
 
         # Perform inverse FFT shift, inverse FFT, and inverse FFT shift to reconstruct the image in the spatial domain
-        image = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(k_space)))
+        image = utils.run_ifft(k_space)
 
         # Update the main matrix of the image view widget with the image fft data
         self.main.image_view_widget.main_matrix = image
-
-        figure = image / np.max(np.abs(image)) * 100
         
         orientation = None
         if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
@@ -185,7 +183,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
 
         # Add new item to the history list
         self.main.history_list.addNewItem(stamp="iFFT",
-                                          image=figure,
+                                          image=image,
                                           orientation=orientation,
                                           operation="iFFT",
                                           space="i",
@@ -413,7 +411,7 @@ class ReconstructionTabController(ReconstructionTabWidget):
         # Update the main matrix of the image view widget with the interpolated image
         self.main.image_view_widget.main_matrix = img_reconstructed
 
-        figure = img_reconstructed / np.max(np.abs(img_reconstructed)) * 100
+        figure = img_reconstructed
 
         # Add new item to the history list
         orientation=None

@@ -40,6 +40,7 @@ dfovs = []
 fovs = []
 
 bash_path = "gnome-terminal"
+rp_ip_address = "192.168.1.101"
 rp_ip_list = []
 rp_version = "rp-122"
 adcFactor = 13.788

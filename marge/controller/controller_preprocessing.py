@@ -195,12 +195,12 @@ class PreProcessingTabController(PreProcessingTabWidget):
         shape_0 = k_space.shape
 
         # Determine the new shape after zero-padding
-        matrix_size = self.zero_padding_order_field.text().split(',')
-        n_rd = int(matrix_size[0]) * shape_0[2]
-        n_ph = int(matrix_size[1]) * shape_0[1]
-        n_sl = int(matrix_size[2]) * shape_0[0]
+        zp_order = self.zero_padding_order_field.text().split(',')
+        n_rd = int(float(zp_order[0]) * shape_0[2])
+        n_ph = int(float(zp_order[1]) * shape_0[1])
+        n_sl = int(float(zp_order[2]) * shape_0[0])
 
-        image_matrix = utils.run_zero_padding(k_space, [n_rd, n_ph, n_sl])
+        image_matrix = utils.run_zero_padding(k_space, [n_sl, n_ph, n_rd])
 
         # Update the main matrix of the image view widget with the padded image
         self.main.image_view_widget.main_matrix = image_matrix.copy()

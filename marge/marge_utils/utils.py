@@ -1,3 +1,5 @@
+import copy
+
 import bm4d
 import numpy as np
 import nibabel as nib
@@ -385,10 +387,7 @@ def run_zero_padding(k_space, new_size):
     shape_0 = k_space.shape
 
     # Determine the new shape after zero-padding
-    n_rd = shape_0[2] * int(new_size[0])
-    n_ph = shape_0[1] * int(new_size[1])
-    n_sl = shape_0[0] * int(new_size[2])
-    shape_1 = n_sl, n_ph, n_rd
+    shape_1 = new_size
 
     # Create an image matrix filled with zeros
     image_matrix = np.zeros(shape_1, dtype=complex)
@@ -457,7 +456,7 @@ def hanning_filter(kSpace, mm, nb_point):
 
     return kSpace_hanning
 
-def run_pocs_reconstruction(n_points, factors, k_space_ref):
+def run_pocs_reconstruction(n_points, factors, k_space_ref, test=False):
     """
     Perform POCS reconstruction.
 
@@ -490,6 +489,12 @@ def run_pocs_reconstruction(n_points, factors, k_space_ref):
     # Get the reference image
     img_ref = np.abs(run_ifft(k_space_ref))
 
+    if test:
+        n_sl, n_ph, n_rd = np.shape(img_ref)
+        plt.figure()
+        plt.imshow(img_ref[n_sl // 2, :, :], cmap="gray")
+        plt.title("Reference image")
+
     # Create a copy with the center of k-space
     k_space_center = getCenterKSpace(k_space_ref, m)
 
@@ -502,76 +507,119 @@ def run_pocs_reconstruction(n_points, factors, k_space_ref):
     # Get image phase
     img_center = run_ifft(k_space_center)
     phase = img_center / abs(img_center)
+    if test:
+        plt.figure()
+        plt.imshow(np.abs(img_center[n_sl // 2, :, :]), cmap='gray')
+        plt.title("Center image")
+
+    # Generate zero padding image for comparison
+    k_space_zp = np.zeros_like(k_space_ref, dtype=complex)
+    k_space_zp[0:mm[0], 0:mm[1], 0:mm[2]] = k_space_ref[0:mm[0], 0:mm[1], 0:mm[2]]
+    img_zp = np.abs(run_ifft(k_space_zp))
+    if test:
+        plt.figure()
+        plt.imshow(np.abs(img_zp[n_sl // 2, :, :]), cmap='gray')
+        plt.title("ZP")
 
     # Generate the corresponding image with the Hanning filter
     k_space_hanning = hanning_filter(k_space_ref, mm, nb_point)
-    img_hanning = np.abs(run_ifft(k_space_hanning))
+    img_hanning = run_ifft(k_space_hanning)
 
     num_iterations = 0  # Initialize the iteration counter
-    previous_img = img_hanning.copy()  # you have the choice between img_hanning or img_ramp
-
+    img_reconstructed = [img_hanning]
     while True:
         # Iterative reconstruction
-        img_iterative = previous_img * phase
+        img_iterative = np.abs(img_reconstructed[-1]) * phase
         k_space_new = run_dfft(img_iterative)
 
         # Apply constraint: Keep the region of k-space from n+m onwards and restore the rest
         k_space_new[0:mm[0], 0:mm[1], 0:mm[2]] = k_space_ref[0:mm[0], 0:mm[1], 0:mm[2]]
 
         # Reconstruct the image from the modified k-space
-        img_reconstructed = np.abs(run_ifft(k_space_new))
+        img_reconstructed.append(run_ifft(k_space_new))
+
+        if test:
+            plt.figure()
+            plt.imshow(np.abs(np.abs(img_reconstructed[-1][n_sl // 2, :, :]) - np.abs(img_reconstructed[-2][n_sl // 2, :, :])),
+                       vmin=0, vmax=1e-5)
+            plt.title(f"Iteration {num_iterations+1}")
 
         # Compute correlation between consecutive reconstructed images
-        correlation = np.corrcoef(previous_img.flatten(), img_reconstructed.flatten())[0, 1]
+        correlation = np.corrcoef(np.abs(img_reconstructed[-2].flatten()), np.abs(img_reconstructed[-1].flatten()))[0, 1]
 
         # Display correlation and current iteration number
-        print("Iteration: %i, Convergence: %0.2e" % (num_iterations, (1-correlation)))
+        print("Iteration: %i, Convergence: %0.2e" % (num_iterations, (1 - correlation)))
 
         # Check if correlation reaches the desired threshold
         if (1-correlation) <= threshold or num_iterations >= 100:
             break
 
-        # Update previous_img for the next iteration
-        previous_img = img_reconstructed.copy()
-
         # Increment the iteration counter
         num_iterations += 1
 
+    if test:
+        plt.figure()
+        plt.imshow(np.abs(img_reconstructed[-1][n_sl // 2, :, :]), cmap='gray')
+        plt.title(f"POCS")
+        plt.show()
+
+
     # Get correlation with reference image
-    correlation = np.corrcoef(img_ref.flatten(), img_reconstructed.flatten())[0, 1]
-    print("Respect the reference image:")
+    correlation_1 = np.corrcoef(np.abs(img_ref.flatten()), np.abs(img_reconstructed[-1].flatten()))[0, 1]
+    print("POCS compared to reference image:")
+    print("Convergence: %0.2e" % (1 - correlation_1))
+    # correlation_2 = np.corrcoef(img_ref.flatten(), img_zp.flatten())[0, 1]
+    # print("ZP compared to reference image:")
+    # print("Convergence: %0.2e" % (1 - correlation_2))
+
+    return img_reconstructed[-1]
+
+def run_zero_padding_reconstruction(n_points, factors, k_space_ref):
+    """
+    Run the partial reconstruction operation.
+
+    Retrieves the necessary parameters and performs the partial reconstruction on the loaded image.
+    Updates the main matrix of the image view widget with the partially reconstructed image, adds the operation to
+    the history widget, and updates the operations history.
+    """
+    # Get the k_space data and its shape
+    img_ref = run_ifft(k_space_ref)
+
+    # Percentage for partial reconstruction from the text field
+    factors = [float(num) for num in factors][-1::-1]
+    mm = np.array([int(num) for num in (n_points * factors)])
+
+    # Set to zero the corresponding values
+    k_space = np.zeros_like(k_space_ref, dtype=complex)
+    k_space[:mm[0], :mm[1], :mm[2]] = k_space_ref[:mm[0], :mm[1], :mm[2]]
+
+    # Calculate logarithmic scale
+    image = run_ifft(k_space)
+
+    # Get correlation with reference image
+    correlation = np.corrcoef(np.abs(img_ref.flatten()), np.abs(image.flatten()))[0, 1]
+    print("ZP compared to reference image:")
     print("Convergence: %0.2e" % (1 - correlation))
 
-    return img_reconstructed
+    return np.abs(image)
 
 # TODO: include new filters and other methods from Miguel
 
 
 if __name__ == "__main__":
-    # mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.10.03.769.mat")
-    # mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.10.44.360.mat")
-    # mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.11.22.935.mat")
-    # mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.12.09.496.mat")
-    # mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.12.52.711.mat")
-    # mat_data = sp.io.loadmat("/home/physio/git_repos/Results/Dicom/RarePyPulseq.2025.03.27.07.13.29.064.mat")
-    # image = np.abs(mat_data['image3D'])
-    # fov = mat_data['fov'][0]
-    # n_points = mat_data['nPoints'][0]
-    # dfov = mat_data['dfov'][0]
-    # axes_orientation = mat_data['axesOrientation'][0]
-    # file_path = "/home/physio/git_repos/Results/Dicom/new_dicom.dcm"
-    # save_dicom(axes_orientation, n_points, fov, image, file_path)
+    from matplotlib import pyplot as plt
+    mat_data = sp.io.loadmat("C:/CSIC/RareDoubleImage.2025.09.24.13.32.29.066.mat")
+    # mat_data = sp.io.loadmat("C:/CSIC/RareDoubleImage.2025.09.24.13.03.47.729.mat")
 
-    # image = np.zeros((10, 12, 14))
-    # image[0:3, 0, 0] = 1
-    # image[0, 0:5, 0] = 1
-    # image[0, 0, 0:7] = 1
-    # fov = np.array([10, 12, 14])
-    # n_points = np.array([14, 12, 10])
-    # dfov = np.array([0.0, 0.0, 0.0])
-    # axes_orientation = np.array([0, 1, 2])
-    # file_path = "/home/physio/git_repos/Results/Dicom/new_dicom_1.dcm"
-    # save_dicom(axes_orientation, n_points, fov, dfov, image, file_path)
+    n_points = mat_data['nPoints'][0][-1::-1]
 
-    analyze_rabi_curve()
+    # Number of extra lines which has been taken past the center of k-space
+    factors = [1, 1, 0.7]
+
+    # Get the k_space data
+    k_space_ref = mat_data['kSpace3D']
+
+    # Run pocs
+    k_space_ref_zp = run_zero_padding(k_space_ref, (20, 240, 240))
+    img_reconstructed = run_pocs_reconstruction(n_points, factors, k_space_ref, test=True)
 
