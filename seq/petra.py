@@ -10,7 +10,7 @@ import controller.experiment_gui as ex
 import configs.hw_config as hw # Import the scanner hardware config
 import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 from scipy.interpolate import griddata
-
+from marge_tyger import tyger_petra
 
 #*********************************************************************************
 #*********************************************************************************
@@ -47,6 +47,8 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='NyquistOS', string='Radial oversampling', val=1, field='SEQ')
         self.addParameter(key='reco', string='ART->0,  FFT->1', val=1, field='IM')
         self.addParameter(key='boolGrid', string='Bool regridding', val=1, field='OTH')
+        self.addParameter(key='tyger_recon', string='Tyger ART reconstruction', val=0, field='PRO',
+                          tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
 
     def sequenceInfo(self):
         
@@ -630,7 +632,35 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             self.output = [result1, result2]
 
         self.saveRawData()
+        
+        ## Tyger Reconstruction
+        if self.tyger_recon == 1:
+            try:
+                rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
+                print(rawData_path)
+                output_field = 'imgTygerART'
+                
+                imgTyger = tyger_petra.reconTygerPETRA(rawData_path, output_field)
+                imageTyger = np.abs(imgTyger[0])
+                imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
 
+                ## Image plot
+                # Tyger
+                
+                result_Tyger = {}
+                result_Tyger['widget'] = 'image'
+                result_Tyger['data'] = imageTyger
+                result_Tyger['xLabel'] = axislegend[0]
+                result_Tyger['yLabel'] = axislegend[1]
+                result_Tyger['title'] = "Tyger"
+                result_Tyger['row'] = 0
+                result_Tyger['col'] = 0
+                
+                self.output = [result_Tyger]
+            except Exception as e:
+                print('Tyger reconstruction failed.')
+                print(f'Error: {e}')
+                
         if self.mode == 'Standalone':
             self.plotResults()
             

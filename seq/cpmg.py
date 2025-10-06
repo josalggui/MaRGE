@@ -205,11 +205,11 @@ class TSE(blankSeq.MRIBLANKSEQ):
 
         result2 = {'widget': 'curve',
                    'xData': t1_vector,
-                   'yData': [np.abs(data_echoes)],
+                   'yData': [np.abs(data_echoes),np.real(data_echoes),np.imag(data_echoes)],
                    'xLabel': 'Echo time (ms)',
                    'yLabel': 'Echo amplitude (mV)',
                    'title': 'Echo train',
-                   'legend': ['Experimental measurement'],
+                   'legend': ['Experimental measurement','Real','Imag'],
                    'row': 1,
                    'col': 0}
 
