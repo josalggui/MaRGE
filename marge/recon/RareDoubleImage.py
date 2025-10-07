@@ -12,6 +12,16 @@ def RareDoubleImage(raw_data_path=None):
     output_dict = {}
     dicom_meta_data = {}
 
+    # Print inputs
+    keys = mat_data['input_keys']
+    strings = mat_data['input_strings']
+    string = ""
+    print("****Inputs****")
+    for ii, key in enumerate(keys):
+        string = string + f"{str(strings[ii]).strip()}: {np.squeeze(mat_data[str(key).strip()])}, "
+    print(string)
+    print("****Outputs****")
+
     # Get data
     full_plot = mat_data['full_plot'].item()
     par_fourier_fraction = mat_data['parFourierFraction'].item()

@@ -45,6 +45,16 @@ def SPDS(raw_data_path=None):
     # Create new dictionary to save new outputs
     output_dict = {}
 
+    # Print inputs
+    keys = mat_data['input_keys']
+    strings = mat_data['input_strings']
+    string = ""
+    print("****Inputs****")
+    for ii, key in enumerate(keys):
+        string = string + f"{str(strings[ii]).strip()}: {np.squeeze(mat_data[str(key).strip()])}, "
+    print(string)
+    print("****Outputs****")
+
     def zero_padding(data, order):
         original_shape = data.shape
         if len(original_shape) == 3:

@@ -1945,6 +1945,8 @@ class MRIBLANKSEQ:
             None
 
         """
+        self.mapVals['input_keys'] = self.mapKeys
+        self.mapVals['input_strings'] = list(self.mapNmspc.values())
         for key in self.mapKeys: 
             if isinstance(self.mapVals[key], list): 
                 setattr(self, key, np.array([element * self.map_units[key] for element in self.mapVals[key]]))

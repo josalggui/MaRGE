@@ -1,6 +1,6 @@
 import numpy as np
 import scipy as sp
-import configs.hw_config as hw
+import marge.configs.hw_config as hw
 
 
 def Larmor(raw_data_path=None):
@@ -37,13 +37,23 @@ def Larmor(raw_data_path=None):
     # Create new dictionary to save new outputs
     output_dict = {}
 
+    # Print inputs
+    keys = mat_data['input_keys']
+    strings = mat_data['input_strings']
+    string = ""
+    print("****Inputs****")
+    for ii, key in enumerate(keys):
+        string = string + f"{str(strings[ii]).strip()}: {np.squeeze(mat_data[str(key).strip()])}, "
+    print(string)
+    print("****Outputs****")
+
     # Load data
     signal = mat_data['data'][0]
     acq_time = mat_data['acqTime'][0][0] * 1e3  # ms
     n_points = mat_data['nPoints'][0][0]  # kHz
-    bw = mat_data['bw'][0][0] 
+    bw = mat_data['bw'][0][0]
 
-    # Generate time and frequency vectors and calcualte the signal spectrum
+    # Generate time and frequency vectors and calculate the signal spectrum
     tVector = np.linspace(-acq_time / 2, acq_time / 2, n_points)
     fVector = np.linspace(-bw / 2, bw / 2, n_points)
     spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal)))

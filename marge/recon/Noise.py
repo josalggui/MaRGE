@@ -11,6 +11,16 @@ def Noise(raw_data_path=None):
     mat_data = sp.io.loadmat(raw_data_path)
     output_dict = {}
 
+    # Print inputs
+    keys = mat_data['input_keys']
+    strings = mat_data['input_strings']
+    string = ""
+    print("****Inputs****")
+    for ii, key in enumerate(keys):
+        string = string + f"{str(strings[ii]).strip()}: {np.squeeze(mat_data[str(key).strip()])}, "
+    print(string)
+    print("****Outputs****")
+
     # Get data and time vector
     data = mat_data['data']
     data = np.squeeze(data)

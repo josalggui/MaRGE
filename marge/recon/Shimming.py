@@ -16,6 +16,16 @@ def Shimming(raw_data_path=None):
     n_points = mat_data['nPoints'][0][0]
     n_shimming = mat_data['nShimming'][0][0]
 
+    # Print inputs
+    keys = mat_data['input_keys']
+    strings = mat_data['input_strings']
+    string = ""
+    print("****Inputs****")
+    for ii, key in enumerate(keys):
+        string = string + f"{str(strings[ii]).strip()}: {np.squeeze(mat_data[str(key).strip()])}, "
+    print(string)
+    print("****Outputs****")
+
     # Get data
     data = np.reshape(data, shape=(3, n_shimming, -1))
 
