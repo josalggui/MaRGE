@@ -721,281 +721,27 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                                )
 
     def sequenceAnalysis(self, mode=None):
-        """
-        Analyzes the sequence data and performs several steps including data extraction, processing,
-        noise estimation, dummy pulse separation, signal decimation, data reshaping, Fourier transforms,
-        and image reconstruction.
-
-        Parameters:
-        mode (str, optional): A string indicating the mode of operation. If set to 'Standalone',
-                               additional plotting will be performed. Default is None.
-
-        The method performs the following key operations:
-        1. Extracts relevant data from `self.mapVals`, including the data for readouts, signal,
-           noise, and dummy pulses.
-        2. Decimates the signal data to match the desired bandwidth and reorganizes the data for
-           further analysis.
-        3. Performs averaging on the data and reorganizes it according to sweep order.
-        4. Computes the central line and adjusts for any drift in the k-space data.
-        5. Applies zero-padding to the data to match the expected resolution.
-        6. Computes the k-space trajectory (kRD, kPH, kSL) and applies the phase correction.
-        7. Performs inverse Fourier transforms to reconstruct the 3D image data.
-        8. Saves the processed data and produces plots for visualization based on the mode of operation.
-        9. Optionally outputs sampled data and performs DICOM formatting for medical imaging storage.
-
-        The method also handles the creation of various output results that can be plotted in the GUI,
-        including signal curves, frequency spectra, and 3D images. It also updates the metadata for
-        DICOM storage.
-
-        The sequence of operations ensures the data is processed correctly according to the
-        hardware setup and scan parameters.
-
-        Results are saved in `self.mapVals` and visualized depending on the provided mode. The method
-        also ensures proper handling of rotation angles and field-of-view (dfov) values, resetting
-        them as necessary.
-        """
-
-        self.mode = mode
-
-        # Get data
-        axes_enable = self.mapVals['axes_enable']
-        data_decimated = self.mapVals['data_decimated']
-        n_rd, n_ph, n_sl = self.nPoints
-        n_rd = n_rd + 2 * hw.addRdPoints
-        n_sl = (n_sl // 2 + self.mapVals['partialAcquisition'] * axes_enable[2] + (1 - axes_enable[2]))
-        n_batches = self.mapVals['n_batches']
-        n_readouts = self.mapVals['n_readouts']
-        ind = self.getParameter('sweepOrder')
-
-        # Get noise data, dummy data and signal data
-        data_noise = []
-        data_dummy = []
-        data_signal = []
-        points_per_rd = n_rd
-        points_per_train = points_per_rd * self.etl
-        idx_0 = 0
-        idx_1 = 0
-        for batch in range(n_batches):
-            n_rds = n_readouts[batch]
-            for scan in range(self.nScans):
-                idx_1 += n_rds
-                data_prov = data_decimated[idx_0:idx_1]
-                data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd]), axis=0)
-                if self.dummyPulses > 0:
-                    data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd + points_per_train]),
-                                                axis=0)
-                data_signal = np.concatenate((data_signal, data_prov[points_per_rd + points_per_train::]), axis=0)
-                idx_0 = idx_1
-            n_readouts[batch] += -n_rd - n_rd * self.etl
-        self.mapVals['data_noise'] = data_noise
-        self.mapVals['data_dummy'] = data_dummy
-        self.mapVals['data_signal'] = data_signal
-
-        # Decimate data to get signal in desired bandwidth
-        data_full = data_signal
-
-        # Reorganize data_full
-        data_prov = np.zeros(shape=[self.nScans, n_sl * n_ph * n_rd * 2], dtype=complex)
-        if n_batches > 1:
-            data_full_a = data_full[0:sum(n_readouts[0:-1]) * self.nScans]
-            data_full_b = data_full[sum(n_readouts[0:-1]) * self.nScans:]
-            data_full_a = np.reshape(data_full_a, newshape=(n_batches - 1, self.nScans, -1, n_rd))
-            data_full_b = np.reshape(data_full_b, newshape=(1, self.nScans, -1, n_rd))
-            for scan in range(self.nScans):
-                data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
-                data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
-                data_prov[scan, :] = np.concatenate((data_scan_a, data_scan_b), axis=0)
-        else:
-            data_full = np.reshape(data_full, newshape=(1, self.nScans, -1, n_rd))
-            for scan in range(self.nScans):
-                data_prov[scan, :] = np.reshape(data_full[:, scan, :, :], -1)
-        data_full = np.reshape(data_prov, -1)
-
-        # Save data_full to save it in .h5
-        self.data_fullmat = data_full
-
-        # Get index for krd = 0
-        # Average data
-        data_prov = np.reshape(data_full, newshape=(self.nScans, n_rd * n_ph * n_sl * 2))
-        data_prov = np.average(data_prov, axis=0)
-        # Reorganize the data according to sweep mode
-        data_prov = np.reshape(data_prov, newshape=(n_sl, n_ph, 2 * n_rd))
-        data_temp = np.zeros_like(data_prov)
-        for ii in range(n_ph):
-            data_temp[:, ind[ii], :] = data_prov[:, ii, :]
-        data_prov = data_temp
-        # Get central line
-        data_prov = data_prov[int(self.nPoints[2] / 2), int(n_ph / 2), 0:n_rd]
-        ind_krd_0 = np.argmax(np.abs(data_prov))
-        if ind_krd_0 < n_rd / 2 - hw.addRdPoints or ind_krd_0 > n_rd / 2 + hw.addRdPoints:
-            ind_krd_0 = int(n_rd / 2)
-
-        # Get individual images
-        data_full = np.reshape(data_full, newshape=(self.nScans, n_sl, n_ph, 2 * n_rd))
-        data_full_odd = data_full[:, :, :, ind_krd_0 - int(self.nPoints[0] / 2):ind_krd_0 + int(self.nPoints[0] / 2)]
-        data_full_eve = data_full[:, :, :,
-                        n_rd + ind_krd_0 - int(self.nPoints[0] / 2):n_rd + ind_krd_0 + int(self.nPoints[0] / 2)]
-        data_temp_odd = np.zeros_like(data_full_odd)
-        data_temp_eve = np.zeros_like(data_full_eve)
-        for ii in range(n_ph):
-            data_temp_odd[:, :, ind[ii], :] = data_full_odd[:, :, ii, :]
-            data_temp_eve[:, :, ind[ii], :] = data_full_eve[:, :, ii, :]
-
-        data_full_odd = data_temp_odd
-        data_full_eve = data_temp_eve
-        self.mapVals['data_full_odd_echoes'] = data_full_odd
-        self.mapVals['data_full_even_echoes'] = data_full_eve
-
-        # Average data
-        data_odd = np.average(data_full_odd, axis=0)
-        data_eve = np.average(data_full_eve, axis=0)
-
-        # Do zero padding
-        data_temp_odd = np.zeros(shape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]), dtype=complex)
-        data_temp_eve = np.zeros(shape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]), dtype=complex)
-        data_temp_odd[0:n_sl, :, :] = data_odd
-        data_temp_eve[0:n_sl, :, :] = data_eve
-        data_odd = np.reshape(data_temp_odd, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        data_eve = np.reshape(data_temp_eve, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-
-        # Fix the position of the sample according to dfov
-        bw = self.getParameter('bw_MHz')
-        time_vector = np.linspace(-self.nPoints[0] / bw / 2 + 0.5 / bw, self.nPoints[0] / bw / 2 - 0.5 / bw,
-                                  self.nPoints[0]) * 1e-6  # s
-        kMax = np.array(self.nPoints) / (2 * np.array(self.fov)) * np.array(self.mapVals['axes_enable'])
-        kRD = time_vector * hw.gammaB * self.getParameter('rd_grad_amplitude')
-        kPH = np.linspace(-kMax[1], kMax[1], num=self.nPoints[1], endpoint=False)
-        kSL = np.linspace(-kMax[2], kMax[2], num=self.nPoints[2], endpoint=False)
-        kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
-        kRD = np.reshape(kRD, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        kPH = np.reshape(kPH, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        kSL = np.reshape(kSL, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        dPhase = np.exp(2 * np.pi * 1j * (self.dfov[0] * kRD + self.dfov[1] * kPH + self.dfov[2] * kSL))
-        data_odd = np.reshape(data_odd * dPhase, newshape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]))
-        data_eve = np.reshape(data_eve * dPhase, newshape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]))
-
-        self.mapVals['kSpace3D_odd_echoes'] = data_odd
-        self.mapVals['kSpace3D_even_echoes'] = data_eve
-        img_odd = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data_odd)))
-        img_eve = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data_eve)))
-        img = (np.abs(img_odd) + np.abs(img_eve)) / 2
-        data = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(img)))
-        self.mapVals['image3D_odd_echoes'] = img_odd
-        self.mapVals['image3D_even_echoes'] = img_eve
-        self.mapVals['image3D'] = img
-        self.mapVals['kSpace3D'] = data
-        data_odd = np.reshape(data_odd, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        data_eve = np.reshape(data_eve, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        data = np.reshape(data, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-
-        # Create sampled data
-        kRD = np.reshape(kRD, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        kPH = np.reshape(kPH, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        kSL = np.reshape(kSL, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        data_odd = np.reshape(data_odd, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        data_eve = np.reshape(data_eve, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        data = np.reshape(data, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        self.mapVals['kMax_1/m'] = kMax
-        self.mapVals['sampled_odd'] = np.concatenate((kRD, kPH, kSL, data_odd), axis=1)
-        self.mapVals['sampled_eve'] = np.concatenate((kRD, kPH, kSL, data_eve), axis=1)
-        self.mapVals['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
-        self.mapVals['sampledCartesian'] = self.mapVals['sampled']
-
-        axes_enable = self.mapVals['axes_enable']
-
-        # Get axes in strings
-        axes = self.mapVals['axesOrientation']
-        axesDict = {'x': 0, 'y': 1, 'z': 2}
-        axesKeys = list(axesDict.keys())
-        axesVals = list(axesDict.values())
-        axesStr = ['', '', '']
-        n = 0
-        for val in axes:
-            index = axesVals.index(val)
-            axesStr[n] = axesKeys[index]
-            n += 1
-
-        # Plot image
-        img_mag_odd = np.abs(img_odd)
-        img_mag_eve = np.abs(img_eve)
-        img_pha_odd = np.angle(img_odd)
-        mask_odd = img_mag_odd > 0.3 * np.max(img_mag_odd)
-        mean_phase_odd = np.mean(img_pha_odd[mask_odd])
-        img_pha_odd[~mask_odd] = mean_phase_odd
-        img_pha_eve = np.angle(img_eve)
-        mask_eve = img_mag_eve > 0.3 * np.max(img_mag_eve)
-        mean_phase_eve = np.mean(img_pha_eve[mask_eve])
-        img_pha_eve[~mask_eve] = mean_phase_eve
-
-        if self.full_plot is True or self.full_plot == 'True':
-            # Image plot
-            result_mag_odd, img_mag_odd, _ = utils.fix_image_orientation(img_mag_odd, axes=self.axesOrientation)
-            result_mag_odd['row'] = 0
-            result_mag_odd['col'] = 0
-
-            result_mag_eve, img_mag_eve, _ = utils.fix_image_orientation(img_mag_eve, axes=self.axesOrientation)
-            result_mag_eve['row'] = 1
-            result_mag_eve['col'] = 0
-
-            result_pha_odd, img_pha_odd, _ = utils.fix_image_orientation(img_pha_odd, axes=self.axesOrientation)
-            result_pha_odd['row'] = 0
-            result_pha_odd['col'] = 1
-
-            result_pha_eve, img_pha_eve, self.image_orientation_dicom = utils.fix_image_orientation(img_pha_eve, axes=self.axesOrientation)
-            result_pha_eve['row'] = 1
-            result_pha_eve['col'] = 1
-
-            # k-space plot
-            result_k_odd = {'widget': 'image'}
-            if self.parFourierFraction == 1:
-                result_k_odd['data'] = np.log10(np.abs(self.mapVals['kSpace3D_odd_echoes']))
-            else:
-                result_k_odd['data'] = np.zeros_like(self.mapVals['kSpace3D_odd_echoes'])
-                result_k_odd['data'][0:n_sl, :, :] = np.log10(np.abs(self.mapVals['kSpace3D_odd_echoes'][0:n_sl, :, :]))
-                # result_k_odd['data'] = np.abs(self.mapVals['kSpace3D_odd_echoes'])
-            result_k_odd['xLabel'] = "k%s" % axesStr[1]
-            result_k_odd['yLabel'] = "k%s" % axesStr[0]
-            result_k_odd['title'] = "k-Space odd echoes"
-            result_k_odd['row'] = 0
-            result_k_odd['col'] = 2
-
-            # k-space plot
-            result_k_eve = {'widget': 'image'}
-            if self.parFourierFraction == 1:
-                result_k_eve['data'] = np.log10(np.abs(self.mapVals['kSpace3D_even_echoes']))
-            else:
-                result_k_eve['data'] = np.abs(self.mapVals['kSpace3D_odd_echoes'])
-            result_k_eve['xLabel'] = "k%s" % axesStr[1]
-            result_k_eve['yLabel'] = "k%s" % axesStr[0]
-            result_k_eve['title'] = "k-Space even echoes"
-            result_k_eve['row'] = 1
-            result_k_eve['col'] = 2
-
-            # Add results into the output attribute (result_1 must be the image to save in dicom)
-            self.output = [result_mag_odd, result_pha_odd, result_k_odd, result_mag_eve, result_pha_eve, result_k_eve]
-        else:
-            # Image plot
-            result, img, self.image_orientation_dicom = utils.fix_image_orientation(img, axes=self.axesOrientation)
-            result['row'] = 0
-            result['col'] = 0
-
-            # Dicom parameters
-            self.meta_data["RepetitionTime"] = self.mapVals['repetitionTime']
-            self.meta_data["EchoTime"] = self.mapVals['echoSpacing']
-            self.meta_data["EchoTrainLength"] = self.mapVals['etl']
-
-            # Add results into the output attribute (result_1 must be the image to save in dicom)
-            self.output = [result]
-
-        # Save results
-        self.saveRawData()
+        super().sequenceAnalysis(mode=mode)
 
         ## Tyger Reconstruction
-        if axes_enable == [1,1,1] and self.tyger_recon == 1:
+        result = {}
+        if self.mapVals['axes_enable'] == [1, 1, 1] and self.tyger_recon == 1:
+            # Get axes in strings
+            axes = self.mapVals['axesOrientation']
+            axesDict = {'x': 0, 'y': 1, 'z': 2}
+            axesKeys = list(axesDict.keys())
+            axesVals = list(axesDict.values())
+            axesStr = ['', '', '']
+            n = 0
+            for val in axes:
+                index = axesVals.index(val)
+                axesStr[n] = axesKeys[index]
+                n += 1
+
             if self.full_plot == 'False' or self.full_plot is False:
                 print('Preparing Tyger enviroment...')
-                rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
-                sign_rarepp = [-1,-1,-1,1,1,1,1,1, tyger_conf.cp_batchsize_RARE]
+                rawData_path = self.directory_mat + '/' + self.file_name + '.mat'
+                sign_rarepp = [-1, -1, -1, 1, 1, 1, 1, 1, tyger_conf.cp_batchsize_RARE]
                 if self.recon_type == 'cp':
                     output_field = 'imgTygerCP'
                 elif self.recon_type == 'art':
@@ -1011,21 +757,22 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                 boFit_path = 'b0_maps/fits/' + self.boFit_file
 
                 try:
-                    imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp, output_field)
+                    imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp,
+                                                         output_field)
                     imageTyger = np.abs(imgTyger[0])
-                    imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
+                    imageTyger = imageTyger / np.max(np.reshape(imageTyger, -1)) * 100
 
                     ## Image plot
                     # Tyger
                     if self.mapVals['unlock_orientation'] == 0:
-                        result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
+                        result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axes_orientation)
                         result_Tyger['row'] = 0
                         result_Tyger['col'] = 1
                         result_Tyger['title'] = "Tyger"
                         result['title'] = "Original"
                     else:
                         result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
-                                    'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
+                                        'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
 
                     self.output = [result, result_Tyger]
                 except Exception as e:
@@ -1034,9 +781,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             else:
                 print('Tyger reconstruction not available for Full plot True.')
                 print('Change this input parameter to False.')
-
-        if self.mode == 'Standalone':
-            self.plotResults()
 
         return self.output
 

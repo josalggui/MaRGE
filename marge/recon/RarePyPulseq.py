@@ -54,6 +54,7 @@ def RarePyPulseq(raw_data_path=None):
     etl = mat_data['etl'].item()
     n_scans = mat_data['nScans'].item()
     axes_enable = np.squeeze(mat_data['axes_enable'])
+    axes_orientation = np.squeeze(mat_data['axesOrientation'])
     data_decimated = np.squeeze(mat_data['data_decimated'])
     n_points = np.squeeze(mat_data['nPoints'])
     n_rd, n_ph, n_sl = n_points
@@ -174,8 +175,6 @@ def RarePyPulseq(raw_data_path=None):
 
 
     # Get axes in strings
-    axes_orientation = np.squeeze(mat_data['axesOrientation'])
-    axes_enable = np.squeeze(mat_data['axes_enable'])
     axesDict = {'x': 0, 'y': 1, 'z': 2}
     axesKeys = list(axesDict.keys())
     axesVals = list(axesDict.values())

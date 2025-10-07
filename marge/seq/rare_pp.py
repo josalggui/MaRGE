@@ -959,7 +959,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         
         # Experimental Conditions field
         exp = ismrmrd.xsd.experimentalConditionsType() 
-        magneticFieldStrength = hw.larmorFreq*1e6/hw.gammaB
+        magneticFieldStrength = hw.larmorFreq * 1e6 / hw.gammaB
         exp.H1resonanceFrequency_Hz = hw.larmorFreq
 
         self.header.experimentalConditions = exp 
@@ -976,9 +976,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         #encoding.trajectory =ismrmrd.xsd.trajectoryType[data.processing.trajectory.upper()]
         
         dset.write_xml_header(self.header.toXML()) # Write the header to the dataset
-                
-        
-        
+
         new_data = np.zeros((n_ph * n_sl * self.nScans, n_rd + 2*hw.addRdPoints))
         new_data = np.reshape(self.data_fullmat, (self.nScans, n_sl, n_ph, n_rd+ 2*hw.addRdPoints))
         
