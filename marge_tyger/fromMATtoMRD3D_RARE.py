@@ -36,7 +36,7 @@ def matToMRD(input, output_file):
     fov = fov.astype(int); fov = [int(x) for x in fov] # mm; x, y, z
     fov_adq = fov_adq
     fov_adq = fov_adq.astype(np.float32); fov_adq = [int(x) for x in fov_adq] # mm; x, y, z
-    dfov = mat_data['dfov'][0]; dfov = dfov.astype(np.float32)  # mm; x, y, z
+    dfov = mat_data['dfov'][0]*1e-3; dfov = dfov.astype(np.float32)  # mm; x, y, z
     acqTime = mat_data['acqTime'][0]*1e-3 # s
     
     # print('axesOrientation',  axesOrientation)
