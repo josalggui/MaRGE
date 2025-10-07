@@ -20,7 +20,7 @@ for subdir in subdirs:
     full_path = os.path.join(parent_directory, subdir)
     sys.path.append(full_path)
 #******************************************************************************
-import marge.marcos.marcos_client.experiment
+import marge.marcos.marcos_client.experiment as ex
 import numpy as np
 import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
@@ -40,7 +40,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, units=units.us, field='RF')
         self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, units=units.us, field='RF')
         self.addParameter(key='echoTime', string='Echo time (ms)', val=10., units=units.ms, field='SEQ')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=1000., units=units.ms, field='SEQ')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=100., units=units.ms, field='SEQ')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ')
