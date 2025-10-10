@@ -1,7 +1,7 @@
 import numpy as np
 import scipy as sp
-from configs import units as units
-from configs import hw_config as hw
+from marge.configs import units as units
+from marge.configs import hw_config as hw
 
 def Shimming(raw_data_path=None):
     if raw_data_path is None:
