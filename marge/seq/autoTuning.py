@@ -91,12 +91,10 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             while counter < 10:
                 # Turn OFF vna.
                 self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "11")
-                print("nanoVNA OFF")
                 time.sleep(0.5)
 
                 # Turn ON vna.
                 self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "00")
-                print("nanoVNA ON")
                 time.sleep(0.5)
 
                 # Connect to VNA
