@@ -2,12 +2,14 @@ import bm4d
 import numpy as np
 import nibabel as nib
 from skimage.util import view_as_blocks
-
 import scipy as sp
-from manager.dicommanager import DICOMImage
 import pydicom
+import random
+
+from manager.dicommanager import DICOMImage
 from pydicom.dataset import Dataset, FileDataset
 from datetime import date, datetime
+from configs import hw_config as hw
 
 
 def fix_image_orientation(image, axes, orientation='FFS'):
@@ -92,7 +94,8 @@ def fix_image_orientation(image, axes, orientation='FFS'):
 
     return output, image, image_orientation_dicom
 
-def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data={}):
+
+def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data={}, session={}, hw_config={}):
     image = np.abs(image)
     axes_orientation = np.array(axes_orientation)
     n_xyz = [0, 0, 0]
@@ -106,10 +109,26 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data={}):
     fov = np.array(fov)  # cm
     fov = fov[axes_orientation]
     resolution = fov / n_points * 10  # Convert cm to mm
+    #meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
+    #meta_data['SliceThickness'] = resolution[2]
 
-    # DICOM TAGS
+    """
+    ## FUNCTIONS
+    study_accession_map = {}
+    scanner_prefix = 1111   # Los 4 primeros digitos son fijo
+    def generate_accession_number(study_id):
+        if study_id not in study_accession_map:
+            random_suffix = str(random.randint(0,10**12-1)).zfill(12)
+            accession = scanner_prefix + random_suffix
+            study_accession_map[study_id] = accession
+        return study_accession_map[study_id]
+    """
+   
+    ## DICOM TAGS
+    # Orientation tags. Look carefully 
+    # """Added comments"""
     if (axes_orientation == [0, 1, 2]).all():
-        meta_data["ImageOrientationPatient"] = [0.0, 0.0, -1.0, 0.0, 1.0, 0.0]
+        meta_data["ImageOrientationPatient"] = [0.0, 0.0, -1.0, 0.0, 1.0, 0.0]   # En La Fe (10/10/2025): [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
         meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
         meta_data['SliceThickness'] = resolution[2]
     elif (axes_orientation == [1, 0, 2]).all():
@@ -131,7 +150,7 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data={}):
         meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
         meta_data['SliceThickness'] = resolution[2]
     elif (axes_orientation == [0, 2, 1]).all():
-        meta_data["ImageOrientationPatient"] = [0.0, 0.0, -1.0, 1.0, 0.0, 0.0]
+        meta_data["ImageOrientationPatient"] = [0.0, 0.0, -1.0, 1.0, 0.0, 0.0]  # En La Fe (10/10/2025): [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
         meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
         meta_data['SliceThickness'] = resolution[2]
 
@@ -167,11 +186,51 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data={}):
     # Save image into DICOM object
     dicom_image.meta_data["PixelData"] = meta_data["PixelData"]
 
-    # Date and time
+    # General Info - STATIC TAGS  """Added all the fields below"""
+    dicom_image.meta_data["Modality"] = "MR PORTABLE -asdas"
+    dicom_image.meta_data["InstitutionName"] = "MRILab - I3M - UPV, CSIC"
+    dicom_image.meta_data["Manufacturer"] = "PhysioMRI"
+    dicom_image.meta_data["ManufacturerModelName"] = "PHYSIO I"
+    dicom_image.meta_data["SoftwareVersions"] = "MARGE v0.8.1-35g25a2be1"
+    dicom_image.meta_data["PatientPosition"] = "FFS"
+    dicom_image.meta_data["ImagingFrequency"] = hw.larmorFreq
+
+    # Sessiontags -- ALL NEW EC
+    dicom_image.meta_data["PatientName"] = session["subject_id"] 
+    dicom_image.meta_data["StudyID"] = session["study_id"]
+    dicom_image.meta_data["PatientID"] = session["subject_id"]
+    dicom_image.meta_data["PatientBirthDate"] =  session["subject_birthday"]
+    dicom_image.meta_data["PatientWeight"] = session["subject_weight"]   # Check if it works. 
+    dicom_image.meta_data["PatientHeight"] = session["subject_height"]   # Check if it works. 
+    dicom_image.meta_data["OperatorsName"] = session['user']
+    dicom_image.meta_data["PatientPosition"] = session['orientation']
+
+    # Study tags: Static ones. -- All New EC
+    """
+    Study refers to all the measurement related to a particular patient. 
+    - Accession number: This is an identifier number composed of 16 digits. 
+    It is at study level. All the images that belong to the same study need 
+    to have the same value for the accession number. In our case, it will be 
+    random number generated for each study. We will make sure though that the first 
+    3 digits are the same in general to indentify our specific scan, e.g. PHYSIO I.
+
+    - Study ID: The studyID should be the same as the accession number. 
+    """
     current_time = datetime.now()
     meta_data["StudyDate"] = current_time.strftime("%Y%m%d")
     meta_data["StudyTime"] = current_time.strftime("%H%M%S")
+    #meta_data["AccessionNumber"] = generate_accession_number(session["study_id"])
+    #meta_data["StudyDescription"] = " "   # Fill with the name of the Protocol of the study study (e.g. La FE 2025 VIEWS) 
 
+
+    # Series tags -- All New EC
+    """
+    Series refers to every single measurement perform for each patient. 
+    """
+    dicom_image.meta_data["SeriesDate"] = current_time.strftime("%Y%m%d")
+    dicom_image.meta_data["SeriesNumber"] = session['seriesNumber']
+    
+ 
     # Update the DICOM metadata
     dicom_image.meta_data.update(meta_data)
 
