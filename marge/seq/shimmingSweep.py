@@ -201,7 +201,6 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         if not self.plot_seq:
             if not self.demo:
                 rxd, msgs = self.expt.run()
-                print(msgs)
                 self.expt.__del__()
             else:
                 rxd = {'rx0': np.random.randn(self.nPoints * self.nShimming * hw.oversamplingFactor) +

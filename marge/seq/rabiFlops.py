@@ -191,7 +191,6 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
             if not self.demo:
                 rxd, msgs = self.expt.run()
                 self.expt.__del__()
-                print(msgs)
             else:
                 rxd = {'rx0': np.random.randn(2 * self.nPoints * self.nSteps * hw.oversamplingFactor) +
                               1j * np.random.randn(2 * self.nPoints * self.nSteps * hw.oversamplingFactor)}
