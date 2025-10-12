@@ -114,6 +114,8 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
         self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
                           tip="'True' or 'False' to plot odd and even images separately")
+        self.addParameter(key='k_fill', string='Filling method', val='ZP', field='PRO',
+                          tip="'ZP': Zero Padding, 'POCS': Projection Onto Convex Sets")
         self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
                           tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
         self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',

@@ -467,7 +467,7 @@ def run_pocs_reconstruction(n_points, factors, k_space_ref, test=False):
     Updates the main matrix of the image view widget with the interpolated image.
     Adds the "POCS" operation to the history widget and updates the history dictionary and operations history.
     """
-
+    print("Running POCS...")
     def getCenterKSpace(k_space, m_vec):
         # fix n_vec
         output = np.zeros(np.shape(k_space), dtype=complex)
@@ -482,7 +482,7 @@ def run_pocs_reconstruction(n_points, factors, k_space_ref, test=False):
         return output
 
     # Get n and m
-    factors = [float(num) for num in factors][-1::-1]
+    factors = [float(num) for num in factors]
     mm = np.array([int(num) for num in (n_points * factors)])
     m = np.array([int(num) for num in (n_points * factors - n_points / 2)])
 
@@ -564,15 +564,12 @@ def run_pocs_reconstruction(n_points, factors, k_space_ref, test=False):
         plt.show()
 
 
-    # Get correlation with reference image
-    correlation_1 = np.corrcoef(np.abs(img_ref.flatten()), np.abs(img_reconstructed[-1].flatten()))[0, 1]
-    print("POCS compared to reference image:")
-    print("Convergence: %0.2e" % (1 - correlation_1))
-    # correlation_2 = np.corrcoef(img_ref.flatten(), img_zp.flatten())[0, 1]
-    # print("ZP compared to reference image:")
-    # print("Convergence: %0.2e" % (1 - correlation_2))
+        # Get correlation with reference image
+        correlation_1 = np.corrcoef(np.abs(img_ref.flatten()), np.abs(img_reconstructed[-1].flatten()))[0, 1]
+        print("POCS compared to reference image:")
+        print("Convergence: %0.2e" % (1 - correlation_1))
 
-    return img_reconstructed[-1]
+    return k_space_new
 
 def run_zero_padding_reconstruction(n_points, factors, k_space_ref):
     """
@@ -614,7 +611,7 @@ if __name__ == "__main__":
     n_points = mat_data['nPoints'][0][-1::-1]
 
     # Number of extra lines which has been taken past the center of k-space
-    factors = [1, 1, 0.7]
+    factors = [0.7, 1, 1]
 
     # Get the k_space data
     k_space_ref = mat_data['kSpace3D']

@@ -1,5 +1,5 @@
 """
-Created on Thu June 2 2022
+Created on Thu June 2, 2022
 @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
 @email: josalggui@i3m.upv.es
 @Summary: rare sequence class
@@ -114,6 +114,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
+        self.addParameter(key='k_fill', string='Filling method', val='ZP', field='PRO',
+                          tip="'ZP': Zero Padding, 'POCS': Projection Onto Convex Sets")
         self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
                           tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
         self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',

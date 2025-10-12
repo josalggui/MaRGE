@@ -1913,7 +1913,7 @@ class MRIBLANKSEQ:
             key (str): The key of the parameter.
             string (str): The description string of the parameter.
             val (int/float/str/list): The value of the parameter. It can be an integer, a float, a string, or a list.
-            units (bool): Indicates the units of the parameter (e.g. cm -> 1e-2, or you can use the config/units.py module).
+            units (float): Indicates the units of the parameter (e.g. cm -> 1e-2, or you can use the config/units.py module).
             field (str): The field of the parameter: 'RF', 'IMG', 'SEQ', 'OTH'.
             tip (str): Additional information or tip about the parameter.
 

@@ -40,6 +40,7 @@ def RareDoubleImage(raw_data_path=None):
     n_rd = n_rd + 2 * hw.addRdPoints
     n_sl = (n_sl // 2 + partial_acquisition * axes_enable[2] + (1 - axes_enable[2]))
     ind = np.squeeze(mat_data['sweepOrder'])
+    k_fill = mat_data['k_fill'].item()
 
     # Get noise data, dummy data and signal data
     data_noise = []
@@ -126,6 +127,9 @@ def RareDoubleImage(raw_data_path=None):
     data_temp_eve = np.zeros(shape=(n_points[2], n_points[1], n_points[0]), dtype=complex)
     data_temp_odd[0:n_sl, :, :] = data_odd
     data_temp_eve[0:n_sl, :, :] = data_eve
+    if k_fill == 'POCS':
+        data_temp_odd = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp_odd)
+        data_temp_eve = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp_eve)
     data_odd = np.reshape(data_temp_odd, shape=(1, n_points[0] * n_points[1] * n_points[2]))
     data_eve = np.reshape(data_temp_eve, shape=(1, n_points[0] * n_points[1] * n_points[2]))
 

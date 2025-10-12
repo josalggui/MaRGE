@@ -406,7 +406,8 @@ class ReconstructionTabController(ReconstructionTabWidget):
         k_space_ref = self.main.image_view_widget.main_matrix.copy()
 
         # Run pocs
-        img_reconstructed = utils.run_pocs_reconstruction(n_points, factors, k_space_ref)
+        k_space_new = utils.run_pocs_reconstruction(n_points, factors, k_space_ref)
+        img_reconstructed = utils.run_ifft(k_space_new)
 
         # Update the main matrix of the image view widget with the interpolated image
         self.main.image_view_widget.main_matrix = img_reconstructed

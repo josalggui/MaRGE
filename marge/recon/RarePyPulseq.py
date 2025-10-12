@@ -73,6 +73,7 @@ def RarePyPulseq(raw_data_path=None):
     n_batches = mat_data['n_batches'].item()
     n_readouts = mat_data['n_readouts'][0]
     ind = np.squeeze(mat_data['sweepOrder'])
+    k_fill = mat_data['k_fill'].item()
 
     # Get noise data, dummy data and signal data
     data_noise = []
@@ -152,6 +153,8 @@ def RarePyPulseq(raw_data_path=None):
     # Do zero padding
     data_temp = np.zeros(shape=(n_points[2], n_points[1], n_points[0]), dtype=complex)
     data_temp[0:n_sl, :, :] = data
+    if k_fill == 'POCS':
+        data_temp = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp)
     data = np.reshape(data_temp, shape=(1, n_points[0] * n_points[1] * n_points[2]))
 
     # Fix the position of the sample according to dfov
