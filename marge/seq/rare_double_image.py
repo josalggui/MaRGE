@@ -27,6 +27,7 @@ import marge.controller.experiment_gui as ex
 import marge.configs.hw_config as hw  # Import the scanner hardware config
 import marge.configs.units as units
 import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+import scipy as sp
 
 import ismrmrd
 import ismrmrd.xsd
@@ -249,6 +250,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.mapVals['resolution'] = resolution
         self.mapVals['grad_rise_time'] = hw.grad_rise_time
         self.mapVals['addRdPoints'] = hw.addRdPoints
+        self.mapVals['oversampling_factor'] = hw.oversamplingFactor
         self.mapVals['larmorFreq'] = hw.larmorFreq + self.freqOffset
         if rf_ex_amp > 1 or rf_re_amp > 1:
             print("ERROR: RF amplitude is too high, try with longer RF pulse time.")

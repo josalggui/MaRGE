@@ -13,13 +13,16 @@ def RareDoubleImage(raw_data_path=None):
     dicom_meta_data = {}
 
     # Print inputs
-    keys = mat_data['input_keys']
-    strings = mat_data['input_strings']
-    string = ""
-    print("****Inputs****")
-    for ii, key in enumerate(keys):
-        string = string + f"{str(strings[ii]).strip()}: {np.squeeze(mat_data[str(key).strip()])}, "
-    print(string)
+    try:
+        keys = mat_data['input_keys']
+        strings = mat_data['input_strings']
+        string = ""
+        print("****Inputs****")
+        for ii, key in enumerate(keys):
+            string = string + f"{str(strings[ii]).strip()}: {np.squeeze(mat_data[str(key).strip()])}, "
+        print(string)
+    except:
+        pass
     print("****Outputs****")
 
     # Get data
@@ -32,6 +35,7 @@ def RareDoubleImage(raw_data_path=None):
     axes_enable = np.squeeze(mat_data['axes_enable'])
     axes_orientation = np.squeeze(mat_data['axesOrientation'])
     data_decimated = np.squeeze(mat_data['data_decimated'])
+    data_oversampled = np.squeeze(mat_data['data_over'])
     n_points = np.squeeze(mat_data['nPoints'])
     partial_acquisition = mat_data['partialAcquisition'].item()
     n_batches = mat_data['n_batches'].item()
@@ -40,7 +44,24 @@ def RareDoubleImage(raw_data_path=None):
     n_rd = n_rd + 2 * hw.addRdPoints
     n_sl = (n_sl // 2 + partial_acquisition * axes_enable[2] + (1 - axes_enable[2]))
     ind = np.squeeze(mat_data['sweepOrder'])
-    k_fill = mat_data['k_fill'].item()
+    add_rd_points = mat_data['addRdPoints'].item()
+    try:
+        k_fill = mat_data['k_fill'].item()
+        oversampling_factor = mat_data['oversampling_factor'].item()
+    except:
+        k_fill = 'ZP'
+        oversampling_factor = 5
+    dummy_pulses = mat_data['dummyPulses'].item()
+
+    data_decimated = utils.fix_echo_position(data_oversampled=data_oversampled,
+                                             dummy_pulses=dummy_pulses,
+                                             etl=etl,
+                                             n_rd=n_rd,
+                                             n_batches=n_batches,
+                                             n_readouts=n_readouts,
+                                             n_scans=n_scans,
+                                             add_rd_points=add_rd_points,
+                                             oversampling_factor=oversampling_factor)
 
     # Get noise data, dummy data and signal data
     data_noise = []
@@ -56,7 +77,7 @@ def RareDoubleImage(raw_data_path=None):
             idx_1 += n_rds
             data_prov = data_decimated[idx_0:idx_1]
             data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd]), axis=0)
-            if mat_data['dummyPulses'].item() > 0:
+            if dummy_pulses > 0:
                 data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd + points_per_train]),
                                             axis=0)
             data_signal = np.concatenate((data_signal, data_prov[points_per_rd + points_per_train::]), axis=0)

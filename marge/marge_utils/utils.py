@@ -600,23 +600,193 @@ def run_zero_padding_reconstruction(n_points, factors, k_space_ref):
 
     return np.abs(image)
 
+def fix_echo_position(data_oversampled, dummy_pulses, etl, n_rd, n_batches, n_readouts, n_scans, add_rd_points, oversampling_factor):
+    """
+    Adjust the position of k=0 in the echo data to the center of the acquisition window.
+
+    This method uses oversampled data obtained with a given echo train length and readout gradient to determine the
+    true position of k=0. It then shifts the sampled data to place k=0 at the center of each acquisition window for
+    each gradient-spin-echo.
+
+    Args:
+        data_oversampled (numpy.ndarray): The original data array to be adjusted with dimensions [channels, etl, n].
+
+    Returns:
+        numpy.ndarray: The adjusted data array with k=0 positioned at the center of each acquisition window.
+
+    """
+    # Get relevant data
+    data_noise = []
+    data_dummy = []
+    data_signal = []
+    points_per_rd = n_rd * oversampling_factor
+    points_per_train = points_per_rd * etl
+    idx_0 = 0
+    idx_1 = 0
+    for batch in range(n_batches):
+        n_rds = n_readouts[batch] * oversampling_factor
+        for scan in range(n_scans):
+            idx_1 += n_rds
+            data_prov = data_oversampled[idx_0:idx_1]
+            data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd]), axis=0)
+            if dummy_pulses > 0:
+                data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd + points_per_train]),
+                                            axis=0)
+            data_signal = np.concatenate((data_signal, data_prov[points_per_rd + points_per_train::]), axis=0)
+            idx_0 = idx_1
+
+    # Get echo position
+    data_dummy_b = np.reshape(data_dummy, (-1, etl, points_per_rd))
+    data_dummy_b = np.average(data_dummy_b, axis=0)
+    idx = np.argmax(np.abs(data_dummy_b[:, 5:-5]), axis=1) + 5
+
+    # Apply to full data
+    data_signal = []
+    idx_0 = 0
+    idx_1 = 0
+    for batch in range(n_batches):
+        n_rds = n_readouts[batch] * oversampling_factor
+        for scan in range(n_scans):
+            idx_1 += n_rds
+            data_prov = data_oversampled[idx_0:idx_1]
+            if dummy_pulses > 0:
+                data_dummy = data_prov[points_per_rd:points_per_rd + points_per_train]
+                data_dummy = np.reshape(data_dummy, (etl, points_per_rd))
+                data_signal = data_prov[points_per_rd + points_per_train::]
+                data_signal = np.reshape(data_signal, (-1, etl, points_per_rd))
+                for ii in range(etl):
+                    dx = 0
+                    if idx[ii] >= points_per_rd // 2:
+                        dx = points_per_rd - idx[ii]
+                    if idx[ii] < points_per_rd // 2:
+                        dx = idx[ii]
+                    data_dummy[ii, points_per_rd // 2 - dx:points_per_rd // 2 + dx] = data_dummy[ii, idx[ii] - dx: idx[ii] + dx]
+                    data_signal[:, ii, points_per_rd // 2 - dx:points_per_rd // 2 + dx] = data_signal[:, ii, idx[ii] - dx: idx[ii] + dx]
+                data_dummy = np.reshape(data_dummy, -1)
+                data_signal = np.reshape(data_signal, -1)
+                data_prov[points_per_rd:points_per_rd + points_per_train] = data_dummy
+                data_prov[points_per_rd + points_per_train::] = data_signal
+            data_oversampled[idx_0:idx_1] = data_prov
+            idx_0 = idx_1
+
+    # Decimate the signal
+    data_decimated = decimate(data_over=data_oversampled,
+                              n_adc=np.size(data_oversampled)//points_per_rd,
+                              option='Normal',
+                              remove=False,
+                              add_rd_points=add_rd_points,
+                              oversampling_factor=oversampling_factor)
+
+    return data_decimated
+
+def decimate(data_over, n_adc, option='PETRA', remove=True, add_rd_points=10, oversampling_factor=5):
+    """
+    Decimates oversampled MRI data, with optional preprocessing to manage oscillations and postprocessing
+    to remove extra points.
+
+    Parameters:
+    -----------
+    data_over : numpy.ndarray
+        The oversampled data array to be decimated.
+    n_adc : int
+        The number of adc windows in the dataset, used to reshape and process the data appropriately.
+    option : str, optional
+        Preprocessing option to handle data before decimation:
+        - 'PETRA': Adjusts initial points to avoid oscillations during decimation.
+        - 'Normal': Applies no preprocessing (default is 'PETRA').
+    remove : bool, optional
+        If True, removes `addRdPoints` from the start and end of each readout line after decimation.
+        Defaults to True.
+
+    Returns:
+    --------
+    numpy.ndarray
+        The decimated data array, optionally adjusted to remove extra points.
+
+    Workflow:
+    ---------
+    1. **Preprocess data (optional)**:
+        - For 'PETRA' mode, reshapes the data into adc windows and adjusts the first few points of each line
+          to avoid oscillations caused by decimation.
+        - For 'Normal' mode, no preprocessing is applied.
+
+    2. **Decimate the signal**:
+        - Applies a finite impulse response (FIR) filter and decimates the signal by the oversampling factor
+          (`hw.oversamplingFactor`).
+        - Starts decimation after skipping `(oversamplingFactor - 1) / 2` points to minimize edge effects.
+
+    3. **Postprocess data (if `remove=True`)**:
+        - Reshapes the decimated data into adc windows.
+        - Removes `hw.addRdPoints` from the start and end of each line.
+        - Reshapes the cleaned data back into a 1D array.
+
+    Notes:
+    ------
+    - This method uses the hardware-specific parameters:
+      - `hw.oversamplingFactor`: The oversampling factor applied during data acquisition.
+      - `hw.addRdPoints`: The number of additional readout points to include or remove.
+    - The 'PETRA' preprocessing mode is tailored for specialized MRI acquisitions that require smoothing of
+      initial points to prevent oscillations.
+    """
+
+    # Preprocess the signal to avoid oscillations due to decimation
+    if option == 'PETRA':
+        data_over = np.reshape(data_over, (n_adc, -1))
+        for line in range(n_adc):
+            data_over[line, 0:add_rd_points * oversampling_factor] = data_over[
+                line, add_rd_points * oversampling_factor]
+        data_over = np.reshape(data_over, -1)
+    elif option == 'Normal':
+        pass
+
+    # Decimate the signal after 'fir' filter
+    data_decimated = sp.signal.decimate(data_over[int((oversampling_factor - 1) / 2)::], oversampling_factor,
+                                  ftype='fir', zero_phase=True)
+
+    # Remove addRdPoints
+    if remove:
+        nPoints = int(data_decimated.shape[0] / n_adc) - 2 * add_rd_points
+        data_decimated = np.reshape(data_decimated, (n_adc, -1))
+        data_decimated = data_decimated[:, add_rd_points:add_rd_points + nPoints]
+        data_decimated = np.reshape(data_decimated, -1)
+
+    return data_decimated
+    
 # TODO: include new filters and other methods from Miguel
 
 
 if __name__ == "__main__":
+    # from matplotlib import pyplot as plt
+    # mat_data = sp.io.loadmat("C:/CSIC/RareDoubleImage.2025.09.24.13.32.29.066.mat")
+    # # mat_data = sp.io.loadmat("C:/CSIC/RareDoubleImage.2025.09.24.13.03.47.729.mat")
+    #
+    # n_points = mat_data['nPoints'][0][-1::-1]
+    #
+    # # Number of extra lines which has been taken past the center of k-space
+    # factors = [0.7, 1, 1]
+    #
+    # # Get the k_space data
+    # k_space_ref = mat_data['kSpace3D']
+    #
+    # # Run pocs
+    # k_space_ref_zp = run_zero_padding(k_space_ref, (20, 240, 240))
+    # img_reconstructed = run_pocs_reconstruction(n_points, factors, k_space_ref, test=True)
+
+    ####################################################################################################################
+    # Fix echo position example
+    ####################################################################################################################
     from matplotlib import pyplot as plt
-    mat_data = sp.io.loadmat("C:/CSIC/RareDoubleImage.2025.09.24.13.32.29.066.mat")
-    # mat_data = sp.io.loadmat("C:/CSIC/RareDoubleImage.2025.09.24.13.03.47.729.mat")
+    mat_data = sp.io.loadmat("RareDoubleImage.2025.09.22.14.51.12.793.mat")
+    data = mat_data["data_over"][0]
+    n_batches = mat_data['n_batches'].item()
+    n_readouts = mat_data['n_readouts'][0]
+    etl = mat_data['etl'].item()
+    n_scans = mat_data['nScans'].item()
+    dummy_pulses = mat_data['dummyPulses'].item()
+    add_rd_points = mat_data['addRdPoints'].item()
+    n_points = np.squeeze(mat_data['nPoints'])
+    n_rd, n_ph, n_sl = n_points
+    n_rd = n_rd + 2 * add_rd_points
 
-    n_points = mat_data['nPoints'][0][-1::-1]
-
-    # Number of extra lines which has been taken past the center of k-space
-    factors = [0.7, 1, 1]
-
-    # Get the k_space data
-    k_space_ref = mat_data['kSpace3D']
-
-    # Run pocs
-    k_space_ref_zp = run_zero_padding(k_space_ref, (20, 240, 240))
-    img_reconstructed = run_pocs_reconstruction(n_points, factors, k_space_ref, test=True)
-
+    # Run method
+    fix_echo_position(data, dummy_pulses, etl, n_rd, n_batches, n_readouts, n_scans, 10, 5)

@@ -249,6 +249,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.mapVals['resolution'] = resolution
         self.mapVals['grad_rise_time'] = hw.grad_rise_time
         self.mapVals['addRdPoints'] = hw.addRdPoints
+        self.mapVals['oversampling_factor'] = hw.oversamplingFactor
         self.mapVals['larmorFreq'] = hw.larmorFreq + self.freqOffset
         if rf_ex_amp > 1 or rf_re_amp > 1:
             print("ERROR: RF amplitude is too high, try with longer RF pulse time.")

@@ -5,11 +5,10 @@ from io import BytesIO
 import scipy as sp
 import inspect
 from matplotlib import pyplot as plt
-from numpy.testing.print_coercion_tables import print_new_cast_table
 
-import recon
+import marge.recon
 
-module_path = recon.__path__[0]
+module_path = marge.recon.__path__[0]
 
 def run_recon(raw_data_path=None, mode=None, printer=None):
     # Load .mat file and get sequence name
