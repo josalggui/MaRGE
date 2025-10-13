@@ -30,7 +30,7 @@ import scipy.signal as sig
 
 import pypulseq as pp
 
-import marge.marcos.marcos_client.experiment
+import marge.marcos.marcos_client.experiment as ex
 import marge.configs.hw_config as hw
 import marge.configs.units as units
 import marge.seq.mriBlankSeq as blankSeq
