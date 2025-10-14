@@ -115,6 +115,8 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
         self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
                           tip="'True' or 'False' to plot odd and even images separately")
+        self.addParameter(key='fix_echo', string='Eddy compensation', val='False', field='PRO',
+                          tip="Shift acquisition window to account for eddy currents using dummy pulse")
         self.addParameter(key='k_fill', string='Filling method', val='ZP', field='PRO',
                           tip="'ZP': Zero Padding, 'POCS': Projection Onto Convex Sets")
         self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',

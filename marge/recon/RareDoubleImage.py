@@ -2,6 +2,8 @@ import marge.configs.hw_config as hw
 import numpy as np
 import scipy as sp
 from marge.marge_utils import utils
+from marge.marge_utils.utils import fix_echo_position
+
 
 def RareDoubleImage(raw_data_path=None):
     if raw_data_path is None:
@@ -34,18 +36,17 @@ def RareDoubleImage(raw_data_path=None):
     n_scans = mat_data['nScans'].item()
     axes_enable = np.squeeze(mat_data['axes_enable'])
     axes_orientation = np.squeeze(mat_data['axesOrientation'])
-    data_decimated = np.squeeze(mat_data['data_decimated'])
-    data_oversampled = np.squeeze(mat_data['data_over'])
     n_points = np.squeeze(mat_data['nPoints'])
     partial_acquisition = mat_data['partialAcquisition'].item()
     n_batches = mat_data['n_batches'].item()
-    n_readouts = mat_data['n_readouts'][0] 
+    n_readouts = mat_data['n_readouts'][0]
     n_rd, n_ph, n_sl = n_points
     n_rd = n_rd + 2 * hw.addRdPoints
     n_sl = (n_sl // 2 + partial_acquisition * axes_enable[2] + (1 - axes_enable[2]))
     ind = np.squeeze(mat_data['sweepOrder'])
     add_rd_points = mat_data['addRdPoints'].item()
     try:
+        fix_echo = mat_data['k_fill'].item()
         k_fill = mat_data['k_fill'].item()
         oversampling_factor = mat_data['oversampling_factor'].item()
     except:
@@ -53,15 +54,19 @@ def RareDoubleImage(raw_data_path=None):
         oversampling_factor = 5
     dummy_pulses = mat_data['dummyPulses'].item()
 
-    data_decimated = utils.fix_echo_position(data_oversampled=data_oversampled,
-                                             dummy_pulses=dummy_pulses,
-                                             etl=etl,
-                                             n_rd=n_rd,
-                                             n_batches=n_batches,
-                                             n_readouts=n_readouts,
-                                             n_scans=n_scans,
-                                             add_rd_points=add_rd_points,
-                                             oversampling_factor=oversampling_factor)
+    if fix_echo == 'True':
+        data_oversampled = np.squeeze(mat_data['data_over'])
+        data_decimated = utils.fix_echo_position(data_oversampled=data_oversampled,
+                                                 dummy_pulses=dummy_pulses,
+                                                 etl=etl,
+                                                 n_rd=n_rd,
+                                                 n_batches=n_batches,
+                                                 n_readouts=n_readouts,
+                                                 n_scans=n_scans,
+                                                 add_rd_points=add_rd_points,
+                                                 oversampling_factor=oversampling_factor)
+    else:
+        data_decimated = np.squeeze(mat_data['data_decimated'])
 
     # Get noise data, dummy data and signal data
     data_noise = []
