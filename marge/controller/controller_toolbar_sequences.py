@@ -340,7 +340,10 @@ class SequenceController(SequenceToolBar):
         seq_name = 'Localizer'
 
         defaultsequences[seq_name].loadParams(directory="calibration")
-        defaultsequences[seq_name].mapVals['shimming'] = defaultsequences['RARE'].mapVals['shimming']
+        try:
+            defaultsequences[seq_name].mapVals['shimming'] = defaultsequences['Shimming'].mapVals['shimming']
+        except:
+            defaultsequences[seq_name].mapVals['shimming'] = defaultsequences['RARE'].mapVals['shimming']
 
         # Sagittal localizer
         if defaultsequences[seq_name].mapVals['planes'][0]:

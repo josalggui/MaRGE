@@ -254,7 +254,8 @@ def RarePyPulseq(raw_data_path=None):
         if par_fourier_fraction == 1:
             result_2['data'] = np.log10(np.abs(output_dict['kSpace3D']))
         else:
-            result_2['data'] = np.abs(output_dict['kSpace3D'])
+            result_2['data'] = np.zeros_like(output_dict['kSpace3D'], dtype=float)
+            result_2['data'][0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D'][0:n_sl, :, :]))
         result_2['xLabel'] = "k%s" % axesStr[1]
         result_2['yLabel'] = "k%s" % axesStr[0]
         result_2['title'] = "k-Space"
