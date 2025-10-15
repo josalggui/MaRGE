@@ -129,11 +129,11 @@ class SessionWidget(QWidget):
 
         # Create QLineEdit for scanner
         row += 1
-        self.main_layout.addWidget(QLabel("Scanner"), row, 0)
-        self.scanner_line_edit = QLineEdit(hw_config.scanner_name)
-        self.scanner_line_edit.setDisabled(True)
-        self.scanner_line_edit.setStatusTip("Scanner version")
-        self.main_layout.addWidget(self.scanner_line_edit, row, 1)
+        self.main_layout.addWidget(QLabel("User"), row, 0)
+        self.user_line_edit = QLineEdit()
+        self.user_line_edit.setPlaceholderText("Amin")
+        self.user_line_edit.setStatusTip("User name")
+        self.main_layout.addWidget(self.user_line_edit, row, 1)
 
         # Create QLineEdit for software version
         # Get repo or pypi version

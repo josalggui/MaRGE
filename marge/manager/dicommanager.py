@@ -17,7 +17,10 @@ class DICOMImage:
 
     def image2Dicom(self):
         for key in self.meta_data.keys():
-            setattr(self.ds, key, self.meta_data[key])
+            try:
+                setattr(self.ds, key, self.meta_data[key])
+            except:
+                pass
 
     def save(self, filename):
         self.ds.save_as(filename)

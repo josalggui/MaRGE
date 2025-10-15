@@ -30,6 +30,7 @@ import nibabel as nib
 import recon.data_processing as dp
 
 class MRIBLANKSEQ:
+
     """
     Class for representing MRI sequences.
 
@@ -1747,7 +1748,7 @@ class MRIBLANKSEQ:
             os.makedirs(directory_ismrmrd)
 
         self.directory_mat = directory_mat
-        self.directory_rmd=directory_ismrmrd 
+        self.directory_rmd=directory_ismrmrd
         
         # Generate filename
         name = datetime.now()
@@ -1783,6 +1784,7 @@ class MRIBLANKSEQ:
                                  image=self.mapVals['image3D'],
                                  file_path=f"{directory_dcm}/{file_name}.dcm",
                                  meta_data = self.meta_data,
+                                 session = self.session
                                  )
                 utils.save_nifti(axes_orientation=self.mapVals['axesOrientation'],
                                  n_points=self.mapVals['nPoints'],
@@ -1834,73 +1836,6 @@ class MRIBLANKSEQ:
                 shutil.move(source_file, destination_file)
                 print(f'Moved: {file_name} to {destination_folder}')
 
-    def image2Dicom(self, fileName): 
-        """
-        Save the DICOM image.
-
-        This method saves the DICOM image with the given filename.
-
-        Args:
-            fileName (str): The filename to save the DICOM image.
-
-        Returns:
-            None
-
-        """
-        # Create DICOM object
-        dicom_image = DICOMImage()
-
-        # Save image into DICOM object
-        try:
-            dicom_image.meta_data["PixelData"] = self.meta_data["PixelData"]
-        except KeyError:
-            image = self.output[0]['data']
-            dicom_image.meta_data["PixelData"] = image.astype(np.int16).tobytes()
-            # If it is a 3D image
-            if len(image.shape) > 2:
-                # Get dimensions
-                slices, rows, columns = image.shape
-                dicom_image.meta_data["Columns"] = columns
-                dicom_image.meta_data["Rows"] = rows
-                dicom_image.meta_data["NumberOfSlices"] = slices
-                dicom_image.meta_data["NumberOfFrames"] = slices
-            # If it is a 2D image
-            else:
-                # Get dimensions
-                rows, columns = image.shape
-                dicom_image.meta_data["Columns"] = columns
-                dicom_image.meta_data["Rows"] = rows
-                dicom_image.meta_data["NumberOfSlices"] = 1
-                dicom_image.meta_data["NumberOfFrames"] = 1
-
-        # Date and time
-        current_time = datetime.now()
-        self.meta_data["StudyDate"] = current_time.strftime("%Y%m%d")
-        self.meta_data["StudyTime"] = current_time.strftime("%H%M%S")
-
-        # More DICOM tags
-        self.meta_data["PatientName"] = self.session["subject_id"]
-        self.meta_data["PatientSex"] = " "
-        self.meta_data["StudyID"] = self.session["subject_id"]
-        self.meta_data["InstitutionName"] = self.session["scanner"]
-        self.meta_data["ImageComments"] = " "
-        self.meta_data["PatientID"] = self.session["subject_id"]
-        self.meta_data["SOPInstanceUID"] = self.mapVals['name_string']
-        self.meta_data["SeriesDescription"] = self.raw_data_name
-        self.session['seriesNumber'] = self.session['seriesNumber'] + 1
-        self.meta_data["SeriesNumber"] = self.session['seriesNumber']
-        # Full dynamic window
-        # self.meta_data["WindowWidth"] = 26373
-        # self.meta_data["WindowCenter"] = 13194
-
-        # Update the DICOM metadata
-        dicom_image.meta_data.update(self.meta_data)
-
-        # Save metadata dictionary into DICOM object metadata (Standard DICOM 3.0)
-        dicom_image.image2Dicom() 
-
-        # Save DICOM file
-        dicom_image.save(fileName)
 
     def addParameter(self, key='', string='', val=0, units=True, field='', tip=None):
         """
@@ -1947,7 +1882,7 @@ class MRIBLANKSEQ:
         """
         self.mapVals['input_keys'] = self.mapKeys
         self.mapVals['input_strings'] = list(self.mapNmspc.values())
-        for key in self.mapKeys: 
+        for key in self.mapKeys:
             if isinstance(self.mapVals[key], list): 
                 setattr(self, key, np.array([element * self.map_units[key] for element in self.mapVals[key]]))
             else:

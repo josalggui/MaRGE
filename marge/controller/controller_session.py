@@ -261,22 +261,25 @@ class SessionController(SessionWindow):
         def get_text_or_placeholder(widget):
             return widget.text() if widget.text() else widget.placeholderText()
 
-        self.session = {'project': self.tab_session.project_combo_box.currentText(),
-                        'study': self.tab_session.study_combo_box.currentText(),
-                        'side': self.tab_session.side_combo_box.currentText(),
-                        'orientation': self.tab_session.orientation_combo_box.currentText(),
-                        'subject_id': get_text_or_placeholder(self.tab_session.id_line_edit),
-                        'study_id': get_text_or_placeholder(self.tab_session.idS_line_edit),
-                        'subject_name': get_text_or_placeholder(self.tab_session.name_line_edit),
-                        'subject_surname': get_text_or_placeholder(self.tab_session.surname_line_edit),
-                        'subject_birthday': get_text_or_placeholder(self.tab_session.birthday_line_edit),
-                        'subject_weight': get_text_or_placeholder(self.tab_session.weight_line_edit),
-                        'subject_height': get_text_or_placeholder(self.tab_session.height_line_edit),
-                        'scanner': get_text_or_placeholder(self.tab_session.scanner_line_edit),
-                        'rf_coil': self.tab_session.rf_coil_combo_box.currentText(),
-                        'software_version': get_text_or_placeholder(self.tab_session.software_line_edit),
-                        'black_theme': self.is_dark_theme}
-
-        # Save session theme
+        self.session = {
+            'project': self.tab_session.project_combo_box.currentText(),
+            'study': self.tab_session.study_combo_box.currentText(),
+            'side': self.tab_session.side_combo_box.currentText(),
+            'orientation': self.tab_session.orientation_combo_box.currentText(),
+            'subject_id': get_text_or_placeholder(self.tab_session.id_line_edit),
+            'study_id': get_text_or_placeholder(self.tab_session.idS_line_edit),
+            'subject_name': get_text_or_placeholder(self.tab_session.name_line_edit),
+            'subject_surname': get_text_or_placeholder(self.tab_session.surname_line_edit),
+            'subject_birthday': get_text_or_placeholder(self.tab_session.birthday_line_edit),
+            'subject_weight': get_text_or_placeholder(self.tab_session.weight_line_edit),
+            'subject_height': get_text_or_placeholder(self.tab_session.height_line_edit),
+            'user': get_text_or_placeholder(self.tab_session.user_line_edit),
+            'rf_coil': self.tab_session.rf_coil_combo_box.currentText(),
+            'software_version': get_text_or_placeholder(self.tab_session.software_line_edit),
+            'scanner_name': get_text_or_placeholder(self.tab_others.input_boxes["Scanner name"]),
+            'scanner_manufacturer': get_text_or_placeholder(self.tab_others.input_boxes["Manufacturer"]),
+            'institution_name': get_text_or_placeholder(self.tab_others.input_boxes["Institution name"]),
+            'black_theme': self.is_dark_theme,
+        }
 
         hw.b1Efficiency = hw.antenna_dict.get(self.session['rf_coil'], 1.0)

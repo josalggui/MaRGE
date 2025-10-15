@@ -21,7 +21,9 @@ class OthersWidget(QWidget):
         self.tips = []
 
         # Add inputs
-        self.add_input(label="Scanner name", value="Demo", tip="Name of the MRI scanner")
+        self.add_input(label="Scanner name", value="Physio I", tip="Name of the MRI scanner")
+        self.add_input(label="Institution name", value="MRILab - I3M", tip="Name of the institution that owns the scanner")
+        self.add_input(label="Manufacturer", value="MRILab - I3M", tip="Name of the company that fabricated the scanner")
         self.add_input(label="FOVx (cm)", value="20.0", tip="Field of View in the X direction")
         self.add_input(label="FOVy (cm)", value="20.0", tip="Field of View in the Y direction")
         self.add_input(label="FOVz (cm)", value="20.0", tip="Field of View in the Z direction")
@@ -77,11 +79,11 @@ class OthersWidget(QWidget):
                   float(self.input_boxes["FOVy (cm)"].text()),
                   float(self.input_boxes["FOVz (cm)"].text())]
         hw.shimming_factor = float(self.input_boxes["Shimming factor"].text())
-        hw.scanner_name = self.input_boxes["Scanner name"].text()
         hw.bash_path = self.input_boxes["Bash path"].text()
         hw.ard_sn_interlock = self.input_boxes["Arduino interlock"].text()
         hw.ard_sn_attenuator = self.input_boxes["Arduino attenuator"].text()
-        hw.ard_sn_autotuning = self.input_boxes["Arduino autotuning"].text()
+        hw.ard_sn_autotuning = self.input_boxes["Arduino autotuning"].text()  
+
 
     def save_others_entries(self):
         file_name = "configs/hw_others.csv"
