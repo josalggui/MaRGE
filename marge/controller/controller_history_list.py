@@ -13,9 +13,9 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QTableWidgetItem, QLabel, QMenu, QAction
 
-from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
+from marge.controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from marge.controller.controller_plot1d import Plot1DController as SpectrumPlot
-from controller.controller_smith_chart import PlotSmithChartController as SmithChart
+from marge.controller.controller_smith_chart import PlotSmithChartController as SmithChart
 try:
     from marge.seq.sequences import defaultsequences
 except:
@@ -25,7 +25,7 @@ from marge.manager.dicommanager import DICOMImage
 from marge.marge_utils import utils
 import numpy as np
 import marge.configs.hw_config as hw
-import nibabel as nib
+
 
 class HistoryListController(HistoryListWidget):
     """

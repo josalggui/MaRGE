@@ -120,15 +120,13 @@ class Plot3DController(Plot3DWidget):
             current_output = self.main.history_list.current_output
             self.seq_name = self.main.history_list.inputs[current_output][1][0]
             img_fov = self.main.history_list.fovs[current_output][-1]
+            dfov_0 = self.main.history_list.shifts[current_output][-1]
             if self.seq_name in defaultsequences.keys():
                 roi_fov = np.array(defaultsequences[self.seq_name].mapVals['fov']) * 1e-2  # m
                 roi_pos = np.array(defaultsequences[self.seq_name].mapVals['dfov']) * 1e-3  # m
             else:
                 roi_fov = img_fov
                 roi_pos = [0.0, 0.0, 0.0]
-
-            # Get global dfov
-            dfov_0 = list(self.main.history_list.shifts.values())[-1][-1]
 
             img_fov_px = np.array(np.shape(self.getProcessedImage()))[1::]
             img_fov_ru = [img_fov[x_axis], img_fov[y_axis]]
@@ -226,7 +224,9 @@ class Plot3DController(Plot3DWidget):
         rotation[3] = a * roi_angle
 
         # Get global dfov
-        dfov_0 = list(self.main.history_list.shifts.values())[-1][-1]
+        current_output = self.main.history_list.current_output
+        self.seq_name = self.main.history_list.inputs[current_output][1][0]
+        dfov_0 = self.main.history_list.shifts[current_output][-1]
 
         # Update sequence parameters
         for sequence in defaultsequences.values():
@@ -234,8 +234,10 @@ class Plot3DController(Plot3DWidget):
                 sequence.mapVals['fov'][x_axis] = float(np.round(fov_roi[x_axis], decimals=1))  # cm
                 sequence.mapVals['fov'][y_axis] = float(np.round(fov_roi[y_axis], decimals=1))  # cm
             if 'dfov' in sequence.mapKeys:
-                sequence.mapVals['dfov'][x_axis] = float(np.round(dfov_roi[x_axis] + dfov_0[x_axis] * 1e3, decimals=1))  # mm
-                sequence.mapVals['dfov'][y_axis] = float(np.round(dfov_roi[y_axis] + dfov_0[y_axis] * 1e3, decimals=1))  # mm
+                sequence.mapVals['dfov'][x_axis] = float(
+                    np.round(dfov_roi[x_axis] + dfov_0[x_axis] * 1e3, decimals=1))  # mm
+                sequence.mapVals['dfov'][y_axis] = float(
+                    np.round(dfov_roi[y_axis] + dfov_0[y_axis] * 1e3, decimals=1))  # mm
             if 'angle' in sequence.mapKeys:
                 sequence.mapVals['angle'] = float(np.round(rotation[3], decimals=2))  # degrees
             if 'rotationAxis' in sequence.mapKeys:
