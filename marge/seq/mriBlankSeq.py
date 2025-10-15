@@ -12,22 +12,17 @@ import numpy as np
 
 import marge.configs.hw_config as hw
 from datetime import date, datetime
-from scipy.io import savemat, loadmat
+from scipy.io import savemat
 import marge.controller.experiment_gui as ex
 import scipy.signal as sig
 import csv
-import ismrmrd
 import matplotlib.pyplot as plt
-from skimage.util import view_as_blocks
-from skimage.measure import shannon_entropy
 
 # Import dicom saver
-from marge.manager.dicommanager import DICOMImage
 from marge.marge_utils import utils
 import shutil
-import nibabel as nib
 
-import recon.data_processing as dp
+import marge.recon.data_processing as dp
 
 class MRIBLANKSEQ:
 
@@ -1783,8 +1778,8 @@ class MRIBLANKSEQ:
                                  fov=self.mapVals['fov'],
                                  image=self.mapVals['image3D'],
                                  file_path=f"{directory_dcm}/{file_name}.dcm",
-                                 meta_data = self.meta_data,
-                                 session = self.session
+                                 meta_data=self.meta_data,
+                                 session=self.session
                                  )
                 utils.save_nifti(axes_orientation=self.mapVals['axesOrientation'],
                                  n_points=self.mapVals['nPoints'],
@@ -1834,7 +1829,6 @@ class MRIBLANKSEQ:
                 # Move the file to the destination folder
                 destination_file = os.path.join(destination_folder, 'seq', file_name+'_%s.seq' % batch_num)
                 shutil.move(source_file, destination_file)
-                print(f'Moved: {file_name} to {destination_folder}')
 
 
     def addParameter(self, key='', string='', val=0, units=True, field='', tip=None):

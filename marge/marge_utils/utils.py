@@ -193,8 +193,9 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
     dicom_image.meta_data["Manufacturer"] = session['scanner_manufacturer']
     dicom_image.meta_data["ManufacturerModelName"] = session['scanner_name']
     dicom_image.meta_data["SoftwareVersions"] = f"MARGE {session['software_version']}"
-    dicom_image.meta_data["PatientPosition"] = "FFS"
     dicom_image.meta_data["ImagingFrequency"] = hw.larmorFreq
+    if 'FFS' in session['orientation']:
+        dicom_image.meta_data["PatientPosition"] = "FFS"
 
     # Sessiontags -- ALL NEW EC
     dicom_image.meta_data["PatientName"] = session["subject_id"]
@@ -237,9 +238,6 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
 
     # Save DICOM file
     dicom_image.save(f"{file_path}")
-    
-    # Save the DICOM file
-    print(f"DICOM saved: {file_path}")
 
 def save_nifti(axes_orientation, n_points, fov, dfov, image, file_path):
     axes_orientation = np.array(axes_orientation)
