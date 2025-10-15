@@ -136,7 +136,7 @@ class FID(blankSeq.MRIBLANKSEQ):
         return True
 
     def sequenceAnalysis(self, obj=''):
-        def getFHWM(s,f_vector,bw):
+        def getFWHM(s,f_vector,bw):
             target = np.max(s) / 2
             p0 = np.argmax(s)
             f0 = f_vector[p0]
@@ -158,7 +158,7 @@ class FID(blankSeq.MRIBLANKSEQ):
         spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal))))
         fitedLarmor=self.mapVals['larmorFreq'] + fVector[np.argmax(np.abs(spectrum))] * 1e-3  #MHz
         hw.larmorFreq=fitedLarmor
-        fwhm=getFHWM(spectrum, fVector, bw)
+        fwhm=getFWHM(spectrum, fVector, bw)
         dB0=fwhm*1e6/hw.larmorFreq
 
         for sequence in self.sequence_list.values():
@@ -167,7 +167,7 @@ class FID(blankSeq.MRIBLANKSEQ):
 
         # Get the central frequency
         print('Larmor frequency: %1.5f MHz' % fitedLarmor)
-        print('FHWM: %1.5f kHz' % fwhm)
+        print('FWHM: %1.5f kHz' % fwhm)
         print('dB0/B0: %1.5f ppm' % dB0)
 
         self.mapVals['signalVStime'] = [tVector, signal]

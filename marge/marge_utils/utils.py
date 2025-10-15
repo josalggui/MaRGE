@@ -54,33 +54,33 @@ def fix_image_orientation(image, axes, orientation='FFS'):
         if axes[0] == 0 and axes[1] == 1:
             image = np.flip(image, axis=0)
             x_label = "(-Y) A | PHASE | P (+Y)"
-            y_label = "(-X) I | READOUT | S (+X)"
+            y_label = "(+X) I | READOUT | S (-X)"
         else:
             image = np.transpose(image, (0, 2, 1))
             image = np.flip(image, axis=0)
             x_label = "(-Y) A | READOUT | P (+Y)"
-            y_label = "(-X) I | PHASE | S (+X)"
+            y_label = "(+X) I | PHASE | S (-X)"
         image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
     elif axes[2] == 1:  # Coronal
         title = "Coronal"
         if axes[0] == 0 and axes[1] == 2:
-            x_label = "(+Z) R | PHASE | L (-Z)"
-            y_label = "(-X) I | READOUT | S (+X)"
+            x_label = "(-Z) R | PHASE | L (+Z)"
+            y_label = "(+X) I | READOUT | S (-X)"
         else:
             image = np.transpose(image, (0, 2, 1))
-            x_label = "(+Z) R | READOUT | L (-Z)"
-            y_label = "(-X) I | PHASE | S (+X)"
+            x_label = "(-Z) R | READOUT | L (+Z)"
+            y_label = "(+X) I | PHASE | S (-X)"
         image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
     elif axes[2] == 0:  # Transversal
         title = "Transversal"
         if axes[0] == 1 and axes[1] == 2:
             image = np.flip(image, axis=0)
-            x_label = "(+Z) R | PHASE | L (-Z)"
+            x_label = "(-Z) R | PHASE | L (+Z)"
             y_label = "(+Y) P | READOUT | A (-Y)"
         else:
             image = np.transpose(image, (0, 2, 1))
             image = np.flip(image, axis=0)
-            x_label = "(+Z) R | READOUT | L (-Z)"
+            x_label = "(-Z) R | READOUT | L (+Z)"
             y_label = "(+Y) P | PHASE | A (-Y)"
         image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
 

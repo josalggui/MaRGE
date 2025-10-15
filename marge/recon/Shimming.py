@@ -29,7 +29,7 @@ def Shimming(raw_data_path=None):
     # Get data
     data = np.reshape(data, shape=(3, n_shimming, -1))
 
-    def getFHWM(s=None):
+    def getFWHM(s=None):
         bw = mat_data['bw'] * 1e-3
         f_vector = np.linspace(-bw / 2, bw / 2, n_points)
         target = np.max(s) / 2
@@ -48,7 +48,7 @@ def Shimming(raw_data_path=None):
         for jj in range(n_shimming):
             spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data[ii, jj, :]))))
             dataFFT[ii, jj] = np.max(spectrum)
-            dataFWHM[ii, jj] = getFHWM(spectrum)
+            dataFWHM[ii, jj] = getFWHM(spectrum)
     output_dict['amplitudeVSshimming'] = dataFFT
 
     # Get max signal for each excitation
@@ -64,7 +64,7 @@ def Shimming(raw_data_path=None):
     print("Shimming X = %0.1f" % (sx / units.sh))
     print("Shimming Y = %0.1f" % (sy / units.sh))
     print("Shimming Z = %0.1f" % (sz / units.sh))
-    print("FHWM = %0.0f Hz" % (fwhm * 1e3))
+    print("FWHM = %0.0f Hz" % (fwhm * 1e3))
     print("Homogeneity = %0.0f ppm" % (fwhm * 1e3 / hw.larmorFreq))
     print("Shimming loaded into the sequences.")
 
@@ -83,7 +83,7 @@ def Shimming(raw_data_path=None):
                'xData': [sxVector / units.sh, syVector / units.sh, szVector / units.sh],
                'yData': [dataFWHM[0, :], dataFWHM[1, :], dataFWHM[2, :]],
                'xLabel': 'Shimming',
-               'yLabel': 'FHWM (kHz)',
+               'yLabel': 'FWHM (kHz)',
                'title': 'FWHM',
                'legend': ['X', 'Y', 'Z'],
                'row': 1,

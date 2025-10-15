@@ -215,7 +215,7 @@ class FIDandNoise(blankSeq.MRIBLANKSEQ):
         # spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal))))
         # spectrum = np.reshape(spectrum, -1)
         #
-        # # Get max and FHWM
+        # # Get max and FWHM
         # spectrum = np.abs(spectrum)
         # maxValue = np.max(spectrum)
         # maxIndex = np.argmax(spectrum)
