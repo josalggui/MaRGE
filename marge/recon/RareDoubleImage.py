@@ -30,8 +30,11 @@ def RareDoubleImage(raw_data_path=None):
     # Get data
     full_plot = mat_data['full_plot'].item()
     par_fourier_fraction = mat_data['parFourierFraction'].item()
-    fov = np.squeeze(mat_data['fov'])
-    dfov = np.squeeze(mat_data['dfov'])
+    axes_orientation = np.squeeze(mat_data['axesOrientation'])
+    fov = np.squeeze(mat_data['fov']) * 1e-2
+    dfov = np.squeeze(mat_data['dfov']) * 1e-3
+    fov = fov[axes_orientation]
+    dfov = dfov[axes_orientation]
     etl = mat_data['etl'].item()
     n_scans = mat_data['nScans'].item()
     axes_enable = np.squeeze(mat_data['axes_enable'])

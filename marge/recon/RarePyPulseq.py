@@ -59,8 +59,11 @@ def RarePyPulseq(raw_data_path=None):
 
     # Get data
     par_fourier_fraction = mat_data['parFourierFraction'].item()
-    fov = np.squeeze(mat_data['fov'])
-    dfov = np.squeeze(mat_data['dfov'])
+    axes_orientation = np.squeeze(mat_data['axesOrientation'])
+    fov = np.squeeze(mat_data['fov']) * 1e-2
+    dfov = np.squeeze(mat_data['dfov']) * 1e-3
+    fov = fov[axes_orientation]
+    dfov = dfov[axes_orientation]
     etl = mat_data['etl'].item()
     n_scans = mat_data['nScans'].item()
     axes_enable = np.squeeze(mat_data['axes_enable'])
@@ -145,7 +148,7 @@ def RarePyPulseq(raw_data_path=None):
     for ii in range(n_ph):
         data_temp[:, :, ind[ii], :] = data_full[:, :, ii, :]
     data_full = data_temp
-    mat_data['data_full'] = data_full
+    output_dict['data_full'] = data_full
 
     # Average data
     data = np.average(data_full, axis=0)
@@ -171,9 +174,9 @@ def RarePyPulseq(raw_data_path=None):
     kSL = np.reshape(kSL, shape=(1, n_points[0] * n_points[1] * n_points[2]))
     dPhase = np.exp(2 * np.pi * 1j * (dfov[0] * kRD + dfov[1] * kPH + dfov[2] * kSL))
     data = np.reshape(data * dPhase, shape=(n_points[2], n_points[1], n_points[0]))
-    mat_data['kSpace3D'] = data
+    output_dict['kSpace3D'] = data
     img = utils.run_ifft(data)
-    mat_data['image3D'] = img
+    output_dict['image3D'] = img
     data = np.reshape(data, shape=(1, n_points[0] * n_points[1] * n_points[2]))
 
     # Create sampled data
@@ -181,9 +184,9 @@ def RarePyPulseq(raw_data_path=None):
     kPH = np.reshape(kPH, shape=(n_points[0] * n_points[1] * n_points[2], 1))
     kSL = np.reshape(kSL, shape=(n_points[0] * n_points[1] * n_points[2], 1))
     data = np.reshape(data, shape=(n_points[0] * n_points[1] * n_points[2], 1))
-    mat_data['kMax_1/m'] = kMax
-    mat_data['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
-    mat_data['sampledCartesian'] = mat_data['sampled']  # To sweep
+    output_dict['kMax_1/m'] = kMax
+    output_dict['sampled'] = np.concatenate((kRD, kPH, kSL, data), axis=1)
+    output_dict['sampledCartesian'] = output_dict['sampled']  # To sweep
     data = np.reshape(data, shape=(n_points[2], n_points[1], n_points[0]))
 
 
@@ -233,7 +236,7 @@ def RarePyPulseq(raw_data_path=None):
 
     else:
         # Plot image
-        image = np.abs(mat_data['image3D'])
+        image = np.abs(output_dict['image3D'])
         image = image / np.max(np.reshape(image, -1)) * 100
 
         # Image plot
@@ -249,9 +252,9 @@ def RarePyPulseq(raw_data_path=None):
         # k-space plot
         result_2 = {'widget': 'image'}
         if par_fourier_fraction == 1:
-            result_2['data'] = np.log10(np.abs(mat_data['kSpace3D']))
+            result_2['data'] = np.log10(np.abs(output_dict['kSpace3D']))
         else:
-            result_2['data'] = np.abs(mat_data['kSpace3D'])
+            result_2['data'] = np.abs(output_dict['kSpace3D'])
         result_2['xLabel'] = "k%s" % axesStr[1]
         result_2['yLabel'] = "k%s" % axesStr[0]
         result_2['title'] = "k-Space"
