@@ -22,9 +22,9 @@ class OthersWidget(QWidget):
         self.tips = []
 
         # Add inputs
-        self.add_input(label="Scanner name", value="Physio I", tip="Name of the MRI scanner")    # He cambiado esto. 
-        self.add_input(label="Institution Name", value="MRILab - I3M", tip="Name of the institution that owns the scanner")   # He cambiado esto. 
-        self.add_input(label="Manufacturer", value="Tesoro Imaging", tip="Name of the company that fabricated the scanner")   # He cambiado esto. 
+        self.add_input(label="Scanner name", value="Physio I", tip="Name of the MRI scanner")
+        self.add_input(label="Institution name", value="MRILab - I3M", tip="Name of the institution that owns the scanner")
+        self.add_input(label="Manufacturer", value="MRILab - I3M", tip="Name of the company that fabricated the scanner")
         self.add_input(label="FOVx (cm)", value="20.0", tip="Field of View in the X direction")
         self.add_input(label="FOVy (cm)", value="20.0", tip="Field of View in the Y direction")
         self.add_input(label="FOVz (cm)", value="20.0", tip="Field of View in the Z direction")
@@ -75,10 +75,6 @@ class OthersWidget(QWidget):
         self.tips.append(tip)
 
     def update_hw_config_others(self):
-
-        hw.scanner_name = self.input_boxes["Scanner name"].text()   # He añadido esto
-        hw.institution_name = self.input_boxes["Institution Name"].text()   # He añadido esto
-        hw.manufacturer = self.input_boxes["Manufacturer"].text()    # He añadido esto
         hw.fov = [float(self.input_boxes["FOVx (cm)"].text()),
                   float(self.input_boxes["FOVy (cm)"].text()),
                   float(self.input_boxes["FOVz (cm)"].text())]

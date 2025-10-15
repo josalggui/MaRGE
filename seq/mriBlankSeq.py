@@ -1620,102 +1620,7 @@ class MRIBLANKSEQ:
                                    }, rewrite)
         return True
 
-    """
-    def image2Dicom(self, fileName): 
-        
-        Save the DICOM image.
 
-        This method saves the DICOM image with the given filename.
-
-        Args:
-            fileName (str): The filename to save the DICOM image.
-
-        Returns:
-            None
-
-        
-        # Create DICOM object
-        dicom_image = DICOMImage()
-
-        # Modification of DICOM function
-        
-        # Save image into DICOM object
-        try:
-            dicom_image.meta_data["PixelData"] = self.meta_data["PixelData"]
-        except KeyError:
-            image = self.output[0]['data']
-            dicom_image.meta_data["PixelData"] = image.astype(np.int16).tobytes()
-            # If it is a 3D image
-            if len(image.shape) > 2:
-                # Get dimensions
-                slices, rows, columns = image.shape
-                dicom_image.meta_data["Columns"] = columns
-                dicom_image.meta_data["Rows"] = rows
-                dicom_image.meta_data["NumberOfSlices"] = slices
-                dicom_image.meta_data["NumberOfFrames"] = slices
-            # If it is a 2D image
-            else:
-                # Get dimensions
-                rows, columns = image.shape
-                dicom_image.meta_data["Columns"] = columns
-                dicom_image.meta_data["Rows"] = rows
-                dicom_image.meta_data["NumberOfSlices"] = 1
-                dicom_image.meta_data["NumberOfFrames"] = 1
-        
-
-        ## DICOM tags
-        # Date and time
-        current_time = datetime.now()
-        self.meta_data["StudyDate"] = current_time.strftime("%Y%m%d")
-        self.meta_data["StudyTime"] = current_time.strftime("%H%M%S")
-        
-       
-        # Patient tags  - Los acabo de comentar
-        # self.meta_data["PatientName"] = self.session["subject_id"]   
-        # self.meta_data["PatientSex"] = " "     # No se usa. O lo introducimos o lo quitamos
-        # self.meta_data["StudyID"] = self.session["study_id"]
-        # self.meta_data["PatientID"] =  self.session["subject_id"]
-        # self.meta_data["PatientBirthDate"] =  self.session["subject_birthday"]   # Check if it works. 
-        # self.meta_data["PatientWeight"] =  self.session["subject_weight"]   # Check if it works. 
-        # self.meta_data["PatientHeight"] =  self.session["subject_height"]   # Check if it works. 
-        
-        # self.meta_data["ImageComments"] = " "
-        # self.meta_data["SOPInstanceUID"] = self.mapVals['name_string']
-
-        # Series
-        self.meta_data["SeriesDate"] = current_time.strftime("%Y%m%d")
-        self.meta_data["Modality"] = "MR"
-        self.meta_data["SeriesDescription"] = self.raw_data_name
-        self.session['seriesNumber'] = self.session['seriesNumber'] + 1
-        self.meta_data["SeriesNumber"] = self.session['seriesNumber']
-        self.meta_data["OperatorsName"] = self.session['user']
-        self.meta_data["PatientPosition"] = self.session['orientation']
-         
-        # Full dynamic window
-        # self.meta_data["WindowWidth"] = 26373
-        # self.meta_data["WindowCenter"] = 13194
-
-        # Manufacturer and Institution
-        # self.meta_data["InstitutionName"] = "MRILab - I3M"
-        # self.meta_data["Manufacturer"] = "Tesoro Imaging"
-        # self.meta_data["ManufacturerModelName"] = "Physio I"
-
-        # General Study
-        self.meta_data["StudyDescription"] = self.session["subject_id"]
-        
-
-        # Update the DICOM metadata
-        dicom_image.meta_data.update(self.meta_data)
-        
-        self.meta_data = dicom_image.meta_data   # añadi esto.  # Important: update self.meta_data with the final result
-
-        # Save metadata dictionary into DICOM object metadata (Standard DICOM 3.0)
-        # dicom_image.image2Dicom()  ## I commented this
-
-        # Save DICOM file
-        # dicom_image.save(fileName)     # I commented this
-    """
-        
     def saveRawData(self):
         
         """
@@ -1792,8 +1697,6 @@ class MRIBLANKSEQ:
 
         # Save dcm and nifti with the final image
         if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode is None): ##verify if output is an image
-            #self.image2Dicom(fileName=None) # I added this. Fill self.meta_data with all DICOM tags
-            
             utils.save_dicom(axes_orientation=self.mapVals['axesOrientation'],
                              n_points=self.mapVals['nPoints'],
                              fov=self.mapVals['fov'],
