@@ -12,7 +12,7 @@ from datetime import date, datetime
 from marge.configs import hw_config as hw
 
 
-def fix_image_orientation(image, axes, orientation='FFS'):
+def fix_image_orientation(image, axes, orientation='FFS', rd_direction=1):
     """
     Adjusts the orientation of a 3D image array to match standard anatomical planes
     (sagittal, coronal, or transversal) and returns the oriented image along with labeling
@@ -55,21 +55,29 @@ def fix_image_orientation(image, axes, orientation='FFS'):
             image = np.flip(image, axis=0)
             x_label = "(-Y) A | PHASE | P (+Y)"
             y_label = "(+X) I | READOUT | S (-X)"
+            if rd_direction == -1:
+                image = image[:, :, ::-1]
         else:
             image = np.transpose(image, (0, 2, 1))
             image = np.flip(image, axis=0)
             x_label = "(-Y) A | READOUT | P (+Y)"
             y_label = "(+X) I | PHASE | S (-X)"
+            if rd_direction == -1:
+                image = image[:, ::-1, :]
         image_orientation_dicom = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
     elif axes[2] == 1:  # Coronal
         title = "Coronal"
         if axes[0] == 0 and axes[1] == 2:
             x_label = "(-Z) R | PHASE | L (+Z)"
             y_label = "(+X) I | READOUT | S (-X)"
+            if rd_direction == -1:
+                image = image[:, :, ::-1]
         else:
             image = np.transpose(image, (0, 2, 1))
             x_label = "(-Z) R | READOUT | L (+Z)"
             y_label = "(+X) I | PHASE | S (-X)"
+            if rd_direction == -1:
+                image = image[:, ::-1, :]
         image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
     elif axes[2] == 0:  # Transversal
         title = "Transversal"
@@ -77,11 +85,15 @@ def fix_image_orientation(image, axes, orientation='FFS'):
             image = np.flip(image, axis=0)
             x_label = "(-Z) R | PHASE | L (+Z)"
             y_label = "(+Y) P | READOUT | A (-Y)"
+            if rd_direction == -1:
+                image = image[:, :, ::-1]
         else:
             image = np.transpose(image, (0, 2, 1))
             image = np.flip(image, axis=0)
             x_label = "(-Z) R | READOUT | L (+Z)"
             y_label = "(+Y) P | PHASE | A (-Y)"
+            if rd_direction == -1:
+                image = image[:, ::-1, :]
         image_orientation_dicom = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
 
     output = {

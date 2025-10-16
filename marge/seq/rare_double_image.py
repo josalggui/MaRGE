@@ -125,6 +125,8 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip='Options: cp, art, artpk, fft.')
         self.addParameter(key='boFit_file', string='Bo Fit file', val='boFit_default.txt', field='PRO',
                           tip='Path to the Bo Fit file inside [b0_maps] folder.')
+        self.addParameter(key='rd_direction', string='Rd direction', val=1, field='SEQ',
+                          tip='Set the readout direction to positive (1) or negative (-1)')
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
         self.header = ismrmrd.xsd.ismrmrdHeader()

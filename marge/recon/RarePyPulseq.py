@@ -77,6 +77,7 @@ def RarePyPulseq(raw_data_path=None):
     n_readouts = mat_data['n_readouts'][0]
     ind = np.squeeze(mat_data['sweepOrder'])
     k_fill = mat_data['k_fill'].item()
+    rd_direction = mat_data['rd_direction'].item()
 
     # Get noise data, dummy data and signal data
     data_noise = []
@@ -241,7 +242,7 @@ def RarePyPulseq(raw_data_path=None):
 
         # Image plot
         if mat_data['unlock_orientation'] == 0:
-            result_1, _, _ = utils.fix_image_orientation(image, axes=axes_orientation)
+            result_1, _, _ = utils.fix_image_orientation(image, axes=axes_orientation, rd_direction=rd_direction)
             result_1['row'] = 0
             result_1['col'] = 0
             result_1['title'] = 'Original'

@@ -56,6 +56,7 @@ def RareDoubleImage(raw_data_path=None):
         k_fill = 'ZP'
         oversampling_factor = 5
     dummy_pulses = mat_data['dummyPulses'].item()
+    rd_direction = mat_data['rd_direction'].item()
 
     if fix_echo == 'True':
         data_oversampled = np.squeeze(mat_data['data_over'])
@@ -156,7 +157,7 @@ def RareDoubleImage(raw_data_path=None):
     data_temp_eve = np.zeros(shape=(n_points[2], n_points[1], n_points[0]), dtype=complex)
     data_temp_odd[0:n_sl, :, :] = data_odd
     data_temp_eve[0:n_sl, :, :] = data_eve
-    if k_fill == 'POCS':
+    if k_fill == 'POCS' and n_points[2] > n_sl:
         data_temp_odd = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp_odd)
         data_temp_eve = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp_eve)
     data_odd = np.reshape(data_temp_odd, shape=(1, n_points[0] * n_points[1] * n_points[2]))
@@ -230,19 +231,19 @@ def RareDoubleImage(raw_data_path=None):
 
     if full_plot is True or full_plot == 'True' or full_plot == 1:
         # Image plot
-        result_mag_odd, img_mag_odd, _ = utils.fix_image_orientation(img_mag_odd, axes=axes_orientation)
+        result_mag_odd, img_mag_odd, _ = utils.fix_image_orientation(img_mag_odd, axes=axes_orientation, rd_direction=rd_direction)
         result_mag_odd['row'] = 0
         result_mag_odd['col'] = 0
 
-        result_mag_eve, img_mag_eve, _ = utils.fix_image_orientation(img_mag_eve, axes=axes_orientation)
+        result_mag_eve, img_mag_eve, _ = utils.fix_image_orientation(img_mag_eve, axes=axes_orientation, rd_direction=rd_direction)
         result_mag_eve['row'] = 1
         result_mag_eve['col'] = 0
 
-        result_pha_odd, img_pha_odd, _ = utils.fix_image_orientation(img_pha_odd, axes=axes_orientation)
+        result_pha_odd, img_pha_odd, _ = utils.fix_image_orientation(img_pha_odd, axes=axes_orientation, rd_direction=rd_direction)
         result_pha_odd['row'] = 0
         result_pha_odd['col'] = 1
 
-        result_pha_eve, img_pha_eve, _ = utils.fix_image_orientation(img_pha_eve, axes=axes_orientation)
+        result_pha_eve, img_pha_eve, _ = utils.fix_image_orientation(img_pha_eve, axes=axes_orientation, rd_direction=rd_direction)
         result_pha_eve['row'] = 1
         result_pha_eve['col'] = 1
 
@@ -276,7 +277,7 @@ def RareDoubleImage(raw_data_path=None):
         output = [result_mag_odd, result_pha_odd, result_k_odd, result_mag_eve, result_pha_eve, result_k_eve]
     else:
         # Image plot
-        result, img, _ = utils.fix_image_orientation(img, axes=axes_orientation)
+        result, img, _ = utils.fix_image_orientation(img, axes=axes_orientation, rd_direction=rd_direction)
         result['row'] = 0
         result['col'] = 0
 
