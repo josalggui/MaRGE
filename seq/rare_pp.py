@@ -106,6 +106,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
+        self.addParameter(key='nNoise', string='Noise acquisitions', val=16, field='SEQ', tip="Adquire noise acquisitions")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
@@ -641,6 +642,122 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
             return batch, n_rd_points, n_adc
 
+        def initialize_batch_0():
+                    """
+                    Initializes a batch of MRI sequence blocks using PyPulseq for a given experimental configuration.
+
+                    Returns:
+                    --------
+                    tuple
+                        - `batch` (pp.Sequence): A PyPulseq sequence object containing the configured sequence blocks.
+                        - `n_rd_points` (int): Total number of readout points in the batch.
+                        - `n_adc` (int): Total number of ADC acquisitions in the batch.
+
+                    Workflow:
+                    ---------
+                    1. **Create PyPulseq Sequence Object**:
+                        - Instantiates a new PyPulseq sequence object (`pp.Sequence`) and initializes counters for
+                        readout points (`n_rd_points`) and ADC events (`n_adc`).
+
+                    2. **Set Gradients to Zero**:
+                        - Initializes slice and phase gradients (`gr_ph_deph`, `gr_sl_deph`, `gr_ph_reph`, `gr_sl_reph`) to zero
+                        by scaling predefined gradient blocks with a factor of 0.
+
+                    3. **Add Initial Delay and Noise Measurement**:
+                        - Adds an initial delay block (`delay_first`) and a noise measurement ADC block (`block_adc_noise`)
+                        to the sequence.
+
+                    4. **Generate Dummy Pulses**:
+                        - Creates a specified number of dummy pulses (`self.dummyPulses`) to prepare the system for data acquisition:
+                            - **Pre-excitation Pulse**:
+                                - If `self.preExTime > 0`, adds a pre-excitation pulse with a readout pre-phasing gradient.
+                            - **Inversion Pulse**:
+                                - If `self.inversionTime > 0`, adds an inversion pulse with a scaled readout pre-phasing gradient.
+                            - **Excitation Pulse**:
+                                - Adds an excitation pulse followed by a readout de-phasing gradient (`block_gr_rd_preph`).
+
+                        - For each dummy pulse:
+                            - **Echo Train**:
+                                - For the last dummy pulse, appends an echo train that includes:
+                                    - A refocusing pulse.
+                                    - Gradients for readout re-phasing, phase de-phasing, and slice de-phasing.
+                                    - ADC signal acquisition block (`block_adc_signal`).
+                                    - Gradients for phase and slice re-phasing.
+                                - For other dummy pulses, excludes the ADC signal acquisition.
+
+                            - **Repetition Time Delay**:
+                                - Adds a delay (`delay_tr`) to separate repetitions.
+
+                    5. **Return Results**:
+                        - Returns the configured sequence (`batch`), total readout points (`n_rd_points`), and number of ADC events (`n_adc`).
+
+                    """
+                    # Instantiate pypulseq sequence object
+                    batch = pp.Sequence(system)
+                    n_rd_points = 0
+                    n_adc = 0
+
+                    # Set slice and phase gradients to 0
+                    gr_ph_deph = pp.scale_grad(block_gr_ph_deph, scale=0.0)
+                    gr_sl_deph = pp.scale_grad(block_gr_sl_deph, scale=0.0)
+                    gr_ph_reph = pp.scale_grad(block_gr_ph_reph, scale=0.0)
+                    gr_sl_reph = pp.scale_grad(block_gr_sl_reph, scale=0.0)
+
+                    # Add first delay and first noise measurement
+                    for nNoise in range(self.nNoise):
+                        batch.add_block(delay_first, block_adc_noise)
+                        n_rd_points += n_rd
+                        n_adc += 1
+                        print(nNoise)
+                    print('TGN: ', nNoise)
+                    # Create dummy pulses
+                    for dummy in range(self.dummyPulses):
+                        # Pre-excitation pulse
+                        if self.preExTime>0:
+                            gr_rd_preex = pp.scale_grad(block_gr_rd_preph, scale=1.0)
+                            batch.add_block(block_rf_pre_excitation,
+                                                    gr_rd_preex,
+                                                    delay_pre_excitation)
+
+                        # Inversion pulse
+                        if self.inversionTime>0:
+                            gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
+                            batch.add_block(block_rf_inversion,
+                                                    gr_rd_inv,
+                                                    delay_inversion)
+
+                        # Add excitation pulse and readout de-phasing gradient
+                        batch.add_block(block_gr_rd_preph,
+                                                block_rf_excitation,
+                                                delay_preph)
+
+                        # Add echo train
+                        for echo in range(self.etl):
+                            if dummy == self.dummyPulses-1:
+                                batch.add_block(block_rf_refocusing,
+                                                        block_gr_rd_reph,
+                                                        gr_ph_deph,
+                                                        gr_sl_deph,
+                                                        block_adc_signal,
+                                                        delay_reph)
+                                batch.add_block(gr_ph_reph,
+                                                        gr_sl_reph)
+                                n_rd_points += n_rd
+                                n_adc += 1
+                            else:
+                                batch.add_block(block_rf_refocusing,
+                                                        block_gr_rd_reph,
+                                                        gr_ph_deph,
+                                                        gr_sl_deph,
+                                                        delay_reph)
+                                batch.add_block(gr_ph_reph,
+                                                        gr_sl_reph)
+
+                        # Add time delay to next repetition
+                        batch.add_block(delay_tr)
+
+                    return batch, n_rd_points, n_adc
+
         '''
         Step 7: Define your createBatches method.
         In this step you will populate the batches adding the blocks previously defined in step 4, and accounting for
@@ -718,7 +835,12 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                         n_rd_points_dict[batch_num] = n_rd_points  # Save readout points count
                         n_rd_points = 0
                         batch_num = f"batch_{seq_idx}"
-                        batches[batch_num], n_rd_points, n_adc_0 = initialize_batch()  # Initialize new batch
+                        print(batch_num)
+                        if batch_num == "batch_1":
+                            print('TGN, in')
+                            batches[batch_num], n_rd_points, n_adc_0 = initialize_batch_0()  # Initialize new batch
+                        else:
+                            batches[batch_num], n_rd_points, n_adc_0 = initialize_batch()  # Initialize new batch
                         n_adc += n_adc_0
                         print(f"Creating {batch_num}.seq...")
 
@@ -898,12 +1020,20 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             for scan in range(self.nScans):
                 idx_1 += n_rds
                 data_prov = data_decimated[idx_0:idx_1]
-                data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd]), axis=0)
-                if self.dummyPulses > 0:
-                    data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd+points_per_train]), axis=0)
-                data_signal = np.concatenate((data_signal, data_prov[points_per_rd+points_per_train::]), axis=0)
+                if batch == 0:
+                    data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd*self.nNoise]), axis=0)
+                    if self.dummyPulses > 0:
+                        data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd*self.nNoise:points_per_rd+points_per_train]), axis=0)
+                    data_signal = np.concatenate((data_signal, data_prov[points_per_rd*self.nNoise+points_per_train::]), axis=0)
+                else:
+                    data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd]), axis=0)
+                    if self.dummyPulses > 0:
+                        data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd+points_per_train]), axis=0)
+                    data_signal = np.concatenate((data_signal, data_prov[points_per_rd+points_per_train::]), axis=0)
                 idx_0 = idx_1
             n_readouts[batch] += -n_rd - n_rd * self.etl
+        data_noise = np.reshape(data_noise, (-1, self.nPoints[0]+hw.addRdPoints*2))
+        data_noise = data_noise[:, hw.addRdPoints : -hw.addRdPoints]
         self.mapVals['data_noise'] = data_noise
         self.mapVals['data_dummy'] = data_dummy
         self.mapVals['data_signal'] = data_signal
