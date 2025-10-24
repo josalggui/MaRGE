@@ -708,8 +708,6 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                         batch.add_block(delay_first, block_adc_noise)
                         n_rd_points += n_rd
                         n_adc += 1
-                        print(nNoise)
-                    print('TGN: ', nNoise)
                     # Create dummy pulses
                     for dummy in range(self.dummyPulses):
                         # Pre-excitation pulse
@@ -837,7 +835,6 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                         batch_num = f"batch_{seq_idx}"
                         print(batch_num)
                         if batch_num == "batch_1":
-                            print('TGN, in')
                             batches[batch_num], n_rd_points, n_adc_0 = initialize_batch_0()  # Initialize new batch
                         else:
                             batches[batch_num], n_rd_points, n_adc_0 = initialize_batch()  # Initialize new batch
