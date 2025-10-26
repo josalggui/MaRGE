@@ -520,7 +520,6 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         return self.output
 
-
 if __name__ == '__main__':
     seq = ShimmingSweep()
     seq.sequenceAtributes()

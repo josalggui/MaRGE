@@ -350,10 +350,10 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
 
-        # if mode != 'Standalone':
-        #     for sequence in self.sequence_list.values():
-        #         if 'larmorFreq' in sequence.mapVals:
-        #             sequence.mapVals['larmorFreq'] = hw.larmorFreq
+        if mode != 'Standalone':
+            for sequence in self.sequence_list.values():
+                if 'larmorFreq' in sequence.mapVals:
+                    sequence.mapVals['larmorFreq'] = hw.larmorFreq
 
         # Add time signal to the layout
         result1 = {'widget': 'curve',
