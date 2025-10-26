@@ -103,7 +103,7 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
 
         flo_interpreter = PSInterpreter(
             tx_warmup=hw.blkTime,  # Transmit chain warm-up time (us)
-            rf_center=hw.larmorFreq * 1e6,  # Larmor frequency (Hz)
+            rf_center=self.larmorFreq,  # Larmor frequency (Hz)
             rf_amp_max=hw.b1Efficiency / (2 * np.pi) * 1e6,  # Maximum RF amplitude (Hz)
             gx_max=hw.gFactor[0] * hw.gammaB,  # Maximum gradient amplitude for X (Hz/m)
             gy_max=hw.gFactor[1] * hw.gammaB,  # Maximum gradient amplitude for Y (Hz/m)
@@ -157,7 +157,7 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
 
         # Define device arguments
         dev_kwargs = {
-            "lo_freq": hw.larmorFreq,  # MHz
+            "lo_freq": self.larmorFreq * 1e-6,  # MHz
             "rx_t": sampling_period,  # us
             "print_infos": True,
             "assert_errors": True,
@@ -298,7 +298,7 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         return self.runBatches(waveforms=waveforms,
                                n_readouts=n_readouts,
                                n_adc=n_adc,
-                               frequency=hw.larmorFreq,  # MHz
+                               frequency=self.larmorFreq * 1e-6,  # MHz
                                bandwidth=self.bw,  # MHz
                                decimate='Normal',
                                )
@@ -335,43 +335,45 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         n_points = self.mapVals['nPoints']
 
         # Generate time and frequency vectors and calculate the signal spectrum
-        tVector = np.linspace(-acq_time / 2, acq_time / 2, n_points)
-        fVector = np.linspace(-self.bw / 2, self.bw / 2, n_points) * 1e-3  # kHz
-        spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal)))
+        tVector = np.linspace(-acq_time / 2, acq_time / 2, n_points)  # ms
+        fVector = np.linspace(-self.bw / 2, self.bw / 2, n_points) * 1e3 # kHz
+        spectrum = []
+        for channel in range(len(self.mapVals['data_decimated'])):
+            spectrum.append(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(self.mapVals['data_decimated'][channel]))))
 
         # Get the central frequency
-        idf = np.argmax(np.abs(spectrum))
+        idf = np.argmax(np.abs(spectrum[0]))
         fCentral = fVector[idf] * 1e-3  # MHz
-        hw.larmorFreq = self.mapVals['larmorFreq'] + fCentral
+        hw.larmorFreq = (self.mapVals['larmorFreq'] + fCentral)
         print('Larmor frequency: %1.5f MHz' % hw.larmorFreq)
         self.mapVals['larmorFreq'] = hw.larmorFreq
         self.mapVals['signalVStime'] = [tVector, signal]
         self.mapVals['spectrum'] = [fVector, spectrum]
 
-        if mode != 'Standalone':
-            for sequence in self.sequence_list.values():
-                if 'larmorFreq' in sequence.mapVals:
-                    sequence.mapVals['larmorFreq'] = hw.larmorFreq
+        # if mode != 'Standalone':
+        #     for sequence in self.sequence_list.values():
+        #         if 'larmorFreq' in sequence.mapVals:
+        #             sequence.mapVals['larmorFreq'] = hw.larmorFreq
 
         # Add time signal to the layout
         result1 = {'widget': 'curve',
                    'xData': tVector,
-                   'yData': [np.abs(signal), np.real(signal), np.imag(signal)],
+                   'yData': [np.abs(data) for data in self.mapVals['data_decimated']],
                    'xLabel': 'Time (ms)',
                    'yLabel': 'Signal amplitude (mV)',
                    'title': 'Echo',
-                   'legend': ['abs', 'real', 'imag'],
+                   'legend': [f'Channel {channel}' for channel in self.channels],
                    'row': 0,
                    'col': 0}
 
         # Add frequency spectrum to the layout
         result2 = {'widget': 'curve',
                    'xData': fVector,
-                   'yData': [np.abs(spectrum)],
+                   'yData': [np.abs(data) for data in spectrum],
                    'xLabel': 'Frequency (kHz)',
                    'yLabel': 'Spectrum amplitude (a.u.)',
                    'title': 'Spectrum',
-                   'legend': [''],
+                   'legend': [f'Channel {channel}' for channel in self.channels],
                    'row': 1,
                    'col': 0}
 

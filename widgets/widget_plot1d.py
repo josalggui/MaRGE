@@ -15,14 +15,20 @@ class Plot1DWidget(pg.GraphicsLayoutWidget):
         self.addItem(self.label2)
 
         # Create set of colors
-        self.pen = [[255, 0, 0],
-                    [0, 255, 0],
-                    [255, 255, 0],
-                    [0, 0, 255],
-                    [255, 0, 255],
-                    [0, 255, 255],
-                    [255, 255, 255],
-                    [128, 128, 128]]
+        self.pen = [
+                    [255, 0, 0],       # Red
+                    [0, 255, 0],       # Green
+                    [255, 255, 0],     # Yellow
+                    [0, 0, 255],       # Blue
+                    [255, 0, 255],     # Magenta
+                    [0, 255, 255],     # Cyan
+                    [255, 255, 255],   # White
+                    [128, 128, 128],   # Gray
+                    [255, 128, 0],     # Orange
+                    [128, 0, 255],     # Purple
+                    [0, 128, 255],     # Sky Blue
+                    [0, 255, 128]      # Spring Green
+                    ]
 
         # Create plot_item to show the figure
         self.plot_item = self.addPlot(row=1, col=0)

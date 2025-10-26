@@ -60,14 +60,14 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                           field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90.0, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180.0, field='RF')
-        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=30.0, units=units.us, field='RF')
-        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=60.0, units=units.us, field='RF')
+        self.addParameter(key='rfExTime', string='RF excitation time (us)', val=50.0, units=units.us, field='RF')
+        self.addParameter(key='rfReTime', string='RF refocusing time (us)', val=100.0, units=units.us, field='RF')
         self.addParameter(key='echoTime', string='Echo time (ms)', val=10., units=units.ms, field='SEQ')
-        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=20., units=units.ms, field='SEQ')
+        self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ')
         self.addParameter(key='nPoints', string='nPoints', val=60, field='IM')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=0, field='SEQ')
-        self.addParameter(key='shimming0', string='Shimming 0', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
+        self.addParameter(key='shimming0', string='Shimming 0', val=[-110.0, 50.0, 10.0], units=units.sh, field='OTH')
         self.addParameter(key='nShimming', string='n Shimming steps', val=4, field='OTH')
         self.addParameter(key='dShimming', string='Shimming step', val=[2.5, 2.5, 2.5], units=units.sh, field='OTH')
 
@@ -88,6 +88,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         self.demo = demo  # Set demo mode
         self.plotSeq = plotSeq
         self.standalone = standalone
+        self.shimming = np.array([0.0, 0.0, 0.0])
 
         '''
         Step 1: Define the interpreter for FloSeq/PSInterpreter.
@@ -163,7 +164,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         if not self.demo:
             # Define device arguments
             dev_kwargs = {
-                "lo_freq": hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
+                "lo_freq": hw.larmorFreq + self.freqOffset,  # MHz
                 "rx_t": sampling_period,  # us
                 "print_infos": True,
                 "assert_errors": True,
@@ -277,11 +278,11 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             # Select gradient vector
             sh_vector = []
             if case == 'x':
-                sh_vector = sx_vector
+                sh_vector = sx_vector * hw.gFactor[0]
             elif case == 'y':
-                sh_vector = sy_vector
+                sh_vector = sy_vector * hw.gFactor[1]
             elif case == 'z':
-                sh_vector = sz_vector
+                sh_vector = sz_vector * hw.gFactor[2]
 
             # Populate the sequence
             for ii in range(1, np.size(sh_vector)):
@@ -386,13 +387,6 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
     def sequenceAnalysis(self, mode=None):
         self.mode = mode
 
-        # Get data
-        data_x = self.mapVals['data_decimated_x'][0]
-        data_y = self.mapVals['data_decimated_y'][0]
-        data_z = self.mapVals['data_decimated_z'][0]
-        data = np.concatenate((data_x, data_y, data_z))
-        data = np.reshape(data, (3, self.nShimming, -1))
-
         def getFHWM(s=None):
             bw = self.mapVals['bw_MHz'] * 1e3  # kHz
             f_vector = np.linspace(-bw / 2, bw / 2, self.nPoints)
@@ -405,53 +399,106 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             f2 = f_vector[np.argmin(s2) + p0]
             return f2 - f1
 
-        # Get FFT
-        dataFFT = np.zeros((3, self.nShimming))
-        dataFWHM = np.zeros((3, self.nShimming))
-        for ii in range(3):
-            for jj in range(self.nShimming):
-                spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data[ii, jj, :]))))
-                dataFFT[ii, jj] = np.max(spectrum)
-                dataFWHM[ii, jj] = getFHWM(spectrum)
-        self.mapVals['amplitudeVSshimming'] = dataFFT
+        fft_list = []
+        fwhm_list = []
+        for channel in range(len(self.mapVals['data_decimated_x'])):
+            # Get data
+            data_x = self.mapVals['data_decimated_x'][channel]
+            data_y = self.mapVals['data_decimated_y'][channel]
+            data_z = self.mapVals['data_decimated_z'][channel]
+            data = np.concatenate((data_x, data_y, data_z))
+            data = np.reshape(data, (3, self.nShimming, -1))
 
-        # Get max signal for each excitation
-        sxVector = np.squeeze(self.mapVals['sx_vector'])[1:-1]
-        syVector = np.squeeze(self.mapVals['sy_vector'])[1:-1]
-        szVector = np.squeeze(self.mapVals['sz_vector'])[1:-1]
+            # Get FFT
+            dataFFT = np.zeros((3, self.nShimming))
+            dataFWHM = np.zeros((3, self.nShimming))
+            for ii in range(3):
+                for jj in range(self.nShimming):
+                    spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data[ii, jj, :]))))
+                    dataFFT[ii, jj] = np.max(spectrum)
+                    dataFWHM[ii, jj] = getFHWM(spectrum)
+            self.mapVals['amplitudeVSshimming'] = dataFFT
+            fft_list.append(dataFFT)
+            fwhm_list.append(dataFWHM)
 
-        # Get the shimming values
-        sx = sxVector[np.argmax(dataFFT[0, :])]
-        sy = syVector[np.argmax(dataFFT[1, :])]
-        sz = szVector[np.argmax(dataFFT[2, :])]
-        fwhm = dataFWHM[2, np.argmax(dataFFT[2, :])]
-        print("Shimming X = %0.1f" % (sx / units.sh))
-        print("Shimming Y = %0.1f" % (sy / units.sh))
-        print("Shimming Z = %0.1f" % (sz / units.sh))
-        print("FHWM = %0.0f Hz" % (fwhm * 1e3))
-        print("Homogeneity = %0.0f ppm" % (fwhm * 1e3 / hw.larmorFreq))
-        print("Shimming loaded into the sequences.")
+            if channel == 0:
+                # Get max signal for each excitation
+                sxVector = np.squeeze(self.mapVals['sx_vector'])[1:-1]
+                syVector = np.squeeze(self.mapVals['sy_vector'])[1:-1]
+                szVector = np.squeeze(self.mapVals['sz_vector'])[1:-1]
+
+                # Get the shimming values
+                sx = sxVector[np.argmax(dataFFT[0, :])]
+                sy = syVector[np.argmax(dataFFT[1, :])]
+                sz = szVector[np.argmax(dataFFT[2, :])]
+                fwhm = dataFWHM[2, np.argmax(dataFFT[2, :])]
+                print("Shimming X = %0.1f" % (sx / units.sh))
+                print("Shimming Y = %0.1f" % (sy / units.sh))
+                print("Shimming Z = %0.1f" % (sz / units.sh))
+                print("FHWM = %0.0f Hz" % (fwhm * 1e3))
+                print("Homogeneity = %0.0f ppm" % (fwhm * 1e3 / hw.larmorFreq))
+                print("Shimming loaded into the sequences.")
 
         # Shimming plot
         result1 = {'widget': 'curve',
-                   'xData': [sxVector / units.sh, syVector / units.sh, szVector / units.sh],
-                   'yData': [np.abs(dataFFT[0, :]), np.abs(dataFFT[1, :]), np.abs(dataFFT[2, :])],
+                   'xData': sxVector / units.sh,
+                   'yData': [np.abs(data[0, :]) for data in fft_list],
                    'xLabel': 'Shimming',
                    'yLabel': 'a.u.',
-                   'title': 'Spectrum amplitude',
-                   'legend': ['X', 'Y', 'Z'],
+                   'title': 'Spectrum amplitude - Gx',
+                   'legend': [f'Channel {channel}' for channel in self.channels],
                    'row': 0,
                    'col': 0}
 
         result2 = {'widget': 'curve',
-                   'xData': [sxVector / units.sh, syVector / units.sh, szVector / units.sh],
-                   'yData': [dataFWHM[0, :], dataFWHM[1, :], dataFWHM[2, :]],
+                   'xData': syVector / units.sh,
+                   'yData': [np.abs(data[1, :]) for data in fft_list],
+                   'xLabel': 'Shimming',
+                   'yLabel': 'a.u.',
+                   'title': 'Spectrum amplitude - Gy',
+                   'legend': [f'Channel {channel}' for channel in self.channels],
+                   'row': 0,
+                   'col': 1}
+
+        result3 = {'widget': 'curve',
+                   'xData': szVector / units.sh,
+                   'yData': [np.abs(data[2, :]) for data in fft_list],
+                   'xLabel': 'Shimming',
+                   'yLabel': 'a.u.',
+                   'title': 'Spectrum amplitude - Gz',
+                   'legend': [f'Channel {channel}' for channel in self.channels],
+                   'row': 0,
+                   'col': 2}
+
+        result4 = {'widget': 'curve',
+                   'xData': sxVector / units.sh,
+                   'yData': [np.abs(data[0, :]) for data in fwhm_list],
                    'xLabel': 'Shimming',
                    'yLabel': 'FHWM (kHz)',
-                   'title': 'FWHM',
-                   'legend': ['X', 'Y', 'Z'],
+                   'title': 'FWHM - Gx',
+                   'legend': [f'Channel {channel}' for channel in self.channels],
                    'row': 1,
                    'col': 0}
+        
+        result5 = {'widget': 'curve',
+                   'xData': syVector / units.sh,
+                   'yData': [np.abs(data[1, :]) for data in fwhm_list],
+                   'xLabel': 'Shimming',
+                   'yLabel': 'FHWM (kHz)',
+                   'title': 'FWHM - Gy',
+                   'legend': [f'Channel {channel}' for channel in self.channels],
+                   'row': 1,
+                   'col': 1}
+        
+        result6 = {'widget': 'curve',
+                   'xData': szVector / units.sh,
+                   'yData': [np.abs(data[2, :]) for data in fwhm_list],
+                   'xLabel': 'Shimming',
+                   'yLabel': 'FHWM (kHz)',
+                   'title': 'FWHM - Gz',
+                   'legend': [f'Channel {channel}' for channel in self.channels],
+                   'row': 1,
+                   'col': 2}
 
         # Update the shimming in hw_config
         if mode != "Standalone":
@@ -464,7 +511,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                     np.round(sz / units.sh, decimals=1)]
         self.mapVals['shimming0'] = shimming
 
-        self.output = [result1, result2]
+        self.output = [result1, result2, result3, result4, result5, result6]
 
         self.saveRawData()
 
