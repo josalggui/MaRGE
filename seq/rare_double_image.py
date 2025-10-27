@@ -1019,7 +1019,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                         result_Tyger['row'] = 0
                         result_Tyger['col'] = 1
                         result_Tyger['title'] = "Tyger"
-                        result['title'] = "Original"
+                        result['title'] = "Local"
                     else:
                         result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
                                     'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}

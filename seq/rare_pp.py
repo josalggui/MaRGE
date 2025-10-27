@@ -1183,7 +1183,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 result_1, _, _ = utils.fix_image_orientation(image, axes=self.axesOrientation)
                 result_1['row'] = 0
                 result_1['col'] = 0
-                result_1['title'] = 'Original'
+                result_1['title'] = 'Local'
             else:
                 result_1 = {'widget': 'image', 'data': image, 'xLabel': "%s" % axesStr[1],
                             'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}

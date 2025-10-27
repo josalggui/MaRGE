@@ -616,7 +616,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             result1['data'] = np.abs(image)
             result1['xLabel'] = axislegend[0]
             result1['yLabel'] = axislegend[1]
-            result1['title'] = "Image magnitude"
+            result1['title'] = "Local"
             result1['row'] = 0
             result1['col'] = 0
 
@@ -654,9 +654,9 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                 result_Tyger['yLabel'] = axislegend[1]
                 result_Tyger['title'] = "Tyger"
                 result_Tyger['row'] = 0
-                result_Tyger['col'] = 0
+                result_Tyger['col'] = 1
                 
-                self.output = [result_Tyger]
+                self.output = [result1, result_Tyger]
             except Exception as e:
                 print('Tyger reconstruction failed.')
                 print(f'Error: {e}')
