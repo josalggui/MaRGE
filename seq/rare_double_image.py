@@ -106,6 +106,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ',
                           tip="Use last dummy pulse to calibrate k = 0")
+        self.addParameter(key='nNoise', string='Noise acquisitions', val=16, field='SEQ', tip="Adquire noise acquisitions")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH',
                           tip="Fraction of k planes aquired in slice direction")
@@ -598,6 +599,73 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
 
             return batch, n_rd_points, n_adc
 
+        def initialize_batch_0():
+            # Instantiate pypulseq sequence object
+            batch = pp.Sequence(system)
+            n_rd_points = 0
+            n_adc = 0
+
+            # Set slice and phase gradients to 0
+            gr_ph_deph = pp.scale_grad(block_gr_ph_deph, scale=0.0)
+            gr_sl_deph = pp.scale_grad(block_gr_sl_deph, scale=0.0)
+            gr_ph_reph = pp.scale_grad(block_gr_ph_reph, scale=0.0)
+            gr_sl_reph = pp.scale_grad(block_gr_sl_reph, scale=0.0)
+
+            # Add first delay and first noise measurement
+            for nNoise in range(self.nNoise):
+                batch.add_block(delay_first, block_adc_noise)
+                n_rd_points += n_rd
+                n_adc += 1
+
+            # Create dummy pulses
+            for dummy in range(self.dummyPulses):
+                # Pre-excitation pulse
+                if self.preExTime > 0:
+                    gr_rd_preex = pp.scale_grad(block_gr_rd_preph, scale=1.0)
+                    batch.add_block(block_rf_pre_excitation,
+                                    gr_rd_preex,
+                                    delay_pre_excitation)
+
+                # Inversion pulse
+                if self.inversionTime > 0:
+                    gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
+                    batch.add_block(block_rf_inversion,
+                                    gr_rd_inv,
+                                    delay_inversion)
+
+                # Add excitation pulse and readout de-phasing gradient
+                batch.add_block(block_gr_rd_preph,
+                                block_rf_excitation,
+                                delay_preph)
+
+                # Add echo train
+                for echo in range(self.etl):
+                    if dummy == self.dummyPulses - 1:
+                        batch.add_block(block_rf_refocusing_odd,
+                                        block_gr_rd_reph,
+                                        gr_ph_deph,
+                                        gr_sl_deph,
+                                        block_adc_signal,
+                                        delay_reph)
+                        batch.add_block(gr_ph_reph,
+                                        gr_sl_reph)
+                        n_rd_points += n_rd
+                        n_adc += 1
+                    else:
+                        batch.add_block(block_rf_refocusing_odd,
+                                        block_gr_rd_reph,
+                                        gr_ph_deph,
+                                        gr_sl_deph,
+                                        delay_reph)
+                        batch.add_block(gr_ph_reph,
+                                        gr_sl_reph)
+
+                # Add time delay to next repetition
+                batch.add_block(delay_tr)
+
+            return batch, n_rd_points, n_adc
+
+
         '''
         Step 7: Define your createBatches method.
         In this step you will populate the batches adding the blocks previously defined in step 4, and accounting for
@@ -631,7 +699,10 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                         n_rd_points_dict[batch_num] = n_rd_points  # Save readout points count
                         n_rd_points = 0
                         batch_num = f"batch_{seq_idx}"
-                        batches[batch_num], n_rd_points, n_adc_0 = initialize_batch()  # Initialize new batch
+                        if batch_num == "batch_1":
+                            batches[batch_num], n_rd_points, n_adc_0 = initialize_batch_0()  # Initialize new batch
+                        else:
+                            batches[batch_num], n_rd_points, n_adc_0 = initialize_batch()  # Initialize new batch
                         n_adc += n_adc_0
                         print(f"Creating {batch_num}.seq...")
 
@@ -779,13 +850,20 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             for scan in range(self.nScans):
                 idx_1 += n_rds
                 data_prov = data_decimated[idx_0:idx_1]
-                data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd]), axis=0)
-                if self.dummyPulses > 0:
-                    data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd + points_per_train]),
-                                                axis=0)
-                data_signal = np.concatenate((data_signal, data_prov[points_per_rd + points_per_train::]), axis=0)
+                if batch == 0:
+                    data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd*self.nNoise]), axis=0)
+                    if self.dummyPulses > 0:
+                        data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd*self.nNoise:points_per_rd+points_per_train]), axis=0)
+                    data_signal = np.concatenate((data_signal, data_prov[points_per_rd*self.nNoise+points_per_train::]), axis=0)
+                else:
+                    data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd]), axis=0)
+                    if self.dummyPulses > 0:
+                        data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd+points_per_train]), axis=0)
+                    data_signal = np.concatenate((data_signal, data_prov[points_per_rd+points_per_train::]), axis=0)
                 idx_0 = idx_1
             n_readouts[batch] += -n_rd - n_rd * self.etl
+        data_noise = np.reshape(data_noise, (-1, self.nPoints[0]+hw.addRdPoints*2))
+        data_noise = data_noise[:, hw.addRdPoints : -hw.addRdPoints]
         self.mapVals['data_noise'] = data_noise
         self.mapVals['data_dummy'] = data_dummy
         self.mapVals['data_signal'] = data_signal
