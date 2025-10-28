@@ -1069,7 +1069,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         ## Tyger Reconstruction
-        if self.tyger_denoising == 1:
+        if axes_enable == [1,1,1] and self.tyger_denoising == 1:
             try:
                 output_field = "img_denoising"
                 rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
