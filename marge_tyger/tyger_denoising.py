@@ -22,10 +22,6 @@ def denoisingTyger(rawData_path, output_field):
     
     for p in (pathMRD_or, pathMRD_ia):
         Path(p).parent.mkdir(parents=True, exist_ok=True)
-        
-    print(rawData_path)
-    print(pathMRD_or)
-    print(pathMRD_ia)
     
     matToMRD(rawData_path, pathMRD_or)
 

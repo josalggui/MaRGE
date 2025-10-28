@@ -34,6 +34,7 @@ from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 from marge_utils import utils
 from marge_tyger import tyger_rare
+from marge_tyger import tyger_denoising
 import marge_tyger.tyger_config as tyger_conf
 
 #*********************************************************************************
@@ -114,6 +115,8 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
         self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
                           tip="'True' or 'False' to plot odd and even images separately")
+        self.addParameter(key='tyger_denoising', string='Denoising (SNRAware)', val=0, field='PRO',
+                          tip='To denoising with Tyger (0 = Disabled; 1 = Enabled)')
         self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
                           tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
         self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',
@@ -1066,7 +1069,31 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.saveRawData()
 
         ## Tyger Reconstruction
-        if axes_enable == [1,1,1] and self.tyger_recon == 1:
+        if self.tyger_denoising == 1:
+            try:
+                output_field = "img_denoising"
+                rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
+                imgTyger = tyger_denoising.denoisingTyger(rawData_path, output_field)
+                imageTyger = np.abs(imgTyger[0])
+                imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
+
+                ## Image plot
+                # Tyger
+                if self.mapVals['unlock_orientation'] == 0:
+                    result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
+                    result_Tyger['row'] = 0
+                    result_Tyger['col'] = 1
+                    result_Tyger['title'] = "Tyger"
+                    result['title'] = "Local"
+                else:
+                    result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
+                                'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
+
+                self.output = [result, result_Tyger]
+            except Exception as e:
+                print('Tyger reconstruction failed.')
+                print(f'Error: {e}')
+        if axes_enable == [1,1,1] and self.tyger_recon == 1 and self.tyger_denoising == 0:
             if self.full_plot == 'False' or self.full_plot is False:
                 print('Preparing Tyger enviroment...')
                 rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
