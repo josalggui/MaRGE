@@ -39,6 +39,7 @@ import ctypes
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 from marge_tyger import tyger_rare
+from marge_tyger import tyger_denoising
 import marge_tyger.tyger_config as tyger_conf
 
 #*********************************************************************************
@@ -111,8 +112,10 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
-        self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
-                          tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
+        self.addParameter(key='tyger_denoising', string='Denoising (SNRAware)', val=0, field='PRO',
+                          tip='To denoising with Tyger (0 = Disabled; 1 = Enabled)')
+        self.addParameter(key='tyger_recon', string='Distorsion correction', val=0, field='PRO',
+                          tip='To distorsion correction with Tyger (0 = Disabled; 1 = Enabled)')
         self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',
                           tip='Options: cp, art, artpk, fft.')
         self.addParameter(key='boFit_file', string='Bo Fit file', val='boFit_default.txt', field='PRO',
@@ -1213,7 +1216,31 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.save_ismrmrd()
 
         ## Tyger Reconstruction
-        if axes_enable == [1,1,1] and self.tyger_recon == 1:
+        if self.tyger_denoising == 1:
+            try:
+                output_field = "img_denoising"
+                rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
+                imgTyger = tyger_denoising.denoisingTyger(rawData_path, output_field)
+                imageTyger = np.abs(imgTyger[0])
+                imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
+
+                ## Image plot
+                # Tyger
+                if self.mapVals['unlock_orientation'] == 0:
+                    result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
+                    result_Tyger['row'] = 0
+                    result_Tyger['col'] = 1
+                    result_Tyger['title'] = "Tyger"
+                else:
+                    result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
+                                'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
+
+                self.output = [result_1, result_Tyger]
+            except Exception as e:
+                print('Tyger reconstruction failed.')
+                print(f'Error: {e}')
+                
+        if axes_enable == [1,1,1] and self.tyger_recon == 1 and self.tyger_denoising == 0:
             print('Preparing Tyger enviroment...')
             rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
             sign_rarepp = [-1,-1,-1,1,1,1,1,1, tyger_conf.cp_batchsize_RARE]

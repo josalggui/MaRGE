@@ -1,0 +1,27 @@
+job:
+  codespec:
+    image: acr-proxy.tyger.cloud/tygertepimages.azurecr.io/tinker:20251025
+    buffers:
+      inputs:
+        - input
+        - noisecovariance
+      outputs:
+        - recon
+    args:
+      - "recon"
+      - "--input"
+      - "$(INPUT_PIPE)"
+      - "--noise.noise-covariance"
+      - "$(NOISECOVARIANCE_PIPE)"
+      - "--output"
+      - "$(RECON_PIPE)"
+      - "--kspace-filter.sigma"
+      - "1.0"
+      - "--denoising.model-file"
+      - "/opt/tinker/models/denoising/model_ifm-mri-denoising_extra-large.pts"
+      - "--log-level"
+      - "DEBUG"
+    resources:
+      requests:
+        cpu: 4
+      gpu: 1
