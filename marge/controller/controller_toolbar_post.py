@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QFileDialog, QLabel, QApplication, QMainWindow, QTab
     QWidget, QTabWidget
 from scipy.interpolate import griddata
 from marge.widgets.widget_toolbar_post import ToolBarWidgetPost
-from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
+from marge.controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from PyQt5 import QtCore
 from scipy.io import loadmat
 import h5py

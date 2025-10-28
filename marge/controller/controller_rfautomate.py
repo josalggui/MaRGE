@@ -13,7 +13,7 @@ from scipy.interpolate import interp1d
 
 import time
 
-from vna import Hardware
+from marge.vna import Hardware
 
 
 class Arduino:

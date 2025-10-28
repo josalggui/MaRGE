@@ -1,7 +1,7 @@
 import numpy as np
 from PyQt5.QtWidgets import QGridLayout
 from marge.widgets.widget_visualisation import VisualisationTabWidget
-from controller.controller_plot3d import Plot3DController as Spectrum3DPlot
+from marge.controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 
 
 class VisualisationTabController(VisualisationTabWidget):

@@ -476,11 +476,11 @@ class MRIBLANKSEQ:
 
     def sequenceInfo(self):
         print("sequenceInfo method is empty."
-              "It is recommended to overide this method into your sequence.")
+              "It is recommended to override this method into your sequence.")
 
     def sequenceTime(self):
         print("sequenceTime method is empty."
-             "It is recommended to overide this method into your sequence.")
+             "It is recommended to override this method into your sequence.")
         return 0
 
     def pypulseq2mriblankseq(self, waveforms=None,
@@ -555,7 +555,7 @@ class MRIBLANKSEQ:
                          'tx0': [[], []],
                          'tx1': [[], []],
                          'ttl0': [[], []],
-                         'ttl1': [[], []], }
+                         'ttl1': [[], []],}
 
         # Fill dictionary
         for key in waveforms.keys():

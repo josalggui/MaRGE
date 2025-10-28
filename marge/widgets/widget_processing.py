@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QTabWidget
 
 from marge.controller.controller_post import PostProcessingTabController
-from controller.controller_preprocessing import PreProcessingTabController
+from marge.controller.controller_preprocessing import PreProcessingTabController
 from marge.controller.controller_reconstruction import ReconstructionTabController
 from marge.controller.controller_visualisation import VisualisationTabController
 

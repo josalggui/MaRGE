@@ -2,7 +2,7 @@ import scipy as sp
 import numpy as np
 import scipy.signal as sig
 from scipy.interpolate import make_interp_spline
-from configs import hw_config as hw
+from marge.configs import hw_config as hw
 
 
 def RabiFlops(raw_data_path=None):
