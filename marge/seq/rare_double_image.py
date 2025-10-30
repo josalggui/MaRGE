@@ -305,7 +305,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
 
         # Readout dephasing amplitude
         rd_deph_amplitude = 0.5 * rd_grad_amplitude * (hw.grad_rise_time + self.rdGradTime) / (
-                hw.grad_rise_time + self.rdDephTime) * self.rd_direction
+                hw.grad_rise_time + self.rdDephTime)
         self.mapVals['rd_deph_amplitude'] = rd_deph_amplitude
         print("Max rd gradient amplitude: %0.1f mT/m" % (max(rd_grad_amplitude, rd_deph_amplitude) * 1e3))
         print("Max ph gradient amplitude: %0.1f mT/m" % (ph_grad_amplitude * 1e3))
