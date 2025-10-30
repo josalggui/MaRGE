@@ -25,6 +25,7 @@ from marge.manager.dicommanager import DICOMImage
 from marge.marge_utils import utils
 import numpy as np
 import marge.configs.hw_config as hw
+from scipy.io import savemat
 
 
 class HistoryListController(HistoryListWidget):
@@ -861,6 +862,14 @@ class HistoryListControllerPos(HistoryListWidget):
                          image = image,
                          file_path = path + "_" + name_string + ".nii")
         print("Nifti image saved")
+
+        # Save rawdata
+        path = self.main.session['directory'] + "/mat/" + self.main.file_name[0:-4] + "_processed.mat"
+        if not os.path.exists(self.main.session['directory'] + "/mat/"):
+            os.makedirs(self.main.session['directory'] + "/mat/")
+        mat_data = {}
+        mat_data['image_denoised'] = image
+        savemat(path, mat_data)
 
         return 0
 

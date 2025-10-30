@@ -46,6 +46,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RareDoubleImage, self).__init__()
         # Input the parameters
+        self.rd_direction = None
         self.image_orientation_dicom = None
         self.full_plot = None
         self.sequence_list = None
@@ -293,7 +294,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.mapVals['phGradTime'] = self.phGradTime * 1e3  # ms
 
         # Max gradient amplitude
-        rd_grad_amplitude = self.nPoints[0] / (hw.gammaB * self.fov[0] * self.acqTime) * axes_enable[0]
+        rd_grad_amplitude = self.nPoints[0] / (hw.gammaB * self.fov[0] * self.acqTime) * axes_enable[0] * self.rd_direction
         ph_grad_amplitude = n_ph / (2 * hw.gammaB * self.fov[1] * (self.phGradTime + hw.grad_rise_time)) * axes_enable[
             1]
         sl_grad_amplitude = n_sl / (2 * hw.gammaB * self.fov[2] * (self.phGradTime + hw.grad_rise_time)) * axes_enable[
@@ -304,7 +305,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
 
         # Readout dephasing amplitude
         rd_deph_amplitude = 0.5 * rd_grad_amplitude * (hw.grad_rise_time + self.rdGradTime) / (
-                hw.grad_rise_time + self.rdDephTime)
+                hw.grad_rise_time + self.rdDephTime) * self.rd_direction
         self.mapVals['rd_deph_amplitude'] = rd_deph_amplitude
         print("Max rd gradient amplitude: %0.1f mT/m" % (max(rd_grad_amplitude, rd_deph_amplitude) * 1e3))
         print("Max ph gradient amplitude: %0.1f mT/m" % (ph_grad_amplitude * 1e3))
