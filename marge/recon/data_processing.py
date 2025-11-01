@@ -26,7 +26,7 @@ def run_recon(raw_data_path=None, mode=None, printer=None):
 
     for filename in files:
         module_name = filename[:-3]  # strip .py
-        full_module = f"recon.{module_name}"
+        full_module = f"marge.recon.{module_name}"
 
         # Dynamically import the module
         mod = importlib.import_module(full_module)
@@ -86,8 +86,9 @@ def plot_results(output, title=None, printer=None):
     for item in output:
         if item['widget'] == 'image':
             nz, ny, nx = item['data'].shape
+            image_to_show = item['data'][int(nz / 2), :, :]
             plt.subplot(rows, cols, plot + 1)
-            plt.imshow(item['data'][int(nz / 2), :, :], cmap='gray')
+            plt.imshow(image_to_show.T, cmap='gray')
             plt.title(item['title'])
             plt.xlabel(item['xLabel'])
             plt.ylabel(item['yLabel'])
