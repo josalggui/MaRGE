@@ -456,7 +456,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
             for ii in range(self.nScans):
                 if not demo:
                     if not plotSeq:
-                        print('Batch ', nBatches, ', Scan ', ii+1, ' runing...')
+                        print('Batch ', nBatches, ', Scan ', ii+1, ' running...')
                         check = True
                         while check:
                             rxd, msgs = self.expt.run()
@@ -476,7 +476,7 @@ class RAREProtocols(blankSeq.MRIBLANKSEQ):
                         else:
                             overData = np.concatenate((overData, rxd['rx0']), axis = 0)
                 else:
-                    print('Batch ', nBatches, ', Scan ', ii, ' runing...')
+                    print('Batch ', nBatches, ', Scan ', ii, ' running...')
                     data = dataA
                     noise = np.concatenate((noise, data[0:nRD*hw.oversamplingFactor]), axis = 0)
                     data = data[nRD*hw.oversamplingFactor::]
