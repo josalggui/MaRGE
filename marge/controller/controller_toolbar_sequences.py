@@ -262,7 +262,7 @@ class SequenceController(SequenceToolBar):
             name = str(datetime.now())[11:23] + " | " + seq_name
         else:
             name = str(datetime.now())[11:23] + " | " + item_name
-        self.main.history_list.addItem(name)
+        self.main.history_list.addCustomItem(name)
 
         # Get sequence to run
         sequence = copy.deepcopy(defaultsequences[seq_name])
