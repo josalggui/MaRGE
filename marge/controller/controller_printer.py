@@ -63,11 +63,9 @@ class Printer:
 
         # Check path
         local_story = False
-        check_items = True
         if path is None:
             path = self.main.session["directory"] + "/mat"
             local_story = True
-            check_items = self.main.history_list.allUnchecked()
 
         # Create heading
         full_path = Path(path)
@@ -83,18 +81,14 @@ class Printer:
                 self.story.append(Spacer(1, 12))
                 dp.run_recon(raw_data_path=path + "/" + file, mode="Standalone", printer=self)
             else:
-                if check_items:  # All  items unchecked
+                raw_datas, info = self.main.history_list.getHistoryListInfo()
+                if file in raw_datas:  # All  items unchecked
+                    index = raw_datas.index(file)
                     self.story.append(Spacer(1, 12))
                     self.add_text_to_story(f"<font color='blue' size=14><b>{file}</b></font>")
+                    self.add_text_to_story(f"<font color='black' size=12><b>{info[index]}</b></font>")
                     self.story.append(Spacer(1, 12))
                     dp.run_recon(raw_data_path=path + "/" + file, mode="Standalone", printer=self)
-                else:
-                    checked_items = self.main.history_list.getCheckedItems()
-                    if file in checked_items:
-                        self.story.append(Spacer(1, 12))
-                        self.add_text_to_story(f"<font color='blue' size=14><b>{file}</b></font>")
-                        self.story.append(Spacer(1, 12))
-                        dp.run_recon(raw_data_path=path + "/" + file, mode="Standalone", printer=self)
 
         try:
             self.main.console.signal_text_ready.disconnect(self.add_text_to_story)

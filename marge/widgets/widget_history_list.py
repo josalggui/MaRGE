@@ -62,6 +62,35 @@ class HistoryListWidget(QListWidget):
                 checked_labels.append(widget.label.text().split('|')[1].split(' ')[1])
         return checked_labels
 
+    def getHistoryListInfo(self):
+        """
+        Return two lists:
+          - labels: list of label texts
+          - edits:  list of QLineEdit texts
+
+        If all items are unchecked → include all.
+        Otherwise → include only checked ones.
+        """
+        labels = []
+        edits = []
+
+        all_unchecked = True
+        for i in range(self.count()):
+            item = self.item(i)
+            widget = self.itemWidget(item)
+            if widget.checkbox.isChecked():
+                all_unchecked = False
+                break
+
+        for i in range(self.count()):
+            item = self.item(i)
+            widget = self.itemWidget(item)
+            if all_unchecked or widget.checkbox.isChecked():
+                labels.append(widget.label.text().split('|')[1].split(' ')[1])
+                edits.append(widget.edit.text())
+
+        return labels, edits
+
     def getCustomItemText(self, item=None):
         """
         Return the text of the QLabel in the specified row (or selected item).
