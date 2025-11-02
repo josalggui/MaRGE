@@ -41,14 +41,26 @@ class HistoryListWidget(QListWidget):
 
         # Retrieve the associated custom widget
         widget = self.itemWidget(item)
-        # --- Update label text ---
         widget.label.setText(text)
-        widget.label.adjustSize()  # update label's preferred width
 
-        # --- Update list item height and layout ---
-        item.setSizeHint(widget.sizeHint())  # resize the row
-        self.updateGeometries()  # refresh internal layout
-        self.viewport().update()  # force repaint
+    def allUnchecked(self):
+        """Return True if all checkboxes are unchecked."""
+        for i in range(self.count()):
+            item = self.item(i)
+            widget = self.itemWidget(item)
+            if widget.checkbox.isChecked():
+                return False
+        return True
+
+    def getCheckedItems(self):
+        """Return a list with the label texts of all checked items."""
+        checked_labels = []
+        for i in range(self.count()):
+            item = self.item(i)
+            widget = self.itemWidget(item)
+            if widget.checkbox.isChecked():
+                checked_labels.append(widget.label.text().split('|')[1].split(' ')[1])
+        return checked_labels
 
     def getCustomItemText(self, item=None):
         """

@@ -62,8 +62,12 @@ class Printer:
             pass
 
         # Check path
+        local_story = False
+        check_items = True
         if path is None:
             path = self.main.session["directory"] + "/mat"
+            local_story = True
+            check_items = self.main.history_list.allUnchecked()
 
         # Create heading
         full_path = Path(path)
@@ -71,11 +75,26 @@ class Printer:
         self.add_text_to_story(f"<font color='black' size=16><b>Report for {id_path}</b></font>")
 
         files = self.get_sorted_mat_files(path)
+
         for file in files:
-            self.story.append(Spacer(1, 12))
-            self.add_text_to_story(f"<font color='blue' size=14><b>{file}</b></font>")
-            self.story.append(Spacer(1, 12))
-            dp.run_recon(raw_data_path=path + "/" + file, mode="Standalone", printer=self)
+            if not local_story:
+                self.story.append(Spacer(1, 12))
+                self.add_text_to_story(f"<font color='blue' size=14><b>{file}</b></font>")
+                self.story.append(Spacer(1, 12))
+                dp.run_recon(raw_data_path=path + "/" + file, mode="Standalone", printer=self)
+            else:
+                if check_items:  # All  items unchecked
+                    self.story.append(Spacer(1, 12))
+                    self.add_text_to_story(f"<font color='blue' size=14><b>{file}</b></font>")
+                    self.story.append(Spacer(1, 12))
+                    dp.run_recon(raw_data_path=path + "/" + file, mode="Standalone", printer=self)
+                else:
+                    checked_items = self.main.history_list.getCheckedItems()
+                    if file in checked_items:
+                        self.story.append(Spacer(1, 12))
+                        self.add_text_to_story(f"<font color='blue' size=14><b>{file}</b></font>")
+                        self.story.append(Spacer(1, 12))
+                        dp.run_recon(raw_data_path=path + "/" + file, mode="Standalone", printer=self)
 
         try:
             self.main.console.signal_text_ready.disconnect(self.add_text_to_story)
