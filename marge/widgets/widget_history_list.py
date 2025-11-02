@@ -21,6 +21,8 @@ class HistoryListWidget(QListWidget):
         item.setSizeHint(widget.sizeHint())
         self.addItem(item)
         self.setItemWidget(item, widget)
+        self.setCurrentItem(item)
+        self.scrollToItem(item)
 
     def setCustomItemText(self, text, row=None):
         """
@@ -48,24 +50,18 @@ class HistoryListWidget(QListWidget):
         self.updateGeometries()  # refresh internal layout
         self.viewport().update()  # force repaint
 
-    def getCustomItemText(self, row=None):
+    def getCustomItemText(self, item=None):
         """
         Return the text of the QLabel in the specified row (or selected item).
         Returns None if the row or item is invalid.
         """
-        if row is None:
+        if item is None:
             item = self.currentItem()
-            if not item:
-                return None
-        else:
-            item = self.item(row)
             if not item:
                 return None
 
         widget = self.itemWidget(item)
-        if widget and hasattr(widget, "label"):
-            return widget.label.text()
-        return None
+        return widget.label.text()
 
 class CustomItemWidget(QWidget):
     def __init__(self, label_text):
@@ -76,16 +72,8 @@ class CustomItemWidget(QWidget):
         self.label = QLabel(label_text)
         self.edit = QLineEdit()
 
-        # --- Make label adjust to its text only ---
-        self.label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
-        self.label.setWordWrap(False)
-        self.label.adjustSize()  # ensure minimum width fits the text
-
-        # --- Make the line edit take all remaining space ---
-        self.edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-
         layout.addWidget(self.checkbox, 0)
-        layout.addWidget(self.label, 0)
+        layout.addWidget(self.label, 3)
         layout.addWidget(self.edit, 1)
 
 if __name__ == "__main__":

@@ -129,7 +129,7 @@ class MainWindow(QMainWindow):
 
         # Add list to show the history
         self.history_list = HistoryListController(parent=self)
-        self.layout_right_h.addWidget(self.history_list)
+        self.layout_right_h.addWidget(self.history_list, 3)
         self.history_list.setMaximumHeight(200)
         self.history_list.setMinimumHeight(200)
 
@@ -137,7 +137,7 @@ class MainWindow(QMainWindow):
         self.input_table = QTableWidget()
         self.input_table.setMaximumHeight(200)
         self.input_table.setMinimumHeight(200)
-        self.layout_right_h.addWidget(self.input_table)
+        self.layout_right_h.addWidget(self.input_table, 1)
 
         # Create the post-processing toolbox
         self.post_gui = ProcessingWindowController(session=self.session, main=self)

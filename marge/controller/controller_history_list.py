@@ -95,7 +95,7 @@ class HistoryListController(HistoryListWidget):
 
     def openPostGui(self):
         # Get the corresponding key to get access to the history dictionary
-        item_name = self.clicked_item.text().split(' | ')[1]
+        item_name = self.getCustomItemText(self.clicked_item).split(' | ')[1]
         path = self.main.session['directory']
         self.main.post_gui.showMaximized()
         self.main.post_gui.toolbar_image.rawDataLoading(file_path=path + "/mat/", file_name=item_name)
@@ -110,7 +110,7 @@ class HistoryListController(HistoryListWidget):
             item = self.currentItem()
         else:
             item = self.item(item_number)
-        text = item.text()
+        text = self.getCustomItemText(item)
         text = text.split(".", maxsplit=2)
         key = text[0] + "." + text[1]
         self.takeItem(self.row(item))
@@ -156,8 +156,9 @@ class HistoryListController(HistoryListWidget):
             return
 
         # Get clicked item self.current_output
-        item_time = self.clicked_item.text().split(' | ')[0]
-        item_name = self.clicked_item.text().split(' | ')[1].split('.')[0]
+
+        item_time = self.getCustomItemText(self.clicked_item).split(' | ')[0]
+        item_name = self.getCustomItemText(self.clicked_item).split(' | ')[1].split('.')[0]
         self.current_output = item_time + " | " + item_name
 
         # Get the widget from history
@@ -222,8 +223,8 @@ class HistoryListController(HistoryListWidget):
         """
 
         # Get the corresponding key to get access to the history dictionary
-        item_time = item.text().split(' | ')[0]
-        item_name = item.text().split(' | ')[1].split('.')[0]
+        item_time = self.getCustomItemText(item).split(' | ')[0]
+        item_name = self.getCustomItemText(item).split(' | ')[1].split('.')[0]
         name = item_time + " | " + item_name
 
         # Get the input data from history
@@ -263,8 +264,8 @@ class HistoryListController(HistoryListWidget):
         # Get the corresponding key to get access to the history dictionary
         if item is None:
             item = self.item(self.count() - 1)
-        item_time = item.text().split(' | ')[0]
-        item_name = item.text().split(' | ')[1].split('.')[0]
+        item_time = self.getCustomItemText(item).split(' | ')[0]
+        item_name = self.getCustomItemText(item).split(' | ')[1].split('.')[0]
         self.current_output = item_time + " | " + item_name
 
         # Get the widget from history
@@ -290,7 +291,7 @@ class HistoryListController(HistoryListWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet("background-color: black;color: white")
         self.main.figures_layout.addWidget(label, row=0, col=0, colspan=2)
-        label.setText(item.text().split(' | ')[1])
+        label.setText(self.getCustomItemText(item).split(' | ')[1])
 
         # Add plots to the plotview_layout
         n_columns = 1
@@ -341,8 +342,8 @@ class HistoryListController(HistoryListWidget):
         # Get the corresponding key to get access to the history dictionary
         if item is None:
             item = self.item(self.count() - 1)
-        item_time = item.text().split(' | ')[0]
-        item_name = item.text().split(' | ')[1].split('.')[0]
+        item_time = self.getCustomItemText(item).split(' | ')[0]
+        item_name = self.getCustomItemText(item).split(' | ')[1].split('.')[0]
         self.current_output = item_time + " | " + item_name
 
         # Get the widget from history
@@ -368,7 +369,7 @@ class HistoryListController(HistoryListWidget):
         label.setAlignment(QtCore.Qt.AlignCenter)
         label.setStyleSheet("background-color: black;color: white")
         self.main.figures_layout.addWidget(label, row=0, col=0, colspan=2)
-        label.setText(item.text().split(' | ')[1])
+        label.setText(self.getCustomItemText(item).split(' | ')[1])
 
         # Add plots to the plotview_layout
         n_columns = 1
@@ -521,7 +522,7 @@ class HistoryListController(HistoryListWidget):
             # Add item to the history list
             file_name = sequence.mapVals['fileName']
             date = ".".join(file_name.split('.')[1::])
-            self.item(key_index).setText(self.item(key_index).text() + "." + date)
+            self.setCustomItemText(self.getCustomItemText(self.item(key_index)) + "." + date, key_index)
             # Save results into the history
             self.outputs[key] = output
             del self.pending_recons[key]
@@ -643,7 +644,7 @@ class HistoryListControllerPos(HistoryListWidget):
         selected_items = self.selectedItems()
         if selected_items:
             selected_item = selected_items[0]
-            image_key = selected_item.text()
+            image_key = self.getCustomItemText(selected_item)
             if image_key in self.image_hist:
                 self.orientations.append(self.image_orientation.get(image_key))
                 if self.space[image_key] == 'k':
@@ -729,7 +730,7 @@ class HistoryListControllerPos(HistoryListWidget):
             item (QListWidgetItem): The selected item in the history list.
         """
 
-        image_key = item.text()
+        image_key = self.getCustomItemText(item)
         if image_key in self.image_hist.keys():
             self.main.image_view_widget.main_matrix = self.image_hist[image_key]
             self.main.image_view_widget.image_key = image_key
@@ -797,7 +798,7 @@ class HistoryListControllerPos(HistoryListWidget):
         self.main.methods_list.setText('')
 
         # Get the values to show in the methods_list table
-        selected_text = item.text()
+        selected_text = self.getCustomItemText(item)
         values = self.operations_hist.get(selected_text, [])
 
         # Print the methods
@@ -882,11 +883,11 @@ class HistoryListControllerPos(HistoryListWidget):
             selected_item = selected_items[0]
             self.takeItem(self.row(selected_item))
 
-        if selected_item.text() in self.image_hist:
-            del self.image_hist[selected_item.text()]
+        if self.getCustomItemText(selected_item) in self.image_hist:
+            del self.image_hist[self.getCustomItemText(selected_item)]
 
-        if selected_item.text() in self.operations_hist:
-            del self.operations_hist[selected_item.text()]
+        if self.getCustomItemText(selected_item) in self.operations_hist:
+            del self.operations_hist[self.getCustomItemText(selected_item)]
 
     # def plotPhase(self):
     #     selected_items = self.selectedItems()
