@@ -92,23 +92,21 @@ class SessionWindow(QMainWindow):
         self.demo_gui_action.setDisabled(True)
         self.toolbar.addAction(self.demo_gui_action)
 
-
         with resources.path("marge.resources.icons", "arrow-sync.svg") as icon_path:
             self.update_action = QAction(QIcon(str(icon_path)), "Update scanner hardware", self)
         self.update_action.setStatusTip("Update scanner hardware")
         self.toolbar.addAction(self.update_action)
-
-
-        with resources.path("marge.resources.icons", "close.png") as icon_path:
-            self.close_action = QAction(QIcon(str(icon_path)), "Close GUI", self)
-        self.close_action.setStatusTip("Close the GUI")
-        self.toolbar.addAction(self.close_action)
 
         # Add switch theme button
         with resources.path("marge.resources.icons", "adjust-contrast.svg") as icon_path:
             self.switch_theme_action = QAction(QIcon(str(icon_path)), "", self)
         self.switch_theme_action.setStatusTip("Switch between Dark and Light theme")
         self.toolbar.addAction(self.switch_theme_action)
+
+        with resources.path("marge.resources.icons", "close.png") as icon_path:
+            self.close_action = QAction(QIcon(str(icon_path)), "Close GUI", self)
+        self.close_action.setStatusTip("Close the GUI")
+        self.toolbar.addAction(self.close_action)
 
         # Tabs
         self.tabs = QTabWidget()

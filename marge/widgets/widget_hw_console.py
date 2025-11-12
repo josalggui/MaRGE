@@ -28,7 +28,7 @@ class ConsoleWidget(QWidget):
                        tip="Maximum voltage that can be input to the system")
         self.add_input(label="Gradient board model", value="gpa-fhdo", tip="Model of the gradient controller board")
         self.add_input(label="Clock frequency (MHz)", value="122.88", tip="Clock frequency of the system")
-        self.add_input(label="ADC factor (mV/unit)", value="13.788", tip="ADC conversion factor from unit to mV")
+        self.add_input(label="ADC factor (mV/unit)", value="6.894", tip="ADC conversion factor from unit to mV")
         self.add_input(label="CIC delay points", value="3", tip="Number of delay points in the CIC filter")
 
         # Dictionary to store references to input fields
@@ -60,10 +60,10 @@ class ConsoleWidget(QWidget):
         layout = QHBoxLayout()
         layout.addWidget(self.text_box)
         layout.addWidget(self.add_button)
-        layout.addWidget(self.save_button)
         self.main_layout.addLayout(self.layout)
         self.main_layout.addLayout(self.dynamic_container)
         self.main_layout.addLayout(layout)
+        self.main_layout.addWidget(self.save_button)
         self.main_layout.addStretch()
 
         self.setLayout(self.main_layout)

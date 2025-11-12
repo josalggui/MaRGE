@@ -52,13 +52,13 @@ class SessionWidget(QWidget):
         self.orientation_combo_box.setStatusTip("Select the subject orientation")
         self.main_layout.addWidget(self.orientation_combo_box, row, 1)
 
-        # Create QLineEdit for user id
-        row += 1
-        self.main_layout.addWidget(QLabel("User"), row, 0)
-        self.user_line_edit = QLineEdit()
-        self.user_line_edit.setPlaceholderText("User")
-        self.user_line_edit.setStatusTip("Write the user name")
-        self.main_layout.addWidget(self.user_line_edit, row, 1)
+        # # Create QLineEdit for user id
+        # row += 1
+        # self.main_layout.addWidget(QLabel("User"), row, 0)
+        # self.user_line_edit = QLineEdit()
+        # self.user_line_edit.setPlaceholderText("User")
+        # self.user_line_edit.setStatusTip("Write the user name")
+        # self.main_layout.addWidget(self.user_line_edit, row, 1)
 
         # Create QLineEdit for subject id
         row += 1

@@ -34,8 +34,8 @@ class OthersWidget(QWidget):
                        tip="Arduino serial number for autotuning")
         self.add_input(label="Arduino interlock", value="242353133363518050E1",
                        tip="Arduino serial number for interlock system")
-        self.add_input(label="Arduino attenuator", value="242353133363518050E2",
-                       tip="Arduino serial number for RF attenuation")
+        # self.add_input(label="Arduino attenuator", value="242353133363518050E2",
+        #                tip="Arduino serial number for RF attenuation")
 
         # Dictionary to store references to input fields
         self.input_boxes = {}
@@ -81,7 +81,7 @@ class OthersWidget(QWidget):
         hw.shimming_factor = float(self.input_boxes["Shimming factor"].text())
         hw.bash_path = self.input_boxes["Bash path"].text()
         hw.ard_sn_interlock = self.input_boxes["Arduino interlock"].text()
-        hw.ard_sn_attenuator = self.input_boxes["Arduino attenuator"].text()
+        # hw.ard_sn_attenuator = self.input_boxes["Arduino attenuator"].text()
         hw.ard_sn_autotuning = self.input_boxes["Arduino autotuning"].text()  
 
 

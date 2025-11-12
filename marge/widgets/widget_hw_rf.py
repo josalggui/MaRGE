@@ -23,7 +23,7 @@ class RfWidget(QWidget):
         self.tips = []
 
         # Add inputs
-        self.add_input(label="RF de-blanking time (us)", value="15", tip="Time required to de-blank RF system")
+        self.add_input(label="RFPA de-blanking time (us)", value="15", tip="Time required to de-blank RF system")
         self.add_input(label="RFPA de-blanking off time (us)", value="400", tip="Time required to de-blank RF off system")
         self.add_input(label="RF dead time (us)", value="400", tip="Time after RF pulse before acquisition starts")
         self.add_input(label="Gyromagnetic ratio (MHz/T)", value="42.57747892",
@@ -35,8 +35,8 @@ class RfWidget(QWidget):
         self.add_input(label="Max readout points", value="1e5", tip="Maximum number of readout points")
         self.add_input(label="Add readout points", value="10", tip="Additional readout points for processing")
         self.add_input(label="LNA gain (dB)", value="45", tip="Low-noise amplifier gain in dB")
-        self.add_input(label="RF gain min (dB)", value="45", tip="Minimum RF amplifier gain in dB")
-        self.add_input(label="RF gain max (dB)", value="76", tip="Maximum RF amplifier gain in dB")
+        # self.add_input(label="RF gain min (dB)", value="45", tip="Minimum RF amplifier gain in dB")
+        # self.add_input(label="RF gain max (dB)", value="76", tip="Maximum RF amplifier gain in dB")
         self.add_input(label="RFPA model", value="None", tip="RFPA model: Only 'Barthel' is supported; otherwise, leave it empty.")
 
         # Dictionary to store references to input fields
@@ -70,10 +70,10 @@ class RfWidget(QWidget):
         layout.addWidget(self.text_box_1)
         layout.addWidget(self.text_box_2)
         layout.addWidget(self.add_button)
-        layout.addWidget(self.save_button)
         self.main_layout.addLayout(self.layout)
         self.main_layout.addLayout(self.dynamic_container)
         self.main_layout.addLayout(layout)
+        self.main_layout.addWidget(self.save_button)
         self.main_layout.addStretch()
 
         self.setLayout(self.main_layout)
@@ -98,7 +98,7 @@ class RfWidget(QWidget):
         self.tips.append(tip)
 
     def update_hw_config_rf(self):
-        hw.blkTime = float(self.input_boxes["RF de-blanking time (us)"].text())
+        hw.blkTime = float(self.input_boxes["RFPA de-blanking time (us)"].text())
         hw.deadTime = float(self.input_boxes["RF dead time (us)"].text())
         hw.gammaB = float(self.input_boxes["Gyromagnetic ratio (MHz/T)"].text()) * 1e6
         hw.larmorFreq = float(self.input_boxes["Larmor frequency (MHz)"].text())
@@ -107,8 +107,8 @@ class RfWidget(QWidget):
         hw.addRdPoints = int(self.input_boxes["Add readout points"].text())
         hw.reference_time = float(self.input_boxes["Reference time (us)"].text())
         hw.lnaGain = float(self.input_boxes["LNA gain (dB)"].text())
-        hw.rf_min_gain = int(self.input_boxes["RF gain min (dB)"].text())
-        hw.rf_max_gain = int(self.input_boxes["RF gain max (dB)"].text())
+        # hw.rf_min_gain = int(self.input_boxes["RF gain min (dB)"].text())
+        # hw.rf_max_gain = int(self.input_boxes["RF gain max (dB)"].text())
         hw.rfpa_model = self.input_boxes["RFPA model"].text()
         hw.blkOffTime = float(self.input_boxes["RFPA de-blanking off time (us)"].text())
         hw.antenna_dict = {}
