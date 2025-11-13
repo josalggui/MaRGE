@@ -95,6 +95,11 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             # Extract the k-space data from the loaded .mat file
             self.k_space_raw = self.mat_data['sampled'] ## on recupere pas kspace3d ni dataFull mais sampled
             self.k_space = np.reshape(self.k_space_raw[:, 3], self.nPoints[-1::-1])
+            try:
+                if self.mat_data['rd_direction'].item() == -1:
+                    self.k_space = self.k_space[:, :, -1::-1]
+            except:
+                pass
 
             # Clear the console, history widget, history controller, and history dictionaries
             self.main.visualisation_controller.clear2DImage()

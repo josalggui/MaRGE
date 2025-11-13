@@ -64,7 +64,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         print(" Selected scans: " + str(scans))
         scans = parse_indexes(scans, n_scans)
 
-        # Generate artifitial data_full for RareDoubleImage
+        # Generate artificial data_full for RareDoubleImage
         if mat_data['seqName'] == 'RareDoubleImage':
             data_odd = mat_data['data_full_odd_echoes']
             data_even = mat_data['data_full_even_echoes']

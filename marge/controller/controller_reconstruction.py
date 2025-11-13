@@ -121,6 +121,10 @@ class ReconstructionTabController(ReconstructionTabWidget):
         self.ifft_button.clicked.connect(self.ifft)
         self.dfft_button.clicked.connect(self.dfft)
         self.image_art_button.clicked.connect(self.artReconstruction)
+        self.snr_1_button.clicked.connect(self.snr_1)
+        self.snr_2_button.clicked.connect(self.snr_2)
+        self.snr_3_button.clicked.connect(self.snr_3)
+        self.snr_4_button.clicked.connect(self.snr_4)
 
     def dfft(self):
 
@@ -422,5 +426,129 @@ class ReconstructionTabController(ReconstructionTabWidget):
                                           image=figure,
                                           orientation=orientation,
                                           operation="POCS - " + str(factors[-1::-1]),
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
+
+    def snr_1(self):
+        # Get the k-space data from the main matrix
+        image = self.main.image_view_widget.main_matrix
+
+        # Calculate snr
+        roi = int(self.snr_1_edit.text())
+        image = utils.get_snr_2d(image, roi)
+
+        # Update the main matrix of the image view widget with the image fft data
+        self.main.image_view_widget.main_matrix = image
+        orientation = None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="SNR_2d",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          orientation=orientation,
+                                          operation="SNR_2d",
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
+
+    def snr_2(self):
+        # Get the k-space data from the main matrix
+        image = self.main.image_view_widget.main_matrix
+
+        # Calculate snr
+        roi = int(self.snr_2_edit.text())
+        image = utils.get_snr_3d(image, roi)
+
+        # Update the main matrix of the image view widget with the image fft data
+        self.main.image_view_widget.main_matrix = image
+        orientation = None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="SNR_3d",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          orientation=orientation,
+                                          operation="SNR_3d",
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
+
+    def snr_3(self):
+        # Get the k-space data from the main matrix
+        image = self.main.image_view_widget.main_matrix
+
+        # Calculate snr
+        roi = int(self.snr_3_edit.text())
+        image = utils.get_snr_histogram(image, roi)
+
+        # Update the main matrix of the image view widget with the image fft data
+        self.main.image_view_widget.main_matrix = image
+        orientation = None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="SNR_histogram",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          orientation=orientation,
+                                          operation="SNR_histogram",
+                                          space="i",
+                                          image_key=self.main.image_view_widget.image_key)
+
+    def snr_4(self):
+        # Get the mat data
+        mat_data = self.main.toolbar_image.mat_data
+
+        if mat_data['seqName'] == 'RareDoubleImage':
+            data_odd = mat_data['data_full_odd_echoes']
+            data_even = mat_data['data_full_even_echoes']
+            n_scans, n_sl, n_ph, n_rd = np.shape(data_odd)
+            n_points = np.reshape(mat_data['nPoints'], -1)
+
+            # Process odd data
+            data_odd_temp = np.zeros((n_scans, n_points[2], n_points[1], n_points[0]), dtype=complex)
+            img_odd = np.zeros_like(data_odd_temp)
+            data_odd_temp[:, 0:n_sl, :, :] = data_odd
+            for ii in range(n_scans):
+                img_odd[ii, :, :, :] = utils.run_ifft(data_odd_temp[ii, :, :, :])
+
+            # Process even data
+            data_even_temp = np.zeros((n_scans, n_points[2], n_points[1], n_points[0]), dtype=complex)
+            img_even = np.zeros_like(data_even_temp)
+            data_even_temp[:, 0:n_sl, :, :] = data_even
+            for ii in range(n_scans):
+                img_even[ii, :, :, :] = utils.run_ifft(data_even_temp[ii, :, :, :])
+
+            # Get average from odd and even image
+            image = (np.abs(img_odd) + np.abs(img_even)) / 2
+        else:
+            # Get the selected scans from dataFull and average
+            data_full = mat_data['dataFull']
+            n_scans, n_sl, n_ph, n_rd = np.shape(data_full)
+            n_points = np.reshape(mat_data['nPoints'], -1)
+            data_temp = np.zeros((n_scans, n_points[2], n_points[1], n_points[0]), dtype=complex)
+            image = np.zeros_like(data_temp)
+            data_temp[:, 0:n_sl, :, :] = data_full
+            for ii in range(n_scans):
+                image[ii, :, :, :] = utils.run_ifft(data_temp[ii, :, :, :])
+
+        # Fix image orientation
+        try:
+            if self.main.toolbar_image.mat_data['rd_direction'].item() == -1:
+                image = image[:, :, :, -1::-1]
+        except:
+            pass
+
+        # Calculate snr
+        roi = int(self.snr_4_edit.text())
+        image = utils.get_snr_from_individual_acquisitions(image, roi)
+
+        # Update the main matrix of the image view widget with the image fft data
+        self.main.image_view_widget.main_matrix = image
+        orientation = None
+        if self.main.toolbar_image.mat_data and 'axesOrientation' in self.main.toolbar_image.mat_data:
+            orientation = self.main.toolbar_image.mat_data['axesOrientation'][0]
+        # Add new item to the history list
+        self.main.history_list.addNewItem(stamp="SNR_individual_images",
+                                          image=self.main.image_view_widget.main_matrix,
+                                          orientation=orientation,
+                                          operation="SNR_individual_images",
                                           space="i",
                                           image_key=self.main.image_view_widget.image_key)

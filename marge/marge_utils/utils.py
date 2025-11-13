@@ -817,6 +817,130 @@ def decimate(data_over, n_adc, option='PETRA', remove=True, add_rd_points=10, ov
 
     return data_decimated
 
+def get_snr_histogram(image, roi_size=4):
+    """
+    Compute a pixel-wise SNR map for a 3D image.
+    1) signal: mean value in a cubic ROI.
+    2) noise: mean noise from the histogram.
+    SNR = local signal / noise from the histogram.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        3D image (e.g., shape (x, y, z)).
+    roi_size : int
+        Size of the cubic ROI (odd number recommended, e.g., 3, 5, 7).
+
+    Returns
+    -------
+    snr_map : np.ndarray
+        3D array with same shape as `image`, containing SNR values.
+    """
+
+    image = np.abs(image)
+    image = image.astype(np.float64)
+
+    # Get histogram
+    counts, bins = np.histogram(image, bins=512)
+
+    # Find the peak (maximum count)
+    peak_bin_index = np.argmax(counts)
+    peak_value = (bins[peak_bin_index] + bins[peak_bin_index + 1]) / 2
+
+    # Local mean
+    mean = sp.ndimage.uniform_filter(image, roi_size)
+
+    # Get SNR
+    snr = mean / peak_value
+    return snr
+
+def get_snr_3d(image, roi_size=4):
+    """
+    Compute a pixel-wise SNR map for a 3D image.
+    SNR = local mean / local std, computed in a cubic ROI.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        3D image (e.g., shape (x, y, z)).
+    roi_size : int
+        Size of the cubic ROI (odd number recommended, e.g., 3, 5, 7).
+
+    Returns
+    -------
+    snr_map : np.ndarray
+        3D array with same shape as `image`, containing SNR values.
+    """
+
+    image = np.abs(image)
+    image = image.astype(np.float64)
+    # Local mean
+    mean = sp.ndimage.uniform_filter(image, roi_size)
+    # Local variance and std
+    var = sp.ndimage.uniform_filter((image - mean) ** 2, roi_size)
+    std = np.sqrt(var)
+    # Avoid division by zero
+    snr = mean / std
+    return snr
+
+def get_snr_2d(image, roi_size=4):
+    """
+    Compute a pixel-wise SNR map for a 3D image slice by slice.
+    SNR = local mean / local std, computed in a cubic ROI.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        3D image (e.g., shape (x, y, z)).
+    roi_size : int
+        Size of the cubic ROI (odd number recommended, e.g., 3, 5, 7).
+
+    Returns
+    -------
+    snr_map : np.ndarray
+        3D array with same shape as `image`, containing SNR values.
+    """
+
+    n_sl, n_ph, n_rd = image.shape
+    snr = np.zeros((n_sl, n_ph, n_rd))
+    for sl in range(n_sl):
+        image_sl = np.abs(image[sl])
+        image_sl = image_sl.astype(np.float64)
+        # Local mean
+        mean = sp.ndimage.uniform_filter(image_sl, roi_size)
+        # Local variance and std
+        var = sp.ndimage.uniform_filter((image_sl - mean) ** 2, roi_size)
+        std = np.sqrt(var)
+        # Avoid division by zero
+        snr[sl] = mean / std
+    return snr
+
+def get_snr_from_individual_acquisitions(data, roi_size):
+    """
+    Compute a pixel-wise SNR map for a 4D image, where first dimention is the scan.
+    1) signal: mean value along first dimension, then mean filter.
+    2) noise: std value along first dimension.
+    SNR = local signal / noise from the histogram.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        3D image (e.g., shape (x, y, z)).
+    roi_size : int
+        Size of the cubic ROI (odd number recommended, e.g., 3, 5, 7).
+
+    Returns
+    -------
+    snr_map : np.ndarray
+        3D array with same shape as `image`, containing SNR values.
+    """
+    noise = np.std(np.abs(data), axis=0)
+    mean = np.mean(np.abs(data), axis=0)
+    noise = sp.ndimage.uniform_filter(noise, roi_size)
+    signal = sp.ndimage.uniform_filter(mean, roi_size)
+    snr = signal / noise
+    return snr
+
 # TODO: include new filters and other methods from Miguel
 
 

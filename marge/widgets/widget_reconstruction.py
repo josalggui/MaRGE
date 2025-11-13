@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QLabel, QLineEdit, QHBoxLayout, QGroupBox, QWidget
+from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QLabel, QLineEdit, QHBoxLayout, QGroupBox, QWidget, QGridLayout
 
 
 class ReconstructionTabWidget(QWidget):
@@ -64,6 +64,42 @@ class ReconstructionTabWidget(QWidget):
         self.fft_group.setLayout(self.fft_layout)
 
         # *****************
+        # SNR
+        # *****************
+        label_1 = QLabel("ROI size")
+        label_2 = QLabel("SNR method")
+        self.snr_1_edit = QLineEdit('3')
+        self.snr_1_button = QPushButton('SNR 1')
+        self.snr_1_button.setStatusTip("Method 1: mean(2d_roi)/std(2d_roi)")
+
+        self.snr_2_edit = QLineEdit('3')
+        self.snr_2_button = QPushButton('SNR 2')
+        self.snr_2_button.setStatusTip("Method 2: mean(3d_roi)/std(3d_roi)")
+
+        self.snr_3_edit = QLineEdit('3')
+        self.snr_3_button = QPushButton('SNR 3')
+        self.snr_3_button.setStatusTip("Method 3: mean filter / histogram maximum")
+
+        self.snr_4_edit = QLineEdit('3')
+        self.snr_4_button = QPushButton('SNR 4')
+        self.snr_4_button.setStatusTip("Method 4: calculated from individual scans")
+
+
+        snr_layout = QGridLayout()
+        snr_layout.addWidget(label_1, 0, 0)
+        snr_layout.addWidget(label_2, 0, 1)
+        snr_layout.addWidget(self.snr_1_edit, 1, 0)
+        snr_layout.addWidget(self.snr_1_button, 1, 1)
+        snr_layout.addWidget(self.snr_2_edit, 2, 0)
+        snr_layout.addWidget(self.snr_2_button, 2, 1)
+        snr_layout.addWidget(self.snr_3_edit, 3, 0)
+        snr_layout.addWidget(self.snr_3_button, 3, 1)
+        snr_layout.addWidget(self.snr_4_edit, 4, 0)
+        snr_layout.addWidget(self.snr_4_button, 4, 1)
+        snr_group = QGroupBox('SNR')
+        snr_group.setLayout(snr_layout)
+
+        # *****************
         # POCS
         # *****************
         # Partial fourier factor
@@ -111,5 +147,6 @@ class ReconstructionTabWidget(QWidget):
         self.reconstruction_layout.addWidget(self.art_group)
         self.reconstruction_layout.addWidget(self.fft_group)
         self.reconstruction_layout.addWidget(self.pocs_group)
+        self.reconstruction_layout.addWidget(snr_group)
         self.reconstruction_layout.addStretch()
         self.setLayout(self.reconstruction_layout)
