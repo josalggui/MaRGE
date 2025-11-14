@@ -888,7 +888,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
                 ## Image plot
                 # Tyger
-                if self.mat_data['unlock_orientation'] == 0:
+                if self.unlock_orientation == 0:
                     result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
                     result_Tyger['row'] = 0
                     result_Tyger['col'] = 1
@@ -897,7 +897,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                     result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
                                     'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
 
-                output = [result_Tyger]
+                self.output.append(result_Tyger)
             except Exception as e:
                 print('Tyger reconstruction failed.')
                 print(f'Error: {e}')
