@@ -46,6 +46,10 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RareDoubleImage, self).__init__()
         # Input the parameters
+        self.boFit_file = None
+        self.recon_type = None
+        self.tyger_recon = None
+        self.axes_orientation = None
         self.rd_direction = None
         self.image_orientation_dicom = None
         self.full_plot = None
@@ -733,7 +737,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         super().sequenceAnalysis(mode=mode)
 
         ## Tyger Reconstruction
-        result = {}
         if self.mapVals['axes_enable'] == [1, 1, 1] and self.tyger_recon == 1:
             # Get axes in strings
             axes = self.mapVals['axesOrientation']
@@ -778,12 +781,11 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                         result_Tyger['row'] = 0
                         result_Tyger['col'] = 1
                         result_Tyger['title'] = "Tyger"
-                        result['title'] = "Original"
                     else:
                         result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
                                         'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
 
-                    self.output = [result, result_Tyger]
+                    self.output.append(result_Tyger)
                 except Exception as e:
                     print('Tyger reconstruction failed.')
                     print(f'Error: {e}')
