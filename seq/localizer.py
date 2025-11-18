@@ -27,6 +27,7 @@ class Localizer(rare.RARE):
     def __init__(self):
         super(Localizer, self).__init__()
         self.addParameter(key='planes', string='Planes (sag, cor, tra)', val=[1, 1, 1], field='OTH')
+        self.setParameter(key='toMaRGE', val=False)
         self.planes = self.mapVals['planes']
 
         self.mapVals['seqName'] = 'Localizer'

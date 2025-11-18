@@ -48,20 +48,20 @@ class SequenceController(SequenceToolBar):
         self.old_seq_name = None
         self.seq_name = "RARE"
         self.iterative_run = None
-        self.action_iterate.setCheckable(True)
+        # self.action_iterate.setCheckable(True)
         self.serverConnected()
 
         # Connect the action buttons to the slots
         self.action_autocalibration.triggered.connect(self.autocalibration)
-        self.action_acquire.triggered.connect(self.startAcquisition)
+        # self.action_acquire.triggered.connect(self.startAcquisition)
         self.action_add_to_list.triggered.connect(self.runToList)
-        self.action_view_sequence.triggered.connect(self.startSequencePlot)
-        self.action_localizer.triggered.connect(self.startLocalizer)
-        self.action_iterate.triggered.connect(self.iterate)
+        # self.action_view_sequence.triggered.connect(self.startSequencePlot)
+        # self.action_localizer.triggered.connect(self.startLocalizer)
+        # self.action_iterate.triggered.connect(self.iterate)
         self.action_bender.triggered.connect(self.bender)
-        self.action_save_parameters.triggered.connect(self.saveParameters)
-        self.action_load_parameters.triggered.connect(self.loadParameters)
-        self.action_save_parameters_cal.triggered.connect(self.saveParametersCalibration)
+        # self.action_save_parameters.triggered.connect(self.saveParameters)
+        # self.action_load_parameters.triggered.connect(self.loadParameters)
+        # self.action_save_parameters_cal.triggered.connect(self.saveParametersCalibration)
         self.main.toolbar_marcos.action_server.triggered.connect(self.serverConnected)
 
     def bender(self):
@@ -90,9 +90,10 @@ class SequenceController(SequenceToolBar):
         # Include here the sequences to run on autocalibration
         seq_names = [
             'Larmor',
+            'Larmor',
             'AutoTuning',
             'Noise',
-            'Shimming',
+            # 'Shimming',
             'RabiFlops',
             'Larmor',
         ]
@@ -267,7 +268,7 @@ class SequenceController(SequenceToolBar):
             name = str(datetime.now())[11:23] + " | " + item_name
         self.main.history_list.addItem(name)
 
-        sequence = copy.deepcopy(defaultsequences[seq_name])
+        sequence = copy.copy(defaultsequences[seq_name])
         if map_nmspc is None and map_vals is None:
             map_nmspc = list(sequence.mapNmspc.values())
             map_vals = list(sequence.mapVals.values())
@@ -597,16 +598,17 @@ class SequenceController(SequenceToolBar):
             'action_view_sequence', and 'action_add_to_list'. If the server is not connected (unchecked), it disables these actions.
         """
         if self.main.toolbar_marcos.action_server.isChecked():
-            self.action_acquire.setDisabled(False)
-            self.action_localizer.setDisabled(False)
+            # self.action_acquire.setDisabled(False)
+            # self.action_localizer.setDisabled(False)
             self.action_autocalibration.setDisabled(False)
             self.action_bender.setDisabled(False)
-            self.action_view_sequence.setDisabled(False)
-            self.action_add_to_list.setDisabled(False)
+            # self.action_view_sequence.setDisabled(False)
+            # self.action_add_to_list.setDisabled(False)
         else:
-            self.action_acquire.setDisabled(True)
-            self.action_localizer.setDisabled(True)
+            # self.action_acquire.setDisabled(True)
+            # self.action_localizer.setDisabled(True)
             self.action_autocalibration.setDisabled(True)
             self.action_bender.setDisabled(True)
-            self.action_view_sequence.setDisabled(True)
-            self.action_add_to_list.setDisabled(True)
+            # self.action_view_sequence.setDisabled(True)
+            # self.action_add_to_list.setDisabled(True)
+            # self.action_iterate.setDisabled(True)

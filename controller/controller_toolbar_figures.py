@@ -39,7 +39,7 @@ class FiguresController(FiguresToolBar):
         self.action_full_screen.triggered.connect(self.doFullScreen)
         self.action_screenshot.triggered.connect(self.doScreenshot)
         self.action_open_directory.triggered.connect(self.open_folder)
-        self.action_postprocessing.triggered.connect(self.openPostGui)
+        # self.action_postprocessing.triggered.connect(self.openPostGui)
 
     def openPostGui(self):
         self.main.post_gui.showMaximized()
@@ -128,7 +128,7 @@ class FiguresControllerPos(FiguresToolBar):
         super(FiguresControllerPos, self).__init__(*args, **kwargs)
 
         # Hide post button:
-        self.action_postprocessing.setVisible(False)
+        # self.action_postprocessing.setVisible(False)
         self.action_open_directory.setVisible(False)
 
         self.action_full_screen.setCheckable(True)

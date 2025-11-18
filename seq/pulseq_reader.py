@@ -41,7 +41,7 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
         self.expt = None
         self.larmorFreq = None
         self.addParameter(key='seqName', string='PulseqReader', val='PulseqReader')
-        self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
+        self.addParameter(key='toMaRGE', string='to MaRGE', val=False)
         self.addParameter(key='pypulseq', string='PyPulseq', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.066, units=units.MHz, field='IM')

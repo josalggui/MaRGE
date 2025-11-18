@@ -73,7 +73,7 @@ class RARE_T2prep_pp(blankSeq.MRIBLANKSEQ):
         self.angle = None
         self.axesOrientation = None
         self.addParameter(key='seqName', string='RAREInfo', val='RARE_T2prep_pp')
-        self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
+        self.addParameter(key='toMaRGE', string='to MaRGE', val=False)
         self.addParameter(key='pypulseq', string='PyPulseq', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')

@@ -120,7 +120,8 @@ class ProtocolsController(ProtocolsToolBar):
 
         # Open a file dialog to get the filename to save to
         directory = 'protocols/%s' % protocol
-        file_name, _ = QFileDialog.getSaveFileName(self.main, 'Add sequence to protocol', directory, '(*.csv)')
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(None, 'Add sequence to protocol', directory, '', options=options)
         if file_name:
             if platform.system()=='Linux':
                 file_name = "%s_%s.csv" % (seq_name, file_name.split('/')[-1])

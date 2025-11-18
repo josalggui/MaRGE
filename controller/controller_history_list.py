@@ -332,8 +332,8 @@ class HistoryListController(HistoryListWidget):
                 pending_keys = list(self.pending_inputs.keys())  # List of elements in the pending sequence list
                 keys = list(self.inputs.keys())  # List of elements in the sequence history list
                 for key in pending_keys:
-                    # Disable acquire button
-                    self.main.toolbar_sequences.action_acquire.setEnabled(False)
+                    # # Disable acquire button
+                    # self.main.toolbar_sequences.action_acquire.setEnabled(False)
 
                     # Get the sequence to run
                     seq_name = self.pending_inputs[key][1][0]
@@ -354,7 +354,10 @@ class HistoryListController(HistoryListWidget):
                             except:
                                 pass
                         if seq_name == 'RabiFlops':
-                            sequence.mapVals['shimming'] = defaultsequences['Shimming'].mapVals['shimming']
+                            try:
+                                sequence.mapVals['shimming'] = defaultsequences['Shimming'].mapVals['shimming']
+                            except:
+                                pass
 
                     # Run the sequence
                     key_index = keys.index(key)
@@ -377,9 +380,9 @@ class HistoryListController(HistoryListWidget):
                         # self.main.sequence_list.updateSequence()
                         print("READY: " + key + "\n")
                     time.sleep(0.1)
-                # Enable acquire button
-                if self.main.toolbar_marcos.action_server.isChecked():
-                    self.main.toolbar_sequences.action_acquire.setEnabled(True)
+                # # Enable acquire button
+                # if self.main.toolbar_marcos.action_server.isChecked():
+                #     self.main.toolbar_sequences.action_acquire.setEnabled(True)
             time.sleep(0.1)
         return 0
 

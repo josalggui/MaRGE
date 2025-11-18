@@ -18,7 +18,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         super(InversionRecovery, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='InverionRecoveryInfo', val='InversionRecovery')
-        self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='toMaRGE', val=False)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')

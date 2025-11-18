@@ -43,7 +43,7 @@ class LarmorRaw(blankSeq.MRIBLANKSEQ):
         self.rfExTime = None
         self.nScans = None
         self.addParameter(key='seqName', string='LarmorInfo', val='Larmor Raw')
-        self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='toMaRGE', val=False)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.0, units=units.MHz, field='RF')
         self.addParameter(key='rfExAmplitude', string='Excitation amplitude (a.u.)', val=0.3, field='RF')

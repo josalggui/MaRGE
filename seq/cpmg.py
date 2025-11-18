@@ -18,7 +18,7 @@ class TSE(blankSeq.MRIBLANKSEQ):
         super(TSE, self).__init__()
         # Input the parameters
         self.addParameter(key='seqName', string='TSEInfo', val='TSE')
-        self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='toMaRGE', val=False)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, units=units.MHz, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')

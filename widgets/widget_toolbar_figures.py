@@ -27,7 +27,7 @@ class FiguresToolBar(QToolBar):
         self.action_open_directory.setStatusTip("Open main directory")
         self.addAction(self.action_open_directory)
 
-        # Action button to open postprocessing gui
-        self.action_postprocessing = QAction(QIcon("resources/icons/postprocessing.png"), "Open post-processing GUI", self)
-        self.action_postprocessing.setStatusTip("Open the post-processing GUI")
-        self.addAction(self.action_postprocessing)
+        # # Action button to open postprocessing gui
+        # self.action_postprocessing = QAction(QIcon("resources/icons/postprocessing.png"), "Open post-processing GUI", self)
+        # self.action_postprocessing.setStatusTip("Open the post-processing GUI")
+        # self.addAction(self.action_postprocessing)

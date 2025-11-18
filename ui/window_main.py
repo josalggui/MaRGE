@@ -57,9 +57,9 @@ class MainWindow(QMainWindow):
         self.toolbar_figures = FiguresController(self, "Figures toolbar")
         self.addToolBar(self.toolbar_figures)
 
-        # Add protocol toolbar
-        self.toolbar_protocols = ProtocolsController(self, "Protocols toolbar")
-        self.addToolBar(self.toolbar_protocols)
+        # # Add protocol toolbar
+        # self.toolbar_protocols = ProtocolsController(self, "Protocols toolbar")
+        # self.addToolBar(self.toolbar_protocols)
 
         # Add Scanner menu
         self.menu = self.menuBar()

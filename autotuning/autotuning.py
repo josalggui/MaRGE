@@ -178,7 +178,7 @@ class VNA:
 if __name__ == "__main__":
     device = VNA()
     device.connect()
-    s11, z11 = device.getS11(2.9713)
+    s11, z11 = device.getS11(3.7)
     print(s11)
     print(z11)
 
