@@ -74,8 +74,7 @@ class MarcosController(MarcosToolBar):
         thread.start()
 
         # Arduino to control the interlock
-        self.arduino = autotuning.Arduino(baudrate=19200, name="interlock")
-        self.arduino.connect(serial_number=hw.ard_sn_interlock)
+        self.arduino = autotuning.Arduino(baudrate=115200, name="interlock")
 
     # TODO: create tyger method
 
@@ -193,34 +192,48 @@ class MarcosController(MarcosToolBar):
         def init_gpa():
             if self.action_server.isChecked():
                 if not self.main.demo:
+                    self.action_gpa_init.setEnabled(False)
                     link = False
                     while not link:
                         try:
+                            gpa_code = []  # It appends 0 or 1 depending on success on GPA process
+                            rfpa_code = []  # It appends 0 or 1 depending on success on RFPA process
+                            self.arduino.connect(serial_number=hw.ard_sn_interlock)
                             # Initialize communication with gpa
                             if hw.gpa_model=="Barthel":
                                 # Check if GPA available
                                 received_string = self.arduino.send("GPA_VERB 1;").decode()
                                 if received_string[0:4] != ">OK;":
                                     print("WARNING: GPA not available.")
+                                    gpa_code.append(0)
                                 else:
-                                    print("READY: GPA available.")
+                                    print("GPA available.")
+                                    gpa_code.append(1)
 
                                 # Remote communication with GPA
                                 received_string = self.arduino.send("GPA_SPC:CTL 1;").decode()  # Activate remote control
                                 if received_string[0:4] != ">OK;":  # If wrong response
                                     print("WARNING: Error enabling GPA remote control.")
+                                    gpa_code.append(0)
                                 else:  # If good response
-                                    print("READY: GPA remote communication succeed.")
+                                    print("GPA remote communication succeed.")
+                                    gpa_code.append(1)
 
                                 # Disable Interlock
                                 received_string = self.arduino.send("GPA_ERRST;").decode()  # Activate remote control
                                 if received_string[0:4] != ">OK;":  # If wrong response
                                     print("WARNING: Interlock reset.")
+                                    gpa_code.append(0)
                                 else:  # If good response
-                                    print("READY: Interlock reset done.")
+                                    print("Interlock reset done.")
+                                    gpa_code.append(1)
 
                                 # Disable power module
-                                self.arduino.send("GPA_ON 0;")
+                                received_string = self.arduino.send("GPA_ON 0;").decode()
+                                if received_string[0:4] != ">OK;":  # If wrong response
+                                    gpa_code.append(0)
+                                else:  # If good response
+                                    gpa_code.append(1)
 
                             # Initialize communication with rfpa
                             if hw.rfpa_model == "Barthel":
@@ -228,18 +241,26 @@ class MarcosController(MarcosToolBar):
                                 received_string = self.arduino.send("RFPA_VERB 1;").decode()
                                 if received_string[0:4] != ">OK;":
                                     print("WARNING: RFPA not available.")
+                                    rfpa_code.append(0)
                                 else:
-                                    print("READY: RFPA available.")
+                                    print("RFPA available.")
+                                    rfpa_code.append(1)
 
                                 # Remote communication with RFPA
                                 received_string = self.arduino.send("RFPA_SPC:CTL 1;").decode()
                                 if received_string[0:4] != ">OK;":
                                     print("WARNING: Error enabling RFPA remote control.")
+                                    rfpa_code.append(0)
                                 else:
-                                    print("READY: RFPA remote communication succeed.")
+                                    print("RFPA remote communication succeed.")
+                                    rfpa_code.append(1)
 
                                 # Disable power module
                                 self.arduino.send("RFPA_RF 0;")
+                                if received_string[0:4] != ">OK;":
+                                    rfpa_code.append(0)
+                                else:
+                                    rfpa_code.append(1)
 
                             # Run init_gpa sequence
                             if hw.grad_board == "ocra1":
@@ -250,10 +271,10 @@ class MarcosController(MarcosToolBar):
                                 expt.run()
                                 expt.__del__()
                                 link = True
-                                print("READY: GPA init done!")
+                                print("READY: OCRA1 init done!")
                             elif hw.grad_board == "gpa-fhdo":
                                 link = True
-                                print("READY: GPA init done!")
+                                print("READY: FHDO init done!")
 
                             # Enable gpa power modules
                             if hw.gpa_model == "Barthel":
@@ -261,19 +282,37 @@ class MarcosController(MarcosToolBar):
                                 received_string = self.arduino.send("GPA_ON 1;").decode()  # Enable power module
                                 if received_string[0:4] != ">OK;":  # If wrong response
                                     print("WARNING: Error activating GPA power module.")
-                                else:  # If good reponse
-                                    print("READY: GPA power enabled.")
+                                    gpa_code.append(0)
+                                else:  # If good response
+                                    print("GPA power enabled.")
+                                    gpa_code.append(1)
 
                             # Enable rfpa power module
                             if hw.rfpa_model == "Barthel":
                                 received_string = self.arduino.send("RFPA_RF 1;").decode()
                                 if received_string[0:4] != ">OK;":
                                     print("WARNING: Error activating RFPA power module.")
+                                    rfpa_code.append(1)
                                 else:
-                                    print("READY: RFPA power enabled.")
+                                    print("RFPA power enabled.")
+                                    rfpa_code.append(1)
+
+                            # Check
+                            if sum(gpa_code) == 5:
+                                print("READY: GPA init done!")
+                            else:
+                                print(f"ERROR: GPA init failed. Error code: {gpa_code}")
+                            if sum(rfpa_code) == 4:
+                                print("READY: RFPA init done!")
+                            else:
+                                print(f"ERROR: RPFA init failed. Error code: {rfpa_code}")
+
+                            self.arduino.disconnect()
+
                         except:
                             link = False
                             time.sleep(1)
+                    self.action_gpa_init.setEnabled(True)
             else:
                 print("ERROR: No connection to the server")
                 print("Please, connect to MaRCoS server first")

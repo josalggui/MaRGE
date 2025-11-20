@@ -84,7 +84,6 @@ class Arduino:
         if self.device is not None:
             while output == False:
                 self.device.write(data.encode())
-                time.sleep(0.1)
                 output = self.receive()
                 if output == False:
                     print("WARNING: Arduino communication failed...")
@@ -100,11 +99,12 @@ class Arduino:
         if self.device is not None:
             # Wait for data or timeout
             t0 = time.time()
-            while self.device.in_waiting == 0 and time.time() - t0 < 2:
-                pass
+            self.device.reset_input_buffer()
+            while self.device.in_waiting == 0 and time.time() - t0 < 5:
+                time.sleep(0.01)
 
             # If timeout, return False. Otherwise, return received string
-            if time.time() - t0 >= 2:
+            if time.time() - t0 >= 5:
                 print("Failed to get data from Arduino...")
                 return False
             else:
@@ -188,25 +188,10 @@ class VNA:
 
             return s11, z11
 
-
-
 if __name__ == "__main__":
-    # device = VNA()
-    # device.connect()
-    # s11, z11 = device.getS11(2.9713)
-    # print(s11)
-    # print(z11)
+    # Create an instance of the Arduino to control the interlock
+    arduino = Arduino(baudrate=115200, name="interlock")
+    arduino.connect(serial_number="55731323736351611260")
 
-    import random
-
-    # Create an instance of the Arduino class and connect to an Arduino
-    arduino = Arduino()
-    arduino.connect(serial_number='44234313434351416122')
-    n = 0
-    while True:
-        binary_string = ''.join(random.choice('01') for _ in range(17))
-        result = arduino.send(binary_string)
-        n += 1
-        print(f"Iteration {n}")
-
-    # arduino.disconnect()
+    string = arduino.send("GPA_SPC:CTL 1;").decode()
+    string = arduino.send("GPA_ERRST;").decode()
