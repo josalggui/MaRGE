@@ -216,7 +216,7 @@ class MarcosController(MarcosToolBar):
                                     print("WARNING: Error enabling GPA remote control.")
                                     gpa_code.append(0)
                                 else:  # If good response
-                                    print("GPA remote communication succeed.")
+                                    print("GPA remote communication succeeded.")
                                     gpa_code.append(1)
 
                                 # Disable Interlock
@@ -252,7 +252,7 @@ class MarcosController(MarcosToolBar):
                                     print("WARNING: Error enabling RFPA remote control.")
                                     rfpa_code.append(0)
                                 else:
-                                    print("RFPA remote communication succeed.")
+                                    print("RFPA remote communication succeeded.")
                                     rfpa_code.append(1)
 
                                 # Disable power module
