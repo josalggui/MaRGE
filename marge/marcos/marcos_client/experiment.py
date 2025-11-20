@@ -10,6 +10,7 @@ from marge.marcos.marcos_client.local_config import ip_address, port, fpga_clk_f
 import marge.marcos.marcos_client.grad_board as gb
 import marge.marcos.marcos_client.server_comms as sc
 import marge.marcos.marcos_client.marcompile as fc
+import marge.configs.hw_config as hw
 
 import pdb
 st = pdb.set_trace
@@ -82,7 +83,7 @@ class Experiment:
         self._close_socket = True
         if prev_socket is None:
             self._s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._s.connect( (ip_address, port) )
+            self._s.connect( (hw.rp_ip_address, port) )
         else:
             self._s = prev_socket
             self._close_socket = False # do not close previous socket
