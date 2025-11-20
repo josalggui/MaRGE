@@ -73,9 +73,6 @@ class MarcosController(MarcosToolBar):
         thread = threading.Thread(target=self.search_sdrlab)
         thread.start()
 
-        # Arduino to control the interlock
-        self.arduino = autotuning.Arduino(baudrate=115200, name="interlock")
-
     # TODO: create tyger method
 
     def search_sdrlab(self):
@@ -198,11 +195,10 @@ class MarcosController(MarcosToolBar):
                         try:
                             gpa_code = []  # It appends 0 or 1 depending on success on GPA process
                             rfpa_code = []  # It appends 0 or 1 depending on success on RFPA process
-                            self.arduino.connect(serial_number=hw.ard_sn_interlock)
                             # Initialize communication with gpa
                             if hw.gpa_model=="Barthel":
                                 # Check if GPA available
-                                received_string = self.arduino.send("GPA_VERB 1;").decode()
+                                received_string = self.main.arduino_interlock.send("GPA_VERB 1;").decode()
                                 if received_string[0:4] != ">OK;":
                                     print("WARNING: GPA not available.")
                                     gpa_code.append(0)
@@ -211,7 +207,7 @@ class MarcosController(MarcosToolBar):
                                     gpa_code.append(1)
 
                                 # Remote communication with GPA
-                                received_string = self.arduino.send("GPA_SPC:CTL 1;").decode()  # Activate remote control
+                                received_string = self.main.arduino_interlock.send("GPA_SPC:CTL 1;").decode()  # Activate remote control
                                 if received_string[0:4] != ">OK;":  # If wrong response
                                     print("WARNING: Error enabling GPA remote control.")
                                     gpa_code.append(0)
@@ -220,7 +216,7 @@ class MarcosController(MarcosToolBar):
                                     gpa_code.append(1)
 
                                 # Disable Interlock
-                                received_string = self.arduino.send("GPA_ERRST;").decode()  # Activate remote control
+                                received_string = self.main.arduino_interlock.send("GPA_ERRST;").decode()  # Activate remote control
                                 if received_string[0:4] != ">OK;":  # If wrong response
                                     print("WARNING: Interlock reset.")
                                     gpa_code.append(0)
@@ -229,7 +225,7 @@ class MarcosController(MarcosToolBar):
                                     gpa_code.append(1)
 
                                 # Disable power module
-                                received_string = self.arduino.send("GPA_ON 0;").decode()
+                                received_string = self.main.arduino_interlock.send("GPA_ON 0;").decode()
                                 if received_string[0:4] != ">OK;":  # If wrong response
                                     gpa_code.append(0)
                                 else:  # If good response
@@ -238,7 +234,7 @@ class MarcosController(MarcosToolBar):
                             # Initialize communication with rfpa
                             if hw.rfpa_model == "Barthel":
                                 # Check if RFPA available
-                                received_string = self.arduino.send("RFPA_VERB 1;").decode()
+                                received_string = self.main.arduino_interlock.send("RFPA_VERB 1;").decode()
                                 if received_string[0:4] != ">OK;":
                                     print("WARNING: RFPA not available.")
                                     rfpa_code.append(0)
@@ -247,7 +243,7 @@ class MarcosController(MarcosToolBar):
                                     rfpa_code.append(1)
 
                                 # Remote communication with RFPA
-                                received_string = self.arduino.send("RFPA_SPC:CTL 1;").decode()
+                                received_string = self.main.arduino_interlock.send("RFPA_SPC:CTL 1;").decode()
                                 if received_string[0:4] != ">OK;":
                                     print("WARNING: Error enabling RFPA remote control.")
                                     rfpa_code.append(0)
@@ -256,7 +252,7 @@ class MarcosController(MarcosToolBar):
                                     rfpa_code.append(1)
 
                                 # Disable power module
-                                self.arduino.send("RFPA_RF 0;")
+                                self.main.arduino_interlock.send("RFPA_RF 0;")
                                 if received_string[0:4] != ">OK;":
                                     rfpa_code.append(0)
                                 else:
@@ -279,7 +275,7 @@ class MarcosController(MarcosToolBar):
                             # Enable gpa power modules
                             if hw.gpa_model == "Barthel":
                                 # Enable GPA module
-                                received_string = self.arduino.send("GPA_ON 1;").decode()  # Enable power module
+                                received_string = self.main.arduino_interlock.send("GPA_ON 1;").decode()  # Enable power module
                                 if received_string[0:4] != ">OK;":  # If wrong response
                                     print("WARNING: Error activating GPA power module.")
                                     gpa_code.append(0)
@@ -289,7 +285,7 @@ class MarcosController(MarcosToolBar):
 
                             # Enable rfpa power module
                             if hw.rfpa_model == "Barthel":
-                                received_string = self.arduino.send("RFPA_RF 1;").decode()
+                                received_string = self.main.arduino_interlock.send("RFPA_RF 1;").decode()
                                 if received_string[0:4] != ">OK;":
                                     print("WARNING: Error activating RFPA power module.")
                                     rfpa_code.append(1)
@@ -306,8 +302,6 @@ class MarcosController(MarcosToolBar):
                                 print("READY: RFPA init done!")
                             else:
                                 print(f"ERROR: RPFA init failed. Error code: {rfpa_code}")
-
-                            self.arduino.disconnect()
 
                         except:
                             link = False

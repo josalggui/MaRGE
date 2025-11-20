@@ -203,8 +203,8 @@ class SessionController(SessionWindow):
 
                 # Disable power modules
                 try:
-                    self.main_gui.toolbar_marcos.arduino.send("GPA_ON 0;")
-                    self.main_gui.toolbar_marcos.arduino.send("RFPA_RF 0;")
+                    self.main_gui.arduino_interlock.send("GPA_ON 0;")
+                    self.main_gui.arduino_interlock.send("RFPA_RF 0;")
                 except Exception as e:
                     print("ERROR: Could not disable power modules.")
                     print(str(e))
@@ -233,8 +233,8 @@ class SessionController(SessionWindow):
 
                 # Disable power modules
                 try:
-                    self.main_gui.toolbar_marcos.arduino.send("GPA_ON 0;")
-                    self.main_gui.toolbar_marcos.arduino.send("RFPA_RF 0;")
+                    self.main_gui.arduino_interlock.send("GPA_ON 0;")
+                    self.main_gui.arduino_interlock.send("RFPA_RF 0;")
                 except Exception as e:
                     print("ERROR: Could not disable power modules.")
                     print(str(e))

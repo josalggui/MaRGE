@@ -23,6 +23,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(AutoTuning, self).__init__()
         # Input the parameters
+        self.arduino = None
         self.freqOffset = None
         self.frequency = None
         self.statesXm = None
@@ -57,9 +58,6 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                           tip='Choose one option: auto, manual')
         self.addParameter(key='xyz', string='xyz', val=0.0, field='IM')
 
-        # Connect to Arduino and set the initial state
-        self.arduino = autotuning.Arduino(name="auto-tuning")
-
     def sequenceInfo(self):
         print("RF automatic impedance matching")
         print("Author: Dr. J.M. Algarín")
@@ -79,9 +77,11 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.n_aux = [[], [], []]
         self.frequency = hw.larmorFreq + self.freqOffset * 1e-6
 
-        self.arduino.connect(serial_number=hw.ard_sn_autotuning)
+        # Connect to Arduino and set the initial state
+        if self.arduino is None:
+            self.arduino = autotuning.Arduino()
+            self.arduino.connect(serial_number=hw.ard_sn_autotuning)
         self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "11")
-
 
         if self.arduino.device is None:
             print("WARNING: No Arduino found for auto-tuning.")
@@ -112,12 +112,12 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
         if self.test == 'auto':
             output = self.runAutoTuning()
-            self.arduino.disconnect()
+            # self.arduino.disconnect()
             self.vna.interface.close()
             return output
         elif self.test == 'manual':
             output = self.runManual()
-            self.arduino.disconnect()
+            # self.arduino.disconnect()
             self.vna.interface.close()
             return output
         else:

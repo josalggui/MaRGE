@@ -17,7 +17,7 @@ from marge.vna import Hardware
 
 
 class Arduino:
-    def __init__(self, baudrate=115200, timeout=0.1, name='test'):
+    def __init__(self, baudrate=115200, timeout=0.1):
         """
         Initialize an Arduino object.
 
@@ -29,7 +29,6 @@ class Arduino:
         self.port = None
         self.baudrate = baudrate
         self.timeout = timeout
-        self.name = name
 
     def findPort(self):
         """
@@ -44,7 +43,6 @@ class Arduino:
                 arduino_port = port.device
 
         if arduino_port is None:
-            # print("WARNING: No Arduino found for " + self.name)
             return False
         else:
             return arduino_port
@@ -62,7 +60,7 @@ class Arduino:
                 return False
             else:
                 self.device = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout)
-                print("Connected to Arduino for " + self.name)
+                print("Connected to Arduino")
                 time.sleep(1.0)
 
     def disconnect(self):
@@ -71,7 +69,7 @@ class Arduino:
         """
         if self.device is not None:
             self.device.close()
-            print("Disconnected from Arduino for " + self.name)
+            print("Disconnected from Arduino")
             self.device = None
 
     def send(self, data):
