@@ -54,5 +54,7 @@ tyger_server = "localhost"
 
 # Arduinos
 ard_sn_autotuning = '4423431343435131E180'
+ard_br_autotuning = 115200
 ard_sn_interlock = '242353133363518050E1'
+ard_br_interlock = 115200
 ard_sn_attenuator = '242353133363518050E2'

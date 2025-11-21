@@ -27,12 +27,12 @@ class MainController(MainWindow):
         self.history_list.figure_ready_signal.connect(self.toolbar_figures.doScreenshot)
 
         # Define the arduinos
-        self.arduino_autotuning = autotuning.Arduino()
+        self.arduino_autotuning = autotuning.Arduino(baudrate=hw.ard_br_autotuning)
         self.arduino_autotuning.connect(serial_number=hw.ard_sn_autotuning)
         if hw.ard_sn_autotuning==hw.ard_sn_interlock:
             self.arduino_interlock = self.arduino_autotuning
         else:
-            self.arduino_interlock = autotuning.Arduino()
+            self.arduino_interlock = autotuning.Arduino(hw.ard_br_interlock)
             self.arduino_interlock.connect(serial_number=hw.ard_sn_interlock)
 
     def set_demo(self, demo):

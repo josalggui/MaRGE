@@ -32,10 +32,12 @@ class OthersWidget(QWidget):
         self.add_input(label="Tyger server", value="localhost", tip="Tyger server")
         self.add_input(label="Arduino autotuning", value="242353133363518050E0",
                        tip="Arduino serial number for autotuning")
+        self.add_input(label="Arduino autotuning baudrate", value="115200",
+                       tip="Arduino baudrate for autotuning")
         self.add_input(label="Arduino interlock", value="242353133363518050E1",
                        tip="Arduino serial number for interlock system")
-        # self.add_input(label="Arduino attenuator", value="242353133363518050E2",
-        #                tip="Arduino serial number for RF attenuation")
+        self.add_input(label="Arduino interlock baudrate", value="115200",
+                       tip="Arduino baudrate for interlock")
 
         # Dictionary to store references to input fields
         self.input_boxes = {}
@@ -81,8 +83,9 @@ class OthersWidget(QWidget):
         hw.shimming_factor = float(self.input_boxes["Shimming factor"].text())
         hw.bash_path = self.input_boxes["Bash path"].text()
         hw.ard_sn_interlock = self.input_boxes["Arduino interlock"].text()
-        # hw.ard_sn_attenuator = self.input_boxes["Arduino attenuator"].text()
-        hw.ard_sn_autotuning = self.input_boxes["Arduino autotuning"].text()  
+        hw.ard_br_interlock = int(self.input_boxes["Arduino interlock baudrate"].text())
+        hw.ard_sn_autotuning = self.input_boxes["Arduino autotuning"].text()
+        hw.ard_br_autotuning = int(self.input_boxes["Arduino autotuning baudrate"].text())
 
 
     def save_others_entries(self):
