@@ -98,7 +98,7 @@ class SequenceController(SequenceToolBar):
 
         for seq_name in seq_names:
             # Get sequence parameters
-            seq = defaultsequences[seq_name]
+            seq = copy.deepcopy(defaultsequences[seq_name])
             seq.loadParams(directory='calibration', file=seq_name)
 
             # Specific task for AutoTuning
