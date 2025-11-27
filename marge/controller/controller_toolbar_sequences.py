@@ -355,21 +355,36 @@ class SequenceController(SequenceToolBar):
 
         # Sagittal localizer
         if defaultsequences[seq_name].mapVals['planes'][0]:
-            defaultsequences[seq_name].mapVals['axesOrientation'] = [0, 1, 2]
+            if defaultsequences[seq_name].mapVals['rd_axis'][0]==0:
+                defaultsequences[seq_name].mapVals['axesOrientation'] = [0, 1, 2]
+            elif defaultsequences[seq_name].mapVals['rd_axis'][0]==1:
+                defaultsequences[seq_name].mapVals['axesOrientation'] = [1, 0, 2]
+            else:
+                print("ERROR: wrong readout axis for sagittal localizer")
             defaultsequences[seq_name].mapVals['rd_direction'] = defaultsequences[seq_name].mapVals['rd_directions'][0]
             self.runToList(seq_name=seq_name)
             time.sleep(0.1)
 
         # Transversal localizer
         if defaultsequences[seq_name].mapVals['planes'][1]:
-            defaultsequences[seq_name].mapVals['axesOrientation'] = [1, 2, 0]
+            if defaultsequences[seq_name].mapVals['rd_axis'][1]==1:
+                defaultsequences[seq_name].mapVals['axesOrientation'] = [1, 2, 0]
+            elif defaultsequences[seq_name].mapVals['rd_axis'][1]==2:
+                defaultsequences[seq_name].mapVals['axesOrientation'] = [2, 1, 0]
+            else:
+                print("ERROR: wrong readout axis for transversal localizer")
             defaultsequences[seq_name].mapVals['rd_direction'] = defaultsequences[seq_name].mapVals['rd_directions'][1]
             self.runToList(seq_name=seq_name)
             time.sleep(0.1)
 
         # Coronal localizer
         if defaultsequences[seq_name].mapVals['planes'][2]:
-            defaultsequences[seq_name].mapVals['axesOrientation'] = [2, 0, 1]
+            if defaultsequences[seq_name].mapVals['rd_axis'][2]==2:
+                defaultsequences[seq_name].mapVals['axesOrientation'] = [2, 0, 1]
+            elif defaultsequences[seq_name].mapVals['rd_axis'][2]==0:
+                defaultsequences[seq_name].mapVals['axesOrientation'] = [0, 2, 1]
+            else:
+                print("ERROR: wrong readout axis for coronal localizer")
             defaultsequences[seq_name].mapVals['rd_direction'] = defaultsequences[seq_name].mapVals['rd_directions'][2]
             self.runToList(seq_name=seq_name)
 
