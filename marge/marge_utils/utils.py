@@ -213,12 +213,15 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
     dicom_image.meta_data["PatientName"] = session["subject_id"]
     dicom_image.meta_data["StudyID"] = session["study_id"]
     dicom_image.meta_data["PatientID"] = session["subject_id"]
-    dicom_image.meta_data["PatientBirthDate"] =  session["subject_birthday"]
-    dicom_image.meta_data["PatientWeight"] = session["subject_weight"]
-    dicom_image.meta_data["PatientHeight"] = session["subject_height"]
     dicom_image.meta_data["OperatorsName"] = session['user']
-    dicom_image.meta_data["PatientPosition"] = session['orientation']
 
+    if session['subjet_birthday'] != 'YY/MM/DD':
+        dicom_image.meta_data["PatientBirthDate"] =  session["subject_birthday"]
+    if session['subject_weight'] != 'kg':
+        dicom_image.meta_data["PatientWeight"] = session["subject_weight"]
+    if session['subject_height']:
+        dicom_image.meta_data["PatientSize"] = session["subject_height"]
+    
     # Study tags: Static ones. -- All New EC
     """
     Study refers to all the measurement related to a particular patient. 
