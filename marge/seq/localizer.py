@@ -21,9 +21,10 @@ for subdir in subdirs:
     full_path = os.path.join(parent_directory, subdir)
     sys.path.append(full_path)
 #******************************************************************************
-import marge.seq.rare as rare
+# import marge.seq.rare as rare
+import marge.seq.rare_double_image as rare
 
-class Localizer(rare.RARE):
+class Localizer(rare.RareDoubleImage):
     def __init__(self):
         super(Localizer, self).__init__()
         self.addParameter(key='planes', string='Planes (sag, cor, tra)', val=[1, 1, 1], field='OTH')
@@ -35,5 +36,6 @@ class Localizer(rare.RARE):
 
 if __name__ == '__main__':
     seq = Localizer()
-    seq.sequenceRun()
-    seq.sequenceAnalysis(obj='Standalone')
+    seq.sequenceAtributes()
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
+    seq.sequenceAnalysis(mode="Standalone")
