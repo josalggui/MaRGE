@@ -356,18 +356,21 @@ class SequenceController(SequenceToolBar):
         # Sagittal localizer
         if defaultsequences[seq_name].mapVals['planes'][0]:
             defaultsequences[seq_name].mapVals['axesOrientation'] = [0, 1, 2]
+            defaultsequences[seq_name].mapVals['rd_direction'] = defaultsequences[seq_name].mapVals['rd_directions'][0]
             self.runToList(seq_name=seq_name)
             time.sleep(0.1)
 
         # Transversal localizer
         if defaultsequences[seq_name].mapVals['planes'][1]:
             defaultsequences[seq_name].mapVals['axesOrientation'] = [1, 2, 0]
+            defaultsequences[seq_name].mapVals['rd_direction'] = defaultsequences[seq_name].mapVals['rd_directions'][1]
             self.runToList(seq_name=seq_name)
             time.sleep(0.1)
 
         # Coronal localizer
         if defaultsequences[seq_name].mapVals['planes'][2]:
             defaultsequences[seq_name].mapVals['axesOrientation'] = [2, 0, 1]
+            defaultsequences[seq_name].mapVals['rd_direction'] = defaultsequences[seq_name].mapVals['rd_directions'][2]
             self.runToList(seq_name=seq_name)
 
     def iterate(self):
