@@ -18,11 +18,17 @@ class TygerTabController(TygerTabWidget):
     def __init__(self, *args, **kwargs):
         super(TygerTabController, self).__init__(*args, **kwargs)
 
-        self.rare_run_pk_recon_button.clicked.connect(self.rare_run_pk_recon)
+        self.rare_run_pk_recon_button.clicked.connect(self.run_rare_pk_recon)
         self.run_snraware_button.clicked.connect(self.run_snraware_recon)
-        self.petra_run_pk_recon_button.clicked.connect(self.petra_run_pk_recon)
+        self.petra_run_pk_recon_button.clicked.connect(self.run_petra_pk_recon)
 
-    def rare_run_pk_recon(self):
+
+    def run_rare_pk_recon(self):
+
+        thread = threading.Thread(target=self.rare_pk_recon)
+        thread.start()
+
+    def rare_pk_recon(self):
         print("----- PK Reconstruction Inputs -----")
 
         # Radio buttons
@@ -39,10 +45,20 @@ class TygerTabController(TygerTabWidget):
 
         print("----- End -----")
 
-    def petra_run_pk_recon(self):
+    def run_petra_pk_recon(self):
+
+        thread = threading.Thread(target=self.petra_pk_recon)
+        thread.start()
+
+    def petra_pk_recon(self):
         pass
 
     def run_snraware_recon(self):
+
+        thread = threading.Thread(target=self.snraware_recon)
+        thread.start()
+
+    def snraware_recon(self):
         pass
 
 
