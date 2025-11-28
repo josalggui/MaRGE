@@ -52,7 +52,7 @@ class MarcosController(MarcosToolBar):
         self.action_server.triggered.connect(self.controlMarcosServer)
         self.action_copybitstream.triggered.connect(self.copyBitStream)
         self.action_gpa_init.triggered.connect(self.initgpa)
-        # TODO: connect tyger button to tyger method
+        self.action_tyger_init.triggered.connect(self.init_tyger)
 
         thread = threading.Thread(target=self.search_sdrlab)
         thread.start()
@@ -61,7 +61,18 @@ class MarcosController(MarcosToolBar):
         self.arduino = autotuning.Arduino(baudrate=19200, name="interlock")
         self.arduino.connect(serial_number=hw.ard_sn_interlock)
 
-    # TODO: create tyger method
+    @staticmethod
+    def init_tyger(self):
+        print("Hi")
+        result = subprocess.run(
+            ["tyger", "login", hw.tyger_server],
+            capture_output=True,
+            text=True
+        )
+
+        print("STDOUT:", result.stdout)
+        print("STDERR:", result.stderr)
+        print("Bye")
 
     def search_sdrlab(self):
         # Get the IP of the SDRLab

@@ -31,5 +31,7 @@ class MarcosToolBar(QToolBar):
         self.action_gpa_init.setStatusTip("Init GPA board")
         self.addAction(self.action_gpa_init)
 
-        # TODO: add button for tyger
-        
+        # Setup tyger
+        self.action_tyger_init = QAction(QIcon("resources/icons/tyger.png"), "Init tyger module", self)
+        self.action_tyger_init.setStatusTip("Init tyger module. Check 'https://github.com/mriLab-i3M/Tyger_MRIlab'")
+        self.addAction(self.action_tyger_init)
