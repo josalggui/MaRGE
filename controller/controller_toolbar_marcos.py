@@ -62,8 +62,7 @@ class MarcosController(MarcosToolBar):
         self.arduino.connect(serial_number=hw.ard_sn_interlock)
 
     @staticmethod
-    def init_tyger(self):
-        print("Hi")
+    def init_tyger():
         result = subprocess.run(
             ["tyger", "login", hw.tyger_server],
             capture_output=True,
@@ -72,7 +71,6 @@ class MarcosController(MarcosToolBar):
 
         print("STDOUT:", result.stdout)
         print("STDERR:", result.stderr)
-        print("Bye")
 
     def search_sdrlab(self):
         # Get the IP of the SDRLab
