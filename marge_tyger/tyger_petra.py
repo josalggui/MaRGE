@@ -52,5 +52,5 @@ def reconTygerPETRA(rawData_path, output_field):
     end_time = time.time()
     total_duration = end_time - start_time
     print(f"Tyger elapsed time: {total_duration:.2f} seconds")
-    print(imgTyger.shape)
+    # print(imgTyger.shape)
     return imgTyger 

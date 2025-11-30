@@ -107,7 +107,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
-        self.addParameter(key='nNoise', string='Noise acquisitions', val=16, field='SEQ', tip="Adquire noise acquisitions")
+        self.addParameter(key='nNoise', string='Noise acquisitions', val=1, field='SEQ', tip="Adquire noise acquisitions")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
@@ -117,7 +117,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='tyger_recon', string='Distorsion correction', val=0, field='PRO',
                           tip='To distorsion correction with Tyger (0 = Disabled; 1 = Enabled)')
         self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',
-                          tip='Options: cp, art, artpk, fft.')
+                          tip='Options: cp or artpk.')
         self.addParameter(key='boFit_file', string='Bo Fit file', val='boFit_default.txt', field='PRO',
                           tip='Path to the Bo Fit file inside [b0_maps] folder.')
 
@@ -1023,15 +1023,17 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 if batch == 0:
                     data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd*self.nNoise]), axis=0)
                     if self.dummyPulses > 0:
-                        data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd*self.nNoise:points_per_rd+points_per_train]), axis=0)
+                        data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd*self.nNoise:points_per_rd*self.nNoise+points_per_train]), axis=0)
                     data_signal = np.concatenate((data_signal, data_prov[points_per_rd*self.nNoise+points_per_train::]), axis=0)
+                    # n_readouts[batch] += -n_rd*self.nNoise - n_rd * self.etl
                 else:
                     data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd]), axis=0)
                     if self.dummyPulses > 0:
                         data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd+points_per_train]), axis=0)
                     data_signal = np.concatenate((data_signal, data_prov[points_per_rd+points_per_train::]), axis=0)
                 idx_0 = idx_1
-            n_readouts[batch] += -n_rd - n_rd * self.etl
+                # n_readouts[batch] += -n_rd - n_rd * self.etl
+        n_readouts[batch] += -n_rd - n_rd * self.etl
         data_noise = np.reshape(data_noise, (-1, self.nPoints[0]+hw.addRdPoints*2))
         data_noise = data_noise[:, hw.addRdPoints : -hw.addRdPoints]
         self.mapVals['data_noise'] = data_noise
@@ -1218,9 +1220,10 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         ## Tyger Reconstruction
         if axes_enable == [1,1,1] and self.tyger_denoising == 1:
             try:
-                output_field = "img_denoising"
+                out_field = 'image3D_den'
+                out_field_k = 'kSpace3D_den'
                 rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
-                imgTyger = tyger_denoising.denoisingTyger(rawData_path, output_field)
+                imgTyger = tyger_denoising.denoisingTyger(rawData_path, out_field, out_field_k)
                 imageTyger = np.abs(imgTyger[0])
                 imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
 
@@ -1240,14 +1243,19 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 print('Tyger reconstruction failed.')
                 print(f'Error: {e}')
                 
-        if axes_enable == [1,1,1] and self.tyger_recon == 1 and self.tyger_denoising == 0:
+        if axes_enable == [1,1,1] and self.tyger_recon == 1:
+            if self.tyger_denoising == 1:
+                input_field = out_field_k
+            else:
+                input_field =''
+                
             print('Preparing Tyger enviroment...')
             rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
             sign_rarepp = [-1,-1,-1,1,1,1,1,1, tyger_conf.cp_batchsize_RARE]
             if self.recon_type == 'cp':
                 output_field = 'imgTygerCP'
-            elif self.recon_type == 'art':
-                output_field = 'imgTygerART'
+            # elif self.recon_type == 'art':
+            #     output_field = 'imgTygerART'
             elif self.recon_type == 'artpk':
                 output_field = 'imgTygerARTPK'
             elif self.recon_type == 'fft':
@@ -1257,9 +1265,11 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 self.recon_type == 'fft'
                 output_field = 'imgTygerFFT'
             boFit_path = 'b0_maps/fits/' + self.boFit_file
-
+            if self.tyger_denoising == 1:
+                output_field = output_field + '_den'
+            
             try:
-                imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp, output_field)
+                imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp, output_field, input_field)
                 imageTyger = np.abs(imgTyger[0])
                 imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
 

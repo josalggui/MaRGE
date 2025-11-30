@@ -34,7 +34,7 @@ from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 from marge_utils import utils
 from marge_tyger import tyger_rare
-from marge_tyger import tyger_denoising
+from marge_tyger import tyger_denoising_double
 import marge_tyger.tyger_config as tyger_conf
 
 #*********************************************************************************
@@ -107,7 +107,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ',
                           tip="Use last dummy pulse to calibrate k = 0")
-        self.addParameter(key='nNoise', string='Noise acquisitions', val=16, field='SEQ', tip="Adquire noise acquisitions")
+        self.addParameter(key='nNoise', string='Noise acquisitions', val=1, field='SEQ', tip="Adquire noise acquisitions")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH',
                           tip="Fraction of k planes aquired in slice direction")
@@ -115,12 +115,14 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
         self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
                           tip="'True' or 'False' to plot odd and even images separately")
+        self.addParameter(key='tyger_denoising_echoes', string='Input echoes to Tyger', val='odd', field='PRO',
+                          tip='Echoes to send (odd, even or all)')
         self.addParameter(key='tyger_denoising', string='Denoising (SNRAware)', val=0, field='PRO',
                           tip='To denoising with Tyger (0 = Disabled; 1 = Enabled)')
-        self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
-                          tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
+        self.addParameter(key='tyger_recon', string='Distorsion correction', val=0, field='PRO',
+                          tip='To distorsion correction with Tyger (0 = Disabled; 1 = Enabled)')
         self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',
-                          tip='Options: cp, art, artpk, fft.')
+                          tip='Options: cp or artpk.')
         self.addParameter(key='boFit_file', string='Bo Fit file', val='boFit_default.txt', field='PRO',
                           tip='Path to the Bo Fit file inside [b0_maps] folder.')
         self.acq = ismrmrd.Acquisition()
@@ -615,6 +617,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             gr_sl_reph = pp.scale_grad(block_gr_sl_reph, scale=0.0)
 
             # Add first delay and first noise measurement
+            # self.nNoise = 1 # Delete if added as input to the sequence
             for nNoise in range(self.nNoise):
                 batch.add_block(delay_first, block_adc_noise)
                 n_rd_points += n_rd
@@ -879,14 +882,14 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         if n_batches > 1:
             data_full_a = data_full[0:sum(n_readouts[0:-1]) * self.nScans]
             data_full_b = data_full[sum(n_readouts[0:-1]) * self.nScans:]
-            data_full_a = np.reshape(data_full_a, newshape=(n_batches - 1, self.nScans, -1, n_rd))
-            data_full_b = np.reshape(data_full_b, newshape=(1, self.nScans, -1, n_rd))
+            data_full_a = np.reshape(data_full_a, shape=(n_batches - 1, self.nScans, -1, n_rd))
+            data_full_b = np.reshape(data_full_b, shape=(1, self.nScans, -1, n_rd))
             for scan in range(self.nScans):
                 data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
                 data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
                 data_prov[scan, :] = np.concatenate((data_scan_a, data_scan_b), axis=0)
         else:
-            data_full = np.reshape(data_full, newshape=(1, self.nScans, -1, n_rd))
+            data_full = np.reshape(data_full, shape=(1, self.nScans, -1, n_rd))
             for scan in range(self.nScans):
                 data_prov[scan, :] = np.reshape(data_full[:, scan, :, :], -1)
         data_full = np.reshape(data_prov, -1)
@@ -896,10 +899,10 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
 
         # Get index for krd = 0
         # Average data
-        data_prov = np.reshape(data_full, newshape=(self.nScans, n_rd * n_ph * n_sl * 2))
+        data_prov = np.reshape(data_full, shape=(self.nScans, n_rd * n_ph * n_sl * 2))
         data_prov = np.average(data_prov, axis=0)
         # Reorganize the data according to sweep mode
-        data_prov = np.reshape(data_prov, newshape=(n_sl, n_ph, 2 * n_rd))
+        data_prov = np.reshape(data_prov, shape=(n_sl, n_ph, 2 * n_rd))
         data_temp = np.zeros_like(data_prov)
         for ii in range(n_ph):
             data_temp[:, ind[ii], :] = data_prov[:, ii, :]
@@ -911,7 +914,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             ind_krd_0 = int(n_rd / 2)
 
         # Get individual images
-        data_full = np.reshape(data_full, newshape=(self.nScans, n_sl, n_ph, 2 * n_rd))
+        data_full = np.reshape(data_full, shape=(self.nScans, n_sl, n_ph, 2 * n_rd))
         data_full_odd = data_full[:, :, :, ind_krd_0 - int(self.nPoints[0] / 2):ind_krd_0 + int(self.nPoints[0] / 2)]
         data_full_eve = data_full[:, :, :,
                         n_rd + ind_krd_0 - int(self.nPoints[0] / 2):n_rd + ind_krd_0 + int(self.nPoints[0] / 2)]
@@ -935,8 +938,8 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         data_temp_eve = np.zeros(shape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]), dtype=complex)
         data_temp_odd[0:n_sl, :, :] = data_odd
         data_temp_eve[0:n_sl, :, :] = data_eve
-        data_odd = np.reshape(data_temp_odd, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        data_eve = np.reshape(data_temp_eve, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        data_odd = np.reshape(data_temp_odd, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        data_eve = np.reshape(data_temp_eve, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
 
         # Fix the position of the sample according to dfov
         bw = self.getParameter('bw_MHz')
@@ -947,12 +950,12 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         kPH = np.linspace(-kMax[1], kMax[1], num=self.nPoints[1], endpoint=False)
         kSL = np.linspace(-kMax[2], kMax[2], num=self.nPoints[2], endpoint=False)
         kPH, kSL, kRD = np.meshgrid(kPH, kSL, kRD)
-        kRD = np.reshape(kRD, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        kPH = np.reshape(kPH, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        kSL = np.reshape(kSL, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        kRD = np.reshape(kRD, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        kPH = np.reshape(kPH, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        kSL = np.reshape(kSL, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
         dPhase = np.exp(2 * np.pi * 1j * (self.dfov[0] * kRD + self.dfov[1] * kPH + self.dfov[2] * kSL))
-        data_odd = np.reshape(data_odd * dPhase, newshape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]))
-        data_eve = np.reshape(data_eve * dPhase, newshape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]))
+        data_odd = np.reshape(data_odd * dPhase, shape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]))
+        data_eve = np.reshape(data_eve * dPhase, shape=(self.nPoints[2], self.nPoints[1], self.nPoints[0]))
 
         self.mapVals['kSpace3D_odd_echoes'] = data_odd
         self.mapVals['kSpace3D_even_echoes'] = data_eve
@@ -964,17 +967,17 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.mapVals['image3D_even_echoes'] = img_eve
         self.mapVals['image3D'] = img
         self.mapVals['kSpace3D'] = data
-        data_odd = np.reshape(data_odd, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        data_eve = np.reshape(data_eve, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
-        data = np.reshape(data, newshape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        data_odd = np.reshape(data_odd, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        data_eve = np.reshape(data_eve, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
+        data = np.reshape(data, shape=(1, self.nPoints[0] * self.nPoints[1] * self.nPoints[2]))
 
         # Create sampled data
-        kRD = np.reshape(kRD, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        kPH = np.reshape(kPH, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        kSL = np.reshape(kSL, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        data_odd = np.reshape(data_odd, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        data_eve = np.reshape(data_eve, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
-        data = np.reshape(data, newshape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
+        kRD = np.reshape(kRD, shape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
+        kPH = np.reshape(kPH, shape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
+        kSL = np.reshape(kSL, shape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
+        data_odd = np.reshape(data_odd, shape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
+        data_eve = np.reshape(data_eve, shape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
+        data = np.reshape(data, shape=(self.nPoints[0] * self.nPoints[1] * self.nPoints[2], 1))
         self.mapVals['kMax_1/m'] = kMax
         self.mapVals['sampled_odd'] = np.concatenate((kRD, kPH, kSL, data_odd), axis=1)
         self.mapVals['sampled_eve'] = np.concatenate((kRD, kPH, kSL, data_eve), axis=1)
@@ -1071,9 +1074,11 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         ## Tyger Reconstruction
         if axes_enable == [1,1,1] and self.tyger_denoising == 1:
             try:
-                output_field = "img_denoising"
+                input_echoes = self.tyger_denoising_echoes
+                out_field = 'image3D_den'
+                out_field_k = 'kSpace3D_den'
                 rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
-                imgTyger = tyger_denoising.denoisingTyger(rawData_path, output_field)
+                imgTyger = tyger_denoising_double.denoisingTyger_double(rawData_path, out_field, out_field_k, input_echoes)
                 imageTyger = np.abs(imgTyger[0])
                 imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
 
@@ -1093,15 +1098,25 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             except Exception as e:
                 print('Tyger reconstruction failed.')
                 print(f'Error: {e}')
-        if axes_enable == [1,1,1] and self.tyger_recon == 1 and self.tyger_denoising == 0:
+                
+        if axes_enable == [1,1,1] and self.tyger_recon == 1:
+            if self.tyger_denoising == 1:
+                if input_echoes == 'even': 
+                    input_field = out_field_k + '_even'
+                elif input_echoes == 'odd': 
+                    input_field = out_field_k + '_odd'
+                elif input_echoes == 'all': 
+                    input_field = out_field_k + '_all'
+            else:
+                input_field =''
             if self.full_plot == 'False' or self.full_plot is False:
                 print('Preparing Tyger enviroment...')
                 rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
                 sign_rarepp = [-1,-1,-1,1,1,1,1,1, tyger_conf.cp_batchsize_RARE]
                 if self.recon_type == 'cp':
                     output_field = 'imgTygerCP'
-                elif self.recon_type == 'art':
-                    output_field = 'imgTygerART'
+                # elif self.recon_type == 'art':
+                #     output_field = 'imgTygerART'
                 elif self.recon_type == 'artpk':
                     output_field = 'imgTygerARTPK'
                 elif self.recon_type == 'fft':
@@ -1113,7 +1128,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                 boFit_path = 'b0_maps/fits/' + self.boFit_file
 
                 try:
-                    imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp, output_field)
+                    imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp, output_field, input_field)
                     imageTyger = np.abs(imgTyger[0])
                     imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
 

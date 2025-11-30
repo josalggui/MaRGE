@@ -1,6 +1,6 @@
 job:
   codespec:
-    image: ghcr.io/teresaguallartnaval/petra_tyger:latest
+    image: ghcr.io/teresaguallartnaval/petra_tyger:v2
     buffers:
       inputs:
         - input

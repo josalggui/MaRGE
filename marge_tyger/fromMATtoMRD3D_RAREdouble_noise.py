@@ -8,7 +8,9 @@ import sys
 import os
 from pathlib import Path
 
-def matToMRD(input, output_file):
+def matToMRD(input, output_file, input_field_raw):
+    # print('From MAT to MRD...')
+   
     # OUTPUT
     if output_file is None:
         raise ValueError("'output_file' needed.")
@@ -21,9 +23,10 @@ def matToMRD(input, output_file):
     else:
         # file-like con .write() binario
         output = output_file
-        
+       
     # INPUT - Read .mat
     mat_data = sio.loadmat(input)
+   
     # Head info
     axesOrientation = mat_data['axesOrientation'][0]
     nPoints = mat_data['nPoints'][0]    # rd, ph, sl
@@ -38,7 +41,7 @@ def matToMRD(input, output_file):
     except: # RAREprotocols
         rdGradAmplitude = mat_data['rdGradAmplitude']
        
-    fov = mat_data['fov'][0]*1e1
+    fov = mat_data['fov'][0]*1e1;
     fov_adq = fov[axesOrientation] # rd, ph, sl
     fov = fov.astype(int); fov = [int(x) for x in fov] # mm; x, y, z
     fov_adq = fov_adq
@@ -57,12 +60,11 @@ def matToMRD(input, output_file):
     # print('dfov: ', dfov)
    
     # Signal vector
-    sampledCartesian = mat_data['sampledCartesian']
+    # sampledCartesian = mat_data['sampledCartesian']
+    sampledCartesian = mat_data[input_field_raw]
     signal = sampledCartesian[:,3]        
     kSpace = np.reshape(signal, nPoints_sig) # sl, ph, rd
     kSpace = np.reshape(kSpace, (1,kSpace.shape[0],kSpace.shape[1], kSpace.shape[2])) # Expand to MRD requisites
-    # kSpace[0,0:10,:,:] = kSpace[0,0:10,:,:]*0 ## Zero padding simulation
-    # kSpace[0,:,:,350:] = kSpace[0,:,:,350:]*0 ## Removing artifacts
     
     # k vectors
     kTrajec = np.real(sampledCartesian[:,0:3]).astype(np.float32)    # rd, ph, sl
@@ -258,19 +260,19 @@ def matToMRD(input, output_file):
     with mrd.BinaryMrdWriter(output) as w:
         w.write_header(h)
         w.write_data(generate_data())
-    
+
     if 'must_close_out' in locals() and must_close_out:
         output.close()
-
+        
 # if __name__ == "__main__":
 #     parser = argparse.ArgumentParser(description="Convert mat to MRD")
 #     parser.add_argument('-i', '--input', type=str, required=False, help="Input file path")
 #     parser.add_argument('-o', '--output', type=str, required=False, help="Output MRD file")
 
-#     parser.set_defaults(
-#         input = '/data/raw_data/i3m/RarePyPulseq.2025.10.24.14.18.10.422.mat',
-#         output= '/data/raw_data/i3m/RarePyPulseq.2025.10.24.14.18.10.422.mrd',
-#     )
+#     # parser.set_defaults(
+#     #     input = '/data/raw_data/i3m/RarePyPulseq.2025.10.24.14.18.10.422.mat',
+#     #     output= '/data/raw_data/i3m/RarePyPulseq.2025.10.24.14.18.10.422.mrd',
+#     # )
    
 #     args = parser.parse_args()
 #     matToMRD(args.input, args.output)

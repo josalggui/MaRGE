@@ -63,6 +63,7 @@ class MarcosController(MarcosToolBar):
 
     @staticmethod
     def init_tyger():
+        print(hw.tyger_server)
         result = subprocess.run(
             ["tyger", "login", hw.tyger_server],
             capture_output=True,
@@ -70,7 +71,7 @@ class MarcosController(MarcosToolBar):
         )
 
         print("STDOUT:", result.stdout)
-        print("STDERR:", result.stderr)
+        # print("STDERR:", result.stderr)
 
     def search_sdrlab(self):
         # Get the IP of the SDRLab

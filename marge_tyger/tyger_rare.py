@@ -67,7 +67,7 @@ def generate_yml_file(recon_type, boFit_path, sign, yml_path):
     print(f"YAML file generated: {yml_path}")
     return yml_path
 
-def reconTygerRARE(rawData_path, recon_type, boFit_path, sign, output_field):
+def reconTygerRARE(rawData_path, recon_type, boFit_path, sign, output_field, input_field):
     # Generate yml file.
     yml_path = generate_yml_folder(rawData_path)
     yml_file = generate_yml_file(recon_type, boFit_path, sign, yml_path)
@@ -88,7 +88,7 @@ def reconTygerRARE(rawData_path, recon_type, boFit_path, sign, output_field):
     original_stdout = sys.stdout
     try:
         sys.stdout = StdoutWrapper(mrd_buffer)
-        matToMRD(input=rawData_path, output_file=mrd_buffer)
+        matToMRD(input=rawData_path, output_file=mrd_buffer, input_field=input_field)
     finally:
         sys.stdout = original_stdout
     mrd_buffer.seek(0)  

@@ -27,8 +27,9 @@ if __name__ == "__main__":
     parser.add_argument('-of', '--out_field', type=str, required=False, help="Recon img name field")
     
     # parser.set_defaults(
-    #     input = '',
-    #     output= '',
+    #     input = '/home/teresa/marcos_tyger/Brain_Images/output.bin',
+    #     output= '/home/teresa/marcos_tyger/Brain_Images/brainIR.mat',
+    #     out_field = 'tyger_test'
     # )
     
     args = parser.parse_args()

@@ -45,7 +45,7 @@ class TygerTabWidget(QWidget):
         # lineedit and recon button
         # self.petra_recon_text = QLineEdit()
         # self.petra_recon_text.setPlaceholderText("Path to B0 file")
-        self.petra_run_pk_recon_button = QPushButton('Run reconstruction')
+        self.petra_run_pk_recon_button = QPushButton('Run ART')
 
         # Fill layout
         # self.petra_recon_layout.addWidget(self.petra_recon_text)
@@ -61,10 +61,10 @@ class TygerTabWidget(QWidget):
         self.rare_recon_group = QGroupBox('RARE - PK reconstruction')
         self.rare_recon_group.setLayout(self.rare_recon_layout)
 
-        self.petra_recon_group = QGroupBox('PETRA reconstruction')
+        self.petra_recon_group = QGroupBox('PETRA - reconstruction')
         self.petra_recon_group.setLayout(self.petra_recon_layout)
 
-        self.snraware_group = QGroupBox('SNRAware')
+        self.snraware_group = QGroupBox('RARE - Denoising')
         self.snraware_group.setLayout(self.snraware_layout)
 
         self.main_layout = QVBoxLayout()

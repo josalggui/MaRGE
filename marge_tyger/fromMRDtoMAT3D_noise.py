@@ -2,9 +2,9 @@ import sys
 import argparse
 import mrd
 import scipy.io as sio
+import numpy as np
 
-
-def export(input, output, out_field):
+def export(input, output, out_field, out_field_k):
     images = []
     with mrd.BinaryMrdReader(input) as reader:
         header = reader.read_header()
@@ -16,7 +16,9 @@ def export(input, output, out_field):
     
     imgRecon = images[0].data        
     rawData = sio.loadmat(output)
-    rawData[out_field] = imgRecon
+    rawData[out_field] = imgRecon[0]
+    kSpace3D_den = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(imgRecon[0])))
+    rawData[out_field_k] = kSpace3D_den
     sio.savemat(output, rawData)
     return imgRecon
             

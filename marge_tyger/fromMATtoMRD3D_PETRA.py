@@ -73,13 +73,13 @@ def matToMRD(input, output_file):
 
         acq.data.resize((1, nPoints[0]))
         acq.trajectory.resize((7, nPoints[0]))
-        acq.center_sample = round(nPoints[0] / 2)
+        acq.head.center_sample = round(nPoints[0] / 2)
 
         for s in range(lenT):
-            acq.idx.kspace_encode_step_1 = 1
-            acq.idx.kspace_encode_step_2 = s
-            acq.idx.slice = s
-            acq.idx.repetition = 0
+            acq.head.idx.kspace_encode_step_1 = 1
+            acq.head.idx.kspace_encode_step_2 = s
+            acq.head.idx.slice = s
+            acq.head.idx.repetition = 0
             acq.data[:] = kSpace[:, s, :, :]
             acq.trajectory[0,:] = kx[:, s, :, :]
             acq.trajectory[1,:] = ky[:, s, :, :]
@@ -103,17 +103,17 @@ def matToMRD(input, output_file):
             
             acq.data.resize((1, n_points_batch))
             acq.trajectory.resize((7, n_points_batch))
-            acq.center_sample = round(n_points_batch / 2)
+            acq.head.center_sample = round(n_points_batch / 2)
             
             acq.data[:] = data_batch.reshape(-1)
             acq.trajectory[0,:] = kx_batch.reshape(-1)
             acq.trajectory[1,:] = ky_batch.reshape(-1)
             acq.trajectory[2,:] = kz_batch.reshape(-1)
             
-            acq.idx.kspace_encode_step_1 = 1
-            acq.idx.kspace_encode_step_2 = batch_start  
-            acq.idx.slice = batch_start
-            acq.idx.repetition = 0
+            acq.head.idx.kspace_encode_step_1 = 1
+            acq.head.idx.kspace_encode_step_2 = batch_start  
+            acq.head.idx.slice = batch_start
+            acq.head.idx.repetition = 0
 
             yield mrd.StreamItem.Acquisition(acq)
 
