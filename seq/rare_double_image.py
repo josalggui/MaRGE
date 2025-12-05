@@ -879,7 +879,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
 
         # Reorganize data_full
         data_prov = np.zeros(shape=[self.nScans, n_sl * n_ph * n_rd * 2], dtype=complex)
-        if n_batches > 1:
+        if n_batches == 2:
             data_full_a = data_full[0:sum(n_readouts[0:-1]) * self.nScans]
             data_full_b = data_full[sum(n_readouts[0:-1]) * self.nScans:]
             data_full_a = np.reshape(data_full_a, shape=(n_batches - 1, self.nScans, -1, n_rd))
@@ -888,6 +888,18 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                 data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
                 data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
                 data_prov[scan, :] = np.concatenate((data_scan_a, data_scan_b), axis=0)
+        elif n_batches > 2:
+            data_full_ini = data_full[0:n_readouts[0] * self.nScans]
+            data_full_a = data_full[n_readouts[0]* self.nScans:n_readouts[0]* self.nScans + n_readouts[1]*(n_batches-2) * self.nScans]
+            data_full_b = data_full[n_readouts[0] * self.nScans + n_readouts[1]*(n_batches-2) * self.nScans:]
+            data_full_ini = np.reshape(data_full_ini, shape=(1, self.nScans, -1, n_rd))
+            data_full_a = np.reshape(data_full_a, shape=(n_batches - 2, self.nScans, -1, n_rd))
+            data_full_b = np.reshape(data_full_b, shape=(1, self.nScans, -1, n_rd))
+            for scan in range(self.nScans):
+                data_scan_ini = np.reshape(data_full_ini[:, scan, :, :], -1)
+                data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
+                data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
+                data_prov[scan, :] = np.concatenate((data_scan_ini, data_scan_a, data_scan_b), axis=0)
         else:
             data_full = np.reshape(data_full, shape=(1, self.nScans, -1, n_rd))
             for scan in range(self.nScans):

@@ -276,7 +276,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         # par_acq_lines in case par_acq_lines = 0
         par_acq_lines = int(int(self.nPoints[2]*self.parFourierFraction)-self.nPoints[2]/2)
         self.mapVals['partialAcquisition'] = par_acq_lines
-
+        print('Par acq lines!', par_acq_lines)
+        
         # BW
         bw = self.nPoints[0] / self.acqTime * 1e-6  # MHz
         sampling_period = 1 / bw  # us
@@ -1025,14 +1026,12 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                     if self.dummyPulses > 0:
                         data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd*self.nNoise:points_per_rd*self.nNoise+points_per_train]), axis=0)
                     data_signal = np.concatenate((data_signal, data_prov[points_per_rd*self.nNoise+points_per_train::]), axis=0)
-                    # n_readouts[batch] += -n_rd*self.nNoise - n_rd * self.etl
                 else:
                     data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd]), axis=0)
                     if self.dummyPulses > 0:
                         data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd+points_per_train]), axis=0)
                     data_signal = np.concatenate((data_signal, data_prov[points_per_rd+points_per_train::]), axis=0)
                 idx_0 = idx_1
-                # n_readouts[batch] += -n_rd - n_rd * self.etl
         n_readouts[batch] += -n_rd - n_rd * self.etl
         data_noise = np.reshape(data_noise, (-1, self.nPoints[0]+hw.addRdPoints*2))
         data_noise = data_noise[:, hw.addRdPoints : -hw.addRdPoints]
@@ -1045,7 +1044,16 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         # Reorganize data_full
         data_prov = np.zeros(shape=[self.nScans, n_sl * n_ph * n_rd], dtype=complex)
-        if n_batches > 1:
+        # if n_batches > 1:
+        #     data_full_a = data_full[0:sum(n_readouts[0:-1]) * self.nScans]
+        #     data_full_b = data_full[sum(n_readouts[0:-1]) * self.nScans:]
+        #     data_full_a = np.reshape(data_full_a, shape=(n_batches - 1, self.nScans, -1, n_rd))
+        #     data_full_b = np.reshape(data_full_b, shape=(1, self.nScans, -1, n_rd))
+        #     for scan in range(self.nScans):
+        #         data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
+        #         data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
+        #         data_prov[scan, :] = np.concatenate((data_scan_a, data_scan_b), axis=0)
+        if n_batches == 2:
             data_full_a = data_full[0:sum(n_readouts[0:-1]) * self.nScans]
             data_full_b = data_full[sum(n_readouts[0:-1]) * self.nScans:]
             data_full_a = np.reshape(data_full_a, shape=(n_batches - 1, self.nScans, -1, n_rd))
@@ -1054,6 +1062,18 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
                 data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
                 data_prov[scan, :] = np.concatenate((data_scan_a, data_scan_b), axis=0)
+        elif n_batches > 2:
+            data_full_ini = data_full[0:n_readouts[0] * self.nScans]
+            data_full_a = data_full[n_readouts[0]* self.nScans:n_readouts[0]* self.nScans + n_readouts[1]*(n_batches-2) * self.nScans]
+            data_full_b = data_full[n_readouts[0] * self.nScans + n_readouts[1]*(n_batches-2) * self.nScans:]
+            data_full_ini = np.reshape(data_full_ini, shape=(1, self.nScans, -1, n_rd))
+            data_full_a = np.reshape(data_full_a, shape=(n_batches - 2, self.nScans, -1, n_rd))
+            data_full_b = np.reshape(data_full_b, shape=(1, self.nScans, -1, n_rd))
+            for scan in range(self.nScans):
+                data_scan_ini = np.reshape(data_full_ini[:, scan, :, :], -1)
+                data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
+                data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
+                data_prov[scan, :] = np.concatenate((data_scan_ini, data_scan_a, data_scan_b), axis=0)
         else:
             data_full = np.reshape(data_full, shape=(1, self.nScans, -1, n_rd))
             for scan in range(self.nScans):
