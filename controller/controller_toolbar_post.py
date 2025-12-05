@@ -74,12 +74,13 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         else:
             file_path = file_path+file_name
         self.main.file_name = file_name
+        self.main.file_path = file_path
+        self.main.tyger_denoising = ''
         self.mat_data = sp.io.loadmat(file_path)
         self.nPoints = np.reshape(self.mat_data['nPoints'], -1)
-
+        self.main.seq_name = self.mat_data['seqName']
         if self.mat_data['seqName'] == 'PETRA':
             print("Executing regridding...")
-
             kCartesian = self.mat_data['kCartesian']
             self.k_space_raw = self.mat_data['kSpaceRaw']
 

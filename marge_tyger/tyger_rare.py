@@ -69,7 +69,10 @@ def generate_yml_file(recon_type, boFit_path, sign, yml_path):
 
 def reconTygerRARE(rawData_path, recon_type, boFit_path, sign, output_field, input_field):
     # Generate yml file.
-    yml_path = generate_yml_folder(rawData_path)
+    try:
+        yml_path = generate_yml_folder(rawData_path)
+    except:
+        yml_path = rawData_path.replace(".mat", ".yml")
     yml_file = generate_yml_file(recon_type, boFit_path, sign, yml_path)
     
     # Run Tyger Recon
