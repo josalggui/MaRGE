@@ -843,15 +843,15 @@ def get_snr_histogram(image, roi_size=4):
     image = np.abs(image)
     image = image.astype(np.float64)
 
+    # Local mean
+    mean = sp.ndimage.uniform_filter(image, roi_size)
+
     # Get histogram
-    counts, bins = np.histogram(image, bins=512)
+    counts, bins = np.histogram(mean, bins=512)
 
     # Find the peak (maximum count)
     peak_bin_index = np.argmax(counts)
     peak_value = (bins[peak_bin_index] + bins[peak_bin_index + 1]) / 2
-
-    # Local mean
-    mean = sp.ndimage.uniform_filter(image, roi_size)
 
     # Get SNR
     snr = mean / peak_value
@@ -920,23 +920,28 @@ def get_snr_2d(image, roi_size=4):
 
 def get_snr_from_individual_acquisitions(data, roi_size):
     """
-    Compute a pixel-wise SNR map for a 4D image, where first dimention is the scan.
-    1) signal: mean value along first dimension, then mean filter.
-    2) noise: std value along first dimension.
-    SNR = local signal / noise from the histogram.
+    Compute a voxel-wise SNR map from a 4D dataset composed of repeated acquisitions.
+
+    The function treats the first dimension of `data` as the acquisition axis:
+    - The **signal** is computed as the mean magnitude across acquisitions,
+      followed by a uniform (mean) filter of size `roi_size`.
+    - The **noise** is computed as the standard deviation of the magnitude across
+      acquisitions, also followed by the same uniform filter.
 
     Parameters
     ----------
-    image : np.ndarray
-        3D image (e.g., shape (x, y, z)).
+    data : np.ndarray
+        4D array (n_acq, x, y, z) containing repeated measurements of the same volume.
     roi_size : int
-        Size of the cubic ROI (odd number recommended, e.g., 3, 5, 7).
+        Size of the cubic window for the uniform filter. An odd value (e.g., 3, 5, 7)
+        is recommended to maintain symmetry.
 
     Returns
     -------
     snr_map : np.ndarray
-        3D array with same shape as `image`, containing SNR values.
+        3D array with shape (x, y, z), containing the computed SNR values.
     """
+
     noise = np.std(np.abs(data), axis=0)
     mean = np.mean(np.abs(data), axis=0)
     noise = sp.ndimage.uniform_filter(noise, roi_size)
