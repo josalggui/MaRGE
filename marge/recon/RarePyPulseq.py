@@ -109,7 +109,7 @@ def RarePyPulseq(raw_data_path=None):
                 data_signal = np.concatenate((data_signal, data_prov[points_per_rd + points_per_train::]), axis=0)
             idx_0 = idx_1
         n_readouts[batch] += -n_rd - n_rd * mat_data['etl'].item()
-    data_noise = np.reshape(data_noise, (-1, self.nPoints[0] + hw.addRdPoints * 2))
+    data_noise = np.reshape(data_noise, (-1, n_points[0] + hw.addRdPoints * 2))
     data_noise = data_noise[:, hw.addRdPoints: -hw.addRdPoints]
     output_dict['data_noise'] = data_noise
     output_dict['data_dummy'] = data_dummy
@@ -270,10 +270,9 @@ def RarePyPulseq(raw_data_path=None):
             result_1, _, _ = utils.fix_image_orientation(image, axes=axes_orientation, rd_direction=rd_direction)
             result_1['row'] = 0
             result_1['col'] = 0
-            result_1['title'] = 'Original'
         else:
             result_1 = {'widget': 'image', 'data': image, 'xLabel': "%s" % axesStr[1],
-                        'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
+                        'yLabel': "%s" % axesStr[0], 'title': "i-Space", 'row': 0, 'col': 0}
 
         # k-space plot
         result_2 = {'widget': 'image'}
