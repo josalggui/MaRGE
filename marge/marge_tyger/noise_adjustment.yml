@@ -1,0 +1,17 @@
+job:
+  codespec:
+    image: acr-proxy.tyger.cloud/tygertepimages.azurecr.io/tinker:20251025
+    buffers:
+      inputs:
+        - input
+      outputs:
+        - noisecovariance
+    args:
+      - "noise"
+      - "--input"
+      - "$(INPUT_PIPE)"
+      - "--noise.noise-covariance"
+      - "$(NOISECOVARIANCE_PIPE)"
+    resources:
+      requests:
+        cpu: 1

@@ -36,6 +36,7 @@ import pypulseq as pp
 from marge.marge_utils import utils
 
 from marge.marge_tyger import tyger_rare
+from marge.marge_tyger import tyger_denoising_double
 import marge.marge_tyger.tyger_config as tyger_conf
 
 #*********************************************************************************
@@ -46,6 +47,8 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RareDoubleImage, self).__init__()
         # Input the parameters
+        self.tyger_denoising_echoes = None
+        self.tyger_denoising = None
         self.boFit_file = None
         self.recon_type = None
         self.tyger_recon = None
@@ -113,6 +116,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ',
                           tip="Use last dummy pulse to calibrate k = 0")
+        self.addParameter(key='nNoise', string='Noise acquisitions', val=1, field='SEQ', tip="Noise noise acquisitions")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH',
                           tip="Fraction of k planes aquired in slice direction")
@@ -124,10 +128,14 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip="Shift acquisition window to account for eddy currents using dummy pulse")
         self.addParameter(key='k_fill', string='Filling method', val='ZP', field='PRO',
                           tip="'ZP': Zero Padding, 'POCS': Projection Onto Convex Sets")
-        self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
-                          tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
+        self.addParameter(key='tyger_denoising_echoes', string='Input echoes to Tyger', val='all', field='PRO',
+                          tip='Echoes to send (odd, even or all)')
+        self.addParameter(key='tyger_denoising', string='Denoising (SNRAware)', val=0, field='PRO',
+                          tip='To denoising with Tyger (0 = Disabled; 1 = Enabled)')
+        self.addParameter(key='tyger_recon', string='Distortion correction', val=0, field='PRO',
+                          tip='B0 map acquired with SPDS required (0 = Disabled; 1 = Enabled)')
         self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',
-                          tip='Options: cp, art, artpk, fft.')
+                          tip='Options: cp or artpk.')
         self.addParameter(key='boFit_file', string='Bo Fit file', val='boFit_default.txt', field='PRO',
                           tip='Path to the Bo Fit file inside [b0_maps] folder.')
         self.addParameter(key='rd_direction', string='Rd direction', val=1, field='SEQ',
@@ -612,6 +620,74 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
 
             return batch, n_rd_points, n_adc
 
+        def initialize_batch_0():
+            # Instantiate pypulseq sequence object
+            batch = pp.Sequence(system)
+            n_rd_points = 0
+            n_adc = 0
+
+            # Set slice and phase gradients to 0
+            gr_ph_deph = pp.scale_grad(block_gr_ph_deph, scale=0.0)
+            gr_sl_deph = pp.scale_grad(block_gr_sl_deph, scale=0.0)
+            gr_ph_reph = pp.scale_grad(block_gr_ph_reph, scale=0.0)
+            gr_sl_reph = pp.scale_grad(block_gr_sl_reph, scale=0.0)
+
+            # Add first delay and first noise measurement
+            # self.nNoise = 1 # Delete if added as input to the sequence
+            for nNoise in range(self.nNoise):
+                batch.add_block(delay_first, block_adc_noise)
+                n_rd_points += n_rd
+                n_adc += 1
+
+            # Create dummy pulses
+            for dummy in range(self.dummyPulses):
+                # Pre-excitation pulse
+                if self.preExTime > 0:
+                    gr_rd_preex = pp.scale_grad(block_gr_rd_preph, scale=1.0)
+                    batch.add_block(block_rf_pre_excitation,
+                                    gr_rd_preex,
+                                    delay_pre_excitation)
+
+                # Inversion pulse
+                if self.inversionTime > 0:
+                    gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
+                    batch.add_block(block_rf_inversion,
+                                    gr_rd_inv,
+                                    delay_inversion)
+
+                # Add excitation pulse and readout de-phasing gradient
+                batch.add_block(block_gr_rd_preph,
+                                block_rf_excitation,
+                                delay_preph)
+
+                # Add echo train
+                for echo in range(self.etl):
+                    if dummy == self.dummyPulses - 1:
+                        batch.add_block(block_rf_refocusing_odd,
+                                        block_gr_rd_reph,
+                                        gr_ph_deph,
+                                        gr_sl_deph,
+                                        block_adc_signal,
+                                        delay_reph)
+                        batch.add_block(gr_ph_reph,
+                                        gr_sl_reph)
+                        n_rd_points += n_rd
+                        n_adc += 1
+                    else:
+                        batch.add_block(block_rf_refocusing_odd,
+                                        block_gr_rd_reph,
+                                        gr_ph_deph,
+                                        gr_sl_deph,
+                                        delay_reph)
+                        batch.add_block(gr_ph_reph,
+                                        gr_sl_reph)
+
+                # Add time delay to next repetition
+                batch.add_block(delay_tr)
+
+            return batch, n_rd_points, n_adc
+
+
         '''
         Step 7: Define your createBatches method.
         In this step you will populate the batches adding the blocks previously defined in step 4, and accounting for
@@ -645,7 +721,10 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                         n_rd_points_dict[batch_num] = n_rd_points  # Save readout points count
                         n_rd_points = 0
                         batch_num = f"batch_{seq_idx}"
-                        batches[batch_num], n_rd_points, n_adc_0 = initialize_batch()  # Initialize new batch
+                        if batch_num == "batch_1":
+                            batches[batch_num], n_rd_points, n_adc_0 = initialize_batch_0()  # Initialize new batch
+                        else:
+                            batches[batch_num], n_rd_points, n_adc_0 = initialize_batch()  # Initialize new batch
                         n_adc += n_adc_0
                         print(f"Creating {batch_num}.seq...")
 
@@ -736,28 +815,64 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
     def sequenceAnalysis(self, mode=None):
         super().sequenceAnalysis(mode=mode)
 
+        # Get axes in strings
+        axes = self.mapVals['axesOrientation']
+        axesDict = {'x': 0, 'y': 1, 'z': 2}
+        axesKeys = list(axesDict.keys())
+        axesVals = list(axesDict.values())
+        axesStr = ['', '', '']
+        n = 0
+        for val in axes:
+            index = axesVals.index(val)
+            axesStr[n] = axesKeys[index]
+            n += 1
+            
         ## Tyger Reconstruction
-        if self.mapVals['axes_enable'] == [1, 1, 1] and self.tyger_recon == 1:
-            # Get axes in strings
-            axes = self.mapVals['axesOrientation']
-            axesDict = {'x': 0, 'y': 1, 'z': 2}
-            axesKeys = list(axesDict.keys())
-            axesVals = list(axesDict.values())
-            axesStr = ['', '', '']
-            n = 0
-            for val in axes:
-                index = axesVals.index(val)
-                axesStr[n] = axesKeys[index]
-                n += 1
+        input_echoes = self.tyger_denoising_echoes
+        out_field = 'image3D_den'
+        out_field_k = 'kSpace3D_den'
+        result_Tyger = None
+        if self.mapVals['axes_enable'] == [1, 1, 1] and self.tyger_denoising == 1:
+            try:
+                rawData_path = self.directory_mat + '/' + self.file_name + '.mat'
+                imgTyger = tyger_denoising_double.denoisingTyger_double(rawData_path, out_field, out_field_k,
+                                                                        input_echoes)
+                imageTyger = np.abs(imgTyger[0])
+                imageTyger = imageTyger / np.max(np.reshape(imageTyger, -1)) * 100
 
+                ## Image plot
+                # Tyger
+                if self.mapVals['unlock_orientation'] == 0:
+                    result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
+                    result_Tyger['row'] = 0
+                    result_Tyger['col'] = 1
+                    result_Tyger['title'] = "Tyger"
+                else:
+                    result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
+                                    'yLabel': "%s" % axesStr[0], 'title': "Tyger", 'row': 0, 'col': 1}
+            except Exception as e:
+                print('Tyger reconstruction failed.')
+                print(f'Error: {e}')
+                
+        if self.mapVals['axes_enable'] == [1, 1, 1] and self.tyger_recon == 1:
+            if self.tyger_denoising == 1:
+                if input_echoes == 'even': 
+                    input_field = out_field_k + '_even'
+                elif input_echoes == 'odd': 
+                    input_field = out_field_k + '_odd'
+                elif input_echoes == 'all': 
+                    input_field = out_field_k + '_all'
+            else:
+                input_field =''
+                
             if self.full_plot == 'False' or self.full_plot is False:
                 print('Preparing Tyger enviroment...')
                 rawData_path = self.directory_mat + '/' + self.file_name + '.mat'
                 sign_rarepp = [-1, -1, -1, 1, 1, 1, 1, 1, tyger_conf.cp_batchsize_RARE]
                 if self.recon_type == 'cp':
                     output_field = 'imgTygerCP'
-                elif self.recon_type == 'art':
-                    output_field = 'imgTygerART'
+                # elif self.recon_type == 'art':
+                #     output_field = 'imgTygerART'
                 elif self.recon_type == 'artpk':
                     output_field = 'imgTygerARTPK'
                 elif self.recon_type == 'fft':
@@ -769,29 +884,30 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                 boFit_path = 'b0_maps/fits/' + self.boFit_file
 
                 try:
-                    imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp,
-                                                         output_field)
+                    imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp, output_field, input_field)
                     imageTyger = np.abs(imgTyger[0])
                     imageTyger = imageTyger / np.max(np.reshape(imageTyger, -1)) * 100
 
                     ## Image plot
                     # Tyger
                     if self.mapVals['unlock_orientation'] == 0:
-                        result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axes_orientation)
+                        result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
                         result_Tyger['row'] = 0
                         result_Tyger['col'] = 1
                         result_Tyger['title'] = "Tyger"
                     else:
                         result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
-                                        'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
+                                        'yLabel': "%s" % axesStr[0], 'title': "Tyger", 'row': 0, 'col': 1}
 
-                    self.output.append(result_Tyger)
                 except Exception as e:
                     print('Tyger reconstruction failed.')
                     print(f'Error: {e}')
             else:
                 print('Tyger reconstruction not available for Full plot True.')
                 print('Change this input parameter to False.')
+            
+            if result_Tyger is not None:
+                self.output.append(result_Tyger)
 
         return self.output
 

@@ -61,7 +61,7 @@ class SequenceInputsController(SequenceInputsWidget):
         if hasattr(defaultsequences[self.seq_name], 'PROproperties'):
             props, tips = defaultsequences[self.seq_name].PROproperties
             input_widgets_5 = self.createTab(props, tips)
-            self.addTab(input_widgets_5, "Processing")
+            self.addTab(input_widgets_5, "Tyger")
 
     def removeTabs(self):
         """

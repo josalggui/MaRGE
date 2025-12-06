@@ -453,7 +453,8 @@ class MRIBLANKSEQ:
                     # Concatenate acquired data into the oversampled data array
                     data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
                     print(f"Acquired points = {acquired_points}, Expected points = {expected_points}")
-                    print(f"Scan {scan + 1}, batch {seq_num[-1]}/{len(n_readouts)} ready!")
+                    print(f"Scan {scan + 1}, batch {seq_num.split('_')[-1]}/{len(n_readouts)} ready!")
+                    # print(f"Scan {scan + 1}, batch {seq_num[-1]}/{len(n_readouts)} ready!")
 
                 # Decimate the oversampled data and store it
                 if output=='':

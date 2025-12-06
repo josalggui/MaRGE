@@ -40,6 +40,7 @@ from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 from marge.marge_tyger import tyger_rare
 import marge.marge_tyger.tyger_config as tyger_conf
+from marge.marge_tyger import tyger_denoising
 
 #*********************************************************************************
 #*********************************************************************************
@@ -49,6 +50,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RarePyPulseq, self).__init__()
         # Input the parameters
+        self.nNoise = None
+        self.tyger_denoising = None
         self.boFit_file = None
         self.tyger_recon = None
         self.recon_type = None
@@ -110,6 +113,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
         self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ', tip="Use last dummy pulse to calibrate k = 0")
+        self.addParameter(key='nNoise', string='Noise acquisitions', val=1, field='SEQ', tip="Number of noise acquisitions")
         self.addParameter(key='shimming', string='Shimming (*1e4)', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
@@ -118,8 +122,10 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                           tip="'ZP': Zero Padding, 'POCS': Projection Onto Convex Sets")
         self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
                           tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
+        self.addParameter(key='tyger_denoising', string='Denoising (SNRAware)', val=0, field='PRO',
+                          tip='To denoising with Tyger (0 = Disabled; 1 = Enabled)')
         self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',
-                          tip='Options: cp, art, artpk, fft.')
+                          tip='Options: cp or artpk.')
         self.addParameter(key='boFit_file', string='Bo Fit file', val='boFit_default.txt', field='PRO',
                           tip='Path to the Bo Fit file inside [b0_maps] folder.')
         self.addParameter(key='rd_direction', string='Rd direction', val=1, field='SEQ',
@@ -281,7 +287,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         # par_acq_lines in case par_acq_lines = 0
         par_acq_lines = int(int(self.nPoints[2]*self.parFourierFraction)-self.nPoints[2]/2)
         self.mapVals['partialAcquisition'] = par_acq_lines
-
+        print('Par acq lines!', par_acq_lines)
+        
         # BW
         bw = self.nPoints[0] / self.acqTime * 1e-6  # MHz
         sampling_period = 1 / bw  # us
@@ -650,6 +657,120 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
             return batch, n_rd_points, n_adc
 
+        def initialize_batch_0():
+            """
+            Initializes a batch of MRI sequence blocks using PyPulseq for a given experimental configuration.
+
+            Returns:
+            --------
+            tuple
+                - `batch` (pp.Sequence): A PyPulseq sequence object containing the configured sequence blocks.
+                - `n_rd_points` (int): Total number of readout points in the batch.
+                - `n_adc` (int): Total number of ADC acquisitions in the batch.
+
+            Workflow:
+            ---------
+            1. **Create PyPulseq Sequence Object**:
+                - Instantiates a new PyPulseq sequence object (`pp.Sequence`) and initializes counters for
+                readout points (`n_rd_points`) and ADC events (`n_adc`).
+
+            2. **Set Gradients to Zero**:
+                - Initializes slice and phase gradients (`gr_ph_deph`, `gr_sl_deph`, `gr_ph_reph`, `gr_sl_reph`) to zero
+                by scaling predefined gradient blocks with a factor of 0.
+
+            3. **Add Initial Delay and Noise Measurement**:
+                - Adds an initial delay block (`delay_first`) and a noise measurement ADC block (`block_adc_noise`)
+                to the sequence.
+
+            4. **Generate Dummy Pulses**:
+                - Creates a specified number of dummy pulses (`self.dummyPulses`) to prepare the system for data acquisition:
+                    - **Pre-excitation Pulse**:
+                        - If `self.preExTime > 0`, adds a pre-excitation pulse with a readout pre-phasing gradient.
+                    - **Inversion Pulse**:
+                        - If `self.inversionTime > 0`, adds an inversion pulse with a scaled readout pre-phasing gradient.
+                    - **Excitation Pulse**:
+                        - Adds an excitation pulse followed by a readout de-phasing gradient (`block_gr_rd_preph`).
+
+                - For each dummy pulse:
+                    - **Echo Train**:
+                        - For the last dummy pulse, appends an echo train that includes:
+                            - A refocusing pulse.
+                            - Gradients for readout re-phasing, phase de-phasing, and slice de-phasing.
+                            - ADC signal acquisition block (`block_adc_signal`).
+                            - Gradients for phase and slice re-phasing.
+                        - For other dummy pulses, excludes the ADC signal acquisition.
+
+                    - **Repetition Time Delay**:
+                        - Adds a delay (`delay_tr`) to separate repetitions.
+
+            5. **Return Results**:
+                - Returns the configured sequence (`batch`), total readout points (`n_rd_points`), and number of ADC events (`n_adc`).
+
+            """
+            # Instantiate pypulseq sequence object
+            batch = pp.Sequence(system)
+            n_rd_points = 0
+            n_adc = 0
+
+            # Set slice and phase gradients to 0
+            gr_ph_deph = pp.scale_grad(block_gr_ph_deph, scale=0.0)
+            gr_sl_deph = pp.scale_grad(block_gr_sl_deph, scale=0.0)
+            gr_ph_reph = pp.scale_grad(block_gr_ph_reph, scale=0.0)
+            gr_sl_reph = pp.scale_grad(block_gr_sl_reph, scale=0.0)
+
+            # Add first delay and first noise measurement
+            for nNoise in range(self.nNoise):
+                batch.add_block(delay_first, block_adc_noise)
+                n_rd_points += n_rd
+                n_adc += 1
+            # Create dummy pulses
+            for dummy in range(self.dummyPulses):
+                # Pre-excitation pulse
+                if self.preExTime>0:
+                    gr_rd_preex = pp.scale_grad(block_gr_rd_preph, scale=1.0)
+                    batch.add_block(block_rf_pre_excitation,
+                                            gr_rd_preex,
+                                            delay_pre_excitation)
+
+                # Inversion pulse
+                if self.inversionTime>0:
+                    gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
+                    batch.add_block(block_rf_inversion,
+                                            gr_rd_inv,
+                                            delay_inversion)
+
+                # Add excitation pulse and readout de-phasing gradient
+                batch.add_block(block_gr_rd_preph,
+                                        block_rf_excitation,
+                                        delay_preph)
+
+                # Add echo train
+                for echo in range(self.etl):
+                    if dummy == self.dummyPulses-1:
+                        batch.add_block(block_rf_refocusing,
+                                                block_gr_rd_reph,
+                                                gr_ph_deph,
+                                                gr_sl_deph,
+                                                block_adc_signal,
+                                                delay_reph)
+                        batch.add_block(gr_ph_reph,
+                                                gr_sl_reph)
+                        n_rd_points += n_rd
+                        n_adc += 1
+                    else:
+                        batch.add_block(block_rf_refocusing,
+                                                block_gr_rd_reph,
+                                                gr_ph_deph,
+                                                gr_sl_deph,
+                                                delay_reph)
+                        batch.add_block(gr_ph_reph,
+                                                gr_sl_reph)
+
+                # Add time delay to next repetition
+                batch.add_block(delay_tr)
+
+            return batch, n_rd_points, n_adc
+
         '''
         Step 7: Define your createBatches method.
         In this step you will populate the batches adding the blocks previously defined in step 4, and accounting for
@@ -727,7 +848,11 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                         n_rd_points_dict[batch_num] = n_rd_points  # Save readout points count
                         n_rd_points = 0
                         batch_num = f"batch_{seq_idx}"
-                        batches[batch_num], n_rd_points, n_adc_0 = initialize_batch()  # Initialize new batch
+                        print(batch_num)
+                        if batch_num == "batch_1":
+                            batches[batch_num], n_rd_points, n_adc_0 = initialize_batch_0()  # Initialize new batch
+                        else:
+                            batches[batch_num], n_rd_points, n_adc_0 = initialize_batch()  # Initialize new batch
                         n_adc += n_adc_0
                         print(f"Creating {batch_num}.seq...")
 
@@ -747,8 +872,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
                     # Add excitation pulse and readout de-phasing gradient
                     batches[batch_num].add_block(block_gr_rd_preph,
-                                            block_rf_excitation,
-                                            delay_preph)
+                                                 block_rf_excitation,
+                                                 delay_preph)
 
                     # Add echo train
                     for echo in range(self.etl):
@@ -759,15 +884,15 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                         gr_sl_reph = pp.scale_grad(block_gr_sl_reph, - sl_gradients[sl_idx])
 
                         # Add blocks
-                        if self.echoMode=='All':
+                        if self.echoMode == 'All':
                             batches[batch_num].add_block(block_rf_refocusing,
-                                                    block_gr_rd_reph,
-                                                    gr_ph_deph,
-                                                    gr_sl_deph,
-                                                    block_adc_signal,
-                                                    delay_reph)
+                                                         block_gr_rd_reph,
+                                                         gr_ph_deph,
+                                                         gr_sl_deph,
+                                                         block_adc_signal,
+                                                         delay_reph)
                             batches[batch_num].add_block(gr_ph_reph,
-                                                    gr_sl_reph)
+                                                         gr_sl_reph)
                             n_rd_points += n_rd
                             n_adc += 1
                             ph_idx += 1
@@ -849,40 +974,71 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
     def sequenceAnalysis(self, mode=None):
         super().sequenceAnalysis(mode=mode)
 
+        # Get axes in strings
+        axes = self.mapVals['axesOrientation']
+        axesDict = {'x': 0, 'y': 1, 'z': 2}
+        axesKeys = list(axesDict.keys())
+        axesVals = list(axesDict.values())
+        axesStr = ['', '', '']
+        n = 0
+        for val in axes:
+            index = axesVals.index(val)
+            axesStr[n] = axesKeys[index]
+            n += 1
+
+        ## Tyger Reconstruction
+        out_field = 'image3D_den'
+        out_field_k = 'kSpace3D_den'
+        result_Tyger = None
+        if self.mapVals['axes_enable'] == [1,1,1] and self.tyger_denoising == 1:
+            try:
+                rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
+                imgTyger = tyger_denoising.denoisingTyger(rawData_path, out_field, out_field_k)
+                imageTyger = np.abs(imgTyger[0])
+                imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
+
+                ## Image plot
+                # Tyger
+                if self.mapVals['unlock_orientation'] == 0:
+                    result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
+                    result_Tyger['row'] = 0
+                    result_Tyger['col'] = 1
+                    result_Tyger['title'] = "Tyger"
+                else:
+                    result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
+                                    'yLabel': "%s" % axesStr[0], 'title': "Tyger", 'row': 0, 'col': 1}
+
+            except Exception as e:
+                print('Tyger reconstruction failed.')
+                print(f'Error: {e}')
+            
         ## Tyger Reconstruction
         if self.mapVals['axes_enable'] == [1, 1, 1] and self.tyger_recon == 1:
-            # Get axes in strings
-            axes = self.mapVals['axesOrientation']
-            axesDict = {'x': 0, 'y': 1, 'z': 2}
-            axesKeys = list(axesDict.keys())
-            axesVals = list(axesDict.values())
-            axesStr = ['', '', '']
-            n = 0
-            for val in axes:
-                index = axesVals.index(val)
-                axesStr[n] = axesKeys[index]
-                n += 1
-
+            if self.tyger_denoising == 1:
+                input_field = out_field_k
+            else:
+                input_field =''
             print('Preparing Tyger enviroment...')
             rawData_path = self.directory_mat + '/' + self.file_name + '.mat'
             sign_rarepp = [-1, -1, -1, 1, 1, 1, 1, 1, tyger_conf.cp_batchsize_RARE]
             if self.recon_type == 'cp':
                 output_field = 'imgTygerCP'
-            elif self.recon_type == 'art':
-                output_field = 'imgTygerART'
+            # elif self.recon_type == 'art':
+            #     output_field = 'imgTygerART'
             elif self.recon_type == 'artpk':
                 output_field = 'imgTygerARTPK'
             elif self.recon_type == 'fft':
                 output_field = 'imgTygerFFT'
             else:
                 print('Reconstruction type not available in tyger. Reassigned to FFT.')
-                self.recon_type == 'fft'
+                var = self.recon_type == 'fft'
                 output_field = 'imgTygerFFT'
             boFit_path = 'b0_maps/fits/' + self.boFit_file
-
+            if self.tyger_denoising == 1:
+                output_field = output_field + '_den'
+            
             try:
-                imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp,
-                                                     output_field)
+                imgTyger = tyger_rare.reconTygerRARE(rawData_path, self.recon_type, boFit_path, sign_rarepp, output_field, input_field)
                 imageTyger = np.abs(imgTyger[0])
                 imageTyger = imageTyger / np.max(np.reshape(imageTyger, -1)) * 100
 
@@ -897,10 +1053,12 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                     result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
                                     'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
 
-                self.output.append(result_Tyger)
             except Exception as e:
                 print('Tyger reconstruction failed.')
                 print(f'Error: {e}')
+
+        if result_Tyger is not None:
+            self.output.append(result_Tyger)
 
         return self.output
 

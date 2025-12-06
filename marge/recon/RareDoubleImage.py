@@ -48,6 +48,7 @@ def RareDoubleImage(raw_data_path=None):
     n_sl = (n_sl // 2 + partial_acquisition * axes_enable[2] + (1 - axes_enable[2]))
     ind = np.squeeze(mat_data['sweepOrder'])
     add_rd_points = mat_data['addRdPoints'].item()
+    n_noise = mat_data['nNoise'].item()
     try:
         fix_echo = mat_data['k_fill'].item()
         k_fill = mat_data['k_fill'].item()
@@ -85,13 +86,23 @@ def RareDoubleImage(raw_data_path=None):
         for scan in range(n_scans):
             idx_1 += n_rds
             data_prov = data_decimated[idx_0:idx_1]
-            data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd]), axis=0)
-            if dummy_pulses > 0:
-                data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd + points_per_train]),
-                                            axis=0)
-            data_signal = np.concatenate((data_signal, data_prov[points_per_rd + points_per_train::]), axis=0)
+            if batch == 0:
+                data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd * n_noise]), axis=0)
+                if dummy_pulses > 0:
+                    data_dummy = np.concatenate(
+                        (data_dummy, data_prov[points_per_rd * n_noise:points_per_rd + points_per_train]), axis=0)
+                data_signal = np.concatenate((data_signal, data_prov[points_per_rd * n_noise + points_per_train::]),
+                                             axis=0)
+            else:
+                data_noise = np.concatenate((data_noise, data_prov[0:points_per_rd]), axis=0)
+                if dummy_pulses > 0:
+                    data_dummy = np.concatenate((data_dummy, data_prov[points_per_rd:points_per_rd + points_per_train]),
+                                                axis=0)
+                data_signal = np.concatenate((data_signal, data_prov[points_per_rd + points_per_train::]), axis=0)
             idx_0 = idx_1
         n_readouts[batch] += -n_rd - n_rd * etl
+    data_noise = np.reshape(data_noise, (-1, self.nPoints[0] + hw.addRdPoints * 2))
+    data_noise = data_noise[:, hw.addRdPoints:-hw.addRdPoints]
     output_dict['data_noise'] = data_noise
     output_dict['data_dummy'] = data_dummy
     output_dict['data_signal'] = data_signal
@@ -101,7 +112,7 @@ def RareDoubleImage(raw_data_path=None):
 
     # Reorganize data_full
     data_prov = np.zeros(shape=[n_scans, n_sl * n_ph * n_rd * 2], dtype=complex)
-    if n_batches > 1:
+    if n_batches == 2:
         data_full_a = data_full[0:sum(n_readouts[0:-1]) * n_scans]
         data_full_b = data_full[sum(n_readouts[0:-1]) * n_scans:]
         data_full_a = np.reshape(data_full_a, shape=(n_batches - 1, n_scans, -1, n_rd))
@@ -110,6 +121,19 @@ def RareDoubleImage(raw_data_path=None):
             data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
             data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
             data_prov[scan, :] = np.concatenate((data_scan_a, data_scan_b), axis=0)
+    elif n_batches > 2:
+        data_full_ini = data_full[0:n_readouts[0] * n_scans]
+        data_full_a = data_full[
+            n_readouts[0] * n_scans:n_readouts[0] * n_scans + n_readouts[1] * (n_batches - 2) * n_scans]
+        data_full_b = data_full[n_readouts[0] * n_scans + n_readouts[1] * (n_batches - 2) * n_scans:]
+        data_full_ini = np.reshape(data_full_ini, shape=(1, n_scans, -1, n_rd))
+        data_full_a = np.reshape(data_full_a, shape=(n_batches - 2, n_scans, -1, n_rd))
+        data_full_b = np.reshape(data_full_b, shape=(1, n_scans, -1, n_rd))
+        for scan in range(n_scans):
+            data_scan_ini = np.reshape(data_full_ini[:, scan, :, :], -1)
+            data_scan_a = np.reshape(data_full_a[:, scan, :, :], -1)
+            data_scan_b = np.reshape(data_full_b[:, scan, :, :], -1)
+            data_prov[scan, :] = np.concatenate((data_scan_ini, data_scan_a, data_scan_b), axis=0)
     else:
         data_full = np.reshape(data_full, shape=(1, n_scans, -1, n_rd))
         for scan in range(n_scans):
