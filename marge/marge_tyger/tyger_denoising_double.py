@@ -1,4 +1,4 @@
-import marge_tyger.tyger_config as tyger_conf
+import marge.marge_tyger.tyger_config as tyger_conf
 from pathlib import Path
 import time
 import subprocess
@@ -6,10 +6,10 @@ import io
 from os.path import exists
 import os
 import sys
-import marge_tyger.tyger_config as tyger_conf
-from marge_tyger.fromMATtoMRD3D_RAREdouble_noise import matToMRD
-from marge_tyger.fromMATtoMRD3D_RAREdouble_old import matToMRD_old
-from marge_tyger.fromMRDtoMAT3D_noise import export
+import marge.marge_tyger.tyger_config as tyger_conf
+from marge.marge_tyger.fromMATtoMRD3D_RAREdouble_noise import matToMRD
+from marge.marge_tyger.fromMATtoMRD3D_RAREdouble_old import matToMRD_old
+from marge.marge_tyger.fromMRDtoMAT3D_noise import export
 from pathlib import Path
 from os import stat
 import mrd

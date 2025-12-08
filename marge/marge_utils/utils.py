@@ -765,6 +765,12 @@ def decimate(data_over, n_adc, option='PETRA', remove=True, add_rd_points=10, ov
     remove : bool, optional
         If True, removes `addRdPoints` from the start and end of each readout line after decimation.
         Defaults to True.
+    add_rd_points : int, optional
+        Number of additional points at the begining and end of each readout line.
+        Defaults to 10.
+    oversampling_factor : int, optional
+        Oversampling factor applied to data before decimation.
+        Defaults to 5.
 
     Returns:
     --------
@@ -808,8 +814,13 @@ def decimate(data_over, n_adc, option='PETRA', remove=True, add_rd_points=10, ov
         pass
 
     # Decimate the signal after 'fir' filter
-    data_decimated = sp.signal.decimate(data_over[int((oversampling_factor - 1) / 2)::], oversampling_factor,
-                                  ftype='fir', zero_phase=True)
+    if oversampling_factor > 1:
+        data_decimated = sp.signal.decimate(data_over[int((oversampling_factor - 1) / 2)::],
+                                            oversampling_factor,
+                                            ftype='fir',
+                                            zero_phase=True)
+    else:
+        data_decimated = data_over
 
     # Remove addRdPoints
     if remove:

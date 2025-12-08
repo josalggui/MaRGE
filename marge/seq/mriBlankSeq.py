@@ -459,11 +459,21 @@ class MRIBLANKSEQ:
                 # Decimate the oversampled data and store it
                 if output=='':
                     self.mapVals[f'data_over'] = data_over
-                    data = utils.decimate(data_over, n_adc=n_adc, option=decimate, remove=False)
+                    data = utils.decimate(data_over,
+                                          n_adc=n_adc,
+                                          option=decimate,
+                                          remove=False,
+                                          add_rd_points=hw.addRdPoints,
+                                          oversampling_factor=hw.oversamplingFactor)
                     self.mapVals[f'data_decimated'] = data
                 else:
                     self.mapVals[f'data_over_{output}'] = data_over
-                    data = utils.decimate(data_over, n_adc=n_adc, option=decimate, remove=False)
+                    data = utils.decimate(data_over,
+                                          n_adc=n_adc,
+                                          option=decimate,
+                                          remove=False,
+                                          add_rd_points=hw.addRdPoints,
+                                          oversampling_factor=hw.oversamplingFactor)
                     self.mapVals[f'data_decimated_{output}'] = data
 
             elif self.plotSeq and self.standalone:

@@ -1,4 +1,4 @@
-import marge_tyger.tyger_config as tyger_conf
+import marge.marge_tyger.tyger_config as tyger_conf
 from pathlib import Path
 import time
 import subprocess
@@ -6,8 +6,8 @@ import io
 
 import os
 import sys
-from marge_tyger.fromMATtoMRD3D_PETRA import matToMRD
-from marge_tyger.fromMRDtoMAT3D import export
+from marge.marge_tyger.fromMATtoMRD3D_PETRA import matToMRD
+from marge.marge_tyger.fromMRDtoMAT3D import export
 
 def reconTygerPETRA(rawData_path, output_field):
     yml_file = tyger_conf.yml_petra
