@@ -86,6 +86,7 @@ class OthersWidget(QWidget):
         hw.ard_br_interlock = int(self.input_boxes["Arduino interlock baudrate"].text())
         hw.ard_sn_autotuning = self.input_boxes["Arduino autotuning"].text()
         hw.ard_br_autotuning = int(self.input_boxes["Arduino autotuning baudrate"].text())
+        hw.tyger_server = self.input_boxes["Tyger server"].text()
 
 
     def save_others_entries(self):
