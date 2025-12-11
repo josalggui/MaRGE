@@ -37,12 +37,14 @@ class FiguresToolBar(QToolBar):
         self.addAction(self.action_postprocessing)
 
         # Action button to print results
-        self.action_print_current_session = QAction(QIcon("resources/icons/printer1.png"), "Report current session", self)
+        with resources.path("marge.resources.icons", "printer1.png") as icon_path:
+            self.action_print_current_session = QAction(QIcon(str(icon_path)), "Report current session", self)
         self.action_print_current_session.setStatusTip("Report current session")
         self.addAction(self.action_print_current_session)
 
         # Action button to print results
-        self.action_print_given_session = QAction(QIcon("resources/icons/printer2.png"), "Report given session", self)
+        with resources.path("marge.resources.icons", "printer2.png") as icon_path:
+            self.action_print_given_session = QAction(QIcon(str(icon_path)), "Report given session", self)
         self.action_print_given_session.setStatusTip("Report given session")
         self.addAction(self.action_print_given_session)
 
