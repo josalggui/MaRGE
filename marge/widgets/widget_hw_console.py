@@ -24,8 +24,6 @@ class ConsoleWidget(QWidget):
 
         # Add inputs
         self.add_input(label="Red Pitaya model", value="rp-122", tip="Model of the Red Pitaya board")
-        self.add_input(label="Maximum input voltage (mV)", value="225",
-                       tip="Maximum voltage that can be input to the system")
         self.add_input(label="Gradient board model", value="gpa-fhdo", tip="Model of the gradient controller board")
         self.add_input(label="Clock frequency (MHz)", value="122.88", tip="Clock frequency of the system")
         self.add_input(label="ADC factor (mV/unit)", value="6.894", tip="ADC conversion factor from unit to mV")
@@ -94,7 +92,6 @@ class ConsoleWidget(QWidget):
             hw.rp_ip_list.append(ip)
             hw.rp_port.append(11111)
         hw.rp_version = self.input_boxes["Red Pitaya model"].text()
-        hw.rp_max_input_voltage = float(self.input_boxes["Maximum input voltage (mV)"].text())
         hw.grad_board = self.input_boxes["Gradient board model"].text()
         hw.fpga_clk_freq_MHz = float(self.input_boxes["Clock frequency (MHz)"].text())
         hw.adcFactor = float(self.input_boxes["ADC factor (mV/unit)"].text())

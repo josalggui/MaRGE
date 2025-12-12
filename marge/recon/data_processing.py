@@ -50,7 +50,7 @@ def run_recon(raw_data_path=None, mode=None, printer=None):
         print(f"Unknown or unimplemented sequence: {seq}")
         return False
 
-    if mode == 'Standalone':
+    if mode == 'Standalone' and len(output) > 0:
         file_name = mat_data['fileName'][0]
         plot_results(output=output, title=file_name, printer=printer)
 

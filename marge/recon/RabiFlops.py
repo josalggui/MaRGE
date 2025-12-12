@@ -14,13 +14,16 @@ def RabiFlops(raw_data_path=None):
     output_dict = {}
 
     # Print inputs
-    keys = mat_data['input_keys']
-    strings = mat_data['input_strings']
-    string = ""
-    print("****Inputs****")
-    for ii, key in enumerate(keys):
-        string = string + f"{str(strings[ii]).strip()}: {np.squeeze(mat_data[str(key).strip()])}, "
-    print(string)
+    try:
+        keys = mat_data['input_keys']
+        strings = mat_data['input_strings']
+        string = ""
+        print("****Inputs****")
+        for ii, key in enumerate(keys):
+            string = string + f"{str(strings[ii]).strip()}: {np.squeeze(mat_data[str(key).strip()])}, "
+        print(string)
+    except:
+        pass
     print("****Outputs****")
 
     # Get data and time vector
@@ -50,8 +53,7 @@ def RabiFlops(raw_data_path=None):
 
     # Analyze the curve
     piHalfTime, interpolations = analyze_rabi_curve(data=[timeVector, rabiFID, rabiEcho],
-                                                    method=mat_data['cal_method'][0],
-                                                    discriminator=mat_data['discriminator'][0])
+                                                    method=mat_data['cal_method'][0],)
 
     output_dict['piHalfTime'] = piHalfTime
     print("pi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us" % (mat_data['rfExAmp'][0][0],
