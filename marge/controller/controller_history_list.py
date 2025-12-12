@@ -503,8 +503,8 @@ class HistoryListController(HistoryListWidget):
                 del self.pending_runs[key]
                 return False
         except Exception as e:
+            print("ERROR: Exception in sequenceRun:")
             del self.pending_runs[key]
-            print(f"An error occurred in sequenceRun method: {e}")
             return False
 
     def reconSequenceInList(self, sequence=None, key=None):

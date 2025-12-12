@@ -22,9 +22,10 @@ for subdir in subdirs:
     sys.path.append(full_path)
 #******************************************************************************
 # import marge.seq.rare as rare
-import marge.seq.rare_double_image as rare
+import marge.seq.rare_pp as rare
+# import marge.seq.rare_double_image as rare
 
-class Localizer(rare.RareDoubleImage):
+class Localizer(rare.RarePyPulseq):
     def __init__(self):
         super(Localizer, self).__init__()
         self.addParameter(key='planes', string='Planes (sag, cor, tra)', val=[1, 1, 1], field='OTH')
@@ -36,7 +37,7 @@ class Localizer(rare.RareDoubleImage):
 
         self.mapVals['seqName'] = 'Localizer'
         self.mapNmspc['seqName'] = 'LocalizerInfo'
-        self.pos = [0, 0, 0]                    # Global position of each axis
+        self.pos = [0, 0, 0]  # Global position of each axis
 
 if __name__ == '__main__':
     seq = Localizer()
