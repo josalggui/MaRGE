@@ -50,6 +50,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RarePyPulseq, self).__init__()
         # Input the parameters
+        self.oversampling_factor = None
+        self.decimation_factor = None
+        self.add_rd_points = None
         self.nNoise = None
         self.tyger_denoising = None
         self.boFit_file = None
@@ -118,6 +121,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
+        self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
+                          tip="'True' or 'False' to plot odd and even images separately")
         self.addParameter(key='k_fill', string='Filling method', val='ZP', field='PRO',
                           tip="'ZP': Zero Padding, 'POCS': Projection Onto Convex Sets")
         self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
@@ -130,6 +135,12 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                           tip='Path to the Bo Fit file inside [b0_maps] folder.')
         self.addParameter(key='rd_direction', string='Rd direction', val=1, field='SEQ',
                           tip='Set the readout direction to positive (1) or negative (-1)')
+        self.addParameter(key='oversampling_factor', string='Oversampling factor', val=6, field='OTH',
+                          tip='Oversampling factor applied during readout')
+        self.addParameter(key='decimation_factor', string='Decimation factor', val=3, field='OTH',
+                          tip='Decimation applied to acquired data')
+        self.addParameter(key='add_rd_points', string='Add RD points', val=10, field='OTH',
+                          tip='Add RD points to avoid CIC and FIR filters issues')
 
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
@@ -256,8 +267,6 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.mapVals['rf_re_amp'] = rf_re_amp
         self.mapVals['resolution'] = resolution
         self.mapVals['grad_rise_time'] = hw.grad_rise_time
-        self.mapVals['addRdPoints'] = hw.addRdPoints
-        self.mapVals['oversampling_factor'] = hw.oversamplingFactor
         self.mapVals['larmorFreq'] = hw.larmorFreq + self.freqOffset
         if rf_ex_amp > 1 or rf_re_amp > 1:
             print("ERROR: RF amplitude is too high, try with longer RF pulse time.")
@@ -273,7 +282,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         print("Repetition time: %0.3f ms" % (self.repetitionTime * 1e3))
 
         # Matrix size
-        n_rd = self.nPoints[0] + 2 * hw.addRdPoints
+        n_rd = self.nPoints[0] + 2 * self.add_rd_points
         n_ph = self.nPoints[1]
         n_sl = self.nPoints[2]
 
@@ -968,6 +977,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                                frequency=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
                                bandwidth=bw,  # MHz
                                decimate='Normal',
+                               oversampling_factor=self.oversampling_factor,
+                               decimation_factor=self.decimation_factor,
                                hardware=True,
                                )
 
@@ -1140,8 +1151,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         
         dset.write_xml_header(self.header.toXML()) # Write the header to the dataset
 
-        new_data = np.zeros((n_ph * n_sl * self.nScans, n_rd + 2*hw.addRdPoints))
-        new_data = np.reshape(self.data_fullmat, (self.nScans, n_sl, n_ph, n_rd+ 2*hw.addRdPoints))
+        new_data = np.zeros((n_ph * n_sl * self.nScans, n_rd + 2*self.add_rd_points))
+        new_data = np.reshape(self.data_fullmat, (self.nScans, n_sl, n_ph, n_rd+ 2*self.add_rd_points))
         
         counter=0  
         for scan in range(self.nScans):
@@ -1149,7 +1160,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 for phase_idx in range(n_ph):
                     
                     line = new_data[scan, slice_idx, phase_idx, :]
-                    line2d = np.reshape(line, (1, n_rd+2*hw.addRdPoints))
+                    line2d = np.reshape(line, (1, n_rd+2*self.add_rd_points))
                     acq = ismrmrd.Acquisition.from_array(line2d, None)
                     
                     index_in_repetition = phase_idx % etl
@@ -1193,8 +1204,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                     acq.idx.average = scan + 1 # scan
                     
                     acq.scan_counter = counter
-                    acq.discard_pre = hw.addRdPoints
-                    acq.discard_post = hw.addRdPoints
+                    acq.discard_pre = self.add_rd_points
+                    acq.discard_post = self.add_rd_points
                     acq.sample_time_us = 1/bw
                     self.dfov = np.array(self.dfov)
                     acq.position = (ctypes.c_float * 3)(*self.dfov.flatten())

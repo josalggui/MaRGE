@@ -73,16 +73,27 @@ def RarePyPulseq(raw_data_path=None):
     axes_orientation = np.squeeze(mat_data['axesOrientation'])
     data_decimated = np.squeeze(mat_data['data_decimated'])
     n_points = np.squeeze(mat_data['nPoints'])
+    partial_acquisition = mat_data['partialAcquisition'].item()
     n_rd, n_ph, n_sl = n_points
-    n_rd = n_rd + 2 * hw.addRdPoints
-    n_sl = (n_sl // 2 + mat_data['partialAcquisition'].item() * axes_enable[2] + (1 - axes_enable[2]))
     n_batches = mat_data['n_batches'].item()
     n_readouts = mat_data['n_readouts'][0]
     ind = np.squeeze(mat_data['sweepOrder'])
+    add_rd_points = mat_data['add_rd_points'].item()
     k_fill = mat_data['k_fill'].item()
+    oversampling_factor = mat_data['oversampling_factor'].item()
+    decimation_factor = mat_data['decimation_factor'].item()
     dummy_pulses = mat_data['dummyPulses'].item()
     rd_direction = mat_data['rd_direction'].item()
     n_noise = mat_data['nNoise'].item()
+    full_plot = mat_data['full_plot'].item()
+
+    # Correct values
+    n_rd_0 = n_points[0]
+    n_points[0] = int(n_points[0] * oversampling_factor / decimation_factor)
+    n_rd = int((n_rd + 2 * add_rd_points) * oversampling_factor / decimation_factor)
+    n_sl = (n_sl // 2 + partial_acquisition * axes_enable[2] + (1 - axes_enable[2]))
+    fov[0] = fov[0] * oversampling_factor / decimation_factor
+    add_rd_points = int(add_rd_points * oversampling_factor / decimation_factor)
 
     # Get noise data, dummy data and signal data
     data_noise = []
@@ -93,7 +104,7 @@ def RarePyPulseq(raw_data_path=None):
     idx_0 = 0
     idx_1 = 0
     for batch in range(n_batches):
-        n_rds = n_readouts[batch]
+        n_rds = int(n_readouts[batch] * oversampling_factor / decimation_factor)
         for scan in range(n_scans):
             idx_1 += n_rds
             data_prov = data_decimated[idx_0:idx_1]
@@ -112,8 +123,8 @@ def RarePyPulseq(raw_data_path=None):
                 data_signal = np.concatenate((data_signal, data_prov[points_per_rd + points_per_train::]), axis=0)
             idx_0 = idx_1
         n_readouts[batch] += -n_rd - n_rd * mat_data['etl'].item()
-    data_noise = np.reshape(data_noise, (-1, n_points[0] + hw.addRdPoints * 2))
-    data_noise = data_noise[:, hw.addRdPoints: -hw.addRdPoints]
+    data_noise = np.reshape(data_noise, (-1, n_points[0] + add_rd_points * 2))
+    data_noise = data_noise[:, add_rd_points: -add_rd_points]
     output_dict['data_noise'] = data_noise
     output_dict['data_dummy'] = data_dummy
     output_dict['data_signal'] = data_signal
@@ -167,7 +178,7 @@ def RarePyPulseq(raw_data_path=None):
     # Get central line
     data_prov = data_prov[int(n_points[2] / 2), int(n_ph / 2), :]
     ind_krd_0 = np.argmax(np.abs(data_prov))
-    if ind_krd_0 < n_rd / 2 - hw.addRdPoints or ind_krd_0 > n_rd / 2 + hw.addRdPoints:
+    if ind_krd_0 < n_rd / 2 - add_rd_points or ind_krd_0 > n_rd / 2 + add_rd_points:
         ind_krd_0 = int(n_rd / 2)
 
     # Get individual images
@@ -218,7 +229,6 @@ def RarePyPulseq(raw_data_path=None):
     output_dict['sampledCartesian'] = output_dict['sampled']  # To sweep
     data = np.reshape(data, shape=(n_points[2], n_points[1], n_points[0]))
 
-
     # Get axes in strings
     axesDict = {'x': 0, 'y': 1, 'z': 2}
     axesKeys = list(axesDict.keys())
@@ -230,13 +240,14 @@ def RarePyPulseq(raw_data_path=None):
         axesStr[n] = axesKeys[index]
         n += 1
 
-    if (axes_enable[1] == 0 and axes_enable[2] == 0):
+    if axes_enable[1] == 0 and axes_enable[2] == 0:
         bw = mat_data['bw_MHz'] * 1e-3  # kHz
         acqTime = mat_data['acqTime']  # ms
         tVector = np.linspace(-acqTime / 2, acqTime / 2, n_points[0])
         sVector = mat_data['sampled'][:, 3]
-        fVector = np.linspace(-bw / 2, bw / 2, n_points[0])
-        iVector = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(sVector)))
+        fVector = np.linspace(-bw / 4, bw / 4, n_rd_0)
+        iVector = utils.run_ifft(sVector)
+        iVector = iVector[n_points[0]//2 - n_rd_0//2:n_points[0]//2 + n_rd_0//2]
 
         # Plots to show into the GUI
         result_1 = {}
@@ -269,27 +280,46 @@ def RarePyPulseq(raw_data_path=None):
         image = image / np.max(np.reshape(image, -1)) * 100
 
         # Image plot
+        image_reduced = image[:, :, n_points[0]//2 - n_rd_0//2:n_points[0]//2 + n_rd_0//2]
         if mat_data['unlock_orientation'] == 0:
-            result_1, _, _ = utils.fix_image_orientation(image, axes=axes_orientation, rd_direction=rd_direction)
+            if full_plot=='True' or full_plot==True:
+                result_1, _, _ = utils.fix_image_orientation(image, axes=axes_orientation, rd_direction=rd_direction)
+            elif full_plot=='False' or full_plot==False:
+                result_1, _, _ = utils.fix_image_orientation(image_reduced, axes=axes_orientation, rd_direction=rd_direction)
             result_1['row'] = 0
             result_1['col'] = 0
         else:
-            result_1 = {'widget': 'image', 'data': image, 'xLabel': "%s" % axesStr[1],
-                        'yLabel': "%s" % axesStr[0], 'title': "i-Space", 'row': 0, 'col': 0}
+            result_1 = {'widget': 'image',
+                        'xLabel': "%s" % axesStr[1],
+                        'yLabel': "%s" % axesStr[0],
+                        'title': "i-Space",
+                        'row': 0,
+                        'col': 0}
+            if full_plot == 'True' or full_plot == True:
+                result_1['data'] = image
+            elif full_plot == 'False' or full_plot == False:
+                result_1['data'] = image_reduced
 
         # k-space plot
-        result_2 = {'widget': 'image'}
         if par_fourier_fraction == 1:
-            result_2['data'] = np.log10(np.abs(output_dict['kSpace3D']))
+                data = np.log10(np.abs(output_dict['kSpace3D']))
         else:
-            result_2['data'] = np.zeros_like(output_dict['kSpace3D'], dtype=float)
-            result_2['data'][0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D'][0:n_sl, :, :]))
-        result_2['xLabel'] = "k%s" % axesStr[1]
-        result_2['yLabel'] = "k%s" % axesStr[0]
-        result_2['title'] = "k-Space"
-        result_2['row'] = 0
-        result_2['col'] = 1
-
+            data = np.zeros_like(output_dict['kSpace3D'], dtype=float)
+            data[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D'][0:n_sl, :, :]))
+        
+        if mat_data['unlock_orientation'] == 0:
+            result_2, _, _ = utils.fix_image_orientation(data, axes=axes_orientation, rd_direction=rd_direction)
+            result_2['row'] = 0
+            result_2['col'] = 1
+        elif mat_data['unlock_orientation'] == 1:
+            result_2 = {'widget': 'image',
+                        'data': data,
+                        'xLabel': "%s" % axesStr[1],
+                        'yLabel': "%s" % axesStr[0],
+                        'title': "i-Space",
+                        'row': 0,
+                        'col': 1}
+        
         # Dicom parameters
         dicom_meta_data["RepetitionTime"] = mat_data['repetitionTime']
         dicom_meta_data["EchoTime"] = mat_data['echoSpacing']

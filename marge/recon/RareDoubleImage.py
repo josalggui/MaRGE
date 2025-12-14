@@ -72,7 +72,7 @@ def RareDoubleImage(raw_data_path=None):
                                                  n_readouts=n_readouts,
                                                  n_scans=n_scans,
                                                  add_rd_points=add_rd_points,
-                                                 oversampling_factor=oversampling_factor - oversampling_reductor)
+                                                 oversampling_factor=decimation_factor)
     else:
         data_decimated = np.squeeze(mat_data['data_decimated'])
 

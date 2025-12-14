@@ -46,8 +46,8 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RareDoubleImage, self).__init__()
         # Input the parameters
+        self.decimation_factor = None
         self.add_rd_points = None
-        self.oversampling_reductor = None
         self.oversampling_factor = None
         self.tyger_denoising_echoes = None
         self.tyger_denoising = None
