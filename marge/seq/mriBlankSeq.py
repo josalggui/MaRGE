@@ -1,5 +1,5 @@
 """
-Created on Thu June 2 2022
+Created on Thu June 2, 2022
 @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
 @email: josalggui@i3m.upv.es
 @Summary: mri blank sequence with common methods that will be inherited by any sequence
@@ -347,6 +347,8 @@ class MRIBLANKSEQ:
                    frequency=hw.larmorFreq,
                    bandwidth=0.03,
                    decimate='Normal',
+                   oversampling_factor=hw.oversamplingFactor,
+                   decimation_factor=hw.oversamplingFactor,
                    hardware=True,
                    output='',
                    channels=[0],
@@ -372,6 +374,10 @@ class MRIBLANKSEQ:
             Specifies the decimation method.
             - 'Normal': Decimates the acquired array without preprocessing.
             - 'PETRA': Adjusts the pre-readout points to the desired starting point.
+        oversampling_factor: int, optional
+            Oversampling factor applied to the acquisition.
+        decimation_factor: int, optional
+            Decimation factor applied to the acquired data
         hardware: bool, optional
             Take into account gradient and ADC delay.
         output: str, optional
@@ -432,7 +438,7 @@ class MRIBLANKSEQ:
                 for scan in range(self.nScans):
                     print(f"Scan {scan + 1}, batch {seq_num.split('_')[-1]}/{len(n_readouts)} running...")
                     acquired_points = 0
-                    expected_points = n_readouts[seq_num] * hw.oversamplingFactor  # Expected number of points
+                    expected_points = n_readouts[seq_num] * oversampling_factor  # Expected number of points
 
                     # Continue acquiring points until we reach the expected number
                     while acquired_points != expected_points:
@@ -454,7 +460,6 @@ class MRIBLANKSEQ:
                     data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
                     print(f"Acquired points = {acquired_points}, Expected points = {expected_points}")
                     print(f"Scan {scan + 1}, batch {seq_num.split('_')[-1]}/{len(n_readouts)} ready!")
-                    # print(f"Scan {scan + 1}, batch {seq_num[-1]}/{len(n_readouts)} ready!")
 
                 # Decimate the oversampled data and store it
                 if output=='':
@@ -464,7 +469,7 @@ class MRIBLANKSEQ:
                                           option=decimate,
                                           remove=False,
                                           add_rd_points=hw.addRdPoints,
-                                          oversampling_factor=hw.oversamplingFactor)
+                                          oversampling_factor=decimation_factor)
                     self.mapVals[f'data_decimated'] = data
                 else:
                     self.mapVals[f'data_over_{output}'] = data_over
@@ -473,7 +478,7 @@ class MRIBLANKSEQ:
                                           option=decimate,
                                           remove=False,
                                           add_rd_points=hw.addRdPoints,
-                                          oversampling_factor=hw.oversamplingFactor)
+                                          oversampling_factor=decimation_factor)
                     self.mapVals[f'data_decimated_{output}'] = data
 
             elif self.plotSeq and self.standalone:

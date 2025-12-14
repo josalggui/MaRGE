@@ -27,7 +27,6 @@ import marge.controller.experiment_gui as ex
 import marge.configs.hw_config as hw  # Import the scanner hardware config
 import marge.configs.units as units
 import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
-import scipy as sp
 
 import ismrmrd
 import ismrmrd.xsd
@@ -47,6 +46,9 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RareDoubleImage, self).__init__()
         # Input the parameters
+        self.add_rd_points = None
+        self.oversampling_reductor = None
+        self.oversampling_factor = None
         self.tyger_denoising_echoes = None
         self.tyger_denoising = None
         self.boFit_file = None
@@ -122,7 +124,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH',
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
-        self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
+        self.addParameter(key='full_plot', string='Full plot', val=True, field='OTH',
                           tip="'True' or 'False' to plot odd and even images separately")
         self.addParameter(key='fix_echo', string='Eddy compensation', val='False', field='PRO',
                           tip="Shift acquisition window to account for eddy currents using dummy pulse")
@@ -140,6 +142,12 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip='Path to the Bo Fit file inside [b0_maps] folder.')
         self.addParameter(key='rd_direction', string='Rd direction', val=1, field='SEQ',
                           tip='Set the readout direction to positive (1) or negative (-1)')
+        self.addParameter(key='oversampling_factor', string='Oversampling factor', val=6, field='OTH',
+                          tip='Oversampling factor applied during readout')
+        self.addParameter(key='decimation_factor', string='Decimation factor', val=3, field='OTH',
+                          tip='Decimation applied to acquired data')
+        self.addParameter(key='add_rd_points', string='Add RD points', val=10, field='OTH',
+                          tip='Add RD points to avoid CIC and FIR filters issues')
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
         self.header = ismrmrd.xsd.ismrmrdHeader()
@@ -266,15 +274,13 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.mapVals['rf_re_amp'] = rf_re_amp
         self.mapVals['resolution'] = resolution
         self.mapVals['grad_rise_time'] = hw.grad_rise_time
-        self.mapVals['addRdPoints'] = hw.addRdPoints
-        self.mapVals['oversampling_factor'] = hw.oversamplingFactor
         self.mapVals['larmorFreq'] = hw.larmorFreq + self.freqOffset
         if rf_ex_amp > 1 or rf_re_amp > 1:
             print("ERROR: RF amplitude is too high, try with longer RF pulse time.")
             return 0
 
         # Matrix size
-        n_rd = self.nPoints[0] + 2 * hw.addRdPoints
+        n_rd = self.nPoints[0] + 2 * self.add_rd_points
         n_ph = self.nPoints[1]
         n_sl = self.nPoints[2]
 
@@ -687,7 +693,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
 
             return batch, n_rd_points, n_adc
 
-
         '''
         Step 7: Define your createBatches method.
         In this step you will populate the batches adding the blocks previously defined in step 4, and accounting for
@@ -810,6 +815,8 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                                frequency=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
                                bandwidth=bw,  # MHz
                                decimate='Normal',
+                               oversampling_factor=self.oversampling_factor,
+                               decimation_factor=self.decimation_factor,
                                )
 
     def sequenceAnalysis(self, mode=None):

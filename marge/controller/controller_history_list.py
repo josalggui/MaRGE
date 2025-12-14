@@ -503,7 +503,7 @@ class HistoryListController(HistoryListWidget):
                 del self.pending_runs[key]
                 return False
         except Exception as e:
-            print("ERROR: Exception in sequenceRun:")
+            print(f"ERROR: An error occurred in sequenceRun method: {e}")
             del self.pending_runs[key]
             return False
 
