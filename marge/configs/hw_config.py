@@ -10,7 +10,7 @@ import numpy as np
 # Y axis: 40 mT/m/o.u., 0.8 mT/m/A, 4.0 mT/m/V
 # Z axis: 35 mT/m/o.u., 0.7 mT/m/A, 3.5 mT/m/V
 
-gFactor = np.array([0.0106, 0.0129, 0.0113]) # (X, Y, Z) in T/m/o.u.
+gFactor = np.array([0.0506, 0.0529, 0.0513]) # (X, Y, Z) in T/m/o.u.
 max_grad = 40  # mT/m
 max_slew_rate = 150e-3  # mT/m/ms
 grad_raster_time = 25e-6  # s

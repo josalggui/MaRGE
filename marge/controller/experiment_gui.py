@@ -57,12 +57,13 @@ class Experiment(ex.Experiment):
                  allow_user_init_cfg=False, # allow user-defined alteration of flocra configuration set by init, namely RX rate, LO properties etc; see the compile() method for details
                  halt_and_reset=False,  # upon connecting to the server, halt any existing sequences that may be running
                  flush_old_rx=False, # when debugging or developing new code, you may accidentally fill up the RX FIFOs - they will not automatically be cleared in case there is important data inside. Setting this true will always read them out and clear them before running a sequence. More advanced manual code can read RX from existing sequences.
+                 oversampling_factor=hw.oversamplingFactor,  # Oversampling applied to the sampling rate
                  ):
         """
         Initialize the Experiment object with the specified parameters.
         """
         super(Experiment, self).__init__(lo_freq,
-                                         rx_t / hw.oversamplingFactor,
+                                         rx_t / oversampling_factor,
                                          seq_dict,
                                          seq_csv,
                                          rx_lo,
@@ -79,6 +80,7 @@ class Experiment(ex.Experiment):
                                          allow_user_init_cfg,
                                          halt_and_reset,
                                          flush_old_rx,)
+        self.oversampling_factor = oversampling_factor
 
     def getSamplingRate(self):
         """
@@ -87,7 +89,7 @@ class Experiment(ex.Experiment):
         Returns:
             float: The sampling rate in samples per second.
         """
-        return self.get_rx_ts()[0] * hw.oversamplingFactor
+        return self.get_rx_ts()[0] * self.oversampling_factor
 
     def get_sampling_period(self):
         """
@@ -96,7 +98,7 @@ class Experiment(ex.Experiment):
         Returns:
             float: The sampling rate in samples per second.
         """
-        return self.get_rx_ts()[0] * hw.oversamplingFactor  # s
+        return self.get_rx_ts()[0] * self.oversampling_factor  # s
 
     def run(self):
         """
