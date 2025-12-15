@@ -6,13 +6,14 @@
 """
 import copy
 import csv
+import sys
 import threading
 import time
 from datetime import datetime
 
 import numpy as np
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QLabel, QFileDialog
+from PyQt5.QtWidgets import QLabel, QFileDialog, QApplication, QWidget
 
 from marge.controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from marge.controller.controller_plot1d import Plot1DController as SpectrumPlot
@@ -88,6 +89,7 @@ class SequenceController(SequenceToolBar):
         """
         # Include here the sequences to run on autocalibration
         seq_names = [
+            'AutoTuning',
             'Larmor',
             'AutoTuning',
             'Noise',
@@ -112,7 +114,11 @@ class SequenceController(SequenceToolBar):
                 seq.mapVals['rfExAmp'] = rf_amp
                 seq.mapVals['rfReAmp'] = rf_amp
 
-            self.runToList(seq_name=seq_name, item_name="Calibration_"+seq_name)
+            # Send sequence to waiting list
+            self.runToList(seq_name=seq_name,
+                           item_name="Calibration_"+seq_name,
+                           map_nmspc=list(seq.mapNmspc.values()),
+                           map_vals=list(seq.mapVals.values()))
 
         # Update the inputs of the sequences
         self.main.sequence_list.updateSequence()
@@ -641,3 +647,4 @@ class SequenceController(SequenceToolBar):
             self.action_bender.setDisabled(True)
             self.action_view_sequence.setDisabled(True)
             self.action_add_to_list.setDisabled(True)
+
