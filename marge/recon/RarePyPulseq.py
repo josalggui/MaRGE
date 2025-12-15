@@ -203,7 +203,7 @@ def RarePyPulseq(raw_data_path=None):
     # Fix the position of the sample according to dfov
     bw = mat_data['bw_MHz'].item()
     time_vector = np.linspace(-n_points[0] / bw / 2 + 0.5 / bw, n_points[0] / bw / 2 - 0.5 / bw,
-                              n_points[0]) * 1e-6  # s
+                              n_points[0]) * 1e-6 * decimation_factor / oversampling_factor  # s
     kMax = np.squeeze(np.array(n_points) / (2 * np.array(fov)) * np.array(mat_data['axes_enable']))
     kRD = time_vector * hw.gammaB * mat_data['rd_grad_amplitude'].item()
     kPH = np.linspace(-kMax[1], kMax[1], num=n_points[1], endpoint=False)

@@ -368,7 +368,8 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                                       rx_t=sampling_period,  # us
                                       init_gpa=False,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                      auto_leds=True)
+                                      auto_leds=True,
+                                      oversampling_factor=self.oversampling_factor)
             sampling_period = self.expt.get_sampling_period()  # us
             bw = 1 / sampling_period  # MHz
             sampling_time = sampling_period * n_rd * 1e-6  # s
@@ -921,5 +922,5 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__':
     seq = RareDoubleImage()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
+    seq.sequenceRun(plotSeq=False, demo=False, standalone=True)
     seq.sequenceAnalysis(mode='Standalone')

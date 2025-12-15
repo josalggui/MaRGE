@@ -296,8 +296,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         # par_acq_lines in case par_acq_lines = 0
         par_acq_lines = int(int(self.nPoints[2]*self.parFourierFraction)-self.nPoints[2]/2)
         self.mapVals['partialAcquisition'] = par_acq_lines
-        print('Par acq lines!', par_acq_lines)
-        
+
         # BW
         bw = self.nPoints[0] / self.acqTime * 1e-6  # MHz
         sampling_period = 1 / bw  # us
@@ -368,7 +367,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                                       rx_t=sampling_period,  # us
                                       init_gpa=False,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                      auto_leds=True)
+                                      auto_leds=True,
+                                      oversampling_factor=self.oversampling_factor)
             sampling_period = self.expt.get_sampling_period() # us
             bw = 1 / sampling_period  # MHz
             sampling_time = sampling_period * n_rd * 1e-6  # s

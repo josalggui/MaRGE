@@ -415,7 +415,8 @@ class MRIBLANKSEQ:
                     rx_t=1 / bandwidth,  # Sampling time in us
                     init_gpa=False,  # Whether to initialize GPA board (False for now)
                     gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
-                    auto_leds=True  # Automatic control of LEDs
+                    auto_leds=True,  # Automatic control of LEDs
+                    oversampling_factor=oversampling_factor,
                 )
 
             # Convert the PyPulseq waveform to the Red Pitaya compatible format
