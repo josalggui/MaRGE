@@ -1799,8 +1799,8 @@ class MRIBLANKSEQ:
                                  image=self.mapVals['image3D'],
                                  file_path=f"{directory_nii}/{file_name}.nii"
                                  )
-            except:
-                pass
+            except Exception as e:
+                print(f"WARNING: Dicom or Nifti error: {e}")
 
         # Move seq files
         self.move_batch_files(destination_folder=directory, file_name=file_name)

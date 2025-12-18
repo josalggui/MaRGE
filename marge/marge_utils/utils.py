@@ -215,7 +215,7 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
     dicom_image.meta_data["PatientID"] = session["subject_id"]
     dicom_image.meta_data["OperatorsName"] = session['user']
 
-    if session['subjet_birthday'] != 'YY/MM/DD':
+    if session['subject_birthday'] != 'YY/MM/DD':
         dicom_image.meta_data["PatientBirthDate"] =  session["subject_birthday"]
     if session['subject_weight'] != 'kg':
         dicom_image.meta_data["PatientWeight"] = session["subject_weight"]
