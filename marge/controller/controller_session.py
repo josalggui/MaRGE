@@ -39,6 +39,30 @@ class SessionController(SessionWindow):
         self.main_gui = None
         self.tab_session.rf_coil_combo_box.addItems(hw.antenna_dict.keys())
 
+        # Nuevo #Posicionar el item del combo según la inf guardada en b1Efficiency.csv
+        def read_rf_from_csv(path_csv: str) -> str | None:
+            try:
+                with open(path_csv, newline="", encoding="utf-8") as f:
+                    row = next(csv.reader(f))
+                coil = row[0].strip()
+                return coil if coil else None
+            except Exception:
+                return None
+
+        def select_rf_from_csv(combo, path_csv: str) -> None:
+            if combo.count() == 0:
+                return
+
+            coil = read_rf_from_csv(path_csv)
+            if coil:
+                idx = combo.findText(coil)
+                combo.setCurrentIndex(idx if idx >= 0 else 0)
+            else:
+                combo.setCurrentIndex(0)
+
+        path_b1 = os.path.join("configs", "b1Efficiency.csv")
+        select_rf_from_csv(self.tab_session.rf_coil_combo_box, path_b1)
+
         # Set slots for toolbar actions
         self.launch_gui_action.triggered.connect(self.runMainGui)
         self.demo_gui_action.triggered.connect(self.runDemoGui)
@@ -129,6 +153,7 @@ class SessionController(SessionWindow):
         shutil.copy2("configs/hw_rf.csv", os.path.join(self.session["directory"], "hw_rf.csv"))
         shutil.copy2("configs/sys_projects.csv", os.path.join(self.session["directory"], "sys_projects.csv"))
         shutil.copy2("configs/sys_study.csv", os.path.join(self.session["directory"], "sys_study.csv"))
+        shutil.copy2("configs/b1Efficiency.csv", os.path.join(self.session["directory"], "b1Efficiency.csv"))
 
         self.session['seriesNumber'] = 0
 
@@ -169,6 +194,7 @@ class SessionController(SessionWindow):
         shutil.copy2("configs/hw_rf.csv", os.path.join(self.session["directory"], "hw_rf.csv"))
         shutil.copy2("configs/sys_projects.csv", os.path.join(self.session["directory"], "sys_projects.csv"))
         shutil.copy2("configs/sys_study.csv", os.path.join(self.session["directory"], "sys_study.csv"))
+        shutil.copy2("configs/b1Efficiency.csv", os.path.join(self.session["directory"], "b1Efficiency.csv"))
 
         self.session['seriesNumber'] = 0
 
@@ -283,3 +309,10 @@ class SessionController(SessionWindow):
         }
 
         hw.b1Efficiency = hw.antenna_dict.get(self.session['rf_coil'], 1.0)
+
+        # Nuevo # guardar RfCoil y valor en configs/b1Efficiency.csv
+        path_b1 = os.path.join("configs", "b1Efficiency.csv")
+        coil = self.session.get('rf_coil', '')
+        eff = float(hw.antenna_dict.get(coil, 1.0))
+        with open(path_b1, "w", newline="", encoding="utf-8") as f:
+            csv.writer(f).writerow([coil, f"{eff:.6f}"])
