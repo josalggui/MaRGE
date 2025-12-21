@@ -126,8 +126,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip='0: Images oriented according to standard. 1: Image raw orientation')
         self.addParameter(key='full_plot', string='Full plot', val=True, field='OTH',
                           tip="'True' or 'False' to plot odd and even images separately")
-        self.addParameter(key='fix_echo', string='Eddy compensation', val='False', field='PRO',
-                          tip="Shift acquisition window to account for eddy currents using dummy pulse")
         self.addParameter(key='k_fill', string='Filling method', val='ZP', field='PRO',
                           tip="'ZP': Zero Padding, 'POCS': Projection Onto Convex Sets")
         self.addParameter(key='tyger_denoising_echoes', string='Input echoes to Tyger', val='all', field='PRO',
@@ -148,6 +146,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip='Decimation applied to acquired data')
         self.addParameter(key='add_rd_points', string='Add RD points', val=10, field='OTH',
                           tip='Add RD points to avoid CIC and FIR filters issues')
+
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
         self.header = ismrmrd.xsd.ismrmrdHeader()
@@ -818,6 +817,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                                decimate='Normal',
                                oversampling_factor=self.oversampling_factor,
                                decimation_factor=self.decimation_factor,
+                               hardware=True,
                                )
 
     def sequenceAnalysis(self, mode=None):

@@ -47,12 +47,12 @@ def RareDoubleImage(raw_data_path=None):
     ind = np.squeeze(mat_data['sweepOrder'])
     add_rd_points = mat_data['add_rd_points'].item()
     n_noise = mat_data['nNoise'].item()
-    fix_echo = mat_data['fix_echo'].item()
     k_fill = mat_data['k_fill'].item()
     oversampling_factor = mat_data['oversampling_factor'].item()
     decimation_factor = mat_data['decimation_factor'].item()
     dummy_pulses = mat_data['dummyPulses'].item()
     rd_direction = mat_data['rd_direction'].item()
+    data_decimated = np.squeeze(mat_data['data_decimated'])
 
     # Correct values
     n_rd_0 = n_points[0]
@@ -61,20 +61,6 @@ def RareDoubleImage(raw_data_path=None):
     n_sl = (n_sl // 2 + partial_acquisition * axes_enable[2] + (1 - axes_enable[2]))
     fov[0] = fov[0] * oversampling_factor / decimation_factor
     add_rd_points = int(add_rd_points * oversampling_factor / decimation_factor)
-
-    if fix_echo == 'True':
-        data_oversampled = np.squeeze(mat_data['data_over'])
-        data_decimated = utils.fix_echo_position(data_oversampled=data_oversampled,
-                                                 dummy_pulses=dummy_pulses,
-                                                 etl=etl,
-                                                 n_rd=n_rd,
-                                                 n_batches=n_batches,
-                                                 n_readouts=n_readouts,
-                                                 n_scans=n_scans,
-                                                 add_rd_points=add_rd_points,
-                                                 oversampling_factor=decimation_factor)
-    else:
-        data_decimated = np.squeeze(mat_data['data_decimated'])
 
     # Get noise data, dummy data and signal data
     data_noise = []
@@ -187,10 +173,39 @@ def RareDoubleImage(raw_data_path=None):
     if k_fill == 'POCS' and n_points[2] > n_sl:
         data_temp_odd = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp_odd)
         data_temp_eve = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp_eve)
-    data_odd = np.reshape(data_temp_odd, shape=(1, n_points[0] * n_points[1] * n_points[2]))
-    data_eve = np.reshape(data_temp_eve, shape=(1, n_points[0] * n_points[1] * n_points[2]))
+
+    # METHOD 1: Get decimated k-space by FFT
+    subdecimation_method = 'FFT'
+    if subdecimation_method=='FFT' and (full_plot==False or full_plot=='False'):
+        image_temp_odd = utils.run_ifft(data_temp_odd)
+        image_temp_eve = utils.run_ifft(data_temp_eve)
+        idx_0 = n_points[0] // 2 - n_points[0] // 2 * decimation_factor // oversampling_factor
+        idx_1 = n_points[0] // 2 + n_points[0] // 2 * decimation_factor // oversampling_factor
+        image_temp_odd = image_temp_odd[:, :, idx_0:idx_1]
+        image_temp_eve = image_temp_eve[:, :, idx_0:idx_1]
+        data_temp_odd = utils.run_dfft(image_temp_odd)
+        data_temp_eve = utils.run_dfft(image_temp_eve)
+        n_points[0] = n_rd_0
+        fov[0] = fov[0] * decimation_factor / oversampling_factor
+
+    # METHO 2: Get image by decimating k-space with average of consecutive samples.
+    if subdecimation_method=='AVG' and (full_plot==False or full_plot=='False'):
+        n_points[0] = n_rd_0
+        fov[0] = fov[0] * decimation_factor / oversampling_factor
+        data_prov_odd = np.zeros((n_points[2], n_points[1], n_points[0]), dtype=complex)
+        data_prov_eve = np.zeros((n_points[2], n_points[1], n_points[0]), dtype=complex)
+        dii = oversampling_factor // decimation_factor
+        for ii in range(n_rd_0):
+            data_prov_odd[:, :, ii] = np.mean(data_temp_odd[:, :, dii*ii:dii*(ii+1)], axis=2)
+            data_prov_eve[:, :, ii] = np.mean(data_temp_eve[:, :, dii*ii:dii*(ii+1)], axis=2)
+        data_temp_odd = data_prov_odd
+        data_temp_eve = data_prov_eve
+        image_temp_odd = utils.run_ifft(data_temp_odd)
+        image_temp_eve = utils.run_ifft(data_temp_eve)
 
     # Fix the position of the sample according to dfov
+    data_odd = np.reshape(data_temp_odd, shape=(1, n_points[0] * n_points[1] * n_points[2]))
+    data_eve = np.reshape(data_temp_eve, shape=(1, n_points[0] * n_points[1] * n_points[2]))
     bw = mat_data['bw_MHz'].item()
     time_vector = np.linspace(-n_points[0] / bw / 2 + 0.5 / bw, n_points[0] / bw / 2 - 0.5 / bw,
                               n_points[0]) * 1e-6 * decimation_factor / oversampling_factor # s
@@ -259,10 +274,14 @@ def RareDoubleImage(raw_data_path=None):
         k_odd = np.log10(np.abs(output_dict['kSpace3D_odd_echoes']))
         k_even = np.log10(np.abs(output_dict['kSpace3D_even_echoes']))
     else:
-        k_odd = np.zeros_like(output_dict['kSpace3D_odd_echoes'], dtype=float)
-        k_odd[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D_odd_echoes'][0:n_sl, :, :]))
-        k_even = np.zeros_like(output_dict['kSpace3D_even_echoes'], dtype=float)
-        k_even[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D_even_echoes'][0:n_sl, :, :]))
+        if k_fill == 'ZP':
+            k_odd = np.zeros_like(output_dict['kSpace3D_odd_echoes'], dtype=float)
+            k_odd[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D_odd_echoes'][0:n_sl, :, :]))
+            k_even = np.zeros_like(output_dict['kSpace3D_even_echoes'], dtype=float)
+            k_even[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D_even_echoes'][0:n_sl, :, :]))
+        else:
+            k_odd = np.log10(np.abs(output_dict['kSpace3D_odd_echoes']))
+            k_even = np.log10(np.abs(output_dict['kSpace3D_even_echoes']))
     result_k_odd, k_odd, _ = utils.fix_image_orientation(k_odd, axes=axes_orientation, rd_direction=rd_direction)
     result_k_even, k_even, _ = utils.fix_image_orientation(k_even, axes=axes_orientation, rd_direction=rd_direction)
 

@@ -1,10 +1,7 @@
-import copy
-
 import marge.configs.hw_config as hw
 import numpy as np
 import scipy as sp
 from marge.marge_utils import utils
-from phantominator import shepp_logan
 
 
 def RarePyPulseq(raw_data_path=None):
