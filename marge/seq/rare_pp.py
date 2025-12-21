@@ -8,8 +8,6 @@ Created on Thu June 2, 2022
 import os
 import sys
 
-from phantominator import shepp_logan
-
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))

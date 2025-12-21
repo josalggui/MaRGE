@@ -1,7 +1,10 @@
+import copy
+
 import marge.configs.hw_config as hw
 import numpy as np
 import scipy as sp
 from marge.marge_utils import utils
+from phantominator import shepp_logan
 
 
 def RarePyPulseq(raw_data_path=None):
@@ -193,17 +196,54 @@ def RarePyPulseq(raw_data_path=None):
     # Average data
     data = np.average(data_full, axis=0)
 
-    # Do zero padding
+    # Do zero padding or POCS
     data_temp = np.zeros(shape=(n_points[2], n_points[1], n_points[0]), dtype=complex)
     data_temp[0:n_sl, :, :] = data
     if k_fill == 'POCS':
         data_temp = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp)
-    data = np.reshape(data_temp, shape=(1, n_points[0] * n_points[1] * n_points[2]))
+
+    # #############################################
+    # print("Raw image statistics:")
+    # noise_2 = int(np.std(data_temp) * 100)
+    # print(f"Std noise: {noise_2}")
+    # image_2 = int(np.std(image_temp) * 1e6)
+    # print(f"Std image: {image_2}")
+    # #############################################
+
+    # METHOD 1: Get decimated k-space by FFT
+    subdecimation_method = 'FFT'
+    if subdecimation_method=='FFT' and (full_plot==False or full_plot=='False'):
+        image_temp = utils.run_ifft(data_temp)
+        idx_0 = n_points[0] // 2 - n_points[0] // 2 * decimation_factor // oversampling_factor
+        idx_1 = n_points[0] // 2 + n_points[0] // 2 * decimation_factor // oversampling_factor
+        image_temp = image_temp[:, :, idx_0:idx_1]
+        data_temp = utils.run_dfft(image_temp)
+        n_points[0] = n_rd_0
+        fov[0] = fov[0] * decimation_factor / oversampling_factor
+
+    # METHO 2: Get image by decimating k-space with average of consecutive samples.
+    if subdecimation_method=='AVG' and (full_plot==False or full_plot=='False'):
+        n_points[0] = n_rd_0
+        fov[0] = fov[0] * decimation_factor / oversampling_factor
+        data_prov = np.zeros((n_points[2], n_points[1], n_points[0]), dtype=complex)
+        dii = oversampling_factor // decimation_factor
+        for ii in range(n_rd_0):
+            data_prov[:, :, ii] = np.mean(data_temp[:, :, dii*ii:dii*(ii+1)], axis=2)
+        data_temp = data_prov
+        image_temp = utils.run_ifft(data_temp)
+
+    # #############################################
+    # print("Target image statistics:")
+    # noise_2 = int(np.std(data) * 100)
+    # print(f"Std noise: {noise_2}")
+    # image_2 = int(np.std(image_temp) * 1e6)
+    # print(f"Std image: {image_2}")
+    # #############################################
 
     # Fix the position of the sample according to dfov
+    data = np.reshape(data_temp, shape=(1, n_points[0] * n_points[1] * n_points[2]))
     bw = mat_data['bw_MHz'].item()
-    time_vector = np.linspace(-n_points[0] / bw / 2 + 0.5 / bw, n_points[0] / bw / 2 - 0.5 / bw,
-                              n_points[0]) * 1e-6 * decimation_factor / oversampling_factor  # s
+    time_vector = np.linspace(-n_points[0] / bw / 2 + 0.5 / bw, n_points[0] / bw / 2 - 0.5 / bw, n_points[0]) * 1e-6 # s
     kMax = np.squeeze(np.array(n_points) / (2 * np.array(fov)) * np.array(mat_data['axes_enable']))
     kRD = time_vector * hw.gammaB * mat_data['rd_grad_amplitude'].item()
     kPH = np.linspace(-kMax[1], kMax[1], num=n_points[1], endpoint=False)
@@ -215,8 +255,7 @@ def RarePyPulseq(raw_data_path=None):
     dPhase = np.exp(2 * np.pi * 1j * (dfov[0] * kRD + dfov[1] * kPH + dfov[2] * kSL))
     data = np.reshape(data * dPhase, shape=(n_points[2], n_points[1], n_points[0]))
     output_dict['kSpace3D'] = data
-    img = utils.run_ifft(data)
-    output_dict['image3D'] = img
+    output_dict['image3D'] = utils.run_ifft(data)
     data = np.reshape(data, shape=(1, n_points[0] * n_points[1] * n_points[2]))
 
     # Create sampled data
@@ -277,35 +316,31 @@ def RarePyPulseq(raw_data_path=None):
     else:
         # Plot image
         image = np.abs(output_dict['image3D'])
-        image = image / np.max(np.reshape(image, -1)) * 100
 
         # Image plot
-        image_reduced = image[:, :, n_points[0]//2 - n_rd_0//2:n_points[0]//2 + n_rd_0//2]
         if mat_data['unlock_orientation'] == 0:
-            if full_plot=='True' or full_plot==True:
-                result_1, _, _ = utils.fix_image_orientation(image, axes=axes_orientation, rd_direction=rd_direction)
-            elif full_plot=='False' or full_plot==False:
-                result_1, _, _ = utils.fix_image_orientation(image_reduced, axes=axes_orientation, rd_direction=rd_direction)
+            result_1, _, _ = utils.fix_image_orientation(image, axes=axes_orientation, rd_direction=rd_direction)
             result_1['row'] = 0
             result_1['col'] = 0
         else:
             result_1 = {'widget': 'image',
+                        'data': image,
                         'xLabel': "%s" % axesStr[1],
                         'yLabel': "%s" % axesStr[0],
                         'title': "i-Space",
                         'row': 0,
                         'col': 0}
-            if full_plot == 'True' or full_plot == True:
-                result_1['data'] = image
-            elif full_plot == 'False' or full_plot == False:
-                result_1['data'] = image_reduced
 
         # k-space plot
         if par_fourier_fraction == 1:
                 data = np.log10(np.abs(output_dict['kSpace3D']))
+                data = np.abs(output_dict['kSpace3D'])
         else:
-            data = np.zeros_like(output_dict['kSpace3D'], dtype=float)
-            data[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D'][0:n_sl, :, :]))
+            if k_fill == 'ZP':
+                data = np.zeros_like(output_dict['kSpace3D'], dtype=float)
+                data[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D'][0:n_sl, :, :]))
+            elif k_fill == 'POCS':
+                data = np.log10(np.abs(output_dict['kSpace3D']))
         
         if mat_data['unlock_orientation'] == 0:
             result_2, _, _ = utils.fix_image_orientation(data, axes=axes_orientation, rd_direction=rd_direction)
@@ -333,5 +368,5 @@ def RarePyPulseq(raw_data_path=None):
 
     return output_dict, output
 
-# if __name__ == '__main__':
-#     RarePyPulseq(raw_data_path="C:\CSIC\REPOSITORIOS\MaRCoS\MaRGE\RareDoubleImage.2025.08.18.17.29.50.502.mat")
+if __name__ == '__main__':
+    RarePyPulseq(raw_data_path="C:\CSIC\REPOSITORIOS\MaRCoS\MaRGE\RareDoubleImage.2025.08.18.17.29.50.502.mat")
