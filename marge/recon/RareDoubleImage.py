@@ -56,6 +56,7 @@ def RareDoubleImage(raw_data_path=None):
 
     # Correct values
     n_rd_0 = n_points[0]
+    n_readouts = n_readouts * oversampling_factor // decimation_factor
     n_points[0] = int(n_points[0] * oversampling_factor / decimation_factor)
     n_rd = int((n_rd + 2 * add_rd_points) * oversampling_factor / decimation_factor)
     n_sl = (n_sl // 2 + partial_acquisition * axes_enable[2] + (1 - axes_enable[2]))
@@ -71,7 +72,7 @@ def RareDoubleImage(raw_data_path=None):
     idx_0 = 0
     idx_1 = 0
     for batch in range(n_batches):
-        n_rds = int(n_readouts[batch] * oversampling_factor / decimation_factor)
+        n_rds = n_readouts[batch]
         for scan in range(n_scans):
             idx_1 += n_rds
             data_prov = data_decimated[idx_0:idx_1]
