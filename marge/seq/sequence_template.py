@@ -53,7 +53,7 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='seqName', string='Sequence Name', val='Default_SeqName',
                           tip="The identifier name for the sequence.")
 
-        # To automatically include the sequence into MaRGE.
+        # To automatically include the sequence into MaRGE, val=True.
         self.addParameter(key='toMaRGE', string='to MaRGE', val=False)
 
         # To let the code know that we are using tools associated to pypulseq
@@ -108,10 +108,10 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
         Calculate the sequence time based on its parameters.
         Students can extend this method as needed.
         """
-        nScans = self.mapVals['nScans']
+        nRepetitions = self.mapVals['nRepetitions']
         repetitionTime = self.mapVals['repetitionTime']
 
-        seqTime = nScans * repetitionTime * 1e-3 / 60  # conversion to minutes
+        seqTime = nRepetitions * repetitionTime * 1e-3 / 60  # conversion to minutes
         seqTime = np.round(seqTime, decimals=2)
         return seqTime  # minutes
 
@@ -352,27 +352,25 @@ class SEQUENCE_TEMPLATE(blankSeq.MRIBLANKSEQ):
                                decimate='Normal',
                                )
 
-    def sequenceAnalysis(self, mode=None):
-
-
-        # create self.out to run in iterative mode
-        self.output = []
-
-        # save data once self.output is created
-        self.saveRawData()
-
-        # Plot result in standalone execution
-        if self.mode == 'Standalone':
-            self.plotResults()
-
-        return self.output
+    # def sequenceAnalysis(self, mode=None):
+    #
+    #
+    #     # create self.out to run in iterative mode
+    #     self.output = []
+    #
+    #     # save data once self.output is created
+    #     self.saveRawData()
+    #
+    #     # Plot result in standalone execution
+    #     if self.mode == 'Standalone':
+    #         self.plotResults()
+    #
+    #     return self.output
 
 
 if __name__ == "__main__":
-    # main(plot=True, write_seq=True)
 
     seq = SEQUENCE_TEMPLATE()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
-    # seq.sequenceAnalysis(mode='standalone')
-    # seq.plotResults()
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
+    seq.sequenceAnalysis(mode='Standalone')

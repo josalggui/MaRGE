@@ -1,3 +1,30 @@
+"""
+run_recon.py
+
+This script dynamically loads and runs reconstruction functions for
+different sequences stored in `.mat` files.
+
+The reconstruction functions must be located in the `marge/recon`
+directory. The script dynamically imports all Python modules in this
+directory (excluding `__init__.py`) and looks for functions whose
+names match the `seqName` field in the `.mat` file.
+
+Each sequence-specific function must:
+- Be named exactly as the `seqName` value in the `.mat` file.
+- Be located in a Python module inside `marge/recon`.
+
+The script can operate in two modes:
+- Standard: Returns the output dictionary and plotting data.
+- Standalone: Automatically plots the results in a window or
+  sends them to a printer object.
+
+Dependencies:
+- numpy
+- scipy
+- matplotlib
+- marge.recon
+"""
+
 import importlib
 import os
 from io import BytesIO
@@ -11,6 +38,43 @@ import marge.recon
 module_path = marge.recon.__path__[0]
 
 def run_recon(raw_data_path=None, mode=None, printer=None):
+    """
+    Run the reconstruction for a given sequence.
+
+    This function dynamically loads the reconstruction function that
+    corresponds to the `seqName` in the provided `.mat` file. It then
+    executes the function and optionally plots the results.
+
+    Parameters
+    ----------
+    raw_data_path : str, optional
+        Path to the `.mat` file containing the raw sequence data.
+        Must contain the `seqName` field.
+    mode : str, optional
+        If set to `"Standalone"`, the function will generate plots
+        for the results. Otherwise, it simply returns the outputs.
+    printer : object, optional
+        If provided and `mode="Standalone"`, the plots are sent to
+        this printer object instead of being displayed.
+
+    Returns
+    -------
+    output_dict : dict
+        Dictionary of derived numerical values, metrics, or metadata
+        returned by the sequence-specific reconstruction function.
+    output : list
+        List of plotting dictionaries describing images or curves to
+        visualize.
+
+    Notes
+    -----
+    - The function requires that reconstruction scripts reside in
+      `marge/recon`.
+    - The reconstruction function name must exactly match the
+      `seqName` from the `.mat` file.
+    - If the sequence is unrecognized or not implemented, the
+      function prints a warning and returns `False`.
+    """
     # Load .mat file and get sequence name
     mat_data = sp.io.loadmat(raw_data_path)
     seq = mat_data['seqName'].item()  # Use `.item()` if it's a MATLAB cell
@@ -58,14 +122,33 @@ def run_recon(raw_data_path=None, mode=None, printer=None):
 
 def plot_results(output, title=None, printer=None):
     """
-    Plot results in a standalone window.
+    Generate plots from the reconstruction output.
 
-    This method generates plots based on the output data provided. It creates a plot window, inserts each plot
-    according to its type (image or curve), sets titles and labels, and displays the plot.
+    This function creates a figure and inserts subplots based on the
+    output dictionaries. Each item can be a curve plot or an image.
 
-    Returns:
-        None
+    Parameters
+    ----------
+    output : list
+        List of dictionaries, each describing a plot to generate.
+        Each dictionary must contain keys such as 'widget', 'xData',
+        'yData', 'title', 'xLabel', 'yLabel', 'row', and 'col'.
+    title : str, optional
+        Overall title for the figure.
+    printer : object, optional
+        If provided, the plot is saved into a BytesIO buffer and
+        passed to the printer's `add_image_to_story` method. If not
+        provided, the figure is displayed using `plt.show()`.
 
+    Returns
+    -------
+    None
+
+    Notes
+    -----
+    - Automatically arranges subplots according to 'row' and 'col' keys.
+    - Supports both 'curve' and 'image' widgets.
+    - Uses tight_layout to prevent overlapping titles and labels.
     """
     # Determine the number of columns and rows for subplots
     cols = 0
