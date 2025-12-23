@@ -219,7 +219,7 @@ def RarePyPulseq(raw_data_path=None):
         n_points[0] = n_rd_0
         fov[0] = fov[0] * decimation_factor / oversampling_factor
 
-    # METHO 2: Get image by decimating k-space with average of consecutive samples.
+    # METHOD 2: Get image by decimating k-space with average of consecutive samples.
     if subdecimation_method=='AVG' and (full_plot==False or full_plot=='False'):
         n_points[0] = n_rd_0
         fov[0] = fov[0] * decimation_factor / oversampling_factor
