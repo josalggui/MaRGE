@@ -51,7 +51,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         repetitionTime = self.mapVals['repetitionTime']*1e-3
         return(repetitionTime*nScans/60)  # minutes, scanTime
 
-    def sequenceRun(self, plotSeq, demo=False):
+    def sequenceRun(self, plotSeq=False, demo=False):
         init_gpa = False  # Starts the gpa
         self.demo = demo
 
@@ -168,21 +168,18 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         else:
             print("ERROR: sequence waveforms out of hardware bounds")
             return False
-        if plotSeq:
-            self.expt.__del__()
-        else:
+        if not plotSeq:
             data_over = np.array([])
             for _ in range(self.nScans):
                 if not self.demo:
-                    rxd, msgs = self.expt.run()
-                    print(msgs)
+                    rxd, _ = self.expt.run()
                     data_over = np.concatenate((data_over, rxd['rx0']*hw.adcFactor), axis=0)
                 else:
                     data_over = np.concatenate((data_over, self.mySignal()), axis=0)
             data_decimated = sig.decimate(data_over, hw.oversamplingFactor, ftype='fir', zero_phase=True)
             self.mapVals['data'] = data_decimated
-            if not self.demo:
-                self.expt.__del__()
+
+        if not self.demo: self.expt.__del__()
 
         return True
 

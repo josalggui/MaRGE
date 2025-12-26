@@ -30,7 +30,6 @@ class TSE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='etl', string='Echo train length', val=50, field='SEQ')
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=2.0, units=units.ms, field='SEQ')
         self.addParameter(key='shimming', string='shimming', val=[0.0, 0.0, 0.0], units=units.sh, field='OTH')
-        self.addParameter(key='echoObservation', string='Echo Observation', val=1, field='OTH')
         self.addParameter(key='phase_mode', string='Phase mode', val='CPMG', tip='CP, CPMG, APCP, APCPMG', field='SEQ')
 
     def sequenceInfo(self):
