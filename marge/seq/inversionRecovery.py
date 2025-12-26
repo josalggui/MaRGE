@@ -17,9 +17,10 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(InversionRecovery, self).__init__()
         # Input the parameters
+        self.nSteps = None
         self.addParameter(key='seqName', string='InverionRecoveryInfo', val='InversionRecovery')
         self.addParameter(key='toMaRGE', val=True)
-        self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
+        self.addParameter(key='nScans', string='Number of scans', val=10, field='SEQ')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
         self.addParameter(key='rfReAmp', string='RF refocusing amplitude (a.u.)', val=0.3, field='RF')
@@ -52,13 +53,7 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
 
     def sequenceRun(self, plotSeq, demo=False):
         init_gpa = False  # Starts the gpa
-
-        # Create the inputs automatically. For some reason it only works if there is a few code later...
-        # for key in self.mapKeys:
-        #     locals()[key] = self.mapVals[key]
-        #     if not key in locals():
-        #         print('Error')
-        #         locals()[key] = self.mapVals[key]
+        self.demo = demo
 
         # Create the inputs manually, pufff
         seqName = self.mapVals['seqName']
@@ -159,8 +154,9 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         # Bandwidth and sampling rate
         bw = nPoints / acqTime * hw.oversamplingFactor # MHz
         samplingPeriod = 1 / bw # us
-        self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
-        samplingPeriod = self.expt.get_rx_ts()[0]  # us
+        if not self.demo:
+            self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriod, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))
+            samplingPeriod = self.expt.get_rx_ts()[0]  # us
         bw = 1 / samplingPeriod / hw.oversamplingFactor  # MHz
         acqTime = nPoints / bw  # us
         self.mapVals['samplingPeriod'] = samplingPeriod * 1e-6
@@ -175,37 +171,52 @@ class InversionRecovery(blankSeq.MRIBLANKSEQ):
         if plotSeq:
             self.expt.__del__()
         else:
-            rxd, msgs = self.expt.run()
-            print(msgs)
-            data = sig.decimate(rxd['rx0']*hw.adcFactor, hw.oversamplingFactor, ftype='fir', zero_phase=True)
-            self.mapVals['data'] = data
-            self.expt.__del__()
+            data_over = np.array([])
+            for _ in range(self.nScans):
+                if not self.demo:
+                    rxd, msgs = self.expt.run()
+                    print(msgs)
+                    data_over = np.concatenate((data_over, rxd['rx0']*hw.adcFactor), axis=0)
+                else:
+                    data_over = np.concatenate((data_over, self.mySignal()), axis=0)
+            data_decimated = sig.decimate(data_over, hw.oversamplingFactor, ftype='fir', zero_phase=True)
+            self.mapVals['data'] = data_decimated
+            if not self.demo:
+                self.expt.__del__()
 
-            # Process data to be plotted
-            data = np.reshape(data, (nSteps, -1))
-            data = data[:, int(nPoints / 2)]
-            self.data = [irTimeVector*1e-3, data]
-            self.mapVals['sampledPoint'] = data
         return True
 
-    def sequenceAnalysis(self, obj=''):
+    def mySignal(self):
+        # Get inputs
+        ti = self.mapVals['irTimeVector'] * 1e-3  # ms
+        te = self.mapVals['echoTime']
+        acq_time = self.mapVals['acqTime']
+        n_points = self.mapVals['nPoints'] * hw.oversamplingFactor
+        t1 = 150.0  # ms
+        t2_star = 1.0  # ms
 
-        # Signal vs inverion time
-        result1 = {'widget': 'curve',
-                   'xData': self.data[0],
-                   'yData': [np.abs(self.data[1])],
-                   'xLabel': 'Time (ms)',
-                   'yLabel': 'Signal amplitude (mV)',
-                   'title': '',
-                   'legend': [''],
-                   'row': 0,
-                   'col': 0}
+        # Define gaussian function
+        def gaussian(a, t, mu, sig):
+            return a*np.exp(-np.power(t - mu, 2.) / (2 * np.power(sig, 2.)))
 
-        # create self.out to run in iterative mode
-        self.output = [result1]
+        # Generate signal vector
+        t0 = np.linspace(start=te - acq_time / 2, stop=te + acq_time / 2, num=n_points)  # ms
+        t0_p = np.linspace(start=0, stop = acq_time, num=n_points, endpoint=False)  # ms
+        t1_vector = t0_p
+        signal = gaussian(1-2*np.exp(-ti[0]/t1), t0, te, t2_star)
+        for ti_index in range(self.nSteps - 1):
+            sig_prov = gaussian(1-2*np.exp(-ti[ti_index+1]/t1), t0, te, t2_star)
+            t0_p = t0_p + acq_time
+            t1_vector = np.concatenate((t1_vector, t0_p), axis=0)
+            signal = np.concatenate((signal, sig_prov), axis=0)
 
-        self.saveRawData()
+        # Add noise
+        signal = signal + (np.random.randn(np.size(signal)) + 1j * np.random.randn(np.size(signal))) * 0.01
 
-        return self.output
+        return signal
 
-
+if __name__ == '__main__':
+    seq = InversionRecovery()
+    seq.sequenceAtributes()
+    seq.sequenceRun(plotSeq=False, demo=True)
+    seq.sequenceAnalysis(mode='Standalone')
