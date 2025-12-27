@@ -29,7 +29,7 @@ class Localizer(rare.RarePyPulseq):
     def __init__(self):
         super(Localizer, self).__init__()
         self.addParameter(key='planes', string='Planes (sag, tra, cor)', val=[1, 1, 1], field='OTH')
-        self.addParameter(key='rd_directions', string="RD Direction", val = [1, 1, 1], field='OTH',
+        self.addParameter(key='rd_directions', string="RD directions", val = [1, 1, 1], field='OTH',
                           tip = "RD direction (1 or -1) for sagittal, coronal, transversal")
         self.addParameter(key='rd_axis', string="RD Axis", val=[0, 1, 2], field='OTH',
                           tip = "RD axis for sagittal, coronal, transversal")

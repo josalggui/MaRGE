@@ -74,7 +74,6 @@ class SequenceController(SequenceToolBar):
         items = [self.main.protocol_inputs.item(index) for index in range(self.main.protocol_inputs.count())]
         for item in items:
             self.main.protocol_inputs.sequenceDoubleClicked(item)
-            hw.dfov = [0.0, 0.0, 0.0]
             time.sleep(0.1)
 
     def autocalibration(self):
