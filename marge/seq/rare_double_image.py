@@ -115,7 +115,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='rdDephTime', string='Rd dephasing time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='phGradTime', string='Ph gradient time (ms)', val=1.0, units=units.ms, field='OTH')
         self.addParameter(key='rdPreemphasis', string='Rd preemphasis', val=1.0, field='OTH')
-        self.addParameter(key='rfPhase', string='RF phase (º)', val=0.0, field='OTH')
         self.addParameter(key='dummyPulses', string='Dummy pulses', val=1, field='SEQ',
                           tip="Use last dummy pulse to calibrate k = 0")
         self.addParameter(key='nNoise', string='Noise acquisitions', val=1, field='SEQ', tip="Noise noise acquisitions")
@@ -476,7 +475,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
             flip_angle=flip_re,
             system=system,
             duration=self.rfReTime,
-            phase_offset=np.pi / 2 + self.rfPhase * np.pi / 180,
+            phase_offset=np.pi / 2,
             delay=0,
             use='refocusing'
         )
