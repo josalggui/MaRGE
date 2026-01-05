@@ -86,9 +86,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.echoMode = None
         self.axesOrientation = None
         self.addParameter(key='seqName', string='RAREInfo', val='RarePyPulseq')
-        self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
-        self.addParameter(key='pypulseq', string='PyPulseq', val=True)
-        self.addParameter(key='nScans', string='Number of scans', val=1, field='IM') ## number of scans 
+        self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='nScans', string='Number of scans', val=1, field='IM') ## number of scans
         self.addParameter(key='freqOffset', string='Larmor frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='rfExFA', string='Excitation flip angle (º)', val=90, field='RF')
         self.addParameter(key='rfReFA', string='Refocusing flip angle (º)', val=180, field='RF')

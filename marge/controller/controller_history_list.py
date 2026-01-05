@@ -233,6 +233,11 @@ class HistoryListController(HistoryListWidget):
         # Extract items from the input_data
         input_info = list(input_data[0])
         input_vals = list(input_data[1])
+        input_info, input_vals = zip(
+            *[(info, val) for info, val in zip(input_info, input_vals) if info != '']
+        )
+        input_info = list(input_info)
+        input_vals = list(input_vals)
 
         # Set number of rows
         self.main.input_table.setColumnCount(1)

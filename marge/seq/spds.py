@@ -60,8 +60,7 @@ class spds(blankSeq.MRIBLANKSEQ):
         self.plotSeq = None
         self.addParameter(key='seqName', string='Sequence Name', val='SPDS',
                           tip="The identifier name for the sequence.")
-        self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
-        self.addParameter(key='pypulseq', string='PyPulseq', val=True)
+        self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM',
                           tip='Number of repetitions of the full scan.')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.055, field='RF',
