@@ -306,11 +306,11 @@ class MarcosController(MarcosToolBar):
                             # Check
                             if sum(gpa_code) == 5:
                                 print("READY: GPA init done!")
-                            else:
+                            elif sum(gpa_code) != 5 and hw.gpa_model == "Barthel":
                                 print(f"ERROR: GPA init failed. Error code: {gpa_code}")
                             if sum(rfpa_code) == 4:
                                 print("READY: RFPA init done!")
-                            else:
+                            elif sum(rfpa_code) != 4 and hw.rfpa_model == "Barthel":
                                 print(f"ERROR: RPFA init failed. Error code: {rfpa_code}")
 
                         except:
