@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "marge-mri"
-version = "0.9.1b1"
+version = "0.9.1b2"
 authors = [
     { name = "José Miguel Algarín", email = "josalggui@i3m.upv.es" },
 ]
