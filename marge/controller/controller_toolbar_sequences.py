@@ -356,7 +356,7 @@ class SequenceController(SequenceToolBar):
         try:
             defaultsequences[seq_name].mapVals['shimming'] = defaultsequences['Shimming'].mapVals['shimming']
         except:
-            defaultsequences[seq_name].mapVals['shimming'] = defaultsequences['RARE'].mapVals['shimming']
+            defaultsequences[seq_name].mapVals['shimming'] = np.array([0.0, 0.0, 0.0])
 
         # Sagittal localizer
         if defaultsequences[seq_name].mapVals['planes'][0]:

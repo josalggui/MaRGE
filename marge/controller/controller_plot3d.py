@@ -9,6 +9,7 @@ import numpy as np
 from marge.seq.sequences import defaultsequences
 from marge.widgets.widget_plot3d import Plot3DWidget
 import marge.configs.hw_config as hw
+import pyqtgraph as pg
 
 
 class Plot3DController(Plot3DWidget):
@@ -52,10 +53,24 @@ class Plot3DController(Plot3DWidget):
 
         # Create ROI to get FOV
         self.roiFOV.setSize(np.size(data, 1), np.size(data, 2), update=False)
+        self.roiFOV.handleSize = 12
+        self.roiFOV.setPen(pg.mkPen('r', width=3))
+        self.roiFOV.hoverPen = pg.mkPen('g', width=3)
         self.roiFOV.addScaleHandle([1, 1], [0.5, 0.5])
         # self.roiFOV.addRotateHandle([0, 0], [0.5, 0.5])
-        self.roiFOV.setZValue(20)
-        self.roiFOV.setPen('y')
+
+        # Manage colors
+        for h in self.roiFOV.handles:
+            item = h.get("item")
+            if item is None:
+                continue
+            if h.get("type") == "s":
+                item.pen = pg.mkPen('y', width=3)
+                item.hoverPen = pg.mkPen('g', width=3)
+                item.currentPen = item.pen
+                item.update()
+
+        self.roiFOV.hide()
         self.roiFOV.hide()
         self.roiFOV.sigRegionChangeFinished.connect(self.roiFOVChanged)
 

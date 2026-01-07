@@ -523,7 +523,7 @@ class HistoryListController(HistoryListWidget):
 
         if output:
             if sequence.mapVals['seqName'] == 'Localizer':
-                hw.fov = sequence.mapVals['fov']
+                hw.fov = copy.deepcopy(sequence.mapVals['fov'])
             keys = list(self.inputs.keys())  # List of elements in the sequence history list
             key_index = keys.index(key)
             # Add item to the history list
