@@ -53,7 +53,7 @@ class Plot3DController(Plot3DWidget):
         # Create ROI to get FOV
         self.roiFOV.setSize(np.size(data, 1), np.size(data, 2), update=False)
         self.roiFOV.addScaleHandle([1, 1], [0.5, 0.5])
-        self.roiFOV.addRotateHandle([0, 0], [0.5, 0.5])
+        # self.roiFOV.addRotateHandle([0, 0], [0.5, 0.5])
         self.roiFOV.setZValue(20)
         self.roiFOV.setPen('y')
         self.roiFOV.hide()
