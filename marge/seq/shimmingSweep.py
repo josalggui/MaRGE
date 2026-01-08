@@ -116,9 +116,9 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         # Update the shimming in hw_config
         if mode != "Standalone":
             for seqName in self.sequence_list:
-                self.sequence_list[seqName].mapVals['shimming'] = [np.round(self.mapVals['shimming0'][0], decimals=1),
-                                                                   np.round(self.mapVals['shimming0'][1], decimals=1),
-                                                                   np.round(self.mapVals['shimming0'][2], decimals=1)]
+                self.sequence_list[seqName].mapVals['shimming'] = [float(np.round(self.mapVals['shimming0'][0], decimals=1)),
+                                                                   float(np.round(self.mapVals['shimming0'][1], decimals=1)),
+                                                                   float(np.round(self.mapVals['shimming0'][2], decimals=1))]
         return self.output
 
     def createSequence(self):

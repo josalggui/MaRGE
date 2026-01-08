@@ -92,9 +92,9 @@ def Shimming(raw_data_path=None):
                'row': 1,
                'col': 0}
 
-    shimming = [np.round(sx / units.sh, decimals=1),
-                np.round(sy / units.sh, decimals=1),
-                np.round(sz / units.sh, decimals=1)]
+    shimming = [float(np.round(sx / units.sh, decimals=1)),
+                float(np.round(sy / units.sh, decimals=1)),
+                float(np.round(sz / units.sh, decimals=1))]
     output_dict['shimming0'] = shimming
 
     return output_dict, [result1, result2]

@@ -223,15 +223,15 @@ class Plot3DController(Plot3DWidget):
 
         # Set fov properties in true units
         fov_roi = hw.fov.copy()
-        fov_roi[x_axis] = np.round(roi_fov_px[0] * self.img_resolution[0] * 1e2, decimals=1)  # cm
-        fov_roi[y_axis] = np.round(roi_fov_px[1] * self.img_resolution[1] * 1e2, decimals=1)  # cm
+        fov_roi[x_axis] = float(np.round(roi_fov_px[0] * self.img_resolution[0] * 1e2, decimals=1))  # cm
+        fov_roi[y_axis] = float(np.round(roi_fov_px[1] * self.img_resolution[1] * 1e2, decimals=1))  # cm
         dfov_roi = hw.dfov.copy()
-        dfov_roi[x_axis] = d[0] * np.round(x0_ru * 1e3, decimals=1)  # mm
-        dfov_roi[y_axis] = d[1] * np.round(y0_ru * 1e3, decimals=1)  # mm
-        hw.fov[x_axis] = np.round(fov_roi[x_axis])
-        hw.fov[y_axis] = np.round(fov_roi[y_axis])
-        hw.dfov[x_axis] = np.round(dfov_roi[x_axis])
-        hw.dfov[y_axis] = np.round(dfov_roi[y_axis])
+        dfov_roi[x_axis] = d[0] * float(np.round(x0_ru * 1e3, decimals=1))  # mm
+        dfov_roi[y_axis] = d[1] * float(np.round(y0_ru * 1e3, decimals=1))  # mm
+        hw.fov[x_axis] = float(np.round(fov_roi[x_axis], decimals=1))
+        hw.fov[y_axis] = float(np.round(fov_roi[y_axis], decimals=1))
+        hw.dfov[x_axis] = float(np.round(dfov_roi[x_axis], decimals=1))
+        hw.dfov[y_axis] = float(np.round(dfov_roi[y_axis], decimals=1))
 
         # Define rotation
         rotation = [0, 0, 0, 0]
