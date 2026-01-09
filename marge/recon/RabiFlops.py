@@ -53,7 +53,8 @@ def RabiFlops(raw_data_path=None):
 
     # Analyze the curve
     piHalfTime, interpolations = analyze_rabi_curve(data=[timeVector, rabiFID, rabiEcho],
-                                                    method=mat_data['cal_method'][0],)
+                                                    method=mat_data['cal_method'][0],
+                                                    discriminator=mat_data['discriminator'][0])
 
     output_dict['piHalfTime'] = piHalfTime
     print("pi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us" % (mat_data['rfExAmp'][0][0],
