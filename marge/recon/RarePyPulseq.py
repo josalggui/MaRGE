@@ -200,22 +200,22 @@ def RarePyPulseq(raw_data_path=None):
     if k_fill == 'POCS':
         data_temp = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp)
 
-    # #############################################
-    # print("Raw image statistics:")
-    # noise_2 = int(np.std(data_temp) * 100)
-    # print(f"Std noise: {noise_2}")
-    # image_2 = int(np.std(image_temp) * 1e6)
-    # print(f"Std image: {image_2}")
-    # #############################################
+    #******************************************************************************************************************#
+    #                                                   Sub-decimation
+    #******************************************************************************************************************#
 
     # METHOD 1: Get decimated k-space by FFT
     subdecimation_method = 'FFT'
     if subdecimation_method=='FFT' and (full_plot==False or full_plot=='False'):
         image_temp = utils.run_ifft(data_temp)
+        noise_temp = utils.run_ifft(data_noise)
         idx_0 = n_points[0] // 2 - n_points[0] // 2 * decimation_factor // oversampling_factor
         idx_1 = n_points[0] // 2 + n_points[0] // 2 * decimation_factor // oversampling_factor
         image_temp = image_temp[:, :, idx_0:idx_1]
+        noise_temp = noise_temp[:, idx_0:idx_1]
         data_temp = utils.run_dfft(image_temp)
+        data_noise = utils.run_dfft(noise_temp)
+        output_dict['data_noise'] = data_noise
         n_points[0] = n_rd_0
         fov[0] = fov[0] * decimation_factor / oversampling_factor
 
@@ -230,13 +230,12 @@ def RarePyPulseq(raw_data_path=None):
         data_temp = data_prov
         image_temp = utils.run_ifft(data_temp)
 
-    # #############################################
-    # print("Target image statistics:")
-    # noise_2 = int(np.std(data) * 100)
-    # print(f"Std noise: {noise_2}")
-    # image_2 = int(np.std(image_temp) * 1e6)
-    # print(f"Std image: {image_2}")
-    # #############################################
+    # Decimate noise
+
+
+    #******************************************************************************************************************#
+    #
+    #******************************************************************************************************************#
 
     # Fix the position of the sample according to dfov
     data = np.reshape(data_temp, shape=(1, n_points[0] * n_points[1] * n_points[2]))
