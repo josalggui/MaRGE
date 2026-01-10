@@ -166,6 +166,11 @@ class ProtocolInputsController(ProtocolInputsWidget):
         # Extract items from the input_data
         input_info = defaultsequences[seq_name].mapNmspc.values()
         input_vals = defaultsequences[seq_name].mapVals.values()
+        input_info, input_vals = zip(
+            *[(info, val) for info, val in zip(input_info, input_vals) if info != '']
+        )
+        input_info = list(input_info)
+        input_vals = list(input_vals)
 
         # Set number of rows
         self.main.input_table.setColumnCount(1)
