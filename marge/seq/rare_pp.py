@@ -100,7 +100,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[40, 40, 10], field='IM')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[120, 120, 20], field='IM')
         self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ') ## nm of peaks in 1 repetition
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
@@ -1226,9 +1226,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             
             # img.data_type= 8 ## COMPLEX FLOAT
             img.image_type = 5 ## COMPLEX
-            
-            
-            
+
             img.read_dir = (ctypes.c_float * 3)(*read_dir)
             img.phase_dir = (ctypes.c_float * 3)(*phase_dir)
             img.slice_dir = (ctypes.c_float * 3)(*slice_dir)

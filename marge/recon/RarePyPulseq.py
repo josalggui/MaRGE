@@ -73,28 +73,17 @@ def RarePyPulseq(raw_data_path=None):
     axes_orientation = np.squeeze(mat_data['axesOrientation'])
     data_decimated = np.squeeze(mat_data['data_decimated'])
     n_points = np.squeeze(mat_data['nPoints'])
-    partial_acquisition = mat_data['partialAcquisition'].item()
+    add_rd_points = mat_data['add_rd_points'].item()
     n_rd, n_ph, n_sl = n_points
+    n_rd = n_rd + 2 * add_rd_points
+    n_sl = (n_sl // 2 + mat_data['partialAcquisition'].item() * axes_enable[2] + (1 - axes_enable[2]))
     n_batches = mat_data['n_batches'].item()
     n_readouts = mat_data['n_readouts'][0]
     ind = np.squeeze(mat_data['sweepOrder'])
-    add_rd_points = mat_data['add_rd_points'].item()
     k_fill = mat_data['k_fill'].item()
-    oversampling_factor = mat_data['oversampling_factor'].item()
-    decimation_factor = mat_data['decimation_factor'].item()
     dummy_pulses = mat_data['dummyPulses'].item()
     rd_direction = mat_data['rd_direction'].item()
     n_noise = mat_data['nNoise'].item()
-    full_plot = mat_data['full_plot'].item()
-
-    # Correct values
-    n_rd_0 = n_points[0]
-    n_readouts = n_readouts * oversampling_factor // decimation_factor
-    n_points[0] = int(n_points[0] * oversampling_factor / decimation_factor)
-    n_rd = int((n_rd + 2 * add_rd_points) * oversampling_factor / decimation_factor)
-    n_sl = (n_sl // 2 + partial_acquisition * axes_enable[2] + (1 - axes_enable[2]))
-    fov[0] = fov[0] * oversampling_factor / decimation_factor
-    add_rd_points = int(add_rd_points * oversampling_factor / decimation_factor)
 
     # Get noise data, dummy data and signal data
     data_noise = []
@@ -194,52 +183,14 @@ def RarePyPulseq(raw_data_path=None):
     # Average data
     data = np.average(data_full, axis=0)
 
-    # Do zero padding or POCS
+    # Do zero padding
     data_temp = np.zeros(shape=(n_points[2], n_points[1], n_points[0]), dtype=complex)
     data_temp[0:n_sl, :, :] = data
     if k_fill == 'POCS':
         data_temp = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp)
-
-    # #############################################
-    # print("Raw image statistics:")
-    # noise_2 = int(np.std(data_temp) * 100)
-    # print(f"Std noise: {noise_2}")
-    # image_2 = int(np.std(image_temp) * 1e6)
-    # print(f"Std image: {image_2}")
-    # #############################################
-
-    # METHOD 1: Get decimated k-space by FFT
-    subdecimation_method = 'FFT'
-    if subdecimation_method=='FFT' and (full_plot==False or full_plot=='False'):
-        image_temp = utils.run_ifft(data_temp)
-        idx_0 = n_points[0] // 2 - n_points[0] // 2 * decimation_factor // oversampling_factor
-        idx_1 = n_points[0] // 2 + n_points[0] // 2 * decimation_factor // oversampling_factor
-        image_temp = image_temp[:, :, idx_0:idx_1]
-        data_temp = utils.run_dfft(image_temp)
-        n_points[0] = n_rd_0
-        fov[0] = fov[0] * decimation_factor / oversampling_factor
-
-    # METHOD 2: Get image by decimating k-space with average of consecutive samples.
-    if subdecimation_method=='AVG' and (full_plot==False or full_plot=='False'):
-        n_points[0] = n_rd_0
-        fov[0] = fov[0] * decimation_factor / oversampling_factor
-        data_prov = np.zeros((n_points[2], n_points[1], n_points[0]), dtype=complex)
-        dii = oversampling_factor // decimation_factor
-        for ii in range(n_rd_0):
-            data_prov[:, :, ii] = np.mean(data_temp[:, :, dii*ii:dii*(ii+1)], axis=2)
-        data_temp = data_prov
-        image_temp = utils.run_ifft(data_temp)
-
-    # #############################################
-    # print("Target image statistics:")
-    # noise_2 = int(np.std(data) * 100)
-    # print(f"Std noise: {noise_2}")
-    # image_2 = int(np.std(image_temp) * 1e6)
-    # print(f"Std image: {image_2}")
-    # #############################################
+    data = np.reshape(data_temp, shape=(1, n_points[0] * n_points[1] * n_points[2]))
 
     # Fix the position of the sample according to dfov
-    data = np.reshape(data_temp, shape=(1, n_points[0] * n_points[1] * n_points[2]))
     bw = mat_data['bw_MHz'].item()
     time_vector = np.linspace(-n_points[0] / bw / 2 + 0.5 / bw, n_points[0] / bw / 2 - 0.5 / bw, n_points[0]) * 1e-6 # s
     kMax = np.squeeze(np.array(n_points) / (2 * np.array(fov)) * np.array(mat_data['axes_enable']))
@@ -282,9 +233,8 @@ def RarePyPulseq(raw_data_path=None):
         acqTime = mat_data['acqTime']  # ms
         tVector = np.linspace(-acqTime / 2, acqTime / 2, n_points[0])
         sVector = mat_data['sampled'][:, 3]
-        fVector = np.linspace(-bw / 4, bw / 4, n_rd_0)
+        fVector = np.linspace(-bw / 2, bw / 2, n_points[0])
         iVector = utils.run_ifft(sVector)
-        iVector = iVector[n_points[0]//2 - n_rd_0//2:n_points[0]//2 + n_rd_0//2]
 
         # Plots to show into the GUI
         result_1 = {}
@@ -332,7 +282,6 @@ def RarePyPulseq(raw_data_path=None):
         # k-space plot
         if par_fourier_fraction == 1:
                 data = np.log10(np.abs(output_dict['kSpace3D']))
-                data = np.abs(output_dict['kSpace3D'])
         else:
             if k_fill == 'ZP':
                 data = np.zeros_like(output_dict['kSpace3D'], dtype=float)
@@ -360,9 +309,6 @@ def RarePyPulseq(raw_data_path=None):
 
         # Add results into the output attribute (result_1 must be the image to save in dicom)
         output = [result_1, result_2]
-
-    # Save results
-    # self.save_ismrmrd()
 
     return output_dict, output
 

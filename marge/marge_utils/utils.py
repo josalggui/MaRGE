@@ -747,10 +747,15 @@ def fix_echo_position(data_oversampled, dummy_pulses, etl, n_rd, n_batches, n_re
 
     return data_decimated
 
-def decimate(data_over, n_adc, option='PETRA', remove=True, add_rd_points=10, oversampling_factor=5):
+def decimate(data_over, n_adc, option='PETRA', remove=True, add_rd_points=10, oversampling_factor=5, decimation_factor=5):
     """
-    Decimates oversampled MRI data, with optional preprocessing to manage oscillations and postprocessing
-    to remove extra points.
+    Decimate oversampled MRI readout data using a two-stage approach:
+    FIR decimation followed by optional averaging-based decimation.
+
+    This function converts oversampled ADC data to the desired bandwidth.
+    If the requested decimation factor is smaller than the acquisition
+    oversampling factor, the remaining decimation is completed by averaging
+    (convolution with a boxcar), which preserves phase and improves SNR.
 
     Parameters:
     -----------
@@ -769,39 +774,46 @@ def decimate(data_over, n_adc, option='PETRA', remove=True, add_rd_points=10, ov
         Number of additional points at the begining and end of each readout line.
         Defaults to 10.
     oversampling_factor : int, optional
-        Oversampling factor applied to data before decimation.
-        Defaults to 5.
+        Oversampling factor used during data acquisition.
+        This defines the total effective decimation applied to the data.
+        Default is 5.
+    decimation_factor : int, optional
+        FIR decimation factor applied using an anti-aliasing filter.
+        If smaller than `oversampling_factor`, the remaining decimation is
+        completed by averaging.
+        Default is 5.
 
     Returns:
     --------
     numpy.ndarray
         The decimated data array, optionally adjusted to remove extra points.
 
-    Workflow:
-    ---------
-    1. **Preprocess data (optional)**:
-        - For 'PETRA' mode, reshapes the data into adc windows and adjusts the first few points of each line
-          to avoid oscillations caused by decimation.
-        - For 'Normal' mode, no preprocessing is applied.
+    Notes
+    -----
+    - The total effective decimation factor is always equal to
+      `oversampling_factor`.
+    - When `decimation_factor < oversampling_factor`, the remaining
+      decimation factor (`oversampling_factor / decimation_factor`) is
+      applied by averaging consecutive samples.
+    - Averaging is performed independently for each ADC window to avoid
+      mixing readout lines.
+    - The PETRA preprocessing step is designed to reduce Gibbs-like
+      oscillations introduced by FIR filtering at the beginning of
+      each readout.
 
-    2. **Decimate the signal**:
-        - Applies a finite impulse response (FIR) filter and decimates the signal by the oversampling factor
-          (`hw.oversamplingFactor`).
-        - Starts decimation after skipping `(oversamplingFactor - 1) / 2` points to minimize edge effects.
-
-    3. **Postprocess data (if `remove=True`)**:
-        - Reshapes the decimated data into adc windows.
-        - Removes `hw.addRdPoints` from the start and end of each line.
-        - Reshapes the cleaned data back into a 1D array.
-
-    Notes:
-    ------
-    - This method uses the hardware-specific parameters:
-      - `hw.oversamplingFactor`: The oversampling factor applied during data acquisition.
-      - `hw.addRdPoints`: The number of additional readout points to include or remove.
-    - The 'PETRA' preprocessing mode is tailored for specialized MRI acquisitions that require smoothing of
-      initial points to prevent oscillations.
+    Workflow
+    --------
+    1. Optionally preprocess the data to stabilize early readout points
+       (PETRA mode).
+    2. Apply FIR decimation with factor `decimation_factor`.
+    3. If required, finish the decimation by averaging.
+    4. Optionally remove extra readout points from each ADC window.
     """
+
+    # Get averaging factor
+    if oversampling_factor % decimation_factor != 0:
+        raise ValueError("oversampling_factor must be a multiple of decimation_factor")
+    avg_factor = oversampling_factor // decimation_factor
 
     # Preprocess the signal to avoid oscillations due to decimation
     if option == 'PETRA':
@@ -815,12 +827,20 @@ def decimate(data_over, n_adc, option='PETRA', remove=True, add_rd_points=10, ov
 
     # Decimate the signal after 'fir' filter
     if oversampling_factor > 1:
-        data_decimated = sp.signal.decimate(data_over[int((oversampling_factor - 1) / 2)::],
-                                            oversampling_factor,
+        data_decimated = sp.signal.decimate(data_over[int((decimation_factor - 1) / 2)::],
+                                            decimation_factor,
                                             ftype='fir',
                                             zero_phase=True)
     else:
         data_decimated = data_over
+
+    # Remaining decimation by averaging
+    if avg_factor > 1:
+        data_decimated = data_decimated.reshape(n_adc, -1)
+        n = (data_decimated.shape[1] // avg_factor) * avg_factor
+        data_decimated = data_decimated[:, :n]
+        data_decimated = data_decimated.reshape(n_adc, -1, avg_factor).mean(axis=2)
+        data_decimated = data_decimated.reshape(-1)
 
     # Remove addRdPoints
     if remove:
@@ -964,6 +984,7 @@ def get_snr_from_individual_acquisitions(data, roi_size):
 
 
 if __name__ == "__main__":
+    pass
     # from matplotlib import pyplot as plt
     # mat_data = sp.io.loadmat("C:/CSIC/RareDoubleImage.2025.09.24.13.32.29.066.mat")
     # # mat_data = sp.io.loadmat("C:/CSIC/RareDoubleImage.2025.09.24.13.03.47.729.mat")
@@ -979,22 +1000,3 @@ if __name__ == "__main__":
     # # Run pocs
     # k_space_ref_zp = run_zero_padding(k_space_ref, (20, 240, 240))
     # img_reconstructed = run_pocs_reconstruction(n_points, factors, k_space_ref, test=True)
-
-    ####################################################################################################################
-    # Fix echo position example
-    ####################################################################################################################
-    from matplotlib import pyplot as plt
-    mat_data = sp.io.loadmat("RareDoubleImage.2025.09.22.14.51.12.793.mat")
-    data = mat_data["data_over"][0]
-    n_batches = mat_data['n_batches'].item()
-    n_readouts = mat_data['n_readouts'][0]
-    etl = mat_data['etl'].item()
-    n_scans = mat_data['nScans'].item()
-    dummy_pulses = mat_data['dummyPulses'].item()
-    add_rd_points = mat_data['addRdPoints'].item()
-    n_points = np.squeeze(mat_data['nPoints'])
-    n_rd, n_ph, n_sl = n_points
-    n_rd = n_rd + 2 * add_rd_points
-
-    # Run method
-    fix_echo_position(data, dummy_pulses, etl, n_rd, n_batches, n_readouts, n_scans, 10, 5)

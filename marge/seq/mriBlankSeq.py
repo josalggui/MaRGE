@@ -347,6 +347,7 @@ class MRIBLANKSEQ:
                    frequency=hw.larmorFreq,
                    bandwidth=0.03,
                    decimate='Normal',
+                   add_rd_points = hw.addRdPoints,
                    oversampling_factor=hw.oversamplingFactor,
                    decimation_factor=hw.oversamplingFactor,
                    hardware=True,
@@ -374,10 +375,12 @@ class MRIBLANKSEQ:
             Specifies the decimation method.
             - 'Normal': Decimates the acquired array without preprocessing.
             - 'PETRA': Adjusts the pre-readout points to the desired starting point.
+        add_rd_points: int, optional
+            Additional points acquired before and after each acquisition window
         oversampling_factor: int, optional
             Oversampling factor applied to the acquisition.
         decimation_factor: int, optional
-            Decimation factor applied to the acquired data
+            Decimation factor applied to the acquired data with 'fir' filter
         hardware: bool, optional
             Take into account gradient and ADC delay.
         output: str, optional
@@ -462,32 +465,34 @@ class MRIBLANKSEQ:
                     print(f"Acquired points = {acquired_points}, Expected points = {expected_points}")
                     print(f"Scan {scan + 1}, batch {seq_num.split('_')[-1]}/{len(n_readouts)} ready!")
 
-                # Decimate the oversampled data and store it
-                if output=='':
-                    self.mapVals[f'data_over'] = data_over
-                    data = utils.decimate(data_over,
-                                          n_adc=n_adc,
-                                          option=decimate,
-                                          remove=False,
-                                          add_rd_points=hw.addRdPoints,
-                                          oversampling_factor=decimation_factor)
-                    self.mapVals[f'data_decimated'] = data
-                else:
-                    self.mapVals[f'data_over_{output}'] = data_over
-                    data = utils.decimate(data_over,
-                                          n_adc=n_adc,
-                                          option=decimate,
-                                          remove=False,
-                                          add_rd_points=hw.addRdPoints,
-                                          oversampling_factor=decimation_factor)
-                    self.mapVals[f'data_decimated_{output}'] = data
-
             elif self.plotSeq and self.standalone:
                 # Plot the sequence if requested and return immediately
                 self.sequencePlot(standalone=self.standalone)
 
             if not self.demo:
                 self.expt.__del__()
+
+        # Decimate the oversampled data and store it
+        if output == '':
+            self.mapVals[f'data_over'] = data_over
+            data = utils.decimate(data_over,
+                                  n_adc=n_adc,
+                                  option=decimate,
+                                  remove=False,
+                                  add_rd_points=add_rd_points,
+                                  oversampling_factor=oversampling_factor,
+                                  decimation_factor=decimation_factor)
+            self.mapVals[f'data_decimated'] = data
+        else:
+            self.mapVals[f'data_over_{output}'] = data_over
+            data = utils.decimate(data_over,
+                                  n_adc=n_adc,
+                                  option=decimate,
+                                  remove=False,
+                                  add_rd_points=add_rd_points,
+                                  oversampling_factor=oversampling_factor,
+                                  decimation_factor=decimation_factor)
+            self.mapVals[f'data_decimated_{output}'] = data
 
         return True
 
