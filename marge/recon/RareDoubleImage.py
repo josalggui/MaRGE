@@ -2,7 +2,6 @@ import marge.configs.hw_config as hw
 import numpy as np
 import scipy as sp
 from marge.marge_utils import utils
-from marge.marge_utils.utils import fix_echo_position
 
 
 def RareDoubleImage(raw_data_path=None):
@@ -43,25 +42,16 @@ def RareDoubleImage(raw_data_path=None):
     partial_acquisition = mat_data['partialAcquisition'].item()
     n_batches = mat_data['n_batches'].item()
     n_readouts = mat_data['n_readouts'][0]
-    n_rd, n_ph, n_sl = n_points
-    ind = np.squeeze(mat_data['sweepOrder'])
     add_rd_points = mat_data['add_rd_points'].item()
+    n_rd, n_ph, n_sl = n_points
+    n_rd = n_rd + 2 * add_rd_points
+    n_sl = (n_sl // 2 + partial_acquisition * axes_enable[2] + (1 - axes_enable[2]))
+    ind = np.squeeze(mat_data['sweepOrder'])
     n_noise = mat_data['nNoise'].item()
     k_fill = mat_data['k_fill'].item()
-    oversampling_factor = mat_data['oversampling_factor'].item()
-    decimation_factor = mat_data['decimation_factor'].item()
     dummy_pulses = mat_data['dummyPulses'].item()
     rd_direction = mat_data['rd_direction'].item()
     data_decimated = np.squeeze(mat_data['data_decimated'])
-
-    # Correct values
-    n_rd_0 = n_points[0]
-    n_readouts = n_readouts * oversampling_factor // decimation_factor
-    n_points[0] = int(n_points[0] * oversampling_factor / decimation_factor)
-    n_rd = int((n_rd + 2 * add_rd_points) * oversampling_factor / decimation_factor)
-    n_sl = (n_sl // 2 + partial_acquisition * axes_enable[2] + (1 - axes_enable[2]))
-    fov[0] = fov[0] * oversampling_factor / decimation_factor
-    add_rd_points = int(add_rd_points * oversampling_factor / decimation_factor)
 
     # Get noise data, dummy data and signal data
     data_noise = []
@@ -91,7 +81,7 @@ def RareDoubleImage(raw_data_path=None):
                 data_signal = np.concatenate((data_signal, data_prov[points_per_rd + points_per_train::]), axis=0)
             idx_0 = idx_1
         n_readouts[batch] += -n_rd - n_rd * etl
-    data_noise = np.reshape(data_noise, (-1, n_rd))
+    data_noise = np.reshape(data_noise, (-1, n_points[0] + add_rd_points * 2))
     data_noise = data_noise[:, add_rd_points:-add_rd_points]
     output_dict['data_noise'] = data_noise
     output_dict['data_dummy'] = data_dummy
@@ -174,42 +164,12 @@ def RareDoubleImage(raw_data_path=None):
     if k_fill == 'POCS' and n_points[2] > n_sl:
         data_temp_odd = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp_odd)
         data_temp_eve = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp_eve)
-
-    # METHOD 1: Get decimated k-space by FFT
-    subdecimation_method = 'FFT'
-    if subdecimation_method=='FFT' and (full_plot==False or full_plot=='False'):
-        image_temp_odd = utils.run_ifft(data_temp_odd)
-        image_temp_eve = utils.run_ifft(data_temp_eve)
-        idx_0 = n_points[0] // 2 - n_points[0] // 2 * decimation_factor // oversampling_factor
-        idx_1 = n_points[0] // 2 + n_points[0] // 2 * decimation_factor // oversampling_factor
-        image_temp_odd = image_temp_odd[:, :, idx_0:idx_1]
-        image_temp_eve = image_temp_eve[:, :, idx_0:idx_1]
-        data_temp_odd = utils.run_dfft(image_temp_odd)
-        data_temp_eve = utils.run_dfft(image_temp_eve)
-        n_points[0] = n_rd_0
-        fov[0] = fov[0] * decimation_factor / oversampling_factor
-
-    # METHO 2: Get image by decimating k-space with average of consecutive samples.
-    if subdecimation_method=='AVG' and (full_plot==False or full_plot=='False'):
-        n_points[0] = n_rd_0
-        fov[0] = fov[0] * decimation_factor / oversampling_factor
-        data_prov_odd = np.zeros((n_points[2], n_points[1], n_points[0]), dtype=complex)
-        data_prov_eve = np.zeros((n_points[2], n_points[1], n_points[0]), dtype=complex)
-        dii = oversampling_factor // decimation_factor
-        for ii in range(n_rd_0):
-            data_prov_odd[:, :, ii] = np.mean(data_temp_odd[:, :, dii*ii:dii*(ii+1)], axis=2)
-            data_prov_eve[:, :, ii] = np.mean(data_temp_eve[:, :, dii*ii:dii*(ii+1)], axis=2)
-        data_temp_odd = data_prov_odd
-        data_temp_eve = data_prov_eve
-        image_temp_odd = utils.run_ifft(data_temp_odd)
-        image_temp_eve = utils.run_ifft(data_temp_eve)
-
-    # Fix the position of the sample according to dfov
     data_odd = np.reshape(data_temp_odd, shape=(1, n_points[0] * n_points[1] * n_points[2]))
     data_eve = np.reshape(data_temp_eve, shape=(1, n_points[0] * n_points[1] * n_points[2]))
+
+    # Fix the position of the sample according to dfov
     bw = mat_data['bw_MHz'].item()
-    time_vector = np.linspace(-n_points[0] / bw / 2 + 0.5 / bw, n_points[0] / bw / 2 - 0.5 / bw,
-                              n_points[0]) * 1e-6 * decimation_factor / oversampling_factor # s
+    time_vector = np.linspace(-n_points[0] / bw / 2 + 0.5 / bw, n_points[0] / bw / 2 - 0.5 / bw, n_points[0]) * 1e-6 # s
     kMax = np.array(n_points) / (2 * np.array(fov)) * np.array(axes_enable)
     kRD = time_vector * hw.gammaB * mat_data['rd_grad_amplitude'].item()
     kPH = np.linspace(-kMax[1], kMax[1], num=n_points[1], endpoint=False)
@@ -271,20 +231,6 @@ def RareDoubleImage(raw_data_path=None):
     mask_eve = img_mag_eve > 0.3 * np.max(img_mag_eve)
     mean_phase_eve = np.mean(img_pha_eve[mask_eve])
     img_pha_eve[~mask_eve] = mean_phase_eve
-    if par_fourier_fraction == 1:
-        k_odd = np.log10(np.abs(output_dict['kSpace3D_odd_echoes']))
-        k_even = np.log10(np.abs(output_dict['kSpace3D_even_echoes']))
-    else:
-        if k_fill == 'ZP':
-            k_odd = np.zeros_like(output_dict['kSpace3D_odd_echoes'], dtype=float)
-            k_odd[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D_odd_echoes'][0:n_sl, :, :]))
-            k_even = np.zeros_like(output_dict['kSpace3D_even_echoes'], dtype=float)
-            k_even[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D_even_echoes'][0:n_sl, :, :]))
-        else:
-            k_odd = np.log10(np.abs(output_dict['kSpace3D_odd_echoes']))
-            k_even = np.log10(np.abs(output_dict['kSpace3D_even_echoes']))
-    result_k_odd, k_odd, _ = utils.fix_image_orientation(k_odd, axes=axes_orientation, rd_direction=rd_direction)
-    result_k_even, k_even, _ = utils.fix_image_orientation(k_even, axes=axes_orientation, rd_direction=rd_direction)
 
     if full_plot is True or full_plot == 'True' or full_plot == 1:
         # Image plot
@@ -299,35 +245,42 @@ def RareDoubleImage(raw_data_path=None):
         result_pha_odd, img_pha_odd, _ = utils.fix_image_orientation(img_pha_odd, axes=axes_orientation, rd_direction=rd_direction)
         result_pha_odd['row'] = 0
         result_pha_odd['col'] = 1
+        result_pha_odd['title'] = 'Phase odd echoes'
 
         result_pha_eve, img_pha_eve, _ = utils.fix_image_orientation(img_pha_eve, axes=axes_orientation, rd_direction=rd_direction)
         result_pha_eve['row'] = 1
         result_pha_eve['col'] = 1
+        result_pha_eve['title'] = 'Phase even echoes'
 
         # k-space plot
-        result_k_odd['title'] = "k-Space odd echoes"
+        if par_fourier_fraction == 1:
+            data_odd = np.log10(np.abs(output_dict['kSpace3D_odd_echoes']))
+        else:
+            data_odd = np.zeros_like(output_dict['kSpace3D_odd_echoes'], dtype=float)
+            data_odd[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D_odd_echoes'][0:n_sl, :, :]))
+        result_k_odd, _, _ = utils.fix_image_orientation(data_odd, axes=axes_orientation, rd_direction=rd_direction)
         result_k_odd['row'] = 0
         result_k_odd['col'] = 2
+        result_k_odd['title'] = "k-Space odd echoes"
 
         # k-space plot
-        result_k_even['title'] = "k-Space even echoes"
-        result_k_even['row'] = 1
-        result_k_even['col'] = 2
+        if par_fourier_fraction == 1:
+            data_even = np.log10(np.abs(output_dict['kSpace3D_even_echoes']))
+        else:
+            data_even = np.zeros_like(output_dict['kSpace3D_even_echoes'], dtype=float)
+            data_even[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D_even_echoes'][0:n_sl, :, :]))
+        result_k_eve, _, _ = utils.fix_image_orientation(data_even, axes=axes_orientation, rd_direction=rd_direction)
+        result_k_eve['title'] = "k-Space even echoes"
+        result_k_eve['row'] = 1
+        result_k_eve['col'] = 2
 
         # Add results into the output attribute (result_1 must be the image to save in dicom)
-        output = [result_mag_odd, result_pha_odd, result_k_odd, result_mag_eve, result_pha_eve, result_k_even]
+        output = [result_mag_odd, result_pha_odd, result_k_odd, result_mag_eve, result_pha_eve, result_k_eve]
     else:
         # Image plot
-        img = img[:, :, n_points[0]//2 - n_rd_0//2:n_points[0]//2 + n_rd_0//2]
-        result_1, img, _ = utils.fix_image_orientation(img, axes=axes_orientation, rd_direction=rd_direction)
-        result_1['row'] = 0
-        result_1['col'] = 0
-
-        # k-space plot
-        k_space = utils.run_dfft(img)
-        result_2, k_space, _ = utils.fix_image_orientation(np.abs(k_space), axes=axes_orientation, rd_direction=rd_direction)
-        result_2['row'] = 0
-        result_2['col'] = 1
+        result, img, _ = utils.fix_image_orientation(img, axes=axes_orientation, rd_direction=rd_direction)
+        result['row'] = 0
+        result['col'] = 0
 
         # Dicom parameters
         dicom_meta_data["RepetitionTime"] = mat_data['repetitionTime']
@@ -335,6 +288,6 @@ def RareDoubleImage(raw_data_path=None):
         dicom_meta_data["EchoTrainLength"] = mat_data['etl']
 
         # Add results into the output attribute (result_1 must be the image to save in dicom)
-        output = [result_1, result_2]
+        output = [result]
 
     return output_dict, output

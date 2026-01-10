@@ -921,5 +921,5 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__':
     seq = RareDoubleImage()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=False, demo=False, standalone=True)
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
     seq.sequenceAnalysis(mode='Standalone')

@@ -293,12 +293,13 @@ def RarePyPulseq(raw_data_path=None):
             result_2, _, _ = utils.fix_image_orientation(data, axes=axes_orientation, rd_direction=rd_direction)
             result_2['row'] = 0
             result_2['col'] = 1
+            result_2['title'] = "k-Space"
         elif mat_data['unlock_orientation'] == 1:
             result_2 = {'widget': 'image',
                         'data': data,
                         'xLabel': "%s" % axesStr[1],
                         'yLabel': "%s" % axesStr[0],
-                        'title': "i-Space",
+                        'title': "k-Space",
                         'row': 0,
                         'col': 1}
         
