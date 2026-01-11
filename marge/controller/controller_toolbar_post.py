@@ -7,6 +7,8 @@ import numpy as np
 from PyQt5.QtWidgets import QFileDialog, QLabel, QApplication, QMainWindow, QTableWidget, QTableWidgetItem, QVBoxLayout, \
     QWidget, QTabWidget
 from scipy.interpolate import griddata
+
+from marge.marge_utils import utils
 from marge.widgets.widget_toolbar_post import ToolBarWidgetPost
 from marge.controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from PyQt5 import QtCore
@@ -94,7 +96,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
 
         else:  # Cartesian
             # Extract the k-space data from the loaded .mat file
-            self.k_space_raw = self.mat_data['sampled'] ## on recupere pas kspace3d ni dataFull mais sampled
+            self.k_space_raw = self.mat_data['sampled']
             self.k_space = np.reshape(self.k_space_raw[:, 3], self.nPoints[-1::-1])
             try:
                 if self.mat_data['rd_direction'].item() == -1:
@@ -106,7 +108,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             self.main.visualisation_controller.clear2DImage()
 
         # Update the main matrix of the image view widget with the k-space data
-        self.main.image_view_widget.main_matrix = self.k_space
+        self.main.image_view_widget.main_matrix = copy.deepcopy(self.k_space)
 
         # Update the image view widget to display the new main matrix
         try:
@@ -118,7 +120,11 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             image = np.abs(self.main.image_view_widget.main_matrix)
 
         # Create figure widget
-        image2show, x_label, y_label, title = self.fixImage(image, orientation=self.mat_data['axesOrientation'][0])
+        output, image, _ = utils.fix_image_orientation(image, axes=self.mat_data['axesOrientation'][0])
+        image2show = output['data']
+        x_label = output['xLabel']
+        y_label = output['yLabel']
+        title = output['title']
         image = Spectrum3DPlot(main=self.main,
                                data=image2show,
                                x_label=x_label,

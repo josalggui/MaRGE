@@ -88,7 +88,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
             data = np.fft.fftshift(np.fft.fftn(np.fft.ifftshift(img)))
         else:
             # Get the selected scans from dataFull and average
-            data_full = mat_data['dataFull'][scans, :, :, :]
+            data_full = mat_data['data_full'][scans, :, :, :]
             s_scans, n_sl, n_ph, n_rd = np.shape(data_full)
             n_points = np.reshape(mat_data['nPoints'], -1)
             data_temp = np.zeros((len(scans), n_points[2], n_points[1], n_points[0]), dtype=complex)
@@ -100,7 +100,7 @@ class PreProcessingTabController(PreProcessingTabWidget):
         self.main.toolbar_image.k_space_raw[:, 3] = np.reshape(data, -1)
         self.main.toolbar_image.k_space = np.reshape(self.main.toolbar_image.k_space_raw[:, 3], n_points[-1::-1])
 
-        # Update the main matrix of the image view widget with the cosbell data
+        # Update the main matrix of the image view widget
         self.main.image_view_widget.main_matrix = self.main.toolbar_image.k_space.copy()
 
         # Add new item to the history list
