@@ -24,9 +24,6 @@ class ToolBarWidgetPost(QToolBar):
         super(ToolBarWidgetPost, self).__init__(*args, **kwargs)
         self.main = parent
 
-        # Load data
-
-
         with resources.path("marge.resources.icons", "addSequence.png") as path_add_seq:
             self.action_load = QAction(QIcon(str(path_add_seq)), "Load raw-data .mat", self)
         self.action_load.setStatusTip("Open new raw-data .mat")
@@ -36,13 +33,16 @@ class ToolBarWidgetPost(QToolBar):
             self.action_loadrmd = QAction(QIcon(str(path_add_seq)), "Load raw-data .h5", self)
         self.action_loadrmd.setStatusTip("Open new raw-data .h5")
         self.addAction(self.action_loadrmd)
+        self.action_loadrmd.setVisible(False)
 
         with resources.path("marge.resources.icons", "tableau_rmd.png") as path_tableau_rmd:
             self.action_printrmd = QAction(QIcon(str(path_tableau_rmd)), "Show ISMRMRD data", self)
         self.action_printrmd.setStatusTip("Show ISMRMRD data")
         self.addAction(self.action_printrmd)
+        self.action_printrmd.setVisible(False)
 
         with resources.path("marge.resources.icons", "convert.png") as path_convert:
             self.action_convert = QAction(QIcon(str(path_convert)), "Converter .mat to .h5", self)
         self.action_convert.setStatusTip("Converter .mat to .h5")
         self.addAction(self.action_convert)
+        self.action_convert.setVisible(False)
