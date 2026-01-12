@@ -75,27 +75,16 @@ def Localizer(raw_data_path=None):
     n_points = np.squeeze(mat_data['nPoints'])
     n_rd, n_ph, n_sl = n_points
     add_rd_points = mat_data['add_rd_points'].item()
+    n_rd = n_rd + 2 * add_rd_points
+    n_sl = (n_sl // 2 + mat_data['partialAcquisition'].item() * axes_enable[2] + (1 - axes_enable[2]))
     n_batches = mat_data['n_batches'].item()
     n_readouts = mat_data['n_readouts'][0]
     ind = np.squeeze(mat_data['sweepOrder'])
     k_fill = mat_data['k_fill'].item()
     dummy_pulses = mat_data['dummyPulses'].item()
     rd_direction = mat_data['rd_direction'].item()
-    oversampling_factor = mat_data['oversampling_factor'].item()
-    decimation_factor = mat_data['decimation_factor'].item()
     n_noise = mat_data['nNoise'].item()
-    partial_acquisition = mat_data['partialAcquisition'].item()
-    full_plot = mat_data['full_plot'].item()
 
-    # Correct values
-    n_rd_0 = n_points[0]
-    n_readouts = n_readouts * oversampling_factor // decimation_factor
-    n_points[0] = int(n_points[0] * oversampling_factor / decimation_factor)
-    n_rd = int((n_rd + 2 * add_rd_points) * oversampling_factor / decimation_factor)
-    n_sl = (n_sl // 2 + partial_acquisition * axes_enable[2] + (1 - axes_enable[2]))
-    fov[0] = fov[0] * oversampling_factor / decimation_factor
-    add_rd_points = int(add_rd_points * oversampling_factor / decimation_factor)
-    
     # Get noise data, dummy data and signal data
     data_noise = []
     data_dummy = []
@@ -199,31 +188,9 @@ def Localizer(raw_data_path=None):
     data_temp[0:n_sl, :, :] = data
     if k_fill == 'POCS':
         data_temp = utils.run_pocs_reconstruction(n_points=n_points[::-1], factors=[par_fourier_fraction, 1, 1], k_space_ref=data_temp)
-
-    # METHOD 1: Get decimated k-space by FFT
-    subdecimation_method = 'FFT'
-    if subdecimation_method == 'FFT' and (full_plot == False or full_plot == 'False'):
-        image_temp = utils.run_ifft(data_temp)
-        idx_0 = n_points[0] // 2 - n_points[0] // 2 * decimation_factor // oversampling_factor
-        idx_1 = n_points[0] // 2 + n_points[0] // 2 * decimation_factor // oversampling_factor
-        image_temp = image_temp[:, :, idx_0:idx_1]
-        data_temp = utils.run_dfft(image_temp)
-        n_points[0] = n_rd_0
-        fov[0] = fov[0] * decimation_factor / oversampling_factor
-
-    # METHOD 2: Get image by decimating k-space with average of consecutive samples.
-    if subdecimation_method == 'AVG' and (full_plot == False or full_plot == 'False'):
-        n_points[0] = n_rd_0
-        fov[0] = fov[0] * decimation_factor / oversampling_factor
-        data_prov = np.zeros((n_points[2], n_points[1], n_points[0]), dtype=complex)
-        dii = oversampling_factor // decimation_factor
-        for ii in range(n_rd_0):
-            data_prov[:, :, ii] = np.mean(data_temp[:, :, dii * ii:dii * (ii + 1)], axis=2)
-        data_temp = data_prov
-        image_temp = utils.run_ifft(data_temp)
+    data = np.reshape(data_temp, shape=(1, n_points[0] * n_points[1] * n_points[2]))
 
     # Fix the position of the sample according to dfov
-    data = np.reshape(data_temp, shape=(1, n_points[0] * n_points[1] * n_points[2]))
     bw = mat_data['bw_MHz'].item()
     time_vector = np.linspace(-n_points[0] / bw / 2 + 0.5 / bw, n_points[0] / bw / 2 - 0.5 / bw,
                               n_points[0]) * 1e-6  # s
