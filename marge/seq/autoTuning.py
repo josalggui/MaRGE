@@ -6,8 +6,6 @@ Created on Thu June 2 2022
 Specific hardware from MRILab @ i3M is required
 """
 import copy
-import os
-import sys
 import time
 
 from scipy.interpolate import interp1d

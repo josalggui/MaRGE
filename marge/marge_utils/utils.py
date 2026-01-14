@@ -826,7 +826,7 @@ def decimate(data_over, n_adc, option='PETRA', remove=True, add_rd_points=10, ov
         pass
 
     # Decimate the signal after 'fir' filter
-    if oversampling_factor > 1:
+    if decimation_factor > 1:
         data_decimated = sp.signal.decimate(data_over[int((decimation_factor - 1) / 2)::],
                                             decimation_factor,
                                             ftype='fir',
@@ -839,7 +839,20 @@ def decimate(data_over, n_adc, option='PETRA', remove=True, add_rd_points=10, ov
         data_decimated = data_decimated.reshape(n_adc, -1)
         n = (data_decimated.shape[1] // avg_factor) * avg_factor
         data_decimated = data_decimated[:, :n]
-        data_decimated = data_decimated.reshape(n_adc, -1, avg_factor).mean(axis=2)
+
+        # FFT Method
+        data_decimated = np.fft.fftshift(np.fft.ifft(np.fft.ifftshift(data_decimated, axes=1), axis=1), axes=1)
+        nr_in = np.size(data_decimated, 1)
+        nr_out = nr_in // avg_factor
+        n0 = nr_in // 2 - nr_out // 2
+        n1 = nr_in // 2 + nr_out // 2
+        data_decimated = data_decimated[:, n0:n1]
+        data_decimated = np.fft.ifftshift(np.fft.fft(np.fft.fftshift(data_decimated, axes=1), axis=1), axes=1)
+
+        # # AVG Method
+        # data_decimated = data_decimated.reshape(n_adc, -1, avg_factor).mean(axis=2)
+
+        # Reshape the output
         data_decimated = data_decimated.reshape(-1)
 
     # Remove addRdPoints
