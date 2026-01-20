@@ -170,7 +170,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         # TODO: check for min and max values for all fields
 
-    def sequenceRun(self, plot_seq=False, demo=False, standalone=False):
+    def sequenceRun(self, plotSeq=False, demo=False, standalone=False):
         """
         Runs the RARE MRI pulse sequence.
 
@@ -185,7 +185,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         8. Run the batches and return the resulting data. Oversampled data is stored in `self.mapVals['data_over']`, and decimated data in `self.mapVals['data_decimated']`.
 
         Parameters:
-        - plot_seq (bool): If True, plots the pulse sequence.
+        - plotSeq (bool): If True, plots the pulse sequence.
         - demo (bool): If True, runs the sequence in demo mode with simulated hardware.
         - standalone (bool): If True, runs the sequence as a standalone operation.
 
@@ -194,7 +194,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         """
 
         self.demo = demo
-        self.plotSeq = plot_seq
+        self.plotSeq = plotSeq
         self.standalone = standalone
         print('RARE run...')
 
@@ -1240,5 +1240,5 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__':
     seq = RarePyPulseq()
     seq.sequenceAtributes()
-    seq.sequenceRun(plot_seq=False, demo=True, standalone=True)
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
     seq.sequenceAnalysis(mode='Standalone')

@@ -62,7 +62,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         return (repetitionTime * nShimming * 3 / 60)  # minutes, scanTime
 
     def sequenceRun(self, plotSeq=0, demo=False):
-        self.plot_seq = plotSeq
+        self.plotSeq = plotSeq
         self.demo = demo
 
         # Calculate the rf amplitudes
@@ -198,7 +198,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             return False
 
         # Run experiment and get best shimming for current axis
-        if not self.plot_seq:
+        if not self.plotSeq:
             if not self.demo:
                 rxd, msgs = self.expt.run()
                 self.expt.__del__()

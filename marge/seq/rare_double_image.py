@@ -196,7 +196,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         8. Run the batches and return the resulting data. Oversampled data is stored in `self.mapVals['data_over']`, and decimated data in `self.mapVals['data_decimated']`.
 
         Parameters:
-        - plot_seq (bool): If True, plots the pulse sequence.
+        - plotSeq (bool): If True, plots the pulse sequence.
         - demo (bool): If True, runs the sequence in demo mode with simulated hardware.
         - standalone (bool): If True, runs the sequence as a standalone operation.
 
