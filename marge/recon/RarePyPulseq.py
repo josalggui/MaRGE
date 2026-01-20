@@ -311,7 +311,7 @@ def RarePyPulseq(raw_data_path=None):
         # Add results into the output attribute (result_1 must be the image to save in dicom)
         output = [result_1, result_2]
 
-    return output_dict, output
+    return output_dict, output, dicom_meta_data
 
 if __name__ == '__main__':
     RarePyPulseq(raw_data_path="C:\CSIC\REPOSITORIOS\MaRCoS\MaRGE\RareDoubleImage.2025.08.18.17.29.50.502.mat")

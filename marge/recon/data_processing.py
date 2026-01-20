@@ -106,7 +106,7 @@ def run_recon(raw_data_path=None, mode=None, printer=None):
     if seq in functions.keys():
         recon = functions[seq]
         if recon is not None:
-            output_dict, output = recon(raw_data_path=raw_data_path)
+            output_dict, output, meta_data = recon(raw_data_path=raw_data_path)
         else:
             print(f"Recon for '{seq}' not found.")
             return False
@@ -118,7 +118,7 @@ def run_recon(raw_data_path=None, mode=None, printer=None):
         file_name = mat_data['fileName'][0]
         plot_results(output=output, title=file_name, printer=printer)
 
-    return output_dict, output
+    return output_dict, output, meta_data
 
 def plot_results(output, title=None, printer=None):
     """

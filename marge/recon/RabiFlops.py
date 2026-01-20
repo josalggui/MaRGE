@@ -12,6 +12,7 @@ def RabiFlops(raw_data_path=None):
     # load .mat
     mat_data = sp.io.loadmat(raw_data_path)
     output_dict = {}
+    dicom_meta_data = {}
 
     # Print inputs
     try:
@@ -88,7 +89,7 @@ def RabiFlops(raw_data_path=None):
 
     outputs = [result1, result2]
 
-    return output_dict, outputs
+    return output_dict, outputs, dicom_meta_data
 
 def analyze_rabi_curve(data=None, method='ECHO', discriminator='min'):
     """

@@ -10,6 +10,7 @@ def Shimming(raw_data_path=None):
     # load .mat
     mat_data = sp.io.loadmat(raw_data_path)
     output_dict = {}
+    dicom_meta_data = {}
 
     # Load data
     data = mat_data['data'][0]
@@ -97,4 +98,4 @@ def Shimming(raw_data_path=None):
                 float(np.round(sz / units.sh, decimals=1))]
     output_dict['shimming0'] = shimming
 
-    return output_dict, [result1, result2]
+    return output_dict, [result1, result2], dicom_meta_data

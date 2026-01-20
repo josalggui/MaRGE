@@ -302,7 +302,7 @@ def Localizer(raw_data_path=None):
     # Save results
     # self.save_ismrmrd()
 
-    return output_dict, output
+    return output_dict, output, dicom_meta_data
 
 # if __name__ == '__main__':
 #     RarePyPulseq(raw_data_path="C:\CSIC\REPOSITORIOS\MaRCoS\MaRGE\RareDoubleImage.2025.08.18.17.29.50.502.mat")

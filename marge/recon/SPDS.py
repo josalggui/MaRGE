@@ -44,6 +44,7 @@ def SPDS(raw_data_path=None):
 
     # Create new dictionary to save new outputs
     output_dict = {}
+    dicom_meta_data = {}
 
     # Print inputs
     try:
@@ -401,7 +402,7 @@ def SPDS(raw_data_path=None):
     # Save polynomial_expression into mapVals
     output_dict['polynomial_expression'] = polynomial_expression
 
-    return output_dict, outputs
+    return output_dict, outputs, dicom_meta_data
 
 if __name__ == '__main__':
     SPDS(raw_data_path='raw_data.2025.08.03.07.54.03.786.mat')

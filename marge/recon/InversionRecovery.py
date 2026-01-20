@@ -10,6 +10,7 @@ def InversionRecovery(raw_data_path=None):
     # load .mat
     mat_data = sp.io.loadmat(raw_data_path)
     output_dict = {}
+    dicom_meta_data = {}
 
     # Print inputs
     try:
@@ -92,4 +93,4 @@ def InversionRecovery(raw_data_path=None):
     # create self.out to run in iterative mode
     results = [result1, result2]
     
-    return output_dict, results
+    return output_dict, results, dicom_meta_data

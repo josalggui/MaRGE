@@ -36,6 +36,7 @@ def Larmor(raw_data_path=None):
 
     # Create new dictionary to save new outputs
     output_dict = {}
+    dicom_meta_data = {}
 
     # Print inputs
     try:
@@ -95,4 +96,4 @@ def Larmor(raw_data_path=None):
 
     outputs = [result1, result2]
 
-    return output_dict, outputs
+    return output_dict, outputs, dicom_meta_data

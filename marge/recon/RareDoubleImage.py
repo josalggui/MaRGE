@@ -290,4 +290,4 @@ def RareDoubleImage(raw_data_path=None):
         # Add results into the output attribute (result_1 must be the image to save in dicom)
         output = [result]
 
-    return output_dict, output
+    return output_dict, output, dicom_meta_data

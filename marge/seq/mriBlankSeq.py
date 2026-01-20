@@ -197,7 +197,7 @@ class MRIBLANKSEQ:
         raw_data_path = self.saveRawDataLite()
 
         # Get new ouptuts to raw data and output plots
-        output_dict, self.output = dp.run_recon(raw_data_path=raw_data_path)
+        output_dict, self.output, self.meta_data = dp.run_recon(raw_data_path=raw_data_path)
         self.mapVals.update(output_dict)
 
         # Save raw data

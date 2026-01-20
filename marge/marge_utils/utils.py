@@ -210,10 +210,15 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
         dicom_image.meta_data["PatientPosition"] = "FFS"
 
     # Sessiontags -- ALL NEW EC
-    dicom_image.meta_data["PatientName"] = session["subject_id"]
+    if session['subject_name'] == 'Name':
+        dicom_image.meta_data["PatientName"] = session["subject_id"]
+    else:
+        dicom_image.meta_data["PatientName"] = session["subject_name"]
     dicom_image.meta_data["StudyID"] = session["study_id"]
     dicom_image.meta_data["PatientID"] = session["subject_id"]
     dicom_image.meta_data["OperatorsName"] = session['user']
+    dicom_image.meta_data["AcquisitionNumber"] = 1
+    dicom_image.meta_data["SeriesNumber"] = 101
 
     if session['subject_birthday'] != 'YY/MM/DD':
         dicom_image.meta_data["PatientBirthDate"] =  session["subject_birthday"]
@@ -242,7 +247,7 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
     Series refers to every single measurement perform for each patient. 
     """
     dicom_image.meta_data["SeriesDate"] = current_time.strftime("%Y%m%d")
-    dicom_image.meta_data["SeriesNumber"] = session['seriesNumber']
+    # dicom_image.meta_data["SeriesNumber"] = session['seriesNumber']
 
 
     # Update the DICOM metadata

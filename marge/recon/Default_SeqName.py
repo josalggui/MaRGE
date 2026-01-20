@@ -44,6 +44,7 @@ def Default_SeqName(raw_data_path=None):
     # ------------------------------------------------------------------
     mat_data = sio.loadmat(raw_data_path)
     output_dict = {}  # Store numerical results or metadata here
+    dicom_meta_data = {}  # Store tags to be saved in the dicom file
 
     # ------------------------------------------------------------------
     # Print input parameters (optional)
@@ -112,4 +113,4 @@ def Default_SeqName(raw_data_path=None):
     # ------------------------------------------------------------------
     # Return results
     # ------------------------------------------------------------------
-    return output_dict, outputs
+    return output_dict, outputs, dicom_meta_data

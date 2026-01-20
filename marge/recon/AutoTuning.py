@@ -9,6 +9,7 @@ def AutoTuning(raw_data_path=None):
 
     # Create new dictionary to save new outputs
     output_dict = {}
+    dicom_meta_data = {}
 
     # Print inputs
     try:
@@ -32,4 +33,4 @@ def AutoTuning(raw_data_path=None):
 
     outputs = []
 
-    return output_dict, outputs
+    return output_dict, outputs, dicom_meta_data
