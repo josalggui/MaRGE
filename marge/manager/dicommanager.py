@@ -1,6 +1,7 @@
 import numpy as np
 from pydicom import dcmread
 from pydicom.data import get_testdata_file
+from pydicom.uid import generate_uid, ExplicitVRLittleEndian, PYDICOM_IMPLEMENTATION_UID
 import datetime
 
 
@@ -16,11 +17,17 @@ class DICOMImage:
             self.ds = dcmread(get_testdata_file("MR_small.dcm"))
 
     def image2Dicom(self):
-        for key in self.meta_data.keys():
+        # File meta must match dataset
+        self.ds.file_meta.MediaStorageSOPClassUID = self.ds.SOPClassUID
+        self.ds.file_meta.MediaStorageSOPInstanceUID = self.ds.SOPInstanceUID
+        self.ds.file_meta.TransferSyntaxUID = ExplicitVRLittleEndian
+        self.ds.file_meta.ImplementationClassUID = PYDICOM_IMPLEMENTATION_UID
+
+        for keyword, value in self.meta_data.items():
             try:
-                setattr(self.ds, key, self.meta_data[key])
-            except:
-                pass
+                setattr(self.ds, keyword, value)
+            except Exception as e:
+                print(f"Invalid DICOM tag or value: {keyword} → {e}")
 
     def save(self, filename):
         self.ds.save_as(filename)

@@ -1,13 +1,13 @@
 import copy
+import os
 
 import bm4d
 import numpy as np
 import nibabel as nib
+import pydicom
 from skimage.util import view_as_blocks
 import scipy as sp
 from marge.manager.dicommanager import DICOMImage
-import pydicom
-from pydicom.dataset import Dataset, FileDataset
 from datetime import date, datetime
 from marge.configs import hw_config as hw
 
@@ -189,15 +189,8 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
         meta_data["NumberOfSlices"] = 1
         meta_data["NumberOfFrames"] = 1
 
-    meta_data["PixelData"] = image.tobytes()
-    meta_data["WindowWidth"] = 26373
-    meta_data["WindowCenter"] = 13194
-
     # Create DICOM object
-    dicom_image = DICOMImage()
-
-    # Save image into DICOM object
-    dicom_image.meta_data["PixelData"] = meta_data["PixelData"]
+    dicom_image = copy.deepcopy(DICOMImage())
 
     # General Info - STATIC TAGS  """Added all the fields below"""
     dicom_image.meta_data["Modality"] = "MR PORTABLE"
@@ -217,14 +210,26 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
     dicom_image.meta_data["StudyID"] = session["study_id"]
     dicom_image.meta_data["PatientID"] = session["subject_id"]
     dicom_image.meta_data["OperatorsName"] = session['user']
-    dicom_image.meta_data["AcquisitionNumber"] = 1
-    dicom_image.meta_data["SeriesNumber"] = 101
+    dicom_image.meta_data["AcquisitionNumber"] = get_next_acquisition_number(session["directory"]+"/dcm", session['seriesNumber'])
+    dicom_image.meta_data["SeriesNumber"] = session['seriesNumber']
+    dicom_image.meta_data["StudyInstanceUID"] = session['StudyInstanceUID']
+    dicom_image.meta_data["SeriesInstanceUID"] = pydicom.uid.generate_uid()
+    dicom_image.meta_data["SOPInstanceUID"] = pydicom.uid.generate_uid()
+    print(dicom_image.meta_data["StudyInstanceUID"])
+    print(dicom_image.meta_data["SeriesInstanceUID"])
+    print(dicom_image.meta_data["SOPInstanceUID"])
+
+    meta_data["PixelData"] = image.tobytes()
+    meta_data["WindowWidth"] = 26373
+    meta_data["WindowCenter"] = 13194
+    dicom_image.meta_data["PixelData"] = meta_data["PixelData"]
+
 
     if session['subject_birthday'] != 'YY/MM/DD':
         dicom_image.meta_data["PatientBirthDate"] =  session["subject_birthday"]
     if session['subject_weight'] != 'kg':
         dicom_image.meta_data["PatientWeight"] = session["subject_weight"]
-    if session['subject_height']:
+    if session['subject_height'] != 'cm':
         dicom_image.meta_data["PatientSize"] = session["subject_height"]
     
     # Study tags: Static ones. -- All New EC
@@ -248,7 +253,6 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
     """
     dicom_image.meta_data["SeriesDate"] = current_time.strftime("%Y%m%d")
     # dicom_image.meta_data["SeriesNumber"] = session['seriesNumber']
-
 
     # Update the DICOM metadata
     dicom_image.meta_data.update(meta_data)
@@ -299,6 +303,34 @@ def save_nifti(axes_orientation, n_points, fov, dfov, image, file_path):
 
     # Save the NIfTI file
     nib.save(nifti_img, file_path)
+
+def get_next_acquisition_number(dicom_dir, current_series_number):
+    acquisition_numbers = []
+
+    if not os.path.isdir(dicom_dir):
+        return 1
+
+    for root, _, files in os.walk(dicom_dir):
+        for filename in files:
+            path = os.path.join(root, filename)
+
+            try:
+                ds = pydicom.dcmread(path, stop_before_pixels=True)
+
+                if (
+                    hasattr(ds, "SeriesNumber")
+                    and int(ds.SeriesNumber) == current_series_number
+                    and hasattr(ds, "AcquisitionNumber")
+                ):
+                    acquisition_numbers.append(int(ds.AcquisitionNumber))
+
+            except (pydicom.errors.InvalidDicomError, ValueError, OSError):
+                continue
+
+    if acquisition_numbers:
+        return max(acquisition_numbers) + 1
+
+    return 1
 
 def run_cosbell_filter(sampled, data, cosbell_order):
     """
