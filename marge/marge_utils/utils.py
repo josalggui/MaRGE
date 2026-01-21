@@ -5,6 +5,7 @@ import bm4d
 import numpy as np
 import nibabel as nib
 import pydicom
+from pydicom.errors import InvalidDicomError
 from skimage.util import view_as_blocks
 import scipy as sp
 from marge.manager.dicommanager import DICOMImage
@@ -210,14 +211,11 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
     dicom_image.meta_data["StudyID"] = session["study_id"]
     dicom_image.meta_data["PatientID"] = session["subject_id"]
     dicom_image.meta_data["OperatorsName"] = session['user']
-    dicom_image.meta_data["AcquisitionNumber"] = get_next_acquisition_number(session["directory"]+"/dcm", session['seriesNumber'])
-    dicom_image.meta_data["SeriesNumber"] = session['seriesNumber']
+    dicom_image.meta_data["AcquisitionNumber"] = 1
+    dicom_image.meta_data["SeriesNumber"] = get_next_series_number(session['study_id'], session["directory"]+"/dcm")
     dicom_image.meta_data["StudyInstanceUID"] = session['StudyInstanceUID']
     dicom_image.meta_data["SeriesInstanceUID"] = pydicom.uid.generate_uid()
     dicom_image.meta_data["SOPInstanceUID"] = pydicom.uid.generate_uid()
-    print(dicom_image.meta_data["StudyInstanceUID"])
-    print(dicom_image.meta_data["SeriesInstanceUID"])
-    print(dicom_image.meta_data["SOPInstanceUID"])
 
     meta_data["PixelData"] = image.tobytes()
     meta_data["WindowWidth"] = 26373
@@ -304,33 +302,39 @@ def save_nifti(axes_orientation, n_points, fov, dfov, image, file_path):
     # Save the NIfTI file
     nib.save(nifti_img, file_path)
 
-def get_next_acquisition_number(dicom_dir, current_series_number):
-    acquisition_numbers = []
+def get_next_series_number(study_id: str, dicom_dir: str) -> int:
+    """
+    Finds the next available SeriesNumber for a given StudyID in a directory of DICOM files.
 
+    Parameters
+    ----------
+    study_id : str
+        The StudyID to look for.
+    dicom_dir : str
+        Path to the directory containing DICOM files.
+
+    Returns
+    -------
+    int
+        The next SeriesNumber (max existing + 1), or 1 if none found.
+    """
     if not os.path.isdir(dicom_dir):
-        return 1
+        return 1  # No folder, start with 1
 
-    for root, _, files in os.walk(dicom_dir):
-        for filename in files:
-            path = os.path.join(root, filename)
+    series_numbers = []
 
-            try:
-                ds = pydicom.dcmread(path, stop_before_pixels=True)
+    for filename in os.listdir(dicom_dir):
+        filepath = os.path.join(dicom_dir, filename)
+        try:
+            ds = pydicom.dcmread(filepath, stop_before_pixels=True)
+            if getattr(ds, "StudyID", None) == study_id:
+                series_num = getattr(ds, "SeriesNumber", None)
+                if series_num is not None:
+                    series_numbers.append(int(series_num))
+        except (InvalidDicomError, ValueError, OSError):
+            continue  # Skip invalid files
 
-                if (
-                    hasattr(ds, "SeriesNumber")
-                    and int(ds.SeriesNumber) == current_series_number
-                    and hasattr(ds, "AcquisitionNumber")
-                ):
-                    acquisition_numbers.append(int(ds.AcquisitionNumber))
-
-            except (pydicom.errors.InvalidDicomError, ValueError, OSError):
-                continue
-
-    if acquisition_numbers:
-        return max(acquisition_numbers) + 1
-
-    return 1
+    return max(series_numbers, default=0) + 1
 
 def run_cosbell_filter(sampled, data, cosbell_order):
     """

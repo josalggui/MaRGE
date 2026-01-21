@@ -316,31 +316,10 @@ class SessionController(SessionWindow):
         shutil.copy2("configs/sys_study.csv", os.path.join(self.session["directory"], "sys_study.csv"))
         shutil.copy2("configs/b1Efficiency.csv", os.path.join(self.session["directory"], "b1Efficiency.csv"))
 
-        # Check the series number
-        dicom_dir = self.session['directory'] + "/dcm"
-        if not os.path.isdir(dicom_dir):
-            last_series_number = 0
-        else:
-            series_numbers = []
-
-            for filename in os.listdir(dicom_dir):
-                filepath = os.path.join(dicom_dir, filename)
-                try:
-                    ds = pydicom.dcmread(filepath, stop_before_pixels=True)
-                    if hasattr(ds, "SeriesNumber"):
-                        series_numbers.append(int(ds.SeriesNumber))
-                except (pydicom.errors.InvalidDicomError, ValueError, OSError):
-                    continue
-
-            last_series_number = max(series_numbers) if series_numbers else 1
-        self.session['seriesNumber'] = last_series_number + 1
-
         # Generate session Instance
         path = pydicom.data.get_testdata_file("MR_small.dcm")
         ds = pydicom.dcmread(path)
-        ds.StudyInstanceUID = pydicom.uid.generate_uid()
-        ds.SeriesInstanceUID = pydicom.uid.generate_uid()
-        self.session['StudyInstanceUID'] = ds.StudyInstanceUID
+        self.session['StudyInstanceUID'] = pydicom.uid.generate_uid()
 
         # Open the main gui
         if self.main_gui is None:
