@@ -205,6 +205,8 @@ def RarePyPulseq(raw_data_path=None):
     data = np.reshape(data * dPhase, shape=(n_points[2], n_points[1], n_points[0]))
     output_dict['kSpace3D'] = data
     output_dict['image3D'] = utils.run_ifft(data)
+    ref = np.max(np.abs(output_dict['image3D']))
+    output_dict['image3D'][0, 0:10, 0:20] = ref
     data = np.reshape(data, shape=(1, n_points[0] * n_points[1] * n_points[2]))
 
     # Create sampled data

@@ -107,9 +107,23 @@ def fix_image_orientation(image, axes, orientation='FFS', rd_direction=1):
 
     return output, image, image_orientation_dicom
 
-def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None, session=None):
+def save_dicom(axes_orientation, n_points, fov, dfov, image, file_path, meta_data=None, session=None):
     if session is None:
         session = {}
+        session["institution_name"] = "Example"
+        session['scanner_manufacturer'] = "Example"
+        session['scanner_name'] = "Example"
+        session['software_version'] = "Example"
+        session['orientation'] = "FFS"
+        session['subject_name'] = 'Name'
+        session["subject_id"] = "a"
+        session["study_id"] = "a"
+        session['user'] = "Example"
+        session["directory"] = ""
+        session['StudyInstanceUID'] = pydicom.uid.generate_uid()
+        session['subject_birthday'] = 'YY/MM/DD'
+        session['subject_weight'] = 'kg'
+        session['subject_height'] = 'cm'
     if meta_data is None:
         meta_data = {}
     image = np.abs(image)
@@ -123,7 +137,9 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
         reorder[axis] = i
 
     fov = np.array(fov)  # cm
+    dfov = np.array(dfov)  # mm
     fov = fov[axes_orientation]
+    dfov = dfov[axes_orientation]
     resolution = fov / n_points * 10  # mm
 
     """
@@ -142,31 +158,37 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
     # Orientation tags. Look carefully
     # """Added comments"""
     if (axes_orientation == [0, 1, 2]).all():
-        meta_data["ImageOrientationPatient"] = [0.0, 0.0, -1.0, 0.0, 1.0, 0.0]
-        meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
-        meta_data['SliceThickness'] = resolution[2]
+        image = image[::-1, :, ::-1]
+        meta_data["ImageOrientationPatient"] = [0.0, 0.0, 1.0, 0.0, 1.0, 0.0]
+        meta_data['ImagePositionPatient'] = [dfov[2] + fov[2] * 10 / 2, dfov[1] - fov[1] * 10 / 2,
+                                             -dfov[0] - fov[0] * 10 / 2]
     elif (axes_orientation == [1, 0, 2]).all():
-        meta_data["ImageOrientationPatient"] = [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]
-        meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
-        meta_data['SliceThickness'] = resolution[2]
+        image = image[:, ::-1,:]
+        meta_data["ImageOrientationPatient"] = [0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+        meta_data['ImagePositionPatient'] = [dfov[2] - fov[2] * 10 / 2, dfov[0] - fov[0] * 10 / 2,
+                                             -dfov[1] - fov[1] * 10 / 2]
     elif (axes_orientation == [1, 2, 0]).all():
-        image = image[::-1, : ,:]
         meta_data["ImageOrientationPatient"] = [0.0, 1.0, 0.0, 1.0, 0.0, 0.0]
-        meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
-        meta_data['SliceThickness'] = resolution[2]
+        meta_data['ImagePositionPatient'] = [dfov[1] - fov[1] * 10 / 2, dfov[0] - fov[0] * 10 / 2,
+                                             - dfov[2] + fov[2] * 10 / 2]
     elif (axes_orientation == [2, 1, 0]).all():
         image = image[::-1, : ,:]
         meta_data["ImageOrientationPatient"] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
-        meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
-        meta_data['SliceThickness'] = resolution[2]
+        meta_data['ImagePositionPatient'] = [dfov[0] - fov[0] * 10 / 2, dfov[1] - fov[1] * 10 / 2,
+                                             - dfov[2] - fov[2] * 10 / 2]
     elif (axes_orientation == [2, 0, 1]).all():
-        meta_data["ImageOrientationPatient"] = [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]
-        meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
-        meta_data['SliceThickness'] = resolution[2]
+        image = image[::-1, ::-1, :]
+        meta_data["ImageOrientationPatient"] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+        meta_data['ImagePositionPatient'] = [dfov[0] - fov[0] * 10 / 2, dfov[2] + fov[2] * 10 / 2,
+                                             - dfov[1] - fov[1] * 10 / 2]
     elif (axes_orientation == [0, 2, 1]).all():
-        meta_data["ImageOrientationPatient"] = [0.0, 0.0, -1.0, 1.0, 0.0, 0.0]
-        meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
-        meta_data['SliceThickness'] = resolution[2]
+        image = image[:, :, ::-1]
+        meta_data["ImageOrientationPatient"] = [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
+        meta_data['ImagePositionPatient'] = [dfov[1] - fov[1] * 10 / 2, + dfov[2] - fov[2] * 10 / 2,
+                                             - dfov[0] - fov[0] * 10 / 2]
+    meta_data['PixelSpacing'] = [resolution[1], resolution[0]]
+    meta_data['SliceThickness'] = resolution[2]
+    meta_data['SpacingBetweenSlices'] = resolution[2]
 
     # Normalize to 16-bit (0 - 65535)
     image = (image - np.min(image)) / (np.max(image) - np.min(image)) * (2 ** 15 - 1)
@@ -203,7 +225,7 @@ def save_dicom(axes_orientation, n_points, fov, image, file_path, meta_data=None
     if 'FFS' in session['orientation']:
         dicom_image.meta_data["PatientPosition"] = "FFS"
 
-    # Sessiontags -- ALL NEW EC
+    # Session tags -- ALL NEW EC
     if session['subject_name'] == 'Name':
         dicom_image.meta_data["PatientName"] = session["subject_id"]
     else:
@@ -1040,17 +1062,14 @@ def get_snr_from_individual_acquisitions(data, roi_size):
 if __name__ == "__main__":
     pass
     # from matplotlib import pyplot as plt
-    # mat_data = sp.io.loadmat("C:/CSIC/RareDoubleImage.2025.09.24.13.32.29.066.mat")
-    # # mat_data = sp.io.loadmat("C:/CSIC/RareDoubleImage.2025.09.24.13.03.47.729.mat")
-    #
-    # n_points = mat_data['nPoints'][0][-1::-1]
-    #
-    # # Number of extra lines which has been taken past the center of k-space
-    # factors = [0.7, 1, 1]
-    #
-    # # Get the k_space data
-    # k_space_ref = mat_data['kSpace3D']
-    #
-    # # Run pocs
-    # k_space_ref_zp = run_zero_padding(k_space_ref, (20, 240, 240))
-    # img_reconstructed = run_pocs_reconstruction(n_points, factors, k_space_ref, test=True)
+    mat_data = sp.io.loadmat("RarePyPulseq.210.mat")
+    name = datetime.now()
+    name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
+    print(mat_data['dfov'][0])
+    save_dicom(axes_orientation=mat_data['axesOrientation'][0],
+               n_points=mat_data['nPoints'][0],
+               fov=mat_data['fov'][0],
+               dfov = mat_data['dfov'][0],
+               image=mat_data['image3D'],
+               file_path=f"{name_string}.dcm",
+               )

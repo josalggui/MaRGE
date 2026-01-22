@@ -1798,6 +1798,7 @@ class MRIBLANKSEQ:
                 utils.save_dicom(axes_orientation=self.mapVals['axesOrientation'],
                                  n_points=self.mapVals['nPoints'],
                                  fov=self.mapVals['fov'],
+                                 dfov=self.mapVals['dfov'],
                                  image=self.mapVals['image3D'],
                                  file_path=f"{directory_dcm}/{file_name}.dcm",
                                  meta_data=self.meta_data,
