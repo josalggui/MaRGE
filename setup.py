@@ -10,7 +10,7 @@ setup(
     description="MaRCoS Graphical Environment (MaRGE)",
     entry_points={
         "console_scripts": [
-            "marge=marge.main:MaRGE",
+            "marge-mri=marge.main:MaRGE",
         ],
     },
 )
