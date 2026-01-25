@@ -68,6 +68,11 @@ echo "Press ENTER to continue..."
 read
 echo ""
 
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit
+fi
+
 echo "Please insert the SD card into your computer before continuing."
 read -p "❓ Is the SD card inserted AND unmounted? (y/n): " CONFIRMA
 
