@@ -44,7 +44,7 @@ dependencies = [
 ]
 
 [project.scripts]
-marge = "marge.main:MaRGE"
+marge-mri = "marge.main:MaRGE"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/marge"]
