@@ -43,6 +43,9 @@ dependencies = [
     "mrd-python == 2.0.0",
 ]
 
+[project.scripts]
+marge = "marge.main:MaRGE"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/marge"]
 
