@@ -444,6 +444,7 @@ class HistoryListController(HistoryListWidget):
                                 pass
                         if seq_name == 'RabiFlops':
                             sequence.mapVals['shimming'] = defaultsequences['Shimming'].mapVals['shimming']
+                            sequence.mapVals['larmorFreq'] = hw.larmorFreq
 
                     # Run the sequenceRun
                     raw_data_name = key.split('|')[1].split(' ')[1]
