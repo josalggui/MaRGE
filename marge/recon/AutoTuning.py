@@ -61,6 +61,11 @@ def AutoTuning(raw_data_path=None):
     if mat_data['test'].item() == 'manual':
         s11 = np.squeeze(np.concatenate((s11, s11), axis=0))
 
+    # Get s11 at central frequency
+    idx = np.argmin(np.abs(f_vec_t - frequency))
+    s11_db = s_vec_db[idx]
+    print(f"S11 = {s11_db:.2f} dB")
+
     # Plot smith chart
     result1 = {'widget': 'smith',
                'xData': [np.real(s11), np.real(s_vec_t)],

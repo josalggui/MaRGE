@@ -44,6 +44,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.s11_db_hist = []
         self.states_hist = [[], [], []]
         self.n_aux = [[], [], []]
+        self.current_capacitors = None
 
         # Parameters
         self.addParameter(key='seqName', string='AutoTuningInfo', val='AutoTuning')
@@ -80,7 +81,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         if self.arduino is None:
             self.arduino = autotuning.Arduino()
             self.arduino.connect(serial_number=hw.ard_sn_autotuning)
-        self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "10")
+        self.current_capacitors = self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching']
+        self.arduino.send(self.current_capacitors + "10")
 
         if self.arduino.device is None:
             print("WARNING: No Arduino found for auto-tuning.")
@@ -89,11 +91,13 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             counter = 0
             while counter < 10:
                 # Turn OFF vna.
-                self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "10")
+                self.current_capacitors = self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching']
+                self.arduino.send(self.current_capacitors + "10")
                 time.sleep(0.5)
 
                 # Turn ON vna.
-                self.arduino.send(self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching'] + "01")
+                self.current_capacitors = self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching']
+                self.arduino.send(self.current_capacitors + "01")
                 time.sleep(3.5)
 
                 # Connect to VNA
@@ -122,75 +126,61 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         else:
             print("Incorrect test mode.")
             return False
+    
+    def restart_vna(self):
+        print("Restarting nanoVNA...")
+        counter = 0
+        while counter < 10:
+            # Turn OFF vna.
+            self.arduino.send(self.current_capacitors + "10")
+            time.sleep(0.5)
 
-    # def sequenceAnalysis(self, mode=None):
-    #     self.mode = mode
-    #
-    #     # Get results
-    #     s11 = np.array(self.s11_hist)
-    #     s11_opt = self.mapVals['s11']
-    #     f_vec = self.vna.getFrequency()
-    #     s_vec = self.vna.getData()
-    #
-    #     # Interpolate s_vec
-    #     interp_func = interp1d(f_vec, s_vec, kind='cubic')
-    #     f_vec_t = np.linspace(np.min(f_vec), np.max(f_vec), 1000)
-    #     s_vec_t = interp_func(f_vec_t)
-    #
-    #     # Insert s11 into s_vec
-    #     index = np.searchsorted(f_vec_t, self.frequency)
-    #     f_vec_t = np.insert(f_vec_t, index, self.frequency)
-    #     s_vec_t = np.insert(s_vec_t, index, s11_opt)
-    #
-    #     # Get s in dB
-    #     s_vec_db = 20 * np.log10(np.abs(s_vec_t))
-    #
-    #     # Get quality factor
-    #     try:
-    #         idx = np.argmin(s_vec_db)
-    #         f0 = f_vec_t[idx]
-    #         f1 = f_vec_t[np.argmin(np.abs(s_vec_db[0:idx] + 3))]
-    #         f2 = f_vec_t[idx + np.argmin(np.abs(s_vec_db[idx::] + 3))]
-    #         q = f0 / (f2 - f1)
-    #         print("Q = %0.0f" % q)
-    #         print("BW @ -3 dB = %0.0f kHz" % ((f2 - f1) * 1e3))
-    #     except:
-    #         pass
-    #
-    #     # Create data array in case single point is acquired
-    #     if self.test == 'manual':
-    #         s11 = np.concatenate((s11, s11), axis=0)
-    #
-    #     # Plot smith chart
-    #     result1 = {'widget': 'smith',
-    #                'xData': [np.real(s11), np.real(s_vec_t)],
-    #                'yData': [np.imag(s11), np.imag(s_vec_t)],
-    #                'xLabel': 'Real(S11)',
-    #                'yLabel': 'Imag(S11)',
-    #                'title': 'Smith chart',
-    #                'legend': ['', ''],
-    #                'row': 0,
-    #                'col': 0}
-    #
-    #     # Plot reflection coefficient
-    #     result2 = {'widget': 'curve',
-    #                'xData': (f_vec_t - self.frequency) * 1e3,
-    #                'yData': [s_vec_db],
-    #                'xLabel': 'Frequency (kHz)',
-    #                'yLabel': 'S11 (dB)',
-    #                'title': 'Reflection coefficient',
-    #                'legend': [''],
-    #                'row': 0,
-    #                'col': 1}
-    #
-    #     self.output = [result1, result2]
-    #
-    #     self.saveRawData()
-    #
-    #     if self.mode == 'Standalone':
-    #         self.plotResults()
-    #
-    #     return self.output
+            # Turn ON vna.
+            self.arduino.send(self.current_capacitors + "01")
+            time.sleep(3.5)
+
+            # Connect to VNA
+            print("Linking to nanoVNA...")
+            self.vna = autotuning.VNA()
+            if self.vna.connect():
+                return True
+            else:
+                counter += 1
+        print("ERROR: NanoVNA restart failed!")
+        raise IOError("NanoVNA restart failed!")
+        
+    def get_s11(self):
+        while True:
+            try:
+                s11, impedance = self.vna.getS11(self.frequency)
+                return s11, impedance
+            except Exception as e:
+                if self.restart_vna():
+                    pass
+                else:
+                    raise e
+    
+    def get_frequency(self):
+        while True:
+            try:
+                frequency = self.vna.getFrequency()
+                return frequency
+            except Exception as e:
+                if self.restart_vna():
+                    pass
+                else:
+                    raise e
+    
+    def get_data(self):
+        while True:
+            try:
+                data = self.vna.getData()
+                return data
+            except Exception as e:
+                if self.restart_vna():
+                    pass
+                else:
+                    raise e
 
     def runAutoTuning(self):
         nCap = 5
@@ -241,8 +231,9 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         stateCm = self.states.index(self.matching)
 
         # Check current status
-        self.arduino.send(self.states[stateCs] + self.states[stateCt] + self.states[stateCm] + "01")
-        s11, impedance = self.vna.getS11(self.frequency)
+        self.current_capacitors = self.states[stateCs] + self.states[stateCt] + self.states[stateCm]
+        self.arduino.send(self.current_capacitors + "01")
+        s11, impedance = self.get_s11()
         self.addValues(s11, self.series, self.tuning, self.matching, stateCs, stateCt, stateCm)
         s11_db = 20 * np.log10(np.abs(s11))
 
@@ -283,12 +274,10 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         s11_db = self.s11_db_hist[idx]
 
         # Check final status
-        self.arduino.send(self.states[stateCs] + self.states[stateCt] + self.states[stateCm] + "01")
-        s11, impedance = self.vna.getS11(self.frequency)
+        self.current_capacitors = self.states[stateCs] + self.states[stateCt] + self.states[stateCm]
+        self.arduino.send(self.current_capacitors + "01")
+        s11, impedance = self.get_s11()
         self.addValues(s11, self.series, self.tuning, self.matching, stateCs, stateCt, stateCm)
-
-        # Print results
-        print("S11 = %0.1f dB" % s11_db)
 
         # Save parameters to source sequence
         try:
@@ -305,11 +294,12 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.mapVals['matching'] = self.states[stateCm]
         self.mapVals['s11'] = self.s11_hist[-1]
         self.mapVals['s11_db'] = self.s11_db_hist[-1]
-        self.mapVals['f_vec'] = self.vna.getFrequency()
-        self.mapVals['s_vec'] = self.vna.getData()
+        self.mapVals['f_vec'] = self.get_frequency()
+        self.mapVals['s_vec'] = self.get_data()
 
         # Connect the system to TxRx switch
-        self.arduino.send(self.states[stateCs] + self.states[stateCt] + self.states[stateCm] + "10")
+        self.current_capacitors = self.states[stateCs] + self.states[stateCt] + self.states[stateCm]
+        self.arduino.send(self.current_capacitors + "10")
         print("nanoVNA OFF")
 
         # Data to sweep sequence
@@ -318,9 +308,10 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         return True
 
     def runManual(self):
-        self.arduino.send(self.series + self.tuning + self.matching + "01")
+        self.current_capacitors = self.series + self.tuning + self.matching
+        self.arduino.send(self.current_capacitors + "01")
         if self.vna.device is not None:
-            s11, impedance = self.vna.getS11(self.frequency)
+            s11, impedance = self.get_s11()
             self.s11_hist.append(s11)
             self.mapVals['s11'] = s11
             s11dB = 20 * np.log10(np.abs(s11))
@@ -329,9 +320,10 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             print("S11 = %0.2f dB" % s11dB)
             print("R = %0.2f Ohms" % r)
             print("X = %0.2f Ohms" % x)
-            self.mapVals['f_vec'] = self.vna.getFrequency()
-            self.mapVals['s_vec'] = self.vna.getData()
-            self.arduino.send(self.series + self.tuning + self.matching + "10")
+            self.mapVals['f_vec'] = self.get_frequency()
+            self.mapVals['s_vec'] = self.get_data()
+            self.current_capacitors = self.series + self.tuning + self.matching
+            self.arduino.send(self.current_capacitors + "10")
             print("nanoVNA OFF")
             return True
         else:
@@ -355,8 +347,9 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         cs = self.states[n[-1]]
         ct = self.states[stateCt]
         cm = self.states[stateCm]
-        self.arduino.send(cs + ct + cm + "01")
-        s11, impedance = self.vna.getS11(self.frequency)
+        self.current_capacitors = cs + ct + cm
+        self.arduino.send(self.current_capacitors + "01")
+        s11, impedance = self.get_s11()
         self.addValues(s11, cs, ct, cm, n0, stateCt, stateCm)
         r = np.real(impedance)
         x = np.imag(impedance)
@@ -374,8 +367,9 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         while step * np.abs(z[-1]) < step * self.seriesTarget and 0 < n[-1] + step < 16 and self.s11_db_hist[-1] > -20:
             n.append(n[-1] + step)
             cs = self.states[n[-1]]
-            self.arduino.send(cs + ct + cm + "01")
-            s11, impedance = self.vna.getS11(self.frequency)
+            self.current_capacitors = cs + ct + cm
+            self.arduino.send(self.current_capacitors + "01")
+            s11, impedance = self.get_s11()
             self.addValues(s11, cs, ct, cm, n[-1], stateCt, stateCm)
             r = np.real(impedance)
             x = np.imag(impedance)
@@ -405,8 +399,9 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         cs = self.states[stateCs]
         ct = self.states[n[-1]]
         cm = self.states[stateCm]
-        self.arduino.send(cs + ct + cm + "01")
-        s11, impedance = self.vna.getS11(self.frequency)
+        self.current_capacitors = cs + ct + cm
+        self.arduino.send(self.current_capacitors + "01")
+        s11, impedance = self.get_s11()
         self.addValues(s11, cs, ct, cm, stateCs, n0, stateCm)
         r = np.real(impedance)
         x = np.imag(impedance)
@@ -420,8 +415,9 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         while step * r0[-1] < step * self.tuningTarget and 0 <= n[-1] + step < 32 and self.s11_db_hist[-1] > -20:
             n.append(n[-1] + step)
             ct = self.states[n[-1]]
-            self.arduino.send(cs + ct + cm + "01")
-            s11, impedance = self.vna.getS11(self.frequency)
+            self.current_capacitors = cs + ct + cm
+            self.arduino.send(self.current_capacitors + "01")
+            s11, impedance = self.get_s11()
             self.addValues(s11, cs, ct, cm, stateCs, n[-1], stateCm)
             r = np.real(impedance)
             x = np.imag(impedance)
@@ -446,8 +442,9 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         cs = self.states[stateCs]
         ct = self.states[stateCt]
         cm = self.states[n[-1]]
-        self.arduino.send(cs + ct + cm + "01")
-        s11, impedance = self.vna.getS11(self.frequency)
+        self.current_capacitors = cs + ct + cm
+        self.arduino.send(self.current_capacitors + "01")
+        s11, impedance = self.get_s11()
         self.addValues(s11, cs, ct, cm, stateCs, stateCt, n0)
         r = np.real(impedance)
         x = np.imag(impedance)
@@ -462,8 +459,9 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             while step * x0[-1] < 0.0 and 0 < n[-1] + step < 16 and self.s11_db_hist[-1] > -20:
                 n.append(n[-1] + step)
                 cm = self.states[n[-1]]
-                self.arduino.send(cs + ct + cm + "01")
-                s11, impedance = self.vna.getS11(self.frequency)
+                self.current_capacitors = cs + ct + cm
+                self.arduino.send(self.current_capacitors + "01")
+                s11, impedance = self.get_s11()
                 self.addValues(s11, cs, ct, cm, stateCs, stateCt, n[-1])
                 r = np.real(impedance)
                 x = np.imag(impedance)
@@ -505,8 +503,9 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                         cs_bin = self.states[cs]
                         ct_bin = self.states[ct]
                         cm_bin = self.states[cm]
-                        self.arduino.send(self.states[cs] + self.states[ct] + self.states[cm] + "01")
-                        s11, impedance = self.vna.getS11(self.frequency)
+                        self.current_capacitors = cs_bin + ct_bin + cm_bin
+                        self.arduino.send(self.current_capacitors + "01")
+                        s11, impedance = self.get_s11()
                         self.addValues(s11, cs_bin, ct_bin, cm_bin, cs, ct, cm)
                         result[0].append(self.s11_db_hist[-1])
                         result[1].append(ct)
@@ -553,8 +552,9 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                             if cm == 0 or cm == 17 or ct == -1 or ct == 32 or cs == 0 or cs == 17:
                                 result[0].append(0.0)
                             else:
-                                self.arduino.send(state + "01")
-                                s11, impedance = self.vna.getS11(self.frequency)
+                                self.current_capacitors = state
+                                self.arduino.send(self.current_capacitors + "01")
+                                s11, impedance = self.get_s11()
                                 self.addValues(s11, cs_bin, ct_bin, cm_bin, cs, ct, cm)
                                 result[0].append(self.s11_db_hist[-1])
                             result[1].append(cs)
