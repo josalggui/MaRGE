@@ -122,74 +122,74 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             print("Incorrect test mode.")
             return False
 
-    def sequenceAnalysis(self, mode=None):
-        self.mode = mode
-
-        # Get results
-        s11 = np.array(self.s11_hist)
-        s11_opt = self.mapVals['s11']
-        f_vec = self.vna.getFrequency()
-        s_vec = self.vna.getData()
-
-        # Interpolate s_vec
-        interp_func = interp1d(f_vec, s_vec, kind='cubic')
-        f_vec_t = np.linspace(np.min(f_vec), np.max(f_vec), 1000)
-        s_vec_t = interp_func(f_vec_t)
-
-        # Insert s11 into s_vec
-        index = np.searchsorted(f_vec_t, self.frequency)
-        f_vec_t = np.insert(f_vec_t, index, self.frequency)
-        s_vec_t = np.insert(s_vec_t, index, s11_opt)
-
-        # Get s in dB
-        s_vec_db = 20 * np.log10(np.abs(s_vec_t))
-
-        # Get quality factor
-        try:
-            idx = np.argmin(s_vec_db)
-            f0 = f_vec_t[idx]
-            f1 = f_vec_t[np.argmin(np.abs(s_vec_db[0:idx] + 3))]
-            f2 = f_vec_t[idx + np.argmin(np.abs(s_vec_db[idx::] + 3))]
-            q = f0 / (f2 - f1)
-            print("Q = %0.0f" % q)
-            print("BW @ -3 dB = %0.0f kHz" % ((f2 - f1) * 1e3))
-        except:
-            pass
-
-        # Create data array in case single point is acquired
-        if self.test == 'manual':
-            s11 = np.concatenate((s11, s11), axis=0)
-
-        # Plot smith chart
-        result1 = {'widget': 'smith',
-                   'xData': [np.real(s11), np.real(s_vec_t)],
-                   'yData': [np.imag(s11), np.imag(s_vec_t)],
-                   'xLabel': 'Real(S11)',
-                   'yLabel': 'Imag(S11)',
-                   'title': 'Smith chart',
-                   'legend': ['', ''],
-                   'row': 0,
-                   'col': 0}
-
-        # Plot reflection coefficient
-        result2 = {'widget': 'curve',
-                   'xData': (f_vec_t - self.frequency) * 1e3,
-                   'yData': [s_vec_db],
-                   'xLabel': 'Frequency (kHz)',
-                   'yLabel': 'S11 (dB)',
-                   'title': 'Reflection coefficient',
-                   'legend': [''],
-                   'row': 0,
-                   'col': 1}
-
-        self.output = [result1, result2]
-
-        self.saveRawData()
-
-        if self.mode == 'Standalone':
-            self.plotResults()
-
-        return self.output
+    # def sequenceAnalysis(self, mode=None):
+    #     self.mode = mode
+    #
+    #     # Get results
+    #     s11 = np.array(self.s11_hist)
+    #     s11_opt = self.mapVals['s11']
+    #     f_vec = self.vna.getFrequency()
+    #     s_vec = self.vna.getData()
+    #
+    #     # Interpolate s_vec
+    #     interp_func = interp1d(f_vec, s_vec, kind='cubic')
+    #     f_vec_t = np.linspace(np.min(f_vec), np.max(f_vec), 1000)
+    #     s_vec_t = interp_func(f_vec_t)
+    #
+    #     # Insert s11 into s_vec
+    #     index = np.searchsorted(f_vec_t, self.frequency)
+    #     f_vec_t = np.insert(f_vec_t, index, self.frequency)
+    #     s_vec_t = np.insert(s_vec_t, index, s11_opt)
+    #
+    #     # Get s in dB
+    #     s_vec_db = 20 * np.log10(np.abs(s_vec_t))
+    #
+    #     # Get quality factor
+    #     try:
+    #         idx = np.argmin(s_vec_db)
+    #         f0 = f_vec_t[idx]
+    #         f1 = f_vec_t[np.argmin(np.abs(s_vec_db[0:idx] + 3))]
+    #         f2 = f_vec_t[idx + np.argmin(np.abs(s_vec_db[idx::] + 3))]
+    #         q = f0 / (f2 - f1)
+    #         print("Q = %0.0f" % q)
+    #         print("BW @ -3 dB = %0.0f kHz" % ((f2 - f1) * 1e3))
+    #     except:
+    #         pass
+    #
+    #     # Create data array in case single point is acquired
+    #     if self.test == 'manual':
+    #         s11 = np.concatenate((s11, s11), axis=0)
+    #
+    #     # Plot smith chart
+    #     result1 = {'widget': 'smith',
+    #                'xData': [np.real(s11), np.real(s_vec_t)],
+    #                'yData': [np.imag(s11), np.imag(s_vec_t)],
+    #                'xLabel': 'Real(S11)',
+    #                'yLabel': 'Imag(S11)',
+    #                'title': 'Smith chart',
+    #                'legend': ['', ''],
+    #                'row': 0,
+    #                'col': 0}
+    #
+    #     # Plot reflection coefficient
+    #     result2 = {'widget': 'curve',
+    #                'xData': (f_vec_t - self.frequency) * 1e3,
+    #                'yData': [s_vec_db],
+    #                'xLabel': 'Frequency (kHz)',
+    #                'yLabel': 'S11 (dB)',
+    #                'title': 'Reflection coefficient',
+    #                'legend': [''],
+    #                'row': 0,
+    #                'col': 1}
+    #
+    #     self.output = [result1, result2]
+    #
+    #     self.saveRawData()
+    #
+    #     if self.mode == 'Standalone':
+    #         self.plotResults()
+    #
+    #     return self.output
 
     def runAutoTuning(self):
         nCap = 5
@@ -304,6 +304,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.mapVals['matching'] = self.states[stateCm]
         self.mapVals['s11'] = self.s11_hist[-1]
         self.mapVals['s11_db'] = self.s11_db_hist[-1]
+        self.mapVals['f_vec'] = self.vna.getFrequency()
+        self.mapVals['s_vec'] = self.vna.getData()
 
         # Connect the system to TxRx switch
         self.arduino.send(self.states[stateCs] + self.states[stateCt] + self.states[stateCm] + "10")
@@ -326,6 +328,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             print("S11 = %0.2f dB" % s11dB)
             print("R = %0.2f Ohms" % r)
             print("X = %0.2f Ohms" % x)
+            self.mapVals['f_vec'] = self.vna.getFrequency()
+            self.mapVals['s_vec'] = self.vna.getData()
             self.arduino.send(self.series + self.tuning + self.matching + "10")
             print("nanoVNA OFF")
             return True
