@@ -74,6 +74,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.states_hist = [[], [], []]
         self.n_aux = [[], [], []]
         self.frequency = hw.larmorFreq + self.freqOffset * 1e-6
+        self.mapVals['frequency'] = self.frequency
 
         # Connect to Arduino and set the initial state
         if self.arduino is None:
@@ -110,13 +111,13 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
         if self.test == 'auto':
             output = self.runAutoTuning()
-            # self.arduino.disconnect()
             self.vna.interface.close()
+            self.mapVals['s11_hist'] = self.s11_hist
             return output
         elif self.test == 'manual':
             output = self.runManual()
-            # self.arduino.disconnect()
             self.vna.interface.close()
+            self.mapVals['s11_hist'] = self.s11_hist
             return output
         else:
             print("Incorrect test mode.")

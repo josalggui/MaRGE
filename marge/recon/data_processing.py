@@ -29,6 +29,7 @@ import importlib
 import os
 from io import BytesIO
 
+import numpy as np
 import scipy as sp
 import inspect
 from matplotlib import pyplot as plt
@@ -175,6 +176,42 @@ def plot_results(output, title=None, printer=None):
             plt.title(item['title'])
             plt.xlabel(item['xLabel'])
             plt.ylabel(item['yLabel'])
+        elif item['widget'] == 'smith':
+            plt.subplot(rows, cols, plot + 1)
+            n = 0
+            # Create here the smith chart:
+            theta = np.linspace(0, 2 * np.pi, 100)
+            x0 = np.cos(theta)
+            y0 = np.sin(theta)
+            x1 = 0.5 + 0.5 * np.cos(theta)
+            y1 = 0.5 * np.sin(theta)
+            x2 = np.array([1, -1, 1])
+            y2 = np.array([0, 0, 0])
+            x3 = 0.1 * np.cos(theta)
+            y3 = 0.1 * np.sin(theta)
+            x_smith = np.concatenate((x0, x1, x2, x3), axis=0)
+            y_smith = np.concatenate((y0, y1, y2, y3), axis=0)
+            l_smith = 'Smith chart'
+
+            # Add smith chart to plots
+            x_data = item['xData']
+            y_data = item['yData']
+            legend = item['legend']
+            if type(item['xData']) is list:
+                x_data.append(x_smith)
+            else:
+                x_data = [x_data]
+                x_data.append(x_smith)
+            y_data.append(y_smith)
+            legend.append(l_smith)
+            n = 0
+            for y_data in item['yData']:
+                plt.plot(x_data[n], y_data, label=legend[n])
+                n += 1
+            plt.title(item['title'])
+            plt.xlabel(item['xLabel'])
+            plt.ylabel(item['yLabel'])
+
         elif item['widget'] == 'curve':
             plt.subplot(rows, cols, plot + 1)
             n = 0
@@ -206,5 +243,5 @@ def plot_results(output, title=None, printer=None):
         plt.show()
 
 if __name__ == '__main__':
-    run_recon("../experiments/acquisitions/Example/2025.05.29.16.42/Example/None/mat/Noise.2025.05.29.16.42.11.897.mat",
+    run_recon("AutoTuning.2026.01.30.18.50.35.172.mat",
               mode="Standalone")

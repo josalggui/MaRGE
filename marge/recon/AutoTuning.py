@@ -59,7 +59,7 @@ def AutoTuning(raw_data_path=None):
 
     # Create data array in case single point is acquired
     if mat_data['test'].item() == 'manual':
-        s11 = np.concatenate((s11, s11), axis=0)
+        s11 = np.squeeze(np.concatenate((s11, s11), axis=0))
 
     # Plot smith chart
     result1 = {'widget': 'smith',
