@@ -206,12 +206,19 @@ def plot_results(output, title=None, printer=None):
             legend.append(l_smith)
             n = 0
             for y_data in item['yData']:
-                plt.plot(x_data[n], y_data, label=legend[n])
+                x = np.squeeze(x_data[n])
+                y = np.squeeze(y_data)
+                if n==0:
+                    plt.plot(x, y, '-ob', label=legend[n])
+                if n==2:
+                    plt.plot(x, y, 'k', label=legend[n])
+                else:
+                    plt.plot(x, y, label=legend[n])
                 n += 1
             plt.title(item['title'])
             plt.xlabel(item['xLabel'])
             plt.ylabel(item['yLabel'])
-
+            plt.legend()
         elif item['widget'] == 'curve':
             plt.subplot(rows, cols, plot + 1)
             n = 0
@@ -243,5 +250,5 @@ def plot_results(output, title=None, printer=None):
         plt.show()
 
 if __name__ == '__main__':
-    run_recon("AutoTuning.2026.01.30.18.50.35.172.mat",
+    run_recon("AutoTuning.2026.01.30.19.12.54.809.mat",
               mode="Standalone")

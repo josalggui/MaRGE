@@ -67,10 +67,10 @@ class PlotSmithChartController(PlotSmithChartWidget):
         y_max = 0
         for line in range(n_lines):
             if type(self.x_data) is list:
-                x = self.x_data[line]
+                x = np.squeeze(self.x_data[line])
             else:
-                x = self.x_data.copy()
-            y = self.y_data[line]
+                x = np.squeeze(self.x_data.copy())
+            y = np.squeeze(self.y_data[line])
             if line == 0:
                 self.lines.append(self.plot_item.plot(x, y, pen=self.pen[line], name=legend[line], symbol='o'))
                 x_min = np.min(x)
