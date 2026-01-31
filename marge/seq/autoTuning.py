@@ -275,8 +275,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.mapVals['matching'] = self.states[stateCm]
         self.mapVals['s11'] = self.s11_hist[-1]
         self.mapVals['s11_db'] = self.s11_db_hist[-1]
-        self.mapVals['f_vec'] = self.vna.getFrequency
-        self.mapVals['s_vec'] = self.vna.getData
+        self.mapVals['f_vec'] = self.vna.getFrequency()
+        self.mapVals['s_vec'] = self.vna.getData()
 
         # Connect the system to TxRx switch
         self.current_capacitors = self.states[stateCs] + self.states[stateCt] + self.states[stateCm]
@@ -301,8 +301,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             print("S11 = %0.2f dB" % s11dB)
             print("R = %0.2f Ohms" % r)
             print("X = %0.2f Ohms" % x)
-            self.mapVals['f_vec'] = self.vna.getFrequency
-            self.mapVals['s_vec'] = self.vna.getData
+            self.mapVals['f_vec'] = self.vna.getFrequency()
+            self.mapVals['s_vec'] = self.vna.getData()
             self.current_capacitors = self.series + self.tuning + self.matching
             self.arduino.send(self.current_capacitors + "10")
             print("nanoVNA OFF")
