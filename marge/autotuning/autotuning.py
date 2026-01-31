@@ -5,6 +5,7 @@ Created on Thu August 17th 2023
 @Summary: code to communicate with arduino for autotuning
 Specific hardware from MRILab @ i3M is required
 """
+import threading
 
 import numpy as np
 import serial.tools.list_ports
@@ -116,11 +117,21 @@ class VNA:
         """
         Initialize a Vectorial Network Analyzer (VNA) object.
         """
+        self.error = None
+        self.reading = True
         self.connected = None
         self.frequencies = None
         self.interface = None
         self.data = []
         self.device = None
+        self.timeout = 5
+
+    def _get_frequency(self):
+        try:
+            self.frequencies = np.array(self.device.readFrequencies()) * 1e-6
+        except Exception as e:
+            self.error = e
+        self.reading = False
 
     def connect(self):
         """
@@ -135,9 +146,27 @@ class VNA:
                 self.interface.timeout = 0.05
                 time.sleep(0.1)
                 self.device = Hardware.get_VNA(self.interface)
-                self.frequencies = np.array(self.device.readFrequencies()) * 1e-6  # MHz
-                print("Connected to nanoVNA")
-                return True
+
+                # Initialize frequency reading
+                self.reading = True
+                self.error = None
+                thread = threading.Thread(target=self._get_frequency)
+                thread.start()
+                t0 = time.time()
+                t1 = time.time()
+                while self.reading and t1 - t0 < self.timeout:
+                    t1 = time.time()
+                    time.sleep(0.01)
+                if t1 - t0 >= self.timeout:
+                    print("WARNING: nanoVNA timeout reached!")
+                    return False
+                else:
+                    if self.error is None:
+                        print("Connected to nanoVNA")
+                        return True
+                    else:
+                        print(f"WARNING: Failed to connect to nanoVNA: {self.error}")
+                        return False
             except IndexError:
                 print("WARNING: No interfaces available for nanoVNA")
                 return False
@@ -165,6 +194,13 @@ class VNA:
         if self.device is not None:
             return self.data
 
+    def _get_s11(self):
+        try:
+            self.data_prov = self.device.readValues("data 0")
+        except Exception as e:
+            self.error = e
+        self.reading = False
+
     def getS11(self, f0=None):
         """
         Get S11 parameter and impedance for a specific frequency.
@@ -173,23 +209,51 @@ class VNA:
         :return: Tuple containing S11 parameter and impedance at the given frequency.
         """
         if self.device is not None:
-            self.data = []
-            for value in self.device.readValues("data 0"):
-                self.data.append(float(value.split(" ")[0]) + 1j * float(value.split(" ")[1]))
+            # Initialize data reading
+            self.reading = True
+            self.error = None
+            thread = threading.Thread(target=self._get_s11)
+            thread.start()
+            t0 = time.time()
+            t1 = time.time()
+            while self.reading and t1 - t0 < self.timeout:
+                t1 = time.time()
+                time.sleep(0.01)
+            if t1 - t0 >= self.timeout:
+                print("WARNING: nanoVNA timeout reached!")
+                raise IOError("WARNING: nanoVNA timeout reached!")
+            else:
+                if self.error is None:
+                    self.data = []
+                    for value in self.data_prov:
+                        self.data.append(float(value.split(" ")[0]) + 1j * float(value.split(" ")[1]))
 
-            # Create a linear interpolation function
-            interp_func = interp1d(self.frequencies, self.data, kind='cubic')
+                    # Create a linear interpolation function
+                    interp_func = interp1d(self.frequencies, self.data, kind='cubic')
 
-            # Perform interpolation
-            s11 = interp_func(f0)
-            z11 = 50 * (1 + s11) / (1 - s11)
+                    # Perform interpolation
+                    s11 = interp_func(f0)
+                    z11 = 50 * (1 + s11) / (1 - s11)
 
-            return s11, z11
+                    return s11, z11
+                else:
+                    print(f"WARNING: Failed to connect to nanoVNA: {self.error}")
+                    raise IOError(self.error)
+
 
 if __name__ == "__main__":
-    # Create an instance of the Arduino to control the interlock
-    arduino = Arduino(baudrate=115200, name="interlock")
-    arduino.connect(serial_number="55731323736351611260")
+    # # Test arduino
+    # arduino = Arduino(baudrate=115200, name="interlock")
+    # arduino.connect(serial_number="55731323736351611260")
+    #
+    # string = arduino.send("GPA_SPC:CTL 1;").decode()
+    # string = arduino.send("GPA_ERRST;").decode()
 
-    string = arduino.send("GPA_SPC:CTL 1;").decode()
-    string = arduino.send("GPA_ERRST;").decode()
+    # Test nanoVNA
+    nanovna = VNA()
+    nanovna.connect()
+    try:
+        a, b = nanovna.getS11(3.64)
+        print(a)
+    except Exception as e:
+        print(e)

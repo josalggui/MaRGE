@@ -35,8 +35,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.matching = None
         self.tuning = None
         self.series = None
-        self.seriesTarget = 80
-        self.tuningTarget = 55
+        self.seriesTarget = None
+        self.tuningTarget = None
         self.state0 = None
         self.frequencies = None
         self.expt = None
@@ -57,6 +57,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='test', string='Test', val='manual', field='IM',
                           tip='Choose one option: auto, manual')
         self.addParameter(key='con_delay', string='Connection delay (s)', val=0.5, field='IM')
+        self.addParameter(key='seriesTarget', val=80, string='Series target (Ohms)', field='IM')
+        self.addParameter(key='tuningTarget', val=55, string='Tuning target (Ohms)', field='IM')
         self.addParameter(key='xyz', string='xyz', val=0.0)
 
     def sequenceInfo(self):
@@ -157,7 +159,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                 s11, impedance = self.vna.getS11(self.frequency)
                 return s11, impedance
             except Exception as e:
-                print(f"WARNING: Failed to connect to nanoVNA: {e}")
+                print(f"WARNING: nanoVNA: {e}")
                 if self.restart_vna():
                     pass
                 else:
