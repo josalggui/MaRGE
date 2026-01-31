@@ -136,13 +136,13 @@ class VNA:
                 time.sleep(0.1)
                 self.device = Hardware.get_VNA(self.interface)
                 self.frequencies = np.array(self.device.readFrequencies()) * 1e-6  # MHz
-                print("Connected to nanoVNA for auto-tuning")
+                print("Connected to nanoVNA")
                 return True
             except IndexError:
-                print("WARNING: No interfaces available for nanoVNA auto-tuning")
+                print("WARNING: No interfaces available for nanoVNA")
                 return False
             except Exception as e:
-                print(f"WARNING: Failed to connect to nanoVNA for auto-tuning: {e}")
+                print(f"WARNING: Failed to connect to nanoVNA: {e}")
                 return False
         else:
             return True

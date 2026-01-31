@@ -21,6 +21,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(AutoTuning, self).__init__()
         # Input the parameters
+        self.con_delay = None
         self.arduino = None
         self.freqOffset = None
         self.frequency = None
@@ -55,7 +56,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='matching', string='Matching capacitor', val='10011', field='IM')
         self.addParameter(key='test', string='Test', val='manual', field='IM',
                           tip='Choose one option: auto, manual')
-        self.addParameter(key='xyz', string='xyz', val=0.0, field='IM')
+        self.addParameter(key='con_delay', string='Connection delay (s)', val=0.5, field='IM')
+        self.addParameter(key='xyz', string='xyz', val=0.0)
 
     def sequenceInfo(self):
         print("RF automatic impedance matching")
@@ -98,7 +100,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                 # Turn ON vna.
                 self.current_capacitors = self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching']
                 self.arduino.send(self.current_capacitors + "01")
-                time.sleep(3.5)
+                time.sleep(self.con_delay)
 
                 # Connect to VNA
                 print("Linking to nanoVNA...")
@@ -137,7 +139,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
             # Turn ON vna.
             self.arduino.send(self.current_capacitors + "01")
-            time.sleep(3.5)
+            time.sleep(self.con_delay)
 
             # Connect to VNA
             print("Linking to nanoVNA...")
@@ -155,28 +157,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
                 s11, impedance = self.vna.getS11(self.frequency)
                 return s11, impedance
             except Exception as e:
-                if self.restart_vna():
-                    pass
-                else:
-                    raise e
-    
-    def get_frequency(self):
-        while True:
-            try:
-                frequency = self.vna.getFrequency()
-                return frequency
-            except Exception as e:
-                if self.restart_vna():
-                    pass
-                else:
-                    raise e
-    
-    def get_data(self):
-        while True:
-            try:
-                data = self.vna.getData()
-                return data
-            except Exception as e:
+                print(f"WARNING: Failed to connect to nanoVNA: {e}")
                 if self.restart_vna():
                     pass
                 else:
@@ -294,8 +275,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.mapVals['matching'] = self.states[stateCm]
         self.mapVals['s11'] = self.s11_hist[-1]
         self.mapVals['s11_db'] = self.s11_db_hist[-1]
-        self.mapVals['f_vec'] = self.get_frequency()
-        self.mapVals['s_vec'] = self.get_data()
+        self.mapVals['f_vec'] = self.vna.getFrequency
+        self.mapVals['s_vec'] = self.vna.getData
 
         # Connect the system to TxRx switch
         self.current_capacitors = self.states[stateCs] + self.states[stateCt] + self.states[stateCm]
@@ -320,8 +301,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
             print("S11 = %0.2f dB" % s11dB)
             print("R = %0.2f Ohms" % r)
             print("X = %0.2f Ohms" % x)
-            self.mapVals['f_vec'] = self.get_frequency()
-            self.mapVals['s_vec'] = self.get_data()
+            self.mapVals['f_vec'] = self.vna.getFrequency
+            self.mapVals['s_vec'] = self.vna.getData
             self.current_capacitors = self.series + self.tuning + self.matching
             self.arduino.send(self.current_capacitors + "10")
             print("nanoVNA OFF")
