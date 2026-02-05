@@ -35,7 +35,7 @@ def InversionRecovery(raw_data_path=None):
 
     # Functions for fitting
     def func1(x, m, t1):
-        return np.abs(m * 1 - 2 * np.exp(-x / t1))
+        return np.abs(m * (1 - 2 * np.exp(-x / t1)))
 
     # Process data to be plotted
     data_full = np.reshape(data_full, (n_scans, n_steps, -1))
@@ -47,7 +47,10 @@ def InversionRecovery(raw_data_path=None):
         np.concatenate((t0, t0_prov), axis=0)
 
     # Fitting to functions
-    fitData1, _ = curve_fit(func1, ir_time_vector, np.abs(data), p0=[np.abs(data[0]), 10])
+    idx = np.argmin(np.abs(data))
+    t_ref = ir_time_vector[idx]
+    print(t_ref)
+    fitData1, _ = curve_fit(func1, ir_time_vector, np.abs(data), p0=[np.abs(data[0]), t_ref])
     fitting1 = func1(ir_time_vector, fitData1[0], fitData1[1])
     corr_coef1 = np.corrcoef(np.abs(data), fitting1)
     print('For one component:')
