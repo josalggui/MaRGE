@@ -73,7 +73,7 @@ For a complete installation including MaRCoS configuration, hardware setup, and 
 
 * Python 3.10 or newer
 
-* A working MaRCoS system installation
+* A working MaRCoS system installation with static IP address
 
 * Supported OS: (update — Linux / Windows / macOS as applicable)
 
