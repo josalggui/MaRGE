@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 
-import recon.data_processing as dp
+import marge.recon.data_processing as dp
 
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
@@ -108,7 +108,20 @@ class Printer:
             if f.name != "temp.mat"
         ]
 
-        # Sort by creation time (oldest to newest)
-        mat_files.sort(key=lambda f: f.stat().st_ctime)
+        # # Sort by creation time (oldest to newest)
+        # mat_files.sort(key=lambda f: f.stat().st_ctime)
+
+        # Sort by time and date in the file name
+        def extract_dt_from_name(path: Path):
+            # Remove extension
+            stem = path.stem  # name.2025.06.18.12.30.29.123
+
+            # Split and take the timestamp part
+            parts = stem.split('.')
+            ts_str = ".".join(parts[-7:])  # last 7 parts are the timestamp
+
+            return datetime.strptime(ts_str, "%Y.%m.%d.%H.%M.%S.%f")
+
+        mat_files.sort(key=extract_dt_from_name)
 
         return [f.name for f in mat_files]

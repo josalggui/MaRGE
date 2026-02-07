@@ -813,64 +813,71 @@ def fix_echo_position(data_oversampled, dummy_pulses, etl, n_rd, n_batches, n_re
 def decimate(data_over, n_adc, option='PETRA', remove=True, add_rd_points=10, oversampling_factor=5, decimation_factor=5):
     """
     Decimate oversampled MRI readout data using a two-stage approach:
-    FIR decimation followed by optional averaging-based decimation.
+    FIR decimation followed by optional frequency-domain downsampling.
 
     This function converts oversampled ADC data to the desired bandwidth.
-    If the requested decimation factor is smaller than the acquisition
-    oversampling factor, the remaining decimation is completed by averaging
-    (convolution with a boxcar), which preserves phase and improves SNR.
+    First, an FIR anti-aliasing decimation is applied. If the acquisition
+    oversampling factor is larger than the FIR decimation factor, the
+    remaining reduction is performed by frequency-domain cropping
+    (equivalent to ideal low-pass filtering and resampling).
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     data_over : numpy.ndarray
-        The oversampled data array to be decimated.
+        Oversampled ADC data as a 1D array. Length must be divisible by
+        `n_adc`. Typically complex-valued MRI readout data.
     n_adc : int
-        The number of adc windows in the dataset, used to reshape and process the data appropriately.
-    option : str, optional
-        Preprocessing option to handle data before decimation:
-        - 'PETRA': Adjusts initial points to avoid oscillations during decimation.
-        - 'Normal': Applies no preprocessing (default is 'PETRA').
+        Number of ADC windows (readout lines). Used to reshape the data
+        into (n_adc, samples_per_line) for per-line processing.
+    option : {'PETRA', 'Normal'}, optional
+        Preprocessing mode applied before decimation:
+        - 'PETRA': Flattens the first `add_rd_points * oversampling_factor`
+          samples of each readout line to suppress FIR edge oscillations.
+        - 'Normal': No preprocessing.
+        Default is 'PETRA'.
     remove : bool, optional
-        If True, removes `addRdPoints` from the start and end of each readout line after decimation.
-        Defaults to True.
+        If True, removes `add_rd_points` samples from the beginning and end
+        of each readout line after decimation. Default is True.
     add_rd_points : int, optional
-        Number of additional points at the begining and end of each readout line.
-        Defaults to 10.
+        Number of additional readout points acquired at both ends of each
+        line. Default is 10.
     oversampling_factor : int, optional
-        Oversampling factor used during data acquisition.
-        This defines the total effective decimation applied to the data.
-        Default is 5.
+        Oversampling factor used during acquisition. Defines the total
+        effective decimation applied. Default is 5.
     decimation_factor : int, optional
-        FIR decimation factor applied using an anti-aliasing filter.
-        If smaller than `oversampling_factor`, the remaining decimation is
-        completed by averaging.
-        Default is 5.
+        FIR decimation factor applied with anti-alias filtering. Must divide
+        `oversampling_factor`. Any remaining factor is applied by
+        frequency-domain downsampling. Default is 5.
 
-    Returns:
-    --------
+    Returns
+    -------
     numpy.ndarray
-        The decimated data array, optionally adjusted to remove extra points.
+        Decimated data as a flattened 1D array.
+
+    Raises
+    ------
+    ValueError
+        If `oversampling_factor` is not a multiple of `decimation_factor`.
 
     Notes
     -----
-    - The total effective decimation factor is always equal to
-      `oversampling_factor`.
-    - When `decimation_factor < oversampling_factor`, the remaining
-      decimation factor (`oversampling_factor / decimation_factor`) is
-      applied by averaging consecutive samples.
-    - Averaging is performed independently for each ADC window to avoid
-      mixing readout lines.
-    - The PETRA preprocessing step is designed to reduce Gibbs-like
-      oscillations introduced by FIR filtering at the beginning of
-      each readout.
+    - Total effective decimation equals `oversampling_factor`.
+    - FIR decimation uses `scipy.signal.decimate` with an FIR filter and
+      zero-phase compensation.
+    - A half-filter-length sample offset is applied before FIR decimation
+      to align output samples.
+    - When additional downsampling is required, each ADC window is
+      transformed to k-space, center-cropped, and transformed back.
+    - PETRA preprocessing reduces Gibbs-like ringing caused by FIR filtering
+      near the start of each readout line.
 
     Workflow
     --------
-    1. Optionally preprocess the data to stabilize early readout points
-       (PETRA mode).
-    2. Apply FIR decimation with factor `decimation_factor`.
-    3. If required, finish the decimation by averaging.
-    4. Optionally remove extra readout points from each ADC window.
+    1. Reshape into ADC windows.
+    2. Optionally apply PETRA edge stabilization.
+    3. Apply FIR decimation.
+    4. Apply frequency-domain downsampling if required.
+    5. Optionally remove extra readout points per line.
     """
 
     # Get averaging factor
@@ -918,7 +925,7 @@ def decimate(data_over, n_adc, option='PETRA', remove=True, add_rd_points=10, ov
         # Reshape the output
         data_decimated = data_decimated.reshape(-1)
 
-    # Remove addRdPoints
+    # Remove add_rd_points
     if remove:
         nPoints = int(data_decimated.shape[0] / n_adc) - 2 * add_rd_points
         data_decimated = np.reshape(data_decimated, (n_adc, -1))

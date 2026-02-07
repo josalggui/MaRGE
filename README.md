@@ -4,18 +4,38 @@
 
 # MaRGE (MaRCoS Graphical Environment)
 
-🚀 **Version 1.0.0 coming soon… stay tuned!**
+🚀 **Version 1.0.0 coming soon — stay tuned!**
+
+**MaRGE** is a Python-based graphical environment for interacting with the **MaRCoS MRI research system**. It provides a user-friendly GUI for running MRI sequences, configuring parameters, and managing experiments without needing to work directly with low-level control code.
+
+MaRGE is designed for MRI researchers, developers, and students working with the MaRCoS platform.
+
+---
+
+## Preview
+
+![MaRGE GUI](marge/resources/images/main_clean.png)
+
+## Features
+
+🧲 Graphical interface for MaRCoS MRI experiments
+
+⚙️ Sequence configuration and execution
+
+🧪 Research-oriented workflow
+
+🧩 Extensible sequence architecture
+
+🐍 Fully Python-based
 
 ## Installation with pip
-A fast installation can be done using pip.
-But note that pip installation only works with red pitayas configured with static IP 192.168.1.101.
-You can install **MaRGE** using pip:
+Install MaRGE with pip if you only need to run the GUI and do not plan to modify the source code or add custom sequences.
 
 ```bash
 pip install marge-mri
 ```
 
-Then, you can launch the GUI with:
+Launch the GUI with:
 
 ```python
 # Import marge
@@ -25,25 +45,44 @@ from marge import main
 main.MaRGE()
 ```
 
-## Installation from source
+## Installation from source (Developer mode)
 
-Alternatively, if you prefer to download from source and have full access to the code, simply clone this repository:
+Use this method if you want to modify the codebase or include your own sequences.
 
 ```bash
-git clone --branch pypi_integration --single-branch https://github.com/josalggui/MaRGE.git
+git clone https://github.com/josalggui/MaRGE.git
 ```
-Create your virtual environment and install all the requirements with
-
+Create and activate a virtual environment (recommended):
+```bash
+python -m venv venv
+source venv/bin/activate   # Linux/macOS
+venv\Scripts\activate      # Windows
+```
+Install requirements
 ```bash
 pip install -r requirements.txt
 ```
 
-## Notes
+## Full Installation (MaRGE + MaRCoS Setup)
 
-This repository contains the Python code for the MaRCoS Graphical Environment (MaRGE), a system for magnetic resonance imaging research. The GUI provides a user-friendly interface to interact with the MaRCoS system.
+For a complete installation including MaRCoS configuration, hardware setup, and developer options, please follow the detailed step-by-step guide in the Wiki:
 
-Take a look at the MaRGE [Wiki](https://github.com/josalggui/MaRGE/wiki)! (under development)
+👉 [Full Installation Guide](https://github.com/josalggui/MaRGE/wiki/Setting-up-MaRGE-and-MaRCoS-from-scratch)
 
-Take a look at the MaRGE [Documentation](https://josalggui.github.io/MaRGE/)! (under development)
+## Requirements
 
-Take a look at the MaRGE [PyPi](https://pypi.org/project/marge-mri/)
+* Python 3.10 or newer
+
+* A working MaRCoS system installation with static IP address
+
+* Supported OS: (update — Linux / Windows / macOS as applicable)
+
+## Documentation
+
+📖 Wiki: https://github.com/josalggui/MaRGE/wiki
+ (under development)
+
+📚 Documentation site: https://josalggui.github.io/MaRGE/
+ (under development)
+
+📦 PyPI package: https://pypi.org/project/marge-mri/
