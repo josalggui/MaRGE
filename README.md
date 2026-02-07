@@ -77,22 +77,6 @@ For a complete installation including MaRCoS configuration, hardware setup, and 
 
 * Supported OS: (update — Linux / Windows / macOS as applicable)
 
-## Quick Start
-
-After launching MaRGE:
-
-1. Connect to your MaRCoS system
-
-2. Select or load a sequence
-
-3. Configure acquisition parameters
-
-4. Run the experiment
-
-5. Review outputs and logs
-
-See the [wiki]() for detailed walkthroughs (in progress).
-
 ## Documentation
 
 📖 Wiki: https://github.com/josalggui/MaRGE/wiki
