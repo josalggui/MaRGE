@@ -263,7 +263,7 @@ class SequenceController(SequenceToolBar):
             saves the results into the history, and sets the dfov and angle values to zero for the next figures.
         """
         # Load sequence name
-        if seq_name is None or seq_name is False:
+        if seq_name is None or seq_name is False or seq_name is not str:
             seq_name = self.main.sequence_list.getCurrentSequence()
 
         # Add item to the history list
@@ -395,20 +395,28 @@ class SequenceController(SequenceToolBar):
 
     def iterate(self):
         """
-        Switch the iterative mode.
+        Toggle iterative execution mode.
 
-        Summary:
-            This method switches the iterative mode based on the state of the 'iterate' action. If the action is checked, the
-            tooltip and status tip are updated to indicate that switching to single run is possible. If the action is unchecked,
-            the tooltip and status tip are updated to indicate that switching to iterative run is possible.
+        Enables or disables iterative sequencing via the iterate action. When
+        enabled, manual list addition is disabled and a sequence is immediately
+        queued. After each sequence finishes, the history_list emits a completion
+        signal that checks this action’s state and automatically queues another
+        sequence while iterative mode remains active.
+
+        When disabled, iterative re-queuing stops and manual list addition is
+        re-enabled. Tooltips and status tips are updated to reflect the available
+        mode switch.
         """
         if self.action_iterate.isChecked():
             self.action_iterate.setToolTip('Switch to single run')
             self.action_iterate.setStatusTip("Switch to single run")
+            self.action_add_to_list.setEnabled(False)
+            self.runToList()
         else:
             self.action_iterate.setToolTip('Switch to iterative run')
             self.action_iterate.setStatusTip("Switch to iterative run")
-    
+            self.action_add_to_list.setEnabled(True)
+
     def repeatAcquisition(self):
         """
         Executed when you repeat some calibration sequences.

@@ -35,6 +35,7 @@ class SequenceToolBar(QToolBar):
             self.action_acquire = QAction(QIcon(str(path_acquire)), "Acquire", self)
         self.action_acquire.setStatusTip("Run current sequence")
         self.addAction(self.action_acquire)
+        self.action_acquire.setVisible(False)
 
         # Iterative run
         with resources.path("marge.resources.icons", "iterate.png") as path_iterate:

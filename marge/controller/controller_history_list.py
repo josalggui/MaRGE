@@ -64,6 +64,15 @@ class HistoryListController(HistoryListWidget):
         self.itemChanged.connect(self.main.sequence_list.updateSequence)
         self.itemEntered.connect(self.main.sequence_list.updateSequence)
 
+        # Connect sequence_ready_signal to repeat sequence
+        self.sequence_ready_signal.connect(self.repeat_sequence)
+
+    def repeat_sequence(self):
+        if self.main.toolbar_sequences.action_iterate.isChecked():
+            self.main.toolbar_sequences.runToList()
+        else:
+            pass
+
     def delete_items(self):
         while self.count() > 0:
             self.deleteTask(item_number=0)
