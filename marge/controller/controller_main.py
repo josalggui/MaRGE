@@ -11,8 +11,8 @@ from PyQt5.QtCore import QEvent
 
 from marge.seq.sequences import defaultsequences
 from marge.ui.window_main import MainWindow
-import marge.autotuning.autotuning as autotuning
 import marge.configs.hw_config as hw
+from marge.utils.SerialDevice import SerialDevice
 
 
 class MainController(MainWindow):
@@ -27,13 +27,13 @@ class MainController(MainWindow):
         self.history_list.figure_ready_signal.connect(self.toolbar_figures.doScreenshot)
 
         # Define the arduinos
-        self.arduino_autotuning = autotuning.Arduino(baudrate=hw.ard_br_autotuning)
-        self.arduino_autotuning.connect(serial_number=hw.ard_sn_autotuning)
+        self.arduino_autotuning = SerialDevice(baudrate=hw.ard_br_autotuning)
+        self.arduino_autotuning.connect(port=f"serial:{hw.ard_sn_autotuning}")
         if hw.ard_sn_autotuning==hw.ard_sn_interlock:
             self.arduino_interlock = self.arduino_autotuning
         else:
-            self.arduino_interlock = autotuning.Arduino(hw.ard_br_interlock)
-            self.arduino_interlock.connect(serial_number=hw.ard_sn_interlock)
+            self.arduino_interlock = SerialDevice(baudrate=hw.ard_br_interlock)
+            self.arduino_interlock.connect(port=f"serial:{hw.ard_sn_interlock}")
 
     def set_demo(self, demo):
         self.demo = demo

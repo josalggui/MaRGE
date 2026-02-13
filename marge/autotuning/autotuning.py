@@ -4,6 +4,9 @@ Created on Thu August 17th 2023
 @email: josalggui@i3m.upv.es
 @Summary: code to communicate with arduino for autotuning
 Specific hardware from MRILab @ i3M is required
+
+Note: Serial device communication (previously Arduino class) has been moved to
+marge.utils.SerialDevice.SerialDevice. This module now only contains the VNA class.
 """
 import threading
 
@@ -17,99 +20,7 @@ import time
 from marge.vna import Hardware
 
 
-class Arduino:
-    def __init__(self, baudrate=115200, timeout=0.1):
-        """
-        Initialize an Arduino object.
 
-        :param baudrate: Baud rate for communication (default is 115200).
-        :param timeout: Timeout for communication operations (default is 0.1 seconds).
-        """
-        self.device = None
-        self.serial = None
-        self.port = None
-        self.baudrate = baudrate
-        self.timeout = timeout
-
-    def findPort(self):
-        """
-        Find the port of the connected Arduino.
-
-        :return: The port of the Arduino if found, otherwise False.
-        """
-        arduino_port = None
-        ports = serial.tools.list_ports.comports()
-        for port in ports:
-            if port.serial_number == self.serial_number:
-                arduino_port = port.device
-
-        if arduino_port is None:
-            return False
-        else:
-            return arduino_port
-
-    def connect(self, serial_number=None):
-        """
-        Connect to the Arduino.
-
-        :return: True if connected successfully, otherwise False.
-        """
-        self.serial_number = serial_number
-        if not self.device:
-            self.port = self.findPort()
-            if not self.port:
-                return False
-            else:
-                self.device = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout)
-                print("Connected to Arduino")
-                time.sleep(1.0)
-
-    def disconnect(self):
-        """
-        Disconnect from the Arduino.
-        """
-        if self.device is not None:
-            self.device.close()
-            print("Disconnected from Arduino")
-            self.device = None
-
-    def send(self, data):
-        """
-        Send data to the Arduino.
-
-        :param data: The data to be sent.
-        """
-        output = False
-        if self.device is not None:
-            while output == False:
-                self.device.write(data.encode())
-                output = self.receive()
-                if output == False:
-                    print("WARNING: Arduino communication failed...")
-                    print("Retrying...")
-        return output
-
-    def receive(self):
-        """
-        Receive data from the Arduino.
-
-        :return: The received data.
-        """
-        if self.device is not None:
-            # Wait for data or timeout
-            t0 = time.time()
-            self.device.reset_input_buffer()
-            while self.device.in_waiting == 0 and time.time() - t0 < 5:
-                time.sleep(0.01)
-
-            # If timeout, return False. Otherwise, return received string
-            if time.time() - t0 >= 5:
-                print("Failed to get data from Arduino...")
-                return False
-            else:
-                return self.device.readline()
-        else:
-            return "False".encode('utf-8')
 
 
 class VNA:
@@ -244,7 +155,7 @@ class VNA:
 if __name__ == "__main__":
     # # Test arduino
     # arduino = Arduino(baudrate=115200, name="interlock")
-    # arduino.connect(serial_number="55731323736351611260")
+    # arduino.connect(port="serial:55731323736351611260")
     #
     # string = arduino.send("GPA_SPC:CTL 1;").decode()
     # string = arduino.send("GPA_ERRST;").decode()
