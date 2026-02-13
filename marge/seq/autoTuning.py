@@ -15,6 +15,7 @@ import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any 
 import marge.configs.hw_config as hw
 import marge.autotuning.autotuning as autotuning
 import marge.configs.units as units
+from marge.utils.SerialDevice import SerialDevice
 
 
 class AutoTuning(blankSeq.MRIBLANKSEQ):
@@ -83,8 +84,8 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
         # Connect to Arduino and set the initial state
         if self.arduino is None:
-            self.arduino = autotuning.Arduino()
-            self.arduino.connect(serial_number=hw.ard_sn_autotuning)
+            self.arduino = SerialDevice()
+            self.arduino.connect(port=f"serial:{hw.ard_sn_autotuning}")
         self.current_capacitors = self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching']
         self.arduino.send(self.current_capacitors + "10")
 
