@@ -1,4 +1,10 @@
 import numpy as np
+import platform
+import getpass
+from pathlib import Path
+
+system = platform.system()
+username = getpass.getuser()
 
 # Config file for Physio MRI scanner at MRILab, i3M, CSIC, Spain.
 
@@ -39,7 +45,9 @@ rotations = []
 dfovs = []
 fovs = []
 
-bash_path = "gnome-terminal"
+
+
+
 rp_ip_address = "192.168.1.101"
 rp_ip_list = []
 rp_version = "rp-122"
@@ -58,3 +66,18 @@ ard_br_autotuning = 115200
 ard_sn_interlock = '242353133363518050E1'
 ard_br_interlock = 115200
 ard_sn_attenuator = '242353133363518050E2'
+
+
+# Bash path default for the operating system
+# Change this to the correct bash path for the operating system if needed
+if system == "Linux":
+    bash_path = "gnome-terminal"  # use "gnome-terminal" for genome linux
+elif system == "Windows":
+    # Make sure to have Git installed and the bash path to be in the PATH environment variable
+    bash_path = Path(rf"C:\Users\{username}\AppData\Local\Programs\Git\usr\bin\bash.exe")
+elif system == "Darwin":
+    # macOS: Use osascript to open Terminal.app, or set to empty string to run commands directly
+    # Empty string means commands will be run directly without opening a terminal window
+    bash_path = "osascript"
+else:
+    raise RuntimeError(f"Unsupported operating system: {system}")  # use "gnome-terminal" for genome linux
