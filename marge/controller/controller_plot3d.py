@@ -56,7 +56,7 @@ class Plot3DController(Plot3DWidget):
         self.roiFOV.handleSize = 12
         self.roiFOV.setPen(pg.mkPen('r', width=3))
         self.roiFOV.hoverPen = pg.mkPen('g', width=3)
-        self.roiFOV.addScaleHandle([1, 1], [0.5, 0.5])
+        # self.roiFOV.addScaleHandle([1, 1], [0.5, 0.5])
         # self.roiFOV.addRotateHandle([0, 0], [0.5, 0.5])
 
         # Manage colors

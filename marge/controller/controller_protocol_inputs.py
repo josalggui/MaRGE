@@ -113,7 +113,7 @@ class ProtocolInputsController(ProtocolInputsWidget):
 
         # Set larmor frequency, fov and dfov to the value into the hw_config file
         sequence.mapVals['larmorFreq'] = hw.larmorFreq
-        sequence.mapVals['fov'] = hw.fov
+        # sequence.mapVals['fov'] = hw.fov
         sequence.mapVals['dfov'] = hw.dfov
         sequence.mapVals['shimming'] = shimming
 
