@@ -84,6 +84,7 @@ def RarePyPulseq(raw_data_path=None):
     dummy_pulses = mat_data['dummyPulses'].item()
     rd_direction = mat_data['rd_direction'].item()
     n_noise = mat_data['nNoise'].item()
+    reduction_factor = mat_data['reduction_factor'].item()
 
     # Get noise data, dummy data and signal data
     data_noise = []
@@ -265,7 +266,6 @@ def RarePyPulseq(raw_data_path=None):
         # Plot image
         image = np.abs(output_dict['image3D'])
 
-        reduction_factor = 0.8
         if axes_orientation[0] == 0:
             n_rd_reduced = int((n_rd - 2 * add_rd_points) * reduction_factor)
             output_dict['fov'] = np.array([fov[0] * reduction_factor, fov[1], fov[2]]) * 1e2

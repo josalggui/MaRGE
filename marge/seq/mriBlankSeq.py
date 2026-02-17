@@ -1795,6 +1795,7 @@ class MRIBLANKSEQ:
         # Save dcm and nifti with the final image
         if (len(self.output) > 0) and (self.output[0]['widget'] == 'image') and (self.mode is None): ##verify if output is an image
             try:
+                self.mapVals['dicom_file'] = f"{directory_dcm}/{file_name}.dcm"
                 utils.save_dicom(axes_orientation=self.mapVals['axesOrientation'],
                                  n_points=self.mapVals['nPoints'],
                                  fov=self.mapVals['fov'],

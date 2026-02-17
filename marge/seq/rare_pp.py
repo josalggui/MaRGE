@@ -39,6 +39,7 @@ import pypulseq as pp
 from marge.marge_tyger import tyger_rare
 import marge.marge_tyger.tyger_config as tyger_conf
 from marge.marge_tyger import tyger_denoising
+from marge.manager.dicommanager import DICOMImage
 
 #*********************************************************************************
 #*********************************************************************************
@@ -48,6 +49,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
     def __init__(self):
         super(RarePyPulseq, self).__init__()
         # Input the parameters
+        self.reduction_factor = None
         self.oversampling_factor = None
         self.decimation_factor = None
         self.add_rd_points = None
@@ -135,6 +137,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                           tip='Decimation applied to acquired data')
         self.addParameter(key='add_rd_points', string='Add RD points', val=10, field='OTH',
                           tip='Add RD points to avoid CIC and FIR filters issues')
+        self.addParameter(key='reduction_factor', string='RD reduction factor', val=0.8, field='OTH',
+                          tip='Reduce the displayed FoV along RD direction')
 
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
@@ -1002,8 +1006,12 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 imageTyger = np.abs(imgTyger[0])
                 imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
 
-                ## Image plot
-                # Tyger
+                # Reduce FoV along rd direction
+                if self.mapVals['axes_orientation'][0] == 0:
+                    n_rd_reduced = int((self.nPoints[0] - 2 * self.add_rd_points) * self.reduction_factor)
+                    imageTyger = imageTyger[:, :, self.nPoints[0] // 2 - n_rd_reduced // 2:self.nPoints[0] // 2 - n_rd_reduced // 2 + n_rd_reduced]
+
+                # Image plot
                 if self.mapVals['unlock_orientation'] == 0:
                     result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
                     result_Tyger['row'] = 0
@@ -1047,8 +1055,12 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 imageTyger = np.abs(imgTyger[0])
                 imageTyger = imageTyger / np.max(np.reshape(imageTyger, -1)) * 100
 
-                ## Image plot
-                # Tyger
+                # Reduce FoV along rd direction
+                if self.mapVals['axes_orientation'][0] == 0:
+                    n_rd_reduced = int((self.nPoints[0] - 2 * self.add_rd_points) * self.reduction_factor)
+                    imageTyger = imageTyger[:, :, self.nPoints[0] // 2 - n_rd_reduced // 2:self.nPoints[0] // 2 - n_rd_reduced // 2 + n_rd_reduced]
+
+                # Image plot
                 if self.unlock_orientation == 0:
                     result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
                     result_Tyger['row'] = 0
@@ -1064,6 +1076,14 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         if result_Tyger is not None:
             self.output.append(result_Tyger)
+
+            # Overwrite dicom image with the one from snraware
+            dicom_image = DICOMImage(self.mapVals['dicom_file'])
+            imageTyger = (imageTyger - np.min(imageTyger)) / (np.max(imageTyger) - np.min(imageTyger)) * (2 ** 15 - 1)
+            imageTyger = imageTyger.astype(np.uint16)
+            dicom_image.meta_data["PixelData"] = imageTyger.tobytes()
+            dicom_image.image2Dicom()
+            dicom_image.save(self.mapVals['dicom_file'])
 
         return self.output
 
