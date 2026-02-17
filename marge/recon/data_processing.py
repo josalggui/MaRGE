@@ -250,5 +250,5 @@ def plot_results(output, title=None, printer=None):
         plt.show()
 
 if __name__ == '__main__':
-    run_recon("AutoTuning.2026.01.30.19.12.54.809.mat",
-              mode="Standalone")
+    run_recon("C:/CSIC/Experimental Results/MaRGE issues/RarePyPulseq.2026.02.11.17.07.15.852.mat", mode="Standalone")
+    # run_recon("C:/CSIC/REPOSITORIOS/MaRCoS/MaRGE/marge/seq/experiments/acquisitions/2026.02.17/mat/raw_data.2026.02.17.12.25.50.044.mat", mode="Standalone")
