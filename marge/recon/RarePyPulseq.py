@@ -267,10 +267,8 @@ def RarePyPulseq(raw_data_path=None):
         image = np.abs(output_dict['image3D'])
 
         if axes_orientation[0] == 0:
-            n_rd_reduced = int((n_rd - 2 * add_rd_points) * reduction_factor)
-            output_dict['fov'] = np.array([fov[0] * reduction_factor, fov[1], fov[2]]) * 1e2
-            output_dict['nPoints'] = np.array([n_rd_reduced, n_points[1], n_points[2]])
-            image = image[:, :, n_rd // 2 - n_rd_reduced // 2:n_rd // 2 - n_rd_reduced // 2 + n_rd_reduced]
+            n_rd_reduced = int(n_points[0] * reduction_factor)
+            image = image[:, :, n_points[0] // 2 - n_rd_reduced // 2:n_points[0] // 2 - n_rd_reduced // 2 + n_rd_reduced]
             output_dict['image3D'] = image
 
         # Image plot

@@ -117,8 +117,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=0.7, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
-        self.addParameter(key='full_plot', string='Full plot', val=False, field='OTH',
-                          tip="'True' or 'False' to plot odd and even images separately")
+        self.addParameter(key='full_plot', string='Image to save', val='Tyger', field='OTH',
+                          tip="'Raw' or 'Tyger'")
         self.addParameter(key='k_fill', string='Filling method', val='ZP', field='PRO',
                           tip="'ZP': Zero Padding, 'POCS': Projection Onto Convex Sets")
         self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
@@ -1007,8 +1007,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
 
                 # Reduce FoV along rd direction
-                if self.mapVals['axes_orientation'][0] == 0:
-                    n_rd_reduced = int((self.nPoints[0] - 2 * self.add_rd_points) * self.reduction_factor)
+                if self.mapVals['axesOrientation'][0] == 0:
+                    n_rd_reduced = int(self.nPoints[0] * self.reduction_factor)
                     imageTyger = imageTyger[:, :, self.nPoints[0] // 2 - n_rd_reduced // 2:self.nPoints[0] // 2 - n_rd_reduced // 2 + n_rd_reduced]
 
                 # Image plot
@@ -1056,8 +1056,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 imageTyger = imageTyger / np.max(np.reshape(imageTyger, -1)) * 100
 
                 # Reduce FoV along rd direction
-                if self.mapVals['axes_orientation'][0] == 0:
-                    n_rd_reduced = int((self.nPoints[0] - 2 * self.add_rd_points) * self.reduction_factor)
+                if self.mapVals['axesOrientation'][0] == 0:
+                    n_rd_reduced = int(self.nPoints[0] * self.reduction_factor)
                     imageTyger = imageTyger[:, :, self.nPoints[0] // 2 - n_rd_reduced // 2:self.nPoints[0] // 2 - n_rd_reduced // 2 + n_rd_reduced]
 
                 # Image plot
@@ -1078,12 +1078,15 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             self.output.append(result_Tyger)
 
             # Overwrite dicom image with the one from snraware
-            dicom_image = DICOMImage(self.mapVals['dicom_file'])
-            imageTyger = (imageTyger - np.min(imageTyger)) / (np.max(imageTyger) - np.min(imageTyger)) * (2 ** 15 - 1)
-            imageTyger = imageTyger.astype(np.uint16)
-            dicom_image.meta_data["PixelData"] = imageTyger.tobytes()
-            dicom_image.image2Dicom()
-            dicom_image.save(self.mapVals['dicom_file'])
+            if self.full_plot == 'Tyger':
+                if self.mapVals['axesOrientation'][0] == 0:
+                    imageTyger = imageTyger[:, :, ::-1]  # Not sure why I have to revert rd direction in this case, while in the GUI image looks properly oriented.
+                dicom_image = DICOMImage(self.mapVals['dicom_file'])
+                imageTyger = (imageTyger - np.min(imageTyger)) / (np.max(imageTyger) - np.min(imageTyger)) * (2 ** 15 - 1)
+                imageTyger = imageTyger.astype(np.uint16)
+                dicom_image.meta_data["PixelData"] = imageTyger.tobytes()
+                dicom_image.image2Dicom()
+                dicom_image.save(self.mapVals['dicom_file'])
 
         return self.output
 
