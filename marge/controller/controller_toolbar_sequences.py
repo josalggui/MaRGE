@@ -263,7 +263,7 @@ class SequenceController(SequenceToolBar):
             saves the results into the history, and sets the dfov and angle values to zero for the next figures.
         """
         # Load sequence name
-        if seq_name is None or seq_name is False or seq_name is not str:
+        if seq_name is None or seq_name is False or not isinstance(seq_name, str):
             seq_name = self.main.sequence_list.getCurrentSequence()
 
         # Add item to the history list
