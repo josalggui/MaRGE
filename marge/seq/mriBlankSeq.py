@@ -1798,10 +1798,15 @@ class MRIBLANKSEQ:
                 self.mapVals['dicom_file'] = f"{directory_dcm}/{file_name}.dcm"
                 try:
                     if self.axesOrientation[0] == 0:
-                        n_rd_reduced = int((self.nPoints[0]) * self.reduction_factor)
+                        n_rd_reduced = int(self.nPoints[0] * self.reduction_factor)
                         fov = np.array([self.mapVals['fov'][0] * self.reduction_factor, self.mapVals['fov'][1], self.mapVals['fov'][2]])
                         n_points = np.array([n_rd_reduced, self.mapVals['nPoints'][1], self.mapVals['nPoints'][2]])
                         image = self.mapVals['image3D'][:, :, n_points[0] // 2 - n_rd_reduced // 2:n_points[0] // 2 - n_rd_reduced // 2 + n_rd_reduced]
+                    elif self.axesOrientation[1] == 0:
+                        n_ph_reduced = int(self.nPoints[1] * self.reduction_factor)
+                        fov = np.array([self.mapVals['fov'][0] * self.reduction_factor, self.mapVals['fov'][1], self.mapVals['fov'][2]])
+                        n_points = np.array([self.mapVals['nPoints'][0], n_ph_reduced, self.mapVals['nPoints'][2]])
+                        image = self.mapVals['image3D'][:, n_points[1] // 2 - n_ph_reduced // 2:n_points[1] // 2 - n_ph_reduced // 2 + n_ph_reduced, :]
                     else:
                         fov = self.mapVals['fov']
                         n_points = self.mapVals['nPoints']

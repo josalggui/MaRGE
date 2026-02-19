@@ -270,6 +270,10 @@ def RarePyPulseq(raw_data_path=None):
             n_rd_reduced = int(n_points[0] * reduction_factor)
             image = image[:, :, n_points[0] // 2 - n_rd_reduced // 2:n_points[0] // 2 - n_rd_reduced // 2 + n_rd_reduced]
             output_dict['image3D'] = image
+        if axes_orientation[1] == 0:
+            n_ph_reduced = int(n_points[1] * reduction_factor)
+            image = image[:, n_points[1] // 2 - n_ph_reduced // 2:n_points[1] // 2 - n_ph_reduced // 2 + n_ph_reduced, :]
+            output_dict['image3D'] = image
 
         # Image plot
         if mat_data['unlock_orientation'] == 0:

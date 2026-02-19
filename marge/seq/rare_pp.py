@@ -1010,6 +1010,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 if self.mapVals['axesOrientation'][0] == 0:
                     n_rd_reduced = int(self.nPoints[0] * self.reduction_factor)
                     imageTyger = imageTyger[:, :, self.nPoints[0] // 2 - n_rd_reduced // 2:self.nPoints[0] // 2 - n_rd_reduced // 2 + n_rd_reduced]
+                elif self.mapVals['axesOrientation'][1] == 0:
+                    n_ph_reduced = int(self.nPoints[1] * self.reduction_factor)
+                    imageTyger = imageTyger[:, self.nPoints[1] // 2 - n_ph_reduced // 2:self.nPoints[1] // 2 - n_ph_reduced // 2 + n_ph_reduced, :]
 
                 # Image plot
                 if self.mapVals['unlock_orientation'] == 0:
@@ -1059,6 +1062,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 if self.mapVals['axesOrientation'][0] == 0:
                     n_rd_reduced = int(self.nPoints[0] * self.reduction_factor)
                     imageTyger = imageTyger[:, :, self.nPoints[0] // 2 - n_rd_reduced // 2:self.nPoints[0] // 2 - n_rd_reduced // 2 + n_rd_reduced]
+                elif self.mapVals['axesOrientation'][1] == 0:
+                    n_ph_reduced = int(self.nPoints[1] * self.reduction_factor)
+                    imageTyger = imageTyger[:, self.nPoints[1] // 2 - n_ph_reduced // 2:self.nPoints[1] // 2 - n_ph_reduced // 2 + n_ph_reduced, :]
 
                 # Image plot
                 if self.unlock_orientation == 0:
