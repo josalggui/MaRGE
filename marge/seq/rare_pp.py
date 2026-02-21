@@ -102,8 +102,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[120, 120, 20], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ') ## nm of peaks in 1 repetition
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[30, 30, 6], field='IM')
+        self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ') ## nm of peaks in 1 repetition
         self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
         self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
@@ -121,13 +121,13 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                           tip="'Raw' or 'Tyger'")
         self.addParameter(key='k_fill', string='Filling method', val='ZP', field='PRO',
                           tip="'ZP': Zero Padding, 'POCS': Projection Onto Convex Sets")
-        self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
+        self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=1, field='PRO',
                           tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
-        self.addParameter(key='tyger_denoising', string='Denoising (SNRAware)', val=0, field='PRO',
+        self.addParameter(key='tyger_denoising', string='Denoising (SNRAware)', val=1, field='PRO',
                           tip='To denoising with Tyger (0 = Disabled; 1 = Enabled)')
         self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',
                           tip='Options: cp or artpk.')
-        self.addParameter(key='boFit_file', string='Bo Fit file', val='boFit_default.txt', field='PRO',
+        self.addParameter(key='boFit_file', string='Bo Fit file', val='SPDS.txt', field='PRO',
                           tip='Path to the Bo Fit file inside [b0_maps] folder.')
         self.addParameter(key='rd_direction', string='Rd direction', val=1, field='SEQ',
                           tip='Set the readout direction to positive (1) or negative (-1)')
@@ -1003,7 +1003,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             try:
                 rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
                 imgTyger = tyger_denoising.denoisingTyger(rawData_path, out_field, out_field_k)
-                imageTyger = np.abs(imgTyger[0])
+                imageTyger = np.abs(np.squeeze(imgTyger))
                 imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
 
                 # Reduce FoV along rd direction
@@ -1024,9 +1024,11 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                     result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
                                     'yLabel': "%s" % axesStr[0], 'title': "Tyger", 'row': 0, 'col': 1}
 
+                print("Denoising ready!")
+
             except Exception as e:
-                print('Tyger reconstruction failed.')
-                print(f'Error: {e}')
+                print('Tyger reconstruction failed during denoising.')
+                print(f'ERROR: {e}')
             
         ## Tyger Reconstruction
         if self.mapVals['axes_enable'] == [1, 1, 1] and self.tyger_recon == 1:
@@ -1076,9 +1078,11 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                     result_Tyger = {'widget': 'image', 'data': imageTyger, 'xLabel': "%s" % axesStr[1],
                                     'yLabel': "%s" % axesStr[0], 'title': "k-Space", 'row': 0, 'col': 0}
 
+                print("Distortion correction ready!")
+
             except Exception as e:
-                print('Tyger reconstruction failed.')
-                print(f'Error: {e}')
+                print('Tyger reconstruction failed during distortion correction.')
+                print(f'ERROR: {e}')
 
         if result_Tyger is not None:
             self.output.append(result_Tyger)

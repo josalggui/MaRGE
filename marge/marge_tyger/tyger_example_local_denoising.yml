@@ -1,0 +1,28 @@
+job:
+  codespec:
+    image: snraware:v0 #ghcr.io/teresaguallartnaval/dist_corr_tyger:v1 # Esta es la línea que hay que cambiar por nuestra imagen docker
+    buffers:
+      inputs:
+        - input
+      outputs:
+        - output
+    args:
+      - python3
+      - /app/snraware_pipeline/recon_scripts/stream_recon_RARE.py
+      - -i
+      - $(INPUT_PIPE)
+      - -o
+      - $(OUTPUT_PIPE)
+      - --recon
+      - fft
+      - --denoise
+      - --snraware_repo
+      - /app/SNRAware
+      - --snraware_model
+      - small # small | medium | large
+      - --batch_size
+      - "1"
+    resources:
+      requests:
+        cpu: 1
+      gpu: 1
