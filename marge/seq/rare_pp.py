@@ -1089,6 +1089,11 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
             # Overwrite dicom image with the one from snraware
             if self.full_plot == 'Tyger':
+                ao = self.mapVals['axesOrientation']
+                if ao[0] == 1 and ao[1] == 0 and ao[2] == 2:
+                    imageTyger = imageTyger[:, ::-1, :]
+                elif ao[0] == 2 and ao[1] == 0 and ao[2] == 1:
+                    imageTyger = imageTyger[:, ::-1, :]
                 if self.mapVals['axesOrientation'][0] == 0:
                     imageTyger = imageTyger[:, :, ::-1]  # Not sure why I have to revert rd direction in this case, while in the GUI image looks properly oriented.
                 dicom_image = DICOMImage(self.mapVals['dicom_file'])
