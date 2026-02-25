@@ -161,8 +161,15 @@ class RARE(blankSeq.MRIBLANKSEQ):
             self.etl = nPH
 
         # parAcqLines in case parAcqLines = 0
-        parAcqLines = int(int(self.nPoints[2]*self.parFourierFraction)-self.nPoints[2]/2)
-        self.mapVals['partialAcquisition'] = parAcqLines
+        Nsl_full = int(self.nPoints[2])
+        pf = float(self.parFourierFraction)
+
+        # number of acquired kz planes
+        nSL_acq = int(np.round(Nsl_full * pf))
+        nSL_acq = max(1, min(Nsl_full, nSL_acq))  # clamp
+
+        # keep a consistent "partial acquisition lines" definition
+        self.mapVals['partialAcquisition'] = nSL_acq - Nsl_full // 2 # integer center index count on the "negative side"
 
         # BW
         BW = self.nPoints[0]/self.acqTime*1e-6        # MHz
@@ -196,7 +203,7 @@ class RARE(blankSeq.MRIBLANKSEQ):
         slGradients = np.linspace(-slGradAmplitude,slGradAmplitude,num=nSL,endpoint=False)
 
         # Now fix the number of slices to partailly acquired k-space
-        nSL = (int(self.nPoints[2]/2)+parAcqLines)*axesEnable[2]+(1-axesEnable[2])
+        nSL = nSL_acq * axesEnable[2] + (1 - axesEnable[2])
 
         # Add random displacemnt to phase encoding lines
         for ii in range(nPH):
