@@ -1,4 +1,7 @@
 import numpy as np
+from pathlib import Path
+
+
 
 # Config file for Physio MRI scanner at MRILab, i3M, CSIC, Spain.
 
@@ -39,7 +42,7 @@ rotations = []
 dfovs = []
 fovs = []
 
-bash_path = "gnome-terminal"
+
 rp_ip_address = "192.168.1.101"
 rp_ip_list = []
 rp_version = "rp-122"
@@ -53,8 +56,14 @@ rf_max_gain = 50
 tyger_server = 'https://i3m.tyger.cloud'
 
 # Arduinos
-ard_sn_autotuning = '4423431343435131E180'
+ard_sn_autotuning = 'serial:4423431343435131E180'
 ard_br_autotuning = 115200
-ard_sn_interlock = '242353133363518050E1'
+ard_sn_interlock = 'serial:242353133363518050E1'
 ard_br_interlock = 115200
-ard_sn_attenuator = '242353133363518050E2'
+ard_sn_attenuator = 'serial:242353133363518050E2'
+
+
+# Bash / terminal path for running shell commands (e.g. marcos_install, communicateRP.sh).
+# Leave empty ("") to use auto-detection per platform in run_terminal_command().
+# If set (e.g. "gnome-terminal", or path to bash.exe), that value is used instead.
+bash_path = ""
