@@ -8,6 +8,7 @@ Created on Thu June 2, 2022
 import os
 import sys
 
+
 #*****************************************************************************
 # Get the directory of the current script
 main_directory = os.path.dirname(os.path.realpath(__file__))
@@ -36,9 +37,8 @@ import datetime
 import ctypes
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
-from marge.marge_tyger import tyger_rare
+from marge.marge_tyger import tyger_denoising_tep, tyger_denoising_local, tyger_rare
 import marge.marge_tyger.tyger_config as tyger_conf
-from marge.marge_tyger import tyger_denoising
 
 #*********************************************************************************
 #*********************************************************************************
@@ -121,7 +121,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                           tip="'ZP': Zero Padding, 'POCS': Projection Onto Convex Sets")
         self.addParameter(key='tyger_recon', string='Tyger reconstruction', val=0, field='PRO',
                           tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
-        self.addParameter(key='tyger_denoising', string='Denoising (SNRAware)', val=0, field='PRO',
+        self.addParameter(key='tyger_denoising', string='Denoising (SNRAware TEP)', val=0, field='PRO',
                           tip='To denoising with Tyger (0 = Disabled; 1 = Enabled)')
         self.addParameter(key='recon_type', string='Reconstruction type', val='cp', field='PRO',
                           tip='Options: cp or artpk.')
@@ -998,8 +998,17 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         if self.mapVals['axes_enable'] == [1,1,1] and self.tyger_denoising == 1:
             try:
                 rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
-                imgTyger = tyger_denoising.denoisingTyger(rawData_path, out_field, out_field_k)
-                imageTyger = np.abs(imgTyger[0])
+                if hw.snraware_version == 'TEP':
+                    imgTyger = tyger_denoising_tep.denoisingTyger(rawData_path, out_field, out_field_k)
+                    imageTyger = np.abs(imgTyger[0])
+                elif hw.snraware_version == 'local':
+                    imgTyger = tyger_denoising_local.denoisingTyger(rawData_path, out_field, out_field_k)
+                    imageTyger = np.abs(np.squeeze(imgTyger))
+                else:
+                    print('Denoising not available for snrawre_version = None')
+                    imgTyger = None
+                
+                
                 imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
 
                 ## Image plot

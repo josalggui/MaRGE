@@ -69,9 +69,9 @@ def matToMRD(input, output_file, input_field = ''):
     ph_pos = np.linspace(-fov_adq[1] / 2 , fov_adq[1] / 2 , nPoints[1], endpoint=False)
     sl_pos = np.linspace(-fov_adq[2] / 2 , fov_adq[2] / 2 , nPoints[2], endpoint=False)
     ph_posFull, sl_posFull, rd_posFull = np.meshgrid(ph_pos, sl_pos, rd_pos)
-    rd_posFull = np.reshape(rd_posFull, newshape=(nPoints[0] * nPoints[1] * nPoints[2], 1))
-    ph_posFull = np.reshape(ph_posFull, newshape=(nPoints[0] * nPoints[1] * nPoints[2], 1))
-    sl_posFull = np.reshape(sl_posFull, newshape=(nPoints[0] * nPoints[1] * nPoints[2], 1))
+    rd_posFull = np.reshape(rd_posFull, shape=(nPoints[0] * nPoints[1] * nPoints[2], 1))
+    ph_posFull = np.reshape(ph_posFull, shape=(nPoints[0] * nPoints[1] * nPoints[2], 1))
+    sl_posFull = np.reshape(sl_posFull, shape=(nPoints[0] * nPoints[1] * nPoints[2], 1))
     xyz_matrix = np.concatenate((rd_posFull, ph_posFull, sl_posFull), axis=1) # rd, ph, sl
     xyz_matrix = xyz_matrix[:,inverse_axesOrientation]   # x, y, z
     

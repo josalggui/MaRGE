@@ -51,7 +51,11 @@ rf_min_gain = 35
 rf_max_gain = 50
 
 # Tyger and snraware
-tyger_server = 'https://i3m.tyger.cloud'
+#tyger_server = 'https://i3m.tyger.cloud'
+tyger_server_TEP = 'https://i3m.tyger.cloud'
+tyger_server_local = '--local'
+#conexión tyger por ssh (Jarvis, Bergman...)
+#tyger_server_local = 'ssh://user@192.168.10.2:22/opt/tyger/api.sock' #Bergman
 snraware_version = 'Local'  # 'None', 'Local', or 'TEP'
 
 # Arduinos
