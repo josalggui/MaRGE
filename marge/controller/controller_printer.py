@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -44,60 +45,79 @@ class Printer:
         scaled_height = available_width * aspect_ratio
         self.story.append(Image(image, width=available_width, height=scaled_height))
 
-    def create_full_story(self, path=None):
-        # Create a PDF document
-        timestamp = datetime.now().strftime("%y.%m.%d.%H.%M.%S")
-        pdf_filename = f"reports/report.{timestamp}.pdf"
-        self.doc = None
-        self.doc = SimpleDocTemplate(pdf_filename, pagesize=A4)
-
-        # Get some basic styles
-        styles = getSampleStyleSheet()
-        self.story = []
-
-        # Connect console text
+    @staticmethod
+    def find_mat_folders(root_path):
+        mat_folders = []
         try:
-            self.main.console.signal_text_ready.connect(self.add_text_to_story)
+            for root, dirs, files in os.walk(root_path):
+                for directory in dirs:
+                    if directory == "mat":
+                        mat_folders.append(os.path.join(root, directory))
+
+            return mat_folders
         except:
-            pass
+            return None
 
-        # Check path
-        local_story = False
-        if path is None:
-            path = self.main.session["directory"] + "/mat"
-            local_story = True
+    def create_full_story(self, path=None):
+        # search for all mat folders:
+        mat_folders = self.find_mat_folders(path)
+        if mat_folders is None:
+            mat_folders = [path]
 
-        # Create heading
-        full_path = Path(path)
-        id_path = full_path.parents[2].name  # Go up two levels from 'mat'
-        self.add_text_to_story(f"<font color='black' size=16><b>Report for {id_path}</b></font>")
+        for path in mat_folders:
+            # Create a PDF document
+            timestamp = datetime.now().strftime("%y.%m.%d.%H.%M.%S.%f")[:-3]
+            pdf_filename = f"reports/report.{timestamp}.pdf"
+            self.doc = None
+            self.doc = SimpleDocTemplate(pdf_filename, pagesize=A4)
 
-        files = self.get_sorted_mat_files(path)
+            # Get some basic styles
+            styles = getSampleStyleSheet()
+            self.story = []
 
-        for file in files:
-            if not local_story:
-                self.story.append(Spacer(1, 12))
-                self.add_text_to_story(f"<font color='blue' size=14><b>{file}</b></font>")
-                self.story.append(Spacer(1, 12))
-                dp.run_recon(raw_data_path=path + "/" + file, mode="Standalone", printer=self)
-            else:
-                raw_datas, info = self.main.history_list.getHistoryListInfo()
-                if file in raw_datas:  # All  items unchecked
-                    index = raw_datas.index(file)
+            # Connect console text
+            try:
+                self.main.console.signal_text_ready.connect(self.add_text_to_story)
+            except:
+                pass
+
+            # Check path
+            local_story = False
+            if path is None:
+                path = self.main.session["directory"] + "/mat"
+                local_story = True
+
+            # Create heading
+            full_path = Path(path)
+            id_path = full_path.parents[2].name  # Go up two levels from 'mat'
+            self.add_text_to_story(f"<font color='black' size=16><b>Report for {id_path}</b></font>")
+
+            files = self.get_sorted_mat_files(path)
+
+            for file in files:
+                if not local_story:
                     self.story.append(Spacer(1, 12))
                     self.add_text_to_story(f"<font color='blue' size=14><b>{file}</b></font>")
-                    self.add_text_to_story(f"<font color='black' size=12><b>{info[index]}</b></font>")
                     self.story.append(Spacer(1, 12))
                     dp.run_recon(raw_data_path=path + "/" + file, mode="Standalone", printer=self)
+                else:
+                    raw_datas, info = self.main.history_list.getHistoryListInfo()
+                    if file in raw_datas:  # All  items unchecked
+                        index = raw_datas.index(file)
+                        self.story.append(Spacer(1, 12))
+                        self.add_text_to_story(f"<font color='blue' size=14><b>{file}</b></font>")
+                        self.add_text_to_story(f"<font color='black' size=12><b>{info[index]}</b></font>")
+                        self.story.append(Spacer(1, 12))
+                        dp.run_recon(raw_data_path=path + "/" + file, mode="Standalone", printer=self)
 
-        try:
-            self.main.console.signal_text_ready.disconnect(self.add_text_to_story)
-        except:
-            pass
+            try:
+                self.main.console.signal_text_ready.disconnect(self.add_text_to_story)
+            except:
+                pass
 
-        self.doc.build(self.story)
+            self.doc.build(self.story)
 
-        print("READY: report created!")
+            print("READY: report created!")
 
     @staticmethod
     def get_sorted_mat_files(directory):
