@@ -40,7 +40,7 @@ dependencies = [
     "h5py",
     "reportlab",
     "pillow",
-    "mrd-python >= 2.0.0",
+    "mrd-python==2.2.0",
 ]
 
 [project.scripts]
