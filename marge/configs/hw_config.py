@@ -53,6 +53,7 @@ rf_max_gain = 50
 # Tyger and snraware
 tyger_server = 'https://i3m.tyger.cloud'
 snraware_version = 'Local'  # 'None', 'Local', or 'TEP'
+snraware_model = 'None'
 
 # Arduinos
 ard_sn_autotuning = '4423431343435131E180'
