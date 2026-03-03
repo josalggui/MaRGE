@@ -50,9 +50,13 @@ shimming_factor = 1e-4
 rf_min_gain = 35
 rf_max_gain = 50
 
+#tyger_server = 'https://i3m.tyger.cloud'
+#tyger_server = "ssh://jarvis@92.185.248.57:50022/opt/tyger/api.sock"
+tyger_server = "ssh://user@192.168.10.2:22/opt/tyger/api.sock"
+
 # Arduinos
-ard_sn_autotuning = '4423431343435131E180'
+ard_sn_autotuning = '950373236353519181F0'
 ard_br_autotuning = 115200
-ard_sn_interlock = '242353133363518050E1'
+ard_sn_interlock = '4423831313935190A0D1'
 ard_br_interlock = 115200
 ard_sn_attenuator = '242353133363518050E2'
