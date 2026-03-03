@@ -57,6 +57,7 @@ tyger_server_local = '--local'
 #conexión tyger por ssh (Jarvis, Bergman...)
 #tyger_server_local = 'ssh://user@192.168.10.2:22/opt/tyger/api.sock' #Bergman
 snraware_version = 'Local'  # 'None', 'Local', or 'TEP'
+snraware_model = 'None'
 
 # Arduinos
 ard_sn_autotuning = '4423431343435131E180'
