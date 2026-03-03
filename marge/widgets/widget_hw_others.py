@@ -33,8 +33,7 @@ class OthersWidget(QWidget):
         self.add_input(label="Tyger server", value="localhost", tip="Tyger server")
         self.add_input(label="Tyger batch size", value="1000", tip="Tyger batch size. Reduce the value for weaker GPUs")
         self.add_input(label="SNRAware version", value="None", tip="'None', 'Local', 'TEP'")
-        self.add_input(label="SNRAware model", value="None", tip="'None', 'Local', 'TEP'")
-        self.add_input(label="Docker image", value="None", tip="Docker image for tyger reconstruction")
+        self.add_input(label="Docker for distortion correction", value="None", tip="Docker image path for tyger reconstruction")
         self.add_input(label="Arduino autotuning", value="242353133363518050E0",
                        tip="Arduino serial number for autotuning")
         self.add_input(label="Arduino autotuning baudrate", value="115200", tip="Arduino baudrate for autotuning")
@@ -89,17 +88,9 @@ class OthersWidget(QWidget):
         hw.ard_br_interlock = int(self.input_boxes["Arduino interlock baudrate"].text())
         hw.ard_sn_autotuning = self.input_boxes["Arduino autotuning"].text()
         hw.ard_br_autotuning = int(self.input_boxes["Arduino autotuning baudrate"].text())
-        if hw.snraware_version == 'TEP':
-            hw.tyger_server_TEP = self.input_boxes["Tyger server"].text()
-        elif hw.snraware_version == 'Local':
-            hw.tyger_server_local = self.input_boxes["Tyger server"].text()
-        else:
-            hw.tyger_server_TEP = ""
-            hw.tyger_server_local = ""
+        hw.tyger_server = self.input_boxes["Tyger server"].text()
         tyger_conf.cp_batchsize_RARE = int(self.input_boxes["Tyger batch size"].text())
-        tyger_conf.docker_img_RARE = self.input_boxes["Docker image"].text()
         hw.snraware_version = self.input_boxes["SNRAware version"].text()
-        hw.snraware_model = self.input_boxes["SNRAware model"].text()
 
     def save_others_entries(self):
         file_name = "configs/hw_others.csv"

@@ -5,3 +5,5 @@ cp_batchsize_RARE = 500
 #cp_batchsize_RARE_local = 500
 yml_petra = 'marge_tyger/petra_art.yml'
 denoising_pipeline = 'marge_tyger/pipeline_denoising.sh'
+snraware_version = 'Local'  # 'None', 'Local', or 'TEP'
+tyger_server = 'https://i3m.tyger.cloud'
