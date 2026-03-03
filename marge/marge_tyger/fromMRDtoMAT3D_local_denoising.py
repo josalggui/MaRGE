@@ -26,6 +26,7 @@ def export(mrd_input, mat_in_path: str, mat_out_path: str = None,
             raise RuntimeError("No se encontro ninguna ImageFloat en el MRD de salida.")
 
     # If batch=1, from 4D to 3D (sl, ph, rd)
+    print("Img shape: ",img_data.shape)
     if img_data.ndim == 4 and img_data.shape[0] == 1:
         img_data = img_data[0]  # (sl, ph, rd)
 

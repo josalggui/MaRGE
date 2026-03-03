@@ -18,7 +18,6 @@ def matToMRD(input, output_file, input_field: str = ""):
     nPoints_sig = nPoints[[2, 1, 0]]          # sl, ph, rd
     inverse_axesOrientation = np.argsort(axesOrientation)
     nXYZ = nPoints[inverse_axesOrientation]   # x, y, z
-
     nPoints = [int(x) for x in nPoints]
     nXYZ = [int(x) for x in nXYZ]
     axesOrientation = [int(x) for x in axesOrientation]

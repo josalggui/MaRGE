@@ -33,10 +33,10 @@ def matToMRD(input, output_file, input_field_raw: str = "sampled_odd"):
     mat_data = sio.loadmat(input)
 
     axesOrientation = mat_data["axesOrientation"][0]
-    nPoints = mat_data["nPoints"][0]          # rd, ph, sl
-    nPoints_sig = nPoints[[2, 1, 0]]          # sl, ph, rd
+    nPoints = mat_data["nPoints"][0]  # rd, ph, sl
+    nPoints_sig = nPoints[[2, 1, 0]]  # sl, ph, rd
     inverse_axesOrientation = np.argsort(axesOrientation)
-    nXYZ = nPoints[inverse_axesOrientation]   # x, y, z
+    nXYZ = nPoints[inverse_axesOrientation]  # x, y, z
 
     nPoints = [int(x) for x in nPoints]
     nXYZ = [int(x) for x in nXYZ]
@@ -125,24 +125,15 @@ def matToMRD(input, output_file, input_field_raw: str = "sampled_odd"):
 
     sys_info = mrd.AcquisitionSystemInformationType()
     sys_info.receiver_channels = 1
-    #sys_info.system_field_strength_t = 0.097
-    #sys_info.system_vendor = "i3m"
-    #sys_info.system_model = "i3m_model"
-    #sys_info.relative_receiver_noise_bandwidth = 0.72
-    #sys_info.coil_label = [mrd.CoilLabelType(coil_number=0, coil_name="coil_1")]
-    #sys_info.institution_name = "PhysioMRI"
-    #sys_info.station_name = "i3m_station"
-    #sys_info.device_id = "i3m_device"
-    #sys_info.device_serial_number = "i3m_serial"
     h.acquisition_system_information = sys_info
 
     e = mrd.EncodingSpaceType()
-    e.matrix_size = mrd.MatrixSizeType(x=nPoints_sig[2], y=nPoints_sig[1], z=nPoints_sig[0])
-    e.field_of_view_mm = mrd.FieldOfViewMm(x=fov[2], y=fov[1], z=fov[0])
+    e.matrix_size = mrd.MatrixSizeType(x=nXYZ[0], y=nXYZ[1], z=nXYZ[2])
+    e.field_of_view_mm = mrd.FieldOfViewMm(x=fov[0], y=fov[1], z=fov[2])
 
     r = mrd.EncodingSpaceType()
-    r.matrix_size = mrd.MatrixSizeType(x=nPoints_sig[2], y=nPoints_sig[1], z=nPoints_sig[0])
-    r.field_of_view_mm = mrd.FieldOfViewMm(x=fov[2], y=fov[1], z=fov[0])
+    r.matrix_size = mrd.MatrixSizeType(x=nXYZ[0], y=nXYZ[1], z=nXYZ[2])
+    r.field_of_view_mm = mrd.FieldOfViewMm(x=fov[0], y=fov[1], z=fov[2])
 
     enc = mrd.EncodingType()
     enc.trajectory = mrd.Trajectory.CARTESIAN

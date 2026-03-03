@@ -998,16 +998,17 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         if self.mapVals['axes_enable'] == [1,1,1] and self.tyger_denoising == 1:
             try:
                 rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
-                if hw.snraware_version == 'TEP':
-                    imgTyger = tyger_denoising_tep.denoisingTyger(rawData_path, out_field, out_field_k)
-                    imageTyger = np.abs(imgTyger[0])
-                elif hw.snraware_version == 'local':
-                    imgTyger = tyger_denoising_local.denoisingTyger(rawData_path, out_field, out_field_k)
-                    imageTyger = np.abs(np.squeeze(imgTyger))
-                else:
-                    print('Denoising not available for snrawre_version = None')
-                    imgTyger = None
-                
+                #if hw.snraware_version == 'TEP':
+                #    imgTyger = tyger_denoising_tep.denoisingTyger(rawData_path, out_field, out_field_k)
+                #    imageTyger = np.abs(imgTyger[0])
+                #if hw.snraware_version == 'Local':
+                #    imgTyger = tyger_denoising_local.denoisingTyger(rawData_path, out_field, out_field_k)
+                #    imageTyger = np.abs(np.squeeze(imgTyger))
+                #else:
+                #    print('Denoising not available for snrawre_version = None')
+                #    imgTyger = None
+                imgTyger = tyger_denoising_local.denoisingTyger(rawData_path, out_field, out_field_k)
+                imageTyger = np.abs(np.squeeze(imgTyger))
                 
                 imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
 
