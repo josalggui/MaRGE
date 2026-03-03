@@ -842,21 +842,18 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         if self.mapVals['axes_enable'] == [1, 1, 1] and self.tyger_denoising == 1:
             try:
                 rawData_path = self.directory_mat + '/' + self.file_name + '.mat'
-                #if hw.snraware_version == 'TEP':
-                #    imgTyger = tyger_denoising_double_tep.denoisingTyger_double(rawData_path, out_field, out_field_k,
-                #                                                        input_echoes)
-                #    imageTyger = np.abs(imgTyger[0])
-                #elif hw.snraware_version == 'Local':
-                #    imgTyger = tyger_denoising_double_local.denoisingTyger_double(rawData_path, out_field, out_field_k,
-                #                                                        input_echoes)
-                #    imageTyger = np.abs(np.squeeze(imgTyger))
-                #else:
-                #    print('Denoising not available for snrawre_version = None')
-                #    imgTyger = None
+                if tyger_conf.snraware_version == 'TEP':
+                    imgTyger = tyger_denoising_double_tep.denoisingTyger_double(rawData_path, out_field, out_field_k,
+                                                                        input_echoes)
+                    imageTyger = np.abs(imgTyger[0])
+                elif tyger_conf.snraware_version == 'Local':
+                    imgTyger = tyger_denoising_double_local.denoisingTyger_double(rawData_path, out_field, out_field_k,
+                                                                        input_echoes)
+                    imageTyger = np.abs(np.squeeze(imgTyger))
+                else:
+                    print('Denoising not available for snrawre_version = None')
+                    imgTyger = None
 
-                imgTyger = tyger_denoising_double_local.denoisingTyger_double(rawData_path, out_field, out_field_k,
-                                                                              input_echoes)
-                imageTyger = np.abs(np.squeeze(imgTyger))
                 imageTyger = imageTyger / np.max(np.reshape(imageTyger, -1)) * 100
 
                 ## Image plot
