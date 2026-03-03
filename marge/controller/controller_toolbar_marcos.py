@@ -76,7 +76,7 @@ class MarcosController(MarcosToolBar):
 
     @staticmethod
     def init_tyger():
-        print(hw.tyger_server)
+        print(tyger.tyger_server)
 
         print("Initializing Tyger with server...")
         result = subprocess.run(
