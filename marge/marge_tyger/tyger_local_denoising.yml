@@ -1,6 +1,6 @@
 job:
   codespec:
-    image: snraware:v0 
+    image: ghcr.io/mrilab-i3m/snraware_local:v1 #snraware:v0
     buffers:
       inputs:
         - input

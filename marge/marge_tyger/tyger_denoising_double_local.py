@@ -11,7 +11,7 @@ from marge.marge_tyger.fromMRDtoMAT3D_local_denoising import export
 
 # YML en el mismo directorio que este archivo
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-_DEFAULT_YML = os.path.join(_THIS_DIR, "tyger_example_local_denoising.yml")
+_DEFAULT_YML = os.path.join(_THIS_DIR, "tyger_local_denoising.yml")
 
 
 def _run_single(rawData_path: str,

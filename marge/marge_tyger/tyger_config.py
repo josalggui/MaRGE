@@ -5,6 +5,6 @@ recon_code_RARE = 'stream_recon_RARE.py'
 cp_batchsize_RARE = 1000
 yml_petra = 'marge_tyger/petra_art.yml'
 denoising_pipeline = 'marge_tyger/pipeline_denoising.sh'
-snraware_version = 'TEP'  # 'None', 'Local', or 'TEP'
+snraware_version = 'Local'  # 'None', 'Local', or 'TEP'
 tyger_server = 'https://i3m.tyger.cloud'
 #tyger_server = 'ssh://user@92.185.248.57:50022/opt/tyger/api.sock'
