@@ -1001,7 +1001,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                 if tyger_conf.snraware_version == 'TEP':
                     imgTyger = tyger_denoising_tep.denoisingTyger(rawData_path, out_field, out_field_k)
                     imageTyger = np.abs(imgTyger[0])
-                if tyger_conf.snraware_version == 'Local':
+                elif tyger_conf.snraware_version == 'Local':
                     imgTyger = tyger_denoising_local.denoisingTyger(rawData_path, out_field, out_field_k)
                     imageTyger = np.abs(np.squeeze(imgTyger))
                 else:
