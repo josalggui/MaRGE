@@ -82,7 +82,8 @@ class MarcosController(MarcosToolBar):
         result = subprocess.run(
             ["tyger", "login", tyger.tyger_server],
             capture_output=True,
-            text=True)
+            text=True
+        )
 
         print("STDOUT:", result.stdout)
         # print("STDERR:", result.stderr)
