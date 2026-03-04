@@ -90,7 +90,7 @@ class OthersWidget(QWidget):
         hw.ard_br_autotuning = int(self.input_boxes["Arduino autotuning baudrate"].text())
         tyger_conf.tyger_server = self.input_boxes["Tyger server"].text()
         tyger_conf.cp_batchsize_RARE = int(self.input_boxes["Tyger batch size"].text())
-        tyger_conf.docker_img_RARE = self.input_boxes["Docker image"].text()
+        tyger_conf.docker_img_RARE = self.input_boxes["Docker for distortion correction"].text()
         tyger_conf.snraware_version = self.input_boxes["SNRAware version"].text()
 
     def save_others_entries(self):
