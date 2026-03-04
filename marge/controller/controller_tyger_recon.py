@@ -9,8 +9,8 @@ try:
 except ImportError:
     pass
 from marge.marge_tyger import tyger_rare
-from marge.marge_tyger import tyger_denoising
-from marge.marge_tyger import tyger_denoising_double
+from marge.marge_tyger import tyger_denoising_tep
+from marge.marge_tyger import tyger_denoising_double_tep
 import marge.marge_tyger.tyger_config as tyger_conf
 from marge.marge_tyger import tyger_petra
 
@@ -111,7 +111,7 @@ class TygerTabController(TygerTabWidget):
             if self.main.seq_name == 'RareDoubleImage':
                 try:
                     input_echoes = self.snraware_double.currentText()
-                    imgTyger = tyger_denoising_double.denoisingTyger_double(rawData_path, out_field, out_field_k, input_echoes)
+                    imgTyger = tyger_denoising_double_tep.denoisingTyger_double(rawData_path, out_field, out_field_k, input_echoes)
                     imageTyger = np.abs(imgTyger[0])
                     imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
                     if input_echoes == 'even': 
@@ -134,7 +134,7 @@ class TygerTabController(TygerTabWidget):
                     print(f'Error: {e}')
             elif self.main.seq_name == 'RarePyPulseq':
                 try:
-                    imgTyger = tyger_denoising.denoisingTyger(rawData_path, out_field, out_field_k)
+                    imgTyger = tyger_denoising_tep.denoisingTyger(rawData_path, out_field, out_field_k)
                     imageTyger = np.abs(imgTyger[0])
                     imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
                     self.main.tyger_denoising = out_field_k
