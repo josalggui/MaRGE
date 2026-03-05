@@ -43,6 +43,10 @@ class SequenceListController(SequenceListWidget):
         Returns:
             str: The name of the current sequence.
         """
+        # Use combo-box user data (raw sequence key), not display label.
+        seq_key = self.currentData()
+        if seq_key is not None:
+            return seq_key
         return self.currentText()
 
     def updateSequence(self):

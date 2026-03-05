@@ -96,7 +96,8 @@ class ConsoleWidget(QWidget):
         hw.fpga_clk_freq_MHz = float(self.input_boxes["Clock frequency (MHz)"].text())
         hw.adcFactor = float(self.input_boxes["ADC factor (mV/unit)"].text())
         hw.cic_delay_points = int(self.input_boxes["CIC delay points"].text())
-        hw.rp_ip_address = "192.168.1.101"
+        if hw.rp_ip_list:
+            hw.rp_ip_address = hw.rp_ip_list[0]
 
     def add_rp(self):
         text = self.text_box.text().strip()
