@@ -2,8 +2,28 @@
 Main file to run MaRGE
 """
 import os
+import signal
 import sys
+
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication
+
+
+def _install_signal_handlers(app, gui):
+    """
+    Handle SIGINT (Ctrl+C) and SIGTERM by scheduling a clean shutdown
+    in the Qt event loop (signal handlers must not call Qt from the handler).
+    """
+    def request_close():
+        gui.close()  # Runs cleanup (server, power modules, console) and sys.exit()
+
+    def handle_term(signum, frame):
+        QTimer.singleShot(0, request_close)
+
+    signal.signal(signal.SIGINT, handle_term)
+    if hasattr(signal, 'SIGTERM'):
+        signal.signal(signal.SIGTERM, handle_term)
+
 
 def MaRGE():
     # Run the gui
@@ -30,8 +50,10 @@ def MaRGE():
 
     app = QApplication(sys.argv)
     gui = SessionController()
+    _install_signal_handlers(app, gui)
     gui.show()
     sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
     MaRGE()
