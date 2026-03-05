@@ -112,7 +112,10 @@ def RarePyPulseq(raw_data_path=None):
                                                 axis=0)
                 data_signal = np.concatenate((data_signal, data_prov[points_per_rd + points_per_train::]), axis=0)
             idx_0 = idx_1
-        n_readouts[batch] += -n_rd - n_rd * mat_data['etl'].item()
+        if batch == 0:
+            n_readouts[batch] += -n_rd * n_noise - n_rd * mat_data['etl'].item()
+        else:
+            n_readouts[batch] += -n_rd - n_rd * mat_data['etl'].item()
     data_noise = np.reshape(data_noise, (-1, n_points[0] + add_rd_points * 2))
     data_noise = data_noise[:, add_rd_points: -add_rd_points]
     output_dict['data_noise'] = data_noise
