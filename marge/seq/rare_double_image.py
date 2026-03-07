@@ -35,7 +35,7 @@ import pypulseq as pp
 from marge.marge_utils import utils
 
 from marge.marge_tyger import tyger_rare
-from marge.marge_tyger import tyger_denoising_double
+from marge.marge_tyger import tyger_denoising_double_tep, tyger_denoising_double_local
 import marge.marge_tyger.tyger_config as tyger_conf
 
 #*********************************************************************************
@@ -842,9 +842,18 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         if self.mapVals['axes_enable'] == [1, 1, 1] and self.tyger_denoising == 1:
             try:
                 rawData_path = self.directory_mat + '/' + self.file_name + '.mat'
-                imgTyger = tyger_denoising_double.denoisingTyger_double(rawData_path, out_field, out_field_k,
+                if tyger_conf.snraware_version == 'TEP':
+                    imgTyger = tyger_denoising_double_tep.denoisingTyger_double(rawData_path, out_field, out_field_k,
                                                                         input_echoes)
-                imageTyger = np.abs(imgTyger[0])
+                    imageTyger = np.abs(imgTyger[0])
+                elif tyger_conf.snraware_version == 'Local':
+                    imgTyger = tyger_denoising_double_local.denoisingTyger_double(rawData_path, out_field, out_field_k,
+                                                                        input_echoes)
+                    imageTyger = np.abs(np.squeeze(imgTyger))
+                else:
+                    print('Denoising not available for snrawre_version = None')
+                    imgTyger = None
+
                 imageTyger = imageTyger / np.max(np.reshape(imageTyger, -1)) * 100
 
                 ## Image plot

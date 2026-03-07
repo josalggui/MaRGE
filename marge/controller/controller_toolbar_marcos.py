@@ -15,6 +15,7 @@ import numpy as np
 from marge.widgets.widget_toolbar_marcos import MarcosToolBar
 import marge.marcos.marcos_client.experiment as ex
 import marge.configs.hw_config as hw
+import marge.marge_tyger.tyger_config as tyger
 from marge.autotuning import autotuning
 
 
@@ -75,9 +76,11 @@ class MarcosController(MarcosToolBar):
 
     @staticmethod
     def init_tyger():
-        print(hw.tyger_server)
+        print(tyger.tyger_server)
+
+        print("Initializing Tyger with server...")
         result = subprocess.run(
-            ["tyger", "login", hw.tyger_server],
+            ["tyger", "login", tyger.tyger_server],
             capture_output=True,
             text=True
         )

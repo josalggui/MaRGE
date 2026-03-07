@@ -41,7 +41,7 @@ def matToMRD(input, output_file, input_field_raw):
     except: # RAREprotocols
         rdGradAmplitude = mat_data['rdGradAmplitude']
        
-    fov = mat_data['fov'][0]*1e1;
+    fov = mat_data['fov'][0]*1e1
     fov_adq = fov[axesOrientation] # rd, ph, sl
     fov = fov.astype(int); fov = [int(x) for x in fov] # mm; x, y, z
     fov_adq = fov_adq
