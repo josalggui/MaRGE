@@ -42,6 +42,11 @@ dependencies = [
     "mrd-python >= 2.0.0",
 ]
 
+[project.optional-dependencies]
+gpu = [
+    "cupy-cuda12x",
+]
+
 [project.scripts]
 marge-mri = "marge.main:MaRGE"
 
