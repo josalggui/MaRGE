@@ -1,9 +1,41 @@
+import os
 import platform
+import shutil
 import subprocess
-from getpass import getuser
 from pathlib import Path
 
 import marge.configs.hw_config as hw
+
+
+def _resolve_windows_bash():
+    """
+    Locate a usable bash executable on Windows.
+
+    Prefer an executable already available on PATH so custom or system-wide Git
+    installations work without extra configuration. If PATH does not contain a
+    bash executable, probe the most common Git for Windows installation
+    directories before failing.
+    """
+    for candidate in ("bash.exe", "bash"):
+        resolved = shutil.which(candidate)
+        if resolved:
+            return resolved
+
+    search_roots = []
+    for env_var in ("LOCALAPPDATA", "ProgramFiles", "ProgramFiles(x86)"):
+        root = os.environ.get(env_var)
+        if root:
+            search_roots.append(Path(root))
+
+    for root in search_roots:
+        for relative in ("Programs/Git/usr/bin/bash.exe", "Programs/Git/bin/bash.exe", "Git/usr/bin/bash.exe", "Git/bin/bash.exe"):
+            candidate = root / relative
+            if candidate.exists():
+                return str(candidate)
+
+    raise FileNotFoundError(
+        "Unable to locate a Windows bash executable. Add Git Bash to PATH or configure hw.bash_override."
+    )
 
 
 def get_bash_launcher():
@@ -20,8 +52,7 @@ def get_bash_launcher():
     if system == "Linux":
         return "gnome-terminal"
     if system == "Windows":
-        username = getuser()
-        return str(Path(rf"C:\Users\{username}\AppData\Local\Programs\Git\usr\bin\bash.exe"))
+        return _resolve_windows_bash()
     if system == "Darwin":
         return str(Path("/Applications/Terminal.app"))
     raise RuntimeError(f"Unsupported operating system: {system}")
