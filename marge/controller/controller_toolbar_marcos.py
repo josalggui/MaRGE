@@ -17,6 +17,7 @@ import marge.marcos.marcos_client.experiment as ex
 import marge.configs.hw_config as hw
 import marge.marge_tyger.tyger_config as tyger
 from marge.autotuning import autotuning
+from marge.utils.bash_execution import BashExecution
 
 
 class MarcosController(MarcosToolBar):
@@ -112,8 +113,8 @@ class MarcosController(MarcosToolBar):
                     result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)
                 elif platform.system() == 'Windows':
                     result = subprocess.run(['ping', '-n', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)
-                else:
-                    continue
+                elif platform.system() == 'Darwin':
+                    result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)
 
                 if result.returncode == 0:
                     print(f"Checking ip {ip}...")
@@ -123,6 +124,7 @@ class MarcosController(MarcosToolBar):
                         ip_addresses.append(ip)
                     else:
                         print(f"WARNING: No SDRLab found at ip {ip}")
+                        print(f"Make sure that a manual connection to ssh root@{ip} is possible and passwordless login is set up and all keys are verified.")
             except:
                 print(f"WARNING: No SDRLab found at ip {ip}")
                 continue
@@ -148,15 +150,15 @@ class MarcosController(MarcosToolBar):
     def controlMarcosServer(self):
         if not self.main.demo:
             if not self.action_server.isChecked():
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                BashExecution("./communicateRP.sh", hw.rp_ip_address, "killall marcos_server")
                 self.action_server.setStatusTip('Connect to marcos server')
                 self.action_server.setToolTip('Connect to marcos server')
                 print("Server disconnected")
             else:
                 try:
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                    BashExecution("./communicateRP.sh", hw.rp_ip_address, "killall marcos_server")
                     time.sleep(1.5)
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
+                    BashExecution("./communicateRP.sh", hw.rp_ip_address, "~/marcos_server")
                     time.sleep(1.5)
                     self.action_server.setStatusTip('Kill marcos server')
                     self.action_server.setToolTip('Kill marcos server')
@@ -182,8 +184,8 @@ class MarcosController(MarcosToolBar):
         """
         if not self.main.demo:
             try:
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', hw.rp_ip_address, 'rp-122'], timeout=10)
+                BashExecution("./communicateRP.sh", hw.rp_ip_address, "killall marcos_server")
+                BashExecution("./copy_bitstream.sh", hw.rp_ip_address, "rp-122", timeout=10)
                 print("READY: MaRCoS updated")
             except subprocess.TimeoutExpired as e:
                 print("ERROR: MaRCoS init timeout")
@@ -326,5 +328,4 @@ class MarcosController(MarcosToolBar):
 
         thread = threading.Thread(target=init_gpa)
         thread.start()
-
 
