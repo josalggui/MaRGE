@@ -8,70 +8,38 @@ Specific hardware from MRILab @ i3M is required
 import threading
 
 import numpy as np
-import serial.tools.list_ports
-import serial
 from scipy.interpolate import interp1d
 
 import time
 
+from marge.utils.SerialDevice import SerialDevice
 from marge.vna import Hardware
 
 
-class Arduino:
-    def __init__(self, baudrate=115200, timeout=0.1):
+class Arduino(SerialDevice):
+    def __init__(self, baudrate=115200, timeout=0.1, startup_delay=1.0, name="Arduino",
+                 receive_timeout=5.0, pad_to_length=None):
         """
         Initialize an Arduino object.
 
         :param baudrate: Baud rate for communication (default is 115200).
         :param timeout: Timeout for communication operations (default is 0.1 seconds).
         """
-        self.device = None
-        self.serial = None
-        self.port = None
-        self.baudrate = baudrate
-        self.timeout = timeout
+        super().__init__(baudrate=baudrate, timeout=timeout, startup_delay=startup_delay)
+        self.name = name
+        self.receive_timeout = receive_timeout
+        self.pad_to_length = pad_to_length
 
-    def findPort(self):
-        """
-        Find the port of the connected Arduino.
-
-        :return: The port of the Arduino if found, otherwise False.
-        """
-        arduino_port = None
-        ports = serial.tools.list_ports.comports()
-        for port in ports:
-            if port.serial_number == self.serial_number:
-                arduino_port = port.device
-
-        if arduino_port is None:
-            return False
-        else:
-            return arduino_port
-
-    def connect(self, serial_number=None):
+    def connect(self, serial_number=None, port=None):
         """
         Connect to the Arduino.
 
         :return: True if connected successfully, otherwise False.
         """
-        self.serial_number = serial_number
-        if not self.device:
-            self.port = self.findPort()
-            if not self.port:
-                return False
-            else:
-                self.device = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout)
-                print("Connected to Arduino")
-                time.sleep(1.0)
-
-    def disconnect(self):
-        """
-        Disconnect from the Arduino.
-        """
-        if self.device is not None:
-            self.device.close()
-            print("Disconnected from Arduino")
-            self.device = None
+        target = port
+        if target is None and serial_number:
+            target = f"serial:{serial_number}"
+        return super().connect(target)
 
     def send(self, data):
         """
@@ -79,37 +47,9 @@ class Arduino:
 
         :param data: The data to be sent.
         """
-        output = False
-        if self.device is not None:
-            while output == False:
-                self.device.write(data.encode())
-                output = self.receive()
-                if output == False:
-                    print("WARNING: Arduino communication failed...")
-                    print("Retrying...")
-        return output
-
-    def receive(self):
-        """
-        Receive data from the Arduino.
-
-        :return: The received data.
-        """
-        if self.device is not None:
-            # Wait for data or timeout
-            t0 = time.time()
-            self.device.reset_input_buffer()
-            while self.device.in_waiting == 0 and time.time() - t0 < 5:
-                time.sleep(0.01)
-
-            # If timeout, return False. Otherwise, return received string
-            if time.time() - t0 >= 5:
-                print("Failed to get data from Arduino...")
-                return False
-            else:
-                return self.device.readline()
-        else:
-            return "False".encode('utf-8')
+        if self.pad_to_length is not None:
+            data = str(data).ljust(self.pad_to_length, "0")
+        return super().send(data, deadline_seconds=self.receive_timeout)
 
 
 class VNA:
