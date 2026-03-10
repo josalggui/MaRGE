@@ -92,7 +92,7 @@ class SerialDevice:
             self.device = None
             self.serial = None
 
-    def send(self, data):
+    def send(self, data, deadline_seconds=None):
         output = False
         if self.device is not None:
             payload = str(data)
@@ -101,19 +101,20 @@ class SerialDevice:
 
             while output is False:
                 self.device.write(payload.encode())
-                output = self.receive()
+                output = self.receive(deadline_seconds=deadline_seconds)
                 if output is False:
                     print(f"WARNING: {self.name} communication failed...")
                     print("Retrying...")
         return output
 
-    def receive(self):
+    def receive(self, deadline_seconds=None):
         if self.device is not None:
             t0 = time.time()
-            while self.device.in_waiting == 0 and time.time() - t0 < self.receive_timeout:
+            timeout_seconds = self.receive_timeout if deadline_seconds is None else deadline_seconds
+            while self.device.in_waiting == 0 and time.time() - t0 < timeout_seconds:
                 time.sleep(0.01)
 
-            if time.time() - t0 >= self.receive_timeout:
+            if time.time() - t0 >= timeout_seconds:
                 print(f"Failed to get data from {self.name}...")
                 return False
             return self.device.readline()
