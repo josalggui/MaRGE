@@ -7,5 +7,5 @@ if command -v timeout >/dev/null 2>&1; then
 elif command -v gtimeout >/dev/null 2>&1; then
     exec gtimeout 2s ssh -o BatchMode=yes -o ConnectTimeout=2 -o ConnectionAttempts=1 "root@$1" "~/marcos_server &"
 else
-    exec ssh -o BatchMode=yes -o ConnectTimeout=2 -o ConnectionAttempts=1 "root@$1" "~/marcos_server &"
+    echo "Error: timeout command not found. Please install coreutils to get the timeout command." >&2
 fi

@@ -6,5 +6,5 @@ elif command -v gtimeout >/dev/null 2>&1; then
     # Use homebrew to install coreutils: brew install coreutils
     exec gtimeout 2s ssh -o BatchMode=yes -o ConnectTimeout=2 -o ConnectionAttempts=1 "root@$1" "$2"
 else
-    exec ssh -o BatchMode=yes -o ConnectTimeout=2 -o ConnectionAttempts=1 "root@$1" "$2"
+    echo "Error: timeout command not found. Please install coreutils to get the timeout command." >&2
 fi
