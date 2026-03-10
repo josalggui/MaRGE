@@ -108,6 +108,15 @@ def instantiate_sequences():
     return defaultsequences, sequence_display_names
 
 defaultsequences, sequence_display_names = instantiate_sequences()
+sequence_key_by_display_name = {
+    display_name: seq_name for seq_name, display_name in sequence_display_names.items()
+}
+
+
+def resolve_sequence_name(seq_identifier):
+    if seq_identifier in defaultsequences:
+        return seq_identifier
+    return sequence_key_by_display_name[seq_identifier]
 
 # Note for the users: Now the sequences are added automatically to the defaultsequences dictionary.
 # To do that, the user should include the parameter 'toMaRGE' as True in the sequence using:

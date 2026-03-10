@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import QLabel, QFileDialog, QApplication, QWidget
 
 from marge.controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from marge.controller.controller_plot1d import Plot1DController as SpectrumPlot
-from marge.seq.sequences import defaultsequences
+from marge.seq.sequences import defaultsequences, resolve_sequence_name
 from marge.widgets.widget_toolbar_sequences import SequenceToolBar
 import marge.configs.hw_config as hw
 
@@ -97,7 +97,13 @@ class SequenceController(SequenceToolBar):
             'Larmor',
         ]
 
-        for seq_name in seq_names:
+        for seq_identifier in seq_names:
+            try:
+                seq_name = resolve_sequence_name(seq_identifier)
+            except KeyError:
+                print(f"WARNING: Autocalibration sequence '{seq_identifier}' not found. Skipping.")
+                continue
+
             # Get sequence parameters
             seq = copy.deepcopy(defaultsequences[seq_name])
             seq.loadParams(directory='calibration', file=seq_name)
