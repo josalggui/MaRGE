@@ -64,7 +64,7 @@ Install MaRGE with pip if you only need to run the GUI and do not plan to modify
 
 * Linux / MacOS
 
-    Note: # On MacOS, the `timeout` command is not available by default, so  `gtimeout` (which can be installed via `Homebrew`) is required. In addition the `marcos_install.sh` cant be used, so the initial hardware setup needs to be performed on a Linux system.
+    Note: # On MacOS, the `timeout` command is not available by default, so  `gtimeout` (which can be installed via `Homebrew: brew install coreutils`) is required. In addition the `marcos_install.sh` cant be used, so the initial hardware setup needs to be performed on a Linux system.
 
   ```bash
   python3 -m venv venv
