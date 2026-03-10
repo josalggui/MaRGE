@@ -7,111 +7,12 @@ Specific hardware from MRILab @ i3M is required
 """
 
 import numpy as np
-import serial.tools.list_ports
-import serial
 from scipy.interpolate import interp1d
 
 import time
 
+from marge.utils.SerialDevice import SerialDevice
 from marge.vna import Hardware
-
-
-class Arduino:
-    def __init__(self, baudrate=115200, timeout=0.1, name='test'):
-        """
-        Initialize an Arduino object.
-
-        :param baudrate: Baud rate for communication (default is 115200).
-        :param timeout: Timeout for communication operations (default is 0.1 seconds).
-        """
-        self.device = None
-        self.serial = None
-        self.port = None
-        self.baudrate = baudrate
-        self.timeout = timeout
-        self.name = name
-
-    def findPort(self):
-        """
-        Find the port of the connected Arduino.
-
-        :return: The port of the Arduino if found, otherwise False.
-        """
-        arduino_port = None
-        ports = serial.tools.list_ports.comports()
-        for port in ports:
-            if port.serial_number == self.serial_number:
-                arduino_port = port.device
-
-        if arduino_port is None:
-            print("WARNING: No Arduino found for " + self.name)
-            return False
-        else:
-            return arduino_port
-
-    def connect(self, serial_number=None):
-        """
-        Connect to the Arduino.
-
-        :return: True if connected successfully, otherwise False.
-        """
-        self.serial_number = serial_number
-        if not self.device:
-            self.port = self.findPort()
-            if not self.port:
-                return False
-            else:
-                self.device = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout)
-                print("Connected to Arduino for " + self.name)
-                time.sleep(1.0)
-
-    def disconnect(self):
-        """
-        Disconnect from the Arduino.
-        """
-        if self.device is not None:
-            self.device.close()
-            print("Disconnected from Arduino for " + self.name)
-            self.device = None
-
-    def send(self, data):
-        """
-        Send data to the Arduino. Pads the message with '0' up to 32 characters.
-
-        :param data: The data to be sent.
-        """
-        data = str(data).ljust(32, '0')  # Pad with '0' to length 32
-        output = False
-        if self.device is not None:
-            while not output:
-                self.device.write(data.encode())
-                output = self.receive()
-                if not output:
-                    print("WARNING: Arduino communication failed...")
-                    print("Retrying...")
-        return output
-
-    def receive(self):
-        """
-        Receive data from the Arduino.
-
-        :return: The received data.
-        """
-        if self.device is not None:
-            # Wait for data or timeout
-            t0 = time.time()
-            while self.device.in_waiting == 0 and time.time() - t0 < 2:
-                pass
-
-            # If timeout, return False. Otherwise, return received string
-            if time.time() - t0 >= 2:
-                print("Failed to get data...")
-                return False
-            else:
-                print("Data received from Arduino.")
-                return self.device.readline()
-        else:
-            return "False".encode('utf-8')
 
 
 class VNA:
@@ -202,8 +103,13 @@ if __name__ == "__main__":
 
     import random
 
-    # Create an instance of the Arduino class and connect to an Arduino
-    arduino = Arduino()
+    # Create an instance of the shared serial device and connect to an Arduino.
+    arduino = SerialDevice(
+        name="rf automate",
+        receive_timeout=2,
+        pad_to_length=32,
+        clear_input_on_receive=False,
+    )
     arduino.connect(serial_number='44234313434351416122')
     n = 0
     while True:

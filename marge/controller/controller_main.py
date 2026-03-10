@@ -11,7 +11,7 @@ from PyQt5.QtCore import QEvent
 
 from marge.seq.sequences import defaultsequences
 from marge.ui.window_main import MainWindow
-import marge.autotuning.autotuning as autotuning
+from marge.utils.SerialDevice import SerialDevice
 import marge.configs.hw_config as hw
 
 
@@ -26,14 +26,12 @@ class MainController(MainWindow):
         self.history_list.sequence_ready_signal.connect(self.history_list.updateHistoryFigure2)
         self.history_list.figure_ready_signal.connect(self.toolbar_figures.doScreenshot)
 
-        # Define the arduinos
-        self.arduino_autotuning = autotuning.Arduino(baudrate=hw.ard_br_autotuning)
-        self.arduino_autotuning.connect(serial_number=hw.ard_sn_autotuning)
-        if hw.ard_sn_autotuning==hw.ard_sn_interlock:
-            self.arduino_interlock = self.arduino_autotuning
-        else:
-            self.arduino_interlock = autotuning.Arduino(hw.ard_br_interlock)
-            self.arduino_interlock.connect(serial_number=hw.ard_sn_interlock)
+        # The auto-tuning sequence owns its serial device per run.
+        self.arduino_interlock = SerialDevice(
+            baudrate=hw.ard_br_interlock,
+            name="Arduino interlock",
+        )
+        self.arduino_interlock.connect(serial_number=hw.ard_sn_interlock)
 
     def set_demo(self, demo):
         self.demo = demo
@@ -79,6 +77,9 @@ class MainController(MainWindow):
         """
         # Return stdout to defaults.
         sys.stdout = sys.__stdout__
+
+        if hasattr(self, "arduino_interlock") and self.arduino_interlock is not None:
+            self.arduino_interlock.disconnect()
             
         print('\nMain GUI closed successfully!')
 

@@ -90,7 +90,7 @@ class SequenceController(SequenceToolBar):
         seq_names = [
             'AutoTuning',
             'Larmor',
-            'AutoTuning',
+            'AutoTuning/AutoTuning',
             'Noise',
             'Shimming',
             'RabiFlops',
@@ -101,10 +101,6 @@ class SequenceController(SequenceToolBar):
             # Get sequence parameters
             seq = copy.deepcopy(defaultsequences[seq_name])
             seq.loadParams(directory='calibration', file=seq_name)
-
-            # Specific task for AutoTuning
-            if seq_name == 'AutoTuning':
-                seq.arduino = self.main.arduino_autotuning
 
             # Specific tasks for RabiFlops
             if seq_name == 'RabiFlops':
@@ -275,10 +271,6 @@ class SequenceController(SequenceToolBar):
 
         # Get sequence to run
         sequence = copy.deepcopy(defaultsequences[seq_name])
-
-        # Particular case for Auto-tuning
-        if seq_name == "AutoTuning":
-            sequence.arduino = self.main.arduino_autotuning
 
         # Modify input parameters of the sequence according to current item
         if map_nmspc and map_vals:
@@ -654,4 +646,3 @@ class SequenceController(SequenceToolBar):
             self.action_bender.setDisabled(True)
             self.action_view_sequence.setDisabled(True)
             self.action_add_to_list.setDisabled(True)
-

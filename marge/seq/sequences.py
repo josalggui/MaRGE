@@ -4,19 +4,45 @@ Created on Thu June 2 2022
 @email: josalggui@i3m.upv.es
 @Summary: All sequences on the GUI must be here
 """
+import ast
 import inspect
 import os
-import importlib
 import importlib.util
+
+from marge.seq.mriBlankSeq import MRIBLANKSEQ
 
 """
 Definition of default sequences
 """
 
-# Note for the users: Now the sequences are added automatically to the defaultsequences dictionary.
-# To do that, the user should include the parameter 'toMaRGE' as True in the sequence using:
-# self.addParameter(string='toMaRGE', val=True)
-# This file should not be modified anymore.
+def _base_name(node):
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        prefix = _base_name(node.value)
+        if prefix:
+            return f"{prefix}.{node.attr}"
+        return node.attr
+    return None
+
+
+def _contains_sequence_class_candidate(py_file):
+    try:
+        with open(py_file, "r", encoding="utf-8") as source:
+            tree = ast.parse(source.read(), filename=py_file)
+    except Exception:
+        return False
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            if not node.bases:
+                continue
+            for base in node.bases:
+                base_name = _base_name(base)
+                if base_name and base_name.split(".")[-1] == "MRIBLANKSEQ":
+                    return True
+            return True
+    return False
 
 def instantiate_sequences():
     # Get the absolute path to this folder (marge/seq)
@@ -31,7 +57,9 @@ def instantiate_sequences():
     for root, _, files in os.walk(folder):
         for file in files:
             if file.endswith('.py') and file not in {'__init__.py', 'sequences.py'}:
-                py_files.append(os.path.join(root, file))
+                py_file = os.path.join(root, file)
+                if _contains_sequence_class_candidate(py_file):
+                    py_files.append(py_file)
     py_files.sort()
 
     # Populate defaultsequences
@@ -49,14 +77,14 @@ def instantiate_sequences():
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
 
-            # Find all classes in the module
-            classes = inspect.getmembers(module, inspect.isclass)
-
-            # Add to defaultsequences only if toMaRGE is True
-            for class_name, class_ in classes:
+            # Find all MRIBLANKSEQ subclasses defined in the module.
+            for class_name, class_ in inspect.getmembers(module, inspect.isclass):
                 try:
-                    # Ignore classes re-exported from imports inside the module.
-                    if class_.__module__ != module.__name__:
+                    if (
+                        class_.__module__ != module.__name__
+                        or class_ is MRIBLANKSEQ
+                        or not issubclass(class_, MRIBLANKSEQ)
+                    ):
                         continue
 
                     sequence = class_()
@@ -85,3 +113,9 @@ defaultsequences, sequence_display_names = instantiate_sequences()
 # To do that, the user should include the parameter 'toMaRGE' as True in the sequence using:
 # self.addParameter(string='toMaRGE', val=True)
 # This file should not be modified anymore.
+
+if __name__ == "__main__":
+    print(f"Loaded {len(defaultsequences)} sequences:")
+    for seq_name, display_name in sorted(sequence_display_names.items()):
+        sequence = defaultsequences[seq_name]
+        print(f"- {display_name}: {sequence.__class__.__module__}.{sequence.__class__.__name__}")

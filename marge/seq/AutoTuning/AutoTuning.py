@@ -13,7 +13,8 @@ from scipy.interpolate import interp1d
 import numpy as np
 import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import marge.configs.hw_config as hw
-import marge.autotuning.autotuning as autotuning
+from . import AutoTuningHardwareInterface
+from marge.utils.SerialDevice import SerialDevice
 import marge.configs.units as units
 
 
@@ -46,6 +47,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.states_hist = [[], [], []]
         self.n_aux = [[], [], []]
         self.current_capacitors = None
+        self.vna = None
 
         # Parameters
         self.addParameter(key='seqName', string='AutoTuningInfo', val='AutoTuning')
@@ -72,6 +74,24 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
     def sequenceTime(self):
         return 0  # minutes, scanTime
 
+    def _connect_arduino(self):
+        self.arduino = SerialDevice(name="Arduino autotuning")
+        self.arduino.connect(serial_number=hw.ard_sn_autotuning)
+        return self.arduino.device is not None
+
+    def _close_arduino(self):
+        if self.arduino is not None:
+            self.arduino.disconnect()
+            self.arduino = None
+
+    def _close_vna(self):
+        if self.vna is not None and self.vna.interface is not None:
+            try:
+                self.vna.interface.close()
+            except Exception:
+                pass
+        self.vna = None
+
     def sequenceRun(self, plotSeq=0, demo=False):
         self.demo = demo
         self.s11_hist = []
@@ -80,18 +100,17 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
         self.n_aux = [[], [], []]
         self.frequency = hw.larmorFreq + self.freqOffset * 1e-6
         self.mapVals['frequency'] = self.frequency
+        self._close_vna()
+        self._close_arduino()
 
-        # Connect to Arduino and set the initial state
-        if self.arduino is None:
-            self.arduino = autotuning.Arduino()
-            self.arduino.connect(serial_number=hw.ard_sn_autotuning)
-        self.current_capacitors = self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching']
-        self.arduino.send(self.current_capacitors + "10")
+        try:
+            if not self._connect_arduino():
+                print("WARNING: No Arduino found for auto-tuning.")
+                return False
 
-        if self.arduino.device is None:
-            print("WARNING: No Arduino found for auto-tuning.")
-            return False
-        else:
+            self.current_capacitors = self.mapVals['series'] + self.mapVals['tuning'] + self.mapVals['matching']
+            self.arduino.send(self.current_capacitors + "10")
+
             counter = 0
             while counter < 10:
                 # Turn OFF vna.
@@ -106,30 +125,27 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
                 # Connect to VNA
                 print("Linking to nanoVNA...")
-                self.vna = autotuning.VNA()
+                self.vna = AutoTuningHardwareInterface.VNA()
                 if self.vna.connect():
                     break
-                else:
-                    counter += 1
+                counter += 1
 
             # Check connection with nanoVNA
-            if self.vna.device is None:
+            if self.vna is None or self.vna.device is None:
                 print("ERROR: No nanoVNA found for auto-tuning. \n")
                 return False
 
-        if self.test == 'auto':
-            output = self.runAutoTuning()
-            self.vna.interface.close()
-            self.mapVals['s11_hist'] = self.s11_hist
-            return output
-        elif self.test == 'manual':
-            output = self.runManual()
-            self.vna.interface.close()
-            self.mapVals['s11_hist'] = self.s11_hist
-            return output
-        else:
+            if self.test == 'auto':
+                return self.runAutoTuning()
+            if self.test == 'manual':
+                return self.runManual()
+
             print("Incorrect test mode.")
             return False
+        finally:
+            self.mapVals['s11_hist'] = self.s11_hist
+            self._close_vna()
+            self._close_arduino()
     
     def restart_vna(self):
         print("Restarting nanoVNA...")
@@ -145,7 +161,7 @@ class AutoTuning(blankSeq.MRIBLANKSEQ):
 
             # Connect to VNA
             print("Linking to nanoVNA...")
-            self.vna = autotuning.VNA()
+            self.vna = AutoTuningHardwareInterface.VNA()
             if self.vna.connect():
                 return True
             else:
