@@ -26,9 +26,12 @@ class MainController(MainWindow):
         self.history_list.sequence_ready_signal.connect(self.history_list.updateHistoryFigure2)
         self.history_list.figure_ready_signal.connect(self.toolbar_figures.doScreenshot)
 
-        # The auto-tuning sequence owns its serial device per run.
+        shared_autotuning_interlock = hw.ard_sn_autotuning == hw.ard_sn_interlock
+        interlock_baudrate = hw.ard_br_autotuning if shared_autotuning_interlock else hw.ard_br_interlock
+        if shared_autotuning_interlock:
+            print("Arduino interlock shares the auto-tuning serial device.")
         self.arduino_interlock = SerialDevice(
-            baudrate=hw.ard_br_interlock,
+            baudrate=interlock_baudrate,
             name="Arduino interlock",
         )
         self.arduino_interlock.connect(serial_number=hw.ard_sn_interlock)

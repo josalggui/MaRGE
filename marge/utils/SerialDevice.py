@@ -9,6 +9,8 @@ import serial.tools.list_ports
 
 
 class SerialDevice:
+    _shared_connections = {}
+
     def __init__(
         self,
         baudrate=115200,
@@ -32,6 +34,7 @@ class SerialDevice:
         self.pad_to_length = pad_to_length
         self.pad_char = pad_char
         self.clear_input_on_receive = clear_input_on_receive
+        self._shared_key = None
 
     def _find_port_by_serial_number(self, serial_number):
         for port in serial.tools.list_ports.comports():
@@ -72,6 +75,22 @@ class SerialDevice:
             print(f"WARNING: No serial device found for {self.name}")
             return False
 
+        self._shared_key = str(self.port)
+        shared_entry = self._shared_connections.get(self._shared_key)
+        if shared_entry is not None:
+            shared_device = shared_entry["device"]
+            if shared_device is not None and getattr(shared_device, "is_open", True):
+                if shared_entry["baudrate"] != self.baudrate:
+                    print(
+                        f"WARNING: Reusing serial device for {self.name} at "
+                        f"{shared_entry['baudrate']} baud instead of requested {self.baudrate}"
+                    )
+                self.device = shared_device
+                shared_entry["refcount"] += 1
+                print(f"Reusing serial device for {self.name}")
+                return True
+            self._shared_connections.pop(self._shared_key, None)
+
         try:
             if str(self.port).startswith(("socket://", "rfc2217://", "loop://")):
                 self.device = serial.serial_for_url(
@@ -85,19 +104,34 @@ class SerialDevice:
                     baudrate=self.baudrate,
                     timeout=self.timeout,
                 )
+            self._shared_connections[self._shared_key] = {
+                "baudrate": self.baudrate,
+                "device": self.device,
+                "refcount": 1,
+            }
             print(f"Connected to serial device for {self.name}")
             time.sleep(self.startup_delay)
             return True
         except Exception as exc:
             print(f"WARNING: Failed to connect to serial device for {self.name}: {exc}")
             self.device = None
+            self._shared_key = None
             return False
 
     def disconnect(self):
         if self.device is not None:
-            self.device.close()
-            print(f"Disconnected from serial device for {self.name}")
+            shared_entry = self._shared_connections.get(self._shared_key)
+            if shared_entry is not None and shared_entry["device"] is self.device:
+                shared_entry["refcount"] -= 1
+                if shared_entry["refcount"] <= 0:
+                    self.device.close()
+                    self._shared_connections.pop(self._shared_key, None)
+                    print(f"Disconnected from serial device for {self.name}")
+            else:
+                self.device.close()
+                print(f"Disconnected from serial device for {self.name}")
             self.device = None
+            self._shared_key = None
 
     close = disconnect
 
