@@ -6,6 +6,7 @@ Created on Thu August 17th 2023
 Specific hardware from MRILab @ i3M is required
 """
 
+<<<<<<< HEAD
 import numpy as np
 from scipy.interpolate import interp1d
 
@@ -92,17 +93,27 @@ class VNA:
 
         return None, None
 
+=======
+from marge.autotuning.autotuning import Arduino as BaseArduino
+from marge.autotuning.autotuning import VNA
+
+
+class Arduino(BaseArduino):
+    def __init__(self, baudrate=115200, timeout=0.1, name='test'):
+        super().__init__(
+            baudrate=baudrate,
+            timeout=timeout,
+            name=name,
+            receive_timeout=2.0,
+            pad_to_length=32,
+        )
+>>>>>>> master
 
 
 if __name__ == "__main__":
-    # device = VNA()
-    # device.connect()
-    # s11, z11 = device.getS11(2.9713)
-    # print(s11)
-    # print(z11)
-
     import random
 
+<<<<<<< HEAD
     # Create an instance of the shared serial device and connect to an Arduino.
     arduino = SerialDevice(
         name="rf automate",
@@ -110,12 +121,13 @@ if __name__ == "__main__":
         pad_to_length=32,
         clear_input_on_receive=False,
     )
+=======
+    arduino = Arduino()
+>>>>>>> master
     arduino.connect(serial_number='44234313434351416122')
     n = 0
     while True:
         binary_string = ''.join(random.choice('01') for _ in range(17))
-        result = arduino.send(binary_string)
+        arduino.send(binary_string)
         n += 1
         print(f"Iteration {n}")
-
-    # arduino.disconnect()

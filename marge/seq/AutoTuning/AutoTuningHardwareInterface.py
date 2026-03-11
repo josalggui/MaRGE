@@ -12,9 +12,49 @@ from scipy.interpolate import interp1d
 
 import time
 
+from marge.utils.SerialDevice import SerialDevice
 from marge.vna import Hardware
 
 
+<<<<<<< HEAD:marge/seq/AutoTuning/AutoTuningHardwareInterface.py
+=======
+class Arduino(SerialDevice):
+    def __init__(self, baudrate=115200, timeout=0.1, startup_delay=1.0, name="Arduino",
+                 receive_timeout=5.0, pad_to_length=None):
+        """
+        Initialize an Arduino object.
+
+        :param baudrate: Baud rate for communication (default is 115200).
+        :param timeout: Timeout for communication operations (default is 0.1 seconds).
+        """
+        super().__init__(baudrate=baudrate, timeout=timeout, startup_delay=startup_delay)
+        self.name = name
+        self.receive_timeout = receive_timeout
+        self.pad_to_length = pad_to_length
+
+    def connect(self, serial_number=None, port=None):
+        """
+        Connect to the Arduino.
+
+        :return: True if connected successfully, otherwise False.
+        """
+        target = port
+        if target is None and serial_number:
+            target = f"serial:{serial_number}"
+        return super().connect(target)
+
+    def send(self, data):
+        """
+        Send data to the Arduino.
+
+        :param data: The data to be sent.
+        """
+        if self.pad_to_length is not None:
+            data = str(data).ljust(self.pad_to_length, "0")
+        return super().send(data, deadline_seconds=self.receive_timeout)
+
+
+>>>>>>> master:marge/autotuning/autotuning.py
 class VNA:
     def __init__(self):
         """

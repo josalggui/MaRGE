@@ -20,7 +20,11 @@ for subdir in subdirs:
 
 import marge.seq.larmor as larmor
 import marge.configs.hw_config as hw
+<<<<<<< HEAD
 from marge.utils.SerialDevice import SerialDevice
+=======
+import marge.autotuning.autotuning as autotuning
+>>>>>>> master
 
 
 class FixGain(larmor.Larmor):
@@ -35,6 +39,7 @@ class FixGain(larmor.Larmor):
         self.addParameter(key='mode', string='Mode', val='AUTO', field='OTH', tip="'AUTO' or 'MANUAL'")
         self.arduino = None
 
+<<<<<<< HEAD
     def _open_arduino(self):
         if self.arduino is None:
             self.arduino = SerialDevice(name="Arduino attenuator")
@@ -58,6 +63,14 @@ class FixGain(larmor.Larmor):
             return True
         finally:
             self._close_arduino()
+=======
+        # Connect to Arduino and set the initial state
+        self.arduino = autotuning.Arduino(name="attenuator")
+        self.arduino.connect(serial_number=hw.ard_sn_attenuator)
+        gain_binary = bin(self.mapVals['gain']-hw.rf_min_gain)[2:].zfill(5)
+        self.arduino.send("1" + gain_binary)
+        print("RF gain: %i dB" % self.mapVals['gain'])
+>>>>>>> master
 
     def sequenceInfo(self):
         print("Set RF gain of the scanner")
