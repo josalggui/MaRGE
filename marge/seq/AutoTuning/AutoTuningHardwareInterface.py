@@ -16,21 +16,32 @@ from marge.utils.SerialDevice import SerialDevice
 from marge.vna import Hardware
 
 
-<<<<<<< HEAD:marge/seq/AutoTuning/AutoTuningHardwareInterface.py
-=======
 class Arduino(SerialDevice):
-    def __init__(self, baudrate=115200, timeout=0.1, startup_delay=1.0, name="Arduino",
-                 receive_timeout=5.0, pad_to_length=None):
+    def __init__(
+        self,
+        baudrate=115200,
+        timeout=0.1,
+        startup_delay=1.0,
+        name="Arduino",
+        receive_timeout=5.0,
+        pad_to_length=None,
+        clear_input_on_receive=True,
+    ):
         """
         Initialize an Arduino object.
 
         :param baudrate: Baud rate for communication (default is 115200).
         :param timeout: Timeout for communication operations (default is 0.1 seconds).
         """
-        super().__init__(baudrate=baudrate, timeout=timeout, startup_delay=startup_delay)
-        self.name = name
-        self.receive_timeout = receive_timeout
-        self.pad_to_length = pad_to_length
+        super().__init__(
+            baudrate=baudrate,
+            timeout=timeout,
+            startup_delay=startup_delay,
+            name=name,
+            receive_timeout=receive_timeout,
+            pad_to_length=pad_to_length,
+            clear_input_on_receive=clear_input_on_receive,
+        )
 
     def connect(self, serial_number=None, port=None):
         """
@@ -38,10 +49,9 @@ class Arduino(SerialDevice):
 
         :return: True if connected successfully, otherwise False.
         """
-        target = port
-        if target is None and serial_number:
-            target = f"serial:{serial_number}"
-        return super().connect(target)
+        if port is not None:
+            return super().connect(connection=port)
+        return super().connect(serial_number=serial_number)
 
     def send(self, data):
         """
@@ -49,12 +59,7 @@ class Arduino(SerialDevice):
 
         :param data: The data to be sent.
         """
-        if self.pad_to_length is not None:
-            data = str(data).ljust(self.pad_to_length, "0")
         return super().send(data, deadline_seconds=self.receive_timeout)
-
-
->>>>>>> master:marge/autotuning/autotuning.py
 class VNA:
     def __init__(self):
         """

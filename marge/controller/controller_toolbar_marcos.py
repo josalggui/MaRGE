@@ -16,11 +16,7 @@ from marge.widgets.widget_toolbar_marcos import MarcosToolBar
 import marge.marcos.marcos_client.experiment as ex
 import marge.configs.hw_config as hw
 import marge.marge_tyger.tyger_config as tyger
-<<<<<<< HEAD
-=======
-from marge.autotuning import autotuning
 from marge.utils.bash_execution import BashExecution
->>>>>>> master
 
 
 class MarcosController(MarcosToolBar):
@@ -331,4 +327,3 @@ class MarcosController(MarcosToolBar):
 
         thread = threading.Thread(target=init_gpa)
         thread.start()
-
