@@ -101,8 +101,8 @@ class Experiment:
             rx_lo = rx_lo, rx_lo # extend to 2 elements
         self._rx_lo = rx_lo
 
-        assert grad_board in ('ocra1', 'gpa-fhdo'), "Unknown gradient board!"
-        if grad_board == 'ocra1':
+        assert hw.grad_board in ('ocra1', 'gpa-fhdo'), "Unknown gradient board!"
+        if hw.grad_board == 'ocra1':
             gradb_class = gb.OCRA1
             self._gpa_fhdo_offset_time = 0
         else:
