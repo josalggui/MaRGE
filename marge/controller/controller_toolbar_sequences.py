@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import QLabel, QFileDialog, QApplication, QWidget
 
 from marge.controller.controller_plot3d import Plot3DController as Spectrum3DPlot
 from marge.controller.controller_plot1d import Plot1DController as SpectrumPlot
-from marge.seq.sequences import defaultsequences
+from marge.seq.sequences import defaultsequences, resolve_sequence_name
 from marge.widgets.widget_toolbar_sequences import SequenceToolBar
 import marge.configs.hw_config as hw
 
@@ -90,21 +90,23 @@ class SequenceController(SequenceToolBar):
         seq_names = [
             'AutoTuning',
             'Larmor',
-            'AutoTuning',
+            'AutoTuning/AutoTuning',
             'Noise',
             'Shimming',
             'RabiFlops',
             'Larmor',
         ]
 
-        for seq_name in seq_names:
+        for seq_identifier in seq_names:
+            try:
+                seq_name = resolve_sequence_name(seq_identifier)
+            except KeyError:
+                print(f"WARNING: Autocalibration sequence '{seq_identifier}' not found. Skipping.")
+                continue
+
             # Get sequence parameters
             seq = copy.deepcopy(defaultsequences[seq_name])
             seq.loadParams(directory='calibration', file=seq_name)
-
-            # Specific task for AutoTuning
-            if seq_name == 'AutoTuning':
-                seq.arduino = self.main.arduino_autotuning
 
             # Specific tasks for RabiFlops
             if seq_name == 'RabiFlops':
@@ -275,10 +277,6 @@ class SequenceController(SequenceToolBar):
 
         # Get sequence to run
         sequence = copy.deepcopy(defaultsequences[seq_name])
-
-        # Particular case for Auto-tuning
-        if seq_name == "AutoTuning":
-            sequence.arduino = self.main.arduino_autotuning
 
         # Modify input parameters of the sequence according to current item
         if map_nmspc and map_vals:
@@ -654,4 +652,3 @@ class SequenceController(SequenceToolBar):
             self.action_bender.setDisabled(True)
             self.action_view_sequence.setDisabled(True)
             self.action_add_to_list.setDisabled(True)
-

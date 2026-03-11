@@ -20,7 +20,11 @@ for subdir in subdirs:
 
 import marge.seq.larmor as larmor
 import marge.configs.hw_config as hw
+<<<<<<< HEAD
+from marge.utils.SerialDevice import SerialDevice
+=======
 import marge.autotuning.autotuning as autotuning
+>>>>>>> master
 
 
 class FixGain(larmor.Larmor):
@@ -33,13 +37,40 @@ class FixGain(larmor.Larmor):
         self.addParameter(key='gain', string='Attenuation (dB)', val=45, field='OTH',
                           tip='Integer from %i to %i' % (hw.rf_min_gain, hw.rf_max_gain))
         self.addParameter(key='mode', string='Mode', val='AUTO', field='OTH', tip="'AUTO' or 'MANUAL'")
+        self.arduino = None
 
+<<<<<<< HEAD
+    def _open_arduino(self):
+        if self.arduino is None:
+            self.arduino = SerialDevice(name="Arduino attenuator")
+            self.arduino.connect(serial_number=hw.ard_sn_attenuator)
+        return self.arduino.device is not None
+
+    def _close_arduino(self):
+        if self.arduino is not None:
+            self.arduino.disconnect()
+            self.arduino = None
+
+    def _set_gain(self):
+        if not self._open_arduino():
+            print("WARNING: No Arduino found for attenuator.")
+            return False
+
+        gain_binary = bin(self.mapVals['gain'] - hw.rf_min_gain)[2:].zfill(5)
+        try:
+            self.arduino.send("1" + gain_binary)
+            print("RF gain: %i dB" % self.mapVals['gain'])
+            return True
+        finally:
+            self._close_arduino()
+=======
         # Connect to Arduino and set the initial state
         self.arduino = autotuning.Arduino(name="attenuator")
         self.arduino.connect(serial_number=hw.ard_sn_attenuator)
         gain_binary = bin(self.mapVals['gain']-hw.rf_min_gain)[2:].zfill(5)
         self.arduino.send("1" + gain_binary)
         print("RF gain: %i dB" % self.mapVals['gain'])
+>>>>>>> master
 
     def sequenceInfo(self):
         print("Set RF gain of the scanner")
@@ -69,9 +100,8 @@ class FixGain(larmor.Larmor):
 
     def sequenceAnalysis(self, mode=None, save=True):
         if self.mode == 'MANUAL':
-            gain_binary = bin(self.mapVals['gain'] - hw.rf_min_gain)[2:].zfill(5)
-            self.arduino.send("1" + gain_binary)
-            print("RF gain: %i dB" % self.mapVals['gain'])
+            if not self._set_gain():
+                return []
 
             # save data once self.output is created
             self.saveRawData()
@@ -99,9 +129,8 @@ class FixGain(larmor.Larmor):
                 self.mapVals['gain'] = hw.rf_min_gain
 
             # Set gain
-            gain_binary = bin(self.mapVals['gain'] - hw.rf_min_gain)[2:].zfill(5)
-            self.arduino.send("1" + gain_binary)
-            print("RF gain: %i dB" % self.mapVals['gain'])
+            if not self._set_gain():
+                return []
             hw.lnaGain = self.mapVals['gain']
 
             # save data once self.output is created

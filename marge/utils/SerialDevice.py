@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+"""
+Shared serial device helper for Arduino-like peripherals.
+"""
+
+=======
+>>>>>>> master
 import time
 
 import serial
@@ -5,6 +12,70 @@ import serial.tools.list_ports
 
 
 class SerialDevice:
+<<<<<<< HEAD
+    _shared_connections = {}
+
+    def __init__(
+        self,
+        baudrate=115200,
+        timeout=0.1,
+        name="serial device",
+        startup_delay=1.0,
+        receive_timeout=5.0,
+        pad_to_length=None,
+        pad_char="0",
+        clear_input_on_receive=True,
+    ):
+        self.device = None
+        self.port = None
+        self.serial_number = None
+        self.connection = None
+        self.baudrate = baudrate
+        self.timeout = timeout
+        self.name = name
+        self.startup_delay = startup_delay
+        self.receive_timeout = receive_timeout
+        self.pad_to_length = pad_to_length
+        self.pad_char = pad_char
+        self.clear_input_on_receive = clear_input_on_receive
+        self._shared_key = None
+
+    def _find_port_by_serial_number(self, serial_number):
+        for port in serial.tools.list_ports.comports():
+            if port.serial_number == serial_number:
+                return port.device
+        return None
+
+    def _resolve_port(self, connection=None, serial_number=None):
+        target = serial_number if serial_number is not None else connection
+        if target is None:
+            target = self.connection
+        if target is None:
+            return None
+
+        target = str(target).strip()
+        if not target:
+            return None
+
+        if target.startswith("serial:"):
+            target = target.split(":", 1)[1].strip()
+
+        if target.startswith(("socket://", "rfc2217://", "loop://")):
+            return target
+
+        if "/" in target or "\\" in target or target.upper().startswith("COM"):
+            return target
+
+        return self._find_port_by_serial_number(target)
+
+    def connect(self, connection=None, serial_number=None):
+        self.serial_number = serial_number
+        self.connection = connection if connection is not None else self.connection
+        if self.device is not None:
+            return True
+
+        self.port = self._resolve_port(connection=connection, serial_number=serial_number)
+=======
     def __init__(
         self,
         connection="",
@@ -74,10 +145,126 @@ class SerialDevice:
         self.connection = self.connection if connection is None else connection
         target_port, baudrate = self._parse_connection_spec(self.connection)
         self.port = target_port
+>>>>>>> master
         if not self.port:
             print(f"WARNING: No serial device found for {self.name}")
             return False
 
+<<<<<<< HEAD
+        self._shared_key = str(self.port)
+        shared_entry = self._shared_connections.get(self._shared_key)
+        if shared_entry is not None:
+            shared_device = shared_entry["device"]
+            if shared_device is not None and getattr(shared_device, "is_open", True):
+                if shared_entry["baudrate"] != self.baudrate:
+                    print(
+                        f"WARNING: Reusing serial device for {self.name} at "
+                        f"{shared_entry['baudrate']} baud instead of requested {self.baudrate}"
+                    )
+                self.device = shared_device
+                shared_entry["refcount"] += 1
+                print(f"Reusing serial device for {self.name}")
+                return True
+            self._shared_connections.pop(self._shared_key, None)
+
+        try:
+            if str(self.port).startswith(("socket://", "rfc2217://", "loop://")):
+                self.device = serial.serial_for_url(
+                    self.port,
+                    baudrate=self.baudrate,
+                    timeout=self.timeout,
+                )
+            else:
+                self.device = serial.Serial(
+                    port=self.port,
+                    baudrate=self.baudrate,
+                    timeout=self.timeout,
+                )
+            self._shared_connections[self._shared_key] = {
+                "baudrate": self.baudrate,
+                "device": self.device,
+                "refcount": 1,
+            }
+            print(f"Connected to serial device for {self.name}")
+            time.sleep(self.startup_delay)
+            return True
+        except Exception as exc:
+            print(f"WARNING: Failed to connect to serial device for {self.name}: {exc}")
+            self.device = None
+            self._shared_key = None
+            return False
+
+    def disconnect(self):
+        if self.device is not None:
+            shared_entry = self._shared_connections.get(self._shared_key)
+            if shared_entry is not None and shared_entry["device"] is self.device:
+                shared_entry["refcount"] -= 1
+                if shared_entry["refcount"] <= 0:
+                    self.device.close()
+                    self._shared_connections.pop(self._shared_key, None)
+                    print(f"Disconnected from serial device for {self.name}")
+            else:
+                self.device.close()
+                print(f"Disconnected from serial device for {self.name}")
+            self.device = None
+            self._shared_key = None
+
+    close = disconnect
+
+    def _normalize_payload(self, data, pad_to_length=None, pad_char=None):
+        if isinstance(data, bytes):
+            payload = data
+        else:
+            text = str(data)
+            final_pad_to_length = self.pad_to_length if pad_to_length is None else pad_to_length
+            final_pad_char = self.pad_char if pad_char is None else pad_char
+            if final_pad_to_length is not None:
+                text = text.ljust(final_pad_to_length, final_pad_char)
+            payload = text.encode()
+        return payload
+
+    def send(
+        self,
+        data,
+        deadline_seconds=None,
+        pad_to_length=None,
+        pad_char=None,
+        clear_input=None,
+    ):
+        if self.device is None:
+            return False
+
+        payload = self._normalize_payload(data, pad_to_length=pad_to_length, pad_char=pad_char)
+        output = False
+        while output is False and self.device is not None:
+            self.device.write(payload)
+            output = self.receive(deadline_seconds=deadline_seconds, clear_input=clear_input)
+            if output is False:
+                print(f"WARNING: Serial communication failed for {self.name}...")
+                print("Retrying...")
+        return output
+
+    def receive(self, deadline_seconds=None, clear_input=None):
+        if self.device is None:
+            return "False".encode("utf-8")
+
+        if clear_input is None:
+            clear_input = self.clear_input_on_receive
+
+        wait_limit = self.receive_timeout if deadline_seconds is None else deadline_seconds
+        t0 = time.time()
+        if clear_input:
+            self.device.reset_input_buffer()
+
+        while self.device.in_waiting == 0 and time.time() - t0 < wait_limit:
+            time.sleep(0.01)
+
+        if time.time() - t0 >= wait_limit:
+            print(f"Failed to get data from {self.name}...")
+            return False
+
+        return self.device.readline()
+=======
         self.baudrate = baudrate
         self.device = serial.serial_for_url(self.port, baudrate=self.baudrate, timeout=self.timeout)
         self.serial = self.device
@@ -120,3 +307,4 @@ class SerialDevice:
             return self.device.readline()
 
         return "False".encode("utf-8")
+>>>>>>> master

@@ -2,7 +2,7 @@
 Created on Thu August 17th 2023
 @author: J.M. Algarín, MRILab, i3M, CSIC, Valencia
 @email: josalggui@i3m.upv.es
-@Summary: code to communicate with arduino for autotuning
+@Summary: hardware interfaces for auto-tuning
 Specific hardware from MRILab @ i3M is required
 """
 import threading
@@ -16,6 +16,8 @@ from marge.utils.SerialDevice import SerialDevice
 from marge.vna import Hardware
 
 
+<<<<<<< HEAD:marge/seq/AutoTuning/AutoTuningHardwareInterface.py
+=======
 class Arduino(SerialDevice):
     def __init__(self, baudrate=115200, timeout=0.1, startup_delay=1.0, name="Arduino",
                  receive_timeout=5.0, pad_to_length=None):
@@ -52,6 +54,7 @@ class Arduino(SerialDevice):
         return super().send(data, deadline_seconds=self.receive_timeout)
 
 
+>>>>>>> master:marge/autotuning/autotuning.py
 class VNA:
     def __init__(self):
         """
@@ -182,13 +185,6 @@ class VNA:
 
 
 if __name__ == "__main__":
-    # # Test arduino
-    # arduino = Arduino(baudrate=115200, name="interlock")
-    # arduino.connect(serial_number="55731323736351611260")
-    #
-    # string = arduino.send("GPA_SPC:CTL 1;").decode()
-    # string = arduino.send("GPA_ERRST;").decode()
-
     # Test nanoVNA
     nanovna = VNA()
     nanovna.connect()
