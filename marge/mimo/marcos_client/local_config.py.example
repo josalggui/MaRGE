@@ -1,0 +1,39 @@
+## IP address of master SDRLab: RP address or 'localhost' if emulating a local server.
+## UNCOMMENT ONE OF THE LINES BELOW.
+#
+#ip_address = "localhost"
+#ip_address = "192.168.1.189"
+
+## Master port: always 11111 for now
+port = 11111
+
+## IP address of slave SDRLab
+# ip_address_slave = "192.168.1.180"
+# port_slave = 11111
+
+## FPGA clock frequency of master: uncomment one of the below to configure various
+## system behaviour. Right now only 122.88 is supported.
+##
+## Clocks of slaves are assumed to be in phase with master clock.
+#
+#fpga_clk_freq_MHz = 122.88 # RP-122
+#fpga_clk_freq_MHz = 125.0 # RP-125
+
+## Gradient board: uncomment one of the below to configure the
+## gradient data format.  Note that gradient boards run by slaves
+## are assumed to be the same as the master's gradient board;
+## different gradient boards are unsupported for now.
+#
+#grad_board = "gpa-fhdo"
+#grad_board = "ocra1"
+
+## GPA-FHDO current per volt setting (determined by resistors)
+## (assumed the same for follower GPA-FHDOs as well)
+#
+gpa_fhdo_current_per_volt = 2.5
+
+## Flocra-pulseq path, for use of the flocra-pulseq library (optional).
+## Uncomment the lines below and adjust the path to suit your
+## flocra-pulseq location.
+#import sys
+#sys.path.append('/home/vlad/Documents/mri/flocra-pulseq')
