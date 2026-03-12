@@ -28,6 +28,7 @@ class ConsoleWidget(QWidget):
         self.add_input(label="Clock frequency (MHz)", value="122.88", tip="Clock frequency of the system")
         self.add_input(label="ADC factor (mV/unit)", value="6.894", tip="ADC conversion factor from unit to mV")
         self.add_input(label="CIC delay points", value="3", tip="Number of delay points in the CIC filter")
+        self.add_input(label="MaRCoS version", value="MaRCoS", tip="'MaRCoS' or 'MIMO'")
 
         # Dictionary to store references to input fields
         self.input_boxes = {}
@@ -97,6 +98,7 @@ class ConsoleWidget(QWidget):
         hw.adcFactor = float(self.input_boxes["ADC factor (mV/unit)"].text())
         hw.cic_delay_points = int(self.input_boxes["CIC delay points"].text())
         hw.rp_ip_address = "192.168.1.101"
+        hw.marcos_version = self.input_boxes["MaRCoS version"].text()
 
     def add_rp(self):
         text = self.text_box.text().strip()

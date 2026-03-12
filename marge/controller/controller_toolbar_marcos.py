@@ -31,7 +31,10 @@ class MarcosController(MarcosToolBar):
         super(MarcosController, self).__init__(*args, **kwargs)
 
         # Copy relevant files from marcos_extras
-        extras_path = os.path.join(os.path.dirname(__file__), "..", "marcos", "marcos_extras")
+        if hw.marcos_version=="MaRCoS":
+            extras_path = os.path.join(os.path.dirname(__file__), "..", "marcos", "marcos_extras")
+        elif hw.marcos_version=="MIMO":
+            extras_path = os.path.join(os.path.dirname(__file__), "..", "mimo", "marcos_extras")
         dst = os.getcwd()
         os.makedirs(dst, exist_ok=True)
         files_to_copy = ["copy_bitstream.sh", "marcos_fpga_rp-122.bit", "marcos_fpga_rp-122.bit.bin",
