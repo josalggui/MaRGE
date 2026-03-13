@@ -52,10 +52,13 @@ def Larmor(raw_data_path=None):
     print("****Outputs****")
 
     # Load data
-    signal = mat_data['data'][0]
+    signal = np.squeeze(mat_data['data_decimated'])
     acq_time = mat_data['acqTime'][0][0] * 1e3  # ms
     n_points = mat_data['nPoints'][0][0]  # kHz
     bw = mat_data['bw'][0][0]
+
+    if isinstance(signal, list):
+        signal = signal[0]
 
     # Generate time and frequency vectors and calculate the signal spectrum
     tVector = np.linspace(-acq_time / 2, acq_time / 2, n_points)
