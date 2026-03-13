@@ -26,19 +26,31 @@ def Noise(raw_data_path=None):
     print("****Outputs****")
 
     # Get data and time vector
-    data = mat_data['data']
-    data = np.squeeze(data)
+    data = np.squeeze(mat_data['data'])
     bw = mat_data['bw'][0][0]  # kHz
     acq_time = mat_data['nPoints'][0][0] / bw
-    t_vector = np.linspace(0, acq_time, np.size(data))
+    channels = np.squeeze(mat_data['channels'])
+
+    # If data comes from MIMO, it retrieves data from channel 1 of master RP
+    if len(data.shape) == 1:
+        data = [data]
 
     # Get spectrum a frequency vector
-    spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.fftshift(data)))
-    spectrum = np.squeeze(spectrum)
-    f_vector = np.linspace(-bw / 2, bw / 2, num=np.size(data), endpoint=False)
+    spectrums = []
+    datas = []
+    legends = []
+    n = 0
+    for single_data in data:
+        spectrums.append(np.abs(np.squeeze(np.fft.ifftshift(np.fft.ifftn(np.fft.fftshift(single_data))))))
+        datas.append(np.abs(single_data))
+        legends.append(f"Channel {channels[n]}")
+        n += 1
+    f_vector = np.linspace(-bw / 2, bw / 2, num=np.size(single_data), endpoint=False)
+    t_vector = np.linspace(0, acq_time, np.size(single_data))
+
 
     # Get rms noise
-    noiserms = np.std(data)
+    noiserms = np.std(data[0])
     noiserms = noiserms * 1e3  # uV
     print('rms noise: %0.1f uV @ %0.1f kHz' % (noiserms, bw))
     johnson = np.sqrt(2 * 50 * 300 * bw * 1e3 * 1.38e-23) * 10 ** (hw.lnaGain / 20) * 1e6 / 2  # uV
@@ -50,22 +62,22 @@ def Noise(raw_data_path=None):
     # Plot signal versus time
     result1 = {'widget': 'curve',
                'xData': t_vector,
-               'yData': [np.abs(data), np.real(data), np.imag(data)],
+               'yData': datas,
                'xLabel': 'Time (ms)',
                'yLabel': 'Signal amplitude (mV)',
                'title': 'Noise vs time',
-               'legend': ['abs', 'real', 'imag'],
+               'legend': legends,
                'row': 0,
                'col': 0}
 
     # Plot spectrum
     result2 = {'widget': 'curve',
                'xData': f_vector,
-               'yData': [np.abs(spectrum)],
+               'yData': spectrums,
                'xLabel': 'Frequency (kHz)',
                'yLabel': 'Mag FFT (a.u.)',
                'title': 'Noise spectrum',
-               'legend': [''],
+               'legend': legends,
                'row': 1,
                'col': 0}
 

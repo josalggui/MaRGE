@@ -359,16 +359,12 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         if not self.demo:
             if hw.marcos_version=="MaRCoS":
-                expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
+                dev = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
                                           rx_t=sampling_period,  # us
                                           init_gpa=False,
                                           gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
                                           auto_leds=True,
                                           oversampling_factor=self.oversampling_factor)
-                sampling_period = expt.get_sampling_period() # us
-                bw = 1 / sampling_period  # MHz
-                sampling_time = sampling_period * n_rd * 1e-6  # s
-                expt.__del__()
             elif hw.marcos_version=="MIMO":
                 # Define device arguments
                 dev_kwargs = {
@@ -395,10 +391,10 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
                 # Define experiment
                 dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port[0], **(master_kwargs | dev_kwargs))
-                sampling_period = dev.get_sampling_period()  # us
-                bw = 1 / sampling_period  # MHz
-                sampling_time = sampling_period * n_rd * 1e-6  # s
-                dev.__del__()
+            sampling_period = dev.get_sampling_period()  # us
+            bw = 1 / sampling_period  # MHz
+            sampling_time = sampling_period * n_rd * 1e-6  # s
+            dev.__del__()
 
             print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
         else:

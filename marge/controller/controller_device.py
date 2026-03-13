@@ -90,6 +90,9 @@ class MimoDevices(mimo_devices.MimoDevices):
             self._devs.append(dev)
             self._pool_args.append((dev, run_delay))
 
+    def getSamplingRate(self):
+        return self._devs[0].getSamplingRate()
+
 class Experiment(dev.Device):
     """
     Custom experiment class that extends the base Experiment class from the 'ex' module.

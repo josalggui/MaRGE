@@ -5,29 +5,9 @@ MRILAB @ I3M
 
 
 import time
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-#*****************************************************************************
-# Get the directory of the current script
-main_directory = os.path.dirname(os.path.realpath(__file__))
-parent_directory = os.path.dirname(main_directory)
-parent_directory = os.path.dirname(parent_directory)
-
-# Define the subdirectories you want to add to sys.path
-subdirs = ['MaRGE', 'marcos_client']
-
-# Add the subdirectories to sys.path
-for subdir in subdirs:
-    full_path = os.path.join(parent_directory, subdir)
-    sys.path.append(full_path)
-#******************************************************************************
 import marge.configs.hw_config as hw
-if hw.marcos_version=="MaRCoS":
-    import marge.controller.experiment_gui as ex
-elif hw.marcos_version=="MIMO":
-    import marge.controller.controller_device as ex
+import marge.controller.experiment_gui as ex
+import marge.controller.controller_device as device
 import numpy as np
 from marge.seq.mriBlankSeq import MRIBLANKSEQ
 import marge.configs.units as units
@@ -56,10 +36,10 @@ class Noise(MRIBLANKSEQ):
         print("Author: Dr. J.M. Algarín")
         print("Contact: josalggui@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain")
-        print("Get a noise measurement\n")
+        print("Acquires a noise measurement\n")
 
     def sequenceTime(self):
-        return(0)  # minutes, scanTime
+        return 0  # minutes, scanTime
 
     def sequenceRun(self, plotSeq=0, demo=False):
         init_gpa = False
@@ -71,6 +51,7 @@ class Noise(MRIBLANKSEQ):
         self.repetitionTime *= 1e6  # us
 
         self.mapVals['larmorFreq'] = hw.larmorFreq
+        samplingPeriod = 1 / self.bw
 
         if self.demo:
             dataR = np.random.randn((self.nPoints + 2 * hw.addRdPoints) * hw.oversamplingFactor)
@@ -78,20 +59,42 @@ class Noise(MRIBLANKSEQ):
             data = dataR+1j*dataC
             data = self.decimate(data_over=data, n_adc=1, option='Normal')
             self.mapVals['data'] = data
-            acqTime = self.nPoints/self.bw
-            tVector = np.linspace(0, acqTime, num=self.nPoints) * 1e-3  # ms
-            spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
-            fVector = np.linspace(-self.bw / 2, self.bw / 2, num=self.nPoints) * 1e3  # kHz
-            self.dataTime = [tVector, data]
-            self.dataSpec = [fVector, spectrum]
             time.sleep(self.repetitionTime*1e-6)
-        else:
-            samplingPeriod = 1 / self.bw
+            return True
+
+        if hw.marcos_version=="MaRCoS":
             self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset,
                                       rx_t=samplingPeriod,
                                       init_gpa=init_gpa,
                                       gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
                                       print_infos=False)
+        elif hw.marcos_version=="MIMO":
+            # Define device arguments
+            dev_kwargs = {
+                "lo_freq": hw.larmorFreq,
+                "rx_t": samplingPeriod,
+                "print_infos": True,
+                "assert_errors": True,
+                "halt_and_reset": False,
+                "fix_cic_scale": True,
+                "set_cic_shift": False,  # needs to be true for open-source cores
+                "flush_old_rx": False,
+                "init_gpa": False,
+                "gpa_fhdo_offset_time": 1 / 0.2 / 3.1,
+                "auto_leds": True,
+            }
+
+            # Define master arguments
+            master_kwargs = {
+                'mimo_master': True,
+                'trig_output_time': 1e5,
+                'slave_trig_latency': 6.079
+            }
+
+            # Define experiment
+            self.expt = device.MimoDevices(ips=hw.rp_ip_list, ports=hw.rp_port, **(master_kwargs | dev_kwargs))
+            self.devices = self.expt.dev_list()
+
             samplingPeriod = self.expt.getSamplingRate()
             self.bw = 1/samplingPeriod
             acqTime = self.nPoints/self.bw
@@ -116,15 +119,26 @@ class Noise(MRIBLANKSEQ):
                 return False
 
             if plotSeq == 0:
-                rxd, msgs = self.expt.run()
-                data = self.decimate(rxd['rx%i' % self.rxChannel], 1, option='Normal')
+                if hw.marcos_version=="MaRCoS":
+                    rxd, msgs = self.expt.run()
+                    data = self.decimate(rxd['rx%i' % self.rxChannel], 1, option='Normal')
+                elif hw.marcos_version=="MIMO":
+                    data = [[] for _ in range(len(self.channels))]
+                    result = self.expt.run()  # Run the experiment and collect data
+                    prov = [tup[0] for tup in result]  # List of rx results for each device
+                    results = {}
+                    for channel in self.channels:
+                        results[f'rx{channel}'] = prov[(channel - 1) // 2][f'rx{(channel - 1) % 2}']
+                    for ii in range(len(self.channels)):
+                        data_decimated = self.decimate(results[f'rx{self.channels[ii]}'], 1, option='Normal')
+                        data[ii] = np.concatenate((data[ii], data_decimated), axis=0)
                 self.mapVals['data'] = data
-                tVector = np.linspace(0, acqTime, num=self.nPoints) * 1e-3  # ms
-                spectrum = np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data)))
-                fVector = np.linspace(-self.bw / 2, self.bw / 2, num=self.nPoints) * 1e3  # kHz
-                self.dataTime = [tVector, data]
-                self.dataSpec = [fVector, spectrum]
-            self.expt.__del__()
+
+            if hw.marcos_version == "MaRCoS":
+                self.expt.__del__()
+            elif hw.marcos_version == "MIMO":
+                for dev in self.devices:
+                    dev.__del__()
 
         return True
 
