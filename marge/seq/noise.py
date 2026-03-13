@@ -23,7 +23,7 @@ class Noise(MRIBLANKSEQ):
         self.bw = None
         self.freqOffset = None
         self.addParameter(key='seqName', string='NoiseInfo', val='Noise')
-        self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='toMaRGE', val=False)
         self.addParameter(key='freqOffset', string='RF frequency offset (kHz)', val=0.0, units=units.kHz, field='RF')
         self.addParameter(key='nPoints', string='Number of points', val=2500, field='RF')
         self.addParameter(key='bw', string='Acquisition bandwidth (kHz)', val=50.0, units=units.kHz, field='RF')
@@ -54,21 +54,25 @@ class Noise(MRIBLANKSEQ):
         samplingPeriod = 1 / self.bw
 
         if self.demo:
-            dataR = np.random.randn((self.nPoints + 2 * hw.addRdPoints) * hw.oversamplingFactor)
-            dataC = np.random.randn((self.nPoints + 2 * hw.addRdPoints) * hw.oversamplingFactor)
-            data = dataR+1j*dataC
-            data = self.decimate(data_over=data, n_adc=1, option='Normal')
-            self.mapVals['data'] = data
-            time.sleep(self.repetitionTime*1e-6)
+            n_samples = (self.nPoints + 2 * hw.addRdPoints) * hw.oversamplingFactor
+            data_real = np.random.randn(n_samples)
+            data_imag = np.random.randn(n_samples)
+            data = data_real + 1j * data_imag
+            data = self.decimate(data_over=data, n_adc=1, option="Normal")
+            self.mapVals["data"] = data
+            time.sleep(self.repetitionTime * 1e-6)
             return True
 
         if hw.marcos_version=="MaRCoS":
-            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset,
-                                      rx_t=samplingPeriod,
-                                      init_gpa=init_gpa,
-                                      gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                      print_infos=False)
-        elif hw.marcos_version=="MIMO":
+            self.expt = ex.Experiment(
+                lo_freq=hw.larmorFreq + self.freqOffset,
+                rx_t=samplingPeriod,
+                init_gpa=init_gpa,
+                gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                print_infos=False,
+            )
+
+        if hw.marcos_version=="MIMO":
             # Define device arguments
             dev_kwargs = {
                 "lo_freq": hw.larmorFreq,
@@ -94,12 +98,11 @@ class Noise(MRIBLANKSEQ):
             # Define experiment
             self.expt = device.MimoDevices(ips=hw.rp_ip_list, ports=hw.rp_port, **(master_kwargs | dev_kwargs))
             self.devices = self.expt.dev_list()
-
             samplingPeriod = self.expt.getSamplingRate()
             self.bw = 1/samplingPeriod
             acqTime = self.nPoints/self.bw
 
-            # SEQUENCE
+            # Sequence definition
             self.iniSequence(20, np.array((0, 0, 0)))
             t0 = 30 + hw.addRdPoints*hw.oversamplingFactor/self.bw
             self.ttlOffRecPulse(t0, acqTime)
@@ -110,7 +113,7 @@ class Noise(MRIBLANKSEQ):
             else:
                 self.endSequence(t0+20)
 
-            # Load sequence to red pitaya
+            # Load sequence into red pitaya
             if self.floDict2Exp():
                 print("Sequence waveforms loaded successfully")
                 pass
@@ -122,16 +125,20 @@ class Noise(MRIBLANKSEQ):
                 if hw.marcos_version=="MaRCoS":
                     rxd, msgs = self.expt.run()
                     data = self.decimate(rxd['rx%i' % self.rxChannel], 1, option='Normal')
+
                 elif hw.marcos_version=="MIMO":
                     data = [[] for _ in range(len(self.channels))]
                     result = self.expt.run()  # Run the experiment and collect data
                     prov = [tup[0] for tup in result]  # List of rx results for each device
+
                     results = {}
                     for channel in self.channels:
                         results[f'rx{channel}'] = prov[(channel - 1) // 2][f'rx{(channel - 1) % 2}']
+
                     for ii in range(len(self.channels)):
                         data_decimated = self.decimate(results[f'rx{self.channels[ii]}'], 1, option='Normal')
                         data[ii] = np.concatenate((data[ii], data_decimated), axis=0)
+
                 self.mapVals['data'] = data
 
             if hw.marcos_version == "MaRCoS":

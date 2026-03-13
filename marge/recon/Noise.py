@@ -26,7 +26,7 @@ def Noise(raw_data_path=None):
     print("****Outputs****")
 
     # Get data and time vector
-    data = np.squeeze(mat_data['data'])
+    data = np.squeeze(mat_data['data_decimated'])
     bw = mat_data['bw'][0][0]  # kHz
     acq_time = mat_data['nPoints'][0][0] / bw
     channels = np.squeeze(mat_data['channels'])
@@ -34,6 +34,7 @@ def Noise(raw_data_path=None):
     # If data comes from MIMO, it retrieves data from channel 1 of master RP
     if len(data.shape) == 1:
         data = [data]
+        channels = [channels]
 
     # Get spectrum a frequency vector
     spectrums = []

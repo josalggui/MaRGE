@@ -11,6 +11,7 @@ import bm4d
 import numpy as np
 
 import marge.configs.hw_config as hw
+import marge.configs.units as units
 from datetime import date, datetime
 from scipy.io import savemat
 import marge.controller.experiment_gui as ex
@@ -21,6 +22,7 @@ import matplotlib.pyplot as plt
 
 # Import dicom saver
 from marge.marge_utils import utils
+
 import shutil
 
 import marge.recon.data_processing as dp
@@ -93,6 +95,8 @@ class MRIBLANKSEQ:
         self.addParameter(key='pypulseq', val=False)
         self.addParameter(key='channels', string='Channels', val=list(range(1, len(hw.rp_ip_list) * 2 + 1)),
                           field='OTH', tip='Select the Rx channels you want to use.')
+        self.addParameter(key='shimming', string='Shimming', val=[0.0, 0.0, 0.0], units=units.sh)
+        self.addParameter(key='nScans', string='Number of scans', val=1, field='OTH')
 
     # *********************************************************************************
     # *********************************************************************************
@@ -508,6 +512,7 @@ class MRIBLANKSEQ:
                         # Check if acquired points coincide with expected points
                         if acquired_points != expected_points:
                             print("WARNING: data points lost!")
+                            print(f"Acquired points = {acquired_points}, Expected points = {expected_points}")
                             print("Repeating batch...")
 
                     # Concatenate acquired data into the oversampled data array
