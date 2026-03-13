@@ -9,6 +9,8 @@ import shutil
 import os
 import sys
 import subprocess
+import threading
+import time
 
 import pydicom
 import qdarkstyle
@@ -338,13 +340,18 @@ class SessionController(SessionWindow):
         Returns:
             None
         """
+        def disconnect_server(ip):
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+
         if self.main_gui is not None:
             self.main_gui.app_open = False
             if not self.main_gui.demo:
                 # Close server
                 try:
                     for ip in hw.rp_ip_list:
-                        subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+                        thread = threading.Thread(target=disconnect_server, args=(ip,))
+                        thread.start()
+                        time.sleep(0.1)
                         if hw.marcos_version=="MaRCoS":
                             break
                 except Exception as e:
@@ -388,13 +395,18 @@ class SessionController(SessionWindow):
         Returns:
             None
         """
+        def disconnect_server(ip):
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+
         if self.main_gui is not None:
             self.main_gui.app_open = False
             if not self.main_gui.demo:
                 # Close server
                 try:
                     for ip in hw.rp_ip_list:
-                        subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+                        thread = threading.Thread(target=disconnect_server, args=(ip,))
+                        thread.start()
+                        time.sleep(0.1)
                         if hw.marcos_version=="MaRCoS":
                             break
                 except Exception as e:

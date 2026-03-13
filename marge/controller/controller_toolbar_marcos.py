@@ -160,33 +160,54 @@ class MarcosController(MarcosToolBar):
             print("ERROR: Something went wrong.")
 
     def controlMarcosServer(self):
+        """
+        Controls the MaRCoS server connection.
+
+        Connects or disconnects from the MaRCoS server.
+        """
+
+        def connect_server(ip):
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+            result = subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "~/marcos_server"],
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if result.returncode == 0:
+                print(f"READY: {ip} server connected!")
+            else:
+                print(f"ERROR: {ip} server not connected!")
+
+        def disconnect_server(ip):
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+            self.action_server.setStatusTip('Connect to marcos server')
+            self.action_server.setToolTip('Connect to marcos server')
+            print("Server disconnected")
+
         if not self.main.demo:
             if not self.action_server.isChecked():
                 for ip in hw.rp_ip_list:
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
-                    if hw.marcos_version == "MaRCoS":
+                    thread = threading.Thread(target=disconnect_server, args=(ip,))
+                    thread.start()
+                    time.sleep(0.1)
+                    if hw.marcos_version=="MaRCoS":
                         break
                 self.action_server.setStatusTip('Connect to marcos server')
                 self.action_server.setToolTip('Connect to marcos server')
-                print("Server disconnected")
             else:
                 try:
                     for ip in hw.rp_ip_list:
-                        subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
-                        time.sleep(1.5)
-                        subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "~/marcos_server"])
-                        time.sleep(1.5)
+                        thread = threading.Thread(target=connect_server, args=(ip, ))
+                        thread.start()
+                        time.sleep(0.1)
                         if hw.marcos_version=="MaRCoS":
                             break
                     self.action_server.setStatusTip('Kill marcos server')
                     self.action_server.setToolTip('Kill marcos server')
 
-                    expt = ex.Experiment(init_gpa=False, assert_errors=True)
-                    expt.add_flodict({'grad_vx': (np.array([100]), np.array([0]))})
-                    expt.run()
-                    expt.__del__()
+                    # TODO: Test connection to server
+                    # expt = ex.Experiment(init_gpa=False, assert_errors=True)
+                    # expt.add_flodict({'grad_vx': (np.array([100]), np.array([0]))})
+                    # expt.run()
+                    # expt.__del__()
 
-                    print("READY: Server connected!")
                 except Exception as e:
                     print("ERROR: Server not connected!")
                     print("ERROR: Try to connect to the server again.")
@@ -200,12 +221,21 @@ class MarcosController(MarcosToolBar):
 
         Executes copy_bitstream.sh.
         """
+        def do_copy_bitstream(ip):
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+            start_time = time.time()
+            subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', ip, hw.rp_version], timeout=10)
+            if time.time() - start_time<10:
+                print(f"READY: communication with FPGA from {ip} established")
+            else:
+                print(f"WARNING: {ip} timeout.")
+
         if not self.main.demo:
             try:
                 for ip in hw.rp_ip_list:
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
-                    subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', ip, 'rp-122'], timeout=10)
-                    print(f"READY: communication with FPGA from {ip} established")
+                    thread = threading.Thread(target=do_copy_bitstream, args=(ip, ))
+                    thread.start()
+                    time.sleep(0.1)
                     if hw.marcos_version == "MaRCoS":
                         break
             except subprocess.TimeoutExpired as e:
