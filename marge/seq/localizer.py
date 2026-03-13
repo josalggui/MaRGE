@@ -21,9 +21,7 @@ for subdir in subdirs:
     full_path = os.path.join(parent_directory, subdir)
     sys.path.append(full_path)
 #******************************************************************************
-# import marge.seq.rare as rare
 import marge.seq.rare_pp as rare
-# import marge.seq.rare_double_image as rare
 
 class Localizer(rare.RarePyPulseq):
     def __init__(self):

@@ -22,11 +22,14 @@ for subdir in subdirs:
     sys.path.append(full_path)
 #******************************************************************************
 import numpy as np
+import marge.configs.hw_config as hw
 import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import marge.configs.units as units
 import scipy.signal as sig
-import marge.marcos.marcos_client.experiment as ex
-import marge.configs.hw_config as hw
+if hw.marcos_version=="MaRCoS":
+    import marge.marcos.marcos_client.experiment as ex
+elif hw.marcos_version=="MIMO":
+    import marge.mimo.marcos_client.device as ex
 from marga_pulseq.interpreter import PSInterpreter
 
 

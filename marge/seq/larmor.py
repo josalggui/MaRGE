@@ -21,10 +21,13 @@ for subdir in subdirs:
     full_path = os.path.join(parent_directory, subdir)
     sys.path.append(full_path)
 #******************************************************************************
-import marge.controller.experiment_gui as ex
+import marge.configs.hw_config as hw
+if hw.marcos_version=="MaRCoS":
+    import marge.controller.experiment_gui as ex
+elif hw.marcos_version=="MIMO":
+    import marge.controller.controller_device as ex
 import numpy as np
 import marge.seq.mriBlankSeq as blankSeq
-import marge.configs.hw_config as hw
 import marge.configs.units as units
 
 

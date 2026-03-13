@@ -164,7 +164,7 @@ class MarcosController(MarcosToolBar):
                     self.action_server.setStatusTip('Kill marcos server')
                     self.action_server.setToolTip('Kill marcos server')
 
-                    expt = ex.Experiment(init_gpa=False)
+                    expt = ex.Experiment(init_gpa=False, assert_errors=True)
                     expt.add_flodict({'grad_vx': (np.array([100]), np.array([0]))})
                     expt.run()
                     expt.__del__()

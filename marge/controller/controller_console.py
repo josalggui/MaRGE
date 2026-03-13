@@ -5,6 +5,7 @@ import atexit
 
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from marge.widgets.widget_console import ConsoleWidget
+import marge.configs.hw_config as hw
 
 
 class ConsoleController(ConsoleWidget):
@@ -35,6 +36,7 @@ class ConsoleController(ConsoleWidget):
         sys.stdout = EmittingStream(textWritten=self.write_console)
 
         print("READY - MaRGE has started successfully.")
+        print(f"MaRCoS version: {hw.marcos_version}")
         atexit.register(self.close_log)
 
     def write_console(self, text):

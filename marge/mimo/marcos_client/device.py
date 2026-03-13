@@ -6,10 +6,10 @@ import socket, time, warnings
 import numpy as np
 import matplotlib.pyplot as plt
 
-import local_config as lc
-import grad_board as gb
-import server_comms as sc
-import marcompile as mc
+import marge.mimo.marcos_client.local_config as lc
+import marge.mimo.marcos_client.grad_board as gb
+import marge.mimo.marcos_client.server_comms as sc
+import marge.mimo.marcos_client.marcompile as mc
 
 
 class Device:
@@ -272,7 +272,7 @@ class Device:
                 # channels in parallel
                 if self._gpa_fhdo_offset_time:
                     # TODO the floating-point additions here are unfavourable, should pre-calculate per-channel offsets!
-                    tbin = (times_us(times + self.initial_wait) + channel * gpa_fhdo_offset_time_b - grad_latency_b + master_offset_b,)
+                    tbin = (times_us(times + self._initial_wait) + channel * gpa_fhdo_offset_time_b - grad_latency_b + master_offset_b,)
                 else:
                     # compensate latency
                     tbin = (times_us(times + self._initial_wait) - grad_latency_b + master_offset_b,) # + initial_wait_b - grad_latency_b,)

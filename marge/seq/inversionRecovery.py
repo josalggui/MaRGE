@@ -7,11 +7,14 @@ MRILAB @ I3M
 """
 
 
-import marge.marcos.marcos_client.experiment as ex
+import marge.configs.hw_config as hw
+if hw.marcos_version=="MaRCoS":
+    import marge.marcos.marcos_client.experiment as ex
+elif hw.marcos_version=="MIMO":
+    import marge.mimo.marcos_client.device as ex
 import numpy as np
 import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import scipy.signal as sig
-import marge.configs.hw_config as hw
 
 class InversionRecovery(blankSeq.MRIBLANKSEQ):
     def __init__(self):

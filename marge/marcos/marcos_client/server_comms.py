@@ -81,15 +81,4 @@ def command(server_dict, socket, print_infos=False, assert_errors=False):
         for k in return_status['infos']:
             print(k)
 
-    if 'warnings' in return_status:
-        for k in return_status['warnings']:
-            warnings.warn(k, MarServerWarning)
-
-    if 'errors' in return_status:
-        if assert_errors:
-            assert 'errors' not in return_status, return_status['errors'][0]
-        else:
-            for k in return_status['errors']:
-                warnings.warn("SERVER ERROR: " + k, RuntimeWarning)
-
     return reply, return_status

@@ -13,7 +13,10 @@ import numpy as np
 import marge.configs.hw_config as hw
 from datetime import date, datetime
 from scipy.io import savemat
-import marge.controller.experiment_gui as ex
+if hw.marcos_version=='MaRCoS':
+    import marge.controller.experiment_gui as ex
+elif hw.marcos_version=='MIMO':
+    import marge.controller.controller_device as ex
 import scipy.signal as sig
 import csv
 import matplotlib.pyplot as plt

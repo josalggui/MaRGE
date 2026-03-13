@@ -4,7 +4,7 @@
 import numpy as np
 import logging
 import warnings
-from marmachine import *
+from marge.mimo.marcos_client.marmachine import *
 
 try:
     from local_config import grad_board
