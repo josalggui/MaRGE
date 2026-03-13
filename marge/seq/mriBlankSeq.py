@@ -13,10 +13,8 @@ import numpy as np
 import marge.configs.hw_config as hw
 from datetime import date, datetime
 from scipy.io import savemat
-if hw.marcos_version=='MaRCoS':
-    import marge.controller.experiment_gui as ex
-elif hw.marcos_version=='MIMO':
-    import marge.controller.controller_device as ex
+import marge.controller.experiment_gui as ex
+import marge.controller.controller_device as device
 import scipy.signal as sig
 import csv
 import matplotlib.pyplot as plt
@@ -93,6 +91,8 @@ class MRIBLANKSEQ:
         self.addParameter(key='dfov', val=[0.0, 0.0, 0.0])
         self.addParameter(key='fov', val=[0.0, 0.0, 0.0])
         self.addParameter(key='pypulseq', val=False)
+        self.addParameter(key='channels', string='Channels', val=list(range(1, len(hw.rp_ip_list) * 2 + 1)),
+                          field='OTH', tip='Select the Rx channels you want to use.')
 
     # *********************************************************************************
     # *********************************************************************************
@@ -355,7 +355,6 @@ class MRIBLANKSEQ:
                    decimation_factor=hw.oversamplingFactor,
                    hardware=True,
                    output='',
-                   channels=[0],
                    ):
         """
         Execute multiple batches of MRI waveforms, manage data acquisition, and store oversampled data.
@@ -410,27 +409,57 @@ class MRIBLANKSEQ:
         self.mapVals['n_batches'] = len(n_readouts.values())
 
         # Initialize a list to hold oversampled data
-        data_over = []
+        if hw.marcos_version=="MaRCoS":
+            data_over = []
+        elif hw.marcos_version=="MIMO":
+            data_over = [[] for _ in range(len(self.channels))]
 
         # Iterate through each batch of waveforms
         for seq_num in waveforms.keys():
             # Initialize the experiment if not in demo mode
             if not self.demo:
-                self.expt = ex.Experiment(
-                    lo_freq=frequency,  # Larmor frequency in MHz
-                    rx_t=1 / bandwidth,  # Sampling time in us
-                    init_gpa=False,  # Whether to initialize GPA board (False for now)
-                    gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
-                    auto_leds=True,  # Automatic control of LEDs
-                    oversampling_factor=oversampling_factor,
-                )
+                if hw.marcos_version=="MaRCoS":
+                    self.expt = ex.Experiment(
+                        lo_freq=frequency,  # Larmor frequency in MHz
+                        rx_t=1 / bandwidth,  # Sampling time in us
+                        init_gpa=False,  # Whether to initialize GPA board (False for now)
+                        gpa_fhdo_offset_time=(1 / 0.2 / 3.1),  # GPA offset time calculation
+                        auto_leds=True,  # Automatic control of LEDs
+                        oversampling_factor=oversampling_factor,
+                    )
+                elif hw.marcos_version=="MIMO":
+                    # Define device arguments
+                    dev_kwargs = {
+                        "lo_freq": frequency,
+                        "rx_t": 1 / bandwidth,
+                        "print_infos": True,
+                        "assert_errors": True,
+                        "halt_and_reset": False,
+                        "fix_cic_scale": True,
+                        "set_cic_shift": False,  # needs to be true for open-source cores
+                        "flush_old_rx": False,
+                        "init_gpa": False,
+                        "gpa_fhdo_offset_time": 1 / 0.2 / 3.1,
+                        "auto_leds": True,
+                        "oversampling_factor": self.oversampling_factor,
+                    }
+
+                    # Define master arguments
+                    master_kwargs = {
+                        'mimo_master': True,
+                        'trig_output_time': 1e6,
+                        'slave_trig_latency': 6.079
+                    }
+
+                    # Create list of devices
+                    devices = device.MimoDevices(ips=hw.rp_ip_list, ports=hw.rp_port, **(master_kwargs | dev_kwargs))
+                    self.devices = devices.dev_list()
 
             # Convert the PyPulseq waveform to the Red Pitaya compatible format
             self.pypulseq2mriblankseq(waveforms=waveforms[seq_num],
                                       shimming=self.shimming,
                                       sampling_period=1/bandwidth,
                                       hardware=hardware,
-                                      channels=channels
                                       )
 
             # Load the waveforms into Red Pitaya
@@ -449,14 +478,32 @@ class MRIBLANKSEQ:
 
                     # Continue acquiring points until we reach the expected number
                     while acquired_points != expected_points:
-                        if not self.demo:
-                            rxd, msgs = self.expt.run()  # Run the experiment and collect data
-                        else:
-                            # In demo mode, generate random data as a placeholder
-                            rxd = {'rx0': np.random.randn(expected_points) + 1j * np.random.randn(expected_points)}
+                        if hw.marcos_version=="MaRCoS":
+                            if not self.demo:
+                                rxd, msgs = self.expt.run()  # Run the experiment and collect data
+                            else:
+                                # In demo mode, generate random data as a placeholder
+                                rxd = {'rx0': np.random.randn(expected_points) + 1j * np.random.randn(expected_points)}
 
-                        # Update acquired points
-                        acquired_points = np.size(rxd['rx0'])
+                            # Update acquired points
+                            acquired_points = np.size(rxd['rx0'])
+
+                        elif hw.marcos_version=="MIMO":
+                            if not self.demo:
+                                result = devices.run()  # Run the experiment and collect data
+                                prov = [tup[0] for tup in result]  # List of rx results for each device
+                                results = {}
+                                for channel in self.channels:
+                                    results[f'rx{channel}'] = prov[(channel - 1) // 2][f'rx{(channel - 1) % 2}']
+                            else:
+                                # In demo mode, generate random data as a placeholder
+                                results = {}
+                                for channel in self.channels:
+                                    results[f'rx{channel}'] = np.random.randn(expected_points) + 1j * np.random.randn(
+                                        expected_points)
+
+                            # Update acquired points
+                            acquired_points = np.size(results[f'rx{self.channels[0]}'])
 
                         # Check if acquired points coincide with expected points
                         if acquired_points != expected_points:
@@ -464,7 +511,11 @@ class MRIBLANKSEQ:
                             print("Repeating batch...")
 
                     # Concatenate acquired data into the oversampled data array
-                    data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
+                    if hw.marcos_version=="MaRCoS":
+                        data_over = np.concatenate((data_over, rxd['rx0']), axis=0)
+                    elif hw.marcos_version=="MIMO":
+                        for ii in range(len(self.channels)):
+                            data_over[ii] = np.concatenate((data_over[ii], results[f'rx{self.channels[ii]}']), axis=0)
                     print(f"Acquired points = {acquired_points}, Expected points = {expected_points}")
                     print(f"Scan {scan + 1}, batch {seq_num.split('_')[-1]}/{len(n_readouts)} ready!")
 
@@ -473,30 +524,58 @@ class MRIBLANKSEQ:
                 self.sequencePlot(standalone=self.standalone)
 
             if not self.demo:
-                self.expt.__del__()
+                if hw.marcos_version=="MaRCoS":
+                    self.expt.__del__()
+                elif hw.marcos_version=="MIMO":
+                    for dev in self.devices:
+                        dev.__del__()
 
         # Decimate the oversampled data and store it
         if not self.plotSeq:
-            if output == '':
-                self.mapVals[f'data_over'] = data_over
-                data = utils.decimate(data_over,
-                                      n_adc=n_adc,
-                                      option=decimate,
-                                      remove=False,
-                                      add_rd_points=add_rd_points,
-                                      oversampling_factor=oversampling_factor,
-                                      decimation_factor=decimation_factor)
-                self.mapVals[f'data_decimated'] = data
-            else:
-                self.mapVals[f'data_over_{output}'] = data_over
-                data = utils.decimate(data_over,
-                                      n_adc=n_adc,
-                                      option=decimate,
-                                      remove=False,
-                                      add_rd_points=add_rd_points,
-                                      oversampling_factor=oversampling_factor,
-                                      decimation_factor=decimation_factor)
-                self.mapVals[f'data_decimated_{output}'] = data
+            if hw.marcos_version=="MaRCoS":
+                if output == '':
+                    self.mapVals[f'data_over'] = data_over
+                    data = utils.decimate(data_over,
+                                          n_adc=n_adc,
+                                          option=decimate,
+                                          remove=False,
+                                          add_rd_points=add_rd_points,
+                                          oversampling_factor=oversampling_factor,
+                                          decimation_factor=decimation_factor)
+                    self.mapVals[f'data_decimated'] = data
+                else:
+                    self.mapVals[f'data_over_{output}'] = data_over
+                    data = utils.decimate(data_over,
+                                          n_adc=n_adc,
+                                          option=decimate,
+                                          remove=False,
+                                          add_rd_points=add_rd_points,
+                                          oversampling_factor=oversampling_factor,
+                                          decimation_factor=decimation_factor)
+                    self.mapVals[f'data_decimated_{output}'] = data
+            elif hw.marcos_version=="MIMO":
+                data = []
+                if output == '':
+                    self.mapVals[f'data_over'] = data_over
+                    for data_prov in data_over:
+                        data.append(utils.decimate(data_prov,
+                                                   n_adc=n_adc,
+                                                   option=decimate,
+                                                   remove=False,
+                                                   add_rd_points=add_rd_points,
+                                                   oversampling_factor=oversampling_factor,
+                                                   decimation_factor=decimation_factor))
+                    self.mapVals[f'data_decimated'] = data
+                else:
+                    self.mapVals[f'data_over_{output}'] = data_over
+                    data.append(utils.decimate(data_prov,
+                                               n_adc=n_adc,
+                                               option=decimate,
+                                               remove=False,
+                                               add_rd_points=add_rd_points,
+                                               oversampling_factor=oversampling_factor,
+                                               decimation_factor=decimation_factor))
+                    self.mapVals[f'data_decimated_{output}'] = data
 
         return True
 
@@ -513,7 +592,6 @@ class MRIBLANKSEQ:
                              shimming=np.array([0.0, 0.0, 0.0]),
                              sampling_period=0.0,
                              hardware=True,
-                             channels=[0],
                              ):
         """
         Converts PyPulseq waveforms into a format compatible with MRI hardware.
@@ -530,8 +608,6 @@ class MRIBLANKSEQ:
             Sampling period in seconds, used to account for delays in the CIC filter. Defaults to 0.0.
         hardware: bool, optional
             Take into account gradient and ADC delay
-        channels: list, optional
-            List of channels used for Rx
 
         Returns:
         --------
@@ -829,19 +905,21 @@ class MRIBLANKSEQ:
                         try:
                             inputNum.append(float(valNew[ii]))
                         except:
-                            inputNum.append(float(valOld[ii]))
+                            # inputNum.append(float(valOld[ii]))
+                            pass
                     elif dataType == int:
                         try:
                             inputNum.append(int(valNew[ii]))
                         except:
-                            inputNum.append(int(valOld[ii]))
+                            # inputNum.append(int(valOld[ii]))
+                            pass
                     else:
                         try:
                             inputNum.append(str(valNew[0]))
                             break
                         except:
-                            inputNum.append(str(valOld[0]))
-                            break
+                            # inputNum.append(str(valOld[0]))
+                            pass
                 if dataType == str:
                     self.mapVals[key] = inputNum[0]
                 else:
@@ -1686,17 +1764,31 @@ class MRIBLANKSEQ:
 
         # Add instructions to server
         if not self.demo:
-            self.expt.add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
-                                   'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
-                                   'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
-                                   'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
-                                   'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
-                                   'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
-                                   'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
-                                   'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
-                                #    'rx_gate': (self.flo_dict['ttl1'][0], self.flo_dict['ttl1'][1]),
-                                   'rx_gate': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
-                                   }, rewrite)
+            if hw.marcos_version=="MaRCoS":
+                self.expt.add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
+                                      'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
+                                      'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
+                                      'rx0_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
+                                      'rx1_en': (self.flo_dict['rx1'][0], self.flo_dict['rx1'][1]),
+                                      'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
+                                      'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
+                                      'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
+                                      'rx_gate': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
+                                      }, rewrite)
+            elif hw.marcos_version=="MIMO":
+                self.devices[0].add_flodict({'grad_vx': (self.flo_dict['g0'][0], self.flo_dict['g0'][1]),
+                                             'grad_vy': (self.flo_dict['g1'][0], self.flo_dict['g1'][1]),
+                                             'grad_vz': (self.flo_dict['g2'][0], self.flo_dict['g2'][1]),
+                                             'tx0': (self.flo_dict['tx0'][0], self.flo_dict['tx0'][1]),
+                                             'tx1': (self.flo_dict['tx1'][0], self.flo_dict['tx1'][1]),
+                                             'tx_gate': (self.flo_dict['ttl0'][0], self.flo_dict['ttl0'][1]),
+                                             'rx_gate': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1]),
+                                             }, rewrite)
+
+                # Add Rx waveforms to the master and slaves according to the selected input channels.
+                for channel in self.channels:
+                    self.devices[(channel - 1) // 2].add_flodict({f'rx{(channel - 1) % 2}_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1])})
+
         return True
 
     def saveRawDataLite(self):
@@ -1904,7 +1996,7 @@ class MRIBLANKSEQ:
         self.mapVals['input_keys'] = self.mapKeys
         self.mapVals['input_strings'] = list(self.mapNmspc.values())
         for key in self.mapKeys:
-            if isinstance(self.mapVals[key], list): 
+            if isinstance(self.mapVals[key], list):
                 setattr(self, key, np.array([element * self.map_units[key] for element in self.mapVals[key]]))
             else:
                 setattr(self, key, self.mapVals[key] * self.map_units[key])

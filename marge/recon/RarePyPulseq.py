@@ -85,6 +85,10 @@ def RarePyPulseq(raw_data_path=None):
     rd_direction = mat_data['rd_direction'].item()
     n_noise = mat_data['nNoise'].item()
 
+    # If data comes from MIMO, it retrieves data from channel 1 of master RP
+    if len(data_decimated.shape)>1:
+        data_decimated = data_decimated[0]
+
     # Get noise data, dummy data and signal data
     data_noise = []
     data_dummy = []

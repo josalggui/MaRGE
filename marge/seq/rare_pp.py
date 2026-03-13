@@ -25,10 +25,8 @@ for subdir in subdirs:
 #******************************************************************************
 import numpy as np
 import marge.configs.hw_config as hw # Import the scanner hardware config
-if hw.marcos_version=="MaRCoS":
-    import marge.controller.experiment_gui as ex
-elif hw.marcos_version=="MIMO":
-    import marge.controller.controller_device as ex
+import marge.controller.experiment_gui as ex
+import marge.controller.controller_device as device
 import marge.configs.units as units
 import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 from marge.marge_utils import utils
@@ -103,9 +101,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[120, 120, 20], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ') ## nm of peaks in 1 repetition
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[10, 10, 1], field='IM')
+        self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ') ## nm of peaks in 1 repetition
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=1.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
         self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=5.0, units=units.ms, field='OTH')
@@ -360,17 +358,49 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         '''
 
         if not self.demo:
-            self.expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
-                                      rx_t=sampling_period,  # us
-                                      init_gpa=False,
-                                      gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                      auto_leds=True,
-                                      oversampling_factor=self.oversampling_factor)
-            sampling_period = self.expt.get_sampling_period() # us
-            bw = 1 / sampling_period  # MHz
-            sampling_time = sampling_period * n_rd * 1e-6  # s
+            if hw.marcos_version=="MaRCoS":
+                expt = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
+                                          rx_t=sampling_period,  # us
+                                          init_gpa=False,
+                                          gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
+                                          auto_leds=True,
+                                          oversampling_factor=self.oversampling_factor)
+                sampling_period = expt.get_sampling_period() # us
+                bw = 1 / sampling_period  # MHz
+                sampling_time = sampling_period * n_rd * 1e-6  # s
+                expt.__del__()
+            elif hw.marcos_version=="MIMO":
+                # Define device arguments
+                dev_kwargs = {
+                    "lo_freq": hw.larmorFreq,
+                    "rx_t": 1 / bw,
+                    "print_infos": True,
+                    "assert_errors": True,
+                    "halt_and_reset": False,
+                    "fix_cic_scale": True,
+                    "set_cic_shift": False,  # needs to be true for open-source cores
+                    "flush_old_rx": False,
+                    "init_gpa": False,
+                    "gpa_fhdo_offset_time": 1 / 0.2 / 3.1,
+                    "auto_leds": True,
+                    "oversampling_factor": self.oversampling_factor,
+                }
+
+                # Define master arguments
+                master_kwargs = {
+                    'mimo_master': True,
+                    'trig_output_time': 1e5,
+                    'slave_trig_latency': 6.079
+                }
+
+                # Define experiment
+                dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port[0], **(master_kwargs | dev_kwargs))
+                sampling_period = dev.get_sampling_period()  # us
+                bw = 1 / sampling_period  # MHz
+                sampling_time = sampling_period * n_rd * 1e-6  # s
+                dev.__del__()
+
             print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
-            self.expt.__del__()
         else:
             sampling_time = sampling_period * n_rd * 1e-6  # s
         self.mapVals['bw_MHz'] = bw
@@ -1243,10 +1273,8 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             img.slice_dir = (ctypes.c_float * 3)(*slice_dir)
             
             dset.append_image(f"image_raw", img) # Append the image to the dataset
-                
         
         dset.close()    
-
 
 if __name__ == '__main__':
     seq = RarePyPulseq()
