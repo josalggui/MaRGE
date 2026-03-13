@@ -4,6 +4,7 @@ Main file to run MaRGE
 import os
 import sys
 from PyQt5.QtWidgets import QApplication
+import multiprocessing as mp
 
 def MaRGE():
     # Run the gui
@@ -27,6 +28,10 @@ def MaRGE():
         os.makedirs('configs')
 
     from marge.controller.controller_session import SessionController
+
+    # Ensure multiprocessing works correctly
+    mp.freeze_support()
+    # mp.set_start_method('spawn')
 
     app = QApplication(sys.argv)
     gui = SessionController()

@@ -41,8 +41,8 @@ fovs = []
 
 bash_path = "gnome-terminal"
 rp_ip_address = "192.168.1.101"
-rp_ip_list = []
-rp_port = 11111
+rp_ip_list = ["192.168.1.101"]
+rp_port = [11111]
 rp_version = "rp-122"
 fpga_clk_freq_MHz = 122.88  # RP-122
 grad_board = "gpa-fhdo"  # 'gpa-fhdo' or 'ocra1'

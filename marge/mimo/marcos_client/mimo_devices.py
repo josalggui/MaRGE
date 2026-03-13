@@ -7,12 +7,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import multiprocessing as mp
 
-import local_config as lc
-import grad_board as gb
-import server_comms as sc
-import marcompile as mc
+import marge.mimo.marcos_client.local_config as lc
+import marge.mimo.marcos_client.grad_board as gb
+import marge.mimo.marcos_client.server_comms as sc
+import marge.mimo.marcos_client.marcompile as mc
 
-from device import Device
+from marge.mimo.marcos_client.device import Device
 
 
 def mimo_dev_run(devt):

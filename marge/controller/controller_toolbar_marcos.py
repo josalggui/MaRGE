@@ -13,9 +13,14 @@ import threading
 import numpy as np
 
 from marge.widgets.widget_toolbar_marcos import MarcosToolBar
-import marge.marcos.marcos_client.experiment as ex
 import marge.configs.hw_config as hw
+if hw.marcos_version=="MaRCoS":
+    import marge.marcos.marcos_client.experiment as ex
+elif hw.marcos_version=="MIMO":
+    import marge.controller.controller_device as device
 import marge.marge_tyger.tyger_config as tyger
+import multiprocessing as mp
+from marge.mimo.marcos_client.mimo_devices import mimo_dev_run
 
 
 class MarcosController(MarcosToolBar):
@@ -326,12 +331,38 @@ class MarcosController(MarcosToolBar):
 
                             # Run init_gpa sequence
                             if hw.grad_board == "ocra1":
-                                expt = ex.Experiment(init_gpa=True)
-                                expt.add_flodict({
-                                    'grad_vx': (np.array([100]), np.array([0])),
-                                })
-                                expt.run()
-                                expt.__del__()
+                                if hw.marcos_version == "MaRCoS":
+                                    expt = ex.Experiment(init_gpa=True)
+                                    expt.add_flodict({
+                                        'grad_vx': (np.array([100]), np.array([0])),
+                                    })
+                                    expt.run()
+                                    expt.__del__()
+                                elif hw.marcos_version == "MIMO":
+                                    # Define device arguments
+                                    dev_kwargs = {
+                                        "init_gpa": True,
+                                    }
+
+                                    # Define master arguments
+                                    master_kwargs = {
+                                        'mimo_master': True,
+                                        'trig_output_time': 1e5,
+                                        'slave_trig_latency': 6.079
+                                    }
+
+                                    # Create list of devices
+                                    master_device = device.Device(
+                                        ip_address=hw.rp_ip_list[0], port=hw.rp_port[0], **(master_kwargs | dev_kwargs))
+
+                                    # Run init_gpa sequence
+                                    master_device.add_flodict({
+                                        'grad_vx': (np.array([100]), np.array([0])),
+                                    })
+                                    mpl = [(master_device, 0)]
+                                    with mp.Pool(1) as p:
+                                        p.map(mimo_dev_run, mpl)
+                                    master_device.__del__()  # manual destructor needed
                                 link = True
                                 print("READY: OCRA1 init done!")
                             elif hw.grad_board == "gpa-fhdo":
@@ -369,7 +400,8 @@ class MarcosController(MarcosToolBar):
                             elif sum(rfpa_code) != 4 and hw.rfpa_model == "Barthel":
                                 print(f"ERROR: RPFA init failed. Error code: {rfpa_code}")
 
-                        except:
+                        except Exception as e:
+                            print(e)
                             link = False
                             time.sleep(1)
                     self.action_gpa_init.setEnabled(True)

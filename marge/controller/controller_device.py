@@ -174,3 +174,7 @@ class Experiment(dev.Device):
             pass
 
         return rxd_iq, msgs
+
+class Device(Experiment):
+    def __init__(self, *args, **kargs):
+        super().__init__(*args, **kargs)
