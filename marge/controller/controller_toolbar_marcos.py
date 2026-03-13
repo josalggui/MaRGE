@@ -16,7 +16,6 @@ from marge.widgets.widget_toolbar_marcos import MarcosToolBar
 import marge.marcos.marcos_client.experiment as ex
 import marge.configs.hw_config as hw
 import marge.marge_tyger.tyger_config as tyger
-from marge.autotuning import autotuning
 
 
 class MarcosController(MarcosToolBar):
@@ -95,11 +94,11 @@ class MarcosController(MarcosToolBar):
         # Get the IP of the SDRLab
         if not self.main.demo:
             try:
-                hw.rp_ip_address = self.get_sdrlab_ip()[0]
+                self.get_sdrlab_ip()
             except:
                 print("ERROR: No SDRLab found.")
                 try:
-                    hw.rp_ip_address = self.get_sdrlab_ip()[0]
+                    self.get_sdrlab_ip()
                 except:
                     print("ERROR: No communication with SDRLab.")
                     print("ERROR: Try manually.")
@@ -111,6 +110,7 @@ class MarcosController(MarcosToolBar):
 
         for ip in hw.rp_ip_list:
             try:
+                print(f"Checking ip {ip}...")
                 if platform.system() == 'Linux':
                     result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)
                 elif platform.system() == 'Windows':
@@ -119,19 +119,30 @@ class MarcosController(MarcosToolBar):
                     continue
 
                 if result.returncode == 0:
-                    print(f"Checking ip {ip}...")
+                    print(f"ping to ip {ip} succeeded.")
                     ssh_command = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5', f'root@{ip}', 'exit']
                     ssh_result = subprocess.run(ssh_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     if ssh_result.returncode == 0:
+                        print(f"ssh to ip {ip} succeeded.")
                         ip_addresses.append(ip)
                     else:
-                        print(f"WARNING: No SDRLab found at ip {ip}")
+                        print(f"ERROR: ssh to {ip} failed.")
             except:
-                print(f"WARNING: No SDRLab found at ip {ip}")
+                print(f"ERROR: ping to ip {ip} failed.")
                 continue
 
-        for ip in ip_addresses:
-            print("READY: SDRLab found at IP " + ip)
+        # Check SDRLabs found
+        n = 0
+        for ip in hw.rp_ip_list:
+            if ip in ip_addresses:
+                n+=1
+                print(f"SDRLab at ip {ip} ready!")
+            else:
+                print(f"SDRLab at ip {ip} not ready!")
+        if n==len(hw.rp_ip_list):
+            print("READY: All SDRLab ready!")
+        else:
+            print("ERROR: At least one SDRLab is not ready")
 
         self.action_copybitstream.setEnabled(True)
         self.action_gpa_init.setEnabled(True)
@@ -151,16 +162,22 @@ class MarcosController(MarcosToolBar):
     def controlMarcosServer(self):
         if not self.main.demo:
             if not self.action_server.isChecked():
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                for ip in hw.rp_ip_list:
+                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+                    if hw.marcos_version == "MaRCoS":
+                        break
                 self.action_server.setStatusTip('Connect to marcos server')
                 self.action_server.setToolTip('Connect to marcos server')
                 print("Server disconnected")
             else:
                 try:
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                    time.sleep(1.5)
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
-                    time.sleep(1.5)
+                    for ip in hw.rp_ip_list:
+                        subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+                        time.sleep(1.5)
+                        subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "~/marcos_server"])
+                        time.sleep(1.5)
+                        if hw.marcos_version=="MaRCoS":
+                            break
                     self.action_server.setStatusTip('Kill marcos server')
                     self.action_server.setToolTip('Kill marcos server')
 
@@ -185,9 +202,12 @@ class MarcosController(MarcosToolBar):
         """
         if not self.main.demo:
             try:
-                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
-                subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', hw.rp_ip_address, 'rp-122'], timeout=10)
-                print("READY: MaRCoS updated")
+                for ip in hw.rp_ip_list:
+                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+                    subprocess.run([hw.bash_path, '--', './copy_bitstream.sh', ip, 'rp-122'], timeout=10)
+                    print(f"READY: communication with FPGA from {ip} established")
+                    if hw.marcos_version == "MaRCoS":
+                        break
             except subprocess.TimeoutExpired as e:
                 print("ERROR: MaRCoS init timeout")
                 print(e)
