@@ -21,25 +21,6 @@ class FiguresLayoutController(FiguresLayoutWidget):
         # Show the initial plot
         self.firstPlot()
 
-        # Show the wellcome message
-        self.wellcomeMessage()
-
-    @staticmethod
-    def wellcomeMessage():
-        """
-        Display the welcome message.
-
-        This static method displays the welcome message for the Graphical User Interface for MaRCoS. It prints information about the developer, contact details, and the GitHub repository URL.
-
-        Note:
-            The method does not return any value.
-        """
-        print("Graphical User Interface for MaRCoS")
-        print("J.M. Algarín, PhD")
-        print("josalggui@i3m.upv.es")
-        print("mriLab @ i3M, CSIC, Valencia, Spain")
-        print("https://github.com/mriLab-i3M/MaRGE\n")
-
     def firstPlot(self):
         """
         Display the first plot.

@@ -18,18 +18,8 @@ import qdarkstyle
 
 # Check for MaRCoS version
 import marge.configs.hw_config as hw
-import csv
-with open("configs/hw_redpitayas.csv", newline="") as f:
-    reader = csv.reader(f)
-    for row in reader:
-        if row and row[0].strip() == "MaRCoS version":
-            hw.marcos_version = row[1].strip()
-            break
-from marge.controller.controller_main import MainController
 from marge.ui.window_session import SessionWindow
 from marge.controller.controller_console import ConsoleController
-
-
 
 class SessionController(SessionWindow):
     """
@@ -251,6 +241,7 @@ class SessionController(SessionWindow):
 
         # Open the main gui
         if self.main_gui is None:
+            from marge.controller.controller_main import MainController
             self.main_gui = MainController(session=self.session, demo=False, parent=self)
         else:
             self.main_gui.set_session(self.session)
@@ -312,6 +303,7 @@ class SessionController(SessionWindow):
 
         # Open the main gui
         if self.main_gui is None:
+            from marge.controller.controller_main import MainController
             self.main_gui = MainController(session=self.session, demo=True, parent=self)
         else:
             self.main_gui.set_session(self.session)

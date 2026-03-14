@@ -14,7 +14,6 @@ from marge.ui.window_main import MainWindow
 import marge.autotuning.autotuning as autotuning
 import marge.configs.hw_config as hw
 
-
 class MainController(MainWindow):
     def __init__(self, *args, **kwargs):
         super(MainController, self).__init__(*args, **kwargs)
@@ -34,6 +33,25 @@ class MainController(MainWindow):
         else:
             self.arduino_interlock = autotuning.Arduino(hw.ard_br_interlock)
             self.arduino_interlock.connect(serial_number=hw.ard_sn_interlock)
+
+        self.wellcomeMessage()
+        print(f"MaRCoS version: {hw.marcos_version}")
+
+    @staticmethod
+    def wellcomeMessage():
+        """
+        Display the welcome message.
+
+        This static method displays the welcome message for the Graphical User Interface for MaRCoS. It prints information about the developer, contact details, and the GitHub repository URL.
+
+        Note:
+            The method does not return any value.
+        """
+        print("Graphical User Interface for MaRCoS")
+        print("J.M. Algarín, PhD")
+        print("josalggui@i3m.upv.es")
+        print("mriLab @ i3M, CSIC, Valencia, Spain")
+        print("https://github.com/mriLab-i3M/MaRGE\n")
 
     def set_demo(self, demo):
         self.demo = demo
