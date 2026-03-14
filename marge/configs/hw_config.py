@@ -38,8 +38,7 @@ dfov = [0.0, 0.0, 0.0] # mm
 rotations = []
 dfovs = []
 fovs = []
-
-bash_path = "gnome-terminal"
+# bash_override = "/bin/bash" # Example of bash override. Uncomment and set to your desired launcher if needed.
 rp_ip_address = "192.168.1.101"
 rp_ip_list = []
 rp_version = "rp-122"

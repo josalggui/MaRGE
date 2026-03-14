@@ -43,6 +43,10 @@ class SequenceListController(SequenceListWidget):
         Returns:
             str: The name of the current sequence.
         """
+        # Read the internal key stored in the combo box item, not the visible label.
+        seq_name = self.currentData()
+        if seq_name is not None:
+            return seq_name
         return self.currentText()
 
     def updateSequence(self):

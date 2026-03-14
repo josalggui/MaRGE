@@ -17,14 +17,13 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import logging
-from threading import Lock
 
-import serial
+from marge.utils.SerialDevice import SerialDevice
 
 logger = logging.getLogger(__name__)
 
 
-def drain_serial(serial_port: serial.Serial):
+def drain_serial(serial_port):
     """drain up to 64k outstanding data in the serial incoming buffer"""
     # logger.debug("Draining: %s", serial_port)
     timeout = serial_port.timeout
@@ -38,16 +37,15 @@ def drain_serial(serial_port: serial.Serial):
     logger.warning("unable to drain all data")
 
 
-class Interface(serial.Serial):
+class Interface(SerialDevice):
     def __init__(self, interface_type: str, comment, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        baudrate = kwargs.pop("baudrate", 115200)
+        timeout = kwargs.pop("timeout", 0.05)
+        startup_delay = kwargs.pop("startup_delay", 0.0)
+        super().__init__(baudrate=baudrate, timeout=timeout, startup_delay=startup_delay, announce=False)
         assert interface_type in {'serial', 'usb', 'bt', 'network'}
         self.type = interface_type
         self.comment = comment
-        self.port = None
-        self.baudrate = 115200
-        self.timeout = 0.05
-        self.lock = Lock()
 
     def __str__(self):
         return f"{self.port} ({self.comment})"
