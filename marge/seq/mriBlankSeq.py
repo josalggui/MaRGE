@@ -1791,7 +1791,7 @@ class MRIBLANKSEQ:
                                              }, rewrite)
 
                 # Add Rx waveforms to the master and slaves according to the selected input channels.
-                for channel in self.channels:
+                for channel in range(2 * len(hw.rp_ip_list)):
                     self.devices[(channel - 1) // 2].add_flodict({f'rx{(channel - 1) % 2}_en': (self.flo_dict['rx0'][0], self.flo_dict['rx0'][1])})
 
         return True
