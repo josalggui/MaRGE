@@ -57,7 +57,7 @@ def Larmor(raw_data_path=None):
     n_points = mat_data['nPoints'][0][0]  # kHz
     bw = mat_data['bw'][0][0]
 
-    if isinstance(signal, list):
+    if len(signal.shape) > 1:
         signal = signal[0]
 
     # Generate time and frequency vectors and calculate the signal spectrum
