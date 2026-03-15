@@ -201,7 +201,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
         # Create ADC event
         delay_adc = block_b_duration - self.acqTime
-        event_adc = pp.make_adc(num_samples=self.nPoints * hw.oversamplingFactor,
+        event_adc = pp.make_adc(num_samples=self.nPoints,
                                 duration=self.acqTime,  # s
                                 delay=delay_adc,  # s
                                 system=system)
