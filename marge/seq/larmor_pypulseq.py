@@ -48,6 +48,7 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         self.rfReFA = None
         self.rfExFA = None
         self.rfExTime = None
+        self.rfReTime = None
         self.nScans = None
         self.addParameter(key='seqName', string='LarmorInfo', val='Larmor')
         self.addParameter(key='toMaRGE', string='to MaRGE', val=True)
@@ -186,6 +187,9 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
                 # Define experiment
                 dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port[0], **(master_kwargs | dev_kwargs))
 
+            else:
+                print("Wrong MaRCoS version")
+
             sampling_period = dev.get_sampling_period()  # us
             self.bw = 1 / sampling_period  # MHz
             acq_time = n_points / self.bw * 1e-6  # s
@@ -204,28 +208,36 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         In this step, you will define the building blocks of the MRI sequence, including the RF pulses, gradient pulses,
         and ADC blocks.
         '''
+        round_rf = int(np.abs(np.log10(np.abs(system.rf_raster_time))))
+        round_bl = int(np.abs(np.log10(np.abs(system.block_duration_raster))))
 
         # Create excitation rf event
-        delay_rf_ex = self.repetitionTime-acq_time/2-echo_time-self.rfExTime/2-hw.blkTime * 1e-6
-        delay_rf_ex = delay_rf_ex // system.block_duration_raster * system.block_duration_raster
-        event_rf_ex = pp.make_block_pulse(flip_angle=self.rfExFA * np.pi / 180,
-                                          duration=self.rfExTime,
-                                          delay=delay_rf_ex,
-                                          system=system,
-                                          use="excitation",)
+        delay_rf_ex = self.repetitionTime-acq_time/2-echo_time-self.rfExTime/2
+        rf_duration = np.round(self.rfExTime, decimals=round_rf)
+        block_duration = np.round(delay_rf_ex + rf_duration, decimals=round_bl)
+        delay_rf_ex = block_duration - rf_duration
+        event_rf_ex = pp.make_block_pulse(
+            flip_angle=self.rfExFA * np.pi / 180,
+            duration=rf_duration,
+            delay=delay_rf_ex,
+            system=system,
+            use="excitation",
+        )
 
         # Create refocusing rf event
-        delay_rf_re = echo_time/2-self.rfExTime/2-self.rfReTime/2-hw.blkTime*1e-6
+        delay_rf_re = echo_time/2-self.rfExTime/2-self.rfReTime/2
+        rf_duration = np.round(self.rfReTime, decimals=round_rf)
+        block_duration = np.round(delay_rf_re + rf_duration, decimals=round_bl)
+        delay_rf_re = block_duration - rf_duration
         event_rf_re = pp.make_block_pulse(flip_angle=self.rfReFA * np.pi / 180,
-                                          duration=self.rfReTime,
+                                          duration=rf_duration,
                                           delay=delay_rf_re,
                                           system=system,
                                           use="refocusing")
 
         # Create ADC event
         delay_adc = echo_time/2-self.rfReTime/2-acq_time/2
-        block_duration = delay_adc + acq_time
-        block_duration = block_duration // system.block_duration_raster * system.block_duration_raster
+        block_duration = np.round(delay_adc + acq_time, decimals=round_bl)
         delay_adc = block_duration - acq_time
         event_adc = pp.make_adc(num_samples=n_points,
                                 duration=acq_time,  # s
@@ -338,5 +350,5 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__':
     seq = LarmorPyPulseq()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=False, demo=False, standalone=True)
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
     seq.sequenceAnalysis(mode='Standalone')

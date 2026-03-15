@@ -43,7 +43,7 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
         self.discriminator = None
         self.cal_method = None
         self.addParameter(key='seqName', string='RabiFlopsInfo', val='RabiFlops')
-        self.addParameter(key='toMaRGE', val=True)
+        self.addParameter(key='toMaRGE', val=False)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='SEQ')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.06, field='RF')
         self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')

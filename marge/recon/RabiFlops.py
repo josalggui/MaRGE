@@ -31,11 +31,15 @@ def RabiFlops(raw_data_path=None):
     nScans = mat_data['nScans'][0][0]
     nSteps = mat_data['nSteps'][0][0]
     nPoints = mat_data['nPoints'][0][0]
-    dataOversampled = mat_data['dataOversampled'][0]
+    data = mat_data['data_decimated'][0]
     timeVector = mat_data['rfTime'][0]
 
+    if len(data.shape) > 1:
+        dataFull = data[0]
+    else:
+        dataFull = data
+
     # Get FID and Echo
-    dataFull = sig.decimate(dataOversampled, hw.oversamplingFactor, ftype='fir', zero_phase=True)
     output_dict['dataFull'] = dataFull
     dataFull = np.reshape(dataFull, (nScans, nSteps, 2, -1))
     dataFID = dataFull[:, :, 0, :]
@@ -60,7 +64,10 @@ def RabiFlops(raw_data_path=None):
     output_dict['piHalfTime'] = piHalfTime
     print("pi/2 pulse with RF amp = %0.2f a.u. and pulse time = %0.1f us" % (mat_data['rfExAmp'][0][0],
                                                                                piHalfTime))
-    hw.b1Efficiency = np.pi / 2 / (mat_data['rfExAmp'][0][0] * piHalfTime)
+    try:
+        hw.b1Efficiency = np.pi / 2 / (mat_data['rfExAmp'][0][0] * piHalfTime)
+    except:
+        pass
 
     # Signal vs rf time
     result1 = {'widget': 'curve',
