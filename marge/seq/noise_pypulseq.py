@@ -95,61 +95,18 @@ class Noise(blankSeq.MRIBLANKSEQ):
         gradient strengths, before defining the sequence blocks.
         '''
 
-        # Fix units to MHz and us
-        self.freqOffset *= 1e-6  # MHz
-        self.bw *= 1e-6  # MHz
-        acq_time = self.nPoints / self.bw * 1e-6  # s
-        sampling_period = 1 / self.bw  # us
-        self.mapVals['larmorFreq'] = hw.larmorFreq
+        # Save larmor frequency
+        self.mapVals['larmorFreq'] = hw.larmorFreq + self.freqOffset * 1e-6  # MHz
 
-        '''
-        Step 4: Define the experiment to get the true bandwidth
-        In this step, student needs to get the real bandwidth used in the experiment. To get this bandwidth, an
-        experiment must be defined and the sampling period should be obtained using get_
-        '''
-
-        if not self.demo:
-            if hw.marcos_version=="MaRCoS":
-                dev = ex.Experiment(lo_freq=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
-                                          rx_t=sampling_period,  # us
-                                          init_gpa=False,
-                                          gpa_fhdo_offset_time=(1 / 0.2 / 3.1),
-                                          auto_leds=True,
-                                          oversampling_factor=self.oversampling_factor)
-
-            elif hw.marcos_version == "MIMO":
-                # Define device arguments
-                dev_kwargs = {
-                    "lo_freq": hw.larmorFreq,
-                    "rx_t": sampling_period,
-                    "print_infos": True,
-                    "assert_errors": True,
-                    "halt_and_reset": False,
-                    "fix_cic_scale": True,
-                    "set_cic_shift": False,  # needs to be true for open-source cores
-                    "flush_old_rx": False,
-                    "init_gpa": False,
-                    "gpa_fhdo_offset_time": 1 / 0.2 / 3.1,
-                    "auto_leds": True,
-                    "oversampling_factor": self.oversampling_factor,
-                }
-
-                # Define master arguments
-                master_kwargs = {
-                    'mimo_master': True,
-                    'trig_output_time': 1e5,
-                    'slave_trig_latency': 6.079
-                }
-
-                # Define experiment
-                dev = device.Device(ip_address=hw.rp_ip_list[0], port=hw.rp_port[0], **(master_kwargs | dev_kwargs))
-
-            sampling_period = dev.get_sampling_period()  # us
-            self.bw = 1 / sampling_period  # MHz
-            print("Acquisition bandwidth fixed to: %0.3f kHz" % (self.bw * 1e3))
-            dev.__del__()
-
-        self.mapVals['bw_MHz'] = self.bw
+        # Bandwidth, sampling period, and true acquisition time
+        bw = self.bw * 1e-6  # MHz
+        sampling_period = 1 / bw / self.oversampling_factor  # us
+        sampling_period = np.round(np.array(sampling_period) * hw.fpga_clk_freq_MHz).astype(
+            np.uint32) / hw.fpga_clk_freq_MHz * self.oversampling_factor
+        bw = 1 / sampling_period
+        acq_time = self.nPoints * sampling_period * 1e-6  # s
+        print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
+        self.mapVals['bw_MHz'] = bw
         self.mapVals['sampling_period_us'] = sampling_period
 
         '''
@@ -233,8 +190,8 @@ class Noise(blankSeq.MRIBLANKSEQ):
         return self.runBatches(waveforms=waveforms,
                                n_readouts=n_readouts,
                                n_adc=n_adc,
-                               frequency=hw.larmorFreq,  # MHz
-                               bandwidth=self.bw,  # MHz
+                               frequency=hw.larmorFreq + self.freqOffset * 1e-6,  # MHz
+                               bandwidth=bw,  # MHz
                                decimate='Normal',
                                oversampling_factor=self.oversampling_factor,
                                decimation_factor=self.decimation_factor,

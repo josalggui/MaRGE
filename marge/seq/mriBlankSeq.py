@@ -445,6 +445,7 @@ class MRIBLANKSEQ:
                         "init_gpa": False,
                         "gpa_fhdo_offset_time": 1 / 0.2 / 3.1,
                         "auto_leds": True,
+                        "fpga_clk_freq_MHz": hw.fpga_clk_freq_MHz,
                         "oversampling_factor": self.oversampling_factor,
                     }
 
