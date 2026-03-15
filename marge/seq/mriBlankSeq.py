@@ -574,13 +574,14 @@ class MRIBLANKSEQ:
                     self.mapVals[f'data_decimated'] = data
                 else:
                     self.mapVals[f'data_over_{output}'] = data_over
-                    data.append(utils.decimate(data_prov,
-                                               n_adc=n_adc,
-                                               option=decimate,
-                                               remove=False,
-                                               add_rd_points=add_rd_points,
-                                               oversampling_factor=oversampling_factor,
-                                               decimation_factor=decimation_factor))
+                    for data_prov in data_over:
+                        data.append(utils.decimate(data_prov,
+                                                   n_adc=n_adc,
+                                                   option=decimate,
+                                                   remove=False,
+                                                   add_rd_points=add_rd_points,
+                                                   oversampling_factor=oversampling_factor,
+                                                   decimation_factor=decimation_factor))
                     self.mapVals[f'data_decimated_{output}'] = data
 
         return True

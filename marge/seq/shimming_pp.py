@@ -113,7 +113,7 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             rise_time=hw.grad_rise_time,  # Gradient rise time (s)
             adc_raster_time=1e-9,
             rf_raster_time=1e-9,
-            block_duration_raster=1e-6,
+            block_duration_raster=1e-9,
         )
 
         '''
@@ -141,15 +141,14 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             np.linspace(self.shimming0[2] - dsz / 2, self.shimming0[2] + dsz / 2, num=self.nShimming, endpoint=False),
             (self.nShimming, 1))
         sz_vector = np.vstack([[0.0], sz_vector, [0.0]])
-        self.mapVals['sx_vector'] = sx_vector
-        self.mapVals['sy_vector'] = sy_vector
-        self.mapVals['sz_vector'] = sz_vector
+        self.mapVals['sx_vector'] = sx_vector[1:-1]
+        self.mapVals['sy_vector'] = sy_vector[1:-1]
+        self.mapVals['sz_vector'] = sz_vector[1:-1]
 
         # Bandwidth, sampling period, and true acquisition time
         bw = self.nPoints / self.acqTime * 1e-6  # MHz
         sampling_period = 1 / bw / self.oversampling_factor  # us
-        sampling_period = np.round(np.array(sampling_period) * hw.fpga_clk_freq_MHz).astype(
-            np.uint32) / hw.fpga_clk_freq_MHz * self.oversampling_factor
+        sampling_period = np.round(np.array(sampling_period) * hw.fpga_clk_freq_MHz).astype(np.uint32) / hw.fpga_clk_freq_MHz * self.oversampling_factor
         bw = 1 / sampling_period
         self.acqTime = self.nPoints * sampling_period * 1e-6  # s
         print("Acquisition bandwidth fixed to: %0.3f kHz" % (bw * 1e3))
@@ -220,7 +219,8 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             n_adc = 0
 
             # Add dummy pulses
-            batch.add_block(delay_first)
+            if self.dummyPulses == 0:
+                batch.add_block(delay_first)
             for _ in range(self.dummyPulses):
                 batch.add_block(
                     event_rf_ex,
@@ -275,30 +275,28 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 
                 if ii == np.size(sh_vector) - 1:
                     batches[batch_name].add_block(
-                        # pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_a, times=g_time_a, system=system,
-                        #                            skip_check=True),
+                        pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_a, times=g_time_a, system=system,
+                                                   skip_check=True),
                         delay_a,
                     )
 
                     batches[batch_name].add_block(
-                        # pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_b, times=g_time_b, system=system,
-                        #                            skip_check=True),
+                        pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_b, times=g_time_b, system=system,
+                                                   skip_check=True),
                         delay_b
                     )
                 else:
                     batches[batch_name].add_block(
-                        # pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_a, times=g_time_a, system=system,
-                        #                            skip_check=True),
+                        pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_a, times=g_time_a, system=system,
+                                                   skip_check=True),
                         event_rf_ex,
-                        delay_a,
                     )
 
                     batches[batch_name].add_block(
-                        # pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_b, times=g_time_b, system=system,
-                        #                            skip_check=True),
+                        pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_b, times=g_time_b, system=system,
+                                                   skip_check=True),
                         event_rf_re,
                         event_adc,
-                        delay_b
                     )
                     n_adc += 1
                     n_rd_points += self.nPoints
@@ -384,5 +382,5 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
 if __name__ == '__main__':
     seq = ShimmingSweep()
     seq.sequenceAtributes()
-    seq.sequenceRun(plotSeq=True, demo=True, standalone=True)
+    seq.sequenceRun(plotSeq=False, demo=True, standalone=True)
     seq.sequenceAnalysis(mode='Standalone')

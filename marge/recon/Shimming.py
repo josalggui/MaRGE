@@ -13,9 +13,17 @@ def Shimming(raw_data_path=None):
     dicom_meta_data = {}
 
     # Load data
-    data = mat_data['data'][0]
+    data_x = np.squeeze(mat_data['data_decimated_x'])
+    data_y = np.squeeze(mat_data['data_decimated_y'])
+    data_z = np.squeeze(mat_data['data_decimated_z'])
     n_points = mat_data['nPoints'][0][0]
     n_shimming = mat_data['nShimming'][0][0]
+
+    if len(data_x.shape) > 1:
+        data_x = data_x[0]
+        data_y = data_y[0]
+        data_z = data_z[0]
+    data = np.concatenate((data_x, data_y, data_z), axis=0)
 
     # Print inputs
     try:
@@ -34,7 +42,7 @@ def Shimming(raw_data_path=None):
     data = np.reshape(data, shape=(3, n_shimming, -1))
 
     def getFWHM(s=None):
-        bw = mat_data['bw'] * 1e-3
+        bw = mat_data['bw_MHz'] * 1e3
         f_vector = np.linspace(-bw / 2, bw / 2, n_points)
         target = np.max(s) / 2
         p0 = np.argmax(s)
@@ -56,9 +64,9 @@ def Shimming(raw_data_path=None):
     output_dict['amplitudeVSshimming'] = dataFFT
 
     # Get max signal for each excitation
-    sxVector = np.squeeze(mat_data['sxVector'])
-    syVector = np.squeeze(mat_data['syVector'])
-    szVector = np.squeeze(mat_data['szVector'])
+    sxVector = np.squeeze(mat_data['sx_vector'])
+    syVector = np.squeeze(mat_data['sy_vector'])
+    szVector = np.squeeze(mat_data['sz_vector'])
 
     # Get the shimming values
     sx = sxVector[np.argmax(dataFFT[0, :])]
