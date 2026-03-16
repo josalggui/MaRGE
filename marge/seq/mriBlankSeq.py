@@ -1109,7 +1109,11 @@ class MRIBLANKSEQ:
             outputs = [plotTx, plotGrad, plotRx]
         else:
             # Get instructions from experiment object
-            fd = self.expt.get_flodict()
+            if hw.marcos_version=="MaRCoS":
+                dev = self.expt
+            elif hw.marcos_version=="MIMO":
+                dev = self.devices[0]
+            fd = dev.get_flodict()
 
             # Plot tx channels
             xData = []
@@ -1129,7 +1133,7 @@ class MRIBLANKSEQ:
             xData = []
             yData = []
             legend = []
-            for gradl in self.expt.gradb.keys():
+            for gradl in dev.gradb.keys():
                 try:
                     dataStep = getStepData(fd[gradl])
                     xData.append(dataStep[0] * 1e-3)
