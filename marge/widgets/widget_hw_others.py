@@ -29,7 +29,11 @@ class OthersWidget(QWidget):
         self.add_input(label="FOVy (cm)", value="20.0", tip="Field of View in the Y direction")
         self.add_input(label="FOVz (cm)", value="20.0", tip="Field of View in the Z direction")
         self.add_input(label="Shimming factor", value="1e-5", tip="Factor used for shimming adjustments")
-        self.add_input(label="Bash path", value="gnome-terminal", tip="Path for executing bash commands")
+        self.add_input(
+            label="Bash override",
+            value="",
+            tip="Optional override for the bash/terminal launcher. Leave empty to use the OS default.",
+        )
         self.add_input(label="Tyger server", value="localhost", tip="Tyger server")
         self.add_input(label="Tyger batch size", value="1000", tip="Tyger batch size. Reduce the value for weaker GPUs")
         self.add_input(label="SNRAware version", value="None", tip="'None', 'Local', 'TEP'")
@@ -83,7 +87,7 @@ class OthersWidget(QWidget):
                   float(self.input_boxes["FOVy (cm)"].text()),
                   float(self.input_boxes["FOVz (cm)"].text())]
         hw.shimming_factor = float(self.input_boxes["Shimming factor"].text())
-        hw.bash_path = self.input_boxes["Bash path"].text()
+        hw.bash_override = self.input_boxes["Bash override"].text().strip()
         hw.ard_sn_interlock = self.input_boxes["Arduino interlock"].text()
         hw.ard_br_interlock = int(self.input_boxes["Arduino interlock baudrate"].text())
         hw.ard_sn_autotuning = self.input_boxes["Arduino autotuning"].text()
@@ -114,6 +118,9 @@ class OthersWidget(QWidget):
                 for row in reader:
                     if len(row) == 2:  # Ensure row has two columns
                         label, value = row
+                        if label == "Bash path":
+                            # Migrate the legacy field name to the new override entry.
+                            label = "Bash override"
                         if label in self.input_boxes:
                             self.input_boxes[label].setText(value)  # Update input box
         except:
