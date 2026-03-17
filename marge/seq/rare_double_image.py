@@ -290,7 +290,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         n_rd_points_per_train = self.etl * n_rd
 
         # par_acq_lines in case par_acq_lines = 0
-        par_acq_lines = int(int(self.nPoints[2] * self.parFourierFraction) - self.nPoints[2] / 2)
+        par_acq_lines = int(np.round(self.nPoints[2] * self.parFourierFraction) - self.nPoints[2] // 2)
         self.mapVals['partialAcquisition'] = par_acq_lines
 
         # BW
@@ -332,7 +332,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
         sl_gradients = np.linspace(-sl_grad_amplitude, sl_grad_amplitude, num=n_sl, endpoint=False)
 
         # Now fix the number of slices to partially acquired k-space
-        n_sl = (int(self.nPoints[2] / 2) + par_acq_lines) * axes_enable[2] + (1 - axes_enable[2])
+        n_sl = (self.nPoints[2] // 2 + par_acq_lines) * axes_enable[2] + (1 - axes_enable[2])
         print("Number of acquired slices: %i" % n_sl)
 
         # Set phase vector to given sweep mode
