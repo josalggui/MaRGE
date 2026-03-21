@@ -4,57 +4,127 @@ Created on Thu June 2 2022
 @email: josalggui@i3m.upv.es
 @Summary: All sequences on the GUI must be here
 """
+import ast
 import inspect
 import os
-import importlib
+import importlib.util
+
+from marge.seq.mriBlankSeq import MRIBLANKSEQ
 
 """
 Definition of default sequences
 """
 
-# Note for the users: Now the sequences are added automatically to the defaultsequences dictionary.
-# To do that, the user should include the parameter 'toMaRGE' as True in the sequence using:
-# self.addParameter(string='toMaRGE', val=True)
-# This file should not be modified anymore.
+def _base_name(node):
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        prefix = _base_name(node.value)
+        if prefix:
+            return f"{prefix}.{node.attr}"
+        return node.attr
+    return None
+
+
+def _contains_sequence_class_candidate(py_file):
+    try:
+        with open(py_file, "r", encoding="utf-8") as source:
+            tree = ast.parse(source.read(), filename=py_file)
+    except Exception:
+        return False
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            if not node.bases:
+                continue
+            for base in node.bases:
+                base_name = _base_name(base)
+                if base_name and base_name.split(".")[-1] == "MRIBLANKSEQ":
+                    return True
+            return True
+    return False
 
 def instantiate_sequences():
     # Get the absolute path to this folder (marge/seq)
     folder = os.path.dirname(__file__)
 
-    # Dictionary to store class sequences
+    # Store the sequence instances and the names shown in the GUI.
     defaultsequences = {}
+    sequence_display_names = {}
 
-    # List all .py files in the folder, except __init__.py
-    py_files = [f for f in os.listdir(folder) if f.endswith('.py') and f != '__init__.py']
+    # Search recursively so custom sequences inside subfolders are discovered too.
+    py_files = []
+    for root, _, files in os.walk(folder):
+        for file in files:
+            if file.endswith('.py') and file not in {'__init__.py', 'sequences.py'}:
+                py_file = os.path.join(root, file)
+                if _contains_sequence_class_candidate(py_file):
+                    py_files.append(py_file)
+    py_files.sort()
 
     # Populate defaultsequences
-    for file in py_files:
-        # Remove the .py extension to get the module name
-        module_name = file[:-3]
+    for py_file in py_files:
+        rel_path = os.path.relpath(py_file, folder)
+        rel_module_name = rel_path[:-3].replace(os.sep, '.')
+        folder_prefix = os.path.dirname(rel_path).replace(os.sep, '/')
+        module_name = f"marge.seq.{rel_module_name}"
 
         try:
-            # Dynamically import the module using full path
-            module = importlib.import_module(f"marge.seq.{module_name}")
+            # Load modules from file paths so subfolders do not need to be Python packages.
+            spec = importlib.util.spec_from_file_location(module_name, py_file)
+            if spec is None or spec.loader is None:
+                raise ImportError(f"Unable to create import spec for {py_file}")
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
 
-            # Find all classes in the module
-            classes = inspect.getmembers(module, inspect.isclass)
-
-            # Add to defaultsequences only if toMaRGE is True
-            for class_name, class_ in classes:
+            # Find all MRIBLANKSEQ subclasses defined in the module.
+            for class_name, class_ in inspect.getmembers(module, inspect.isclass):
                 try:
-                    if class_().mapVals['toMaRGE']:
-                        defaultsequences[class_().mapVals['seqName']] = class_()
-                        print(f"{class_().mapVals['seqName']} added to MaRGE")
+                    if (
+                        class_.__module__ != module.__name__
+                        or class_ is MRIBLANKSEQ
+                        or not issubclass(class_, MRIBLANKSEQ)
+                    ):
+                        continue
+
+                    sequence = class_()
+                    if sequence.mapVals['toMaRGE']:
+                        seq_name = sequence.mapVals['seqName']
+                        if seq_name in defaultsequences:
+                            print(f"WARNING: Duplicate sequence name '{seq_name}' found in {rel_path}.")
+                            continue
+
+                        defaultsequences[seq_name] = sequence
+                        if folder_prefix:
+                            sequence_display_names[seq_name] = f"{folder_prefix}/{seq_name}"
+                        else:
+                            sequence_display_names[seq_name] = seq_name
+                        print(f"{sequence_display_names[seq_name]} added to MaRGE")
                 except:
                     pass
         except Exception as e:
             print(f"Error importing module {module_name}: {e}")
 
-    return defaultsequences
+    return defaultsequences, sequence_display_names
 
-defaultsequences = instantiate_sequences()
+defaultsequences, sequence_display_names = instantiate_sequences()
+sequence_key_by_display_name = {
+    display_name: seq_name for seq_name, display_name in sequence_display_names.items()
+}
+
+
+def resolve_sequence_name(seq_identifier):
+    if seq_identifier in defaultsequences:
+        return seq_identifier
+    return sequence_key_by_display_name[seq_identifier]
 
 # Note for the users: Now the sequences are added automatically to the defaultsequences dictionary.
 # To do that, the user should include the parameter 'toMaRGE' as True in the sequence using:
 # self.addParameter(string='toMaRGE', val=True)
 # This file should not be modified anymore.
+
+if __name__ == "__main__":
+    print(f"Loaded {len(defaultsequences)} sequences:")
+    for seq_name, display_name in sorted(sequence_display_names.items()):
+        sequence = defaultsequences[seq_name]
+        print(f"- {display_name}: {sequence.__class__.__module__}.{sequence.__class__.__name__}")

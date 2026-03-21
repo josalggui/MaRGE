@@ -62,7 +62,10 @@ Install MaRGE with pip if you only need to run the GUI and do not plan to modify
 
 1. Go to your project folder.Create and activate a virtual environment:
 
-* Ubuntu
+* Linux / MacOS
+
+    Note: # On MacOS, the `timeout` command is not available by default, so  `gtimeout` (which can be installed via `Homebrew: brew install coreutils`) is required. In addition the `marcos_install.sh` cant be used, so the initial hardware setup needs to be performed on a Linux system.
+
   ```bash
   python3 -m venv venv
   source venv/bin/activate
@@ -182,3 +185,8 @@ In the current version, with the introduction of the **Tyger capability**, the A
 - The code will continue to run using CPU paths (or Tyger paths) instead
 
 You may safely skip CuPy/CUDA installation unless you explicitly plan to use the legacy ART postprocessing toolbox.
+If you install MaRGE from `pyproject.toml`, GPU support can be requested explicitly with:
+
+```bash
+pip install .[gpu]
+```
