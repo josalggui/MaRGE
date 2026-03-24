@@ -10,7 +10,7 @@ authors = [
 ]
 description = "MaRCoS Graphical Environment (MaRGE)"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -32,7 +32,7 @@ dependencies = [
     "phantominator",
     "pyserial",
     "ismrmrd",
-    "pypulseq",
+    "pypulseq==1.4.2",
     "marga_pulseq",
     "scikit-learn",
     "scikit-image",
