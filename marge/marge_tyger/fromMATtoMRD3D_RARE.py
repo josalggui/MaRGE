@@ -67,8 +67,10 @@ def matToMRD(input, output_file, input_field=None):
     # sampledCartesian is a 4-D array with the following columns: kx, ky, kz, signal. The rows are ordered according to the acquisition order (rd, ph, sl)
     sampledCartesian = mat_data['sampledCartesian']
     signal = sampledCartesian[:, 3]
-    if input_field is not None:
+    if input_field is not None and input_field != '':
         kSpace = mat_data[input_field]
+        if kSpace.ndim == 3:
+            kSpace = kSpace[np.newaxis, ...]  # add channel dim: (1, sl, ph, rd)
     else:
         kSpace = np.reshape(signal, (1, nPoints[2], nPoints[1], nPoints[0]))  # sl, ph, rd
 
@@ -176,7 +178,9 @@ def matToMRD(input, output_file, input_field=None):
 
     readout_gradient = mrd.UserParameterDoubleType()
     readout_gradient.name = "readout_gradient_intensity"
-    readout_gradient.value = rdGradAmplitude
+    #readout_gradient.value = rdGradAmplitude
+    readout_gradient.value = float(rdGradAmplitude.item())
+
 
     axes_param = mrd.UserParameterStringType()
     axes_param.name = "axesOrientation"
