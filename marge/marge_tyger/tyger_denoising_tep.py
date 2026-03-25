@@ -7,7 +7,7 @@ from os.path import exists
 import os
 import sys
 import marge.marge_tyger.tyger_config as tyger_conf
-from marge.marge_tyger.fromMATtoMRD3D_RARE_noise import matToMRD
+from marge.marge_tyger.fromMATtoMRD3D_RARE import matToMRD
 from marge.marge_tyger.fromMATtoMRD3D_RARE_old import matToMRD_old
 from marge.marge_tyger.fromMRDtoMAT3D_noise import export
 from pathlib import Path

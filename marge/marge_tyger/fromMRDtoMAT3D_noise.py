@@ -27,7 +27,8 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--input', type=str, required=False, help="Input file (default stdin)")
     parser.add_argument('-o', '--output', type=str, required=False, help="Output filename .mat")
     parser.add_argument('-of', '--out_field', type=str, required=False, help="Recon img name field")
-    
+    parser.add_argument('-ofk', '--out_field_k', type=str, required=False,
+                                               help = "Recon kspace name field")
     # parser.set_defaults(
     #     input = '/home/teresa/marcos_tyger/Brain_Images/output.bin',
     #     output= '/home/teresa/marcos_tyger/Brain_Images/brainIR.mat',
@@ -38,4 +39,4 @@ if __name__ == "__main__":
 
     input = open(args.input, "rb") if args.input is not None else sys.stdin.buffer
 
-    export(input, args.output, args.out_field)
+    export(input, args.output, args.out_field, args.out_field_k)

@@ -49,7 +49,7 @@ class TygerTabController(TygerTabWidget):
                 input_field = self.main.tyger_denoising
                 output_field = output_field + '_den'
             except:
-                input_field = ''
+                input_field = None
             try:
                 imgTyger = tyger_rare.reconTygerRARE(rawData_path, recon_type, boFit_path, sign_rarepp, output_field, input_field)
                 imageTyger = np.abs(imgTyger[0])

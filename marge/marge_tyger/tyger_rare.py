@@ -92,6 +92,11 @@ def reconTygerRARE(rawData_path, recon_type, boFit_path, sign, output_field, inp
     try:
         sys.stdout = StdoutWrapper(mrd_buffer)
         matToMRD(input=rawData_path, output_file=mrd_buffer, input_field=input_field)
+    except Exception as e:
+        import traceback
+        sys.stdout = original_stdout
+        traceback.print_exc()
+        raise
     finally:
         sys.stdout = original_stdout
     mrd_buffer.seek(0)  

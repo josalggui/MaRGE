@@ -1,6 +1,6 @@
 job:
   codespec:
-    image: acr-proxy.tyger.cloud/tygertepimages.azurecr.io/tinker:20251025
+    image: acr-proxy.tyger.cloud/tygertepimages.azurecr.io/tinker:b3e3042-cuda-amd64
     buffers:
       inputs:
         - input
@@ -18,7 +18,8 @@ job:
       - "--kspace-filter.sigma"
       - "1.0"
       - "--denoising.model-file"
-      - "/opt/tinker/models/denoising/model_ifm-mri-denoising_extra-large.pts"
+      - "/app/models/denoising/model_109m_large_with_pf_203136.pts"
+      #- "/app/models/denoising/model_ifm-mri-denoising_extra-large.pts"
       - "--log-level"
       - "DEBUG"
     resources:

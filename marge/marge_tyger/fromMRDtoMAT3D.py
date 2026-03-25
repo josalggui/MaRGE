@@ -2,10 +2,11 @@ import sys
 import argparse
 import mrd
 import scipy.io as sio
+import numpy as np
 
 
 def export(input, output, out_field):
-    
+
     with mrd.BinaryMrdReader(input) as r:
         header = r.read_header()
         for item in r.read_data():
@@ -13,8 +14,9 @@ def export(input, output, out_field):
                 raise RuntimeError("Stream must contain only floating point images")
 
             img = item.value
-            imgRecon = img.data
-            
+            # img.data is (ch, rd, ph, sl); transpose to MaRGE format (ch, sl, ph, rd)
+            imgRecon = np.transpose(img.data, (0, 3, 2, 1))
+
     rawData = sio.loadmat(output)
     rawData[out_field] = imgRecon
     sio.savemat(output, rawData)
