@@ -6,7 +6,7 @@ import io
 
 import os
 import sys
-from marge.marge_tyger.fromMATtoMRD3D_RARE import matToMRD
+from marge.marge_tyger.fromMATtoMRD3D_RARE_recon import matToMRD
 from marge.marge_tyger.fromMRDtoMAT3D import export
 
 def generate_yml_folder(rawData_path):

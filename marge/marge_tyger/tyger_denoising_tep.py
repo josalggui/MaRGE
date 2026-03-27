@@ -23,12 +23,14 @@ def denoisingTyger(rawData_path, output_field, output_field_k):
     
     for p in (pathMRD_or, pathMRD_ia):
         Path(p).parent.mkdir(parents=True, exist_ok=True)
-    
+
     try:
-        matToMRD(rawData_path, pathMRD_or)          # Actual rawDatas
-    except:
-        matToMRD_old(rawData_path, pathMRD_or)      # Old rawDatas
-        
+        matToMRD(rawData_path, pathMRD_or)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise  # no llames a matToMRD_old, que falla peor
+
     start_time = time.time()
     subprocess.run(
         ["bash", tyger_conf.denoising_pipeline, pathMRD_or, pathMRD_ia],
