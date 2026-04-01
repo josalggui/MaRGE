@@ -9,6 +9,21 @@ import os
 from pathlib import Path
 
 def matToMRD(input, output_file, input_field_raw):
+    """
+    Convert a double-echo RARE noise acquisition .mat file to an MRD binary stream.
+
+    Reads the k-space from the specified echo field, physical-space trajectory (kx, ky, kz),
+    noise acquisitions, and geometry metadata. Applies inverse_axesOrientation to map from
+    acquisition space (rd, ph, sl) to physical space (x, y, z). Writes noise acquisitions
+    first, followed by all k-space lines.
+
+    Args:
+        input (str): Path to the input .mat file.
+        output_file (str | os.PathLike | file-like): Destination MRD file path or
+            writable binary stream.
+        input_field_raw (str): .mat field name of the k-space array to use
+            (e.g. 'sampled_odd' or 'sampled_eve').
+    """
     # print('From MAT to MRD...')
    
     # OUTPUT
@@ -176,12 +191,22 @@ def matToMRD(input, output_file, input_field_raw):
     h.user_parameters.user_parameter_string.append(d_fov)
 
     def generate_data() -> Generator[mrd.StreamItem, None, None]:
+        """
+        Yield MRD StreamItems for all noise scans followed by all k-space acquisitions.
+
+        Noise acquisitions are yielded first, each flagged as IS_NOISE_MEASUREMENT.
+        Then all (slice, phase-encode line) combinations are yielded in order,
+        with trajectory vectors in physical space (kx, ky, kz, rdTimes, x_esp, y_esp, z_esp).
+
+        Yields:
+            mrd.StreamItem.Acquisition: One item per noise scan and per k-space line.
+        """
         acq = mrd.Acquisition()
 
         acq.data.resize((1, nPoints[0]))
         acq.trajectory.resize((7, nPoints[0]))
         acq.head.center_sample = round(nPoints[0] / 2)
-       
+
         for n in range(nNoise):
             noise = mrd.Acquisition()
             noise.data.resize((1, nPoints[0]))

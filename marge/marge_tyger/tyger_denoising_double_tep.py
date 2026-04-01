@@ -17,7 +17,24 @@ import scipy.io as sio
 import numpy as np
 
 def denoisingTyger_double(rawData_path, output_field, output_field_k, input_echoes):
+    """
+    Run the Tyger TEP denoising pipeline on a double-echo RARE acquisition.
 
+    Depending on input_echoes, denoises the odd echo, the even echo, or both.
+    When 'all' is selected, both echoes are denoised separately and then averaged
+    into a combined output field. Results are written back into the .mat file.
+
+    Args:
+        rawData_path (str): Path to the .mat file containing the raw k-space data.
+        output_field (str): Base .mat field name for the denoised image
+            (suffixed with '_odd', '_even', or '_all' depending on input_echoes).
+        output_field_k (str): Base .mat field name for the denoised k-space
+            (suffixed with '_odd', '_even', or '_all' depending on input_echoes).
+        input_echoes (str): Which echoes to process: 'odd', 'even', or 'all'.
+
+    Returns:
+        np.ndarray: Denoised image array with shape (1, sl, ph, rd).
+    """
     # Run Tyger Recon
     print('Running Tyger denoising...')
     

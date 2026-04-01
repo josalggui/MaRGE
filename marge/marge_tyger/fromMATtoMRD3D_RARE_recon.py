@@ -8,6 +8,20 @@ import sys
 
 
 def matToMRD(input, output_file, input_field=''):
+    """
+    Convert a RARE reconstruction .mat file to an MRD binary stream.
+
+    Similar to the denoising variant but uses physical-space (x, y, z) axis ordering
+    in the trajectory and position vectors, applying inverse_axesOrientation to map
+    from acquisition space (rd, ph, sl) to physical space. No noise scans are included.
+
+    Args:
+        input (str): Path to the input .mat file.
+        output_file (str | file-like | None): Destination MRD file path or writable
+            binary stream. If None, writes to stdout.
+        input_field (str, optional): .mat field name of the k-space array to use.
+            If empty, the k-space is read from sampledCartesian.
+    """
     # print('From MAT to MRD...')
 
     # OUTPUT - write .mrd
@@ -137,6 +151,14 @@ def matToMRD(input, output_file, input_field=''):
     h.user_parameters.user_parameter_string.append(d_fov)
 
     def generate_data() -> Generator[mrd.StreamItem, None, None]:
+        """
+        Yield MRD StreamItems for all k-space acquisitions in (slice, phase-encode) order.
+
+        Trajectory vectors are in physical space (kx, ky, kz, rdTimes, x_esp, y_esp, z_esp).
+
+        Yields:
+            mrd.StreamItem.Acquisition: One item per k-space line.
+        """
         acq = mrd.Acquisition()
 
         acq.data.resize((1, nPoints[0]))

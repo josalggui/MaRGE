@@ -15,7 +15,20 @@ from os import stat
 import mrd
 
 def denoisingTyger(rawData_path, output_field, output_field_k):
+    """
+    Run the Tyger TEP denoising pipeline on a RARE acquisition.
 
+    Converts the input .mat file to MRD, runs the external denoising bash pipeline,
+    and writes the denoised image and its k-space back into the .mat file.
+
+    Args:
+        rawData_path (str): Path to the .mat file containing the raw k-space data.
+        output_field (str): .mat field name where the denoised image will be stored.
+        output_field_k (str): .mat field name where the denoised k-space will be stored.
+
+    Returns:
+        np.ndarray: Denoised image array as returned by the MRD export function.
+    """
     # Run Tyger Recon
     print('Running Tyger denoising...')
     pathMRD_or = rawData_path.replace("/mat/", "/mrd/").replace(".mat", ".mrd")

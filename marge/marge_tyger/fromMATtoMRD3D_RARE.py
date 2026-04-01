@@ -9,6 +9,21 @@ import os
 from pathlib import Path
 
 def matToMRD(input, output_file, input_field=None):
+    """
+    Convert a RARE acquisition .mat file to an MRD binary stream.
+
+    Reads k-space data, trajectory, noise, and geometry metadata from the .mat file,
+    builds a complete MRD header (encoding limits, axesOrientation, dfov, readout
+    gradient), and writes all acquisitions — noise scans first, then k-space lines —
+    to the output MRD file or stream.
+
+    Args:
+        input (str): Path to the input .mat file.
+        output_file (str | os.PathLike | file-like): Destination MRD file path or
+            writable binary stream.
+        input_field (str, optional): .mat field name of the k-space array to use.
+            If None or empty, the k-space is reconstructed from sampledCartesian.
+    """
     # print('From MAT to MRD...')
 
     if output_file is None:
@@ -199,6 +214,17 @@ def matToMRD(input, output_file, input_field=None):
     print(f"mrd header: {h}")
 
     def generate_data() -> Generator[mrd.StreamItem, None, None]:
+        """
+        Yield MRD StreamItems for all noise scans followed by all k-space acquisitions.
+
+        Noise acquisitions are yielded first, each flagged as IS_NOISE_MEASUREMENT.
+        Then all (slice, phase-encode line) combinations are yielded in order,
+        with trajectory vectors (krd, kph, ksl, rdTimes, rd_esp, ph_esp, sl_esp)
+        attached to each acquisition.
+
+        Yields:
+            mrd.StreamItem.Acquisition: One item per noise scan and per k-space line.
+        """
         acq = mrd.Acquisition()
 
         acq.data.resize((1, nPoints[0]))

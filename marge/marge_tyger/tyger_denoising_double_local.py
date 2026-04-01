@@ -20,10 +20,20 @@ def _run_single(rawData_path: str,
                 out_field_k: str,
                 label: str = "") -> np.ndarray:
     """
-    Ejecuta un único pase del pipeline Tyger:
-      MAT[input_field_raw]  →  MRD (BytesIO)  →  tyger run exec  →  MAT[out_field]
+    Run a single Tyger denoising pass for one echo.
 
-    Devuelve el array de imagen (sl, ph, rd).
+    Converts MAT[input_field_raw] to MRD in memory, submits to Tyger,
+    and writes the result back to MAT[out_field].
+
+    Args:
+        rawData_path (str): Path to the .mat file.
+        input_field_raw (str): .mat field name of the k-space echo to process.
+        out_field (str): .mat field name for the denoised image output.
+        out_field_k (str): .mat field name for the denoised k-space output.
+        label (str, optional): Label appended to log messages (e.g. ' (odd)').
+
+    Returns:
+        np.ndarray: Denoised image array with shape (sl, ph, rd).
     """
 
     # 1. MAT -> MRD en memoria
@@ -85,23 +95,25 @@ def denoisingTyger_double(rawData_path: str,
                           output_field_k: str,
                           input_echoes: str) -> np.ndarray:
     """
-    Parámetros
-    ----------
-    rawData_path : str
-        Ruta al archivo .mat con los datos crudos.
-    output_field : str
-        Nombre base del campo de imagen denoised que se guardará en el .mat.
-    output_field_k : str
-        Nombre base del campo de k-space denoised que se guardará en el .mat.
-    input_echoes : str
-        'odd'  → procesa solo sampled_odd  → guarda output_field_odd / output_field_k_odd
-        'even' → procesa solo sampled_eve  → guarda output_field_even / output_field_k_even
-        'all'  → procesa ambos y promedia  → guarda _odd, _even y _all
+    Run the Tyger local denoising pipeline on a double-echo RARE acquisition.
 
-    Devuelve
-    --------
-    imgTyger : np.ndarray
-        Array 4D (1, sl, ph, rd) con la imagen denoised final.
+    Depending on input_echoes, denoises the odd echo, the even echo, or both.
+    When 'all' is selected, both echoes are denoised separately and averaged
+    into a combined output field. Results are written back into the .mat file.
+
+    Args:
+        rawData_path (str): Path to the .mat file containing the raw k-space data.
+        output_field (str): Base .mat field name for the denoised image
+            (suffixed with '_odd', '_even', or '_all').
+        output_field_k (str): Base .mat field name for the denoised k-space
+            (suffixed with '_odd', '_even', or '_all').
+        input_echoes (str): Which echoes to process: 'odd', 'even', or 'all'.
+
+    Returns:
+        np.ndarray: Denoised image array with shape (1, sl, ph, rd).
+
+    Raises:
+        FileNotFoundError: If rawData_path or the Tyger YML file do not exist.
     """
 
     if not os.path.exists(rawData_path):

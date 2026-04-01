@@ -10,6 +10,18 @@ from marge.marge_tyger.fromMATtoMRD3D_RARE_recon import matToMRD
 from marge.marge_tyger.fromMRDtoMAT3D import export
 
 def generate_yml_folder(rawData_path):
+    """
+    Derive the output YML file path from a .mat raw data path.
+
+    Replaces the 'mat' directory component with 'yml' and changes the file
+    extension to .yml, creating the parent directory if it does not exist.
+
+    Args:
+        rawData_path (str): Absolute path to the input .mat file.
+
+    Returns:
+        pathlib.Path: Path to the output .yml file.
+    """
     p = Path(rawData_path)
     parts = list(p.parts)
     i = parts.index('mat')
@@ -19,6 +31,22 @@ def generate_yml_folder(rawData_path):
     return yml_path
 
 def generate_yml_file(recon_type, boFit_path, sign, yml_path):
+    """
+    Generate the Tyger job YAML file for a RARE reconstruction.
+
+    Reads the B0 fit polynomial from boFit_path (falls back to a zero polynomial
+    if the file is not found) and writes a Tyger job specification YAML that
+    references the configured Docker image and reconstruction script.
+
+    Args:
+        recon_type (str): Reconstruction type identifier passed to the recon script.
+        boFit_path (str): Path to the file containing the B0 fit polynomial string.
+        sign (list[int]): Sign correction vector, e.g. [1, -1, 1].
+        yml_path (str | pathlib.Path): Destination path for the generated YAML file.
+
+    Returns:
+        str | pathlib.Path: The yml_path that was written.
+    """
     # Read BoFit file
     try:
         with open(boFit_path, 'r') as f:
@@ -68,6 +96,23 @@ def generate_yml_file(recon_type, boFit_path, sign, yml_path):
     return yml_path
 
 def reconTygerRARE(rawData_path, recon_type, boFit_path, sign, output_field, input_field):
+    """
+    Run a full Tyger RARE reconstruction pipeline.
+
+    Converts the input .mat file to MRD format, submits the job to Tyger,
+    and writes the reconstructed image back into the .mat file.
+
+    Args:
+        rawData_path (str): Path to the .mat file containing raw k-space data.
+        recon_type (str): Reconstruction type identifier.
+        boFit_path (str): Path to the B0 fit polynomial file.
+        sign (list[int]): Sign correction vector.
+        output_field (str): .mat field name where the reconstructed image will be stored.
+        input_field (str): .mat field name of the raw k-space data to reconstruct.
+
+    Returns:
+        np.ndarray: Reconstructed image array in MaRGE format (ch, sl, ph, rd).
+    """
     # Generate yml file.
     try:
         yml_path = generate_yml_folder(rawData_path)
@@ -83,6 +128,7 @@ def reconTygerRARE(rawData_path, recon_type, boFit_path, sign, output_field, inp
     # # From MAT to MRD
     class StdoutWrapper:
         def __init__(self, buffer):
+            """Redirect stdout writes to a buffer without forwarding data."""
             self.buffer = buffer
         def write(self, data): pass
         def flush(self): pass

@@ -11,7 +11,21 @@ import scipy.io as sio
 
 
 def matToMRD(input, output_file, input_field_raw: str = "sampled_odd"):
+    """
+    Convert a double-echo RARE local-denoising .mat file to an MRD binary stream.
 
+    Reads the selected echo's k-space (sampled_odd or sampled_eve), physical-space
+    trajectory (kx, ky, kz), noise acquisitions, partial Fourier fraction, and
+    geometry metadata. Noise std and parFourierFraction are embedded in the MRD header
+    as user parameters. Noise acquisitions are written first, followed by all k-space lines.
+
+    Args:
+        input (str): Path to the input .mat file.
+        output_file (str | os.PathLike | file-like | None): Destination MRD file path,
+            writable binary stream, or None to write to stdout.
+        input_field_raw (str, optional): .mat field name of the k-space array to use.
+            Defaults to 'sampled_odd'.
+    """
     # ------------------------------------------------------------------
     # output
     # ------------------------------------------------------------------
@@ -84,6 +98,7 @@ def matToMRD(input, output_file, input_field_raw: str = "sampled_odd"):
 
     # Reshape function
     def _reshape4(arr):
+        """Reshape a 1-D array to (1, sl, ph, rd) using nPoints_sig."""
         arr = np.reshape(arr, nPoints_sig)
         return arr.reshape(1, arr.shape[0], arr.shape[1], arr.shape[2])
 
@@ -190,6 +205,16 @@ def matToMRD(input, output_file, input_field_raw: str = "sampled_odd"):
     # Stream aquisitions generator
     # ------------------------------------------------------------------
     def generate_data() -> Generator[mrd.StreamItem, None, None]:
+        """
+        Yield MRD StreamItems for all noise scans followed by all k-space acquisitions.
+
+        Noise acquisitions are yielded first, each flagged as IS_NOISE_MEASUREMENT.
+        Then all (slice, phase-encode line) combinations are yielded in order,
+        with trajectory vectors in physical space (kx, ky, kz, rdTimes, x_esp, y_esp, z_esp).
+
+        Yields:
+            mrd.StreamItem.Acquisition: One item per noise scan and per k-space line.
+        """
         # --- Noise acquisitions ---
         for n in range(nNoise):
             noise = mrd.Acquisition()
