@@ -8,5 +8,6 @@ from pyqtgraph import LayoutWidget
 
 
 class FiguresLayoutWidget(LayoutWidget):
+    """Layout widget that organises the 1D and 3D figure panels in the main window."""
     def __init__(self):
         super().__init__()

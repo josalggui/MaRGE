@@ -1,3 +1,5 @@
+"""Widget for the session management panel."""
+
 import csv
 import os
 import subprocess
@@ -175,6 +177,15 @@ class DynamicComboBox(QComboBox):
         self.activated.connect(self.check_add_new)
 
     def check_add_new(self, index):
+        """
+        Handle 'Add/Delete...' selection in a combo box to add or remove custom items.
+
+        When the special 'Add/Delete...' entry is selected, prompts the user for a
+        new item name. If the item already exists it is removed; otherwise it is added.
+
+        Args:
+            index (int): Index of the selected combo box item.
+        """
         if self.itemText(index) == "Add/Delete...":
             new_item, ok = QInputDialog.getText(self, self.title, "Enter new item:")
 

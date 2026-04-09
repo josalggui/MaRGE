@@ -1,3 +1,5 @@
+"""Tyger TEP denoising pipeline for single-echo RARE acquisitions."""
+
 import marge.marge_tyger.tyger_config as tyger_conf
 from pathlib import Path
 import time

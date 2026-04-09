@@ -1,3 +1,5 @@
+"""Tyger local denoising pipeline for single-echo RARE acquisitions."""
+
 import io
 import os
 import sys

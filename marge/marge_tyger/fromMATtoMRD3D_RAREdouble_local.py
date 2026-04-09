@@ -1,3 +1,5 @@
+"""Conversion of double-echo RARE local-denoising .mat files to MRD binary streams."""
+
 import sys
 import io
 import os

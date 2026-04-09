@@ -7,6 +7,7 @@ import pyqtgraph as pg
 
 
 class PlotSmithChartWidget(pg.GraphicsLayoutWidget):
+    """Smith chart plot widget with a crosshair cursor for RF impedance visualisation."""
     def __init__(self):
         super(PlotSmithChartWidget, self).__init__()
 

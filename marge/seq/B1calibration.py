@@ -1,3 +1,4 @@
+"""Pulse sequence for B1 field calibration."""
 
 import marge.controller.experiment_gui as ex
 import numpy as np
@@ -203,6 +204,19 @@ class B1calibration(blankSeq.MRIBLANKSEQ):
         return True
 
     def sequenceAnalysis(self, obj=''):
+        """
+        Process raw acquired data and compute the output images and metrics.
+
+        Reconstructs the image from k-space, computes SNR or other sequence-specific
+        figures of merit, populates output_dict with result arrays, and fills
+        dicom_meta_data with the relevant DICOM tags for saving.
+
+        Args:
+            obj (str, optional): Processing mode selector (sequence-dependent). Defaults to ''.
+
+        Returns:
+            tuple: (output_dict, dicom_meta_data) with processed results and metadata.
+        """
 
         result1 = {'widget': 'image',
                    'data': np.squeeze(np.abs(self.matrix[self.mapVals['RFampSteps']-1, :, :])),

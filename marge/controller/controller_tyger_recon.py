@@ -1,3 +1,5 @@
+"""Controller for the Tyger reconstruction workflow."""
+
 import sys
 import threading
 import numpy as np
@@ -104,6 +106,13 @@ class TygerTabController(TygerTabWidget):
         thread.start()
 
     def snraware_recon(self):
+        """
+        Run the SNRAware denoising reconstruction in the current thread.
+
+        Selects the appropriate Tyger denoising pipeline (single-echo or
+        double-echo TEP) based on the active sequence name, submits the
+        job, and updates the image view widget with the denoised result.
+        """
         if self.main.seq_name == 'RarePyPulseq' or self.main.seq_name == 'RareDoubleImage':
             rawData_path = self.main.file_path
             out_field = 'post_image3D_den'

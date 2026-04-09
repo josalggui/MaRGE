@@ -447,6 +447,15 @@ class SessionController(SessionWindow):
         """
 
         def get_text_or_placeholder(widget):
+            """
+            Return the widget's text if non-empty, otherwise its placeholder text.
+
+            Args:
+                widget (QLineEdit): The input widget to read.
+
+            Returns:
+                str: Current text or placeholder text.
+            """
             return widget.text() if widget.text() else widget.placeholderText()
 
         self.session = {

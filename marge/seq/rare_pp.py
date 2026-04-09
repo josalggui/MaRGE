@@ -977,6 +977,24 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                                )
 
     def sequenceAnalysis(self, mode=None):
+        """
+        Process raw acquired data and compute the output images and metrics.
+
+        Reconstructs the image from k-space, computes SNR or other sequence-specific
+        figures of merit, populates output_dict with result arrays, and fills
+        dicom_meta_data with the relevant DICOM tags for saving.
+
+        When the Tyger SNRAware denoising pipeline is enabled, the acquired k-space
+        is exported to MRD format and submitted to the Tyger platform for GPU-accelerated
+        TEP or local denoising. The denoised image is then available for subsequent
+        phase-error-based distortion correction before final saving.
+
+        Args:
+            mode (str, optional): Processing mode selector (sequence-dependent). Defaults to None.
+
+        Returns:
+            tuple: (output_dict, dicom_meta_data) with processed results and metadata.
+        """
         super().sequenceAnalysis(mode=mode)
 
         # Get axes in strings

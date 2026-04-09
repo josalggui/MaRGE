@@ -1,3 +1,5 @@
+"""Reconstruction module for shimming sequences."""
+
 import numpy as np
 import scipy as sp
 from marge.configs import units as units
@@ -34,7 +36,16 @@ def Shimming(raw_data_path=None):
     data = np.reshape(data, shape=(3, n_shimming, -1))
 
     def getFWHM(s=None):
-        bw = mat_data['bw'].item() * 1e-3
+        """
+        Compute the full-width at half-maximum (FWHM) of a 1D spectrum.
+
+        Args:
+            s (np.ndarray): 1D array of spectral amplitudes.
+
+        Returns:
+            float: FWHM in kHz.
+        """
+        bw = mat_data['bw'] * 1e-3
         f_vector = np.linspace(-bw / 2, bw / 2, n_points)
         target = np.max(s) / 2
         p0 = np.argmax(s)

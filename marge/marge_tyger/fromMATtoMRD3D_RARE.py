@@ -1,3 +1,5 @@
+"""Conversion of RARE .mat files to MRD binary streams for Tyger."""
+
 import sys
 import argparse
 import numpy as np

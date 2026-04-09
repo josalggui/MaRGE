@@ -1,3 +1,5 @@
+"""Export of reconstructed MRD images to .mat files."""
+
 import sys
 import argparse
 import mrd

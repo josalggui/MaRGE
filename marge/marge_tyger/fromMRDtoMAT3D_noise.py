@@ -1,3 +1,5 @@
+"""Export of noise-scan MRD images and k-space to .mat files."""
+
 import sys
 import argparse
 import mrd

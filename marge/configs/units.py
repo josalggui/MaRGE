@@ -1,3 +1,5 @@
+"""Physical unit conversion constants (cm, mm, kHz, MHz, etc.)."""
+
 cm = 1e-2
 mm = 1e-3
 kHz = 1e3

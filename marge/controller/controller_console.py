@@ -1,3 +1,5 @@
+"""Controller for the hardware console widget."""
+
 import datetime
 import sys
 import os
@@ -102,4 +104,5 @@ class EmittingStream(QObject):
 
     @pyqtSlot()
     def flush(self):
+        """Required by the stream interface; no-op for the Qt console output stream."""
         pass

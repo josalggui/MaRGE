@@ -1,3 +1,5 @@
+"""Tyger pipeline configuration: Docker images, server URL, and pipeline paths."""
+
 docker_img_RARE = 'ghcr.io/mrilab-i3m/rare-recon:v1'
 #docker_img_RARE = 'rare-recon:cuda12.8'
 #docker_img_RARE = 'ghcr.io/mrilab-i3m/rare-recon:v1'

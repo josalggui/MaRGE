@@ -1,3 +1,5 @@
+"""Widget for the image reconstruction controls panel."""
+
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QLabel, QLineEdit, QHBoxLayout, QGroupBox, QWidget, QGridLayout
 
 

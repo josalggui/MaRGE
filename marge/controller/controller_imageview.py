@@ -1,3 +1,5 @@
+"""Controller for the image viewer widget."""
+
 from marge.widgets.widget_imageview import ImageViewWidget
 
 

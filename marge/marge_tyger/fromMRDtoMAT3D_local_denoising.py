@@ -1,3 +1,5 @@
+"""Export of locally denoised MRD images to .mat files."""
+
 import numpy as np
 import scipy.io as sio
 import mrd

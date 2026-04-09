@@ -435,6 +435,7 @@ def loopback(cic0_decimation=7, cic1_decimation=10):
     return raw_data
 
 def long_loopback():
+    """Run a multi-LO-frequency loopback test sequence on the MARGA hardware."""
     lo_freq0 = 4 # MHz
     lo_freq1 = 4.01
     lo_freq2 = 1.5

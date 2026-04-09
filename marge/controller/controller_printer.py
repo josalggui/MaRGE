@@ -1,3 +1,5 @@
+"""Controller for print/export functionality."""
+
 import os
 from datetime import datetime
 from pathlib import Path
@@ -133,6 +135,18 @@ class Printer:
 
         # Sort by time and date in the file name
         def extract_dt_from_name(path: Path):
+            """
+            Extract a datetime object from a .mat filename timestamp suffix.
+
+            Expects the filename stem to end with seven dot-separated components
+            formatted as YYYY.MM.DD.HH.MM.SS.fff.
+
+            Args:
+                path (pathlib.Path): Path to the .mat file.
+
+            Returns:
+                datetime.datetime: Parsed timestamp.
+            """
             # Remove extension
             stem = path.stem  # name.2025.06.18.12.30.29.123
 

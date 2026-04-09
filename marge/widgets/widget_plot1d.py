@@ -7,6 +7,7 @@ import pyqtgraph as pg
 
 
 class Plot1DWidget(pg.GraphicsLayoutWidget):
+    """1D plot widget with a crosshair cursor and multi-colour trace support."""
     def __init__(self):
         super(Plot1DWidget, self).__init__()
 

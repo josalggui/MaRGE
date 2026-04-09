@@ -1,3 +1,5 @@
+"""Conversion of RARE noise acquisition .mat files to MRD binary streams."""
+
 import sys
 import argparse
 import numpy as np
