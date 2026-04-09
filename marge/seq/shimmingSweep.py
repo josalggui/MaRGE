@@ -212,11 +212,11 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             for ii in range(self.nShimming):
                 dataFFT[ii] = np.max(np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data[ii, :])))))
             if axis=='x':
-                self.shimming0[0] = sxVector[np.argmax(dataFFT)]
+                self.shimming0[0] = sxVector[np.argmax(dataFFT), 0]
             elif axis=='y':
-                self.shimming0[1] = syVector[np.argmax(dataFFT)]
+                self.shimming0[1] = syVector[np.argmax(dataFFT), 0]
             elif axis=='z':
-                self.shimming0[2] = szVector[np.argmax(dataFFT)]
+                self.shimming0[2] = szVector[np.argmax(dataFFT), 0]
         return True
 
 if __name__ == '__main__':

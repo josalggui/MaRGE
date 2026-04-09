@@ -1,3 +1,5 @@
+"""Conversion of double-echo RARE noise acquisition .mat files to MRD binary streams."""
+
 import sys
 import argparse
 import numpy as np
@@ -25,7 +27,7 @@ def matToMRD(input, output_file, input_field_raw):
             (e.g. 'sampled_odd' or 'sampled_eve').
     """
     # print('From MAT to MRD...')
-   
+
     # OUTPUT
     if output_file is None:
         raise ValueError("'output_file' needed.")
@@ -38,24 +40,24 @@ def matToMRD(input, output_file, input_field_raw):
     else:
         # file-like con .write() binario
         output = output_file
-       
+
     # INPUT - Read .mat
     mat_data = sio.loadmat(input)
-   
+
     # Head info
     axesOrientation = mat_data['axesOrientation'][0]
     nPoints = mat_data['nPoints'][0]    # rd, ph, sl
     nPoints_sig = nPoints[[2,1,0]] # sl, ph, rd (signal is shorted like this)
-    inverse_axesOrientation = np.argsort(axesOrientation)  
+    inverse_axesOrientation = np.argsort(axesOrientation)
     nXYZ = nPoints[inverse_axesOrientation]  # x, y, z
     nPoints = [int(x) for x in nPoints]; nXYZ = [int(x) for x in nXYZ]; axesOrientation = [int(x) for x in axesOrientation]
     nPoints_sig = [int(x) for x in nPoints_sig]
-   
+
     try: # RAREpp and RARE_double_image
         rdGradAmplitude = mat_data['rd_grad_amplitude']
     except: # RAREprotocols
         rdGradAmplitude = mat_data['rdGradAmplitude']
-       
+
     fov = mat_data['fov'][0]*1e1
     fov_adq = fov[axesOrientation] # rd, ph, sl
     fov = fov.astype(int); fov = [int(x) for x in fov] # mm; x, y, z
@@ -65,7 +67,7 @@ def matToMRD(input, output_file, input_field_raw):
     acqTime = mat_data['acqTime'][0]*1e-3 # s
     bw = mat_data['bw_MHz'][0][0]*1e6 # Hz
     dwell = 1/bw* 1e9 # ns
-   
+
     # print('axesOrientation',  axesOrientation)
     # print('nPoints',  nPoints)
     # print('nXYZ',  nXYZ)
@@ -73,25 +75,25 @@ def matToMRD(input, output_file, input_field_raw):
     # print('fov:,', fov)
     # print('fov_adq: ',fov_adq)
     # print('dfov: ', dfov)
-   
+
     # Signal vector
     # sampledCartesian = mat_data['sampledCartesian']
     sampledCartesian = mat_data[input_field_raw]
-    signal = sampledCartesian[:,3]        
+    signal = sampledCartesian[:,3]
     kSpace = np.reshape(signal, nPoints_sig) # sl, ph, rd
     kSpace = np.reshape(kSpace, (1,kSpace.shape[0],kSpace.shape[1], kSpace.shape[2])) # Expand to MRD requisites
-    
+
     # k vectors
     kTrajec = np.real(sampledCartesian[:,0:3]).astype(np.float32)    # rd, ph, sl
     kTrajec = kTrajec[:,inverse_axesOrientation]    # x, y, z
 
-    kx = kTrajec[:,0]; kx = np.reshape(kx, nPoints_sig)   # sl, ph, rd    
+    kx = kTrajec[:,0]; kx = np.reshape(kx, nPoints_sig)   # sl, ph, rd
     kx = np.reshape(kx, (1,kx.shape[0],kx.shape[1], kx.shape[2]))
 
-    ky = kTrajec[:,1]; ky = np.reshape(ky, nPoints_sig)   # sl, ph, rd  
+    ky = kTrajec[:,1]; ky = np.reshape(ky, nPoints_sig)   # sl, ph, rd
     ky = np.reshape(ky, (1,ky.shape[0],ky.shape[1], ky.shape[2]))
 
-    kz = kTrajec[:,2]; kz = np.reshape(kz, nPoints_sig)   # sl, ph, rd      
+    kz = kTrajec[:,2]; kz = np.reshape(kz, nPoints_sig)   # sl, ph, rd
     kz = np.reshape(kz, (1,kz.shape[0],kz.shape[1], kz.shape[2]))
 
     rdTimes = np.linspace(-acqTime / 2, acqTime / 2, num=nPoints[0])
@@ -110,22 +112,22 @@ def matToMRD(input, output_file, input_field_raw):
     sl_posFull = np.reshape(sl_posFull, shape=(nPoints[0] * nPoints[1] * nPoints[2], 1))
     xyz_matrix = np.concatenate((rd_posFull, ph_posFull, sl_posFull), axis=1) # rd, ph, sl
     xyz_matrix = xyz_matrix[:,inverse_axesOrientation]   # x, y, z
-   
-    x_esp = xyz_matrix[:,0]; x_esp = np.reshape(x_esp, nPoints_sig)   # sl, ph, rd    
+
+    x_esp = xyz_matrix[:,0]; x_esp = np.reshape(x_esp, nPoints_sig)   # sl, ph, rd
     x_esp = np.reshape(x_esp, (1,x_esp.shape[0],x_esp.shape[1], x_esp.shape[2]))
 
-    y_esp = xyz_matrix[:,1]; y_esp = np.reshape(y_esp, nPoints_sig)   # sl, ph, rd  
+    y_esp = xyz_matrix[:,1]; y_esp = np.reshape(y_esp, nPoints_sig)   # sl, ph, rd
     y_esp = np.reshape(y_esp, (1,y_esp.shape[0],y_esp.shape[1], y_esp.shape[2]))
 
-    z_esp = xyz_matrix[:,2]; z_esp = np.reshape(z_esp, nPoints_sig)   # sl, ph, rd      
+    z_esp = xyz_matrix[:,2]; z_esp = np.reshape(z_esp, nPoints_sig)   # sl, ph, rd
     z_esp = np.reshape(z_esp, (1,z_esp.shape[0],z_esp.shape[1], z_esp.shape[2]))
-   
+
     ## Noise acq
     data_noise = mat_data['data_noise']
     nNoise = mat_data['nNoise'][0][0].item()
     # print('Num of noise acq:')
     # print(nNoise)
-    
+
     # OUTPUT - write .mrd
     # MRD Format
     h = mrd.Header()
@@ -159,9 +161,12 @@ def matToMRD(input, output_file, input_field_raw):
     enc.recon_space = r
 
     enc.encoding_limits = mrd.EncodingLimitsType()
-    enc.encoding_limits.kspace_encoding_step_0 = mrd.LimitType(minimum=0, maximum=nPoints_sig[0]-1, center=(nPoints_sig[0])//2)
-    enc.encoding_limits.kspace_encoding_step_1 = mrd.LimitType(minimum=0, maximum=nPoints_sig[1]-1, center=(nPoints_sig[1])//2)
-    enc.encoding_limits.kspace_encoding_step_2 = mrd.LimitType(minimum=0, maximum=nPoints_sig[2]-1, center=(nPoints_sig[2])//2)
+    #enc.encoding_limits.kspace_encoding_step_0 = mrd.LimitType(minimum=0, maximum=nPoints[0]-1, center=nPoints[0]//2)
+    #enc.encoding_limits.kspace_encoding_step_1 = mrd.LimitType(minimum=0, maximum=nPoints[1]-1, center=0)
+    #enc.encoding_limits.kspace_encoding_step_2 = mrd.LimitType(minimum=0, maximum=nPoints[2]-1, center=0)
+    enc.encoding_limits.kspace_encoding_step_0 = mrd.LimitType(minimum=0, maximum=nPoints[0] - 1, center=nPoints[0] // 2)
+    enc.encoding_limits.kspace_encoding_step_1 = mrd.LimitType(minimum=0, maximum=nPoints[1] - 1, center=nPoints[1] // 2)  # center=60
+    enc.encoding_limits.kspace_encoding_step_2 = mrd.LimitType(minimum=0, maximum=nPoints[2] - 1, center=nPoints[2] // 2)  # center=5
     enc.encoding_limits.average = mrd.LimitType(minimum=0, maximum=0, center=0)
     enc.encoding_limits.slice = mrd.LimitType(minimum=0, maximum=0, center=0)
     enc.encoding_limits.contrast = mrd.LimitType(minimum=0, maximum=0, center=0)
@@ -171,19 +176,19 @@ def matToMRD(input, output_file, input_field_raw):
     enc.encoding_limits.segment = mrd.LimitType(minimum=0, maximum=0, center=0)
 
     h.encoding.append(enc)
-   
+
     readout_gradient = mrd.UserParameterDoubleType()
     readout_gradient.name = "readout_gradient_intensity"
-    readout_gradient.value = rdGradAmplitude
-   
+    readout_gradient.value = float(np.squeeze(rdGradAmplitude).item())
+
     axes_param = mrd.UserParameterStringType()
     axes_param.name = "axesOrientation"
-    axes_param.value = ",".join(map(str, axesOrientation))  
-   
+    axes_param.value = ",".join(map(str, axesOrientation))
+
     d_fov = mrd.UserParameterStringType()
     d_fov.name = "dfov"
-    d_fov.value = ",".join(map(str, dfov))  
-   
+    d_fov.value = ",".join(map(str, dfov))
+
     if h.user_parameters is None:
         h.user_parameters = mrd.UserParametersType()
     h.user_parameters.user_parameter_double.append(readout_gradient)
@@ -233,7 +238,7 @@ def matToMRD(input, output_file, input_field_raw):
             noise.head.idx.segment = 0
             noise.data[:] = data_noise[n, :]
             yield mrd.StreamItem.Acquisition(noise)
-       
+
         for s in range(nPoints[2]):
             for line in range(nPoints[1]):
 
@@ -250,7 +255,7 @@ def matToMRD(input, output_file, input_field_raw):
                     acq.head.flags |= mrd.AcquisitionFlags.LAST_IN_REPETITION
 
                 acq.head.scan_counter = num + nNoise
-               
+
                 acq.head.acquisition_time_stamp_ns = int(num * 2 * 1e9)
                 acq.head.physiology_time_stamp_ns = [int(2.5*num * 1e9), 0, 0]
 
@@ -258,10 +263,10 @@ def matToMRD(input, output_file, input_field_raw):
 
                 acq.head.discard_pre = 0
                 acq.head.discard_post = 0
-               
+
                 acq.head.center_sample = round(nPoints[0] / 2)
                 acq.head.sample_time_ns = int(dwell)
-               
+
                 acq.head.idx.kspace_encode_step_1 = line
                 acq.head.idx.kspace_encode_step_2 = s
                 acq.head.idx.slice = 0
@@ -279,7 +284,7 @@ def matToMRD(input, output_file, input_field_raw):
                 acq.trajectory[4,:] = x_esp[:, s, line, :]
                 acq.trajectory[5,:] = y_esp[:, s, line, :]
                 acq.trajectory[6,:] = z_esp[:, s, line, :]
-               
+
                 yield mrd.StreamItem.Acquisition(acq)
 
     with mrd.BinaryMrdWriter(output) as w:
@@ -288,7 +293,7 @@ def matToMRD(input, output_file, input_field_raw):
 
     if 'must_close_out' in locals() and must_close_out:
         output.close()
-        
+
 # if __name__ == "__main__":
 #     parser = argparse.ArgumentParser(description="Convert mat to MRD")
 #     parser.add_argument('-i', '--input', type=str, required=False, help="Input file path")
@@ -298,6 +303,6 @@ def matToMRD(input, output_file, input_field_raw):
 #     #     input = '/data/raw_data/i3m/RarePyPulseq.2025.10.24.14.18.10.422.mat',
 #     #     output= '/data/raw_data/i3m/RarePyPulseq.2025.10.24.14.18.10.422.mrd',
 #     # )
-   
+
 #     args = parser.parse_args()
 #     matToMRD(args.input, args.output)
