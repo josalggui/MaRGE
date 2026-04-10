@@ -55,14 +55,12 @@ def fix_image_orientation(image, axes, orientation='FFS', rd_direction=1):
     if axes[2] == 2:  # Sagittal
         title = "Sagittal"
         if axes[0] == 0 and axes[1] == 1:
-            image = np.flip(image, axis=0)
             x_label = "(-Y) A | PHASE | P (+Y)"
             y_label = "(+X) I | READOUT | S (-X)"
             if rd_direction == -1:
                 image = image[:, :, ::-1]
         else:
             image = np.transpose(image, (0, 2, 1))
-            image = np.flip(image, axis=0)
             x_label = "(-Y) A | READOUT | P (+Y)"
             y_label = "(+X) I | PHASE | S (-X)"
             if rd_direction == -1:
@@ -71,12 +69,14 @@ def fix_image_orientation(image, axes, orientation='FFS', rd_direction=1):
     elif axes[2] == 1:  # Coronal
         title = "Coronal"
         if axes[0] == 0 and axes[1] == 2:
+            image = np.flip(image, axis=0)
             x_label = "(-Z) R | PHASE | L (+Z)"
             y_label = "(+X) I | READOUT | S (-X)"
             if rd_direction == -1:
                 image = image[:, :, ::-1]
         else:
             image = np.transpose(image, (0, 2, 1))
+            image = np.flip(image, axis=0)
             x_label = "(-Z) R | READOUT | L (+Z)"
             y_label = "(+X) I | PHASE | S (-X)"
             if rd_direction == -1:

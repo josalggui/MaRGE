@@ -94,6 +94,13 @@ class Plot3DController(Plot3DWidget):
         # Call the original setImage method
         super().setImage(data, **kwargs)
 
+        try:
+            self.timeLine.setPen(pg.mkPen('y', width=4))
+            self.timeLine.setHoverPen(pg.mkPen('r', width=4))
+            self.timeLine.update()
+        except Exception as e:
+            print("ERROR in timeLime adjustment:", e)
+
         # Set current index to the middle frame
         if data.ndim == 3:
             try:
