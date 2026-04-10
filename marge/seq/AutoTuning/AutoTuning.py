@@ -13,7 +13,7 @@ from scipy.interpolate import interp1d
 import numpy as np
 import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 import marge.configs.hw_config as hw
-from . import AutoTuningHardwareInterface
+from marge.controller import controller_rfautomate as AutoTuningHardwareInterface
 from marge.utils.SerialDevice import SerialDevice
 import marge.configs.units as units
 
