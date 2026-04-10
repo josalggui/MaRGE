@@ -16,6 +16,7 @@ import qdarkstyle
 import marge.configs.hw_config as hw
 from .controller_main import MainController
 from marge.ui.window_session import SessionWindow
+from marge.utils.bash_execution import BashExecution
 
 
 from marge.controller.controller_console import ConsoleController
@@ -336,7 +337,7 @@ class SessionController(SessionWindow):
             if not self.main_gui.demo:
                 # Close server
                 try:
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                    BashExecution("./communicateRP.sh", hw.rp_ip_address, "killall marcos_server")
                 except Exception as e:
                     print("ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
                     print(str(e))
@@ -383,8 +384,7 @@ class SessionController(SessionWindow):
             if not self.main_gui.demo:
                 # Close server
                 try:
-                    subprocess.run(
-                        [hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                    BashExecution("./communicateRP.sh", hw.rp_ip_address, "killall marcos_server")
                 except Exception as e:
                     print("ERROR: Server connection not found! Please verify if the blue LED is illuminated on the Red Pitaya.")
                     print(str(e))
