@@ -182,3 +182,8 @@ In the current version, with the introduction of the **Tyger capability**, the A
 - The code will continue to run using CPU paths (or Tyger paths) instead
 
 You may safely skip CuPy/CUDA installation unless you explicitly plan to use the legacy ART postprocessing toolbox.
+If you install MaRGE from `pyproject.toml`, GPU support can be requested explicitly with:
+
+```bash
+pip install .[gpu]
+```

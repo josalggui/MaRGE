@@ -17,7 +17,6 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "resources",
     "requests >= 2.25.1",
     "numpy",
     "matplotlib",
@@ -41,6 +40,11 @@ dependencies = [
     "reportlab",
     "pillow",
     "mrd-python==2.2.0",
+]
+
+[project.optional-dependencies]
+gpu = [
+    "cupy-cuda12x",
 ]
 
 [project.scripts]
