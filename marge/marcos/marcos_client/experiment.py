@@ -594,6 +594,7 @@ def test_gpa_calibration():
         expt.gradb.calibrate(channels=[0], max_current=0.05, num_calibration_points=30, averages=1, test_cal=True)
 
 def test_lo_change():
+    """Integration test: verify that recompiling after a LO frequency change works."""
     expt = Experiment(auto_leds=False)
     expt.add_flodict({'tx0': ( np.array([1]), np.array([0.5]) )})
     expt.compile()

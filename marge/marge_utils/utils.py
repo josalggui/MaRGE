@@ -1,3 +1,5 @@
+"""General-purpose utility functions shared across MaRGE modules."""
+
 import copy
 import os
 
@@ -600,6 +602,17 @@ def run_pocs_reconstruction(n_points, factors, k_space_ref, test=False):
     """
     print("Running POCS...")
     def getCenterKSpace(k_space, m_vec):
+        """
+        Extract the central region of a 3D k-space array, zeroing out the periphery.
+
+        Args:
+            k_space (np.ndarray): 3D complex k-space array with shape (sl, ph, rd).
+            m_vec (np.ndarray): Half-widths of the central region to keep along each axis.
+
+        Returns:
+            np.ndarray: Array of same shape as k_space, with only the central
+                [n//2 - m : n//2 + m] region preserved; all other values are zero.
+        """
         # fix n_vec
         output = np.zeros(np.shape(k_space), dtype=complex)
         n_vec = np.array(np.shape(k_space))

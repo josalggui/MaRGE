@@ -19,4 +19,4 @@ imageio
 h5py
 reportlab
 pillow
-mrd-python @ git+https://github.com/ismrmrd/mrd.git@0f7684d55cc80d9e69cbe4df21e6a4f3b41515e3#subdirectory=python 
+mrd-python==2.2.0 

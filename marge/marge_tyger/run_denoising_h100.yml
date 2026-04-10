@@ -1,0 +1,28 @@
+job:
+  codespec:
+    image: acr-proxy.tyger.cloud/tygertepimages.azurecr.io/tinker:b3e3042-cuda-amd64
+    buffers:
+      inputs:
+        - input
+        - noisecovariance
+      outputs:
+        - recon
+    args:
+      - "recon"
+      - "--input"
+      - "$(INPUT_PIPE)"
+      - "--noise.noise-covariance"
+      - "$(NOISECOVARIANCE_PIPE)"
+      - "--output"
+      - "$(RECON_PIPE)"
+      - "--kspace-filter.sigma"
+      - "1.0"
+      - "--denoising.model-file"
+      - "/app/models/denoising/model_109m_large_with_pf_203136.pts"
+      - "--log-level"
+      - "DEBUG"
+    resources:
+      requests:
+        cpu: 4
+      gpu: 1
+  nodepool: gpunp3

@@ -1,3 +1,5 @@
+"""Main window definition for the session management interface."""
+
 import sys
 import qdarkstyle
 from PyQt5.QtGui import QIcon
@@ -146,6 +148,7 @@ class SessionWindow(QMainWindow):
         self.tab3.setLayout(layout)
 
     def setupTab4(self):
+        """Set up the 'Others' hardware configuration tab with an OthersWidget."""
         widget = OthersWidget()
         layout = QVBoxLayout()
         layout.addWidget(widget)

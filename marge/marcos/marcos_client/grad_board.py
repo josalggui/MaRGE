@@ -160,6 +160,15 @@ class OCRA1:
         return np.round(131071.49 * gd_cal).astype(np.uint32) & 0x3ffff # 2's complement
 
     def bin2float(self, grad_bin):
+        """
+        Convert a raw 18-bit gradient DAC word to a normalised float in [-1, 1).
+
+        Args:
+            grad_bin (np.ndarray): Array of unsigned 18-bit integer DAC words.
+
+        Returns:
+            np.ndarray: Normalised float values in the range [-1, 1).
+        """
         return ( ((grad_bin & 0x3ffff).astype(np.int32) ^ (1 << 17)) - (1 << 17) ).astype(np.int32) / 131072
 
 class GPAFHDO:

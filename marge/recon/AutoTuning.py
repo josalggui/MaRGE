@@ -1,9 +1,23 @@
+"""Reconstruction module for auto-tuning sequences."""
+
 import numpy as np
 import scipy as sp
 from scipy.interpolate import interp1d
 
 
 def AutoTuning(raw_data_path=None):
+    """
+    Process autotuning raw data and compute S11 optimisation results.
+
+    Loads the .mat file, extracts the S11 history and frequency vector,
+    and returns a result dictionary and DICOM metadata for display.
+
+    Args:
+        raw_data_path (str, optional): Path to the input .mat file.
+
+    Returns:
+        tuple: (output_dict, dicom_meta_data) with processed results.
+    """
     # load .mat
     mat_data = sp.io.loadmat(raw_data_path)
 

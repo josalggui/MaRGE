@@ -400,6 +400,21 @@ def cl2bin(changelist, changelist_grad,
 CIC_SLOWEST_RATE_NEAREST_POW2 = 1 << np.ceil(np.log2(CIC_SLOWEST_RATE)).astype(int)
 
 def cic_words(rate, set_cic_shift=False):
+    """
+    Compute the CIC filter configuration words for a given decimation rate.
+
+    Calculates the gain shift and CIC rate words required to configure the
+    CIC decimation filter for the specified RX sampling rate.
+
+    Args:
+        rate (int | np.ndarray): Desired CIC decimation rate. Must be within
+            [CIC_FASTEST_RATE, CIC_SLOWEST_RATE].
+        set_cic_shift (bool, optional): If True, also compute the CIC shift word.
+            Defaults to False.
+
+    Returns:
+        tuple: CIC configuration words.
+    """
     # Calculate the data words to transfer to the CIC for a given rate
 
     # FLoating-point calculation

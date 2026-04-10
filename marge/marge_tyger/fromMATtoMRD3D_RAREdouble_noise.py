@@ -1,3 +1,5 @@
+"""Conversion of double-echo RARE noise acquisition .mat files to MRD binary streams."""
+
 import sys
 import argparse
 import numpy as np
@@ -9,6 +11,21 @@ import os
 from pathlib import Path
 
 def matToMRD(input, output_file, input_field_raw):
+    """
+    Convert a double-echo RARE noise acquisition .mat file to an MRD binary stream.
+
+    Reads the k-space from the specified echo field, physical-space trajectory (kx, ky, kz),
+    noise acquisitions, and geometry metadata. Applies inverse_axesOrientation to map from
+    acquisition space (rd, ph, sl) to physical space (x, y, z). Writes noise acquisitions
+    first, followed by all k-space lines.
+
+    Args:
+        input (str): Path to the input .mat file.
+        output_file (str | os.PathLike | file-like): Destination MRD file path or
+            writable binary stream.
+        input_field_raw (str): .mat field name of the k-space array to use
+            (e.g. 'sampled_odd' or 'sampled_eve').
+    """
     # print('From MAT to MRD...')
    
     # OUTPUT
@@ -144,9 +161,12 @@ def matToMRD(input, output_file, input_field_raw):
     enc.recon_space = r
 
     enc.encoding_limits = mrd.EncodingLimitsType()
-    enc.encoding_limits.kspace_encoding_step_0 = mrd.LimitType(minimum=0, maximum=nPoints_sig[0]-1, center=(nPoints_sig[0])//2)
-    enc.encoding_limits.kspace_encoding_step_1 = mrd.LimitType(minimum=0, maximum=nPoints_sig[1]-1, center=(nPoints_sig[1])//2)
-    enc.encoding_limits.kspace_encoding_step_2 = mrd.LimitType(minimum=0, maximum=nPoints_sig[2]-1, center=(nPoints_sig[2])//2)
+    #enc.encoding_limits.kspace_encoding_step_0 = mrd.LimitType(minimum=0, maximum=nPoints[0]-1, center=nPoints[0]//2)
+    #enc.encoding_limits.kspace_encoding_step_1 = mrd.LimitType(minimum=0, maximum=nPoints[1]-1, center=0)
+    #enc.encoding_limits.kspace_encoding_step_2 = mrd.LimitType(minimum=0, maximum=nPoints[2]-1, center=0)
+    enc.encoding_limits.kspace_encoding_step_0 = mrd.LimitType(minimum=0, maximum=nPoints[0] - 1, center=nPoints[0] // 2)
+    enc.encoding_limits.kspace_encoding_step_1 = mrd.LimitType(minimum=0, maximum=nPoints[1] - 1, center=nPoints[1] // 2)  # center=60
+    enc.encoding_limits.kspace_encoding_step_2 = mrd.LimitType(minimum=0, maximum=nPoints[2] - 1, center=nPoints[2] // 2)  # center=5
     enc.encoding_limits.average = mrd.LimitType(minimum=0, maximum=0, center=0)
     enc.encoding_limits.slice = mrd.LimitType(minimum=0, maximum=0, center=0)
     enc.encoding_limits.contrast = mrd.LimitType(minimum=0, maximum=0, center=0)
@@ -159,8 +179,8 @@ def matToMRD(input, output_file, input_field_raw):
    
     readout_gradient = mrd.UserParameterDoubleType()
     readout_gradient.name = "readout_gradient_intensity"
-    readout_gradient.value = rdGradAmplitude
-   
+    readout_gradient.value = float(np.squeeze(rdGradAmplitude).item())
+
     axes_param = mrd.UserParameterStringType()
     axes_param.name = "axesOrientation"
     axes_param.value = ",".join(map(str, axesOrientation))  
@@ -176,12 +196,22 @@ def matToMRD(input, output_file, input_field_raw):
     h.user_parameters.user_parameter_string.append(d_fov)
 
     def generate_data() -> Generator[mrd.StreamItem, None, None]:
+        """
+        Yield MRD StreamItems for all noise scans followed by all k-space acquisitions.
+
+        Noise acquisitions are yielded first, each flagged as IS_NOISE_MEASUREMENT.
+        Then all (slice, phase-encode line) combinations are yielded in order,
+        with trajectory vectors in physical space (kx, ky, kz, rdTimes, x_esp, y_esp, z_esp).
+
+        Yields:
+            mrd.StreamItem.Acquisition: One item per noise scan and per k-space line.
+        """
         acq = mrd.Acquisition()
 
         acq.data.resize((1, nPoints[0]))
         acq.trajectory.resize((7, nPoints[0]))
         acq.head.center_sample = round(nPoints[0] / 2)
-       
+
         for n in range(nNoise):
             noise = mrd.Acquisition()
             noise.data.resize((1, nPoints[0]))

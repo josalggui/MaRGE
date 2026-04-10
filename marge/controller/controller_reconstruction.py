@@ -1,3 +1,5 @@
+"""Controller for the image reconstruction workflow."""
+
 import os
 import time
 import threading
@@ -493,6 +495,13 @@ class ReconstructionTabController(ReconstructionTabWidget):
                                           image_key=self.main.image_view_widget.image_key)
 
     def snr_4(self):
+        """
+        Compute the SNR map using a double-echo RARE dataset.
+
+        Reconstructs odd and even echo images from the raw k-space data,
+        zero-pads them to the full matrix size, and computes the SNR map
+        from the combined image using the noise standard deviation.
+        """
         # Get the mat data
         mat_data = self.main.toolbar_image.mat_data
 

@@ -1,3 +1,5 @@
+"""Pulse sequence for automatic receiver gain calibration."""
+
 import os
 import sys
 
@@ -86,6 +88,20 @@ class FixGain(larmor.Larmor):
             return False
 
     def sequenceAnalysis(self, mode=None, save=True):
+        """
+        Process raw acquired data and compute the output images and metrics.
+
+        Reconstructs the image from k-space, computes SNR or other sequence-specific
+        figures of merit, populates output_dict with result arrays, and fills
+        dicom_meta_data with the relevant DICOM tags for saving.
+
+        Args:
+            mode (str, optional): Processing mode selector (sequence-dependent). Defaults to None.
+            save (bool, optional): Whether to save results to disk. Defaults to True.
+
+        Returns:
+            tuple: (output_dict, dicom_meta_data) with processed results and metadata.
+        """
         if self.mode == 'MANUAL':
             if not self._set_gain():
                 return []

@@ -1,3 +1,5 @@
+"""Reconstruction module for localizer sequences."""
+
 import marge.configs.hw_config as hw
 import numpy as np
 import scipy as sp

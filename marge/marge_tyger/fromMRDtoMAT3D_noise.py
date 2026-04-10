@@ -1,3 +1,5 @@
+"""Export of noise-scan MRD images and k-space to .mat files."""
+
 import sys
 import argparse
 import mrd
@@ -5,6 +7,21 @@ import scipy.io as sio
 import numpy as np
 
 def export(input, output, out_field, out_field_k):
+    """
+    Read a noise scan image from an MRD stream and save the image and its k-space into a .mat file.
+
+    Reads the first ImageFloat from the MRD stream, saves it under out_field, and also
+    computes the corresponding k-space via FFT and saves it under out_field_k.
+
+    Args:
+        input (file-like | str): Binary MRD stream or path to the input file.
+        output (str): Path to the .mat file where results will be saved.
+        out_field (str): Field name for the reconstructed image.
+        out_field_k (str): Field name for the reconstructed k-space.
+
+    Returns:
+        np.ndarray: Raw image data from the MRD stream (before removing the channel dimension).
+    """
     images = []
     with mrd.BinaryMrdReader(input) as reader:
         header = reader.read_header()
@@ -27,7 +44,8 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--input', type=str, required=False, help="Input file (default stdin)")
     parser.add_argument('-o', '--output', type=str, required=False, help="Output filename .mat")
     parser.add_argument('-of', '--out_field', type=str, required=False, help="Recon img name field")
-    
+    parser.add_argument('-ofk', '--out_field_k', type=str, required=False,
+                                               help = "Recon kspace name field")
     # parser.set_defaults(
     #     input = '/home/teresa/marcos_tyger/Brain_Images/output.bin',
     #     output= '/home/teresa/marcos_tyger/Brain_Images/brainIR.mat',
@@ -38,4 +56,4 @@ if __name__ == "__main__":
 
     input = open(args.input, "rb") if args.input is not None else sys.stdin.buffer
 
-    export(input, args.output, args.out_field)
+    export(input, args.output, args.out_field, args.out_field_k)

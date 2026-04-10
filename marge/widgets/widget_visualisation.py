@@ -1,3 +1,5 @@
+"""Widget for the visualisation tab panel."""
+
 from PyQt5.QtWidgets import QPushButton, QLabel, QLineEdit, QHBoxLayout, QVBoxLayout, QWidget
 
 

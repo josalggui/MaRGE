@@ -1,3 +1,5 @@
+"""Widget for the post-processing tab panel."""
+
 from PyQt5.QtWidgets import QPushButton, QTabWidget, QWidget, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QHBoxLayout, \
     QGroupBox
 

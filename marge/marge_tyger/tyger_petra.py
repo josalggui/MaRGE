@@ -10,6 +10,20 @@ from marge.marge_tyger.fromMATtoMRD3D_PETRA import matToMRD
 from marge.marge_tyger.fromMRDtoMAT3D import export
 
 def reconTygerPETRA(rawData_path, output_field):
+    """
+    Run a full Tyger PETRA reconstruction pipeline.
+
+    Converts the input .mat file to MRD format, submits the job to Tyger
+    using the preconfigured PETRA YAML, and writes the reconstructed image
+    back into the .mat file.
+
+    Args:
+        rawData_path (str): Path to the .mat file containing raw PETRA k-space data.
+        output_field (str): .mat field name where the reconstructed image will be stored.
+
+    Returns:
+        np.ndarray: Reconstructed image array in MaRGE format (ch, sl, ph, rd).
+    """
     yml_file = tyger_conf.yml_petra
     print(yml_file)
     
@@ -21,6 +35,7 @@ def reconTygerPETRA(rawData_path, output_field):
     # # From MAT to MRD
     class StdoutWrapper:
         def __init__(self, buffer):
+            """Redirect stdout writes to a buffer without forwarding data."""
             self.buffer = buffer
         def write(self, data): pass
         def flush(self): pass

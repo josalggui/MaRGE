@@ -201,6 +201,13 @@ class MarcosController(MarcosToolBar):
         """
 
         def init_gpa():
+            """
+            Initialise the GPA and RFPA hardware in a blocking loop until successful.
+
+            Runs inside a thread started by initgpa(). Disables the GPA init action
+            while running, attempts hardware initialisation, and re-enables the action
+            or shows an error message depending on the outcome.
+            """
             if self.action_server.isChecked():
                 if not self.main.demo:
                     self.action_gpa_init.setEnabled(False)

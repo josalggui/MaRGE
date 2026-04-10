@@ -37,7 +37,8 @@ sequence.seq
 *.rar
 *.csv
 marge/logs/
-
+.venv/
+*.pyc
 
 __pycache__/
 *.py[codz]

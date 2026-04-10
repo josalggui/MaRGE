@@ -214,6 +214,13 @@ class ProtocolInputsController(ProtocolInputsWidget):
             self.main.input_table.setItem(m, 0, new_item)
 
     def loadProtocolInputs(self):
+        """
+        Load sequence parameter values from a protocol CSV file into the input table.
+
+        Reads the CSV file associated with the currently selected protocol item,
+        maps its values onto the sequence's mapVals, and populates the input table
+        widget with the parameter names and their stored values.
+        """
         # Get path to the file
         protocol = self.main.protocol_list.getCurrentProtocol()
         file_name = "%s.csv" % self.clicked_item.text()

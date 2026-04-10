@@ -30,6 +30,19 @@ from marge.controller.controller_postprocessing import ProcessingWindowControlle
 
 
 class MainWindow(QMainWindow):
+    """
+    Main application window for MaRGE.
+
+    Assembles all UI components — toolbars, sequence list, sequence inputs,
+    protocol list, protocol inputs, console, figures layout, history list,
+    and the post-processing window — into a single QMainWindow. Also manages
+    the thread pool used for parallel sequence execution.
+
+    Args:
+        session (dict): Session configuration dictionary (directory, theme, etc.).
+        demo (bool, optional): If True, runs in demo mode without hardware. Defaults to False.
+        parent (QWidget, optional): Parent widget. Defaults to None.
+    """
     def __init__(self, session, demo=False, parent=None):
         super(MainWindow, self).__init__()
         self.app_open = True

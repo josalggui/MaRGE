@@ -8,6 +8,7 @@ import pyqtgraph as pg
 
 
 class Plot3DWidget(pg.ImageView):
+    """3D image view widget with an ROI overlay and a crosshair for value inspection."""
     def __init__(self, main):
 
         # Save inputs into the self

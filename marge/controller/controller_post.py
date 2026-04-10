@@ -1,3 +1,5 @@
+"""Controller for the post-processing panel widget."""
+
 import bm4d
 import threading
 import numpy as np
