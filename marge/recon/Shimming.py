@@ -45,7 +45,7 @@ def Shimming(raw_data_path=None):
         Returns:
             float: FWHM in kHz.
         """
-        bw = mat_data['bw'] * 1e-3
+        bw = mat_data['bw'].item() * 1e-3
         f_vector = np.linspace(-bw / 2, bw / 2, n_points)
         target = np.max(s) / 2
         p0 = np.argmax(s)
