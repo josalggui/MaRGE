@@ -1,3 +1,3 @@
 """MaRGE: MRI Acquisition and Reconstruction Graphical Environment."""
 
-__version__ = "0.0.9.beta5"
+__version__ = "1.0.0.beta4"
