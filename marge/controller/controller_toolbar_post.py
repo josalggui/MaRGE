@@ -1,6 +1,8 @@
+"""Controller for the post-processing toolbar."""
+
 import copy
 import os
-import sys 
+import sys
 import ctypes
 import scipy as sp
 import numpy as np
@@ -831,6 +833,12 @@ class MainWindow_toolbar(QMainWindow):
         
         
     def initialize(self, data_from_other_class):
+        """
+        Store image data received from another controller for later display.
+
+        Args:
+            data_from_other_class: Image data array to be displayed in the post-processing view.
+        """
         self.image_data = data_from_other_class
         
     def display_image(self, row, column):

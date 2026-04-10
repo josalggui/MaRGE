@@ -1,5 +1,8 @@
+"""Tyger pipeline configuration: Docker images, server URL, and pipeline paths."""
+
 docker_img_RARE = 'ghcr.io/mrilab-i3m/rare-recon:v1'
 #docker_img_RARE = 'rare-recon:cuda12.8'
+#docker_img_RARE = 'ghcr.io/mrilab-i3m/rare-recon:v1'
 recon_code_RARE = 'stream_recon_RARE.py'
 cp_batchsize_RARE = 1000
 yml_petra = 'marge_tyger/petra_art.yml'

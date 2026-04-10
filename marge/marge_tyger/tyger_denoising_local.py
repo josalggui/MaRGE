@@ -1,3 +1,5 @@
+"""Tyger local denoising pipeline for single-echo RARE acquisitions."""
+
 import io
 import os
 import sys
@@ -17,7 +19,25 @@ _DEFAULT_YML = os.path.join(_THIS_DIR, "tyger_local_denoising.yml")
 def denoisingTyger(rawData_path: str,
                    output_field: str,
                    output_field_k: str):
+    """
+    Run the Tyger local denoising pipeline on a RARE acquisition.
 
+    Converts the input .mat file to MRD in memory, submits the job to Tyger
+    using the preconfigured local denoising YAML, and writes the denoised image
+    and k-space back into the .mat file.
+
+    Args:
+        rawData_path (str): Path to the .mat file containing the raw k-space data.
+        output_field (str): .mat field name where the denoised image will be stored.
+        output_field_k (str): .mat field name where the denoised k-space will be stored.
+
+    Returns:
+        np.ndarray: Denoised image array with shape (sl, ph, rd).
+
+    Raises:
+        FileNotFoundError: If rawData_path or the Tyger YML file do not exist.
+        RuntimeError: If tyger run exec fails or returns empty output.
+    """
     # ------------------------------------------------------------------
     # 0. Cheking preconditions
     # ------------------------------------------------------------------

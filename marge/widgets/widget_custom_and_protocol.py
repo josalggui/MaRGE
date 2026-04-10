@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QTabWidget, QSizePolicy, QWidget, QVBoxLayout
 
 
 class CustomAndProtocolWidget(QTabWidget):
+    """Tab widget combining the custom sequence list and the protocol list side by side."""
     def __init__(self):
         super().__init__()
         self.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))

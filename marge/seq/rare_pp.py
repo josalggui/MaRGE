@@ -288,7 +288,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         n_rd_points_per_train = self.etl * n_rd
 
         # par_acq_lines in case par_acq_lines = 0
-        par_acq_lines = int(int(self.nPoints[2]*self.parFourierFraction)-self.nPoints[2]/2)
+        par_acq_lines = int(np.round(self.nPoints[2]*self.parFourierFraction)-self.nPoints[2]//2)
         self.mapVals['partialAcquisition'] = par_acq_lines
 
         # BW
@@ -327,7 +327,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         sl_gradients = np.linspace(-sl_grad_amplitude,sl_grad_amplitude,num=n_sl,endpoint=False)
 
         # Now fix the number of slices to partially acquired k-space
-        n_sl = (int(self.nPoints[2]/2)+par_acq_lines)*axes_enable[2]+(1-axes_enable[2])
+        n_sl = (self.nPoints[2]//2+par_acq_lines)*axes_enable[2]+(1-axes_enable[2])
         print("Number of acquired slices: %i" % n_sl)
 
         # Set phase vector to given sweep mode
@@ -977,6 +977,24 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                                )
 
     def sequenceAnalysis(self, mode=None):
+        """
+        Process raw acquired data and compute the output images and metrics.
+
+        Reconstructs the image from k-space, computes SNR or other sequence-specific
+        figures of merit, populates output_dict with result arrays, and fills
+        dicom_meta_data with the relevant DICOM tags for saving.
+
+        When the Tyger SNRAware denoising pipeline is enabled, the acquired k-space
+        is exported to MRD format and submitted to the Tyger platform for GPU-accelerated
+        TEP or local denoising. The denoised image is then available for subsequent
+        phase-error-based distortion correction before final saving.
+
+        Args:
+            mode (str, optional): Processing mode selector (sequence-dependent). Defaults to None.
+
+        Returns:
+            tuple: (output_dict, dicom_meta_data) with processed results and metadata.
+        """
         super().sequenceAnalysis(mode=mode)
 
         # Get axes in strings

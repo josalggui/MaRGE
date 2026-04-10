@@ -1,3 +1,5 @@
+"""Reconstruction module for TSE (Turbo Spin Echo) sequences."""
+
 import marge.configs.hw_config as hw
 import numpy as np
 import scipy as sp
@@ -103,8 +105,10 @@ def TSE(raw_data_path=None):
 
     # Functions for fitting
     def func1(x, m, t2):
+        """Mono-exponential T2 decay model: m * exp(-x / t2)."""
         return m * np.exp(-x / t2)
     def func2(x, As, Ts, Al, Tl):
+        """Bi-exponential T2 decay model: As*exp(-x/Ts) + Al*exp(-x/Tl)."""
         return As * np.exp(-x / Ts) + Al * np.exp(-x / Tl)
 
     try:

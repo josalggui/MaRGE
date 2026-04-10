@@ -4,10 +4,7 @@
 import numpy as np
 import warnings
 from marge.marcos.marcos_client.marmachine import *
-try:
-    from local_config import grad_board
-except ModuleNotFoundError:
-    grad_board = "gpa-fhdo"
+import marge.configs.hw_config as hw
 
 grad_data_bufs = (1, 2)
 
@@ -28,12 +25,12 @@ def col2buf(col_idx, value):
     elif col_idx in (5, 6, 7, 8, 9, 10, 11, 12): # grad
         # Only encode value and channel into words here.  Precise
         # timing and broadcast logic will be handled at the next stage
-        if grad_board == "gpa-fhdo":
+        if hw.grad_board == "gpa-fhdo":
             if col_idx in (9, 10, 11, 12):
                 raise RuntimeError("GPA-FHDO is selected, but you are trying to control OCRA1")
             grad_chan = col_idx - 5
             val_full = value | 0x80000 | ( grad_chan << 16 ) | (grad_chan << 25)
-        elif grad_board == "ocra1":
+        elif hw.grad_board == "ocra1":
             if col_idx in (5, 6, 7, 8):
                 raise RuntimeError("OCRA1 is selected, but you are trying to control GPA-FHDO")
             grad_chan = col_idx - 9
@@ -221,7 +218,7 @@ def cl2bin(changelist, changelist_grad,
             num_chgs[idx] += 1
             # assume the changes in changelist_grad are paired with LSBs/MSBs matching each other's grad channels stored sequentially,
             # and that for each event, the MSB update is first
-            if grad_board == "ocra1": # simultaneous with another grad update
+            if hw.grad_board == "ocra1": # simultaneous with another grad update
                 if msb:
                     if num_chgs[1]: # MSB buffer and not the first grad event on this timestep
                         # turn broadcast off if this isn't the first grad event on this timestep
@@ -235,7 +232,7 @@ def cl2bin(changelist, changelist_grad,
                 # move non-broadcast events back in time, so that synchronisation will be done in ocra1_iface core
                 changelist_grad_shifted.append( (c[0]-num_chgs[idx], c[1], data, c[3]) )
                 num_chgs[idx] += 1
-            elif grad_board == "gpa-fhdo":
+            elif hw.grad_board == "gpa-fhdo":
                 # don't do anything; currently will cause an error
                 # later since multiple events can't happen at the same
                 # time for GPA-FHDO
@@ -403,6 +400,21 @@ def cl2bin(changelist, changelist_grad,
 CIC_SLOWEST_RATE_NEAREST_POW2 = 1 << np.ceil(np.log2(CIC_SLOWEST_RATE)).astype(int)
 
 def cic_words(rate, set_cic_shift=False):
+    """
+    Compute the CIC filter configuration words for a given decimation rate.
+
+    Calculates the gain shift and CIC rate words required to configure the
+    CIC decimation filter for the specified RX sampling rate.
+
+    Args:
+        rate (int | np.ndarray): Desired CIC decimation rate. Must be within
+            [CIC_FASTEST_RATE, CIC_SLOWEST_RATE].
+        set_cic_shift (bool, optional): If True, also compute the CIC shift word.
+            Defaults to False.
+
+    Returns:
+        tuple: CIC configuration words.
+    """
     # Calculate the data words to transfer to the CIC for a given rate
 
     # FLoating-point calculation

@@ -316,6 +316,20 @@ def radial(trs=36, plot_rx=False, init_gpa=False, plot_sequence=False):
     tx_gate_post = 1 # us, time to keep the TX gate on after the RF pulse ends
 
     def radial_tr(tstart, th):
+        """
+        Build the MaRCoS event dictionary for a single radial readout TR.
+
+        Computes Gx/Gy gradient amplitudes from the projection angle th and
+        returns a value_dict with all TX, gradient, RX, and gate events timed
+        relative to tstart.
+
+        Args:
+            tstart (float): Start time of the TR in microseconds.
+            th (float): Projection angle in radians.
+
+        Returns:
+            dict: MaRCoS float-domain event dictionary for one TR.
+        """
         dbg_sc=0.01
         gx = G * np.cos(th)
         gy = G * np.sin(th)

@@ -1,3 +1,5 @@
+"""Widget for the Tyger reconstruction controls panel."""
+
 import sys
 
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QLabel, QLineEdit, QHBoxLayout, QGroupBox, QWidget, QApplication, \

@@ -172,6 +172,19 @@ class PulseqReader(blankSeq.MRIBLANKSEQ):
         return True
 
     def sequenceAnalysis(self, mode=None):
+        """
+        Process raw acquired data and compute the output images and metrics.
+
+        Reconstructs the image from k-space, computes SNR or other sequence-specific
+        figures of merit, populates output_dict with result arrays, and fills
+        dicom_meta_data with the relevant DICOM tags for saving.
+
+        Args:
+            mode (str, optional): Processing mode selector (sequence-dependent). Defaults to None.
+
+        Returns:
+            tuple: (output_dict, dicom_meta_data) with processed results and metadata.
+        """
         # Decimate the data
         data_over = self.mapVals['data_over']
         data = sig.decimate(data_over, hw.oversamplingFactor, ftype='fir', zero_phase=True)

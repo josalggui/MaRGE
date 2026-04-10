@@ -1,3 +1,5 @@
+"""Main window definition for the post-processing interface."""
+
 import sys
 import qdarkstyle
 from PyQt5.QtCore import QThreadPool

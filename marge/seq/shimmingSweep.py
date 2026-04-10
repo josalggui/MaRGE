@@ -111,6 +111,19 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         return True
 
     def sequenceAnalysis(self, mode=None):
+        """
+        Process raw acquired data and compute the output images and metrics.
+
+        Reconstructs the image from k-space, computes SNR or other sequence-specific
+        figures of merit, populates output_dict with result arrays, and fills
+        dicom_meta_data with the relevant DICOM tags for saving.
+
+        Args:
+            mode (str, optional): Processing mode selector (sequence-dependent). Defaults to None.
+
+        Returns:
+            tuple: (output_dict, dicom_meta_data) with processed results and metadata.
+        """
         super().sequenceAnalysis(mode=mode)
 
         # Update the shimming in hw_config
@@ -212,11 +225,11 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             for ii in range(self.nShimming):
                 dataFFT[ii] = np.max(np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data[ii, :])))))
             if axis=='x':
-                self.shimming0[0] = sxVector[np.argmax(dataFFT)]
+                self.shimming0[0] = sxVector[np.argmax(dataFFT), 0]
             elif axis=='y':
-                self.shimming0[1] = syVector[np.argmax(dataFFT)]
+                self.shimming0[1] = syVector[np.argmax(dataFFT), 0]
             elif axis=='z':
-                self.shimming0[2] = szVector[np.argmax(dataFFT)]
+                self.shimming0[2] = szVector[np.argmax(dataFFT), 0]
         return True
 
 if __name__ == '__main__':

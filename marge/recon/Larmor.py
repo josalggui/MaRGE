@@ -1,3 +1,5 @@
+"""Reconstruction module for Larmor frequency estimation sequences."""
+
 import numpy as np
 import scipy as sp
 import marge.configs.hw_config as hw

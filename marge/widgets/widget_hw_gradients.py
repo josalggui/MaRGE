@@ -1,3 +1,5 @@
+"""Widget for the hardware gradients configuration panel."""
+
 import sys
 import os
 import csv
@@ -84,6 +86,7 @@ class GradientsWidget(QWidget):
         hw.gpa_model = self.input_boxes["GPA model"].text()
 
     def save_gradient_entries(self):
+        """Save the current gradient hardware configuration entries to configs/hw_gradients.csv."""
         file_name = "configs/hw_gradients.csv"
 
         # ✅ Ensure the 'configs' directory exists

@@ -1,3 +1,5 @@
+"""Widget for the hardware console panel."""
+
 import os
 import sys
 import csv
@@ -165,6 +167,13 @@ class ConsoleWidget(QWidget):
             print("No hardware configuration loaded for red pitayas.")
 
     def add_rp_from_data(self, rp_id, ip):
+        """
+        Add a Red Pitaya entry row (label + IP + delete button) to the console hardware widget.
+
+        Args:
+            rp_id (int | str): Identifier of the Red Pitaya unit.
+            ip (str): IP address of the Red Pitaya unit.
+        """
         row_layout = QHBoxLayout()
         identifier_label = QLabel(f"RP-{rp_id}")
         text_label = QLabel(ip)

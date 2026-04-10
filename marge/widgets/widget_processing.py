@@ -1,3 +1,5 @@
+"""Widget for the sequence processing tab panel."""
+
 from PyQt5.QtWidgets import QTabWidget
 
 from marge.controller.controller_post import PostProcessingTabController
