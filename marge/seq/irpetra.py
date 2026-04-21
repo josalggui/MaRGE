@@ -6,29 +6,32 @@ Created on Thu June 2 2022
 """
 
 import numpy as np
-import marge.controller.experiment_gui as ex
-import marge.configs.hw_config as hw # Import the scanner hardware config
-import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
+import controller.experiment_gui as ex
+import configs.hw_config as hw # Import the scanner hardware config
+import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 from scipy.interpolate import griddata
-from marge.marge_tyger import tyger_petra
+
 
 #*********************************************************************************
 #*********************************************************************************
 #*********************************************************************************
 
-class PETRA(blankSeq.MRIBLANKSEQ):
+class IRPETRA(blankSeq.MRIBLANKSEQ):
     def __init__(self):
-        super(PETRA, self).__init__()
+        super(IRPETRA, self).__init__()
         # Input the parameters
-        self.addParameter(key='seqName', string='PETRAInfo', val='PETRA')
+        self.addParameter(key='seqName', string='IRPETRAInfo', val='IRPETRA')
         self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM')
         self.addParameter(key='larmorFreq', string='Larmor frequency (MHz)', val=3.08, field='RF')
-        self.addParameter(key='rfExAmp', string='RF excitation amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfExAmp2', string='180º RF excitation amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfExAmp1', string='90º RF excitation amplitude (a.u.)', val=0.3, field='RF')
+        self.addParameter(key='rfInversionTime', string='RF INVERSION time (us)', val=22.0, field='RF')
         self.addParameter(key='rfExTime', string='RF excitation time (us)', val=22.0, field='RF')
         self.addParameter(key='deadTime', string='TxRx dead time (us)', val=150.0, field='RF')
         self.addParameter(key='gapGtoRF', string='Gap G to RF (us)', val=100.0, field='RF')
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=10., field='SEQ')
+        self.addParameter(key='inversionTime', string='Inversion Time (ms)', val=5., field='SEQ')
         self.addParameter(key='fov', string='FOV (cm)', val=[4.0, 4.0, 4.0], field='IM')
         self.addParameter(key='dfov', string='dFOV (mm)', val=[0.0, 0.0, 0.0], field='IM')
         self.addParameter(key='nPoints', string='nPoints (rd, ph, sl)', val=[30, 30, 1], field='IM')
@@ -47,15 +50,10 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='NyquistOS', string='Radial oversampling', val=1, field='SEQ')
         self.addParameter(key='reco', string='ART->0,  FFT->1', val=1, field='IM')
         self.addParameter(key='boolGrid', string='Bool regridding', val=1, field='OTH')
-        self.addParameter(key='rectPremphasis', string='Premphasis Enable', val=1, field='RF', tip="0=NO, 1=Yes")
-        self.addParameter(key='factorV0', string='Factor V0', val=[4.0, 3.0], field='RF')
-        self.addParameter(key='durationPulse0', string='Duration Pulse 0 (us)', val=[2.0, 3.0], field='RF')
-        self.addParameter(key='tyger_recon', string='Tyger ART reconstruction', val=0, field='PRO',
-                          tip='To reconstruct with Tyger (0 = Disabled; 1 = Enabled)')
 
     def sequenceInfo(self):
-
-        print("3D PETRA sequence")
+        
+        print("3D IRPETRA sequence")
         print("Author: Jose Borreguero")
         print("Contact: pepe.morata@i3m.upv.es")
         print("mriLab @ i3M, CSIC, Spain\n")
@@ -72,11 +70,14 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         seqName = self.mapVals['seqName']
         nScans = self.mapVals['nScans']
         larmorFreq = self.mapVals['larmorFreq']  # MHz
-        rfExAmp = self.mapVals['rfExAmp']  #  a.u.
+        rfExAmp1 = self.mapVals['rfExAmp1']  #  a.u.
+        rfExAmp2 = self.mapVals['rfExAmp2']  # a.u.
+        rfInvTime = self.mapVals['rfInversionTime']  # us
         rfExTime = self.mapVals['rfExTime']  # us
         gapGtoRF = self.mapVals['gapGtoRF']  # us
         deadTime = self.mapVals['deadTime']  # us
         repetitionTime = self.mapVals['repetitionTime']  # ms
+        inversionTime = self.mapVals['inversionTime']  # ms
         fov = np.array(self.mapVals['fov'])  # cm
         dfov = np.array(self.mapVals['dfov'])  # mm
         nPoints = np.array(self.mapVals['nPoints'])
@@ -94,23 +95,10 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         rxChannel = self.mapVals['rxChannel']
         NyquistOS = self.mapVals['NyquistOS']
         boolGrid = self.mapVals['boolGrid']
-        rectPremphasis = self.mapVals['rectPremphasis']
-        factorV0 = self.mapVals['factorV0'][0]
-        factorV2 = self.mapVals['factorV0'][1]
-        durationPulse0 = self.mapVals['durationPulse0'][0]
-        durationPulse2 = self.mapVals['durationPulse0'][1]
-
-
-        if rectPremphasis==0:
-            rfExTime = self.mapVals['rfExTime']  # us
-        if rectPremphasis == 1:
-            rfExTime = self.mapVals['rfExTime'] + self.mapVals['durationPulse0'][0] + self.mapVals['durationPulse0'][1]  # us
-        if rectPremphasis != 0 and rectPremphasis != 1:
-            print("ERROR: Preemphasis input should be 0 or 1")
-            return False
 
         # Conversion of variables to non-multiplied units
         larmorFreq = larmorFreq*1e6
+        rfInvTime = rfInvTime*1e-6
         rfExTime = rfExTime*1e-6
         gapGtoRF = gapGtoRF*1e-6
         deadTime = deadTime*1e-6
@@ -120,6 +108,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         acqTime = acqTime*1e-3  # s
         shimming = shimming*1e-4
         repetitionTime= repetitionTime*1e-3  # s
+        inversionTime= inversionTime*1e-3  # s
 
         # Miscellaneous
         larmorFreq = larmorFreq*1e-6    # MHz
@@ -226,6 +215,8 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         # Get cartesian kPoints
         # Get minimun time
         tMin = 0.5 * rfExTime + deadTime + 0.5 / (BW * 1e6)
+        kSP = hw.gammaB * max(gradientAmplitudes) * tMin
+        print("Ksp = ", kSP, " m^-1")
 
         # Get the full cartesian points
         kx = np.linspace(-kMax[0] * (nPoints[0] != 1), kMax[0] * (nPoints[0] != 1), nPoints[0])
@@ -292,11 +283,10 @@ class PETRA(blankSeq.MRIBLANKSEQ):
         MaxGradTransitions[1] = max(gSeqDif[:, 1])
         MaxGradTransitions[2] = max(gSeqDif[:, 2])
 
-        print(f"{gradientVectors1.shape[0]} radial lines and {gradientVectors2.shape[0]} pointwise")
-        print(f"Radial max gradient strengths are {gradientAmplitudes * 1e3} mT/m")
-        print(f"Pointwise max gradient strengths are {MaxSPGradTransitions * 1e3} mT/m")
-        print(f"Max grad transitions are {MaxGradTransitions * 1e3} mT/m")
-
+        print(gradientVectors1.shape[0], " radial lines and ", gradientVectors2.shape[0], " pointwise")
+        print("Radial max gradient strengths are  ", gradientAmplitudes * 1e3, " mT/m")
+        print("Pointwise max gradient strengths are  ", MaxSPGradTransitions * 1e3, " mT/m")
+        print("Max grad transitions are  ", MaxGradTransitions * 1e3, " mT/m")
 
         self.mapVals['SequenceGradients'] = gSeq
         self.mapVals['nSPReadouts'] = gradientVectors2.shape[0]
@@ -305,7 +295,9 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             nRep = gSeq.shape[0]
             Grisetime = gradRiseTime * 1e6
             tr = repetitionTime * 1e6
+            TI = inversionTime * 1e6
             delayGtoRF = gapGtoRF * 1e6
+            RF180pulsetime = rfInvTime * 1e6
             RFpulsetime = rfExTime * 1e6
             axesOn=self.mapVals['axesOn']
             TxRxtime = deadTime * 1e6
@@ -317,11 +309,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
             for ii in range(dummyPulses):
                 tdummy = tInit + tr * (ii + 1) + Grisetime + delayGtoRF
-                if rectPremphasis == 0:
-                    self.rfRecPulse(tdummy, RFpulsetime, rfExAmp, drfPhase * np.pi / 180)
-                if rectPremphasis == 1:
-                    self.rfRecPulsePreemphasized(tdummy, durationPulse0, RFpulsetime, durationPulse2, factorV0 * rfExAmp, rfExAmp, factorV2 * rfExAmp, 0, channel=txChannel)
-
+                self.rfRecPulse(tdummy, RFpulsetime, rfExAmp1, drfPhase * np.pi / 180, channel=txChannel)
 
             tInit = tInit + tr*dummyPulses
 
@@ -344,11 +332,12 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                         self.setGradientRamp(t0, Grisetime, nStepsGradRise, gSeq[repeIndex-1, 2]*axesOn[2], gSeq[repeIndex, 2]*axesOn[2], axes[2], shimming)
 
                 # Excitation pulse
-                trf0 = t0 + Grisetime + delayGtoRF
-                if rectPremphasis == 0:
-                    self.rfRecPulse(trf0, RFpulsetime, rfExAmp, drfPhase * np.pi / 180)
-                if rectPremphasis == 1:
-                    self.rfRecPulsePreemphasized(trf0, durationPulse0, RFpulsetime, durationPulse2, factorV0 * rfExAmp, rfExAmp, factorV2 * rfExAmp, 0, channel=txChannel)
+                trf180 = t0 + Grisetime + delayGtoRF
+                self.rfRecPulse(trf180, RF180pulsetime, rfExAmp2, drfPhase * np.pi / 180)
+
+                trf90 = trf180 + hw.blkTime + RFpulsetime + TI
+                self.rfRecPulse(trf90, RFpulsetime, rfExAmp1, drfPhase * np.pi / 180)
+
 
                 if repeIndex < gradientVectors1.shape[0]:
                     tACQ = acqTimeSeq
@@ -356,7 +345,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                     tACQ = 1 / BWreal
 
                 # Rx gate
-                t0rx = trf0 + hw.blkTime + RFpulsetime + TxRxtime
+                t0rx = trf90 + hw.blkTime + RFpulsetime + TxRxtime
                 self.rxGateSync(t0rx, tACQ)
 
                 if repeIndex == nRep-1:
@@ -414,7 +403,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
                 for ii in range(nScans):
                     rxd, msgs = self.expt.run()
                     rxd['rx0'] = rxd['rx0']  # mV
-                    print(f"{ii+1}/{nScans} PETRA sequence finished")
+                    print(ii, "/", nScans, "IRPETRA sequence finished")
                     # Get data
                     overData = np.concatenate((overData, rxd['rx0']), axis=0)
 
@@ -641,7 +630,7 @@ class PETRA(blankSeq.MRIBLANKSEQ):
             result1['data'] = np.abs(image)
             result1['xLabel'] = axislegend[0]
             result1['yLabel'] = axislegend[1]
-            result1['title'] = "Local"
+            result1['title'] = "Image magnitude"
             result1['row'] = 0
             result1['col'] = 0
 
@@ -658,34 +647,6 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
         self.saveRawData()
 
-        ## Tyger Reconstruction
-        if self.tyger_recon == 1:
-            try:
-                rawData_path = self.directory_mat + '/' + self.file_name+'.mat'
-                print(rawData_path)
-                output_field = 'imgTygerART'
-
-                imgTyger = tyger_petra.reconTygerPETRA(rawData_path, output_field)
-                imageTyger = np.abs(imgTyger[0])
-                imageTyger = imageTyger/np.max(np.reshape(imageTyger,-1))*100
-
-                ## Image plot
-                # Tyger
-
-                result_Tyger = {}
-                result_Tyger['widget'] = 'image'
-                result_Tyger['data'] = imageTyger
-                result_Tyger['xLabel'] = axislegend[0]
-                result_Tyger['yLabel'] = axislegend[1]
-                result_Tyger['title'] = "Tyger"
-                result_Tyger['row'] = 0
-                result_Tyger['col'] = 1
-
-                self.output = [result1, result_Tyger]
-            except Exception as e:
-                print('Tyger reconstruction failed.')
-                print(f'Error: {e}')
-
         if self.mode == 'Standalone':
             self.plotResults()
             
@@ -693,5 +654,5 @@ class PETRA(blankSeq.MRIBLANKSEQ):
 
 
 # if __name__=='__main__':
-#     seq = PETRA()
+#     seq = IRPETRA()
 #     seq.sequenceRun()
