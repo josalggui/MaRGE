@@ -343,6 +343,178 @@ class MRIBLANKSEQ:
 
         return waveforms
 
+    def rfHyperbolicSecantPulse(self, tStart, rfTime, rfAmplitude, num, beta, mu, rfPhase=0, channel=0, rewrite=True):
+        """
+        Hyperbolic secant (sech/tanh) RF pulse for robust adiabatic inversion.
+
+        Args:
+            tStart (float): Start time of the RF pulse (us).
+            rfTime (float): Duration of the RF pulse (us).
+            rfAmplitude (float): Peak B1 amplitude (a.u.).
+            num (int): Number of points.
+            beta (float): Modulation frequency (Hz).
+            mu (float): Frequency sweep width (dimensionless).
+            rfPhase (float): Initial RF phase (rad).
+            channel (int): RF channel.
+            rewrite (bool): Overwrite or append to existing waveform.
+        """
+
+        txTime = np.linspace(tStart, tStart + rfTime, num, endpoint=True) + hw.blkTime
+        t = np.linspace(-rfTime / 2, rfTime / 2, num)
+
+        # Limit beta*t to avoid overflow in cosh and log
+        beta_t = np.clip(beta*1e-6 * t, -50, 50)  # safe range for float64 cosh/log
+
+        # Amplitude modulation
+        A_t = rfAmplitude / np.cosh(beta_t)
+
+        # Phase modulation (integral of tanh)
+        phi_t = mu * np.log(A_t)
+
+        # Complex RF waveform
+        txAmp = A_t * np.exp(1j * (phi_t + rfPhase))
+        txAmp[-1] = 0
+        # TTL gate signal
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
+        txGateAmp = np.array([1, 0])
+
+        # Append to dictionary
+        self.flo_dict[f'tx{channel}'][0] = np.concatenate((self.flo_dict[f'tx{channel}'][0], txTime), axis=0)
+        self.flo_dict[f'tx{channel}'][1] = np.concatenate((self.flo_dict[f'tx{channel}'][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
+
+    def rfChirpPulse(self, tStart, rfTime, rfAmplitude, num, bandwidth, rfPhase=0, channel=0, rewrite=True):
+        """
+        Generate a linear frequency-swept chirp RF pulse with a smooth amplitude envelope.
+
+        This pulse has a time-varying frequency that linearly sweeps across the defined bandwidth.
+        The amplitude is modulated with a sin² window to smoothly turn on and off.
+
+        Args:
+            tStart (float): Start time of the RF pulse (us).
+            rfTime (float): Total duration of the RF pulse (us).
+            rfAmplitude (float): Maximum amplitude of the RF pulse (a.u.).
+            bandwidth (float): Total frequency sweep (Hz).
+            num (int): Number of time samples.
+            rfPhase (float): Initial phase offset (rad).
+            channel (int): RF channel index.
+            rewrite (bool): Whether to overwrite the RF channel.
+        """
+        txTime = np.linspace(tStart, tStart + rfTime, num, endpoint=True) + hw.blkTime
+        t = np.linspace(0, rfTime, num)
+
+        # Amplitude modulation with sin² window
+        A_t = rfAmplitude * np.sin(np.pi * t / rfTime) ** 2
+
+        # Linear frequency sweep (chirp): phase is integral of frequency
+        k = bandwidth*1e-6 / rfTime  # Sweep rate (MHz/us)
+        phi_t = np.pi * k * (t - rfTime / 2) ** 2  # Phase(t) = π·k·(t - T/2)^2
+
+        # Complex RF waveform
+        txAmp = A_t * np.exp(1j * (phi_t + rfPhase))
+        txAmp[-1] = 0
+
+        # TTL gate signal
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
+        txGateAmp = np.array([1, 0])
+
+        # Append to RF and TTL channels
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
+
+    def rfBIR4Pulse(self, tStart, rfTime, rfAmplitude, num, beta, mu, flipAngle=np.pi / 2, rfPhase=0, channel=0,
+                    rewrite=True):
+        """
+        Generate a BIR-4 adiabatic RF pulse for robust rotation with variable flip angle.
+
+        Args:
+            tStart (float): Start time of the RF pulse (us).
+            rfTime (float): Total duration of the RF pulse (us).
+            rfAmplitude (float): Peak amplitude (a.u.).
+            num (int): Number of time samples.
+            beta (float): Amplitude modulation factor (Hz).
+            mu (float): Frequency modulation factor (rad).
+            flipAngle (float): Desired flip angle in radians (e.g., pi/2 for 90Â°, pi for 180Â°).
+            rfPhase (float): Initial RF phase (rad).
+            channel (int): RF transmit channel index.
+            rewrite (bool): Whether to overwrite the RF waveform.
+        """
+
+        txTime = np.linspace(tStart, tStart + rfTime, num, endpoint=True) + hw.blkTime
+        t = np.linspace(-rfTime / 2, rfTime / 2, num)
+
+        # Normalized time for symmetric shape
+        tau = 2 * t / rfTime
+
+        # Amplitude modulation: symmetric cosh (flat at center)
+        beta_t = np.clip(beta * 1e-6 * tau, -50, 50)  # Avoid overflow
+        A_t = rfAmplitude / np.cosh(beta_t)
+
+        # Phase modulation: BIR-4 strategy
+        # Total phase sweep Î”Ï† determined by flipAngle
+        # BIR-4 = BIR-1 + phase flip + BIR-1 (mirrored)
+        phi_mod = mu * np.pi * tau / 2 + (flipAngle / 2) * np.sign(tau)
+
+        # Create full waveform: BIR-4 = BIR-1 + phase flip + BIR-1 reversed
+        txAmp = A_t * np.exp(1j * (phi_mod + rfPhase))
+        txAmp[-1] = 0  # Ensure zero at end
+
+        # TTL gate
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
+        txGateAmp = np.array([1, 0])
+
+        # Append to dictionary
+        self.flo_dict[f'tx{channel}'][0] = np.concatenate((self.flo_dict[f'tx{channel}'][0], txTime), axis=0)
+        self.flo_dict[f'tx{channel}'][1] = np.concatenate((self.flo_dict[f'tx{channel}'][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
+
+    def rfAdiabaticConstantBeff(self, tStart, rfTime, Beffau, num, bandwidth, rfPhase=0, channel=0, rewrite=True):
+        """
+        Generate an adiabatic RF pulse with constant effective field (Beff) and linear frequency sweep.
+
+        Args:
+            tStart (float): Start time of the RF pulse (us).
+            rfTime (float): Total duration of the RF pulse (us).
+            Beff (float): Effective magnetic field strength in the rotating frame (μT).
+            num (int): Number of time samples.
+            bandwidth (float): Total frequency sweep (Hz).
+            gamma (float): Gyromagnetic ratio in MHz/T (default: proton).
+            rfPhase (float): Initial phase offset (rad).
+            channel (int): RF channel index.
+            rewrite (bool): Whether to overwrite the RF channel.
+        """
+        txTime = np.linspace(tStart, tStart + rfTime, num, endpoint=True) + hw.blkTime
+        t = np.linspace(0, rfTime, num)  # Time axis (us)
+
+        # Linear frequency sweep: from -BW/2 to BW/2
+        delta_omega = np.linspace(-bandwidth / 2, bandwidth / 2, num)  # Hz
+        delta_omega_rad = 2 * np.pi * delta_omega  # rad/s
+
+        # Compute B1(t) to maintain constant Beff
+        B1_t = Beffau * np.sqrt(1 - (delta_omega_rad / (hw.gammaB * 1e6)) ** 2)  # T
+        B1_t = np.nan_to_num(B1_t)  # Avoid NaNs if out of sqrt
+
+        # Phase(t) is integral of frequency (in rad)
+        phi_t = 2 * np.pi * np.cumsum(delta_omega) * (rfTime / num * 1e-6)  # Convert to seconds
+
+        # Complex RF waveform
+        txAmp = B1_t * np.exp(1j * (phi_t + rfPhase))
+        txAmp[-1] = 0
+
+        # TTL gate
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
+        txGateAmp = np.array([1, 0])
+
+        # Append to RF and TTL channels
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
+
     def runBatches(self, waveforms, n_readouts, n_adc,
                    frequency=hw.larmorFreq,
                    bandwidth=0.03,
@@ -1265,7 +1437,7 @@ class MRIBLANKSEQ:
 
         return data_decimated
 
-    def rfSincPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, nLobes=7, channel=0, rewrite=True):
+    def rfSincPulseWithHanning(self, tStart, rfTime, rfAmplitude, num, rfPhase=0, nLobes=7, channel=0, rewrite=True):
         """
         Generate an RF pulse with a sinc pulse shape and the corresponding deblanking signal. It uses a Hanning window
         to reduce the banding of the frequency profile.
@@ -1280,11 +1452,37 @@ class MRIBLANKSEQ:
             rewrite (bool): Whether to rewrite the existing RF pulse. Default is True.
 
         """
-        txTime = np.linspace(tStart, tStart + rfTime, num=100, endpoint=True) + hw.blkTime
+        txTime = np.linspace(tStart, tStart + rfTime, num, endpoint=True) + hw.blkTime
         nZeros = (nLobes + 1)
-        tx = np.linspace(-nZeros / 2, nZeros / 2, num=100, endpoint=True)
+        tx = np.linspace(-nZeros / 2, nZeros / 2, num, endpoint=True)
         hanning = 0.5 * (1 + np.cos(2 * np.pi * tx / nZeros))
-        txAmp = rfAmplitude * np.exp(1j * rfPhase) * hanning * np.abs(np.sinc(tx))
+        txAmp = rfAmplitude * np.exp(1j * rfPhase) * hanning * np.real(np.sinc(tx))
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
+        txGateAmp = np.array([1, 0])
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
+
+    def rfSincPulseWithoutHanning(self, tStart, rfTime, rfAmplitude, num, rfPhase=0, nLobes=7, channel=0, rewrite=True):
+        """
+        Generate an RF pulse with a sinc pulse shape and the corresponding deblanking signal. It uses a Hanning window
+        to reduce the banding of the frequency profile.
+
+        Args:
+            tStart (float): Start time of the RF pulse.
+            rfTime (float): Duration of the RF pulse.
+            rfAmplitude (float): Amplitude of the RF pulse.
+            rfPhase (float): Phase of the RF pulse in radians. Default is 0.
+            nLobes (int): Number of lobes in the sinc pulse. Default is 7.
+            channel (int): Channel index for the RF pulse. Default is 0.
+            rewrite (bool): Whether to rewrite the existing RF pulse. Default is True.
+
+        """
+        txTime = np.linspace(tStart, tStart + rfTime, num, endpoint=True) + hw.blkTime
+        nZeros = (nLobes + 1)
+        tx = np.linspace(-nZeros / 2, nZeros / 2, num, endpoint=True)
+        txAmp = rfAmplitude * np.exp(1j * rfPhase) * np.real(np.sinc(tx))
         txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
         txGateAmp = np.array([1, 0])
         self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
@@ -1311,7 +1509,7 @@ class MRIBLANKSEQ:
         nZeros = (nLobes + 1)
         tx = np.linspace(-nZeros / 2, nZeros / 2, num=100, endpoint=True)
         hanning = 0.5 * (1 + np.cos(2 * np.pi * tx / nZeros))
-        txAmp = rfAmplitude * np.exp(1j * rfPhase) * hanning * np.abs(np.sinc(tx))
+        txAmp = rfAmplitude * np.exp(1j * rfPhase) * np.real(np.sinc(tx))
         txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
         txGateAmp = np.array([1, 0])
         self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
@@ -1355,6 +1553,31 @@ class MRIBLANKSEQ:
         self.flo_dict['ttl1'][0] = np.concatenate((self.flo_dict['ttl1'][0], txGateTime), axis=0)
         self.flo_dict['ttl1'][1] = np.concatenate((self.flo_dict['ttl1'][1], txGateAmp), axis=0)
 
+    def rfRecPulsePreemphasized(self, tStart, rfTime1, rfTime2, rfTime3, rfAmplitude1, rfAmplitude2, rfAmplitude3,
+                                rfPhase=0, channel=0):
+        """
+        Generate an RF pulse with a rectangular pulse shape and the corresponding deblanking signal.
+
+        Args:
+            tStart (float): Start time of the RF pulse.
+            rfTime (float): Duration of the RF pulse.
+            rfAmplitude (float): Amplitude of the RF pulse.
+            rfPhase (float): Phase of the RF pulse in radians. Default is 0.
+            channel (int): Channel index for the RF pulse. Default is 0.
+
+        """
+        txTime = np.array([tStart + hw.blkTime, tStart + hw.blkTime + rfTime1, tStart + hw.blkTime + rfTime1 + rfTime2,
+                           tStart + hw.blkTime + rfTime1 + rfTime2 + rfTime3])
+        txAmp = np.array([rfAmplitude1 * np.exp(1j * rfPhase), rfAmplitude2 * np.exp(1j * rfPhase),
+                          rfAmplitude3 * np.exp(1j * (np.pi + rfPhase)), 0.])
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime1 + rfTime2 + rfTime3])
+        txGateAmp = np.array([1, 0])
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
+
+
     def rfRawPulse(self, tStart, rfTime, rfAmplitude, rfPhase=0, channel=0):
         """
         Generate an RF pulse with a rectangular pulse shape.
@@ -1371,6 +1594,131 @@ class MRIBLANKSEQ:
         txAmp = np.array([rfAmplitude * np.exp(1j * rfPhase), 0.])
         self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
         self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
+
+    def rfHyperbolicSecantPulse(self, tStart, rfTime, rfAmplitude, num, beta, mu, rfPhase=0, channel=0, rewrite=True):
+        """
+        Hyperbolic secant (sech/tanh) RF pulse for robust adiabatic inversion.
+
+        Args:
+            tStart (float): Start time of the RF pulse (us).
+            rfTime (float): Duration of the RF pulse (us).
+            rfAmplitude (float): Peak B1 amplitude (a.u.).
+            num (int): Number of points.
+            beta (float): Modulation frequency (Hz).
+            mu (float): Frequency sweep width (dimensionless).
+            rfPhase (float): Initial RF phase (rad).
+            channel (int): RF channel.
+            rewrite (bool): Overwrite or append to existing waveform.
+        """
+
+        txTime = np.linspace(tStart, tStart + rfTime, num, endpoint=True) + hw.blkTime
+        t = np.linspace(-rfTime / 2, rfTime / 2, num)
+
+        # Limit beta*t to avoid overflow in cosh and log
+        beta_t = np.clip(beta * 1e-6 * t, -50, 50)  # safe range for float64 cosh/log
+
+        # Amplitude modulation
+        A_t = rfAmplitude / np.cosh(beta_t)
+
+        # Phase modulation (integral of tanh)
+        phi_t = mu * np.log(A_t)
+
+        # Complex RF waveform
+        txAmp = A_t * np.exp(1j * (phi_t + rfPhase))
+        txAmp[-1] = 0
+        # TTL gate signal
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
+        txGateAmp = np.array([1, 0])
+
+        # Append to dictionary
+        self.flo_dict[f'tx{channel}'][0] = np.concatenate((self.flo_dict[f'tx{channel}'][0], txTime), axis=0)
+        self.flo_dict[f'tx{channel}'][1] = np.concatenate((self.flo_dict[f'tx{channel}'][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
+
+    def rfChirpPulse(self, tStart, rfTime, rfAmplitude, num, bandwidth, rfPhase=0, channel=0, rewrite=True):
+        """
+        Generate a linear frequency-swept chirp RF pulse with a smooth amplitude envelope.
+
+        This pulse has a time-varying frequency that linearly sweeps across the defined bandwidth.
+        The amplitude is modulated with a sin² window to smoothly turn on and off.
+
+        Args:
+            tStart (float): Start time of the RF pulse (us).
+            rfTime (float): Total duration of the RF pulse (us).
+            rfAmplitude (float): Maximum amplitude of the RF pulse (a.u.).
+            bandwidth (float): Total frequency sweep (Hz).
+            num (int): Number of time samples.
+            rfPhase (float): Initial phase offset (rad).
+            channel (int): RF channel index.
+            rewrite (bool): Whether to overwrite the RF channel.
+        """
+        txTime = np.linspace(tStart, tStart + rfTime, num, endpoint=True) + hw.blkTime
+        t = np.linspace(0, rfTime, num)
+
+        # Amplitude modulation with sin² window
+        A_t = rfAmplitude * np.sin(np.pi * t / rfTime) ** 2
+
+        # Linear frequency sweep (chirp): phase is integral of frequency
+        k = bandwidth * 1e-6 / rfTime  # Sweep rate (MHz/us)
+        phi_t = np.pi * k * (t - rfTime / 2) ** 2  # Phase(t) = π·k·(t - T/2)^2
+
+        # Complex RF waveform
+        txAmp = A_t * np.exp(1j * (phi_t + rfPhase))
+        txAmp[-1] = 0
+
+        # TTL gate signal
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
+        txGateAmp = np.array([1, 0])
+
+        # Append to RF and TTL channels
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
+
+    def rfAdiabaticConstantBeff(self, tStart, rfTime, Beffau, num, bandwidth, rfPhase=0, channel=0, rewrite=True):
+        """
+        Generate an adiabatic RF pulse with constant effective field (Beff) and linear frequency sweep.
+
+        Args:
+            tStart (float): Start time of the RF pulse (us).
+            rfTime (float): Total duration of the RF pulse (us).
+            Beff (float): Effective magnetic field strength in the rotating frame (μT).
+            num (int): Number of time samples.
+            bandwidth (float): Total frequency sweep (Hz).
+            gamma (float): Gyromagnetic ratio in MHz/T (default: proton).
+            rfPhase (float): Initial phase offset (rad).
+            channel (int): RF channel index.
+            rewrite (bool): Whether to overwrite the RF channel.
+        """
+        txTime = np.linspace(tStart, tStart + rfTime, num, endpoint=True) + hw.blkTime
+        t = np.linspace(0, rfTime, num)  # Time axis (us)
+
+        # Linear frequency sweep: from -BW/2 to BW/2
+        delta_omega = np.linspace(-bandwidth / 2, bandwidth / 2, num)  # Hz
+        delta_omega_rad = 2 * np.pi * delta_omega  # rad/s
+
+        # Compute B1(t) to maintain constant Beff
+        B1_t = Beffau * np.sqrt(1 - (delta_omega_rad / (hw.gammaB * 1e6)) ** 2)  # T
+        B1_t = np.nan_to_num(B1_t)  # Avoid NaNs if out of sqrt
+
+        # Phase(t) is integral of frequency (in rad)
+        phi_t = 2 * np.pi * np.cumsum(delta_omega) * (rfTime / num * 1e-6)  # Convert to seconds
+
+        # Complex RF waveform
+        txAmp = B1_t * np.exp(1j * (phi_t + rfPhase))
+        txAmp[-1] = 0
+
+        # TTL gate
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime])
+        txGateAmp = np.array([1, 0])
+
+        # Append to RF and TTL channels
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
 
     def rxGate(self, tStart, gateTime, channel=0):
         """
@@ -2032,4 +2380,47 @@ class MRIBLANKSEQ:
 
         return image
 
+    def SLblock(self, tStart, rfTime1, rfTime2, rfAmplitude1, rfAmplitude2, rfPhase=0, channel=0):
+        """
+        Generate an SL block with a rectangular pulse followed by a spin locking pulse
 
+        Args:
+            tStart (float): Start time of the RF pulse.
+            rfTime (float): Duration of the RF pulse.
+            rfAmplitude (float): Amplitude of the RF pulse.
+            rfPhase (float): Phase of the RF pulse in radians. Default is 0.
+            channel (int): Channel index for the RF pulse. Default is 0.
+
+        """
+        txTime = np.array([tStart + hw.blkTime, tStart + hw.blkTime + rfTime1, tStart + hw.blkTime + rfTime1 + rfTime2])
+        txAmp = np.array([rfAmplitude1 * np.exp(1j * rfPhase), rfAmplitude2 * np.exp(1j * (rfPhase + np.pi / 2)), 0.])
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime1 + rfTime2])
+        txGateAmp = np.array([1, 0])
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
+
+
+    def SLblockWithRotaryEcho(self, tStart, rfTime1, rfTime2, rfAmplitude1, rfAmplitude2, rfPhase=0, channel=0):
+        """
+        Generate an SL block with a rectangular pulse followed by a spin locking pulse
+
+        Args:
+            tStart (float): Start time of the RF pulse.
+            rfTime (float): Duration of the RF pulse.
+            rfAmplitude (float): Amplitude of the RF pulse.
+            rfPhase (float): Phase of the RF pulse in radians. Default is 0.
+            channel (int): Channel index for the RF pulse. Default is 0.
+
+        """
+        txTime = np.array([tStart + hw.blkTime, tStart + hw.blkTime + rfTime1, tStart + hw.blkTime + rfTime1 + rfTime2 / 2,
+                           tStart + hw.blkTime + rfTime1 + rfTime2])
+        txAmp = np.array([rfAmplitude1 * np.exp(1j * rfPhase), rfAmplitude2 * np.exp(1j * (rfPhase + np.pi / 2)),
+                          rfAmplitude2 * np.exp(1j * (rfPhase - np.pi / 2)), 0.])
+        txGateTime = np.array([tStart, tStart + hw.blkTime + rfTime1 + rfTime2])
+        txGateAmp = np.array([1, 0])
+        self.flo_dict['tx%i' % channel][0] = np.concatenate((self.flo_dict['tx%i' % channel][0], txTime), axis=0)
+        self.flo_dict['tx%i' % channel][1] = np.concatenate((self.flo_dict['tx%i' % channel][1], txAmp), axis=0)
+        self.flo_dict['ttl0'][0] = np.concatenate((self.flo_dict['ttl0'][0], txGateTime), axis=0)
+        self.flo_dict['ttl0'][1] = np.concatenate((self.flo_dict['ttl0'][1], txGateAmp), axis=0)
