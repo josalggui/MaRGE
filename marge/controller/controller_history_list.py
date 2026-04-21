@@ -836,6 +836,13 @@ class HistoryListControllerPos(HistoryListWidget):
             dictionary[key] = values
 
     def saveImage(self):
+        """
+        Export the currently displayed image to DICOM, NIfTI, and .mat formats.
+
+        Reads the image from the image view widget, applies the required axis
+        transpose for DICOM encoding, normalises pixel values to int16, and saves
+        three output files under the session directory: .dcm, .nii, and .mat.
+        """
         # Path to the DICOM file
         path = self.main.session['directory'] + "/dcm/" + self.main.file_name[0:-4]
         if not os.path.exists(self.main.session['directory'] + "/dcm/"):

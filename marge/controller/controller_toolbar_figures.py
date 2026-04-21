@@ -47,6 +47,7 @@ class FiguresController(FiguresToolBar):
         self.action_print_given_session.triggered.connect(self.print_given_session)
 
     def switch_theme(self):
+        """Toggle the application stylesheet between dark (qdarkstyle) and light themes."""
         if not self.main.session["black_theme"]:
             self.main.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
             self.main.post_gui.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())

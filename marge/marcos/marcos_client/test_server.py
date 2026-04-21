@@ -416,6 +416,7 @@ def test_client(s):
     process(send_msg(msgpack.packb(pkt), s), print_all=True)
 
 def main_test():
+    """Open a TCP connection to the MaRCoS server and run the client test suite."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((ip_address, port))
         # throughput_test(s)

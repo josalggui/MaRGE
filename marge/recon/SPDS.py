@@ -1,3 +1,5 @@
+"""Reconstruction module for SPDS sequences."""
+
 import os
 
 import numpy as np
@@ -60,6 +62,22 @@ def SPDS(raw_data_path=None):
     print("****Outputs****")
 
     def zero_padding(data, order):
+        """
+        Zero-pad a 3D k-space array by a given integer factor.
+
+        Embeds the input array in a larger array (factor × original size per dim),
+        centered, and filled with zeros elsewhere.
+
+        Args:
+            data (np.ndarray): 3D k-space array with shape (sl, ph, rd) or (1, ph, rd).
+            order (int): Zero-padding factor applied to each spatial dimension.
+
+        Returns:
+            np.ndarray: Zero-padded array of same dtype as input.
+
+        Raises:
+            ValueError: If data does not have exactly 3 dimensions.
+        """
         original_shape = data.shape
         if len(original_shape) == 3:
             if original_shape[0] == 1:

@@ -32,6 +32,13 @@ rf_amp = 0.4
 rf_length = 200 # us
 
 def long_loopback(rf_interval=1000000, trs=20):
+    """
+    Run a multi-TR loopback test with configurable TR interval and number of repetitions.
+
+    Args:
+        rf_interval (float): Time between successive RF pulse starts in microseconds.
+        trs (int): Number of TR repetitions to run.
+    """
 
     expt = ex.Experiment(lo_freq=lo_freq, rx_t=rx_period, halt_and_reset=True)
 

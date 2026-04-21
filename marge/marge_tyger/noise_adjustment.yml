@@ -1,6 +1,6 @@
 job:
   codespec:
-    image: acr-proxy.tyger.cloud/tygertepimages.azurecr.io/tinker:20251025
+    image: acr-proxy.tyger.cloud/tygertepimages.azurecr.io/tinker:b3e3042-cuda-amd64
     buffers:
       inputs:
         - input

@@ -58,6 +58,15 @@ class MainController(MainWindow):
         self.layout_left.addWidget(self.console)
 
     def changeEvent(self, event):
+        """
+        Handle window activation change events.
+
+        Redirects the shared console widget into this window's layout whenever
+        this window becomes the active window.
+
+        Args:
+            event (QEvent): The Qt event object.
+        """
         if event.type() == QEvent.ActivationChange:  # Event type 99
             if self.isActiveWindow():
                 self.set_console()

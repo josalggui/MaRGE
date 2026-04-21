@@ -1,3 +1,5 @@
+"""Reconstruction module for double-echo RARE sequences."""
+
 import marge.configs.hw_config as hw
 import numpy as np
 import scipy as sp
@@ -5,6 +7,18 @@ from marge.marge_utils import utils
 
 
 def RareDoubleImage(raw_data_path=None):
+    """
+    Process double-echo RARE raw data and reconstruct both echo images.
+
+    Loads the .mat file, reconstructs odd and even echo images, and
+    returns a result dictionary and DICOM metadata for display.
+
+    Args:
+        raw_data_path (str, optional): Path to the input .mat file.
+
+    Returns:
+        tuple: (output_dict, dicom_meta_data), or None if no path given.
+    """
     if raw_data_path is None:
         return None
 

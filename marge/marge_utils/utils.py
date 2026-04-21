@@ -1,3 +1,5 @@
+"""General-purpose utility functions shared across MaRGE modules."""
+
 import copy
 import os
 
@@ -53,14 +55,12 @@ def fix_image_orientation(image, axes, orientation='FFS', rd_direction=1):
     if axes[2] == 2:  # Sagittal
         title = "Sagittal"
         if axes[0] == 0 and axes[1] == 1:
-            image = np.flip(image, axis=0)
             x_label = "(-Y) A | PHASE | P (+Y)"
             y_label = "(+X) I | READOUT | S (-X)"
             if rd_direction == -1:
                 image = image[:, :, ::-1]
         else:
             image = np.transpose(image, (0, 2, 1))
-            image = np.flip(image, axis=0)
             x_label = "(-Y) A | READOUT | P (+Y)"
             y_label = "(+X) I | PHASE | S (-X)"
             if rd_direction == -1:
@@ -69,12 +69,14 @@ def fix_image_orientation(image, axes, orientation='FFS', rd_direction=1):
     elif axes[2] == 1:  # Coronal
         title = "Coronal"
         if axes[0] == 0 and axes[1] == 2:
+            image = np.flip(image, axis=0)
             x_label = "(-Z) R | PHASE | L (+Z)"
             y_label = "(+X) I | READOUT | S (-X)"
             if rd_direction == -1:
                 image = image[:, :, ::-1]
         else:
             image = np.transpose(image, (0, 2, 1))
+            image = np.flip(image, axis=0)
             x_label = "(-Z) R | READOUT | L (+Z)"
             y_label = "(+X) I | PHASE | S (-X)"
             if rd_direction == -1:
@@ -600,6 +602,17 @@ def run_pocs_reconstruction(n_points, factors, k_space_ref, test=False):
     """
     print("Running POCS...")
     def getCenterKSpace(k_space, m_vec):
+        """
+        Extract the central region of a 3D k-space array, zeroing out the periphery.
+
+        Args:
+            k_space (np.ndarray): 3D complex k-space array with shape (sl, ph, rd).
+            m_vec (np.ndarray): Half-widths of the central region to keep along each axis.
+
+        Returns:
+            np.ndarray: Array of same shape as k_space, with only the central
+                [n//2 - m : n//2 + m] region preserved; all other values are zero.
+        """
         # fix n_vec
         output = np.zeros(np.shape(k_space), dtype=complex)
         n_vec = np.array(np.shape(k_space))

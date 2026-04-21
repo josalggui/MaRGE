@@ -19,6 +19,7 @@ class MarGradWarning(MarUserWarning):
     pass
 
 class MarServerWarning(MarUserWarning):
+    """Warning raised for recoverable server-side issues in the MaRCoS machine layer."""
     pass
 
 INOP = 0x0

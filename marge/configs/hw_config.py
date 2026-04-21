@@ -1,3 +1,5 @@
+"""Hardware configuration file for the Physio MRI scanner at MRILab, i3M, CSIC, Spain."""
+
 import numpy as np
 
 # Config file for Physio MRI scanner at MRILab, i3M, CSIC, Spain.
