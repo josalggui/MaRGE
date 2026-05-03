@@ -536,7 +536,7 @@ wheels = [
 
 [[package]]
 name = "marge-mri"
-version = "1.0.0b3"
+version = "1.0.0b4"
 source = { editable = "." }
 dependencies = [
     { name = "bm4d" },
@@ -573,7 +573,7 @@ requires-dist = [
     { name = "ismrmrd" },
     { name = "marga-pulseq" },
     { name = "matplotlib" },
-    { name = "mrd-python", specifier = "==2.2.0" },
+    { name = "mrd-python", specifier = "==2.2.1" },
     { name = "msgpack" },
     { name = "nibabel" },
     { name = "numpy" },
@@ -649,16 +649,17 @@ wheels = [
 
 [[package]]
 name = "mrd-python"
-version = "2.2.0"
+version = "2.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "h5py" },
     { name = "ismrmrd" },
     { name = "numpy" },
     { name = "pillow" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4c/90/82886c2316f3edd4a9091f0de6054d4c550f61c0aaf937f8b64cfe53873b/mrd_python-2.2.0.tar.gz", hash = "sha256:c040b14a954c4c83ecd984a7fbd18297f31964783d8bc0f3c6aaaa7e9f4f2855", size = 84542, upload-time = "2026-01-30T19:56:58.37Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dd/0d/3d4eea3b64537f6fdf066d168f991ee91fd4159f38ec6e26733b73fa947c/mrd_python-2.2.1.tar.gz", hash = "sha256:c77452ef514b6315805b604ec054a3f147499fdad337c06bd522e72b4e363f36", size = 102133, upload-time = "2026-03-17T21:02:48.829Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/be/b7/516974bfee8f14bcac51fe10b43d76e05208dca3a9c9fc72ea9a1562f55d/mrd_python-2.2.0-py3-none-any.whl", hash = "sha256:9324c90d860e1decf2724c4d7cce4811202bda093e4551fdf7f872b0e876e473", size = 89888, upload-time = "2026-01-30T19:56:56.749Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/a1/aa3ce0ee061868c0085f3387c38cebb59578cca51a0d4bf7ca4f7229567e/mrd_python-2.2.1-py3-none-any.whl", hash = "sha256:bee95e9e212f061d10bf00f1e28a77359366cd78595f0c6bb3ddd09fd2eacde9", size = 108381, upload-time = "2026-03-17T21:02:47.59Z" },
 ]
 
 [[package]]
