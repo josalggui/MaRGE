@@ -1,3 +1,5 @@
+"""Reconstruction module for RARE sequences designed with PyPulseq."""
+
 import marge.configs.hw_config as hw
 import numpy as np
 import scipy as sp

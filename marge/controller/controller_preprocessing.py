@@ -1,3 +1,5 @@
+"""Controller for the pre-processing workflow."""
+
 import threading
 import numpy as np
 
@@ -38,6 +40,19 @@ class PreProcessingTabController(PreProcessingTabWidget):
     def selectScans(self):
         # Define method to get the indexes
         def parse_indexes(index_string, max_index):
+            """
+            Parse a scan-index string into a list of integer indices.
+
+            Accepts 'all' (returns all indices up to max_index), comma-separated
+            integers, or colon-separated ranges (start:end, exclusive end).
+
+            Args:
+                index_string (str): Index specification, e.g. 'all', '0,2,4', '1:5'.
+                max_index (int): Upper bound used when 'all' is specified.
+
+            Returns:
+                list[int]: Resolved list of integer indices.
+            """
             if index_string.strip().lower() == "all":
                 return list(range(max_index))
 

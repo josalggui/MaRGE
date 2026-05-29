@@ -1,3 +1,5 @@
+"""Controller for the visualisation widget."""
+
 import numpy as np
 from PyQt5.QtWidgets import QGridLayout
 from marge.widgets.widget_visualisation import VisualisationTabWidget

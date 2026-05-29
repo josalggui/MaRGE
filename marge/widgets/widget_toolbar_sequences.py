@@ -8,6 +8,7 @@ from PyQt5.QtGui import QIcon
 from importlib import resources
 
 class SequenceToolBar(QToolBar):
+    """Toolbar with controls for running, stopping, and configuring MRI sequences."""
     def __init__(self, parent, *args, **kwargs):
         super(SequenceToolBar, self).__init__(*args, **kwargs)
         self.main = parent

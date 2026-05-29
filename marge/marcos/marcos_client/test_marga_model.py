@@ -547,6 +547,15 @@ class ModelTest(unittest.TestCase):
         d = {'tx0': (np.array([0, 1]), np.array([0.5, 0])), 'rx0_en': (np.array([2, 3]), np.array([1, 0]))}
 
         def change_lo(e):
+            """
+            Run the experiment, change the LO frequency to 2 MHz, then run again.
+
+            Args:
+                e (Experiment): A compiled Experiment instance.
+
+            Returns:
+                The result of the second run() call.
+            """
             e.run() # compile internally
             e.set_lo_freq(2)
             return e.run() # compile internally

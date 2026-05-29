@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="marge-mri",
-    version="1.0.0b3",
+    version="1.0.0b4",
     author="José Miguel Algarín",
     author_email="josalggui@i3m.upv.es",
     packages=find_packages(),

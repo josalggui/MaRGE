@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QListWidget
 
 
 class ProtocolInputsWidget(QListWidget):
+    """List widget that shows the parameter names of the currently selected protocol item."""
     def __init__(self, main):
         super().__init__()
         self.main = main

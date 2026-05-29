@@ -31,3 +31,5 @@ sequence.seq
 *.mat
 *.rar
 marge/logs/
+.venv/
+*.pyc

@@ -115,6 +115,12 @@ class Arduino:
 
 
 class VNA:
+    """
+    Interface for a Vector Network Analyzer used in the RF autotuning controller.
+
+    Manages connection to and data retrieval from a NanoVNA device for
+    monitoring and optimising RF coil matching during MRI operation.
+    """
     def __init__(self):
         """
         Initialize a Vectorial Network Analyzer (VNA) object.

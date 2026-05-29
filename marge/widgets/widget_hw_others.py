@@ -1,3 +1,5 @@
+"""Widget for miscellaneous hardware configuration parameters."""
+
 import sys
 import csv
 from marge.configs import hw_config as hw
@@ -94,6 +96,7 @@ class OthersWidget(QWidget):
         tyger_conf.snraware_version = self.input_boxes["SNRAware version"].text()
 
     def save_others_entries(self):
+        """Save the current 'Others' hardware configuration entries to configs/hw_others.csv."""
         file_name = "configs/hw_others.csv"
         with open(file_name, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)

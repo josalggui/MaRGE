@@ -72,6 +72,18 @@ def send_packet(packet, socket):
             return o # quit function after 1st reply (could make this a thread in the future)
 
 def command(server_dict, socket, print_infos=False, assert_errors=False):
+    """
+    Send a command dictionary to the MaRCoS server and return the reply status.
+
+    Args:
+        server_dict (dict): Command payload to serialise and send.
+        socket: Connected TCP socket to the MaRCoS server.
+        print_infos (bool, optional): Print server info messages if present. Defaults to False.
+        assert_errors (bool, optional): Raise an exception on server errors. Defaults to False.
+
+    Returns:
+        dict: Parsed reply status from the server.
+    """
     packet = construct_packet(server_dict)
     reply = send_packet(packet, socket)
     return_status = reply[5]

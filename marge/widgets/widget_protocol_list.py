@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QComboBox
 
 
 class ProtocolListWidget(QComboBox):
+    """Drop-down combo box for selecting the active acquisition protocol."""
     def __init__(self, main, *args, **kwargs):
         super(ProtocolListWidget, self).__init__(*args, **kwargs)
         self.main = main

@@ -1,3 +1,5 @@
+"""Widget for the hardware RF configuration panel."""
+
 import os
 import sys
 import csv
@@ -188,6 +190,13 @@ class RfWidget(QWidget):
             print("No hardware configuration loaded for red pitayas.")
 
     def add_rf_from_data(self, rf_id, rf_ef):
+        """
+        Add an RF coil entry row (label + efficiency + delete button) to the RF hardware widget.
+
+        Args:
+            rf_id (str): Identifier of the RF coil.
+            rf_ef (str): RF efficiency value for the coil.
+        """
         row_layout = QHBoxLayout()
         identifier_label = QLabel(rf_id)
         text_label = QLabel(rf_ef)

@@ -196,6 +196,7 @@ class Marcostek:
         self._global_time += duration + rx_gate_overhead
 
 def test_marcostek():
+    """Run a basic hardware smoke-test for the Marcostek gradient board."""
     expt = exp.Experiment(lo_freq=5, # MHz
                           rx_t=1.5) # us sampling rate)
     f = Marcostek(expt)

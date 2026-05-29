@@ -1,3 +1,5 @@
+"""Reconstruction module for inversion recovery sequences."""
+
 import numpy as np
 import scipy as sp
 from scipy.optimize import curve_fit
@@ -35,6 +37,7 @@ def InversionRecovery(raw_data_path=None):
 
     # Functions for fitting
     def func1(x, m, t1):
+        """Inversion recovery signal model: |m * (1 - 2 * exp(-x / t1))|."""
         return np.abs(m * (1 - 2 * np.exp(-x / t1)))
 
     # Process data to be plotted

@@ -1,3 +1,5 @@
+"""DICOM file management utilities for reading and writing MRI data."""
+
 import numpy as np
 from pydicom import dcmread
 from pydicom.data import get_testdata_file
@@ -30,6 +32,12 @@ class DICOMImage:
                 print(f"Invalid DICOM tag or value: {keyword} → {e}")
 
     def save(self, filename):
+        """
+        Save the DICOM dataset to disk.
+
+        Args:
+            filename (str): Destination file path for the .dcm file.
+        """
         self.ds.save_as(filename)
 
     def __str__(self):

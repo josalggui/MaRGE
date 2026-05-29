@@ -8,6 +8,7 @@ from marge.seq.sequences import defaultsequences
 
 
 class SequenceListWidget(QComboBox):
+    """Drop-down combo box populated with all available MRI sequence names."""
     def __init__(self, parent, *args, **kwargs):
         super(SequenceListWidget, self).__init__(*args, **kwargs)
         self.main = parent

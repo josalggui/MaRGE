@@ -1,3 +1,5 @@
+"""Controller for the sequence processing workflow."""
+
 from marge.widgets.widget_processing import ProcessingWidget
 
 

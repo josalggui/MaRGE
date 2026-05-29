@@ -102,6 +102,7 @@ class HistoryListWidget(QListWidget):
             return item.text()
 
 class CustomItemWidget(QWidget):
+    """List-item widget containing a checkbox, a label, and an editable text field."""
     def __init__(self, label_text):
         super().__init__()
         layout = QHBoxLayout(self)

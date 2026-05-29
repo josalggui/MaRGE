@@ -10,6 +10,7 @@ from PyQt5.QtGui import QIcon
 from importlib import resources
 
 class MarcosToolBar(QToolBar):
+    """Toolbar providing hardware connection, GPA init, and sequence execution controls."""
     def __init__(self, main, *args, **kwargs):
         super(MarcosToolBar, self).__init__(*args, **kwargs)
         self.main = main

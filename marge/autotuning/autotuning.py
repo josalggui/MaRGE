@@ -18,6 +18,12 @@ from marge.vna import Hardware
 
 
 class Arduino:
+    """
+    Interface for communicating with an Arduino-based autotuning controller.
+
+    Handles serial port discovery, connection, and bidirectional communication
+    with the Arduino device used to control the MRILab autotuning hardware.
+    """
     def __init__(self, baudrate=115200, timeout=0.1):
         """
         Initialize an Arduino object.
@@ -113,6 +119,12 @@ class Arduino:
 
 
 class VNA:
+    """
+    Interface for communicating with a Vector Network Analyzer (NanoVNA).
+
+    Manages connection, frequency sweeps, and S11 data retrieval from the
+    NanoVNA device used for RF coil autotuning in MRILab hardware.
+    """
     def __init__(self):
         """
         Initialize a Vectorial Network Analyzer (VNA) object.

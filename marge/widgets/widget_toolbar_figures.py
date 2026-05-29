@@ -7,6 +7,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QToolBar, QAction
 from importlib import resources
 class FiguresToolBar(QToolBar):
+    """Toolbar with controls for theme switching, post-processing window, and printing."""
     def __init__(self, main, *args, **kwargs):
         super(FiguresToolBar, self).__init__(*args, **kwargs)
         self.main = main

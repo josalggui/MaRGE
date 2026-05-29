@@ -1,3 +1,5 @@
+"""Widget for the pre-processing controls panel."""
+
 from PyQt5.QtWidgets import QPushButton, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QHBoxLayout, QGroupBox, QWidget
 
 

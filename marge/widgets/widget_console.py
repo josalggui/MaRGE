@@ -6,6 +6,7 @@
 from PyQt5.QtWidgets import QMainWindow, QTextEdit, QSizePolicy
 
 class ConsoleWidget(QMainWindow):
+    """Read-only QTextEdit console embedded in a narrow main window for log output."""
     def __init__(self):
         super().__init__()
 

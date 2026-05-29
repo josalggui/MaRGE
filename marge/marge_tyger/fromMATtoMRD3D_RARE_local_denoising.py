@@ -1,3 +1,5 @@
+"""Conversion of RARE local-denoising .mat files to MRD binary streams."""
+
 import sys
 import argparse
 import numpy as np
@@ -7,6 +9,25 @@ import scipy.io as sio
 
 
 def matToMRD(input, output_file, input_field: str = ""):
+    """
+    Convert a RARE local-denoising .mat file to an MRD binary stream.
+
+    Reads k-space data, physical-space trajectory (kx, ky, kz), geometry metadata,
+    partial Fourier fraction, and noise standard deviation from the .mat file.
+    Applies inverse_axesOrientation to map from acquisition space (rd, ph, sl) to
+    physical space (x, y, z). No noise acquisitions are included in the stream;
+    instead, noise_std is embedded as a user parameter in the MRD header.
+
+    Args:
+        input (str): Path to the input .mat file.
+        output_file (str | file-like | None): Destination MRD file path or writable
+            binary stream. If None, writes to stdout.
+        input_field (str, optional): .mat field name of the k-space array to use.
+            If empty, the k-space is read from sampledCartesian.
+
+    Raises:
+        KeyError: If 'parFourierFraction' or 'data_noise' are missing from the .mat file.
+    """
     output = sys.stdout.buffer if output_file is None else output_file
     mat_data = sio.loadmat(input)
 
@@ -159,6 +180,14 @@ def matToMRD(input, output_file, input_field: str = ""):
     # Stream acquisitions
     # ----------------------------
     def generate_data() -> Generator[mrd.StreamItem, None, None]:
+        """
+        Yield MRD StreamItems for all k-space acquisitions in (slice, phase-encode) order.
+
+        Trajectory vectors are in physical space (kx, ky, kz, rdTimes, x_esp, y_esp, z_esp).
+
+        Yields:
+            mrd.StreamItem.Acquisition: One item per k-space line.
+        """
         acq = mrd.Acquisition()
         acq.data.resize((1, nPoints[0]))
         acq.trajectory.resize((7, nPoints[0]))

@@ -1,9 +1,23 @@
+"""Reconstruction module for noise measurement sequences."""
+
 import marge.configs.hw_config as hw
 import numpy as np
 import scipy as sp
 
 
 def Noise(raw_data_path=None):
+    """
+    Process noise scan raw data and compute noise statistics.
+
+    Loads the .mat file, extracts the time-domain noise signal, and
+    returns a result dictionary and DICOM metadata for display.
+
+    Args:
+        raw_data_path (str, optional): Path to the input .mat file.
+
+    Returns:
+        tuple: (output_dict, dicom_meta_data), or None if no path given.
+    """
     if raw_data_path is None:
         return None
 

@@ -1,3 +1,5 @@
+"""Reconstruction module for Rabi flop sequences."""
+
 import scipy as sp
 import numpy as np
 import scipy.signal as sig
@@ -6,6 +8,18 @@ from marge.configs import hw_config as hw
 
 
 def RabiFlops(raw_data_path=None):
+    """
+    Process Rabi flop raw data and compute flip-angle calibration results.
+
+    Loads the .mat file, extracts the signal envelope, and returns a
+    result dictionary and DICOM metadata for display.
+
+    Args:
+        raw_data_path (str, optional): Path to the input .mat file.
+
+    Returns:
+        tuple: (output_dict, dicom_meta_data), or None if no path given.
+    """
     if raw_data_path is None:
         return None
 

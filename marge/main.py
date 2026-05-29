@@ -7,6 +7,13 @@ from PyQt5.QtWidgets import QApplication
 import multiprocessing as mp
 
 def MaRGE():
+    """
+    Entry point for the MaRGE graphical user interface.
+
+    Creates the required directory structure (experiments, calibration, protocols,
+    reports, configs) if they do not exist, then launches the Qt application
+    with the session controller as the main window.
+    """
     # Run the gui
     print("****************************************************************************************")
     print("Graphical User Interface for MaRCoS                                                    *")

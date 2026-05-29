@@ -92,6 +92,19 @@ class SweepImage(blankSeq.MRIBLANKSEQ):
         return True
 
     def sequenceAnalysis(self, obj=''):
+        """
+        Process raw acquired data and compute the output images and metrics.
+
+        Reconstructs the image from k-space, computes SNR or other sequence-specific
+        figures of merit, populates output_dict with result arrays, and fills
+        dicom_meta_data with the relevant DICOM tags for saving.
+
+        Args:
+            obj (str, optional): Processing mode selector (sequence-dependent). Defaults to ''.
+
+        Returns:
+            tuple: (output_dict, dicom_meta_data) with processed results and metadata.
+        """
         nSteps = [self.mapVals['nSteps0'], self.mapVals['nSteps1']]
         start = [self.mapVals['start0'], self.mapVals['start1']]
         end = [self.mapVals['end0'], self.mapVals['end1']]

@@ -1,3 +1,5 @@
+"""Widget for displaying MRI images using pyqtgraph."""
+
 from pyqtgraph import ImageView
 
 

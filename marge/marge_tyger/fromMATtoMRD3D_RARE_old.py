@@ -96,7 +96,8 @@ def matToMRD_old(input, output_file):
    
     ## Noise acq
     data_noise = mat_data['data_noise']
-    addRdPoints = mat_data['addRdPoints'][0][0]
+    _rdpts = mat_data.get('addRdPoints', mat_data.get('add_rd_points'))
+    addRdPoints = int(_rdpts[0][0]) if _rdpts is not None else 10
     data_noise = np.reshape(data_noise, (-1, nPoints[0]+addRdPoints*2))
     data_noise = data_noise[:, addRdPoints : -addRdPoints]
     nNoise = data_noise.shape[0]

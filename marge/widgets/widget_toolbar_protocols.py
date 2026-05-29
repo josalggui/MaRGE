@@ -9,6 +9,7 @@ from importlib import resources
 
 
 class ProtocolsToolBar(QToolBar):
+    """Toolbar with controls for loading, saving, and managing acquisition protocols."""
     def __init__(self, main, *args, **kwargs):
         super(ProtocolsToolBar, self).__init__(*args, **kwargs)
         self.main = main
