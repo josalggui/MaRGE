@@ -195,8 +195,8 @@ class RabiFlops(blankSeq.MRIBLANKSEQ):
                 rxd, msgs = self.expt.run()
                 self.expt.__del__()
             else:
-                rxd = {'rx0': np.random.randn(2 * self.nPoints * self.nSteps * hw.oversamplingFactor) +
-                              1j * np.random.randn(2 * self.nPoints * self.nSteps * hw.oversamplingFactor)}
+                rxd = {'rx0': np.random.randn(2 * self.nPoints * self.nSteps * hw.oversamplingFactor * self.nScans) +
+                              1j * np.random.randn(2 * self.nPoints * self.nSteps * hw.oversamplingFactor * self.nScans)}
             rxd['rx0'] = rxd['rx0'] * hw.adcFactor  # Here I normalize to get the result in mV
             self.mapVals['dataOversampled'] = rxd['rx0']
         return True

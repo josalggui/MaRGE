@@ -302,7 +302,6 @@ def Localizer(raw_data_path=None):
         output = [result_1, result_2]
 
     # Save results
-    # self.save_ismrmrd()
 
     return output_dict, output, dicom_meta_data
 

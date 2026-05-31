@@ -31,8 +31,6 @@ import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any 
 
 from datetime import date
 from datetime import datetime
-import ismrmrd
-import ismrmrd.xsd
 import datetime
 import ctypes
 import matplotlib
@@ -77,10 +75,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='parFourierFraction', string='Partial fourier fraction', val=1.0, field='OTH', tip="Fraction of k planes aquired in slice direction")
         self.addParameter(key='echo_shift', string='Echo time shift', val=0.0, units=units.us, field='OTH', tip='Shift the gradient echo time respect to the spin echo time.')
         self.addParameter(key='unlock_orientation', string='Unlock image orientation', val=0, field='OTH', tip='0: Images oriented according to standard. 1: Image raw orientation')
-        self.acq = ismrmrd.Acquisition()
-        self.img = ismrmrd.Image()
-        self.header= ismrmrd.xsd.ismrmrdHeader() 
-        
        
     def sequenceInfo(self):
         print("3D RARE sequence")
@@ -767,7 +761,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
 
         # Save results
         self.saveRawData()
-        self.save_ismrmrd()
 
         if self.mode == 'Standalone':
             self.plotResults()
@@ -855,243 +848,6 @@ class RARE(blankSeq.MRIBLANKSEQ):
         print('Info from dummy pulses:')
         print('Phase difference at iso-center: %0.1f º' % ((res2.intercept - res1.intercept) * 180 / np.pi))
         print('Phase slope difference %0.3f rads/m' % (res2.slope - res1.slope))
-        
-        
-    def save_ismrmrd(self):
-        """
-        Save the current instance's data in ISMRMRD format.
-
-        This method saves the raw data, header information, and reconstructed images to an HDF5 file
-        using the ISMRMRD (Image Storage and Reconstruction format for MR Data) format.
-
-        Steps performed:
-        1. Generate a timestamp-based filename and directory path for the output file.
-        2. Initialize the ISMRMRD dataset with the generated path.
-        3. Populate the header and write the XML header to the dataset. Informations can be added.
-        4. Reshape the raw data matrix and iterate over scans, slices, and phases to write each acquisition. WARNING : RARE sequence follows ind order to fill the k-space.
-        5. Set acquisition flags and properties.
-        6. Append the acquisition data to the dataset.
-        7. Reshape and save the reconstructed images.
-        8. Close the dataset.
-
-        Attribute:
-        - self.data_full_mat (numpy.array): Full matrix of raw data to be reshaped and saved.
-
-        Returns:
-        None. It creates an HDF5 file with the ISMRMRD format.
-        """
-        
-        directory_rmd = self.directory_rmd
-        name = datetime.datetime.now()
-        name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
-        self.mapVals['name_string'] = name_string
-        if hasattr(self, 'raw_data_name'):
-            file_name = "%s.%s" % (self.raw_data_name, name_string)
-        else:
-            self.raw_data_name = self.mapVals['seqName']
-            file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
-            
-        path= "%s/%s.h5" % (directory_rmd, file_name)
-        
-        dset = ismrmrd.Dataset(path, f'/dataset', True) # Create the dataset
-        
-        nScans = self.mapVals['nScans']
-        nPoints = np.array(self.mapVals['nPoints'])
-        etl = self.mapVals['etl']
-        nRD = self.nPoints[0]
-        nPH = self.nPoints[1]
-        nSL = ((self.nPoints[2] // 2) + self.mapVals['partialAcquisition']) * self.axesEnable[2] + (1 - self.axesEnable[2])
-        ind = self.getIndex(self.etl, nPH, self.sweepMode)
-        nRep = (nPH//etl)*nSL
-        bw = self.mapVals['bw']
-        
-        axesOrientation = self.axesOrientation
-        axesOrientation_list = axesOrientation.tolist()
-
-        read_dir = [0, 0, 0]
-        phase_dir = [0, 0, 0]
-        slice_dir = [0, 0, 0]
-
-        read_dir[axesOrientation_list.index(0)] = 1
-        phase_dir[axesOrientation_list.index(1)] = 1
-        slice_dir[axesOrientation_list.index(2)] = 1
-        
-        # Experimental Conditions field
-        exp = ismrmrd.xsd.experimentalConditionsType() 
-        magneticFieldStrength = hw.larmorFreq*1e6/hw.gammaB
-        exp.H1resonanceFrequency_Hz = hw.larmorFreq
-
-        self.header.experimentalConditions = exp 
-
-        # Acquisition System Information field
-        sys = ismrmrd.xsd.acquisitionSystemInformationType() 
-        sys.receiverChannels = 1 
-        self.header.acquisitionSystemInformation = sys
-
-
-        # Encoding field can be filled if needed
-        encoding = ismrmrd.xsd.encodingType()  
-        encoding.trajectory = ismrmrd.xsd.trajectoryType.CARTESIAN
-        #encoding.trajectory =ismrmrd.xsd.trajectoryType[data.processing.trajectory.upper()]
-
-        # # encoded and recon spaces 
-        # efov = ismrmrd.xsd.fieldOfViewMm()  
-        # efov.x =  
-        # efov.y =
-        # efov.z = 
-
-        # rfov = ismrmrd.xsd.fieldOfViewMm() 
-        # rfov.x = 
-        # rfov.y = 
-        # rfov.z = 
-
-        # ematrix = ismrmrd.xsd.matrixSizeType()
-        # rmatrix = ismrmrd.xsd.matrixSizeType()
-
-        # ematrix.x = 
-        # ematrix.y = 
-        # ematrix.z = 
-        # rmatrix.x = 
-        # rmatrix.y = 
-        # rmatrix.z = 
-
-        # espace = ismrmrd.xsd.encodingSpaceType() 
-        # espace.matrixSize = ematrix
-        # espace.fieldOfView_mm = efov
-        # rspace = ismrmrd.xsd.encodingSpaceType()
-        # rspace.matrixSize = rmatrix
-        # rspace.fieldOfView_mm = rfov
-        
-        # encoding.encodedSpace = espace
-        # encoding.reconSpace = rspace
-
-        # Encoding limits field can be filled if needed
-        
-        # limits = ismrmrd.xsd.encodingLimitsType()
-        # limits1 = ismrmrd.xsd.limitType()
-        # limits1.minimum = 
-        # limits1.center = 
-        # limits1.maximum = 
-        # limits.kspace_encoding_step_1 = limits1
-
-        # limits_rep = ismrmrd.xsd.limitType()
-        # limits_rep.minimum = 
-        # limits_rep.center = 
-        # limits_rep.maximum = 
-        # limits.repetition = limits_rep
-
-        # limits_rest = ismrmrd.xsd.limitType()
-        # limits_rest.minimum = 
-        # limits_rest.center = 
-        # limits_rest.maximum =
-        # limits.kspace_encoding_step_0 = 
-        # limits.slice = 
-        # limits.average =
-        # limits.contrast =
-        # limits.kspaceEncodingStep2 = 
-        # limits.phase =  
-        # limits.segment = 
-        # limits.set =
-
-        # encoding.encodingLimits = limits
-        # self.header.encoding.append(encoding)
-        
-        dset.write_xml_header(self.header.toXML()) # Write the header to the dataset
-                
-        
-        
-        new_data = np.zeros((nPH * nSL * nScans, nRD + 2*self.addRdPoints))
-        new_data = np.reshape(self.dataFullmat, (nScans, nSL, nPH, nRD+ 2*self.addRdPoints))
-        
-        counter=0  
-        for scan in range(nScans):
-            for slice_idx in range(nSL):
-                for phase_idx in range(nPH):
-                    
-                    line = new_data[scan, slice_idx, phase_idx, :]
-                    line2d = np.reshape(line, (1, nRD+2*self.addRdPoints))
-                    acq = ismrmrd.Acquisition.from_array(line2d, None)
-                    
-                    index_in_repetition = phase_idx % etl
-                    current_repetition = (phase_idx // etl) + (slice_idx * (nPH // etl))
-                    
-                    acq.clearAllFlags()
-                    
-                    if index_in_repetition == 0: 
-                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_CONTRAST)
-                    elif index_in_repetition == etl - 1:
-                        acq.setFlag(ismrmrd.ACQ_LAST_IN_CONTRAST)
-                    
-                    if ind[phase_idx]== 0:
-                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_PHASE)
-                    elif ind[phase_idx] == nPH - 1:
-                        acq.setFlag(ismrmrd.ACQ_LAST_IN_PHASE)
-                    
-                    if slice_idx == 0:
-                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_SLICE)
-                    elif slice_idx == nSL - 1:
-                        acq.setFlag(ismrmrd.ACQ_LAST_IN_SLICE)
-                        
-                    if int(current_repetition) == 0:
-                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_REPETITION)
-                    elif int(current_repetition) == nRep - 1:
-                        acq.setFlag(ismrmrd.ACQ_LAST_IN_REPETITION)
-                        
-                    if scan == 0:
-                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_AVERAGE)
-                    elif scan == nScans-1:
-                        acq.setFlag(ismrmrd.ACQ_LAST_IN_AVERAGE)
-                    
-                    
-                    counter += 1 
-                    
-                    # +1 to start at 1 instead of 0
-                    acq.idx.repetition = int(current_repetition + 1)
-                    acq.idx.kspace_encode_step_1 = ind[phase_idx]+1 # phase
-                    acq.idx.slice = slice_idx + 1
-                    acq.idx.contrast = index_in_repetition + 1
-                    acq.idx.average = scan + 1 # scan
-                    
-                    acq.scan_counter = counter
-                    acq.discard_pre = self.addRdPoints
-                    acq.discard_post = self.addRdPoints
-                    acq.sample_time_us = 1/bw
-                    self.dfov = np.array(self.dfov)
-                    acq.position = (ctypes.c_float * 3)(*self.dfov.flatten())
-
-                    
-                    acq.read_dir = (ctypes.c_float * 3)(*read_dir)
-                    acq.phase_dir = (ctypes.c_float * 3)(*phase_dir)
-                    acq.slice_dir = (ctypes.c_float * 3)(*slice_dir)
-                    
-                    dset.append_acquisition(acq) # Append the acquisition to the dataset
-                        
-                        
-        image=self.mapVals['image3D']
-        image_reshaped = np.reshape(image, (self.nPoints[::-1]))
-        
-        for slice_idx in range (nSL): ## image3d does not have scan dimension
-            
-            image_slice = image_reshaped[slice_idx, :, :]
-            img = ismrmrd.Image.from_array(image_slice)
-            img.transpose = False
-            img.field_of_view = (ctypes.c_float * 3)(*(self.fov)*10) # mm
-           
-            img.position = (ctypes.c_float * 3)(*self.dfov)
-            
-            # img.data_type= 8 ## COMPLEX FLOAT
-            img.image_type = 5 ## COMPLEX
-            
-            
-            
-            img.read_dir = (ctypes.c_float * 3)(*read_dir)
-            img.phase_dir = (ctypes.c_float * 3)(*phase_dir)
-            img.slice_dir = (ctypes.c_float * 3)(*slice_dir)
-            
-            dset.append_image(f"image_raw", img) # Append the image to the dataset
-                
-        
-        dset.close()    
 
 
 if __name__ == '__main__': 

@@ -32,8 +32,6 @@ import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any 
 from marge.marge_utils import utils
 
 from datetime import datetime
-import ismrmrd
-import ismrmrd.xsd
 import datetime
 import ctypes
 from marga_pulseq.interpreter import PSInterpreter
@@ -101,9 +99,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
-        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[10, 10, 1], field='IM')
-        self.addParameter(key='etl', string='Echo train length', val=5, field='SEQ') ## nm of peaks in 1 repetition
-        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=1.0, units=units.ms, field='SEQ')
+        self.addParameter(key='nPoints', string='nPoints[rd, ph, sl]', val=[120, 120, 20], field='IM')
+        self.addParameter(key='etl', string='Echo train length', val=4, field='SEQ') ## nm of peaks in 1 repetition
+        self.addParameter(key='acqTime', string='Acquisition time (ms)', val=4.0, units=units.ms, field='SEQ')
         self.addParameter(key='axesOrientation', string='Axes[rd,ph,sl]', val=[2, 1, 0], field='IM', tip="0=x, 1=y, 2=z")
         self.addParameter(key='sweepMode', string='Sweep mode', val=1, field='SEQ', tip="0: sweep from -kmax to kmax. 1: sweep from 0 to kmax. 2: sweep from kmax to 0")
         self.addParameter(key='rdGradTime', string='Rd gradient time (ms)', val=5.0, units=units.ms, field='OTH')
@@ -137,10 +135,6 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='add_rd_points', string='Add RD points', val=10, field='OTH',
                           tip='Add RD points to avoid CIC and FIR filters issues')
 
-        self.acq = ismrmrd.Acquisition()
-        self.img = ismrmrd.Image()
-        self.header = ismrmrd.xsd.ismrmrdHeader()
-       
     def sequenceInfo(self):
         print("3D RARE sequence powered by PyPulseq")
         print("Author: Dr. J.M. Algarín")
@@ -1122,173 +1116,6 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
         return self.output
 
-    def save_ismrmrd(self):
-        """
-        Save the current instance's data in ISMRMRD format.
-
-        This method saves the raw data, header information, and reconstructed images to an HDF5 file
-        using the ISMRMRD (Image Storage and Reconstruction format for MR Data) format.
-
-        Steps performed:
-        1. Generate a timestamp-based filename and directory path for the output file.
-        2. Initialize the ISMRMRD dataset with the generated path.
-        3. Populate the header and write the XML header to the dataset. Informations can be added.
-        4. Reshape the raw data matrix and iterate over scans, slices, and phases to write each acquisition. WARNING : RARE sequence follows ind order to fill the k-space.
-        5. Set acquisition flags and properties.
-        6. Append the acquisition data to the dataset.
-        7. Reshape and save the reconstructed images.
-        8. Close the dataset.
-
-        Attribute:
-        - self.data_full_mat (numpy.array): Full matrix of raw data to be reshaped and saved.
-
-        Returns:
-        None. It creates an HDF5 file with the ISMRMRD format.
-        """
-        
-        directory_rmd = self.directory_rmd
-        name = datetime.datetime.now()
-        name_string = name.strftime("%Y.%m.%d.%H.%M.%S.%f")[:-3]
-        self.mapVals['name_string'] = name_string
-        if hasattr(self, 'raw_data_name'):
-            file_name = "%s.%s" % (self.raw_data_name, name_string)
-        else:
-            self.raw_data_name = self.mapVals['seqName']
-            file_name = "%s.%s" % (self.mapVals['seqName'], name_string)
-            
-        path= "%s/%s.h5" % (directory_rmd, file_name)
-        
-        dset = ismrmrd.Dataset(path, f'/dataset', True) # Create the dataset
-
-        etl = self.mapVals['etl']
-        axes_enable = self.mapVals['axes_enable']
-        n_rd = self.nPoints[0]
-        n_ph = self.nPoints[1]
-        n_sl = (((self.nPoints[2] // 2) + self.mapVals['partialAcquisition']) * axes_enable[2] + (1 - axes_enable[2]))
-        ind = self.getIndex(self.etl, n_ph, self.sweepMode)
-        nRep = (n_ph//etl)*n_sl
-        bw = self.mapVals['bw_MHz']
-        
-        axesOrientation = self.axesOrientation
-        axesOrientation_list = axesOrientation.tolist()
-
-        read_dir = [0, 0, 0]
-        phase_dir = [0, 0, 0]
-        slice_dir = [0, 0, 0]
-
-        read_dir[axesOrientation_list.index(0)] = 1
-        phase_dir[axesOrientation_list.index(1)] = 1
-        slice_dir[axesOrientation_list.index(2)] = 1
-        
-        # Experimental Conditions field
-        exp = ismrmrd.xsd.experimentalConditionsType() 
-        magneticFieldStrength = hw.larmorFreq * 1e6 / hw.gammaB
-        exp.H1resonanceFrequency_Hz = hw.larmorFreq
-
-        self.header.experimentalConditions = exp 
-
-        # Acquisition System Information field
-        sys = ismrmrd.xsd.acquisitionSystemInformationType() 
-        sys.receiverChannels = 1 
-        self.header.acquisitionSystemInformation = sys
-
-
-        # Encoding field can be filled if needed
-        encoding = ismrmrd.xsd.encodingType()  
-        encoding.trajectory = ismrmrd.xsd.trajectoryType.CARTESIAN
-        #encoding.trajectory =ismrmrd.xsd.trajectoryType[data.processing.trajectory.upper()]
-        
-        dset.write_xml_header(self.header.toXML()) # Write the header to the dataset
-
-        new_data = np.zeros((n_ph * n_sl * self.nScans, n_rd + 2*self.add_rd_points))
-        new_data = np.reshape(self.data_fullmat, (self.nScans, n_sl, n_ph, n_rd+ 2*self.add_rd_points))
-        
-        counter=0  
-        for scan in range(self.nScans):
-            for slice_idx in range(n_sl):
-                for phase_idx in range(n_ph):
-                    
-                    line = new_data[scan, slice_idx, phase_idx, :]
-                    line2d = np.reshape(line, (1, n_rd+2*self.add_rd_points))
-                    acq = ismrmrd.Acquisition.from_array(line2d, None)
-                    
-                    index_in_repetition = phase_idx % etl
-                    current_repetition = (phase_idx // etl) + (slice_idx * (n_ph // etl))
-                    
-                    acq.clearAllFlags()
-                    
-                    if index_in_repetition == 0: 
-                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_CONTRAST)
-                    elif index_in_repetition == etl - 1:
-                        acq.setFlag(ismrmrd.ACQ_LAST_IN_CONTRAST)
-                    
-                    if ind[phase_idx]== 0:
-                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_PHASE)
-                    elif ind[phase_idx] == n_ph - 1:
-                        acq.setFlag(ismrmrd.ACQ_LAST_IN_PHASE)
-                    
-                    if slice_idx == 0:
-                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_SLICE)
-                    elif slice_idx == n_sl - 1:
-                        acq.setFlag(ismrmrd.ACQ_LAST_IN_SLICE)
-                        
-                    if int(current_repetition) == 0:
-                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_REPETITION)
-                    elif int(current_repetition) == nRep - 1:
-                        acq.setFlag(ismrmrd.ACQ_LAST_IN_REPETITION)
-                        
-                    if scan == 0:
-                        acq.setFlag(ismrmrd.ACQ_FIRST_IN_AVERAGE)
-                    elif scan == self.nScans-1:
-                        acq.setFlag(ismrmrd.ACQ_LAST_IN_AVERAGE)
-                    
-                    
-                    counter += 1 
-                    
-                    # +1 to start at 1 instead of 0
-                    acq.idx.repetition = int(current_repetition + 1)
-                    acq.idx.kspace_encode_step_1 = ind[phase_idx]+1 # phase
-                    acq.idx.slice = slice_idx + 1
-                    acq.idx.contrast = index_in_repetition + 1
-                    acq.idx.average = scan + 1 # scan
-                    
-                    acq.scan_counter = counter
-                    acq.discard_pre = self.add_rd_points
-                    acq.discard_post = self.add_rd_points
-                    acq.sample_time_us = 1/bw
-                    self.dfov = np.array(self.dfov)
-                    acq.position = (ctypes.c_float * 3)(*self.dfov.flatten())
-
-                    
-                    acq.read_dir = (ctypes.c_float * 3)(*read_dir)
-                    acq.phase_dir = (ctypes.c_float * 3)(*phase_dir)
-                    acq.slice_dir = (ctypes.c_float * 3)(*slice_dir)
-                    
-                    dset.append_acquisition(acq) # Append the acquisition to the dataset
-                        
-                        
-        image=self.mapVals['image3D']
-        image_reshaped = np.reshape(image, (self.nPoints[::-1]))
-        
-        for slice_idx in range (n_sl): ## image3d does not have scan dimension
-            
-            image_slice = image_reshaped[slice_idx, :, :]
-            img = ismrmrd.Image.from_array(image_slice)
-            img.transpose = False
-            img.field_of_view = (ctypes.c_float * 3)(*(self.fov)*10) # mm
-           
-            img.position = (ctypes.c_float * 3)(*self.dfov)
-            
-            # img.data_type= 8 ## COMPLEX FLOAT
-            img.image_type = 5 ## COMPLEX
-
-            img.read_dir = (ctypes.c_float * 3)(*read_dir)
-            img.phase_dir = (ctypes.c_float * 3)(*phase_dir)
-            img.slice_dir = (ctypes.c_float * 3)(*slice_dir)
-            
-            dset.append_image(f"image_raw", img) # Append the image to the dataset
-        
-        dset.close()    
 
 if __name__ == '__main__':
     seq = RarePyPulseq()
