@@ -28,8 +28,6 @@ import marge.configs.hw_config as hw  # Import the scanner hardware config
 import marge.configs.units as units
 import marge.seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.
 
-import ismrmrd
-import ismrmrd.xsd
 from marga_pulseq.interpreter import PSInterpreter
 import pypulseq as pp
 from marge.marge_utils import utils
@@ -145,10 +143,6 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                           tip='Decimation applied to acquired data')
         self.addParameter(key='add_rd_points', string='Add RD points', val=10, field='OTH',
                           tip='Add RD points to avoid CIC and FIR filters issues')
-
-        self.acq = ismrmrd.Acquisition()
-        self.img = ismrmrd.Image()
-        self.header = ismrmrd.xsd.ismrmrdHeader()
 
     def sequenceInfo(self):
         print("3D RARE sequence powered by PyPulseq")

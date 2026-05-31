@@ -59,7 +59,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
         self.action_convert.triggered.connect(self.convert)
         self.acq = ismrmrd.Acquisition()
         self.img = ismrmrd.Image()
-        self.header= ismrmrd.xsd.ismrmrdHeader() 
+        self.header = ismrmrd.xsd.ismrmrdHeader(experimentalConditions=ismrmrd.xsd.experimentalConditionsType(H1resonanceFrequency_Hz=0))
         self.current_slice = 0
         
         
