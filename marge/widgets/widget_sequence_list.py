@@ -4,7 +4,7 @@
 @affiliation:MRILab, i3M, CSIC, Valencia, Spain
 """
 from PyQt5.QtWidgets import QComboBox, QSizePolicy
-from marge.seq.sequences import defaultsequences
+from marge.seq.sequences import defaultsequences, sequence_display_names
 
 
 class SequenceListWidget(QComboBox):
@@ -13,8 +13,13 @@ class SequenceListWidget(QComboBox):
         super(SequenceListWidget, self).__init__(*args, **kwargs)
         self.main = parent
 
-        # Add sequences to sequences list
-        self.addItems(sorted(list(defaultsequences.keys())))
+        # Keep root sequences first and append folder-prefixed ones afterwards.
+        ordered_keys = sorted(
+            defaultsequences.keys(),
+            key=lambda key: ("/" in sequence_display_names.get(key, key), sequence_display_names.get(key, key).lower())
+        )
+        for key in ordered_keys:
+            self.addItem(sequence_display_names.get(key, key), key)
 
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.setMaximumWidth(400)
