@@ -4,122 +4,181 @@
 
 # MaRGE (MaRCoS Graphical Environment)
 
-This repository contains the Python code for the MaRCoS Graphical Environment (MaRGE), a system for magnetic resonance imaging research. The GUI provides a user-friendly interface to interact with the MaRCoS system.
+🚀 **Version 1.0.0 coming soon — stay tuned!**
 
-Take a look at the MaRGE [Wiki](https://github.com/josalggui/MaRGE/wiki)! (under development)
+**MaRGE** is a Python-based graphical environment for interacting with the **MaRCoS MRI research system**. It provides a user-friendly GUI for running MRI sequences, configuring parameters, and managing experiments without needing to work directly with low-level control code.
 
-Take a look at the MaRGE [Documentation](https://josalggui.github.io/MaRGE/)! (under development)
+MaRGE is designed for MRI researchers, developers, and students working with the MaRCoS platform.
 
-### [Setting up a Red Pitaya](https://github.com/josalggui/MaRGE/wiki/Setting-up-Red-Pitaya)
+---
 
-### [Setting up MaRGE](https://github.com/josalggui/MaRGE/wiki/Setting-up-MaRGE)
+## Index
+1. Preview
+2. Features
+3. General requirements
+4. Installation with pip
+5. Installation from source (For developers)
+6. Full Installation (MaRGE + MaRCoS)
+7. Documentation
+8. Additional notes
 
-### [Description of the GUI](https://github.com/josalggui/MaRGE/wiki/Interface-description)
+## 1. Preview
 
-### [Toolbars](https://github.com/josalggui/MaRGE/wiki/Toolbars)
+![MaRGE GUI](marge/resources/images/main_clean.png)
 
-### [Setting up the autocalibration](https://github.com/josalggui/MaRGE/wiki/Setting-up-autocalibration)
+---
 
-### [Setting up the localizer](https://github.com/josalggui/MaRGE/wiki/Setting-up-localizer)
+## 2. Features
 
-### [Run custom sequences](https://github.com/josalggui/MaRGE/wiki/Run-custom-sequences)
+🧲 Graphical interface for MaRCoS MRI experiments
 
-### [Protocols](https://github.com/josalggui/MaRGE/wiki/Protocols)
+⚙️ Sequence configuration and execution
 
-### [Adding a New Sequence to the GUI](https://github.com/josalggui/MaRGE/wiki/Create-your-own-sequence)
+🧪 Research-oriented workflow
 
+🧩 Extensible sequence architecture
 
-## Structure of Folders and Files in the GUI
+🐍 Fully Python-based
 
-The internal architecture of MaRGE is organized into distinct folders and files that define its functionality and user interface. Understanding this structure can be helpful for those interested in further customization or development.
+---
 
-### `ui` Folder
+## 3. General requirements
 
-The `ui` folder contains scripts that define the main windows of the GUI. Currently, it includes the following scripts:
+Before installing MaRGE, make sure your system meets the following minimum requirements. The software is primarily tested and supported on Ubuntu, but other platforms may work with some limitations.
 
-- **window_main.py**: This script defines a class that inherits from QMainWindow. It forms the foundation of the main GUI window, where most user interactions take place.
+1. **Ubuntu 22.04.5 LTS** with **Python 3.10**
+2. **Windows 10** with **Python 3.13**
+3. **Windows 11** with **Python 3.13**
+3. **Internet connection**
 
-- **window_session.py**: Similar to `window_main.py`, this script also defines a class that inherits from QMainWindow. It is responsible for managing the session window, which allows users to input essential information before conducting experiments.
+Without a configured MaRCoS + Red Pitaya setup, MaRGE can still be launched, but only **Trial Mode** will be available (no hardware acquisition).
 
-- **window_postprocessing.py** (under development): This script is intended to define a class for a post-processing window, which will likely offer tools for analyzing and visualizing data after experiments.
+---
 
-### `widgets` Folder
+## 4. Installation with pip
+Install MaRGE with pip if you only need to run the GUI and do not plan to modify the source code or add custom sequences.
 
-The `widgets` folder contains scripts that define individual widgets or components used within the GUI. These widgets are responsible for various specific functionalities and user interactions.
+    Note: Tyger capabilities are not supported from pip installation.
 
-### `controller` Folder
+1. Go to your project folder.Create and activate a virtual environment:
 
-Scripts in the `controller` folder play a crucial role in determining how the windows and widgets react to user interactions. They define the logic behind the GUI's behavior, ensuring that it responds appropriately to user input.
+* Ubuntu
+  ```bash
+  python3 -m venv venv
+  source venv/bin/activate
+  ```
+* Windows
+  ```bash
+  python -m venv venv
+  source venv/Scripts/activate
+  ```
 
-As the GUI evolves and additional features are developed, more scripts and files may be added to these folders, enhancing the functionality and usability of MaRCoS.
+2. Install marge-mri
+   ```bash
+   pip install marge-mri==1.0.0b1
+   ```
 
-Understanding this folder and file structure can provide a foundation for those interested in extending or customizing MaRGE to suit their specific research needs.
+3. Launch the GUI from terminal:
+   ```bash
+     marge-mri
+   ```
 
-### `seq` Folder
+---
 
-The `seq` folder is where you can access the different sequences that can be applied in the scanner. It contains not only the primary sequences but also a parent sequence named `mriBlankSeq.py`. Additionally, you'll find the `sequences.py` file in this folder, which serves as an import point for all the sequences that the GUI can utilize.
+## 5. Installation from source (Developer mode)
 
-### `configs` Folder
+Use this method if you want to modify the codebase or include your own sequences.
 
-Within the `configs` folder, you'll encounter two essential configuration files:
+1. Go to the folder where you want to create the project and clone the repo
+    ```bash
+    git clone https://github.com/josalggui/MaRGE.git
+    ```
 
-- **hw_config.py**: This file stores hardware-related information crucial for the GUI. Variables in this file depend on the specific scanner hardware, such as gradients, or other essential values. Upon downloading the GUI for the first time, the filename is typically named `hw_config.py.copy`. Be sure to modify the filename appropriately to match your hardware and rename it before running the GUI.
+2. Go into the created `MaRGE` folder. Create and activate a virtual environment.
+Then, add the current folder (MaRGE) to Python's module search path:
+* Ubuntu
+    ```bash
+    cd MaRGE
+    python3 -m venv venv
+    source venv/bin/activate
+    export PYTHONPATH=$(pwd)
+    ```
+* Windows
+    ```bash
+    cd MaRGE
+    python -m venv venv
+    source venv/Scripts/activate
+    export PYTHONPATH=$(pwd)
+    ```
+3. Install requirements
+    ```bash
+    pip install -r requirements.txt
+    ```
+4. Go into `MaRGE/marge` folder and run the `main.py`.
+* Ubuntu
+    ```bash
+    cd marge
+    python main.py
+    ```
+* Windows
+    ```bash
+    cd marge
+    python3 main.py
+    ```
 
-- **sys_config.py**: This file contains useful information utilized by the session window of the GUI.
+### Notes
+When you execute `main.py` additional folders are created to save results, configurations, or calibrations.
+These folders are created in the directory where you run `main.py`.
+It is highly recommended to run `main.py` from `MaRGE/marge` folder.
 
-- **autotuning.py**: This file contains the serial number of the arduino used to control the autotuning.
+---
 
-### `protocols` Folder
+## 6. Full Installation (MaRGE + MaRCoS Setup)
 
-The `protocols` folder is where user-created protocols are stored. Protocols are collections of predefined sequences with preset parameters, allowing for streamlined experimental workflows.
+For a complete installation including MaRCoS configuration, hardware setup, and developer options, please follow the detailed step-by-step guide in the Wiki:
 
-### `experiments` Folder
+👉 [Full Installation Guide](https://github.com/josalggui/MaRGE/wiki/Setting-up-MaRGE-and-MaRCoS-from-scratch)
 
-The `experiments` folder serves as the repository for storing the results of experiments conducted within the GUI. Within this folder, you'll find two subfolders:
+---
 
-- **acquisitions**: Scanner acquisitions are stored here, with each day's data stored in a separate folder labeled with the date (YYYY.MM.DD). The outputs of the scanner include:
-  - .mat files containing raw data.
-  - .dcm files with images.
-  - .csv files containing input parameters.
+## 7. Documentation
 
-- **parameterization**: This folder contains important data, including:
-  - Sequence last parameters in CSV format.
-  - CSV files generated when you click the "Save the parameters of a sequence to a file" icon in the GUI main window.
+📖 Wiki: https://github.com/josalggui/MaRGE/wiki
+ (under development)
 
-### `resources` Folder
+📚 Documentation site: https://josalggui.github.io/MaRGE/
+ (under development)
 
-In the `resources` folder, you'll find various icons used in the main menu and other parts of the GUI, as well as the images used in this README.
+📦 PyPI package: https://pypi.org/project/marge-mri/
 
-This structured organization of folders and files ensures that MaRGE remains efficient and organized, allowing for effective experimentation and customization.
+## 8. Additional notes
 
-# Additional notes
+### 1. cupy-cuda12x module related error
 
-## CIC filter issues
+During the installation of the requirements, the following error may appear:
 
-It's crucial to be aware of a systematic delay that occurs as a result of the CIC filter applied to the acquired data in the Red Pitaya. This delay consists of 3 data points and should be taken into account when processing and analyzing acquired data.
+`ERROR: No matching distribution found for cupy-cuda12x`
 
-The CIC filter's delay impacts the alignment of acquired data and can influence the timing of various sequence operations. This means that the timestamp associated with a data point may not reflect its true acquisition time accurately. Understanding and accommodating this delay is essential for accurate data processing and interpretation within MaRGE.
+This usually means your Python environment is not compatible with the prebuilt CuPy CUDA 12 wheels. It is **not typically caused by a missing CUDA Toolkit installation**.
 
-To mitigate potential issues related to the CIC filter's delay, it is also recommended to discard the first five to ten data points during data processing. This practice helps in stabilizing the data and removing any transient effects caused by the filter's delay. Additionally, consider adjusting timestamps or applying correction factors to accurately account for the delay when conducting precise time-sensitive analyses.
+**Common causes and fixes:**
 
-The `mriBlankSeq` module already includes methods for rx gating that account for these considerations, simplifying the implementation of sequences and ensuring reliable data acquisition and processing (not shown in this example).
+- **Unsupported Python version** — CuPy wheels are only published for specific Python versions. Check your version:
 
-## The `mapVals` Variable
+  ```bash
+  python --version
+  ```
+If you are using Python 3.14 (or a newer unsupported version), install Python 3.13.0 and recreate your virtual environment.
 
-The `mapVals` variable is a crucial element within the sequences of MaRGE. It serves as a dictionary inherited from the `mriBlankSeq` class, playing a vital role in managing and preserving information throughout the sequence execution. Below, we explore the significance and usage of the `mapVals` variable:
+### 2. CuPy / CUDA dependency and Tyger capability
 
-- **Initialization and Structure**:
-  - The `mapVals` dictionary is initialized with predefined key-value pairs.
-  - These keys act as unique identifiers for specific information, and their associated values can encompass numbers or lists of numbers.
+CuPy is used in the postprocessing toolbox to accelerate the Algebraic Reconstruction Technique (ART) with GPU computation. The code attempts to import CuPy at runtime; if the import fails, ART automatically falls back to a CPU implementation.
 
-- **Storage of Information**:
-  - During the sequence's execution, you have the flexibility to store pertinent information within the `mapVals` dictionary. This information can encompass various aspects, including parameters, interim results, or any other data deemed essential.
+In the current version, with the introduction of the **Tyger capability**, the ART-based postprocessing workflow is generally no longer needed. As a result:
 
-- **Saving Data in Raw Data**:
-  - Upon the sequence's completion, the `saveRawData` method is utilized to generate .mat and .dcm files containing all the data stored within the `mapVals` dictionary. This .mat file plays a pivotal role in preserving the experimental data and results.
-  - **TODO**: save data in ISMRMD-format and NIFTI-format. Add XNAT.
-- **Persistent Inputs**:
-  - It is worth noting that, although the `mapVals` dictionary is cleared of most information after each sequence run, the inputs defined through the `addParameter` method remain intact. This ensures the retention of critical input parameters for reference and potential use in future experiments.
+- CuPy is effectively optional
+- CUDA Toolkit is not required for normal Tyger-based workflows
+- Failing to install `cupy-cuda12x` will **not** break the pipeline
+- The code will continue to run using CPU paths (or Tyger paths) instead
 
-In summary, the `mapVals` variable functions as a dynamic storage space for various types of data within a sequence. It facilitates the management and organization of vital information throughout the sequence execution process. Additionally, it guarantees that essential input parameters are accessible for reference and subsequent experiments.
-
+You may safely skip CuPy/CUDA installation unless you explicitly plan to use the legacy ART postprocessing toolbox.

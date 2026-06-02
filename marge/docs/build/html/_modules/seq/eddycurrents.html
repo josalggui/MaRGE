@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>seq.eddycurrents &mdash; MaRGE 0.8.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=486e5634"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            MaRGE
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../seq.html">API reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">MaRGE</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">seq.eddycurrents</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for seq.eddycurrents</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c1">#*****************************************************************************</span>
+<span class="c1"># Get the directory of the current script</span>
+<span class="n">main_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">parent_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">main_directory</span><span class="p">)</span>
+<span class="n">parent_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">parent_directory</span><span class="p">)</span>
+
+<span class="c1"># Define the subdirectories you want to add to sys.path</span>
+<span class="n">subdirs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MaRGE&#39;</span><span class="p">,</span> <span class="s1">&#39;marcos_client&#39;</span><span class="p">]</span>
+
+<span class="c1"># Add the subdirectories to sys.path</span>
+<span class="k">for</span> <span class="n">subdir</span> <span class="ow">in</span> <span class="n">subdirs</span><span class="p">:</span>
+    <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parent_directory</span><span class="p">,</span> <span class="n">subdir</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+<span class="c1">#******************************************************************************</span>
+<span class="kn">import</span> <span class="nn">controller.experiment_gui</span> <span class="k">as</span> <span class="nn">ex</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">seq.mriBlankSeq</span> <span class="k">as</span> <span class="nn">blankSeq</span>  <span class="c1"># Import the mriBlankSequence for any new sequence.</span>
+<span class="kn">import</span> <span class="nn">configs.hw_config</span> <span class="k">as</span> <span class="nn">hw</span>
+<span class="kn">import</span> <span class="nn">configs.units</span> <span class="k">as</span> <span class="nn">units</span>
+
+<div class="viewcode-block" id="EDDYCURRENTS">
+<a class="viewcode-back" href="../../seq.html#seq.eddycurrents.EDDYCURRENTS">[docs]</a>
+<span class="k">class</span> <span class="nc">EDDYCURRENTS</span><span class="p">(</span><span class="n">blankSeq</span><span class="o">.</span><span class="n">MRIBLANKSEQ</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">EDDYCURRENTS</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="c1"># Input the parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">larmorFreq</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nReadouts</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nScans</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gAmplitude</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deadTime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfExAmp</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfExTime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gAxis</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gSteps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gDuration</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gRiseTime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repetitionTime</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nDelays</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tDelayMax</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tDelayMin</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shimming</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;seqName&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;EDDYCURRENTSinfo&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="s1">&#39;EDDYCURRENTS&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nScans&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Number of scans&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;larmorFreq&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Larmor frequency (MHz)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">MHz</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfExAmp&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF excitation amplitude (a.u.)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;rfExTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF excitation time (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">us</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;deadTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;RF dead time (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">400.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">us</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;RF&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nReadouts&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Number of points&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;acqTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Acquisition time (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;repetitionTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Repetition time (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;shimming&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Shimming&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">sh</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;gAxis&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;G axis&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;&#39;x&#39;, &#39;y&#39; or &#39;z&#39;&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;gSteps&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;G steps&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;0 if you want to use the default value in the hw_config.py file&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;gRiseTime&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;G rise time (us)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">us</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">,</span>
+                          <span class="n">tip</span><span class="o">=</span><span class="s2">&quot;0 if you want to use the default value in the hw_config.py file&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;gAmplitude&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;G amplitude (mT/m)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">mTm</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;gDuration&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;G duration (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;tDelayMin&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Min delay G2RF (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;tDelayMax&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Max delay G2RF (ms)&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addParameter</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;nDelays&#39;</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;Number of delays&#39;</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s1">&#39;SEQ&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EDDYCURRENTS.sequenceInfo">
+<a class="viewcode-back" href="../../seq.html#seq.eddycurrents.EDDYCURRENTS.sequenceInfo">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;EDDYCURRENTS&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Author: Dr. J.M. Algarín&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Contact: josalggui@i3m.upv.es&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;mriLab @ i3M, CSIC, Spain&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sequence to characterize the eddy currents.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EDDYCURRENTS.sequenceTime">
+<a class="viewcode-back" href="../../seq.html#seq.eddycurrents.EDDYCURRENTS.sequenceTime">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceTime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">n_delays</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nDelays&#39;</span><span class="p">]</span>
+        <span class="n">n_scans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;nScans&#39;</span><span class="p">]</span>
+        <span class="n">tr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;repetitionTime&#39;</span><span class="p">]</span> <span class="c1"># ms</span>
+        <span class="k">return</span> <span class="n">tr</span><span class="o">*</span><span class="mf">1e-3</span><span class="o">*</span><span class="n">n_scans</span><span class="o">*</span><span class="n">n_delays</span><span class="o">*</span><span class="mi">3</span><span class="o">/</span><span class="mi">60</span>  <span class="c1"># minutes, scanTime</span></div>
+
+
+<div class="viewcode-block" id="EDDYCURRENTS.sequenceRun">
+<a class="viewcode-back" href="../../seq.html#seq.eddycurrents.EDDYCURRENTS.sequenceRun">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceRun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plotSeq</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">demo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">init_gpa</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">demo</span> <span class="o">=</span> <span class="n">demo</span>
+
+        <span class="c1"># Define delay array</span>
+        <span class="n">delays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tDelayMin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tDelayMax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDelays</span><span class="p">)</span><span class="o">*</span><span class="mf">1e6</span> <span class="c1">#us</span>
+
+        <span class="c1"># Fix gSteps and gRiseTime</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gSteps</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gSteps</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">grad_steps</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gRiseTime</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gRiseTime</span> <span class="o">=</span> <span class="n">hw</span><span class="o">.</span><span class="n">grad_rise_time</span><span class="o">*</span><span class="mf">1e-6</span>
+
+        <span class="c1"># Fix axis</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gAxis</span> <span class="o">==</span> <span class="s1">&#39;x&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gAxis</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">gAxis</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gAxis</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">gAxis</span> <span class="o">==</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gAxis</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="k">def</span> <span class="nf">createSequence</span><span class="p">():</span>
+            <span class="n">rd_points</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">t_ini</span> <span class="o">=</span> <span class="mi">20</span>
+
+            <span class="c1"># Shimming</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iniSequence</span><span class="p">(</span><span class="n">t_ini</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shimming</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">delay</span> <span class="ow">in</span> <span class="n">delays</span><span class="p">:</span>
+                <span class="c1"># Gradient pulse 0</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">t_ini</span>
+                <span class="n">t0</span> <span class="o">+=</span> <span class="mi">20</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gradTrap</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gRiseTime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gDuration</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gSteps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gAxis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shimming</span><span class="p">)</span>
+                <span class="c1"># Tx RF pulse</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gDuration</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">gRiseTime</span> <span class="o">+</span> <span class="n">delay</span> <span class="o">-</span> <span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rfRecPulse</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">rfTime</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rfExTime</span><span class="p">,</span> <span class="n">rfAmplitude</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rfExAmp</span><span class="p">,</span> <span class="n">rfPhase</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="c1"># Rx gate</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfExTime</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">deadTime</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rxGateSync</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span><span class="p">)</span>
+                <span class="n">rd_points</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nReadouts</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">addRdPoints</span>
+                <span class="c1"># **********************************************</span>
+
+                <span class="c1"># Gradient pulse +</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">t_ini</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">repetitionTime</span>
+                <span class="n">t0</span> <span class="o">+=</span> <span class="mi">20</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gradTrap</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gRiseTime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gDuration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gAmplitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gSteps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gAxis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shimming</span><span class="p">)</span>
+                <span class="c1"># Tx RF pulse</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gDuration</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">gRiseTime</span> <span class="o">+</span> <span class="n">delay</span> <span class="o">-</span> <span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rfRecPulse</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">rfTime</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rfExTime</span><span class="p">,</span> <span class="n">rfAmplitude</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rfExAmp</span><span class="p">,</span> <span class="n">rfPhase</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="c1"># Rx gate</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfExTime</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">deadTime</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rxGateSync</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span><span class="p">)</span>
+                <span class="n">rd_points</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nReadouts</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">addRdPoints</span>
+                <span class="c1"># **********************************************</span>
+
+                <span class="c1"># Gradient pulse -</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">t_ini</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">repetitionTime</span>
+                <span class="n">t0</span> <span class="o">+=</span> <span class="mi">20</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gradTrap</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gRiseTime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gDuration</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">gAmplitude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gSteps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gAxis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shimming</span><span class="p">)</span>
+                <span class="c1"># Tx RF pulse</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gDuration</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">gRiseTime</span> <span class="o">+</span> <span class="n">delay</span> <span class="o">-</span> <span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rfRecPulse</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">rfTime</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rfExTime</span><span class="p">,</span> <span class="n">rfAmplitude</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rfExAmp</span><span class="p">,</span> <span class="n">rfPhase</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="c1"># Rx gate</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="n">hw</span><span class="o">.</span><span class="n">blkTime</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rfExTime</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">deadTime</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rxGateSync</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span><span class="p">)</span>
+                <span class="n">rd_points</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nReadouts</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">addRdPoints</span>
+                <span class="c1"># **********************************************</span>
+
+                <span class="c1"># Update t_ini</span>
+                <span class="n">t_ini</span> <span class="o">+=</span> <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">repetitionTime</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">endSequence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">repetitionTime</span><span class="o">*</span><span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nDelays</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">rd_points</span>
+
+        <span class="c1"># Time parameters to us</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gRiseTime</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gDuration</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gRiseTime</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rfExTime</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deadTime</span> <span class="o">*=</span> <span class="mf">1e6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repetitionTime</span> <span class="o">*=</span> <span class="mf">1e6</span>
+
+        <span class="c1"># Initialize the experiment</span>
+        <span class="n">bw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nReadouts</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span>  <span class="c1"># MHz</span>
+        <span class="n">sampling_period</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">bw</span>  <span class="c1"># us</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;samplingPeriod&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampling_period</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expt</span> <span class="o">=</span> <span class="n">ex</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span><span class="n">lo_freq</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">larmorFreq</span> <span class="o">*</span> <span class="mf">1e-6</span><span class="p">,</span>
+                                      <span class="n">rx_t</span><span class="o">=</span><span class="n">sampling_period</span><span class="p">,</span>
+                                      <span class="n">init_gpa</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                      <span class="n">gpa_fhdo_offset_time</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mf">0.2</span> <span class="o">/</span> <span class="mf">3.1</span><span class="p">),</span>
+                                      <span class="p">)</span>
+            <span class="n">sampling_period</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="n">getSamplingRate</span><span class="p">()</span>
+        <span class="n">bw</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sampling_period</span>  <span class="c1"># MHz</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nReadouts</span> <span class="o">/</span> <span class="n">bw</span>  <span class="c1"># us</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;bw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bw</span> <span class="o">*</span> <span class="mf">1e6</span>
+
+        <span class="c1"># Create the sequence and add instructions to the experiment</span>
+        <span class="n">points_to_measure</span> <span class="o">=</span> <span class="n">createSequence</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">floDict2Exp</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sequence waveforms loaded successfully&quot;</span><span class="p">)</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: sequence waveforms out of hardware bounds&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Run the experiment</span>
+        <span class="n">data_over</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># To save oversampled data</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">plotSeq</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scan </span><span class="si">%i</span><span class="s2"> running...&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">scan</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">:</span>
+                    <span class="n">points_measured</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">while</span> <span class="n">points_measured</span> <span class="o">!=</span> <span class="p">(</span><span class="n">points_to_measure</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">):</span>
+                        <span class="n">rxd</span><span class="p">,</span> <span class="n">msgs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+                        <span class="n">points_measured</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx0&#39;</span><span class="p">])</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Acquired points = </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">points_measured</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Expected points = </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">points_to_measure</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">rxd</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;rx0&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">points_to_measure</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">)</span> <span class="o">+</span>
+                                  <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span>
+                        <span class="n">points_to_measure</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">)}</span>
+                    <span class="n">points_measured</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx0&#39;</span><span class="p">])</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Acquired points = </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">points_measured</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Expected points = </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">points_to_measure</span> <span class="o">*</span> <span class="n">hw</span><span class="o">.</span><span class="n">oversamplingFactor</span><span class="p">))</span>
+                <span class="n">data_over</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">data_over</span><span class="p">,</span> <span class="n">rxd</span><span class="p">[</span><span class="s1">&#39;rx0&#39;</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scan </span><span class="si">%i</span><span class="s2"> ready!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">scan</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;data_oversampled&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_over</span>
+        <span class="k">elif</span> <span class="n">plotSeq</span> <span class="ow">and</span> <span class="n">standalone</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sequencePlot</span><span class="p">(</span><span class="n">standalone</span><span class="o">=</span><span class="n">standalone</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># Close the experiment</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">demo</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expt</span><span class="o">.</span><span class="fm">__del__</span><span class="p">()</span>
+
+        <span class="c1"># Process data to be plotted</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">plotSeq</span><span class="p">:</span>
+            <span class="n">data_full</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decimate</span><span class="p">(</span><span class="n">data_over</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nDelays</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;Normal&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;data_full&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_full</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_full</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nScans</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDelays</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+
+            <span class="c1"># Get fft</span>
+            <span class="n">spectrums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">delay_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nDelays</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">rx_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+                    <span class="n">data_prov</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">delay_idx</span><span class="p">,</span> <span class="n">rx_idx</span><span class="p">,</span> <span class="p">:]</span>
+                    <span class="n">spectrums</span><span class="p">[</span><span class="n">delay_idx</span><span class="p">,</span> <span class="n">rx_idx</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftn</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftshift</span><span class="p">(</span><span class="n">data_prov</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;spectrums&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spectrums</span>
+
+            <span class="c1"># Data to sweep sequence</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;sampledPoint&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="EDDYCURRENTS.sequenceAnalysis">
+<a class="viewcode-back" href="../../seq.html#seq.eddycurrents.EDDYCURRENTS.sequenceAnalysis">[docs]</a>
+    <span class="k">def</span> <span class="nf">sequenceAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="c1"># Load data</span>
+        <span class="n">spectrums</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapVals</span><span class="p">[</span><span class="s1">&#39;spectrums&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># Get spectrum amplitudes</span>
+        <span class="n">gradZero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">spectrums</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="n">gradPositive</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">spectrums</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="n">gradNegative</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">spectrums</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="n">gZero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">gradZero</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">gPositive</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">gradPositive</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">gNegative</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">gradNegative</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">t_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tDelayMin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tDelayMax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nDelays</span><span class="p">)</span><span class="o">*</span><span class="mf">1e3</span> <span class="c1"># ms</span>
+        
+        
+        <span class="c1"># Spectrum maps</span>
+        <span class="n">result1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">spectrums</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+                   <span class="s1">&#39;xLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Frequency (a.u.)&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;yLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Delay (a.u.)&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;No gradient&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;row&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                   <span class="s1">&#39;col&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+
+        <span class="c1"># Plot 2</span>
+        <span class="n">result2</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">spectrums</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+                   <span class="s1">&#39;xLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Frequency (a.u.)&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;yLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Delay (a.u.)&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Positive gradient&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;row&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                   <span class="s1">&#39;col&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+
+        <span class="c1"># Plot 3</span>
+        <span class="n">result3</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">spectrums</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+                   <span class="s1">&#39;xLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Frequency (a.u.)&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;yLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Delay (a.u.)&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Negative gradient&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;row&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                   <span class="s1">&#39;col&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+        
+        <span class="c1"># Plot 4</span>
+        <span class="n">result4</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;widget&#39;</span><span class="p">:</span> <span class="s1">&#39;curve&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;xData&#39;</span><span class="p">:</span> <span class="n">t_vector</span><span class="p">,</span>
+                <span class="s1">&#39;yData&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">gZero</span><span class="p">,</span> <span class="n">gPositive</span><span class="p">,</span> <span class="n">gNegative</span><span class="p">],</span>
+                <span class="s1">&#39;xLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Delay G2RF Time (ms)&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;yLabel&#39;</span><span class="p">:</span> <span class="s1">&#39;Spectrum amplitude (a.u.)&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Echo&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;legend&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;No gradient&#39;</span><span class="p">,</span> <span class="s1">&#39;Positive gradient&#39;</span><span class="p">,</span> <span class="s1">&#39;Negative Gradient&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;row&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s1">&#39;col&#39;</span><span class="p">:</span> <span class="mi">1</span>
+                <span class="p">}</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="n">result4</span><span class="p">]</span>
+
+        <span class="c1"># save data once self.output is created</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saveRawData</span><span class="p">()</span>
+
+        <span class="c1"># Plot result in standalone execution</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;Standalone&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotResults</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span></div>
+</div>
+
+        
+
+
+<span class="c1"># **********************************************************************************************************************</span>
+<span class="c1"># METHOD TO ASSESS MINIMUM DELAY TO EDDY CURRENTS ATTENUATION FOR A GRADIENT ESTABLISHED IN A ZTE EMBODIMENT</span>
+<span class="c1"># import marcos.marcos_client.experiment</span>
+<span class="c1"># import numpy as np</span>
+<span class="c1"># import seq.mriBlankSeq as blankSeq  # Import the mriBlankSequence for any new sequence.</span>
+<span class="c1"># import scipy.signal as sig</span>
+<span class="c1"># import configs.hw_config as hw</span>
+<span class="c1">#</span>
+<span class="c1"># class EDDYCURRENTS(blankSeq.MRIBLANKSEQ):</span>
+<span class="c1">#     def __init__(self):</span>
+<span class="c1">#         super(EDDYCURRENTS, self).__init__()</span>
+<span class="c1">#         # Input the parameters</span>
+<span class="c1">#         self.addParameter(key=&#39;seqName&#39;, string=&#39;EDDYCURRENTSinfo&#39;, val=&#39;EDDYCURRENTS&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;nScans&#39;, string=&#39;Number of scans&#39;, val=1, field=&#39;RF&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;larmorFreq&#39;, string=&#39;Larmor frequency (MHz)&#39;, val=8.365, field=&#39;RF&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;rfExAmp&#39;, string=&#39;RF excitation amplitude (a.u.)&#39;, val=1.0, field=&#39;RF&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;rfExTime&#39;, string=&#39;RF excitation time (us)&#39;, val=30.0, field=&#39;RF&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;rfExPhase&#39;, string=&#39;RF phase&#39;, val=60.0, field=&#39;RF&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;deadTime&#39;, string=&#39;RF dead time (us)&#39;, val=80.0, field=&#39;RF&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;txChannel&#39;, string=&#39;Tx channel&#39;, val=0, field=&#39;RF&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;rxChannel&#39;, string=&#39;Rx channel&#39;, val=0, field=&#39;RF&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;nReadout&#39;, string=&#39;Number of points&#39;, val=600, field=&#39;SEQ&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;tAdq&#39;, string=&#39;Acquisition time (ms)&#39;, val=3.0, field=&#39;SEQ&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;repetitionTime&#39;, string=&#39;Repetition time (ms)&#39;, val=1000, field=&#39;SEQ&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;shimming&#39;, string=&#39;Shimming (*1e4)&#39;, val=[0, 0, 0], field=&#39;SEQ&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;gAxis&#39;, string=&#39;G axis&#39;, val=2, field=&#39;SEQ&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;gSteps&#39;, string=&#39;G steps&#39;, val=20, field=&#39;SEQ&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;gRiseTime&#39;, string=&#39;G rise time (us)&#39;, val=150, field=&#39;SEQ&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;gAmp&#39;, string=&#39;G amplitude (mT/m)&#39;, val=5.0, field=&#39;SEQ&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;tDelayInit&#39;, string=&#39;Delay G-RF initial (ms)&#39;, val=1, field=&#39;SEQ&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;tDelayMiddle&#39;, string=&#39;Delay G-RF middle (ms)&#39;, val=1, field=&#39;SEQ&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;tDelayFinal&#39;, string=&#39;Delay G-RF final (ms)&#39;, val=1, field=&#39;SEQ&#39;)</span>
+<span class="c1">#         self.addParameter(key=&#39;addRdPoints&#39;, string=&#39;addRdPoints&#39;, val=10, field=&#39;SEQ&#39;)</span>
+<span class="c1">#</span>
+<span class="c1">#     def sequenceInfo(self):</span>
+<span class="c1">#         </span>
+<span class="c1">#         print(&quot;EDDYCURRENTS&quot;)</span>
+<span class="c1">#         print(&quot;Author: Dr. J.M. Algarín&quot;)</span>
+<span class="c1">#         print(&quot;Contact: josalggui@i3m.upv.es&quot;)</span>
+<span class="c1">#         print(&quot;mriLab @ i3M, CSIC, Spain&quot;)</span>
+<span class="c1">#</span>
+<span class="c1">#     def sequenceTime(self):</span>
+<span class="c1">#         return(4*self.mapVals[&#39;repetitionTime&#39;]*1e-3/60)  # minutes, scanTime</span>
+<span class="c1">#</span>
+<span class="c1">#     def sequenceRun(self, plotSeq=0, demo=False):</span>
+<span class="c1">#         init_gpa = False  # Starts the gpa</span>
+<span class="c1">#</span>
+<span class="c1">#         # Create input parameters</span>
+<span class="c1">#         nScans = self.mapVals[&#39;nScans&#39;]</span>
+<span class="c1">#         larmorFreq = self.mapVals[&#39;larmorFreq&#39;] # MHz</span>
+<span class="c1">#         rfExAmp = self.mapVals[&#39;rfExAmp&#39;]</span>
+<span class="c1">#         rfExTime = self.mapVals[&#39;rfExTime&#39;] # us</span>
+<span class="c1">#         rfExPhase = self.mapVals[&#39;rfExPhase&#39;]</span>
+<span class="c1">#         deadTime = self.mapVals[&#39;deadTime&#39;] # us</span>
+<span class="c1">#         nReadout = self.mapVals[&#39;nReadout&#39;]</span>
+<span class="c1">#         tAdq = self.mapVals[&#39;tAdq&#39;] * 1e3  # us</span>
+<span class="c1">#         TR = self.mapVals[&#39;repetitionTime&#39;] * 1e3  # us</span>
+<span class="c1">#         gAxis = self.mapVals[&#39;gAxis&#39;]</span>
+<span class="c1">#         gSteps = self.mapVals[&#39;gSteps&#39;]</span>
+<span class="c1">#         gRiseTime = self.mapVals[&#39;gRiseTime&#39;] # us</span>
+<span class="c1">#         gAmp = self.mapVals[&#39;gAmp&#39;]*1e-3 #T/m</span>
+<span class="c1">#         delayGtoRF_0 = self.mapVals[&#39;tDelayInit&#39;]*1e3  # us</span>
+<span class="c1">#         delayGtoRF_M = self.mapVals[&#39;tDelayMiddle&#39;] * 1e3  # us</span>
+<span class="c1">#         delayGtoRF_F = self.mapVals[&#39;tDelayFinal&#39;] * 1e3  # us</span>
+<span class="c1">#         addRdPoints = self.mapVals[&#39;addRdPoints&#39;]</span>
+<span class="c1">#         txChannel = self.mapVals[&#39;txChannel&#39;]</span>
+<span class="c1">#         rxChannel = self.mapVals[&#39;rxChannel&#39;]</span>
+<span class="c1">#         shimming = self.mapVals[&#39;shimming&#39;]</span>
+<span class="c1">#</span>
+<span class="c1">#         # CONSTANTES</span>
+<span class="c1">#         tini = 20</span>
+<span class="c1">#         gAmpMax = 40</span>
+<span class="c1">#         shimming = np.array(shimming) * 1e-4</span>
+<span class="c1">#</span>
+<span class="c1">#         # CONDICIONES PARAMETROS INICIALES.</span>
+<span class="c1">#         if gAmp &gt; gAmpMax:</span>
+<span class="c1">#             gAmp = gAmpMax</span>
+<span class="c1">#</span>
+<span class="c1">#         rfExPhase = rfExPhase * np.pi / 180</span>
+<span class="c1">#         rfExAmp = rfExAmp * np.exp(1j * rfExPhase)</span>
+<span class="c1">#</span>
+<span class="c1">#         # CONDICIONES PARAMETROS INICIALES.</span>
+<span class="c1">#</span>
+<span class="c1">#         rfExPhase = rfExPhase * np.pi / 180</span>
+<span class="c1">#         rfExAmp = rfExAmp * np.exp(1j * rfExPhase)</span>
+<span class="c1">#</span>
+<span class="c1">#         def createSequence():</span>
+<span class="c1">#</span>
+<span class="c1">#             if TR &lt; delayGtoRF_F + rfExTime + deadTime + acqTimeReal:</span>
+<span class="c1">#                 print(&quot;TR so short&quot;)</span>
+<span class="c1">#</span>
+<span class="c1">#             for scan in range(nScans):</span>
+<span class="c1">#                 # Gradient pulse</span>
+<span class="c1">#                 tGup0 = tini</span>
+<span class="c1">#                 self.gradTrap(tGup0, gRiseTime, TR, gAmp, gSteps, gAxis, shimming)</span>
+<span class="c1">#</span>
+<span class="c1">#                 # Tx gate 1</span>
+<span class="c1">#                 tRF1 = tGup0 + gRiseTime + delayGtoRF_0 - hw.blkTime</span>
+<span class="c1">#                 self.rfRecPulse(tRF1, rfExTime, rfExAmp, rfExPhase, txChannel=txChannel)</span>
+<span class="c1">#                 # Rx gate 1</span>
+<span class="c1">#                 tRx1 = tRF1 + hw.blkTime + rfExTime + deadTime - addRdPoints / BWreal</span>
+<span class="c1">#                 self.rxGate(tRx1, acqTimeReal + addRdPoints / BWreal, rxChannel=rxChannel)</span>
+<span class="c1">#</span>
+<span class="c1">#                 # Tx gate 2</span>
+<span class="c1">#                 tRF2 = tGup0 + gRiseTime + delayGtoRF_M - hw.blkTime</span>
+<span class="c1">#                 self.rfRecPulse(tRF2, rfExTime, rfExAmp, rfExPhase, txChannel=txChannel)</span>
+<span class="c1">#                 # Rx gate 2</span>
+<span class="c1">#                 tRx2 = tRF2 + hw.blkTime + rfExTime + deadTime - addRdPoints / BWreal</span>
+<span class="c1">#                 self.rxGate(tRx2, acqTimeReal + addRdPoints / BWreal, rxChannel=rxChannel)</span>
+<span class="c1">#</span>
+<span class="c1">#                 # Tx gate 3</span>
+<span class="c1">#                 tRF3 = tGup0 + gRiseTime + delayGtoRF_F - hw.blkTime</span>
+<span class="c1">#                 self.rfRecPulse(tRF3, rfExTime, rfExAmp, rfExPhase, txChannel=txChannel)</span>
+<span class="c1">#                 # Rx gate 3</span>
+<span class="c1">#                 tRx3 = tRF3 + hw.blkTime + rfExTime + deadTime - addRdPoints / BWreal</span>
+<span class="c1">#                 self.rxGate(tRx3, acqTimeReal + addRdPoints / BWreal, rxChannel=rxChannel)</span>
+<span class="c1">#</span>
+<span class="c1">#             self.endSequence(tini + (TR + 2*gRiseTime))</span>
+<span class="c1">#</span>
+<span class="c1">#         # Initialize the experiment</span>
+<span class="c1">#         BWoriginal = nReadout / tAdq # MHz</span>
+<span class="c1">#         self.mapVals[&#39;BWoriginal&#39;] = BWoriginal</span>
+<span class="c1">#         samplingPeriodOriginal = 1 / BWoriginal # us</span>
+<span class="c1">#         BWov = BWoriginal * hw.oversamplingFactor  # MHz</span>
+<span class="c1">#         samplingPeriodov = 1 / BWov</span>
+<span class="c1">#         self.expt = ex.Experiment(lo_freq=larmorFreq, rx_t=samplingPeriodov, init_gpa=init_gpa, gpa_fhdo_offset_time=(1 / 0.2 / 3.1))</span>
+<span class="c1">#         samplingPeriodReal = self.expt.get_rx_ts()[0]</span>
+<span class="c1">#         BWreal = 1 / samplingPeriodReal / hw.oversamplingFactor  # MHz</span>
+<span class="c1">#         acqTimeReal = nReadout / BWreal  # us</span>
+<span class="c1">#         createSequence()</span>
+<span class="c1">#         if self.floDict2Exp():</span>
+<span class="c1">#             print(&quot;Sequence waveforms loaded successfully&quot;)</span>
+<span class="c1">#             pass</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             print(&quot;ERROR: sequence waveforms out of hardware bounds&quot;)</span>
+<span class="c1">#             return False</span>
+<span class="c1">#</span>
+<span class="c1">#         if plotSeq == 0:</span>
+<span class="c1">#             # Run the experiment and get data</span>
+<span class="c1">#             nScans = self.mapVals[&#39;nScans&#39;]</span>
+<span class="c1">#             rxd, msgs = self.expt.run()</span>
+<span class="c1">#             rxd[&#39;rx%i&#39; % rxChannel] = np.real(rxd[&#39;rx%i&#39;%rxChannel])-1j*np.imag(rxd[&#39;rx%i&#39;%rxChannel])</span>
+<span class="c1">#             overData = rxd[&#39;rx%i&#39;%rxChannel]*hw.adcFactor</span>
+<span class="c1">#             dataFull = sig.decimate(overData, hw.oversamplingFactor, ftype=&#39;fir&#39;, zero_phase=True)</span>
+<span class="c1">#             self.mapVals[&#39;overData&#39;] = overData</span>
+<span class="c1">#             self.mapVals[&#39;dataFull&#39;] = dataFull</span>
+<span class="c1">#             data = np.average(np.reshape(dataFull, (nScans, -1)), axis=0)</span>
+<span class="c1">#             self.mapVals[&#39;data&#39;] = data</span>
+<span class="c1">#             signal = np.reshape(data, (3, nReadout+self.mapVals[&#39;addRdPoints&#39;]))</span>
+<span class="c1">#             signalFiltered = np.delete(signal, np.s_[0:addRdPoints], axis=1)</span>
+<span class="c1">#             self.mapVals[&#39;signals&#39;] = signalFiltered</span>
+<span class="c1">#             self.expt.__del__()</span>
+<span class="c1">#</span>
+<span class="c1">#         return True</span>
+<span class="c1">#</span>
+<span class="c1">#     def sequenceAnalysis(self, obj=&#39;&#39;):</span>
+<span class="c1">#         BW = self.mapVals[&#39;BWoriginal&#39;]*1e3</span>
+<span class="c1">#         FreqVector = np.linspace(-BW/2, BW/2, self.mapVals[&#39;nReadout&#39;])</span>
+<span class="c1">#         ReadoutVector = np.linspace(0, self.mapVals[&#39;tAdq&#39;], self.mapVals[&#39;nReadout&#39;])</span>
+<span class="c1">#         signals = self.mapVals[&#39;signals&#39;]</span>
+<span class="c1">#         signal0 = signals[0, :]</span>
+<span class="c1">#         signalup = signals[1, :]</span>
+<span class="c1">#         signaldown = signals[2, :]</span>
+<span class="c1">#         spectrum0 = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signal0))))</span>
+<span class="c1">#         spectrumup = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signalup))))</span>
+<span class="c1">#         spectrumdown = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(signaldown))))</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#         delayGtoRF_0 = self.mapVals[&#39;tDelayInit&#39;]</span>
+<span class="c1">#         delayGtoRF_M = self.mapVals[&#39;tDelayMiddle&#39;]</span>
+<span class="c1">#         delayGtoRF_F =self.mapVals[&#39;tDelayFinal&#39;]</span>
+<span class="c1">#</span>
+<span class="c1">#         # Add time signal to the layout</span>
+<span class="c1">#         result1 = {&#39;widget&#39;: &#39;curve&#39;,</span>
+<span class="c1">#                    &#39;xData&#39;: ReadoutVector,</span>
+<span class="c1">#                    &#39;yData&#39;: [np.abs(signal0), np.abs(signalup), np.abs(signaldown)],</span>
+<span class="c1">#                    &#39;xLabel&#39;: &#39;Time (ms)&#39;,</span>
+<span class="c1">#                    &#39;yLabel&#39;: &#39;Signal amplitude (mV)&#39;,</span>
+<span class="c1">#                    &#39;title&#39;: &#39;Signal vs time, Residual Gradient: %1.3f mT/m&#39; % ResidualGradient*1e3,</span>
+<span class="c1">#                    &#39;legend&#39;: [&#39;G=0&#39;, &#39;G-&#39;, &#39;G+&#39;],</span>
+<span class="c1">#                    &#39;row&#39;: 0,</span>
+<span class="c1">#                    &#39;col&#39;: 0}</span>
+<span class="c1">#</span>
+<span class="c1">#         # Add frequency spectrum to the layout</span>
+<span class="c1">#         result2 = {&#39;widget&#39;: &#39;curve&#39;,</span>
+<span class="c1">#                    &#39;xData&#39;: FreqVector,</span>
+<span class="c1">#                    &#39;yData&#39;: [np.abs(spectrum0), np.abs(spectrumup), np.abs(spectrumdown)],</span>
+<span class="c1">#                    &#39;xLabel&#39;: &#39;Frequency (kHz)&#39;,</span>
+<span class="c1">#                    &#39;yLabel&#39;: &#39;Signal amplitude (a.u.)&#39;,</span>
+<span class="c1">#                    &#39;title&#39;: &#39;Signal vs freq&#39;,</span>
+<span class="c1">#                    &#39;legend&#39;: [&#39;G=0&#39;, &#39;G-&#39;, &#39;G+&#39;],</span>
+<span class="c1">#                    &#39;row&#39;: 1,</span>
+<span class="c1">#                    &#39;col&#39;: 0}</span>
+<span class="c1">#</span>
+<span class="c1">#         self.output = [result1, result2]</span>
+<span class="c1">#</span>
+<span class="c1">#         self.saveRawData()</span>
+<span class="c1">#</span>
+<span class="c1">#         return self.output</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">seq</span> <span class="o">=</span> <span class="n">EDDYCURRENTS</span><span class="p">()</span>
+    <span class="n">seq</span><span class="o">.</span><span class="n">sequenceAtributes</span><span class="p">()</span>
+    <span class="n">seq</span><span class="o">.</span><span class="n">sequenceRun</span><span class="p">(</span><span class="n">plotSeq</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">demo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">standalone</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># seq.sequencePlot(standalone=True)</span>
+    <span class="n">seq</span><span class="o">.</span><span class="n">sequenceAnalysis</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;Standalone&#39;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, J.M. Algarín.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

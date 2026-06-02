@@ -1,0 +1,28 @@
+job:
+  codespec:
+    image: ghcr.io/mrilab-i3m/snraware_local:v1 #snraware:v0
+    buffers:
+      inputs:
+        - input
+      outputs:
+        - output
+    args:
+      - python3
+      - /app/snraware_pipeline/recon_scripts/stream_recon_RARE.py
+      - -i
+      - $(INPUT_PIPE)
+      - -o
+      - $(OUTPUT_PIPE)
+      - --recon
+      - fft
+      - --denoise
+      - --snraware_repo
+      - /app/SNRAware
+      - --snraware_model
+      - large # small | medium | large
+      - --batch_size
+      - "1"
+    resources:
+      requests:
+        cpu: 1
+      gpu: 1

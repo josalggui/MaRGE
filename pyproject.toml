@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "marge-mri"
+version = "1.0.0b4"
+authors = [
+    { name = "José Miguel Algarín", email = "josalggui@i3m.upv.es" },
+]
+description = "MaRCoS Graphical Environment (MaRGE)"
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "resources",
+    "requests >= 2.25.1",
+    "numpy",
+    "matplotlib",
+    "nibabel",
+    "pydicom",
+    "scipy",
+    "msgpack",
+    "PyQt5",
+    "pyqtgraph",
+    "QDarkStyle",
+    "bm4d",
+    "phantominator",
+    "pyserial",
+    "ismrmrd",
+    "pypulseq==1.4.2",
+    "marga_pulseq",
+    "scikit-learn",
+    "scikit-image",
+    "imageio",
+    "h5py",
+    "reportlab",
+    "pillow",
+    "mrd-python==2.2.0",
+]
+
+[project.scripts]
+marge-mri = "marge.main:MaRGE"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/marge"]
+
+[tools.setuptools]
+include-package-data = true

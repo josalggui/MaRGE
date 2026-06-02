@@ -1,0 +1,21 @@
+job:
+  codespec:
+    image: ghcr.io/teresaguallartnaval/petra_tyger:v2
+    buffers:
+      inputs:
+        - input
+      outputs:
+        - output
+    args:
+      - python3
+      - stream_recon_PETRA.py
+      - -i
+      - $(INPUT_PIPE)
+      - -o
+      - $(OUTPUT_PIPE) 
+      - -r
+      - 'art'
+    resources:
+      requests:
+        cpu: 1
+      gpu: 1
