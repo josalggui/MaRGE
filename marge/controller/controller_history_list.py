@@ -415,8 +415,7 @@ class HistoryListController(HistoryListWidget):
                 self.main.figures_layout.addWidget(plot, row=item['row'] + 1, col=item['col'])
         self.main.figures_layout.addWidget(label, row=0, col=0, colspan=n_columns)
 
-        if 'Calibration' in item_name:
-            QTimer.singleShot(0, self.figure_ready_signal.emit)
+        QTimer.singleShot(0, self.figure_ready_signal.emit)
 
     def waitingForRun(self):
         """
