@@ -103,7 +103,7 @@ Then, add the current folder (MaRGE) to Python's module search path:
     source venv/bin/activate
     export PYTHONPATH=$(pwd)
     ```
-* Windows
+* Windows with `Git Bash`
     ```bash
     cd MaRGE
     python -m venv venv
