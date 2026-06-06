@@ -139,7 +139,7 @@ The commands indicated for Windows work fine for Git Bash. If you use PowerShell
 ### Note 3
 On Ubuntu, some Qt-based applications may fail with an error similar to:
 
-qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
+`qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.`
 
 If this happens, install the required system libraries:
 

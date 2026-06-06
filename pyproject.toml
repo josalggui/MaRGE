@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "marge-mri"
-version = "1.0.0b4"
+version = "1.0.0c2"
 authors = [
     { name = "José Miguel Algarín", email = "josalggui@i3m.upv.es" },
 ]
 description = "MaRCoS Graphical Environment (MaRGE)"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -19,7 +19,7 @@ classifiers = [
 dependencies = [
     "resources",
     "requests >= 2.25.1",
-    "numpy",
+    "numpy == 2.2.6",
     "matplotlib",
     "nibabel",
     "pydicom",
@@ -31,7 +31,7 @@ dependencies = [
     "bm4d",
     "phantominator",
     "pyserial",
-    "ismrmrd",
+    "ismrmrd == 1.14.2",
     "pypulseq==1.4.2",
     "marga_pulseq",
     "scikit-learn",

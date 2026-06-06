@@ -32,6 +32,8 @@ def MaRGE():
         os.makedirs('reports')
     if not os.path.exists('configs'):
         os.makedirs('configs')
+    if not os.path.exists('custom_sequences'):
+        os.makedirs('custom_sequences')
 
     from marge.controller.controller_session import SessionController
 

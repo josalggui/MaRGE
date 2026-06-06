@@ -7,6 +7,7 @@ marge/protocols
 marge/seq/experiments
 marge/b0_maps/
 marge/reports
+marge/custom_sequences
 .idea/
 *.dcm
 *.pptx
