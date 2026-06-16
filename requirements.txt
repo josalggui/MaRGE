@@ -3,14 +3,14 @@ nibabel
 pydicom
 scipy
 msgpack
-numpy
+numpy==2.2.6
 PyQt5
 pyqtgraph
 QDarkStyle
 bm4d
 phantominator
 pyserial
-ismrmrd
+ismrmrd==1.14.2
 cupy-cuda12x
 pypulseq==1.4.2
 marga_pulseq

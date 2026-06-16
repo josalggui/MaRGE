@@ -76,6 +76,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.rfExFA = None
         self.rfReTime = None
         self.rfExTime = None
+        self.rfInTime = None
         self.acqTime = None
         self.freqOffset = None
         self.nPoints = None
@@ -84,6 +85,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.system = None
         self.echoMode = None
         self.axesOrientation = None
+        self.pulse_type = None
+        self.bw_tx = None
+        self.adiabaticity = None
         self.addParameter(key='seqName', string='RAREInfo', val='RarePyPulseq')
         self.addParameter(key='toMaRGE', val=True)
         self.addParameter(key='nScans', string='Number of scans', val=1, field='IM') ## number of scans
@@ -95,7 +99,11 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         self.addParameter(key='echoSpacing', string='Echo spacing (ms)', val=10.0, units=units.ms, field='SEQ')
         self.addParameter(key='echoMode', string='Echoes', val='All', field='SEQ', tip="'All', 'Odd', 'Even'")
         self.addParameter(key='preExTime', string='Preexitation time (ms)', val=0.0, units=units.ms, field='SEQ')
-        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ', tip="0 to ommit this pulse")
+        self.addParameter(key='inversionTime', string='Inversion time (ms)', val=0.0, units=units.ms, field='SEQ', tip="Time between inversion pulse and excitation pulse. 0 to avoid inversion pulse.")
+        self.addParameter(key='rfInTime', string='RF inversion time (ms)', val=0.0, units=units.ms, field='RF', tip="Inversion pulse duration. 0 to use the same pulse duration as the refocusing pulse")
+        self.addParameter(key='pulse_type', string='Inversion pulse type', val='wurst', field='RF', tip="`square`, `wurst` or `hypsec`")
+        self.addParameter(key='bw_tx', string='Inversion bandwidth (kHz)', val=10, field='RF', units=units.kHz, tip="Inversion pulse bandwidth.")
+        self.addParameter(key='adiabaticity', string='Inversion adiabaticity', val=4, field='RF', tip="Adiabaticity of the HypSec adiabatic pulse")
         self.addParameter(key='repetitionTime', string='Repetition time (ms)', val=300., units=units.ms, field='SEQ', tip="0 to ommit this pulse")
         self.addParameter(key='fov', string='FOV[x,y,z] (cm)', val=[12.0, 12.0, 12.0], units=units.cm, field='IM')
         self.addParameter(key='dfov', string='dFOV[x,y,z] (mm)', val=[0.0, 0.0, 0.0], units=units.mm, field='IM', tip="Position of the gradient isocenter")
@@ -402,14 +410,18 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         # In this step, you will define the building blocks of the MRI sequence, including the RF pulses and gradient pulses.
         '''
 
-        # First delay, sequence will start after 1 repetition time, this ensure gradient and ADC latency is not an issue.
+        # First delay, sequence will start after 1 repetition time, this ensures gradient and ADC latency is not an issue.
         if self.inversionTime==0 and self.preExTime==0:
             delay = self.repetitionTime - self.rfExTime / 2 - system.rf_dead_time
         elif self.inversionTime>0 and self.preExTime==0:
-            delay = self.repetitionTime - self.inversionTime - self.rfReTime / 2 - system.rf_dead_time
+            if self.rfInTime == 0:
+                self.rfInTime = self.rfReTime
+            delay = self.repetitionTime - self.inversionTime - self.rfInTime / 2 - system.rf_dead_time
         elif self.inversionTime==0 and self.preExTime>0:
             delay = self.repetitionTime - self.preExTime - self.rfExTime / 2 - system.rf_dead_time
         else:
+            if self.rfInTime == 0:
+                self.rfInTime = self.rfReTime
             delay = self.repetitionTime - self.preExTime - self.inversionTime - self.rfExTime / 2 - system.rf_dead_time
         delay_first = pp.make_delay(delay)
 
@@ -435,20 +447,35 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             if self.inversionTime==0:
                 delay = self.preExTime
             else:
-                delay = self.rfExTime / 2 - self.rfReTime / 2 + self.preExTime
+                delay = self.rfExTime / 2 - self.rfInTime / 2 + self.preExTime
             delay_pre_excitation = pp.make_delay(delay)
 
         # Inversion pulse
         if self.inversionTime>0:
-            flip_inv = self.rfReFA * np.pi / 180
-            block_rf_inversion = pp.make_block_pulse(
-                flip_angle=flip_inv,
-                system=system,
-                duration=self.rfReTime,
-                phase_offset=0.0,
-                delay=0,
-            )
-            delay = self.rfReTime / 2 - self.rfExTime / 2 + self.inversionTime
+            if self.pulse_type=='square':
+                block_rf_inversion = pp.make_block_pulse(
+                    flip_angle=np.pi,
+                    system=system,
+                    duration=self.rfReTime,
+                    phase_offset=0.0,
+                    delay=0,
+                )
+            elif self.pulse_type=='wurst' or self.pulse_type=='hypsec':
+                round_rf = int(np.abs(np.log10(np.abs(system.rf_raster_time))))
+                rf_duration = np.round(self.rfInTime, decimals=round_rf).astype(float)
+                block_rf_inversion = pp.make_adiabatic_pulse(pulse_type=self.pulse_type,
+                                                      duration=rf_duration,
+                                                      bandwidth=self.bw_tx,
+                                                      adiabaticity=self.adiabaticity,
+                                                      beta=self.bw_tx,
+                                                      delay=0,
+                                                      phase_offset=0.0,
+                                                      system=system,
+                                                      use='inversion')
+            else:
+                print("ERROR: Inversion pulse must be 'square' or 'wurst' or 'hypsec'")
+                return False
+            delay = self.rfInTime / 2 - self.rfExTime / 2 + self.inversionTime
             delay_inversion = pp.make_delay(delay)
 
         # Excitation pulse
@@ -560,7 +587,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
         delay = self.repetitionTime + self.rfReTime / 2 - self.rfExTime / 2 - (self.etl + 0.5) * self.echoSpacing - \
             self.inversionTime - self.preExTime
         if self.inversionTime > 0 and self.preExTime == 0:
-            delay -= self.rfExTime / 2
+            delay -= self.rfInTime / 2 - self.rfExTime / 2
         delay_tr = pp.make_delay(delay)
 
         '''
@@ -646,9 +673,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
                 # Inversion pulse
                 if self.inversionTime>0:
-                    gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
+                    # gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
                     batch.add_block(block_rf_inversion,
-                                            gr_rd_inv,
+                                            # gr_rd_inv,
                                             delay_inversion)
 
                 # Add excitation pulse and readout de-phasing gradient
@@ -760,9 +787,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
                 # Inversion pulse
                 if self.inversionTime>0:
-                    gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
+                    # gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
                     batch.add_block(block_rf_inversion,
-                                            gr_rd_inv,
+                                            # gr_rd_inv,
                                             delay_inversion)
 
                 # Add excitation pulse and readout de-phasing gradient
@@ -891,9 +918,9 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
 
                     # Inversion pulse
                     if self.inversionTime > 0:
-                        gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
+                        # gr_rd_inv = pp.scale_grad(block_gr_rd_preph, scale=-1.0)
                         batches[batch_num].add_block(block_rf_inversion,
-                                                     gr_rd_inv,
+                                                     # gr_rd_inv,
                                                      delay_inversion)
 
                     # Add excitation pulse and readout de-phasing gradient
