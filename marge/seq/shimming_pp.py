@@ -265,8 +265,8 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                 g_amp_a = np.array([sh_vector[ii - 1, 0], sh_vector[ii, 0], sh_vector[ii, 0]]) * hw.gammaB
                 t0 = 0.0
                 t1 = hw.grad_rise_time
-                t2 = (self.repetitionTime - self.acqTime / 2 - self.echoTime +
-                      ((self.rfExTime / 2) // hw.grad_raster_time + 1) * hw.grad_raster_time)
+                t2 = ((self.repetitionTime - self.acqTime / 2 - self.echoTime +
+                      ((self.rfExTime / 2) // hw.grad_raster_time + 1) * hw.grad_raster_time)) // hw.grad_raster_time * hw.grad_raster_time
                 g_time_a = np.array([t0, t1, t2])
 
                 # Gradient flat, up to the end of the repetition
