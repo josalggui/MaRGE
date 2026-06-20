@@ -216,6 +216,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             gz_max=hw.gFactor[2] * hw.gammaB,  # Maximum gradient amplitude for Z (Hz/m)
             grad_max=np.max(np.abs(hw.gFactor)) * hw.gammaB,  # Maximum gradient amplitude (Hz/m)
             grad_t=hw.grad_raster_time * 1e6,  # Gradient raster time (us)
+            tx_t=hw.rf_tx_raster_time * 1e6,  # Tx raster time (us)
         )
 
         '''
@@ -232,7 +233,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
             slew_unit='mT/m/ms',  # Units of gradient slew rate
             grad_raster_time=hw.grad_raster_time,  # Gradient raster time (s)
             rise_time=hw.grad_rise_time,  # Gradient rise time (s)
-            rf_raster_time=1e-6,
+            rf_raster_time=hw.rf_tx_raster_time,  # RF tx raster time (s)
             block_duration_raster=1e-6
         )
 
@@ -460,7 +461,7 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                     phase_offset=0.0,
                     delay=0,
                 )
-            elif self.pulse_type=='wurst' or self.pulse_type=='hypsec':
+            elif self.pulse_type=='hypsec':
                 round_rf = int(np.abs(np.log10(np.abs(system.rf_raster_time))))
                 rf_duration = np.round(self.rfInTime, decimals=round_rf).astype(float)
                 block_rf_inversion = pp.make_adiabatic_pulse(pulse_type=self.pulse_type,
@@ -468,6 +469,18 @@ class RarePyPulseq(blankSeq.MRIBLANKSEQ):
                                                       bandwidth=self.bw_tx,
                                                       adiabaticity=self.adiabaticity,
                                                       beta=self.bw_tx,
+                                                      delay=0,
+                                                      phase_offset=0.0,
+                                                      system=system,
+                                                      use='inversion')
+            elif self.pulse_type=='wurst':
+                round_rf = int(np.abs(np.log10(np.abs(system.rf_raster_time))))
+                rf_duration = np.round(self.rfInTime, decimals=round_rf).astype(float)
+                block_rf_inversion = pp.make_adiabatic_pulse(pulse_type=self.pulse_type,
+                                                      duration=rf_duration,
+                                                      bandwidth=self.bw_tx * 1.5,
+                                                      adiabaticity=self.adiabaticity,
+                                                      beta=self.bw_tx * 1.5,
                                                       delay=0,
                                                       phase_offset=0.0,
                                                       system=system,

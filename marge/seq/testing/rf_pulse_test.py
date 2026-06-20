@@ -80,6 +80,7 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
                                              gy_max=hw.gFactor[1] * hw.gammaB,  # Hz/m
                                              gz_max=hw.gFactor[2] * hw.gammaB,  # Hz/m
                                              grad_max=np.max(hw.gFactor) * hw.gammaB,  # Hz/m
+                                             tx_t=hw.rf_tx_raster_time * 1e6  # us
                                              )
 
         '''
@@ -98,8 +99,8 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
             grad_raster_time=hw.grad_raster_time,  # s
             rise_time=hw.grad_rise_time,  # s
             adc_raster_time=1e-6,
-            rf_raster_time = 1e-6,
-            block_duration_raster = 1e-9
+            rf_raster_time=hw.rf_tx_raster_time,
+            block_duration_raster=1e-9
         )
 
         '''
@@ -109,7 +110,7 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         '''
 
         # Calculate acq_time and echo_time
-        acq_time = 2 * self.rfExTime
+        acq_time = 10 * self.rfExTime
         n_points = int(acq_time * self.bw_rx)
         self.mapVals['nPoints'] = n_points
         self.mapVals['acqTime'] = acq_time
@@ -141,16 +142,25 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
         round_bl = int(np.abs(np.log10(np.abs(system.block_duration_raster))))
 
         # Create excitation rf event
-        delay_rf_ex = self.repetitionTime - 3 * acq_time / 4
+        delay_rf_ex = self.repetitionTime - acq_time + acq_time / 2 - self.rfExTime / 2
         rf_duration = np.round(self.rfExTime, decimals=round_rf).astype(float)
         block_duration = np.round(delay_rf_ex + rf_duration, decimals=round_bl)
         delay_rf_ex = block_duration - rf_duration
-        if self.pulse_type=="wurst" or self.pulse_type=="hypsec":
+        if self.pulse_type=="hypsec":
             event_rf_ex = pp.make_adiabatic_pulse(pulse_type=self.pulse_type,
                                                   duration=rf_duration,
                                                   bandwidth=self.bw_tx,
                                                   adiabaticity=self.adiabaticity,
                                                   beta=self.bw_tx,
+                                                  delay=delay_rf_ex,
+                                                  system=system,
+                                                  use='excitation')
+        elif self.pulse_type=="wurst":
+            event_rf_ex = pp.make_adiabatic_pulse(pulse_type=self.pulse_type,
+                                                  duration=rf_duration,
+                                                  bandwidth=self.bw_tx * 1.5,
+                                                  adiabaticity=self.adiabaticity,
+                                                  beta=self.bw_tx * 1.5,
                                                   delay=delay_rf_ex,
                                                   system=system,
                                                   use='excitation')
@@ -226,6 +236,7 @@ class LarmorPyPulseq(blankSeq.MRIBLANKSEQ):
             # Add sequence blocks
             # batches[batch_num].add_block(delay_first)
             batches[batch_num].add_block(event_rf_ex, event_adc)
+            # batches[batch_num].add_block(event_adc)
             n_rd_points += n_points
             n_adc += 1
 
