@@ -1,6 +1,6 @@
 job:
   codespec:
-    image: acr-proxy.tyger.cloud/tygertepimages.azurecr.io/tinker:b3e3042-cuda-amd64
+    image: acr-proxy.tyger.cloud/tygertepimages.azurecr.io/tinker:16f9c70-cuda-amd64
     buffers:
       inputs:
         - input
@@ -18,9 +18,11 @@ job:
       - "--kspace-filter.sigma"
       - "1.0"
       - "--denoising.model-file"
-      - "/app/models/denoising/model_109m_large_with_pf_203136.pts"
+      - "/app/models/denoising/model_219m_with_ellipse_pf.pts"
       - "--log-level"
       - "DEBUG"
+      - "--dtype.data-type"
+      - "float32"
     resources:
       requests:
         cpu: 4
