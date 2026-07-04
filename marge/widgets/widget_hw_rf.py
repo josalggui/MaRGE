@@ -32,13 +32,13 @@ class RfWidget(QWidget):
                        tip="Gyromagnetic ratio of the nucleus being imaged")
         self.add_input(label="Larmor frequency (MHz)", value="3.066",
                        tip="Larmor frequency based on magnetic field strength")
+        self.add_input(label="RF raster time (us)", value="5.0",
+                       tip="Raster time used for RF adiabatic pulses")
         self.add_input(label="Reference time (us)", value="70", tip="Reference time used in efficiency calibration")
         self.add_input(label="Oversampling factor", value="5", tip="Factor by which data is oversampled")
         self.add_input(label="Max readout points", value="1e5", tip="Maximum number of readout points")
         self.add_input(label="Add readout points", value="10", tip="Additional readout points for processing")
         self.add_input(label="LNA gain (dB)", value="45", tip="Low-noise amplifier gain in dB")
-        # self.add_input(label="RF gain min (dB)", value="45", tip="Minimum RF amplifier gain in dB")
-        # self.add_input(label="RF gain max (dB)", value="76", tip="Maximum RF amplifier gain in dB")
         self.add_input(label="RFPA model", value="None", tip="RFPA model: Only 'Barthel' is supported; otherwise, leave it empty.")
 
         # Dictionary to store references to input fields
@@ -109,6 +109,7 @@ class RfWidget(QWidget):
         hw.addRdPoints = int(self.input_boxes["Add readout points"].text())
         hw.reference_time = float(self.input_boxes["Reference time (us)"].text())
         hw.lnaGain = float(self.input_boxes["LNA gain (dB)"].text())
+        hw.rf_tx_raster_time = float(self.input_boxes["RF raster time (us)"].text()) * 1e-6  # s
         # hw.rf_min_gain = int(self.input_boxes["RF gain min (dB)"].text())
         # hw.rf_max_gain = int(self.input_boxes["RF gain max (dB)"].text())
         hw.rfpa_model = self.input_boxes["RFPA model"].text()
