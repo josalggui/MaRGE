@@ -5,13 +5,8 @@ setup(
     version="1.0.0b4",
     author="José Miguel Algarín",
     author_email="josalggui@i3m.upv.es",
-    packages=find_packages(),
+    packages=find_packages(include=["marge", "marge.*"]),
+    include_package_data=True,
     install_requires=[],
     description="MaRCoS Graphical Environment (MaRGE)",
-    entry_points={
-        "console_scripts": [
-            "marge-mri=marge.main:MaRGE",
-        ],
-    },
 )
-

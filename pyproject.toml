@@ -10,7 +10,7 @@ authors = [
 ]
 description = "MaRCoS Graphical Environment (MaRGE)"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -44,10 +44,11 @@ dependencies = [
 ]
 
 [project.scripts]
-marge-mri = "marge.main:MaRGE"
+marge-mri = "marge.__main__:main"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/marge"]
-
-[tools.setuptools]
+[tool.setuptools]
 include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["marge*"]

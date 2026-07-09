@@ -5,6 +5,7 @@ import os
 import sys
 from PyQt5.QtWidgets import QApplication
 
+
 def MaRGE():
     """
     Entry point for the MaRGE graphical user interface.
@@ -40,5 +41,11 @@ def MaRGE():
     gui.show()
     sys.exit(app.exec_())
 
-if __name__ == "__main__":
+
+def main():
+    """Console-script entry point."""
     MaRGE()
+
+
+if __name__ == "__main__":
+    main()
