@@ -21,17 +21,6 @@ Definition of default sequences
 # This file should not be modified anymore.
 
 
-def _base_name(node):
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        prefix = _base_name(node.value)
-        if prefix:
-            return f"{prefix}.{node.attr}"
-        return node.attr
-    return None
-
-
 def _contains_sequence_class_candidate(py_file):
     try:
         with open(py_file, "r", encoding="utf-8") as source:
@@ -39,13 +28,13 @@ def _contains_sequence_class_candidate(py_file):
     except Exception:
         return False
 
+    # This only needs to cheaply rule out files with no classes at all
+    # (e.g. helper modules). Whether a class actually derives from
+    # MRIBLANKSEQ, directly or through an intermediate base, is verified
+    # later via issubclass() once the module is imported.
     for node in ast.walk(tree):
-        if not isinstance(node, ast.ClassDef):
-            continue
-        for base in node.bases:
-            base_name = _base_name(base)
-            if base_name and base_name.split(".")[-1] == "MRIBLANKSEQ":
-                return True
+        if isinstance(node, ast.ClassDef) and node.bases:
+            return True
     return False
 
 def instantiate_sequences():
