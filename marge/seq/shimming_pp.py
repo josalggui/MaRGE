@@ -250,50 +250,89 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
             batches[batch_name], n_rd_points, n_adc_0 = initialize_batch()
             n_adc += n_adc_0
 
-            # Select gradient vector
-            sh_vector = []
-            if case == 'x':
-                sh_vector = sx_vector * hw.gFactor[0]
-            elif case == 'y':
-                sh_vector = sy_vector * hw.gFactor[1]
-            elif case == 'z':
-                sh_vector = sz_vector * hw.gFactor[2]
-
             # Populate the sequence
-            for ii in range(1, np.size(sh_vector)):
-                # Gradient ramp, up to excitation pulse
-                g_amp_a = np.array([sh_vector[ii - 1, 0], sh_vector[ii, 0], sh_vector[ii, 0]]) * hw.gammaB
+            for ii in range(1, np.size(sx_vector)):
+                if case == 'x':
+                    # Gradient ramp, up to excitation pulse
+                    sy_prov = np.ones_like(sx_vector) * self.shimming0[1]
+                    sy_prov[-1:1] = 0
+                    sz_prov = np.ones_like(sx_vector) * self.shimming0[2]
+                    sz_prov[-1:1] = 0
+                    g_amp_ax = np.array([sx_vector[ii - 1, 0], sx_vector[ii, 0], sx_vector[ii, 0]]) * hw.gammaB * hw.gFactor[0]
+                    g_amp_ay = np.array([self.shimming0[1], self.shimming0[1], self.shimming0[1]]) * hw.gammaB * hw.gFactor[1]
+                    g_amp_az = np.array([self.shimming0[2], self.shimming0[2], self.shimming0[2]]) * hw.gammaB * hw.gFactor[2]
+
+                    # Gradient flat, up to the end of the repetition
+                    g_amp_bx = np.array([sx_vector[ii, 0], sx_vector[ii, 0]]) * hw.gammaB * hw.gFactor[0]
+                    g_amp_by = np.array([self.shimming0[1], self.shimming0[1]]) * hw.gammaB * hw.gFactor[1]
+                    g_amp_bz = np.array([self.shimming0[2], self.shimming0[2]]) * hw.gammaB * hw.gFactor[2]
+                elif case == 'y':
+                    # Gradient ramp, up to excitation pulse
+                    g_amp_ax = np.array([self.shimming0[0], self.shimming0[0], self.shimming0[0]]) * hw.gammaB * hw.gFactor[0]
+                    g_amp_ay = np.array([sy_vector[ii - 1, 0], sy_vector[ii, 0], sy_vector[ii, 0]]) * hw.gammaB * hw.gFactor[1]
+                    g_amp_az = np.array([self.shimming0[2], self.shimming0[2], self.shimming0[2]]) * hw.gammaB * hw.gFactor[2]
+
+                    # Gradient flat, up to the end of the repetition
+                    g_amp_bx = np.array([self.shimming0[0], self.shimming0[0]]) * hw.gammaB * hw.gFactor[0]
+                    g_amp_by = np.array([sy_vector[ii, 0], sy_vector[ii, 0]]) * hw.gammaB * hw.gFactor[1]
+                    g_amp_bz = np.array([self.shimming0[2], self.shimming0[2]]) * hw.gammaB * hw.gFactor[2]
+                elif case == 'z':
+                    # Gradient ramp, up to excitation pulse
+                    g_amp_ax = np.array([self.shimming0[0], self.shimming0[0], self.shimming0[0]]) * hw.gammaB * hw.gFactor[0]
+                    g_amp_ay = np.array([self.shimming0[1], self.shimming0[1], self.shimming0[1]]) * hw.gammaB * hw.gFactor[1]
+                    g_amp_az = np.array([sz_vector[ii - 1, 0], sz_vector[ii, 0], sz_vector[ii, 0]]) * hw.gammaB * hw.gFactor[2]
+
+                    # Gradient flat, up to the end of the repetition
+                    g_amp_bx = np.array([self.shimming0[0], self.shimming0[0]]) * hw.gammaB * hw.gFactor[0]
+                    g_amp_by = np.array([self.shimming0[1], self.shimming0[1]]) * hw.gammaB * hw.gFactor[1]
+                    g_amp_bz = np.array([sz_vector[ii, 0], sz_vector[ii, 0]]) * hw.gammaB * hw.gFactor[2]
+
+                # Gradient timings
                 t0 = 0.0
                 t1 = hw.grad_rise_time
                 t2 = ((self.repetitionTime - self.acqTime / 2 - self.echoTime +
                       ((self.rfExTime / 2) // hw.grad_raster_time + 1) * hw.grad_raster_time)) // hw.grad_raster_time * hw.grad_raster_time
                 g_time_a = np.array([t0, t1, t2])
-
-                # Gradient flat, up to the end of the repetition
-                g_amp_b = np.array([sh_vector[ii, 0], sh_vector[ii, 0]]) * hw.gammaB
                 g_time_b = np.array([0, self.repetitionTime - t2])
 
-                if ii == np.size(sh_vector) - 1:
-                    batches[batch_name].add_block(
-                        pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_a, times=g_time_a, system=system,
-                                                   skip_check=True),
-                        delay_a,
-                    )
-
-                    batches[batch_name].add_block(
-                        pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_b, times=g_time_b, system=system,
-                                                   skip_check=True),
-                        delay_b
-                    )
+                if ii == np.size(sx_vector) - 1:
+                    pass
+                    # batches[batch_name].add_block(
+                    #     pp.make_extended_trapezoid(channel='x', amplitudes=g_amp_ax, times=g_time_a, system=system,
+                    #                                skip_check=True),
+                    #     pp.make_extended_trapezoid(channel='y', amplitudes=g_amp_ay, times=g_time_a, system=system,
+                    #                                skip_check=True),
+                    #     pp.make_extended_trapezoid(channel='z', amplitudes=g_amp_az, times=g_time_a, system=system,
+                    #                                skip_check=True),
+                    #     delay_a,
+                    # )
+                    #
+                    # batches[batch_name].add_block(
+                    #     pp.make_extended_trapezoid(channel='x', amplitudes=g_amp_bx, times=g_time_b, system=system,
+                    #                                skip_check=True),
+                    #     pp.make_extended_trapezoid(channel='y', amplitudes=g_amp_by, times=g_time_b, system=system,
+                    #                                skip_check=True),
+                    #     pp.make_extended_trapezoid(channel='z', amplitudes=g_amp_bz, times=g_time_b, system=system,
+                    #                                skip_check=True),
+                    #     delay_b
+                    # )
                 else:
                     batches[batch_name].add_block(
-                        pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_a, times=g_time_a, system=system,
+                        pp.make_extended_trapezoid(channel='x', amplitudes=g_amp_ax, times=g_time_a, system=system,
+                                                   skip_check=True),
+                        pp.make_extended_trapezoid(channel='y', amplitudes=g_amp_ay, times=g_time_a, system=system,
+                                                   skip_check=True),
+                        pp.make_extended_trapezoid(channel='z', amplitudes=g_amp_az, times=g_time_a, system=system,
                                                    skip_check=True),
                         event_rf_ex,
                     )
 
                     batches[batch_name].add_block(
-                        pp.make_extended_trapezoid(channel=case, amplitudes=g_amp_b, times=g_time_b, system=system,
+                        pp.make_extended_trapezoid(channel='x', amplitudes=g_amp_bx, times=g_time_b, system=system,
+                                                   skip_check=True),
+                        pp.make_extended_trapezoid(channel='y', amplitudes=g_amp_by, times=g_time_b, system=system,
+                                                   skip_check=True),
+                        pp.make_extended_trapezoid(channel='z', amplitudes=g_amp_bz, times=g_time_b, system=system,
                                                    skip_check=True),
                         event_rf_re,
                         event_adc,
@@ -317,11 +356,8 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
         The decimated data is shifted to account for CIC delay, so data is synchronized with real-time signal
         '''
 
-        waveforms_x, n_readouts_x, n_adc_x = create_batches(case='x')
-        waveforms_y, n_readouts_y, n_adc_y = create_batches(case='y')
-        waveforms_z, n_readouts_z, n_adc_z = create_batches(case='z')
-
         # Run sequence x
+        waveforms_x, n_readouts_x, n_adc_x = create_batches(case='x')
         if self.runBatches(waveforms=waveforms_x,
                            n_readouts=n_readouts_x,
                            n_adc=n_adc_x,
@@ -333,11 +369,13 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                            oversampling_factor=self.oversampling_factor,
                            decimation_factor=self.decimation_factor,
                            ):
-            pass
+            if not self.plotSeq:
+                self.partial_analysis(axis='x', axis_idx=0)
         else:
             return False
 
         # Run sequence y
+        waveforms_y, n_readouts_y, n_adc_y = create_batches(case='y')
         if self.runBatches(waveforms=waveforms_y,
                            n_readouts=n_readouts_y,
                            n_adc=n_adc_y,
@@ -349,11 +387,13 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                            oversampling_factor=self.oversampling_factor,
                            decimation_factor=self.decimation_factor,
                            ):
-            pass
+            if not self.plotSeq:
+                self.partial_analysis(axis='y', axis_idx=1)
         else:
             return False
 
         # Run sequence z
+        waveforms_z, n_readouts_z, n_adc_z = create_batches(case='z')
         return self.runBatches(waveforms=waveforms_z,
                         n_readouts=n_readouts_z,
                         n_adc=n_adc_z,
@@ -378,6 +418,23 @@ class ShimmingSweep(blankSeq.MRIBLANKSEQ):
                     float(np.round(self.mapVals['shimming0'][2], decimals=1))]
         return self.output
 
+    def partial_analysis(self, axis=None, axis_idx=0):
+        # Get inputs
+        data_decimated = self.mapVals[f'data_decimated_{axis}']
+        if len(data_decimated.shape) > 1:
+            data_decimated = data_decimated[0]
+        data_decimated = np.reshape(data_decimated, (self.nShimming, -1))
+        shimming_vector = self.mapVals[f's{axis}_vector']
+
+        # Obtain the spectrum max values
+        dataFFT = np.zeros(self.nShimming)
+        for jj in range(self.nShimming):
+            spectrum = np.abs(np.fft.ifftshift(np.fft.ifftn(np.fft.ifftshift(data_decimated[jj, :]))))
+            dataFFT[jj] = np.max(spectrum)
+        shimming = shimming_vector[np.argmax(dataFFT)]
+
+        # Save this into the shimming
+        self.shimming0[axis_idx] = shimming
 
 if __name__ == '__main__':
     seq = ShimmingSweep()
