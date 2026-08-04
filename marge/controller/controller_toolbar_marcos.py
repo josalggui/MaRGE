@@ -182,6 +182,19 @@ class MarcosController(MarcosToolBar):
 
         def disconnect_server(ip):
             subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "killall marcos_server"])
+            time.sleep(1.5)
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", ip, "~/marcos_server"])
+            time.sleep(1.5)
+
+            # Halt sequence in case there is any
+            expt = ex.Experiment(init_gpa=False, halt_and_reset=True, flush_old_rx=True)
+            expt.add_flodict({'grad_vx': (np.array([100]), np.array([0]))})
+            expt.run()
+            expt.__del__()
+            time.sleep(1.5)
+
+            # Disconnect from server
+            subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
             self.action_server.setStatusTip('Connect to marcos server')
             self.action_server.setToolTip('Connect to marcos server')
             print("Server disconnected")
