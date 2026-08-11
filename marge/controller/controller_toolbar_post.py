@@ -120,7 +120,7 @@ class ToolBarControllerPost(ToolBarWidgetPost):
             image = np.abs(self.main.image_view_widget.main_matrix)
 
         # Create figure widget
-        output, image, _ = utils.fix_image_orientation(image, axes=self.mat_data['axesOrientation'][0])
+        output, image = utils.fix_image_orientation(image, axes=self.mat_data['axesOrientation'][0])
         image2show = output['data']
         x_label = output['xLabel']
         y_label = output['yLabel']

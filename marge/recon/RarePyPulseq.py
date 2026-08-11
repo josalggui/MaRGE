@@ -270,7 +270,7 @@ def RarePyPulseq(raw_data_path=None):
 
         # Image plot
         if mat_data['unlock_orientation'] == 0:
-            result_1, _, _ = utils.fix_image_orientation(image, axes=axes_orientation, rd_direction=rd_direction)
+            result_1, _ = utils.fix_image_orientation(image, axes=axes_orientation, rd_direction=rd_direction)
             result_1['row'] = 0
             result_1['col'] = 0
         else:
@@ -293,7 +293,7 @@ def RarePyPulseq(raw_data_path=None):
                 data = np.log10(np.abs(output_dict['kSpace3D']))
         
         if mat_data['unlock_orientation'] == 0:
-            result_2, _, _ = utils.fix_image_orientation(data, axes=axes_orientation, rd_direction=rd_direction)
+            result_2, _ = utils.fix_image_orientation(data, axes=axes_orientation, rd_direction=rd_direction)
             result_2['row'] = 0
             result_2['col'] = 1
             result_2['title'] = "k-Space"
@@ -310,6 +310,8 @@ def RarePyPulseq(raw_data_path=None):
         dicom_meta_data["RepetitionTime"] = mat_data['repetitionTime']
         dicom_meta_data["EchoTime"] = mat_data['echoSpacing']
         dicom_meta_data["EchoTrainLength"] = mat_data['etl']
+        dicom_meta_data["ImagingFrequency"] = mat_data['larmorFreq']
+        dicom_meta_data["FlipAngle"] = mat_data['rfExFA']
 
         # Add results into the output attribute (result_1 must be the image to save in dicom)
         output = [result_1, result_2]
