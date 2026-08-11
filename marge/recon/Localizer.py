@@ -273,7 +273,7 @@ def Localizer(raw_data_path=None):
 
         # Image plot
         if mat_data['unlock_orientation'] == 0:
-            result_1, _, _ = utils.fix_image_orientation(image, axes=axes_orientation, rd_direction=rd_direction)
+            result_1, _ = utils.fix_image_orientation(image, axes=axes_orientation, rd_direction=rd_direction)
             result_1['row'] = 0
             result_1['col'] = 0
         else:

@@ -877,7 +877,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                 ## Image plot
                 # Tyger
                 if self.mapVals['unlock_orientation'] == 0:
-                    result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
+                    result_Tyger, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
                     result_Tyger['row'] = 0
                     result_Tyger['col'] = 1
                     result_Tyger['title'] = "Tyger"
@@ -926,7 +926,7 @@ class RareDoubleImage(blankSeq.MRIBLANKSEQ):
                     ## Image plot
                     # Tyger
                     if self.mapVals['unlock_orientation'] == 0:
-                        result_Tyger, _, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
+                        result_Tyger, _ = utils.fix_image_orientation(imageTyger, axes=self.axesOrientation)
                         result_Tyger['row'] = 0
                         result_Tyger['col'] = 1
                         result_Tyger['title'] = "Tyger"

@@ -251,20 +251,20 @@ def RareDoubleImage(raw_data_path=None):
 
     if full_plot is True or full_plot == 'True' or full_plot == 1:
         # Image plot
-        result_mag_odd, img_mag_odd, _ = utils.fix_image_orientation(img_mag_odd, axes=axes_orientation, rd_direction=rd_direction)
+        result_mag_odd, img_mag_odd = utils.fix_image_orientation(img_mag_odd, axes=axes_orientation, rd_direction=rd_direction)
         result_mag_odd['row'] = 0
         result_mag_odd['col'] = 0
 
-        result_mag_eve, img_mag_eve, _ = utils.fix_image_orientation(img_mag_eve, axes=axes_orientation, rd_direction=rd_direction)
+        result_mag_eve, img_mag_eve = utils.fix_image_orientation(img_mag_eve, axes=axes_orientation, rd_direction=rd_direction)
         result_mag_eve['row'] = 1
         result_mag_eve['col'] = 0
 
-        result_pha_odd, img_pha_odd, _ = utils.fix_image_orientation(img_pha_odd, axes=axes_orientation, rd_direction=rd_direction)
+        result_pha_odd, img_pha_odd = utils.fix_image_orientation(img_pha_odd, axes=axes_orientation, rd_direction=rd_direction)
         result_pha_odd['row'] = 0
         result_pha_odd['col'] = 1
         result_pha_odd['title'] = 'Phase odd echoes'
 
-        result_pha_eve, img_pha_eve, _ = utils.fix_image_orientation(img_pha_eve, axes=axes_orientation, rd_direction=rd_direction)
+        result_pha_eve, img_pha_eve = utils.fix_image_orientation(img_pha_eve, axes=axes_orientation, rd_direction=rd_direction)
         result_pha_eve['row'] = 1
         result_pha_eve['col'] = 1
         result_pha_eve['title'] = 'Phase even echoes'
@@ -275,7 +275,7 @@ def RareDoubleImage(raw_data_path=None):
         else:
             data_odd = np.zeros_like(output_dict['kSpace3D_odd_echoes'], dtype=float)
             data_odd[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D_odd_echoes'][0:n_sl, :, :]))
-        result_k_odd, _, _ = utils.fix_image_orientation(data_odd, axes=axes_orientation, rd_direction=rd_direction)
+        result_k_odd, _ = utils.fix_image_orientation(data_odd, axes=axes_orientation, rd_direction=rd_direction)
         result_k_odd['row'] = 0
         result_k_odd['col'] = 2
         result_k_odd['title'] = "k-Space odd echoes"
@@ -286,7 +286,7 @@ def RareDoubleImage(raw_data_path=None):
         else:
             data_even = np.zeros_like(output_dict['kSpace3D_even_echoes'], dtype=float)
             data_even[0:n_sl, :, :] = np.log10(np.abs(output_dict['kSpace3D_even_echoes'][0:n_sl, :, :]))
-        result_k_eve, _, _ = utils.fix_image_orientation(data_even, axes=axes_orientation, rd_direction=rd_direction)
+        result_k_eve, _ = utils.fix_image_orientation(data_even, axes=axes_orientation, rd_direction=rd_direction)
         result_k_eve['title'] = "k-Space even echoes"
         result_k_eve['row'] = 1
         result_k_eve['col'] = 2
@@ -295,7 +295,7 @@ def RareDoubleImage(raw_data_path=None):
         output = [result_mag_odd, result_pha_odd, result_k_odd, result_mag_eve, result_pha_eve, result_k_eve]
     else:
         # Image plot
-        result, img, _ = utils.fix_image_orientation(img, axes=axes_orientation, rd_direction=rd_direction)
+        result, img = utils.fix_image_orientation(img, axes=axes_orientation, rd_direction=rd_direction)
         result['row'] = 0
         result['col'] = 0
 
