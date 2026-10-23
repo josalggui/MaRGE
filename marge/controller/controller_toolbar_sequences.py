@@ -96,6 +96,7 @@ class SequenceController(SequenceToolBar):
             'RabiFlops',
             'Larmor',
             'SDRO',
+            'Larmor',
         ]
 
         for seq_name in seq_names:

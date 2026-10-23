@@ -68,8 +68,7 @@ class SDROSeq(blankSeq.MRIBLANKSEQ):
         mode = self.mapVals['mode']
 
         if mode == 'manual':
-            manual_gain = int(self.mapVals['manualGain'])
-            self.sdro.adjust_gain(manual_gain=manual_gain, mode='manual')
+            self.sdro.adjust_gain(manual_gain=self.manualGain, mode='manual')
 
         elif mode == 'auto':
             if hw.echoAmplitude > 0.0:
@@ -85,6 +84,7 @@ class SDROSeq(blankSeq.MRIBLANKSEQ):
         # Read back and confirm gain
         current_gain = self.sdro.get_gain()
         self.mapVals['current_gain'] = current_gain
+        hw.sdrolnaGain = current_gain
 
         return True
 

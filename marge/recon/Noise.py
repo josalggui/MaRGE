@@ -55,7 +55,8 @@ def Noise(raw_data_path=None):
     noiserms = np.std(data)
     noiserms = noiserms * 1e3  # uV
     print('rms noise: %0.1f uV @ %0.1f kHz' % (noiserms, bw))
-    johnson = np.sqrt(2 * 50 * 300 * bw * 1e3 * 1.38e-23) * 10 ** ((hw.lnaGain + hw.sdrolnaGain) / 20) * 1e6 / 2  # uV
+    johnson = np.sqrt(2 * 50 * 300 * bw * 1e3 * 1.38e-23) * 10 ** ((hw.lnaGain + hw.sdrolnaGain - 1.37) / 20) * 1e6 / 2  # uV
+    print(hw.sdrolnaGain)
     print('Thermal limit: %0.1f uV @ %0.1f kHz' % (johnson, bw))
     print('Noise factor: %0.1f' % (noiserms / johnson))
     if noiserms / johnson > 2:
