@@ -32,11 +32,11 @@ echo "Author: J.M. Algarín"
 sleep 0.1
 echo "Institution: MRIlab, i3M, CSIC-UPV"
 sleep 0.1
-echo "Version 2.1"
+echo "Version 2.2"
 sleep 0.1
-echo "Date: 2025.08.13"
+echo "Date: 2026.06.10"
 sleep 0.1
-echo "Tested with Ubuntu 22.04.5 LTS and Ubuntu 26.04 LTS"
+echo "Tested with Ubuntu 26.04 LTS"
 sleep 0.1
 echo "============================================================"
 echo ""
@@ -51,6 +51,7 @@ echo "  6) (Optional) Configure the host PC Ethernet interface."
 echo "  7) Modify client computer Ethernet configuration."
 echo "  8) Remove old SSH keys for the Red Pitaya and add the new one."
 echo "  9) Install and configure the MaRCoS server on the Red Pitaya."
+echo " 10) Install Tyger client"
 echo ""
 echo "⚠️  WARNING:"
 echo "  - This process will ERASE all data on the selected SD card."
@@ -84,11 +85,11 @@ fi
 #*********************************************************************#
 # Step 1: Download the image
 if [ ! -f "$IMAGE_TARBZ2" ]; then
-    echo "[1/9] Downloading image..."
+    echo "[1/10] Downloading image..."
     wget --content-disposition "$IMAGE_URL"
     echo "✅ Image download ready."
 else
-    echo "[1/9] Image archive already downloaded."
+    echo "[1/10] Image archive already downloaded."
     echo "✅ Image download ready."
 fi
 echo " "
@@ -96,18 +97,18 @@ echo " "
 #*********************************************************************#
 # Step 2: Decompress the tar.bz2
 if [ ! -f "$IMAGE_FILE" ]; then
-    echo "[2/9] Extracting image..."
+    echo "[2/10] Extracting image..."
     tar -xvf "$IMAGE_TARBZ2"
     echo "✅ Image extraction ready."
 else
-    echo "[2/9] Image already extracted."
+    echo "[2/10] Image already extracted."
     echo "✅ Image extraction ready."
 fi
 echo " "
 
 #*********************************************************************#
 # Step 3: List devices and ask user to select
-echo "[3/9] Writing image into the SD card:"
+echo "[3/10] Writing image into the SD card:"
 lsblk -dpno NAME,SIZE,MODEL | grep -v "loop"
 read -p "❓ Enter the target device (e.g., /dev/sdX or /dev/mmcblkX): " DEVICE
 
@@ -131,7 +132,7 @@ echo "✅ Image mounted into $DEVICE."
 
 
 #*********************************************************************#
-echo "[4/9] Mounting root partition..."
+echo "[4/10] Mounting root partition..."
 
 # List all partitions (not loop devices)
 echo "Available partitions:"
@@ -167,7 +168,7 @@ echo " "
 
 #*********************************************************************#
 # Modify interfaces file for static IP
-echo "[5/9] Modifying SDcard network configuration..."
+echo "[5/10] Modifying SDcard network configuration..."
 read -p "❓ Write the static IP address for the Red Pitaya: " RP_IP
 IP_PREFIX=$(echo "$RP_IP" | cut -d'.' -f1,2)
 NETMASK="255.255.255.0"
@@ -218,7 +219,7 @@ read -p "❓ Do you want to configure your Ethernet interface? (y/n): " ETH_CONF
 
 if [[ "$ETH_CONFIG" =~ ^[Yy]$ ]]; then
     #*********************************************************************#
-    echo "[6/9] Detecting Ethernet interfaces..."
+    echo "[6/10] Detecting Ethernet interfaces..."
     ip -o link show | awk -F': ' '{print $2}' | grep -v lo
     read -p "❓ Enter the Ethernet interface to configure (e.g., enp3s0 or eth0): " ETH_INTERFACE
 
@@ -235,7 +236,7 @@ if [[ "$ETH_CONFIG" =~ ^[Yy]$ ]]; then
     echo " "
 
     #*********************************************************************#
-    echo "[7/9] Modifying SD card network configuration..."
+    echo "[7/10] Modifying network configuration of the Host Computer..."
     read -p "❓ Write the static IP address for your client computer: " CLIENT_IP
     IP_PREFIX=$(echo "$CLIENT_IP" | cut -d'.' -f1,2)
     GATEWAY="$IP_PREFIX.1.1"
@@ -265,7 +266,7 @@ else
 fi
 
 #*********************************************************************#
-echo "[8/9] Set SSH key for Red Pitaya IP (if exists)"
+echo "[8/10] Set SSH key for Red Pitaya IP (if exists)"
 KNOWN_HOSTS_FILE="/home/$(logname)/.ssh/known_hosts"
 sudo -u "$(logname)" ssh-keygen -f "$KNOWN_HOSTS_FILE" -R "$RP_IP" || true
 echo "✅ Old SSH key for $RP_IP removed (if it existed)."
@@ -279,7 +280,7 @@ echo ""
 
 
 #*********************************************************************#
-echo "[9/9] Installing marcos server to the Red Pitaya"
+echo "[9/10] Installing marcos server to the Red Pitaya"
 read -p "❓ Enter the marcos version you want to install (master or mimo_all_sata): " marcos
 
 # Validate the answer and set default if needed
@@ -304,5 +305,26 @@ echo "✅ MaRCoS server configured in $RP_IP"
 cd ..
 rm -rf marcos_extras
 
-echo "✅ Ready to work with this Read Pitaya"
+#*********************************************************************#
+echo "[10/10] Installing Tyger CLI"
+
+if command -v tyger >/dev/null 2>&1; then
+    echo "✅ Tyger already installed:"
+    tyger --version
+else
+    echo "Installing Tyger..."
+    cd /tmp
+
+    wget -q https://github.com/microsoft/tyger/releases/latest/download/tyger_linux_x86_64.tar.gz
+    tar -xzf tyger_linux_x86_64.tar.gz
+
+    install -m 755 tyger /usr/local/bin/tyger
+
+    rm -f tyger tyger_linux_x86_64.tar.gz
+
+    echo "✅ Tyger installed:"
+    tyger --version
+fi
+
+echo "✅ Ready to work with this Read Pitaya and Tyger"
 

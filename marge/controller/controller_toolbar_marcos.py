@@ -147,20 +147,36 @@ class MarcosController(MarcosToolBar):
     def controlMarcosServer(self):
         if not self.main.demo:
             if not self.action_server.isChecked():
+                # Reset server
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                time.sleep(1.5)
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
+                time.sleep(1.5)
+
+                # Halt sequence in case there is any
+                expt = ex.Experiment(init_gpa=False, halt_and_reset=True, flush_old_rx=True)
+                expt.add_flodict({'grad_vx': (np.array([100]), np.array([0]))})
+                expt.run()
+                expt.__del__()
+
+                # Disconnect from server
                 subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                 self.action_server.setStatusTip('Connect to marcos server')
                 self.action_server.setToolTip('Connect to marcos server')
                 print("Server disconnected")
             else:
                 try:
-                    subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                    # Connect to server
+                    subprocess.run(
+                        [hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
                     time.sleep(1.5)
                     subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
                     time.sleep(1.5)
                     self.action_server.setStatusTip('Kill marcos server')
                     self.action_server.setToolTip('Kill marcos server')
 
-                    expt = ex.Experiment(init_gpa=False)
+                    # Halt sequence in case there is any
+                    expt = ex.Experiment(init_gpa=False, halt_and_reset=True, flush_old_rx=True)
                     expt.add_flodict({'grad_vx': (np.array([100]), np.array([0]))})
                     expt.run()
                     expt.__del__()
@@ -279,7 +295,7 @@ class MarcosController(MarcosToolBar):
 
                             # Run init_gpa sequence
                             if hw.grad_board == "ocra1":
-                                expt = ex.Experiment(init_gpa=True)
+                                expt = ex.Experiment(init_gpa=True, halt_and_reset=True, flush_old_rx=True)
                                 expt.add_flodict({
                                     'grad_vx': (np.array([100]), np.array([0])),
                                 })
@@ -288,6 +304,12 @@ class MarcosController(MarcosToolBar):
                                 link = True
                                 print("READY: OCRA1 init done!")
                             elif hw.grad_board == "gpa-fhdo":
+                                expt = ex.Experiment(init_gpa=True, halt_and_reset=True, flush_old_rx=True)
+                                expt.add_flodict({
+                                    'grad_vx': (np.array([100]), np.array([0])),
+                                })
+                                expt.run()
+                                expt.__del__()
                                 link = True
                                 print("READY: FHDO init done!")
 
@@ -332,5 +354,29 @@ class MarcosController(MarcosToolBar):
 
         thread = threading.Thread(target=init_gpa)
         thread.start()
+
+    def stop_sequence(self):
+        if not self.main.demo:
+            try:
+                # Reset server connection
+                subprocess.run(
+                    [hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "killall marcos_server"])
+                time.sleep(1.5)
+                subprocess.run([hw.bash_path, "--", "./communicateRP.sh", hw.rp_ip_address, "~/marcos_server"])
+                time.sleep(1.5)
+
+                # Halt sequence in case there is any
+                expt = ex.Experiment(init_gpa=False, halt_and_reset=True, flush_old_rx=True)
+                expt.add_flodict({'grad_vx': (np.array([100]), np.array([0]))})
+                expt.run()
+                expt.__del__()
+
+                print("READY: Sequence stopped!")
+            except Exception as e:
+                print("ERROR: Server not connected!")
+                print(e)
+        else:
+            print("This is a demo\n")
+
 
 
