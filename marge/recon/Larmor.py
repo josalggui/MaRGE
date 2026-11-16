@@ -69,8 +69,13 @@ def Larmor(raw_data_path=None):
     fCentral = fVector[idf] * 1e-3  # MHz
     hw.larmorFreq = mat_data['larmorFreq'][0][0] + fCentral
     print('Larmor frequency: %1.5f MHz' % hw.larmorFreq)
+
+    # Record peak echo amplitude as global parameter for SDRO gain adjustment
+    hw.echoAmplitude = np.max(np.abs(signal))
+    print('Echo amplitude: %1.5f mV' % hw.echoAmplitude)
     output_dict['fCentral'] = fCentral
     output_dict['larmorFreq0'] = hw.larmorFreq
+    output_dict['echoAmplitude'] = hw.echoAmplitude
     output_dict['signalVStime'] = [tVector, signal]
     output_dict['spectrum'] = [fVector, spectrum]
 

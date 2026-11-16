@@ -9,6 +9,7 @@ import threading
 
 from PyQt5.QtCore import QEvent
 
+from marge.controller.controller_sdro import SDRO
 from marge.seq.sequences import defaultsequences
 from marge.ui.window_main import MainWindow
 import marge.autotuning.autotuning as autotuning
@@ -29,6 +30,8 @@ class MainController(MainWindow):
         # Define the arduinos
         self.arduino_autotuning = autotuning.Arduino(baudrate=hw.ard_br_autotuning)
         self.arduino_autotuning.connect(serial_number=hw.ard_sn_autotuning)
+        self.arduino_sdro = SDRO(serial_number=hw.ard_sn_sdro)
+        self.arduino_sdro.connect()
         if hw.ard_sn_autotuning==hw.ard_sn_interlock:
             self.arduino_interlock = self.arduino_autotuning
         else:

@@ -1,0 +1,57 @@
+// cPins[] = {16dB, 8dB, 4dB, 2dB, 0.5dB, 1dB, Latch pin}
+//This is a code to control the attenuation values for the different kspace 
+// ZX76-31A-PPS+ — FIXED pin assignment
+// Moved C1 from pin 1 (TX) to pin 8
+// Moved LE from pin 2 to pin 9
+
+//                   C16  C8  C4  C2  C1   LE
+int cPins[]     = {   7,   6,   5,   4,   8,   9 };
+int nPins       = 6;
+int inputBits   = 5;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.setTimeout(100);
+  for (int c = 0; c < nPins; c++) {
+    pinMode(cPins[c], OUTPUT);
+    digitalWrite(cPins[c], LOW);
+  }
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    String attenuationStr = Serial.readString();
+    attenuationStr.trim();
+
+    unsigned int attenuation = attenuationStr.toInt();
+    if (attenuation > 31) attenuation = 31;
+
+    Serial.print("Received=");
+    Serial.println(attenuation);
+
+    // Write data bits BEFORE latching
+    String state = toBinaryFixed(attenuation, inputBits);
+    for (int c = 0; c < inputBits; c++) {
+      digitalWrite(cPins[c], state.charAt(c) - '0');
+    }
+
+    // Latch pulse
+    digitalWrite(cPins[5], HIGH);
+    delayMicroseconds(10);
+    digitalWrite(cPins[5], LOW);
+
+    Serial.print("Attenuation set to: ");
+    Serial.print(attenuation);
+    Serial.println(" dB");
+    Serial.println("Ready");
+  }
+}
+
+String toBinaryFixed(unsigned int value, int digits) {
+  String result = "";
+  for (int i = digits - 1; i >= 0; i--) {
+    result += (value >> i) & 1;
+  }
+  return result;
+}
+

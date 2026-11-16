@@ -254,18 +254,18 @@ class VNA:
 
 
 if __name__ == "__main__":
-    # # Test arduino
-    # arduino = Arduino(baudrate=115200, name="interlock")
-    # arduino.connect(serial_number="55731323736351611260")
-    #
-    # string = arduino.send("GPA_SPC:CTL 1;").decode()
-    # string = arduino.send("GPA_ERRST;").decode()
+    # Test arduino
+    arduino = Arduino(baudrate=115200)
+    arduino.connect(serial_number="44238313139351507280")
 
-    # Test nanoVNA
-    nanovna = VNA()
-    nanovna.connect()
-    try:
-        a, b = nanovna.getS11(3.64)
-        print(a)
-    except Exception as e:
-        print(e)
+    string = arduino.send("15").decode()
+    print(string)
+
+    # # Test nanoVNA
+    # nanovna = VNA()
+    # nanovna.connect()
+    # try:
+    #     a, b = nanovna.getS11(3.64)
+    #     print(a)
+    # except Exception as e:
+    #     print(e)

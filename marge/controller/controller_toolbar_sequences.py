@@ -95,6 +95,8 @@ class SequenceController(SequenceToolBar):
             'Shimming',
             'RabiFlops',
             'Larmor',
+            'SDRO',
+            'Larmor',
         ]
 
         for seq_name in seq_names:
@@ -105,6 +107,9 @@ class SequenceController(SequenceToolBar):
             # Specific task for AutoTuning
             if seq_name == 'AutoTuning':
                 seq.arduino = self.main.arduino_autotuning
+
+            if seq_name == "SDRO":
+                seq.sdro = self.main.arduino_sdro
 
             # Specific tasks for RabiFlops
             if seq_name == 'RabiFlops':
@@ -279,6 +284,9 @@ class SequenceController(SequenceToolBar):
         # Particular case for Auto-tuning
         if seq_name == "AutoTuning":
             sequence.arduino = self.main.arduino_autotuning
+
+        if seq_name == "SDRO":
+            sequence.sdro = self.main.arduino_sdro
 
         # Modify input parameters of the sequence according to current item
         if map_nmspc and map_vals:
