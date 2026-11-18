@@ -21,7 +21,8 @@ elif hw.marcos_version=="MIMO":
 import marge.marge_tyger.tyger_config as tyger
 import multiprocessing as mp
 from marge.mimo.marcos_client.mimo_devices import mimo_dev_run
-
+import paramiko
+import os
 
 class MarcosController(MarcosToolBar):
     """
@@ -111,29 +112,36 @@ class MarcosController(MarcosToolBar):
     def get_sdrlab_ip(self):
         print("Searching for SDRLabs...")
         ip_addresses = []
-        timeout = 0.1
+        timeout = 3.0
 
         for ip in hw.rp_ip_list:
             try:
                 print(f"Checking ip {ip}...")
                 if platform.system() == 'Linux':
-                    result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)
+                    result = subprocess.run(['ping', '-c', '1', '-W', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)
                 elif platform.system() == 'Windows':
-                    result = subprocess.run(['ping', '-n', '1', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)
+                    result = subprocess.run(['ping', '-n', '1', '-w', '1000', ip], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=timeout)
                 else:
                     continue
 
                 if result.returncode == 0:
                     print(f"ping to ip {ip} succeeded.")
-                    ssh_command = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5', f'root@{ip}', 'exit']
-                    ssh_result = subprocess.run(ssh_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    if ssh_result.returncode == 0:
+                    ssh = paramiko.SSHClient()
+                    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    try:
+
+                        ssh.connect(ip, username='root', password='', timeout=5,
+                                    allow_agent=False, look_for_keys=False)
                         print(f"ssh to ip {ip} succeeded.")
                         ip_addresses.append(ip)
-                    else:
-                        print(f"ERROR: ssh to {ip} failed.")
-            except:
-                print(f"ERROR: ping to ip {ip} failed.")
+                        ssh.close()
+                    except Exception as e:
+                        print(f"ERROR: ssh to {ip} failed. ({e})")
+            except subprocess.TimeoutExpired:
+                print(f"ERROR: ping timeout to ip {ip}.")
+                continue
+            except Exception as e:
+                print(f"ERROR: checking ip {ip} failed: {e}")
                 continue
 
         # Check SDRLabs found
